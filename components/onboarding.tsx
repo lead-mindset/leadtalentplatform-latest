@@ -9,6 +9,13 @@ import { SKILL_OPTIONS } from '@/lib/options'
 import { FormStepper, FormInput } from './ui/stepper'
 import { fullMemberSchema } from '@/lib/memberschema'
 import { LEAD_CHAPTER_OPTIONS } from '@/lib/options'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 export type OnboardingValues = z.infer<typeof fullMemberSchema>
 
@@ -115,26 +122,29 @@ export default function Onboarding() {
                 name="lead_chapter"
                 render={({ field }) => (
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-neutral-300">
+                    <label className="text-sm font-medium">
                       LEAD Chapter
                     </label>
-                    <select
-                      {...field}
-                      className={`w-full px-3 py-2.5 bg-neutral-800 border ${
-                        errors.lead_chapter ? 'border-red-500' : 'border-neutral-700'
-                      } rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all`}
+
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
                     >
-                      <option value="" disabled>
-                        Select your chapter
-                      </option>
-                      {LEAD_CHAPTER_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your chapter" />
+                      </SelectTrigger>
+
+                      <SelectContent>
+                        {LEAD_CHAPTER_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
                     {errors.lead_chapter && (
-                      <p className="text-sm text-red-400 flex items-center gap-1">
+                      <p className="text-sm text-destructive flex items-center gap-1">
                         <X className="w-3 h-3" />
                         {errors.lead_chapter.message}
                       </p>
@@ -142,6 +152,7 @@ export default function Onboarding() {
                   </div>
                 )}
               />
+
             </div>
           </div>
 
@@ -200,11 +211,10 @@ export default function Onboarding() {
                                   : [...field.value, skill.value]
                               )
                             }
-                            className={`group relative px-3 py-1 rounded-full border text-sm font-medium transition-all duration-200 ${
-                              isSelected
+                            className={`group relative px-3 py-1 rounded-full border text-sm font-medium transition-all duration-200 ${isSelected
                                 ? 'bg-green-500 border-green-400 text-white shadow-lg shadow-green-500/20'
                                 : 'border-neutral-700 text-neutral-300 hover:border-neutral-600 hover:bg-neutral-800/50'
-                            }`}
+                              }`}
                           >
                             <div className="flex items-center gap-2">
                               <span className="text-lg">{skill.icon}</span>
@@ -257,12 +267,11 @@ export default function Onboarding() {
                     <label className="block text-sm font-medium text-neutral-300">
                       Resume (PDF)
                     </label>
-                    
+
                     {!fileName ? (
                       <label className="group cursor-pointer">
-                        <div className={`border-2 border-dashed ${
-                          errors.resume_pdf ? 'border-red-500' : 'border-neutral-700'
-                        } rounded-lg p-6 text-center hover:border-neutral-600 hover:bg-neutral-800/30 transition-all`}>
+                        <div className={`border-2 border-dashed ${errors.resume_pdf ? 'border-red-500' : 'border-neutral-700'
+                          } rounded-lg p-6 text-center hover:border-neutral-600 hover:bg-neutral-800/30 transition-all`}>
                           <input
                             type="file"
                             accept="application/pdf"
