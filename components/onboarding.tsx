@@ -2,25 +2,30 @@
 
 import { useForm, FormProvider, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Step, FormStepper, FormInput } from './ui/stepper'
+import { z } from 'zod'
+import { useState } from 'react'
+import { Check, Upload, X, FileText, Loader2 } from 'lucide-react'
+import { SKILL_OPTIONS } from '@/lib/options'
+import { FormStepper, FormInput } from './ui/stepper'
 import { fullMemberSchema } from '@/lib/memberschema'
 import { LEAD_CHAPTER_OPTIONS } from '@/lib/options'
-import { z } from 'zod'
 
 export type OnboardingValues = z.infer<typeof fullMemberSchema>
 
 export default function Onboarding() {
+  const [fileName, setFileName] = useState<string>('')
+  const [isUploading, setIsUploading] = useState(false)
+
   const methods = useForm<OnboardingValues>({
     resolver: zodResolver(fullMemberSchema),
     mode: 'onChange',
     defaultValues: {
       full_name: '',
-      email: '',
       phone: '',
       career: '',
       graduationYear: undefined,
       skills: [],
-      lead_chapter: undefined,
+      lead_chapter: '',
       linkedin_url: '',
       resume_pdf: undefined,
       consentRecruiterVisibility: false,
@@ -31,8 +36,11 @@ export default function Onboarding() {
     trigger,
     getValues,
     control,
+    watch,
     formState: { errors },
   } = methods
+
+  const selectedSkills = watch('skills')
 
   const stepFields: Record<number, (keyof OnboardingValues)[]> = {
     1: ['full_name', 'phone', 'lead_chapter'],
@@ -49,198 +57,307 @@ export default function Onboarding() {
     console.log('FINAL PAYLOAD (schema-safe):', data)
   }
 
+  const handleFileChange = (onChange: any) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setIsUploading(true)
+      setTimeout(() => {
+        setFileName(file.name)
+        onChange(file)
+        setIsUploading(false)
+      }, 500)
+    }
+  }
+
+  const removeFile = (onChange: any) => {
+    setFileName('')
+    onChange(undefined)
+  }
+
   return (
     <div className="min-h-screen w-full">
       <FormProvider {...methods}>
         <FormStepper
           validateStep={validateCurrentStep}
           onFinalStepCompleted={handleComplete}
+          stepCircleContainerClassName="bg-neutral-900/50 backdrop-blur-sm"
         >
-          <Step>
-            <h2 className="text-2xl font-bold text-white mb-2">
-              👋 Let’s get to know you
-            </h2>
-            <p className="text-neutral-400 mb-6">
-              This helps us create your LEAD profile.
-            </p>
+          <div className="space-y-5">
+            <div className="space-y-2">
+              <h2 className="text-3xl font-bold text-white">
+                👋 Welcome to LEAD
+              </h2>
+              <p className="text-neutral-400 text-base">
+                Let's start by getting to know you better
+              </p>
+            </div>
 
-            <FormInput
-              label="Full name"
-              name="full_name"
-              error={errors.full_name?.message}
-            />
+            <div className="space-y-4">
+              <FormInput
+                label="Full Name"
+                name="full_name"
+                placeholder="John Doe"
+                error={errors.full_name?.message}
+                autoComplete="name"
+              />
 
-            <FormInput
-              label="Phone"
-              name="phone"
-              error={errors.phone?.message}
-            />
+              <FormInput
+                label="Phone Number"
+                name="phone"
+                type="tel"
+                placeholder="+1 (555) 123-4567"
+                error={errors.phone?.message}
+                autoComplete="tel"
+              />
 
-            <Controller
-              control={control}
-              name="lead_chapter"
-              render={({ field }) => (
-                <div>
-                  <label className="block mb-1">LEAD Chapter</label>
-                  <select {...field} className="w-full">
-                    <option value="">Select your chapter</option>
-                    {LEAD_CHAPTER_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>
-                        {o.label}
+              <Controller
+                control={control}
+                name="lead_chapter"
+                render={({ field }) => (
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-neutral-300">
+                      LEAD Chapter
+                    </label>
+                    <select
+                      {...field}
+                      className={`w-full px-3 py-2.5 bg-neutral-800 border ${
+                        errors.lead_chapter ? 'border-red-500' : 'border-neutral-700'
+                      } rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all`}
+                    >
+                      <option value="" disabled>
+                        Select your chapter
                       </option>
-                    ))}
-                  </select>
-                  {errors.lead_chapter && (
-                    <p className="text-sm text-red-500 mt-1">
-                      {errors.lead_chapter.message}
-                    </p>
-                  )}
-                </div>
-              )}
-            />
-          </Step>
-
-          <Step>
-            <h2 className="text-2xl font-bold text-white mb-2">
-              🎓 Your academic journey
-            </h2>
-            <p className="text-neutral-400 mb-6">
-              Tell us what you’re studying and what you’re good at.
-            </p>
-
-            <FormInput
-              label="Career / Major"
-              name="career"
-              error={errors.career?.message}
-            />
-
-            <FormInput
-              label="Graduation year"
-              name="graduationYear"
-              type="number"
-              placeholder="e.g. 2026"
-                validation={{ valueAsNumber: true }}
-
-              error={errors.graduationYear?.message}
-            />
-
-            <Controller
-              control={control}
-              name="skills"
-              render={({ field }) => (
-                <div>
-                  <label className="block mb-2">Skills</label>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      'JavaScript',
-                      'Python',
-                      'Data Analysis',
-                      'UX/UI',
-                      'AI',
-                      'Leadership',
-                    ].map((skill) => {
-                      const selected = field.value.includes(skill)
-                      return (
-                        <button
-                          key={skill}
-                          type="button"
-                          onClick={() =>
-                            field.onChange(
-                              selected
-                                ? field.value.filter((v) => v !== skill)
-                                : [...field.value, skill]
-                            )
-                          }
-                          className={`px-3 py-1 rounded-full border text-sm transition ${
-                            selected
-                              ? 'bg-white text-black'
-                              : 'border-neutral-600 text-neutral-300'
-                          }`}
-                        >
-                          {skill}
-                        </button>
-                      )
-                    })}
+                      {LEAD_CHAPTER_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.lead_chapter && (
+                      <p className="text-sm text-red-400 flex items-center gap-1">
+                        <X className="w-3 h-3" />
+                        {errors.lead_chapter.message}
+                      </p>
+                    )}
                   </div>
+                )}
+              />
+            </div>
+          </div>
 
-                  {errors.skills && (
-                    <p className="text-sm text-red-500 mt-2">
-                      {errors.skills.message}
-                    </p>
-                  )}
-                </div>
-              )}
-            />
-          </Step>
+          <div className="space-y-5">
+            <div className="space-y-2">
+              <h2 className="text-3xl font-bold text-white">
+                🎓 Your Academic Journey
+              </h2>
+              <p className="text-neutral-400 text-base">
+                Tell us about your studies and expertise
+              </p>
+            </div>
 
-          <Step>
-            <h2 className="text-2xl font-bold text-white mb-2">
-              💼 Your professional profile
-            </h2>
-            <p className="text-neutral-400 mb-6">
-              This helps recruiters understand your experience.
-            </p>
+            <div className="space-y-4">
+              <FormInput
+                label="Major / Career Field"
+                name="career"
+                placeholder="e.g. Computer Science, Business Administration"
+                error={errors.career?.message}
+              />
 
-            <FormInput
-              label="LinkedIn profile"
-              name="linkedin_url"
-              placeholder="https://linkedin.com/in/username"
-              error={errors.linkedin_url?.message}
-            />
+              <FormInput
+                label="Expected Graduation Year"
+                name="graduationYear"
+                type="number"
+                placeholder="2026"
+                validation={{ valueAsNumber: true }}
+                error={errors.graduationYear?.message}
+              />
 
-            <Controller
-              control={control}
-              name="resume_pdf"
-              render={({ field }) => (
-                <div>
-                  <label className="block mb-1">Resume (PDF)</label>
-                  <input
-                    type="file"
-                    accept="application/pdf"
-                    onChange={(e) =>
-                      field.onChange(e.target.files?.[0])
-                    }
-                  />
-                  {errors.resume_pdf && (
-                    <p className="text-sm text-red-500 mt-1">
-                      {errors.resume_pdf.message}
-                    </p>
-                  )}
-                </div>
-              )}
-            />
+              <Controller
+                control={control}
+                name="skills"
+                render={({ field }) => (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-sm font-medium text-neutral-300">
+                        Skills & Expertise
+                      </label>
+                      <span className="text-xs text-neutral-500">
+                        {selectedSkills.length} selected
+                      </span>
+                    </div>
 
-            <Controller
-              control={control}
-              name="consentRecruiterVisibility"
-              render={({ field }) => (
-                <div className="mt-6">
-                  <label className="flex items-start gap-2">
-                    <input
-                      type="checkbox"
-                      checked={field.value}
-                      onChange={(e) =>
-                        field.onChange(e.target.checked)
-                      }
-                    />
-                    <span>
-                      I agree to make my profile visible to recruiters
-                      partnered with LEAD.
-                    </span>
-                  </label>
-                  <p className="text-sm text-neutral-400 mt-1">
-                    This is optional. You can change this anytime.
-                  </p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {SKILL_OPTIONS.map((skill) => {
+                        const isSelected = field.value.includes(skill.value)
+                        return (
+                          <button
+                            key={skill.value}
+                            type="button"
+                            onClick={() =>
+                              field.onChange(
+                                isSelected
+                                  ? field.value.filter((v) => v !== skill.value)
+                                  : [...field.value, skill.value]
+                              )
+                            }
+                            className={`group relative px-3 py-1 rounded-full border text-sm font-medium transition-all duration-200 ${
+                              isSelected
+                                ? 'bg-green-500 border-green-400 text-white shadow-lg shadow-green-500/20'
+                                : 'border-neutral-700 text-neutral-300 hover:border-neutral-600 hover:bg-neutral-800/50'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">{skill.icon}</span>
+                              <span className="text-left flex-1">{skill.value}</span>
+                              {isSelected && (
+                                <Check className="w-4 h-4 animate-in zoom-in duration-200" />
+                              )}
+                            </div>
+                          </button>
+                        )
+                      })}
+                    </div>
 
-                  {errors.consentRecruiterVisibility && (
-                    <p className="text-sm text-red-500 mt-1">
-                      {errors.consentRecruiterVisibility.message}
-                    </p>
-                  )}
-                </div>
-              )}
-            />
-          </Step>
+                    {errors.skills && (
+                      <p className="text-sm text-red-400 flex items-center gap-1">
+                        <X className="w-3 h-3" />
+                        {errors.skills.message}
+                      </p>
+                    )}
+                  </div>
+                )}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-5">
+            <div className="space-y-2">
+              <h2 className="text-3xl font-bold text-white">
+                💼 Professional Profile
+              </h2>
+              <p className="text-neutral-400 text-base">
+                Help recruiters discover your potential
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <FormInput
+                label="LinkedIn Profile (Optional)"
+                name="linkedin_url"
+                type="url"
+                placeholder="https://linkedin.com/in/johndoe"
+                error={errors.linkedin_url?.message}
+              />
+
+              <Controller
+                control={control}
+                name="resume_pdf"
+                render={({ field }) => (
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-neutral-300">
+                      Resume (PDF)
+                    </label>
+                    
+                    {!fileName ? (
+                      <label className="group cursor-pointer">
+                        <div className={`border-2 border-dashed ${
+                          errors.resume_pdf ? 'border-red-500' : 'border-neutral-700'
+                        } rounded-lg p-6 text-center hover:border-neutral-600 hover:bg-neutral-800/30 transition-all`}>
+                          <input
+                            type="file"
+                            accept="application/pdf"
+                            className="hidden"
+                            onChange={handleFileChange(field.onChange)}
+                          />
+                          <div className="flex flex-col items-center gap-2">
+                            {isUploading ? (
+                              <Loader2 className="w-8 h-8 text-green-500 animate-spin" />
+                            ) : (
+                              <Upload className="w-8 h-8 text-neutral-400 group-hover:text-green-500 transition-colors" />
+                            )}
+                            <div>
+                              <p className="text-sm font-medium text-neutral-300">
+                                {isUploading ? 'Uploading...' : 'Click to upload'}
+                              </p>
+                              <p className="text-xs text-neutral-500 mt-1">
+                                PDF up to 10MB
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </label>
+                    ) : (
+                      <div className="flex items-center gap-3 p-3 bg-neutral-800 border border-neutral-700 rounded-lg">
+                        <div className="flex-shrink-0 w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center">
+                          <FileText className="w-5 h-5 text-green-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-white truncate">
+                            {fileName}
+                          </p>
+                          <p className="text-xs text-neutral-500">Ready to upload</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeFile(field.onChange)}
+                          className="flex-shrink-0 p-1 hover:bg-neutral-700 rounded transition-colors"
+                        >
+                          <X className="w-4 h-4 text-neutral-400" />
+                        </button>
+                      </div>
+                    )}
+
+                    {errors.resume_pdf && (
+                      <p className="text-sm text-red-400 flex items-center gap-1">
+                        <X className="w-3 h-3" />
+                      </p>
+                    )}
+                  </div>
+                )}
+              />
+
+              <Controller
+                control={control}
+                name="consentRecruiterVisibility"
+                render={({ field }) => (
+                  <div className="space-y-2">
+                    <div className="p-4 bg-neutral-800/50 border border-neutral-700 rounded-lg">
+                      <label className="flex items-start gap-3 cursor-pointer group">
+                        <div className="relative flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={field.value}
+                            onChange={(e) => field.onChange(e.target.checked)}
+                            className="sr-only peer"
+                          />
+                          <div className="w-5 h-5 border-2 border-neutral-600 rounded peer-checked:bg-green-500 peer-checked:border-green-500 transition-all flex items-center justify-center">
+                            {field.value && (
+                              <Check className="w-3 h-3 text-white animate-in zoom-in duration-200" />
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-white group-hover:text-green-400 transition-colors">
+                            Make my profile visible to recruiters
+                          </p>
+                          <p className="text-xs text-neutral-400 mt-1">
+                            Connect with companies partnered with LEAD. You can change this anytime in settings.
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+
+                    {errors.consentRecruiterVisibility && (
+                      <p className="text-sm text-red-400 flex items-center gap-1">
+                        <X className="w-3 h-3" />
+                        {errors.consentRecruiterVisibility.message}
+                      </p>
+                    )}
+                  </div>
+                )}
+              />
+            </div>
+          </div>
         </FormStepper>
       </FormProvider>
     </div>
