@@ -1,6 +1,8 @@
 import React, { useState, Children, useRef, useLayoutEffect, HTMLAttributes, ReactNode } from 'react';
 import { motion, AnimatePresence, Variants } from 'motion/react';
 import { useForm, FormProvider, useFormContext } from 'react-hook-form';
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 interface StepperProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
@@ -462,7 +464,7 @@ export function FormStepper({
 
   return (
     <div
-      className="flex min-h-full flex-1 flex-col items-center justify-center p-4 sm:aspect-[4/3] md:aspect-[2/1]"
+      className="flex min-h-full bg-red-500 flex-1 flex-col items-center justify-center p-4 sm:aspect-[4/3] md:aspect-[2/1]"
       {...rest}
     >
       <div
@@ -542,22 +544,35 @@ interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   validation?: object;
 }
 
-export function FormInput({ label, name, error, validation, ...props }: FormInputProps) {
-  const { register } = useFormContext();
+export function FormInput({
+  name,
+  label,
+  validation,
+  ...props
+}: FormInputProps) {
+  const {
+    register,
+    formState: { errors },
+  } = useFormContext()
+
+  const error = errors[name]?.message as string | undefined
 
   return (
-    <div className="mb-4">
-      <label htmlFor={name} className="block text-sm font-medium text-neutral-300 mb-1">
-        {label}
-      </label>
-      <input
+    <div className="space-y-2">
+      <Label htmlFor={name}>{label}</Label>
+
+      <Input
         id={name}
         {...register(name, validation)}
         {...props}
-        className={`w-full px-3 py-2 bg-neutral-800 border ${error ? 'border-red-500' : 'border-neutral-700'
-          } rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500`}
+        aria-invalid={!!error}
       />
-      {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+
+      {error && (
+        <p className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
     </div>
-  );
+  )
 }
