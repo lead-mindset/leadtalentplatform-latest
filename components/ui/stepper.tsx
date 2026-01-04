@@ -1,11 +1,12 @@
 import React, { useState, Children, useRef, useLayoutEffect, HTMLAttributes, ReactNode } from 'react';
 import { motion, AnimatePresence, Variants } from 'motion/react';
+import { useForm, FormProvider, useFormContext } from 'react-hook-form';
 
 interface StepperProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
   initialStep?: number;
   onStepChange?: (step: number) => void;
-  onFinalStepCompleted?: () => void;
+  onFinalStepCompleted?: (data: any) => void;
   stepCircleContainerClassName?: string;
   stepContainerClassName?: string;
   contentClassName?: string;
@@ -20,13 +21,15 @@ interface StepperProps extends HTMLAttributes<HTMLDivElement> {
     currentStep: number;
     onStepClick: (clicked: number) => void;
   }) => ReactNode;
+  validateStep?: (step: number) => Promise<boolean> | boolean;
+  onBeforeStepChange?: (fromStep: number, toStep: number) => Promise<boolean> | boolean;
 }
 
 export default function Stepper({
   children,
   initialStep = 1,
-  onStepChange = () => {},
-  onFinalStepCompleted = () => {},
+  onStepChange = () => { },
+  onFinalStepCompleted = () => { },
   stepCircleContainerClassName = '',
   stepContainerClassName = '',
   contentClassName = '',
@@ -37,6 +40,8 @@ export default function Stepper({
   nextButtonText = 'Continue',
   disableStepIndicators = false,
   renderStepIndicator,
+  validateStep,
+  onBeforeStepChange,
   ...rest
 }: StepperProps) {
   const [currentStep, setCurrentStep] = useState<number>(initialStep);
@@ -49,7 +54,7 @@ export default function Stepper({
   const updateStep = (newStep: number) => {
     setCurrentStep(newStep);
     if (newStep > totalSteps) {
-      onFinalStepCompleted();
+      onFinalStepCompleted({});
     } else {
       onStepChange(newStep);
     }
@@ -62,16 +67,55 @@ export default function Stepper({
     }
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    // Validate before proceeding
+    if (validateStep) {
+      const isValid = await validateStep(currentStep);
+      if (!isValid) return;
+    }
+
+    if (onBeforeStepChange) {
+      const canProceed = await onBeforeStepChange(currentStep, currentStep + 1);
+      if (!canProceed) return;
+    }
+
     if (!isLastStep) {
       setDirection(1);
       updateStep(currentStep + 1);
     }
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    // Validate final step before completing
+    if (validateStep) {
+      const isValid = await validateStep(currentStep);
+      if (!isValid) return;
+    }
+
     setDirection(1);
     updateStep(totalSteps + 1);
+  };
+
+  const handleStepClick = async (clicked: number) => {
+    if (clicked === currentStep) return;
+
+    // If moving forward, validate all steps between current and target
+    if (clicked > currentStep) {
+      for (let step = currentStep; step < clicked; step++) {
+        if (validateStep) {
+          const isValid = await validateStep(step);
+          if (!isValid) return;
+        }
+      }
+    }
+
+    if (onBeforeStepChange) {
+      const canProceed = await onBeforeStepChange(currentStep, clicked);
+      if (!canProceed) return;
+    }
+
+    setDirection(clicked > currentStep ? 1 : -1);
+    updateStep(clicked);
   };
 
   return (
@@ -93,20 +137,14 @@ export default function Stepper({
                   renderStepIndicator({
                     step: stepNumber,
                     currentStep,
-                    onStepClick: clicked => {
-                      setDirection(clicked > currentStep ? 1 : -1);
-                      updateStep(clicked);
-                    }
+                    onStepClick: handleStepClick
                   })
                 ) : (
                   <StepIndicator
                     step={stepNumber}
                     disableStepIndicators={disableStepIndicators}
                     currentStep={currentStep}
-                    onClickStep={clicked => {
-                      setDirection(clicked > currentStep ? 1 : -1);
-                      updateStep(clicked);
-                    }}
+                    onClickStep={handleStepClick}
                   />
                 )}
                 {isNotLastStep && <StepConnector isComplete={currentStep > stepNumber} />}
@@ -130,11 +168,10 @@ export default function Stepper({
               {currentStep !== 1 && (
                 <button
                   onClick={handleBack}
-                  className={`duration-350 rounded px-2 py-1 transition ${
-                    currentStep === 1
-                      ? 'pointer-events-none opacity-50 text-neutral-400'
-                      : 'text-neutral-400 hover:text-neutral-700'
-                  }`}
+                  className={`duration-350 rounded px-2 py-1 transition ${currentStep === 1
+                    ? 'pointer-events-none opacity-50 text-neutral-400'
+                    : 'text-neutral-400 hover:text-neutral-700'
+                    }`}
                   {...backButtonProps}
                 >
                   {backButtonText}
@@ -241,7 +278,7 @@ interface StepProps {
 }
 
 export function Step({ children }: StepProps) {
-  return <div className="px-8">{children}</div>;
+  return <div className="px-8 ">{children}</div>;
 }
 
 interface StepIndicatorProps {
@@ -311,7 +348,7 @@ function StepConnector({ isComplete }: StepConnectorProps) {
   );
 }
 
-interface CheckIconProps extends React.SVGProps<SVGSVGElement> {}
+interface CheckIconProps extends React.SVGProps<SVGSVGElement> { }
 
 function CheckIcon(props: CheckIconProps) {
   return (
@@ -330,5 +367,197 @@ function CheckIcon(props: CheckIconProps) {
         d="M5 13l4 4L19 7"
       />
     </svg>
+  );
+}
+
+export function FormStepper({
+  children,
+  initialStep = 1,
+  onStepChange = () => { },
+  onFinalStepCompleted = () => { },
+  stepCircleContainerClassName = '',
+  stepContainerClassName = '',
+  contentClassName = '',
+  footerClassName = '',
+  backButtonProps = {},
+  nextButtonProps = {},
+  backButtonText = 'Back',
+  nextButtonText = 'Continue',
+  disableStepIndicators = false,
+  renderStepIndicator,
+  validateStep,
+  onBeforeStepChange,
+  ...rest
+}: StepperProps) {
+  const [currentStep, setCurrentStep] = useState<number>(initialStep);
+  const [direction, setDirection] = useState<number>(0);
+  const stepsArray = Children.toArray(children);
+  const totalSteps = stepsArray.length;
+  const isCompleted = currentStep > totalSteps;
+  const isLastStep = currentStep === totalSteps;
+
+  const updateStep = (newStep: number) => {
+    setCurrentStep(newStep);
+    if (newStep > totalSteps) {
+      onFinalStepCompleted({});
+    } else {
+      onStepChange(newStep);
+    }
+  };
+
+  const handleBack = () => {
+    if (currentStep > 1) {
+      setDirection(-1);
+      updateStep(currentStep - 1);
+    }
+  };
+
+  const handleNext = async () => {
+    if (validateStep) {
+      const isValid = await validateStep(currentStep);
+      if (!isValid) return;
+    }
+
+    if (onBeforeStepChange) {
+      const canProceed = await onBeforeStepChange(currentStep, currentStep + 1);
+      if (!canProceed) return;
+    }
+
+    if (!isLastStep) {
+      setDirection(1);
+      updateStep(currentStep + 1);
+    }
+  };
+
+  const handleComplete = async () => {
+    if (validateStep) {
+      const isValid = await validateStep(currentStep);
+      if (!isValid) return;
+    }
+
+    setDirection(1);
+    updateStep(totalSteps + 1);
+  };
+
+  const handleStepClick = async (clicked: number) => {
+    if (clicked === currentStep) return;
+
+    if (clicked > currentStep) {
+      for (let step = currentStep; step < clicked; step++) {
+        if (validateStep) {
+          const isValid = await validateStep(step);
+          if (!isValid) return;
+        }
+      }
+    }
+
+    if (onBeforeStepChange) {
+      const canProceed = await onBeforeStepChange(currentStep, clicked);
+      if (!canProceed) return;
+    }
+
+    setDirection(clicked > currentStep ? 1 : -1);
+    updateStep(clicked);
+  };
+
+  return (
+    <div
+      className="flex min-h-full flex-1 flex-col items-center justify-center p-4 sm:aspect-[4/3] md:aspect-[2/1]"
+      {...rest}
+    >
+      <div
+        className={`mx-auto w-full max-w-md rounded-4xl shadow-xl ${stepCircleContainerClassName}`}
+        style={{ border: '1px solid #222' }}
+      >
+        <div className={`${stepContainerClassName} flex w-full items-center p-8`}>
+          {stepsArray.map((_, index) => {
+            const stepNumber = index + 1;
+            const isNotLastStep = index < totalSteps - 1;
+            return (
+              <React.Fragment key={stepNumber}>
+                {renderStepIndicator ? (
+                  renderStepIndicator({
+                    step: stepNumber,
+                    currentStep,
+                    onStepClick: handleStepClick
+                  })
+                ) : (
+                  <StepIndicator
+                    step={stepNumber}
+                    disableStepIndicators={disableStepIndicators}
+                    currentStep={currentStep}
+                    onClickStep={handleStepClick}
+                  />
+                )}
+                {isNotLastStep && <StepConnector isComplete={currentStep > stepNumber} />}
+              </React.Fragment>
+            );
+          })}
+        </div>
+
+        <StepContentWrapper
+          isCompleted={isCompleted}
+          currentStep={currentStep}
+          direction={direction}
+          className={`space-y-2 px-8 ${contentClassName}`}
+        >
+          {stepsArray[currentStep - 1]}
+        </StepContentWrapper>
+
+        {!isCompleted && (
+          <div className={`px-8 pb-8 ${footerClassName}`}>
+            <div className={`mt-10 flex ${currentStep !== 1 ? 'justify-between' : 'justify-end'}`}>
+              {currentStep !== 1 && (
+                <button
+                  onClick={handleBack}
+                  className={`duration-350 rounded px-2 py-1 transition ${currentStep === 1
+                    ? 'pointer-events-none opacity-50 text-neutral-400'
+                    : 'text-neutral-400 hover:text-neutral-700'
+                    }`}
+                  {...backButtonProps}
+                >
+                  {backButtonText}
+                </button>
+              )}
+              <button
+                onClick={isLastStep ? handleComplete : handleNext}
+                className="duration-350 flex items-center justify-center rounded-full bg-green-500 py-1.5 px-3.5 font-medium tracking-tight text-white transition hover:bg-green-600 active:bg-green-700"
+                {...nextButtonProps}
+              >
+                {isLastStep ? 'Complete' : nextButtonText}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label: string;
+  name: string;
+  error?: string;
+  validation?: object;
+}
+
+export function FormInput({ label, name, error, validation, ...props }: FormInputProps) {
+  const { register } = useFormContext();
+
+  return (
+    <div className="mb-4">
+      <label htmlFor={name} className="block text-sm font-medium text-neutral-300 mb-1">
+        {label}
+      </label>
+      <input
+        id={name}
+        {...register(name, validation)}
+        {...props}
+        className={`w-full px-3 py-2 bg-neutral-800 border ${error ? 'border-red-500' : 'border-neutral-700'
+          } rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500`}
+      />
+      {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+    </div>
   );
 }
