@@ -86,7 +86,6 @@ export default function Onboarding() {
         <FormStepper
           validateStep={validateCurrentStep}
           onFinalStepCompleted={handleComplete}
-          stepCircleContainerClassName="bg-neutral-900/50 backdrop-blur-sm"
         >
           <div className="space-y-5">
             <div className="space-y-2">
