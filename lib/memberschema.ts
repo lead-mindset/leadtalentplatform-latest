@@ -51,15 +51,12 @@ export const fullMemberSchema = z.object({
     .includes('linkedin.com', {
       message: 'Debe ser un perfil de LinkedIn',
     }),
-  lead_chapter: z.preprocess(
-  (val) => (val === '' ? undefined : val),
-  z.enum(
-    LEAD_CHAPTER_OPTIONS.map(o => o.value) as [string, ...string[]],
-    {
-      required_error: 'Selecciona tu capítulo',
-      invalid_type_error: 'Selecciona tu capítulo',
-    }
-  )
+  lead_chapter: z
+  .enum(
+    LEAD_CHAPTER_OPTIONS.map(o => o.value) as [string, ...string[]]
+  , {
+    required_error: 'Selecciona tu capítulo',
+  },
 ),
   resume_pdf: z
     .instanceof(File, {
