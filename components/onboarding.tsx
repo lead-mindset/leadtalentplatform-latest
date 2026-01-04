@@ -32,7 +32,7 @@ export default function Onboarding() {
       career: '',
       graduationYear: undefined,
       skills: [],
-      lead_chapter: '',
+      lead_chapter: undefined,
       linkedin_url: '',
       resume_pdf: undefined,
       consentRecruiterVisibility: false,
@@ -82,7 +82,6 @@ export default function Onboarding() {
   }
 
   return (
-    <div className="min-h-screen w-full">
       <FormProvider {...methods}>
         <FormStepper
           validateStep={validateCurrentStep}
@@ -369,6 +368,5 @@ export default function Onboarding() {
           </div>
         </FormStepper>
       </FormProvider>
-    </div>
   )
 }
