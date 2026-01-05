@@ -4,7 +4,7 @@ import { useForm, FormProvider, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useState } from 'react'
-import { Check, Upload, X, FileText, Loader2 } from 'lucide-react'
+import { Upload, X, FileText, Loader2 } from 'lucide-react'
 import { Checkbox } from "@/components/ui/checkbox"
 import { SKILL_OPTIONS, LEAD_CHAPTER_OPTIONS } from '@/lib/options'
 import { FormStepper, FormInput } from './ui/stepper'
@@ -54,8 +54,6 @@ export default function Onboarding() {
     formState: { errors },
   } = methods
 
-  const selectedSkills = watch('skills')
-
   const stepFields: Record<number, (keyof OnboardingValues)[]> = {
     1: ['full_name', 'phone', 'lead_chapter'],
     2: ['career', 'graduationYear', 'skills'],
@@ -66,10 +64,37 @@ export default function Onboarding() {
     return trigger(stepFields[step])
   }
 
-  const handleComplete = () => {
-    const data = getValues()
-    console.log('FINAL PAYLOAD:', data)
+const handleComplete = async () => {
+  const data = getValues()
+
+  try {
+    const formData = new FormData()
+
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        if (key === 'resume_pdf' && value instanceof File) {
+          formData.append('resume', value)
+        } else {
+          formData.append(key, JSON.stringify(value))
+        }
+      }
+    })
+
+    const res = await fetch('/api/onboarding', {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (!res.ok) {
+      throw new Error('Failed to submit onboarding')
+    }
+
+    console.log('Onboarding completed')
+  } catch (err) {
+    console.error(err)
   }
+}
+
 
   const handleFileChange =
     (onChange: any) => (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -95,7 +120,6 @@ export default function Onboarding() {
         validateStep={validateCurrentStep}
         onFinalStepCompleted={handleComplete}
       >
-        {/* STEP 1 */}
         <div className="space-y-5">
           <div className="space-y-2">
             <h2 className="text-3xl font-bold text-foreground">
@@ -162,7 +186,6 @@ export default function Onboarding() {
           </div>
         </div>
 
-        {/* STEP 2 */}
         <div className="space-y-5">
           <div className="space-y-2">
             <h2 className="text-3xl font-bold text-foreground">
@@ -245,7 +268,6 @@ export default function Onboarding() {
           </div>
         </div>
 
-        {/* STEP 3 */}
         <div className="space-y-5">
           <div className="space-y-2">
             <h2 className="text-3xl font-bold text-foreground">
