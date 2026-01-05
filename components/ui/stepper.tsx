@@ -4,6 +4,7 @@ import { useForm, FormProvider, useFormContext } from 'react-hook-form';
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
+import { X } from 'lucide-react';
 
 interface StepperProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
@@ -594,8 +595,9 @@ export function FormInput({
         aria-invalid={!!error}
       />
 
-      {error && (
-        <p className="text-sm text-destructive">
+       {error && (
+        <p className="flex items-center gap-1 text-sm text-destructive">
+          <X className="h-3 w-3" />
           {error}
         </p>
       )}
