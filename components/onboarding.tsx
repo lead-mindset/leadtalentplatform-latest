@@ -324,10 +324,10 @@ export default function Onboarding() {
                         <X className="h-4 w-4" />
                       </Button></div>
                   )}
-
                   {errors.resume_pdf && (
-                    <p className="text-sm text-destructive flex items-center gap-1">
-                      <X className="w-3 h-3" />
+                    <p className="flex items-center gap-1 text-sm text-destructive">
+                      <X className="h-3 w-3" />
+                      {errors.resume_pdf.message}
                     </p>
                   )}
                 </div>
