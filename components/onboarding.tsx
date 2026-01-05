@@ -9,6 +9,12 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { SKILL_OPTIONS, LEAD_CHAPTER_OPTIONS } from '@/lib/options'
 import { FormStepper, FormInput } from './ui/stepper'
 import { fullMemberSchema } from '@/lib/memberschema'
+import { Button } from './ui/button'
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@/components/ui/toggle-group"
+
 
 import {
   Select,
@@ -188,50 +194,43 @@ export default function Onboarding() {
               render={({ field }) => (
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <label className="text-sm font-medium">
+                    <label className="text-sm font-medium text-foreground">
                       Skills & Expertise
                     </label>
                     <span className="text-xs text-muted-foreground">
-                      {selectedSkills.length} selected
+                      {field.value.length} selected
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    {SKILL_OPTIONS.map((skill) => {
-                      const isSelected =
-                        field.value.includes(skill.value)
+                  <ToggleGroup
+                    type="multiple"
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    variant="outline"
+                    size="sm"
+                    spacing={2}
+                    className="grid grid-cols-2 w-full"
+                  >
+                    {SKILL_OPTIONS.map((skill) => (
+                      <ToggleGroupItem
+                        key={skill.value}
+                        value={skill.value}
+                        aria-label={skill.value}
+                        className=" 
+        justify-start gap-2
+        data-[state=on]:bg-primary
+        data-[state=on]:text-primary-foreground
+        data-[state=on]:border-primary
+      "
+                      >
+                        <span className="text-base">{skill.icon}</span>
+                        <span className="flex-1 text-left">
+                          {skill.value}
+                        </span>
+                      </ToggleGroupItem>
+                    ))}
+                  </ToggleGroup>
 
-                      return (
-                        <button
-                          key={skill.value}
-                          type="button"
-                          onClick={() =>
-                            field.onChange(
-                              isSelected
-                                ? field.value.filter(
-                                  (v) => v !== skill.value
-                                )
-                                : [...field.value, skill.value]
-                            )
-                          }
-                          className={`rounded-full border px-3 py-1 text-sm font-medium transition-all ${isSelected
-                            ? 'bg-primary border-primary text-primary-foreground shadow'
-                            : 'border-border text-muted-foreground hover:bg-muted'
-                            }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span>{skill.icon}</span>
-                            <span className="flex-1 text-left">
-                              {skill.value}
-                            </span>
-                            {isSelected && (
-                              <Check className="h-4 w-4 animate-in zoom-in" />
-                            )}
-                          </div>
-                        </button>
-                      )
-                    })}
-                  </div>
 
                   {errors.skills && (
                     <p className="flex items-center gap-1 text-sm text-destructive">
@@ -242,6 +241,7 @@ export default function Onboarding() {
                 </div>
               )}
             />
+
           </div>
         </div>
 
@@ -314,19 +314,19 @@ export default function Onboarding() {
                           Ready to upload
                         </p>
                       </div>
-                      <button
+                      <Button
                         type="button"
-                        onClick={() =>
-                          removeFile(field.onChange)
-                        }
-                        className="rounded p-1 hover:bg-muted"
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Remove uploaded file"
+                        onClick={() => removeFile(field.onChange)}
                       >
-                        <X className="h-4 w-4 text-muted-foreground" />
-                      </button></div>
+                        <X className="h-4 w-4" />
+                      </Button></div>
                   )}
 
                   {errors.resume_pdf && (
-                    <p className="text-sm text-red-400 flex items-center gap-1">
+                    <p className="text-sm text-destructive flex items-center gap-1">
                       <X className="w-3 h-3" />
                     </p>
                   )}
