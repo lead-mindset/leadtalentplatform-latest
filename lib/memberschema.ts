@@ -58,14 +58,15 @@ export const fullMemberSchema = z.object({
     required_error: 'Selecciona tu capítulo',
   },
 ),
-  resume_pdf: z
-    .instanceof(File, {
-      message: 'Debes subir un archivo PDF',
-    })
-    .refine(
-      (file) => file.type === 'application/pdf',
-      'Solo se permite PDF'
-    ),
+resume_pdf: z
+  .custom<File | undefined>((file) => file instanceof File, {
+    message: 'Debes subir un archivo PDF',
+  })
+  .refine(
+    (file) => file && file.type === 'application/pdf',
+    'Solo se permite PDF'
+  ),
+
   graduationYear: z
   .number({
     required_error: 'El año de graduación es requerido',
