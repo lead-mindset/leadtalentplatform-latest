@@ -1,9 +1,7 @@
 'use client'
 
-import { createClient } from '@/lib/supabase/client'
-
+import { supabase } from "@/lib/supabase/client"
 export default function GoogleButton() {
-  const supabase = createClient()
 
   const signInWithGoogle = async () => {
     await supabase.auth.signInWithOAuth({

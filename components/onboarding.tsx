@@ -10,6 +10,8 @@ import { SKILL_OPTIONS, LEAD_CHAPTER_OPTIONS } from '@/lib/options'
 import { FormStepper, FormInput } from './ui/stepper'
 import { fullMemberSchema } from '@/lib/memberschema'
 import { Button } from './ui/button'
+import { useEffect } from 'react'
+import { supabase } from '@/lib/supabase/client'
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -24,11 +26,34 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
+
+export async function getLeadChapterOptions() {
+  
+  const { data, error } = await supabase
+    .from("Chapter")
+    .select("id, name")
+    .order("name");
+
+  if (error) {
+    console.error("Error fetching chapters:", error);
+    return [];
+  }
+
+  return data.map((chapter) => ({
+    label: chapter.name,
+    value: chapter.id,
+  }));
+}
+
 export type OnboardingValues = z.infer<typeof fullMemberSchema>
 
 export default function Onboarding() {
   const [fileName, setFileName] = useState('')
   const [isUploading, setIsUploading] = useState(false)
+const [chapterOptions, setChapterOptions] = useState([]);
+useEffect(() => {
+  getLeadChapterOptions().then(setChapterOptions);
+}, []);
 
   const methods = useForm<OnboardingValues>({
     resolver: zodResolver(fullMemberSchema),
@@ -64,36 +89,39 @@ export default function Onboarding() {
     return trigger(stepFields[step])
   }
 
-const handleComplete = async () => {
-  const data = getValues()
+  const handleComplete = async () => {
+    const data = getValues()
 
-  try {
-    const formData = new FormData()
+    try {
+      const formData = new FormData()
 
-    Object.entries(data).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        if (key === 'resume_pdf' && value instanceof File) {
-          formData.append('resume', value)
-        } else {
-          formData.append(key, JSON.stringify(value))
+      Object.entries(data).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          if (key === 'resume_pdf' && value instanceof File) {
+            formData.append('resume', value)
+          } else {
+            formData.append(key, JSON.stringify(value))
+          }
         }
+      })
+
+      const res = await fetch('/api/onboarding', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!res.ok) {
+        const error = await res.json()
+        console.error(error)
+        throw new Error(error.error ?? 'Failed to submit onboarding')
       }
-    })
 
-    const res = await fetch('/api/onboarding', {
-      method: 'POST',
-      body: formData,
-    })
 
-    if (!res.ok) {
-      throw new Error('Failed to submit onboarding')
+      console.log('Onboarding completed')
+    } catch (err) {
+      console.error(err)
     }
-
-    console.log('Onboarding completed')
-  } catch (err) {
-    console.error(err)
   }
-}
 
 
   const handleFileChange =
