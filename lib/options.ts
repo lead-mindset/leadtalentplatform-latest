@@ -25,17 +25,18 @@ export const LEAD_ROLE = [
 ];
 
 export const LEAD_CHAPTER_OPTIONS = [
-  { label: "LEAD PUCP", value: "LEAD PUCP" },
-  { label: "LEAD UNMSM", value: "LEAD UNMSM" },
-  { label: "LEAD UTEC", value: "LEAD UTEC" },
-  { label: "LEAD PACÍFICO", value: "LEAD PACÍFICO" },
-  { label: "LEAD VILLAREAL", value: "LEAD VILLAREAL" },
-  { label: "LEAD UNI", value: "LEAD UNI" },
-  { label: "LEAD UPC", value: "LEAD UPC" },
-  { label: "LEAD UPN", value: "LEAD UPN" },
-  { label: "LEAD TECSUP", value: "LEAD TECSUP" },
-  { label: "LEAD UTP", value: "LEAD UTP" },
+  { label: "LEAD PUCP", value: "leadpucp" },
+  { label: "LEAD UNMSM", value: "leadunmsm" },
+  { label: "LEAD UTEC", value: "leadutec" },
+  { label: "LEAD PACÍFICO", value: "leadpacifico" },
+  { label: "LEAD VILLAREAL", value: "leadvillareal" },
+  { label: "LEAD UNI", value: "leaduni" },
+  { label: "LEAD UPC", value: "leadupc" },
+  { label: "LEAD UPN", value: "leadupn" },
+  { label: "LEAD TECSUP", value: "leadtecsup" },
+  { label: "LEAD UTP", value: "leadutp" },
 ];
+
 
 export const AVAILABILITY_OPTIONS = [
   { label: "No disponible", value: "not_available" },
