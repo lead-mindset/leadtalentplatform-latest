@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/server'
+
 
 interface ProfileFormData {
     full_name: string
@@ -14,6 +15,7 @@ interface ProfileFormData {
 
 export async function POST(req: NextRequest) {
     try {
+        const supabase = await createClient()
         const { data: { user } } = await supabase.auth.getUser()
 
         if (!user?.id || !user?.email) {
