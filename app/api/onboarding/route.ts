@@ -1,16 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-
-interface ProfileFormData {
-    full_name: string;
-    phone: string;
-    lead_chapter: string;
-    career: string;
-    graduationYear: number;
-    skills: string[];
-    linkedin_url?: string;
-    consentRecruiterVisibility: boolean;
-}
+import { fullMemberSchema } from '@/lib/memberschema';
 
 export async function POST(req: NextRequest) {
     try {
@@ -18,25 +8,34 @@ export async function POST(req: NextRequest) {
         const { data: { user } } = await supabase.auth.getUser();
 
         if (!user?.id || !user?.email) {
-            console.error('NO AUTH USER IN API', user);
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const formData = await req.formData();
-        const data: ProfileFormData = {
-            full_name: JSON.parse(formData.get('full_name') as string),
-            phone: JSON.parse(formData.get('phone') as string),
-            lead_chapter: JSON.parse(formData.get('lead_chapter') as string),
-            career: JSON.parse(formData.get('career') as string),
-            graduationYear: JSON.parse(formData.get('graduationYear') as string),
-            skills: JSON.parse(formData.get('skills') as string),
-            linkedin_url: JSON.parse(formData.get('linkedin_url') as string),
-            consentRecruiterVisibility: JSON.parse(
-                formData.get('consentRecruiterVisibility') as string
-            ),
+        const resume = formData.get('resume') as File | null;
+
+        const profileData = {
+            full_name: formData.get('full_name')?.toString() || '',
+            phone: formData.get('phone')?.toString() || '',
+            career: formData.get('career')?.toString() || '',
+            lead_chapter: formData.get('lead_chapter')?.toString(), // undefined if empty
+            graduationYear: Number(formData.get('graduationYear')) || undefined,
+            skills: JSON.parse(formData.get('skills')?.toString() || '[]'),
+            linkedin_url: formData.get('linkedin_url')?.toString() || '',
+            consentRecruiterVisibility: formData.get('consentRecruiterVisibility') === 'true',
         };
 
-        const resume = formData.get('resume') as File | null;
+        const parsed = fullMemberSchema.safeParse(profileData);
+
+        if (!parsed.success) {
+            return NextResponse.json({
+                error: 'Validation failed',
+                details: parsed.error
+            }, { status: 400 });
+        }
+
+        const data = parsed.data;
+
         const now = new Date().toISOString();
 
         const { data: userResult, error: userError } = await supabase
