@@ -8,7 +8,7 @@ import { Upload, X, FileText, Loader2, Save } from 'lucide-react'
 import { Checkbox } from "@/components/ui/checkbox"
 import { SKILL_OPTIONS } from '@/lib/options'
 import { FormInput } from '@/components/ui/stepper'
-import { fullMemberSchema2 } from '@/lib/memberschema'
+import { profileUpdateSchema } from '@/lib/memberschema'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -23,9 +23,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { resume } from 'react-dom/server'
 
-export type OnboardingValues = z.infer<typeof fullMemberSchema2>
+export type OnboardingValues = z.infer<typeof profileUpdateSchema>
+import { ProfileData } from '@/lib/memberschema'
 
 async function getLeadChapterOptions() {
   const { data, error } = await supabase
@@ -45,14 +45,15 @@ async function getLeadChapterOptions() {
 }
 
 interface ProfileUpdateFormProps {
-  initialData?: any
+  initialData: ProfileData
 }
+
 
 export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProps) {
   const [fileName, setFileName] = useState('')
   const [isUploading, setIsUploading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [chapterOptions, setChapterOptions] = useState([])
+  const [chapterOptions, setChapterOptions] = useState<{ label: string; value: string }[]>([]);
   const [resumeUrl, setResumeUrl] = useState<string | null>(null)
   console.log(initialData)
   const router = useRouter()
@@ -88,18 +89,16 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
     fetchResume()
   }, [initialData?.id])
 
-
-
   const methods = useForm<OnboardingValues>({
-    resolver: zodResolver(fullMemberSchema2),
+    resolver: zodResolver(profileUpdateSchema),
     mode: 'onChange',
     defaultValues: {
       full_name: initialData?.full_name || '',
       phone: initialData?.phone || '',
       career: initialData?.career || '',
-      graduationYear: initialData?.graduationYear || undefined,
+      graduationYear: initialData?.graduationYear || 0,
       skills: initialData?.skills || [],
-      lead_chapter: initialData?.lead_chapter || undefined,
+      lead_chapter: initialData?.lead_chapter || '',
       linkedin_url: initialData?.linkedin_url || '',
       resume_pdf: undefined,
       consentRecruiterVisibility: initialData?.consentRecruiterVisibility || false,
@@ -118,24 +117,22 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
     try {
       const formData = new FormData();
 
-      // Append all profile fields
 formData.append("full_name", data.full_name);
 formData.append("phone", data.phone);
 formData.append("lead_chapter", data.lead_chapter || "");
 formData.append("career", data.career);
-formData.append("graduationYear", String(data.graduationYear || ""));
-formData.append("skills", JSON.stringify(data.skills)); // arrays still need JSON.stringify
+formData.append("graduationYear", String(data.graduationYear || 0));
+formData.append("skills", JSON.stringify(data.skills));
 formData.append("linkedin_url", data.linkedin_url || "");
 formData.append("consentRecruiterVisibility", String(data.consentRecruiterVisibility));
 
-      // Append the file if selected
       if (data.resume_pdf) {
         formData.append("resume", data.resume_pdf);
       }
 
       const res = await fetch("/api/profile", {
         method: "PATCH",
-        body: formData, // no Content-Type header! browser sets it automatically
+        body: formData, 
       });
 
       if (!res.ok) {
@@ -152,7 +149,6 @@ formData.append("consentRecruiterVisibility", String(data.consentRecruiterVisibi
       setIsSaving(false);
     }
   };
-
 
 
   const handleFileChange =
