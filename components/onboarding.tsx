@@ -56,7 +56,7 @@ export type OnboardingValues = z.infer<typeof fullMemberSchemaFrontend>
 export default function Onboarding() {
   const [fileName, setFileName] = useState('')
   const [isUploading, setIsUploading] = useState(false)
-  const [chapterOptions, setChapterOptions] = useState([]);
+  const [chapterOptions, setChapterOptions] = useState<{ label: string; value: string }[]>([]);
   useEffect(() => {
     getLeadChapterOptions().then(setChapterOptions);
   }, []);
