@@ -104,14 +104,9 @@ export async function POST(req: NextRequest) {
             if (uploadError) {
                 return NextResponse.json({ error: uploadError.message }, { status: 400 });
             }
-
-            const { data: publicUrlData, error: urlError } = supabase.storage
+            const { data: publicUrlData } = supabase.storage
                 .from("resumes")
                 .getPublicUrl(filePath);
-
-            if (urlError) {
-                return NextResponse.json({ error: urlError.message }, { status: 400 });
-            }
 
             const fileUrl = publicUrlData.publicUrl;
 
