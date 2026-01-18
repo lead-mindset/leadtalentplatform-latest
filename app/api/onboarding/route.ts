@@ -42,7 +42,6 @@ export async function POST(req: NextRequest) {
                 name: data.full_name,
                 phone: data.phone,
                 chapterId: data.lead_chapter,
-                isFilled: true,
                 updatedAt: now,
             })
             .eq('id', user.id);
@@ -74,6 +73,8 @@ export async function POST(req: NextRequest) {
                 consentRecruiterVisibility: data.consentRecruiterVisibility,
                 consentDate: data.consentRecruiterVisibility ? now : null,
                 updatedAt: now,
+                isFilled: true,
+
             });
 
         console.log('StudentProfile upsert result:', profileResult, profileError);
