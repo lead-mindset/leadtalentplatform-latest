@@ -70,7 +70,7 @@ export default function Onboarding() {
       career: '',
       graduationYear: 0,
       skills: [],
-      lead_chapter: undefined,
+      lead_chapter: '',
       linkedin_url: '',
       resume_pdf: undefined,
       consentRecruiterVisibility: false,
