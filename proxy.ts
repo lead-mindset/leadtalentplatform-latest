@@ -1,4 +1,3 @@
-// lib/supabase/proxy.ts
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
@@ -38,21 +37,28 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse
   }
 
+  // Allow access to onboarding page
   if (request.nextUrl.pathname === '/onboarding') {
     return supabaseResponse
   }
 
   const { data: profile, error } = await supabase
-    .from('studentprofile')
-    .select('is_filled, role')
-    .eq('user_id', user.id)
+    .from('StudentProfile')
+    .select('isFilled')
+    .eq('userId', user.id)
+    .single()
+
+  const { data: userData } = await supabase
+    .from('User')
+    .select('role')
+    .eq('id', user.id)
     .single()
 
   const needsOnboarding =
     !profile ||
     error ||
-    (!profile.is_filled && 
-     (profile.role === 'member' || profile.role === 'editor'))
+    (!profile.isFilled && 
+     (userData?.role === 'member' || userData?.role === 'editor'))
 
   if (needsOnboarding) {
     const url = request.nextUrl.clone()
