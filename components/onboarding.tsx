@@ -28,7 +28,7 @@ import {
 
 
 export async function getLeadChapterOptions() {
-  
+
   const { data, error } = await supabase
     .from("Chapter")
     .select("id, name")
@@ -50,10 +50,10 @@ export type OnboardingValues = z.infer<typeof fullMemberSchema>
 export default function Onboarding() {
   const [fileName, setFileName] = useState('')
   const [isUploading, setIsUploading] = useState(false)
-const [chapterOptions, setChapterOptions] = useState([]);
-useEffect(() => {
-  getLeadChapterOptions().then(setChapterOptions);
-}, []);
+  const [chapterOptions, setChapterOptions] = useState([]);
+  useEffect(() => {
+    getLeadChapterOptions().then(setChapterOptions);
+  }, []);
 
   const methods = useForm<OnboardingValues>({
     resolver: zodResolver(fullMemberSchema),
@@ -99,8 +99,10 @@ useEffect(() => {
         if (value !== undefined && value !== null) {
           if (key === 'resume_pdf' && value instanceof File) {
             formData.append('resume', value)
-          } else {
+          } else if (Array.isArray(value) || typeof value === 'object') {
             formData.append(key, JSON.stringify(value))
+          } else {
+            formData.append(key, String(value))
           }
         }
       })
