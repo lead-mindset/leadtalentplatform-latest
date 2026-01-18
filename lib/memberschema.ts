@@ -16,14 +16,11 @@ const baseProfileSchema = z.object({
       const num = Number(val);
       return isNaN(num) ? undefined : num;
     },
-    z.number({
-      required_error: 'Por favor ingresa tu año de graduación',
-      invalid_type_error: 'Por favor ingresa tu año de graduación'
-    })
+    z.number({ message: 'Por favor ingresa tu año de graduación' })
       .int('Debe ser un año válido')
       .min(2000, 'Año inválido')
       .max(new Date().getFullYear() + 6, 'Año inválido')
-  ) as unknown as z.ZodEffects<z.ZodNumber, number, unknown>,
+  ),
 
   skills: z.array(z.string()).min(1, "Selecciona al menos una habilidad"),
 
@@ -42,17 +39,11 @@ const baseProfileSchema = z.object({
         (val) => val && LEAD_CHAPTER_OPTIONS.some((o) => o.value === val),
         { message: 'Selecciona un capítulo válido' }
       )
-  ) as unknown as z.ZodEffects<z.ZodType<string>, string, unknown>,
+  ),
 
-  consentRecruiterVisibility: z.boolean({
-    required_error: "Debes indicar tu consentimiento"
-  }),
+  consentRecruiterVisibility: z.boolean({ message: "Debes indicar tu consentimiento" }),
 });
 
-
-
-
-// Frontend schema: adds resume_pdf for RHF validation
 export const fullMemberSchemaFrontend = baseProfileSchema.extend({
   resume_pdf: z
     .custom<File>((file) => file instanceof File, { message: "Debes subir un archivo PDF" })
@@ -60,7 +51,6 @@ export const fullMemberSchemaFrontend = baseProfileSchema.extend({
     .refine(file => file.size <= 10 * 1024 * 1024, "PDF debe ser menor a 10MB"),
 });
 
-// Backend schema: excludes resume_pdf
 export const fullMemberSchemaBackend = baseProfileSchema;
 
 
@@ -71,7 +61,7 @@ export const fullMemberSchema2 = z.object({
   career: z.string().min(1, 'La carrera es requerida'),
 
   graduationYear: z
-    .number({ required_error: 'El año de graduación es requerido' })
+    .number({ message: 'El año de graduación es requerido' })
     .int('Debe ser un año válido')
     .min(2000, 'Año inválido')
     .max(new Date().getFullYear() + 6, 'Año inválido'),
@@ -89,7 +79,7 @@ export const fullMemberSchema2 = z.object({
 
   resume_pdf: z
     .instanceof(File)
-    .optional(), // ✅ optional File, will allow undefined
+    .optional(),
 
   consentRecruiterVisibility: z.boolean(),
 });
