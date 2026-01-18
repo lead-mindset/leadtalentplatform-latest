@@ -8,7 +8,7 @@ import { Upload, X, FileText, Loader2 } from 'lucide-react'
 import { Checkbox } from "@/components/ui/checkbox"
 import { SKILL_OPTIONS, LEAD_CHAPTER_OPTIONS } from '@/lib/options'
 import { FormStepper, FormInput } from './ui/stepper'
-import { fullMemberSchema } from '@/lib/memberschema'
+import { fullMemberSchemaFrontend } from '@/lib/memberschema'
 import { Button } from './ui/button'
 import { useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
@@ -26,6 +26,14 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
+
+
+export function validateResume(file: File | null) {
+  if (!file) return "Debes subir un archivo PDF";
+  if (file.type !== "application/pdf") return "Solo se permite PDF";
+  if (file.size > 10 * 1024 * 1024) return "El PDF debe ser menor a 10MB";
+  return null;
+}
 
 export async function getLeadChapterOptions() {
 
@@ -56,7 +64,7 @@ export default function Onboarding() {
   }, []);
 
   const methods = useForm<OnboardingValues>({
-    resolver: zodResolver(fullMemberSchema),
+    resolver: zodResolver(fullMemberSchemaFrontend),
     mode: 'onChange',
     defaultValues: {
       full_name: '',
@@ -90,6 +98,10 @@ export default function Onboarding() {
   }
 
   const handleComplete = async () => {
+    
+    const isValid = await trigger();
+    if (!isValid) return;
+
     const data = getValues()
 
     try {
@@ -319,6 +331,7 @@ export default function Onboarding() {
             <Controller
               control={control}
               name="resume_pdf"
+
               render={({ field }) => (
                 <div className="space-y-2">
                   <label className="text-sm font-medium">
