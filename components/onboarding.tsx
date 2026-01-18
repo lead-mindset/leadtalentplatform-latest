@@ -26,8 +26,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-
-
 export function validateResume(file: File | null) {
   if (!file) return "Debes subir un archivo PDF";
   if (file.type !== "application/pdf") return "Solo se permite PDF";
@@ -53,7 +51,7 @@ export async function getLeadChapterOptions() {
   }));
 }
 
-export type OnboardingValues = z.infer<typeof fullMemberSchema>
+export type OnboardingValues = z.infer<typeof fullMemberSchemaFrontend>
 
 export default function Onboarding() {
   const [fileName, setFileName] = useState('')
@@ -70,7 +68,7 @@ export default function Onboarding() {
       full_name: '',
       phone: '',
       career: '',
-      graduationYear: undefined,
+      graduationYear: 0,
       skills: [],
       lead_chapter: undefined,
       linkedin_url: '',
@@ -98,7 +96,7 @@ export default function Onboarding() {
   }
 
   const handleComplete = async () => {
-    
+
     const isValid = await trigger();
     if (!isValid) return;
 
