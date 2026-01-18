@@ -112,32 +112,47 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
     formState: { errors, isDirty },
   } = methods
 
-    const onSubmit = async (data: OnboardingValues) => {
-    setIsSaving(true)
+  const onSubmit = async (data: OnboardingValues) => {
+    setIsSaving(true);
 
     try {
-      const res = await fetch('/api/profile', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
+      const formData = new FormData();
 
-      if (!res.ok) {
-        const error = await res.json()
-        throw new Error(error.error ?? 'Failed to update profile')
+      // Append all profile fields
+formData.append("full_name", data.full_name);
+formData.append("phone", data.phone);
+formData.append("lead_chapter", data.lead_chapter || "");
+formData.append("career", data.career);
+formData.append("graduationYear", String(data.graduationYear || ""));
+formData.append("skills", JSON.stringify(data.skills)); // arrays still need JSON.stringify
+formData.append("linkedin_url", data.linkedin_url || "");
+formData.append("consentRecruiterVisibility", String(data.consentRecruiterVisibility));
+
+      // Append the file if selected
+      if (data.resume_pdf) {
+        formData.append("resume", data.resume_pdf);
       }
 
-      alert('Profile updated successfully!')
-      router.refresh()
-    } catch (err) {
-      console.error(err)
-      alert('Failed to update profile. Please try again.')
+      const res = await fetch("/api/profile", {
+        method: "PATCH",
+        body: formData, // no Content-Type header! browser sets it automatically
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error ?? "Failed to update profile");
+      }
+
+      alert("Profile updated successfully!");
+      router.refresh();
+    } catch (err: any) {
+      console.error(err);
+      alert("Failed to update profile. Please try again.");
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
+
 
 
   const handleFileChange =
