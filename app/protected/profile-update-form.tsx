@@ -8,7 +8,7 @@ import { Upload, X, FileText, Loader2, Save } from 'lucide-react'
 import { Checkbox } from "@/components/ui/checkbox"
 import { SKILL_OPTIONS } from '@/lib/options'
 import { FormInput } from '@/components/ui/stepper'
-import { fullMemberSchema } from '@/lib/memberschema'
+import { fullMemberSchema2 } from '@/lib/memberschema'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -23,8 +23,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { resume } from 'react-dom/server'
 
-export type OnboardingValues = z.infer<typeof fullMemberSchema>
+export type OnboardingValues = z.infer<typeof fullMemberSchema2>
 
 async function getLeadChapterOptions() {
   const { data, error } = await supabase
@@ -52,19 +53,45 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
   const [isUploading, setIsUploading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [chapterOptions, setChapterOptions] = useState([])
-  const [resumeUrl, setResumeUrl] = useState<string | null>(
-    initialData?.resume_pdf || null
-  );
-
-
+  const [resumeUrl, setResumeUrl] = useState<string | null>(null)
+  console.log(initialData)
   const router = useRouter()
 
   useEffect(() => {
     getLeadChapterOptions().then(setChapterOptions);
+    console.log('yay')
   }, []);
 
+  useEffect(() => {
+    async function fetchResume() {
+      if (!initialData?.id) return
+
+      const { data, error } = await supabase
+        .from("Resume")
+        .select("*")
+        .eq("studentId", initialData.id)
+        .order("uploadedAt", { ascending: false })
+        .limit(1)
+        .single()
+
+      if (error) {
+        console.error("Error fetching resume:", error)
+        return
+      }
+
+      if (data) {
+        setResumeUrl(data.fileUrl)
+        setFileName(data.fileName || '')
+      }
+    }
+
+    fetchResume()
+  }, [initialData?.id])
+
+
+
   const methods = useForm<OnboardingValues>({
-    resolver: zodResolver(fullMemberSchema),
+    resolver: zodResolver(fullMemberSchema2),
     mode: 'onChange',
     defaultValues: {
       full_name: initialData?.full_name || '',
@@ -85,7 +112,7 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
     formState: { errors, isDirty },
   } = methods
 
-  const onSubmit = async (data: OnboardingValues) => {
+    const onSubmit = async (data: OnboardingValues) => {
     setIsSaving(true)
 
     try {
@@ -111,6 +138,7 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
       setIsSaving(false)
     }
   }
+
 
   const handleFileChange =
     (onChange: any) => (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -409,11 +437,10 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
           </div>
         </div>
 
-        {/* Submit Button */}
         <div className="flex justify-end gap-4 pt-4 border-t">
           <Button
             type="submit"
-            disabled={!isDirty || isSaving}
+            disabled={isSaving}
             className="min-w-32"
           >
             {isSaving ? (
