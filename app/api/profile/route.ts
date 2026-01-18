@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { fullMemberSchema } from "@/lib/memberschema";
+import { fullMemberSchema2 } from "@/lib/memberschema";
 
 export async function GET(req: NextRequest) {
   const supabase = await createClient();
@@ -50,7 +50,7 @@ export async function PATCH(req: NextRequest) {
 
   const body = await req.json();
 
-  const parsed = fullMemberSchema.safeParse(body);
+  const parsed = fullMemberSchema2.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.errors }, { status: 400 });
   }
