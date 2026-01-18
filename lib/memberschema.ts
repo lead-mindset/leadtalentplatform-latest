@@ -5,26 +5,52 @@ import {
 } from './options'
 
 
-
 const baseProfileSchema = z.object({
   full_name: z.string().min(1, "El nombre es requerido"),
   phone: z.string().min(5, "Teléfono inválido"),
   career: z.string().min(1, "La carrera es requerida"),
-  graduationYear: z.preprocess((val) => { const num = Number(val); return Number.isNaN(num) ? undefined : num; }, z.union([z.number().int('Debe ser un año válido').min(2000, 'Año inválido').max(new Date().getFullYear() + 6, 'Año inválido'), z.undefined()])).refine(val => val !== undefined, { message: 'Por favor ingresa tu año de graduación', }),
+
+  graduationYear: z.preprocess(
+    (val) => {
+      if (val === undefined || val === '' || val === null) return undefined;
+      const num = Number(val);
+      return isNaN(num) ? undefined : num;
+    },
+    z.number({
+      required_error: 'Por favor ingresa tu año de graduación',
+      invalid_type_error: 'Por favor ingresa tu año de graduación'
+    })
+      .int('Debe ser un año válido')
+      .min(2000, 'Año inválido')
+      .max(new Date().getFullYear() + 6, 'Año inválido')
+  ) as unknown as z.ZodEffects<z.ZodNumber, number, unknown>,
+
   skills: z.array(z.string()).min(1, "Selecciona al menos una habilidad"),
-  linkedin_url: z.string().url("URL inválida").refine(val => val.includes("linkedin.com"), { message: "Debe ser un perfil de LinkedIn" }),
+
+  linkedin_url: z.string().url("URL inválida").refine(
+    val => val.includes("linkedin.com"),
+    { message: "Debe ser un perfil de LinkedIn" }
+  ),
+
   lead_chapter: z.preprocess(
-    (val) => (val === undefined ? '' : val),
-    z
-      .string()
-      .min(1, 'Selecciona tu capítulo')
+    (val) => (val === undefined || val === '' ? null : val),
+    z.union([z.string(), z.null()])
+      .refine(val => val !== null, {
+        message: 'Selecciona tu capítulo'
+      })
       .refine(
-        (val) =>
-          LEAD_CHAPTER_OPTIONS.some((o) => o.value === val),
-        { message: 'Selecciona tu capítulo' }
+        (val) => val && LEAD_CHAPTER_OPTIONS.some((o) => o.value === val),
+        { message: 'Selecciona un capítulo válido' }
       )
-  ), consentRecruiterVisibility: z.boolean({ required_error: "Debes indicar tu consentimiento" }),
+  ) as unknown as z.ZodEffects<z.ZodType<string>, string, unknown>,
+
+  consentRecruiterVisibility: z.boolean({
+    required_error: "Debes indicar tu consentimiento"
+  }),
 });
+
+
+
 
 // Frontend schema: adds resume_pdf for RHF validation
 export const fullMemberSchemaFrontend = baseProfileSchema.extend({
