@@ -52,6 +52,11 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
   const [isUploading, setIsUploading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [chapterOptions, setChapterOptions] = useState([])
+  const [resumeUrl, setResumeUrl] = useState<string | null>(
+    initialData?.resume_pdf || null
+  );
+
+
   const router = useRouter()
 
   useEffect(() => {
@@ -82,7 +87,7 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
 
   const onSubmit = async (data: OnboardingValues) => {
     setIsSaving(true)
-    
+
     try {
       const res = await fetch('/api/profile', {
         method: 'PATCH',
@@ -97,7 +102,6 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
         throw new Error(error.error ?? 'Failed to update profile')
       }
 
-      // Show success message
       alert('Profile updated successfully!')
       router.refresh()
     } catch (err) {
@@ -129,7 +133,6 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
   return (
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-        {/* Personal Information */}
         <div className="space-y-5">
           <div className="space-y-2">
             <h2 className="text-3xl font-bold text-foreground">
@@ -196,7 +199,6 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
           </div>
         </div>
 
-        {/* Academic Journey */}
         <div className="space-y-5">
           <div className="space-y-2">
             <h2 className="text-3xl font-bold text-foreground">
@@ -272,7 +274,6 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
           </div>
         </div>
 
-        {/* Professional Profile */}
         <div className="space-y-5">
           <div className="space-y-2">
             <h2 className="text-3xl font-bold text-foreground">
@@ -296,11 +297,9 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
               name="resume_pdf"
               render={({ field }) => (
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">
-                    Resume (PDF) - Optional
-                  </label>
+                  <label className="text-sm font-medium">Resume (PDF) - Optional</label>
 
-                  {!fileName ? (
+                  {!fileName && !resumeUrl ? (
                     <label className="cursor-pointer">
                       <div className="rounded-lg border-2 border-dashed border-border p-6 text-center transition hover:bg-muted/50">
                         <input
@@ -318,35 +317,49 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
                           <p className="text-sm font-medium">
                             {isUploading ? 'Uploading...' : 'Click to upload new resume'}
                           </p>
-                          <p className="text-xs text-muted-foreground">
-                            PDF up to 10MB
-                          </p>
+                          <p className="text-xs text-muted-foreground">PDF up to 10MB</p>
                         </div>
                       </div>
                     </label>
                   ) : (
-                    <div className="flex items-center gap-3 rounded-lg border border-border bg-muted p-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                        <FileText className="h-5 w-5 text-primary" />
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-3 rounded-lg border border-border bg-muted p-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                          <FileText className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="flex-1 flex flex-col">
+                          <p className="text-sm font-medium text-foreground truncate">
+                            {fileName || resumeUrl?.split('/').pop()}
+                          </p>
+                          {resumeUrl && !fileName && (
+                            <a
+                              href={resumeUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-primary underline"
+                            >
+                              View current resume
+                            </a>
+                          )}
+                          {fileName && (
+                            <p className="text-xs text-muted-foreground">Ready to upload</p>
+                          )}
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            removeFile(field.onChange)
+                            setResumeUrl(null)
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
                       </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-foreground truncate">
-                          {fileName}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Ready to upload
-                        </p>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeFile(field.onChange)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
                     </div>
                   )}
+
                   {errors.resume_pdf && (
                     <p className="flex items-center gap-1 text-sm text-destructive">
                       <X className="h-3 w-3" />
@@ -356,6 +369,7 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
                 </div>
               )}
             />
+
 
             <Controller
               control={control}
