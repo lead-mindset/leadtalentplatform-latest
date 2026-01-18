@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { fullMemberSchema2 } from "@/lib/memberschema";
+import { profileUpdateSchema } from "@/lib/memberschema";
 import { createServiceClient } from "@/lib/supabase/server-service";
 
 export async function GET(req: NextRequest) {
@@ -31,8 +31,15 @@ export async function GET(req: NextRequest) {
   }
 
   const combinedData = {
-    ...userData,
-    ...profileData,
+    id: userData.id,
+    full_name: userData.name || '',
+    phone: userData.phone || '',
+    lead_chapter: userData.chapterId || '',
+    career: profileData.major || '',
+    graduationYear: profileData.graduationYear || 0,
+    skills: profileData.skills || [],
+    linkedin_url: profileData.linkedinUrl || '',
+    consentRecruiterVisibility: profileData.consentRecruiterVisibility || false,
   };
 
   return NextResponse.json(combinedData);
@@ -40,6 +47,9 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
+        console.log("profileUpdateSchema exists?", !!profileUpdateSchema);
+    console.log("profileUpdateSchema type:", typeof profileUpdateSchema);
+
     const authSupabase = await createClient();
     const {
       data: { user },
@@ -59,19 +69,26 @@ export async function PATCH(req: NextRequest) {
     const profileData = {
       full_name: formData.get("full_name")?.toString() || "",
       phone: formData.get("phone")?.toString() || "",
-      lead_chapter: formData.get("lead_chapter")?.toString() || undefined,
+      lead_chapter: formData.get("lead_chapter")?.toString() || "",
       career: formData.get("career")?.toString() || "",
       graduationYear: Number(formData.get("graduationYear") ?? 0),
       skills: JSON.parse(formData.get("skills")?.toString() || "[]"),
       linkedin_url: formData.get("linkedin_url")?.toString() || "",
       consentRecruiterVisibility: formData.get("consentRecruiterVisibility") === "true",
+      resume_pdf: resume || undefined,
     };
+    
     console.log("Parsed form data:", profileData);
 
-    const parsed = fullMemberSchema2.safeParse(profileData);
+    const parsed = profileUpdateSchema.safeParse(profileData);
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.errors }, { status: 400 });
+      console.error("Validation errors:", parsed.error);
+      return NextResponse.json({ 
+        error: "Validation failed",
+        details: parsed.error 
+      }, { status: 400 });
     }
+    
     const data = parsed.data;
     const now = new Date().toISOString();
 
@@ -85,7 +102,10 @@ export async function PATCH(req: NextRequest) {
       })
       .eq("id", user.id);
 
-    if (userUpdateError) throw userUpdateError;
+    if (userUpdateError) {
+      console.error("User update error:", userUpdateError);
+      throw userUpdateError;
+    }
 
     const { error: profileError } = await supabase
       .from("StudentProfile")
@@ -103,39 +123,42 @@ export async function PATCH(req: NextRequest) {
         { onConflict: "userId" }
       );
 
-    if (profileError) throw profileError;
+    if (profileError) {
+      console.error("Profile update error:", profileError);
+      throw profileError;
+    }
 
-    if (resume) {
-      if (resume.type !== "application/pdf") {
-        return NextResponse.json(
-          { error: "Only PDF resumes are allowed" },
-          { status: 400 }
-        );
-      }
-
+    if (data.resume_pdf) {
       const filePath = `${user.id}/${crypto.randomUUID()}.pdf`;
 
       const { error: uploadError } = await supabase.storage
         .from("resumes")
-        .upload(filePath, resume, {
+        .upload(filePath, data.resume_pdf, {
           contentType: "application/pdf",
           upsert: false,
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error("Resume upload error:", uploadError);
+        throw uploadError;
+      }
 
-      const publicUrl = supabase.storage.from("resumes").getPublicUrl(filePath)
-        .data.publicUrl;
+      const { data: { publicUrl } } = supabase.storage
+        .from("resumes")
+        .getPublicUrl(filePath);
 
       const { error: resumeInsertError } = await supabase.from("Resume").insert({
         studentId: user.id,
         fileUrl: publicUrl,
-        fileName: resume.name,
-        fileSize: resume.size,
+        fileName: data.resume_pdf.name,
+        fileSize: data.resume_pdf.size,
         uploadedAt: now,
       });
 
-      if (resumeInsertError) throw resumeInsertError;
+      if (resumeInsertError) {
+        console.error("Resume insert error:", resumeInsertError);
+        throw resumeInsertError;
+      }
     }
 
     return NextResponse.json({
