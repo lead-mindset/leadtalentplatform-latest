@@ -38,18 +38,24 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(combinedData);
 }
 
-
 export async function PATCH(req: NextRequest) {
   try {
+    const authSupabase = await createClient();
+    const {
+      data: { user },
+      error: userError,
+    } = await authSupabase.auth.getUser();
+
+    if (userError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const supabase = createServiceClient();
 
-    // Parse FormData
     const formData = await req.formData();
 
-    // Get the resume file
     const resume = formData.get("resume") as File | null;
 
-    // Get other fields (FormData values are always strings)
     const profileData = {
       full_name: formData.get("full_name")?.toString() || "",
       phone: formData.get("phone")?.toString() || "",
@@ -60,9 +66,8 @@ export async function PATCH(req: NextRequest) {
       linkedin_url: formData.get("linkedin_url")?.toString() || "",
       consentRecruiterVisibility: formData.get("consentRecruiterVisibility") === "true",
     };
-console.log("Parsed form data:", profileData);
+    console.log("Parsed form data:", profileData);
 
-    // Validate with Zod
     const parsed = fullMemberSchema2.safeParse(profileData);
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.errors }, { status: 400 });
@@ -70,14 +75,6 @@ console.log("Parsed form data:", profileData);
     const data = parsed.data;
     const now = new Date().toISOString();
 
-    const {
-  data: { user },
-  error: userError,
-} = await supabase.auth.getUser();
-
-if (userError || !user) {
-  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-}
     const { error: userUpdateError } = await supabase
       .from("User")
       .update({
@@ -90,7 +87,6 @@ if (userError || !user) {
 
     if (userUpdateError) throw userUpdateError;
 
-    // Upsert StudentProfile table
     const { error: profileError } = await supabase
       .from("StudentProfile")
       .upsert(
@@ -109,7 +105,6 @@ if (userError || !user) {
 
     if (profileError) throw profileError;
 
-    // Handle resume upload
     if (resume) {
       if (resume.type !== "application/pdf") {
         return NextResponse.json(
@@ -118,13 +113,13 @@ if (userError || !user) {
         );
       }
 
-      const filePath = `resumes/${user.id}-${Date.now()}.pdf`;
+      const filePath = `${user.id}/${crypto.randomUUID()}.pdf`;
 
       const { error: uploadError } = await supabase.storage
         .from("resumes")
         .upload(filePath, resume, {
           contentType: "application/pdf",
-          upsert: true,
+          upsert: false,
         });
 
       if (uploadError) throw uploadError;
