@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { fullMemberSchema } from '@/lib/memberschema';
+import { fullMemberSchemaBackend } from '@/lib/memberschema';
 
 export async function POST(req: NextRequest) {
     try {
@@ -18,20 +18,16 @@ export async function POST(req: NextRequest) {
             full_name: formData.get('full_name')?.toString() || '',
             phone: formData.get('phone')?.toString() || '',
             career: formData.get('career')?.toString() || '',
-            lead_chapter: formData.get('lead_chapter')?.toString(), // undefined if empty
+            lead_chapter: formData.get('lead_chapter')?.toString(),
             graduationYear: Number(formData.get('graduationYear')) || undefined,
             skills: JSON.parse(formData.get('skills')?.toString() || '[]'),
             linkedin_url: formData.get('linkedin_url')?.toString() || '',
             consentRecruiterVisibility: formData.get('consentRecruiterVisibility') === 'true',
         };
 
-        const parsed = fullMemberSchema.safeParse(profileData);
-
+        const parsed = fullMemberSchemaBackend.safeParse(profileData);
         if (!parsed.success) {
-            return NextResponse.json({
-                error: 'Validation failed',
-                details: parsed.error
-            }, { status: 400 });
+            return NextResponse.json({ error: "Validation failed", details: parsed.error }, { status: 400 });
         }
 
         const data = parsed.data;
@@ -42,7 +38,7 @@ export async function POST(req: NextRequest) {
             .from('User')
             .upsert({
                 id: user.id,
-                email: user.email!,
+                email: user.email,
                 name: data.full_name,
                 phone: data.phone,
                 chapterId: data.lead_chapter,
