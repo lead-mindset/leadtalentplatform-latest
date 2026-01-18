@@ -10,13 +10,6 @@ export const fullMemberSchema = z.object({
       required_error: 'El nombre es requerido',
     })
     .min(1, 'El nombre es requerido'),
-
-  email: z
-    .string({
-      required_error: 'El correo es requerido',
-    })
-    .email('Correo inválido'),
-
   phone: z
     .string({
       required_error: 'El teléfono es requerido',
@@ -28,7 +21,7 @@ export const fullMemberSchema = z.object({
     })
     .min(1, 'La carrera es requerida'),
 
-  graduation_date: z
+  graduationYear: z
     .string({
       required_error: 'La fecha de graduación es requerida',
     })
@@ -51,33 +44,46 @@ export const fullMemberSchema = z.object({
     .includes('linkedin.com', {
       message: 'Debe ser un perfil de LinkedIn',
     }),
-  lead_chapter: z
-  .enum(
-    LEAD_CHAPTER_OPTIONS.map(o => o.value) as [string, ...string[]]
-  , {
-    required_error: 'Selecciona tu capítulo',
-  },
-),
-resume_pdf: z
-  .custom<File | undefined>((file) => !file || file instanceof File, {
-    message: 'Debes subir un archivo PDF',
-  })
-  .refine(
-    (file) => !file || file.type === 'application/pdf',
-    'Solo se permite PDF'
+  lead_chapter: z.preprocess(
+    (val) => (val === undefined ? '' : val),
+    z
+      .string()
+      .min(1, 'Selecciona tu capítulo')
+      .refine(
+        (val) =>
+          LEAD_CHAPTER_OPTIONS.some((o) => o.value === val),
+        { message: 'Selecciona tu capítulo' }
+      )
   ),
-  
-  graduationYear: z
-  .number({
-    required_error: 'El año de graduación es requerido',
-  })
-  .int('Debe ser un año válido')
-  .min(2000, 'Año inválido')
-  .max(new Date().getFullYear() + 6, 'Año inválido'),
+  resume_pdf: z
+    .custom<File | undefined>((file) => !file || file instanceof File, {
+      message: 'Debes subir un archivo PDF',
+    })
+    .refine(
+      (file) => !file || file.type === 'application/pdf',
+      'Solo se permite PDF'
+    ),
 
-consentRecruiterVisibility: z.boolean({
-  required_error: 'Debes indicar tu consentimiento',
-}),
+graduationYear: z.preprocess(
+  (val) => {
+    const num = Number(val);
+    return Number.isNaN(num) ? undefined : num;
+  },
+  z.union([
+    z.number()
+      .int('Debe ser un año válido')
+      .min(2000, 'Año inválido')
+      .max(new Date().getFullYear() + 6, 'Año inválido'),
+    z.undefined()
+  ])
+).refine(val => val !== undefined, {
+  message: 'Por favor ingresa tu año de graduación',
+})
+
+  ,
+  consentRecruiterVisibility: z.boolean({
+    required_error: 'Debes indicar tu consentimiento',
+  }),
 
 })
 
