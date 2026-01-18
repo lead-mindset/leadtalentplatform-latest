@@ -90,36 +90,53 @@ export async function POST(req: NextRequest) {
 
 
         if (resume) {
+            if (resume.type !== "application/pdf") {
+                return NextResponse.json(
+                    { error: "Only PDF resumes are allowed" },
+                    { status: 400 }
+                );
+            }
+
             const filePath = `${user.id}/${crypto.randomUUID()}.pdf`;
 
             const { error: uploadError } = await supabase.storage
-                .from('resumes')
+                .from("resumes")
                 .upload(filePath, resume, {
-                    contentType: 'application/pdf',
-                    upsert: false,
+                    contentType: "application/pdf",
+                    upsert: true,
                 });
 
             if (uploadError) {
                 return NextResponse.json({ error: uploadError.message }, { status: 400 });
             }
 
-            const { data: publicUrl } = supabase.storage
-                .from('resumes')
+            const { data: publicUrlData, error: urlError } = supabase.storage
+                .from("resumes")
                 .getPublicUrl(filePath);
 
-            const { error: resumeError } = await supabase
-                .from('Resume')
+            if (urlError) {
+                return NextResponse.json({ error: urlError.message }, { status: 400 });
+            }
+
+            const fileUrl = publicUrlData.publicUrl;
+
+            const { error: resumeDbError } = await supabase
+                .from("Resume")
                 .insert({
                     studentId: user.id,
-                    fileUrl: publicUrl.publicUrl,
+                    fileUrl,
                     fileName: resume.name,
                     fileSize: resume.size,
+                    uploadedAt: now,
                 });
 
-            if (resumeError) {
-                return NextResponse.json({ error: resumeError.message }, { status: 400 });
+            if (resumeDbError) {
+                return NextResponse.json({ error: resumeDbError.message }, { status: 400 });
             }
+
+            console.log("Resume uploaded successfully:", fileUrl);
         }
+
 
         return NextResponse.json({ success: true });
     } catch (error) {
