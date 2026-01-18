@@ -49,35 +49,24 @@ export const fullMemberSchemaFrontend = baseProfileSchema.extend({
 export const fullMemberSchemaBackend = baseProfileSchema;
 
 
-
-export const fullMemberSchema2 = z.object({
-  full_name: z.string().min(1, 'El nombre es requerido'),
-  phone: z.string().min(5, 'Teléfono inválido'),
-  career: z.string().min(1, 'La carrera es requerida'),
-
-  graduationYear: z.coerce
-    .number({ message: 'El año de graduación es requerido' })
-    .refine(val => val !== 0, {
-      message: 'Año inválido'
-    })
-    .refine(val => val >= 2000 && val <= new Date().getFullYear() + 6, {
-      message: 'Año inválido'
-    }),
-
-  skills: z.array(z.string()).min(1, 'Selecciona al menos una habilidad'),
-
-  linkedin_url: z
-    .string()
-    .url('URL inválida')
-    .refine((val) => val.includes('linkedin.com'), 'Debe ser un perfil de LinkedIn'),
-
-  lead_chapter: z.enum(
-    LEAD_CHAPTER_OPTIONS.map((o) => o.value) as [string, ...string[]]
-  ),
-
+export const profileUpdateSchema = baseProfileSchema.extend({
   resume_pdf: z
-    .instanceof(File)
+    .custom<File>((file) => file instanceof File, { message: "Debes subir un archivo PDF" })
+    .refine(file => file.type === "application/pdf", "Solo se permite PDF")
+    .refine(file => file.size <= 10 * 1024 * 1024, "PDF debe ser menor a 10MB")
     .optional(),
-
-  consentRecruiterVisibility: z.boolean(),
 });
+
+export type ProfileData = {
+  id: string;
+  full_name: string;
+  phone: string;
+  career: string;
+  graduationYear: number;
+  skills: string[];
+  lead_chapter: string;
+  linkedin_url: string;
+  consentRecruiterVisibility: boolean;
+};
+
+
