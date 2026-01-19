@@ -1,46 +1,36 @@
-'use client'
-import MobMenu from "./MobMenu";
+import { createClient } from "@/lib/supabase/server";
+import { NAV_LINKS } from "../../../lib/types";
 import NavBar from "./NavBar";
+import type { Role } from "../../../lib/types";
 
-export type MenuItem = {
-  name: string;
-  href?: string;
-  icon?: React.ElementType;
-  subMenu?: SubMenuItem[];
-  target?: "_blank" | "_self";
-};
+export default async function NavHeader() {
+  const supabase = await createClient();
 
-export type MobMenuProps = {
-  menuItems: MenuItem[];
-};
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-export interface SubMenuItem {
-  name: string;
-  href?: string;
-  target?: "_blank" | "_self";
-}
+  let role: Role | null = null;
 
-export const menuItems: MenuItem[] = [
-  {
-    name: "About",
-    href: "/about-us",
-    target: "_self",
-  },
-];
+  if (user) {
+    const { data: dbUser } = await supabase
+      .from("User")
+      .select("role")
+      .eq("id", user.id)
+      .single();
 
-export default function NavHeader() {
+    role = dbUser?.role ?? null;
+  }
+
+  const visibleLinks = NAV_LINKS.filter((link) => {
+    if (link.auth === "authenticated" && !user) return false;
+    if (link.roles && (!role || !link.roles.includes(role))) return false;
+    return true;
+  });
+
   return (
-    <header className="h-fit fixed w-full top-0 left-0 z-50 ">
-      <nav className="flex w-full relative ">
-        <NavBar menuItems={menuItems} />
-        <div className="ml-auto flex items-center space-x-2 absolute">
-          <div className="hidden"> 
-            <div>
-            </div>
-            <MobMenu menuItems={menuItems} />
-          </div>
-        </div>
-      </nav>
+    <header className="fixed top-0 left-0 w-full z-50 bg-background border-b">
+      <NavBar user={user} links={visibleLinks} />
     </header>
   );
 }
