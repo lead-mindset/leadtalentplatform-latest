@@ -5,7 +5,7 @@ export const Hero = () => {
   const title = "Talent Platform";
   const words = title.split("LEAD");
   return (
-    <div className="min-h-[calc(100vh-64px)]  flex flex-col items-center justify-center  bg-background">
+    <div className="flex flex-col items-center justify-center  bg-background">
 
       <img src="/lead_logo.svg" alt="Logo" className="max-w-md mb-10" />
 
