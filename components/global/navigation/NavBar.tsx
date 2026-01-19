@@ -4,7 +4,6 @@ import DesktopMenu from "./DesktopMenu";
 import type { MenuItem } from "./NavHeader";
 import Image from "next/image";
 import Link from "next/link";
-import SocialLinks from "@/components/ui/social-links";
 
 function NavBar({ menuItems }: { menuItems: MenuItem[] }) {
   const [selectedMenu, setSelectedMenu] = useState<string | null>(null);
@@ -23,11 +22,11 @@ function NavBar({ menuItems }: { menuItems: MenuItem[] }) {
 
   return (
 
-    <div className="flex w-full text-background">
+    <div className="flex w-full text-foreground">
       <div className="">
         <Link
           href={"/"}
-          className="cursor-pointer bg-white rounded-br-2xl gap-2 p-2 flex px-4"
+          className="cursor-pointer bg-background border border-border rounded-br-2xl gap-4 p-2 flex px-4"
         >
           <Image
             src="/leadl2.svg"
@@ -35,17 +34,11 @@ function NavBar({ menuItems }: { menuItems: MenuItem[] }) {
             width={35}
             height={35}
           />
-          <h3 className="font-bold text-lg">LEAD</h3>
+          <h3 className="font-bold text-lg">LEAD Talent Platform</h3>
 
         </Link>
       </div>
       <div className="flex-1 h-2 "></div>
-
-
-      <SocialLinks
-        className="hidden lg:flex px-3"
-      />
-
 
       <ul className="flex bg-white rounded-bl-2xl items-center">
         {menuItems.map((menuItem) => (
@@ -58,22 +51,6 @@ function NavBar({ menuItems }: { menuItems: MenuItem[] }) {
             onSubMenuClick={handleSubMenuClick}
           />
         ))}
-
-
-        <Link
-          href={'/get-involved'}
-          className=" rounded-bl-2xl h-full bg-linear-to-br from-primary to-chart-1 transition-all 
-          flex items-center"
-        >
-          <button
-            className="cursor-pointer px-4 text-base text-white font-bold"
-          >
-            Get Involved
-          </button>
-        </Link>
-
-
-
 
       </ul>
 
