@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
-import NavHeader from "@/components/global/navigation/NavHeader";
 import { Raleway, Geist_Mono } from "next/font/google";
-import { Suspense } from "react";
 
 const ralewaySans = Raleway({
   subsets: ["latin"],
@@ -43,9 +41,6 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Suspense fallback={<div>Loading menu...</div>}>
-            <NavHeader />
-          </Suspense>
           {children}
         </ThemeProvider>
       </body>
