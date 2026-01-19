@@ -60,13 +60,6 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // 5. Optional: Verify email matches
-    if (user.email !== invite.recruiterEmail) {
-      return NextResponse.json(
-        { error: 'You must sign in with the invited email address' },
-        { status: 403 }
-      )
-    }
 
     // 6. Accept invitation
     const { error: updateError } = await supabase
