@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
-import { createClient } from "@/lib/supabase/client"
+import { supabase } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, CheckCircle2, XCircle, Mail } from "lucide-react"
@@ -18,8 +18,6 @@ export default function InviteContent() {
   const token = params.get("token")
   const [state, setState] = useState<InviteState>({ status: "loading" })
   const [isAccepting, setIsAccepting] = useState(false)
-
-  const supabase = createClient()
 
   useEffect(() => {
     if (!token) {
