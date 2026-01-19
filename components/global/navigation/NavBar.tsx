@@ -1,62 +1,28 @@
 "use client";
-import { useState } from "react";
-import DesktopMenu from "./DesktopMenu";
-import type { MenuItem } from "./NavHeader";
-import Image from "next/image";
+
 import Link from "next/link";
+import DesktopNav from "./DesktopMenu";
+import MobileNav from "./MobMenu";
+import type { NavLink } from "@/lib/types";
+import type { MenuItem } from "./MobMenu";
 
-function NavBar({ menuItems }: { menuItems: MenuItem[] }) {
-  const [selectedMenu, setSelectedMenu] = useState<string | null>(null);
-
-  const handleMenuClick = (menuName: string) => {
-    setSelectedMenu((prev) => (prev === menuName ? null : menuName));
-  };
-
-  const handleSubMenuClick = () => {
-    setSelectedMenu(null);
-  };
-
-  const handleMenuItemClick = () => {
-    setSelectedMenu(null);
-  };
-
-  return (
-
-    <div className="flex w-full text-foreground">
-      <div className="">
-        <Link
-          href={"/"}
-          className="cursor-pointer bg-background border border-border rounded-br-2xl gap-4 p-2 flex px-4"
-        >
-          <Image
-            src="/leadl2.svg"
-            alt="Next.js Logo"
-            width={35}
-            height={35}
-          />
-          <h3 className="font-bold text-lg">LEAD Talent Platform</h3>
-
-        </Link>
-      </div>
-      <div className="flex-1 h-2 "></div>
-
-      <ul className="flex bg-white rounded-bl-2xl items-center">
-        {menuItems.map((menuItem) => (
-          <DesktopMenu
-            menuItem={menuItem}
-            key={menuItem.name}
-            isActive={selectedMenu === menuItem.name}
-            onClick={() => handleMenuClick(menuItem.name)}
-            onMenuItemClick={handleMenuItemClick}
-            onSubMenuClick={handleSubMenuClick}
-          />
-        ))}
-
-      </ul>
-
-
-    </div>
-  );
+interface NavBarProps {
+  user: any | null;
+  links: NavLink[];
 }
 
-export default NavBar;
+export default function NavBar({ user, links }: NavBarProps) {
+  const menuItems: MenuItem[] = links.map((l) => ({ name: l.label, href: l.href }));
+
+  return (
+    <nav className="flex items-center h-16 px-6 border-b bg-background relative z-50">
+      <Link href="/" className="flex items-center font-bold gap-2">
+        <img src="/leadl2.svg" alt="LEAD" width={32} height={32} />
+        LEAD Talent Platform
+      </Link>
+
+      <DesktopNav user={user} links={links} />
+      <MobileNav menuItems={menuItems} user={user} />
+    </nav>
+  );
+}
