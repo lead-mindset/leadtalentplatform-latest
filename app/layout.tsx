@@ -1,10 +1,18 @@
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
-import { Raleway } from "next/font/google";
 import NavHeader from "@/components/global/navigation/NavHeader";
+import { Raleway, Geist_Mono } from "next/font/google";
 
-const outfit = Raleway({ subsets: ['latin'], variable: '--font-sans' });
+const ralewaySans = Raleway({
+  subsets: ["latin"],
+  variable: "--font-raleway-sans",
+});
+
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  variable: "--font-geist-mono",
+});
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -16,19 +24,18 @@ export const metadata: Metadata = {
   description: "talent platform",
 };
 
-const ralewaySans = Raleway({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en" className={outfit.variable} suppressHydrationWarning>
-      <body className={`${ralewaySans.className} antialiased`}>
+    <html
+      lang="en"
+      className={`${ralewaySans.variable} ${geistMono.variable}`}
+      suppressHydrationWarning
+    >
+      <body className="antialiased">
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
