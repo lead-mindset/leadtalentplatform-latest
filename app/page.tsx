@@ -2,9 +2,13 @@ import { AuthButton } from "@/components/auth-button";
 import { Hero } from "@/components/herolead";
 import Link from "next/link";
 import { Suspense } from "react";
-
+import NavHeader from "@/components/global/navigation/NavHeader";
 export default function Home() {
   return (
+    <>
+    <Suspense>
+    <NavHeader/>
+    </Suspense>
     <main className="min-h-screen flex flex-col items-center">
       <div className="flex-1 w-full flex flex-col gap-20 items-center">
         <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
@@ -22,5 +26,6 @@ export default function Home() {
         </div>
       </div>
     </main>
+     </>
   );
 }
