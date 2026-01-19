@@ -5,7 +5,7 @@ export async function POST(req: NextRequest) {
   const supabase = await createClient()
 
   try {
-    // 1. Check if user is authenticated
+    // 1. Check authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // 2. Get token from request body
+    // 2. Get token
     const { token } = await req.json()
 
     if (!token) {
@@ -25,10 +25,13 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // 3. Find the invitation
+    // 3. Find invitation (with company name)
     const { data: invite, error: findError } = await supabase
       .from('RecruiterAccess')
-      .select('*')
+      .select(`
+        *,
+        company:Company(name)
+      `)
       .eq('inviteToken', token)
       .single()
 
@@ -57,24 +60,21 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // 5. Optional: Verify email matches (security)
-    // Uncomment this if you want to enforce email matching
-    /*
+    // 5. Optional: Verify email matches
     if (user.email !== invite.recruiterEmail) {
       return NextResponse.json(
         { error: 'You must sign in with the invited email address' },
         { status: 403 }
       )
     }
-    */
 
-    // 6. Mark invitation as accepted
+    // 6. Accept invitation
     const { error: updateError } = await supabase
       .from('RecruiterAccess')
       .update({
         acceptedAt: new Date().toISOString(),
         isActive: true,
-        acceptedByUserId: user.id, // Link to the authenticated user
+        acceptedByUserId: user.id,
       })
       .eq('inviteToken', token)
 
@@ -86,10 +86,10 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // 7. Success response
+    // 7. Success
     return NextResponse.json({
       success: true,
-      companyName: invite.companyName,
+      companyName: invite.company.name,
       redirectTo: '/company/dashboard',
     })
 
