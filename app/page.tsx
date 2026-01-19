@@ -53,7 +53,7 @@ export default function Home() {
               <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-16">
                 <Card className="border-2 hover:shadow-lg transition-shadow bg-card text-card-foreground">
                   <CardContent className="pt-6">
-                    <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4 bg-accent">
+                    <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4 bg-chart-1">
                       <Users className="w-6 h-6 text-accent-foreground" />
                     </div>
                     <h3 className="font-bold text-lg mb-2">Professional Visibility</h3>
@@ -65,7 +65,7 @@ export default function Home() {
 
                 <Card className="border-2 hover:shadow-lg transition-shadow bg-card text-card-foreground">
                   <CardContent className="pt-6">
-                    <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4 bg-secondary">
+                    <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4 bg-chart-2">
                       <Building2 className="w-6 h-6 text-secondary-foreground" />
                     </div>
                     <h3 className="font-bold text-lg mb-2">Direct Connections</h3>
@@ -77,7 +77,7 @@ export default function Home() {
 
                 <Card className="border-2 hover:shadow-lg transition-shadow bg-card text-card-foreground">
                   <CardContent className="pt-6">
-                    <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4 bg-primary">
+                    <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4 bg-chart-3">
                       <TrendingUp className="w-6 h-6 text-primary-foreground" />
                     </div>
                     <h3 className="font-bold text-lg mb-2">Career Opportunities</h3>
