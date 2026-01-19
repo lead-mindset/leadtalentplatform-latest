@@ -6,33 +6,29 @@ import type { ProfileData } from "@/lib/memberschema";
 
 async function ProfileData() {
   const supabase = await createClient();
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
-  
-  if (userError || !user) {
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
     redirect("/auth/login");
   }
 
-  const { data: userData, error: userDataError } = await supabase
+  const { data: userData } = await supabase
     .from("User")
     .select("*")
     .eq("id", user.id)
     .single();
 
-  const { data: profileData, error: profileError } = await supabase
+  const { data: profileData } = await supabase
     .from("StudentProfile")
     .select("*")
     .eq("userId", user.id)
     .single();
 
-  if (userDataError) {
-    console.error("Error fetching user:", userDataError);
+  if (!profileData || !profileData.isFilled) {
+    redirect("/onboarding");
   }
 
-  if (profileError) {
-    console.error("Error fetching profile:", profileError);
-  }
-
-   const combinedData: ProfileData = {
+  const combinedData: ProfileData = {
     id: userData.id,
     full_name: userData.name || '',
     phone: userData.phone || '',
