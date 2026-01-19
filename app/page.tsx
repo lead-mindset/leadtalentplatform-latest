@@ -1,5 +1,5 @@
 import { AuthButton } from "@/components/auth-button";
-import { Hero } from "@/components/hero";
+import { Hero } from "@/components/herolead";
 import Link from "next/link";
 import { Suspense } from "react";
 
