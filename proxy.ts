@@ -1,6 +1,10 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+const PUBLIC_ROUTES = ['/auth/login', '/auth/signup', '/']
+const AUTH_ROUTES = ['/auth/login', '/auth/signup']
+const PROTECTED_ROUTES = ['/profile', '/dashboard', '/settings'] // Add more as needed
+
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -27,42 +31,67 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  // IMPORTANT: Avoid writing any logic between createServerClient and
-  // supabase.auth.getUser(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
 
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protected routes check
-  if (!user && request.nextUrl.pathname.startsWith('/onboarding')) {
+  const pathname = request.nextUrl.pathname
+
+  if (!user) {
+    const isProtectedRoute = PROTECTED_ROUTES.some(route => pathname.startsWith(route))
+    const isOnboardingRoute = pathname.startsWith('/onboarding')
+
+    if (isProtectedRoute || isOnboardingRoute) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/auth/login'
+      url.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(url)
+    }
+
+    return supabaseResponse
+  }
+  const { data: profile } = await supabase
+    .from('StudentProfile')
+    .select('isFilled')
+    .eq('userId', user.id)
+    .single()
+
+  const hasCompletedOnboarding = profile?.isFilled === true
+
+  if (!hasCompletedOnboarding && 
+      !pathname.startsWith('/onboarding') && 
+      pathname !== '/auth/logout') {
     const url = request.nextUrl.clone()
-    url.pathname = '/auth/login'
+    url.pathname = '/onboarding'
     return NextResponse.redirect(url)
   }
 
-  // Check if user completed onboarding
-  if (user && request.nextUrl.pathname === '/onboarding') {
-    const { data: profile } = await supabase
-      .from('StudentProfile')
-      .select('isFilled')
-      .eq('userId', user.id)
-      .single()
-
-    if (profile?.isFilled) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/'
-      return NextResponse.redirect(url)
-    }
+  if (hasCompletedOnboarding && pathname === '/onboarding') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/'
+    return NextResponse.redirect(url)
   }
 
-  // Redirect authenticated users away from auth pages
-  if (user && request.nextUrl.pathname.startsWith('/auth/')) {
+  if (AUTH_ROUTES.some(route => pathname.startsWith(route))) {
     const url = request.nextUrl.clone()
     url.pathname = '/'
     return NextResponse.redirect(url)
   }
 
   return supabaseResponse
+}
+
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - images - .svg, .png, .jpg, .jpeg, .gif, .webp
+     * Feel free to modify this pattern to include more paths.
+     */
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 }
