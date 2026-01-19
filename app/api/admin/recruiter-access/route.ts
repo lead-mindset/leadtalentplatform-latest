@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
       throw new Error('Database error')
     }
 
-    const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/company/onboard?token=${inviteToken}`
+    const inviteLink = `${process.env.FRONTEND_URL}/company/onboard?token=${inviteToken}`
 
     try {
       await mailer.sendMail({
