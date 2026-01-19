@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  const inviteLink = `${process.env.FRONTEND_URL}/recruiter/onboard?token=${inviteToken}`
+  const inviteLink = `${process.env.FRONTEND_URL}/company/onboard?token=${inviteToken}`
 
   await mailer.sendMail({
     from: `"LEAD Platform" <${process.env.SMTP_USER}>`,
