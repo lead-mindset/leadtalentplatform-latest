@@ -20,7 +20,7 @@ export default async function OnboardingPage() {
     .single();
 
   if (profile?.isFilled) {
-    redirect("/protected");
+    redirect("/");
   }
 
   return (
