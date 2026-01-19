@@ -17,7 +17,10 @@ export async function GET(req: NextRequest) {
 
     const { data: invite, error } = await supabase
       .from('RecruiterAccess')
-      .select('*')
+      .select(`
+        *,
+        company:Company(name)
+      `)
       .eq('inviteToken', token)
       .single()
 
@@ -34,19 +37,19 @@ export async function GET(req: NextRequest) {
     if (now > expiresAt) {
       return NextResponse.json(
         { error: 'This invitation has expired' },
-        { status: 410 } // 410 = Gone
+        { status: 410 }
       )
     }
 
     if (invite.acceptedAt) {
       return NextResponse.json(
         { error: 'This invitation has already been accepted' },
-        { status: 409 } // 409 = Conflict
+        { status: 409 }
       )
     }
 
     return NextResponse.json({
-      companyName: invite.companyName,
+      companyName: invite.company.name,
       recruiterEmail: invite.recruiterEmail,
       expiresAt: invite.inviteExpiresAt,
     })
