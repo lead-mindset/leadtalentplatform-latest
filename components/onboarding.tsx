@@ -12,6 +12,7 @@ import { fullMemberSchemaFrontend } from '@/lib/memberschema'
 import { Button } from './ui/button'
 import { useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -54,6 +55,8 @@ export async function getLeadChapterOptions() {
 export type OnboardingValues = z.infer<typeof fullMemberSchemaFrontend>
 
 export default function Onboarding() {
+  const router = useRouter();
+
   const [fileName, setFileName] = useState('')
   const [isUploading, setIsUploading] = useState(false)
   const [chapterOptions, setChapterOptions] = useState<{ label: string; value: string }[]>([]);
@@ -130,6 +133,8 @@ export default function Onboarding() {
 
 
       console.log('Onboarding completed')
+      router.push('/');
+
     } catch (err) {
       console.error(err)
     }
