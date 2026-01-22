@@ -5,12 +5,15 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 
 export default function StudentSettingsPage() {
+  const router = useRouter()
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
@@ -32,14 +35,12 @@ export default function StudentSettingsPage() {
     setLoading(true)
 
     try {
-      // Get current user's email
       const { data: { user } } = await supabase.auth.getUser()
       
       if (!user?.email) {
         throw new Error('No user found')
       }
 
-      // Verify current password by attempting to sign in
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: user.email,
         password: currentPassword,
@@ -49,7 +50,6 @@ export default function StudentSettingsPage() {
         throw new Error('Current password is incorrect')
       }
 
-      // Update to new password
       const { error: updateError } = await supabase.auth.updateUser({
         password: newPassword
       })
@@ -60,23 +60,41 @@ export default function StudentSettingsPage() {
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to change password')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to change password')
     } finally {
       setLoading(false)
     }
   }
 
   async function handleDeleteAccount() {
-    if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+    if (!window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
       return
     }
 
-    try {
+    if (!window.confirm('This will permanently delete all your data. Are you absolutely sure?')) {
+      return
+    }
 
-      setError('Account deletion requires backend implementation')
-    } catch (error) {
-      setError('Failed to delete account')
+    setDeleteLoading(true)
+    setError(null)
+
+    try {
+      const response = await fetch('/api/auth/delete-account', {
+        method: 'DELETE',
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete account')
+      }
+
+      router.push('/')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete account')
+    } finally {
+      setDeleteLoading(false)
     }
   }
 
@@ -89,6 +107,7 @@ export default function StudentSettingsPage() {
         </p>
       </div>
 
+      {/* Change Password */}
       <Card>
         <CardHeader>
           <CardTitle>Change Password</CardTitle>
@@ -159,8 +178,12 @@ export default function StudentSettingsPage() {
           <CardTitle className="text-destructive">Danger Zone</CardTitle>
         </CardHeader>
         <CardContent>
-          <Button variant="destructive" onClick={handleDeleteAccount}>
-            Delete Account
+          <Button 
+            variant="destructive" 
+            onClick={handleDeleteAccount}
+            disabled={deleteLoading}
+          >
+            {deleteLoading ? 'Deleting...' : 'Delete Account'}
           </Button>
           <p className="text-sm text-muted-foreground mt-2">
             Once you delete your account, there is no going back
