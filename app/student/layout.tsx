@@ -34,10 +34,15 @@ export default function StudentLayout({
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <Sidebar>
-          <SidebarHeader>
-            <div className="px-2 py-4">
-              <h2 className="text-xl font-bold tracking-tight">LEAD</h2>
-              <p className="text-sm text-sidebar-foreground/70">Student Portal</p>
+         <SidebarHeader className="mt-4">
+            <Link href="/" className="flex items-center font-bold gap-2 px-2 mb-4">
+              <img src="/leadl2.svg" alt="LEAD" width={32} height={32} />
+              LEAD 
+            </Link>
+            <div className="px-2 space-y-1">
+              <p className="text-xs text-muted-foreground">Welcome back,</p>
+              <p className="font-semibold text-lg">John Doe</p>
+              <p className="text-xs text-muted-foreground">john.doe@university.edu</p>
             </div>
           </SidebarHeader>
 
