@@ -44,43 +44,48 @@ export default function StudentResumePage() {
     fetchResume()
   }, [])
 
-  async function handleUpload(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    if (!userId) return
+async function handleUpload(e: React.FormEvent<HTMLFormElement>) {
+  e.preventDefault()
+  if (!userId) return
 
-    const formData = new FormData(e.currentTarget)
-    const file = formData.get('resume') as File
+  const form = e.currentTarget  // ✅ Store the form reference immediately
+  const formData = new FormData(form)
+  const file = formData.get('resume') as File
 
-    if (!file) {
-      alert('Please select a file')
-      return
-    }
-
-    setUploading(true)
-
-    try {
-      const res = await fetch(`/api/students/${userId}/resume`, {
-        method: 'POST',
-        body: formData,
-      })
-
-      if (res.ok) {
-        const data = await res.json()
-        setResume(data.resume)
-        alert('Resume uploaded successfully!')
-        // Reset form
-        e.currentTarget.reset()
-      } else {
-        const error = await res.json()
-        alert(error.error || 'Failed to upload resume')
-      }
-    } catch (error) {
-      alert('Failed to upload resume')
-    } finally {
-      setUploading(false)
-    }
+  if (!file) {
+    alert('Please select a file')
+    return
   }
 
+  setUploading(true)
+
+  try {
+    const res = await fetch(`/api/students/${userId}/resume`, {
+      method: 'POST',
+      body: formData,
+    })
+
+    console.log('Response status:', res.status)
+    console.log('Response ok:', res.ok)
+
+    if (res.ok) {
+      const data = await res.json()
+      console.log('Response data:', data)
+      setResume(data.resume)
+      alert('Resume uploaded successfully!')
+      form.reset()  // ✅ Use the stored form reference
+    } else {
+      const error = await res.json()
+      console.log('Error response:', error)
+      alert(error.error || 'Failed to upload resume')
+    }
+  } catch (error) {
+    console.error('Fetch error:', error)
+    alert('Failed to upload resume')
+  } finally {
+    setUploading(false)
+  }
+}
   async function handleDelete() {
     if (!resume || !userId) return
     if (!confirm('Are you sure you want to delete your resume?')) return
@@ -146,7 +151,6 @@ export default function StudentResumePage() {
         </Card>
       )}
 
-      {/* Upload New Resume */}
       <Card>
         <CardHeader>
           <CardTitle>{resume ? 'Upload New Resume' : 'Upload Resume'}</CardTitle>
