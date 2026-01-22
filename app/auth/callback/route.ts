@@ -36,11 +36,11 @@ export async function GET(request: Request) {
             if (!profile || !profile.isFilled) {
               next = '/onboarding'
             } else {
-              next = '/student/dashboard'
+              next = '/student/'
             }
           } 
           else if (role === 'representative') {
-            next = '/company/dashboard'
+            next = '/company/'
           }
           else if (role === 'admin') {
             next = '/admin/'
