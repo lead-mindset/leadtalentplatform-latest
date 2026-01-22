@@ -4,10 +4,11 @@ import { createClient } from '@/lib/supabase/server'
 // GET: Fetch student's resume
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   const supabase = await createClient()
-  const { id: studentId } = await params  // AWAIT params here
+  const studentId = params.id
 
   try {
     // 1. Check authentication
@@ -82,10 +83,11 @@ export async function GET(
 // POST: Upload resume (student or admin)
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   const supabase = await createClient()
-  const { id: studentId } = await params  // AWAIT params here
+  const studentId = params.id
 
   try {
     // 1. Check authentication
@@ -174,10 +176,10 @@ export async function POST(
 
     if (insertError) {
       console.error('Resume insert error:', insertError)
-      
+
       // Cleanup uploaded file
       await supabase.storage.from('resumes').remove([filePath])
-      
+
       return NextResponse.json(
         { error: 'Failed to save resume record' },
         { status: 500 }
@@ -201,10 +203,11 @@ export async function POST(
 // DELETE: Delete resume (student or admin)
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   const supabase = await createClient()
-  const { id: studentId } = await params  // AWAIT params here
+  const studentId = params.id
 
   try {
     // 1. Check authentication
@@ -263,7 +266,7 @@ export async function DELETE(
 
     // 5. Extract file path and delete from storage
     const filePath = resume.fileUrl.split('/resumes/')[1]
-    
+
     if (filePath) {
       await supabase.storage.from('resumes').remove([filePath])
     }
