@@ -117,14 +117,14 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
     try {
       const formData = new FormData();
 
-formData.append("full_name", data.full_name);
-formData.append("phone", data.phone);
-formData.append("lead_chapter", data.lead_chapter || "");
-formData.append("career", data.career);
-formData.append("graduationYear", String(data.graduationYear || 0));
-formData.append("skills", JSON.stringify(data.skills));
-formData.append("linkedin_url", data.linkedin_url || "");
-formData.append("consentRecruiterVisibility", String(data.consentRecruiterVisibility));
+      formData.append("full_name", data.full_name);
+      formData.append("phone", data.phone);
+      formData.append("lead_chapter", data.lead_chapter || "");
+      formData.append("career", data.career);
+      formData.append("graduationYear", String(data.graduationYear || 0));
+      formData.append("skills", JSON.stringify(data.skills));
+      formData.append("linkedin_url", data.linkedin_url || "");
+      formData.append("consentRecruiterVisibility", String(data.consentRecruiterVisibility));
 
       if (data.resume_pdf) {
         formData.append("resume", data.resume_pdf);
@@ -132,7 +132,7 @@ formData.append("consentRecruiterVisibility", String(data.consentRecruiterVisibi
 
       const res = await fetch("/api/profile", {
         method: "PATCH",
-        body: formData, 
+        body: formData,
       });
 
       if (!res.ok) {
@@ -330,85 +330,6 @@ formData.append("consentRecruiterVisibility", String(data.consentRecruiterVisibi
               type="url"
               error={errors.linkedin_url?.message}
             />
-
-            <Controller
-              control={control}
-              name="resume_pdf"
-              render={({ field }) => (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Resume (PDF) - Optional</label>
-
-                  {!fileName && !resumeUrl ? (
-                    <label className="cursor-pointer">
-                      <div className="rounded-lg border-2 border-dashed border-border p-6 text-center transition hover:bg-muted/50">
-                        <input
-                          type="file"
-                          accept="application/pdf"
-                          className="hidden"
-                          onChange={handleFileChange(field.onChange)}
-                        />
-                        <div className="flex flex-col items-center gap-2">
-                          {isUploading ? (
-                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                          ) : (
-                            <Upload className="h-8 w-8 text-muted-foreground" />
-                          )}
-                          <p className="text-sm font-medium">
-                            {isUploading ? 'Uploading...' : 'Click to upload new resume'}
-                          </p>
-                          <p className="text-xs text-muted-foreground">PDF up to 10MB</p>
-                        </div>
-                      </div>
-                    </label>
-                  ) : (
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center gap-3 rounded-lg border border-border bg-muted p-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                          <FileText className="h-5 w-5 text-primary" />
-                        </div>
-                        <div className="flex-1 flex flex-col">
-                          <p className="text-sm font-medium text-foreground truncate">
-                            {fileName || resumeUrl?.split('/').pop()}
-                          </p>
-                          {resumeUrl && !fileName && (
-                            <a
-                              href={resumeUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-primary underline"
-                            >
-                              View current resume
-                            </a>
-                          )}
-                          {fileName && (
-                            <p className="text-xs text-muted-foreground">Ready to upload</p>
-                          )}
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            removeFile(field.onChange)
-                            setResumeUrl(null)
-                          }}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  {errors.resume_pdf && (
-                    <p className="flex items-center gap-1 text-sm text-destructive">
-                      <X className="h-3 w-3" />
-                      {errors.resume_pdf.message}
-                    </p>
-                  )}
-                </div>
-              )}
-            />
-
 
             <Controller
               control={control}
