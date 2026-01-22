@@ -4,10 +4,10 @@ import { createClient } from '@/lib/supabase/server'
 // GET: Fetch student's resume
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const supabase = await createClient()
-  const studentId = params.id
+  const { id: studentId } = await params  // AWAIT params here
 
   try {
     // 1. Check authentication
@@ -82,10 +82,10 @@ export async function GET(
 // POST: Upload resume (student or admin)
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const supabase = await createClient()
-  const studentId = params.id
+  const { id: studentId } = await params  // AWAIT params here
 
   try {
     // 1. Check authentication
@@ -201,10 +201,10 @@ export async function POST(
 // DELETE: Delete resume (student or admin)
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const supabase = await createClient()
-  const studentId = params.id
+  const { id: studentId } = await params  // AWAIT params here
 
   try {
     // 1. Check authentication
