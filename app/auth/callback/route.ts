@@ -6,13 +6,28 @@ export async function GET(request: Request) {
   const code = searchParams.get('code')
   let next = searchParams.get('next') ?? '/'
   if (!next.startsWith('/')) {
- next = '/'
+    next = '/'
   }
 
   if (code) {
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
+
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (user) {
+        const { data: profile } = await supabase
+          .from('StudentProfile')
+          .select('isFilled')
+          .eq('userId', user.id)
+          .single()
+
+        if (!profile || !profile.isFilled) {
+          next = '/onboarding'
+        }
+      }
+
       const forwardedHost = request.headers.get('x-forwarded-host')
       const isLocalEnv = process.env.NODE_ENV === 'development'
       if (isLocalEnv) {
