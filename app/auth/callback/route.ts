@@ -17,14 +17,34 @@ export async function GET(request: Request) {
       const { data: { user } } = await supabase.auth.getUser()
 
       if (user) {
-        const { data: profile } = await supabase
-          .from('StudentProfile')
-          .select('isFilled')
-          .eq('userId', user.id)
+        const { data: userData } = await supabase
+          .from('User')
+          .select('role')
+          .eq('id', user.id)
           .single()
 
-        if (!profile || !profile.isFilled) {
-          next = '/onboarding'
+        if (userData) {
+          const role = userData.role
+
+          if (role === 'student' || role === 'editor') {
+            const { data: profile } = await supabase
+              .from('StudentProfile')
+              .select('isFilled')
+              .eq('userId', user.id)
+              .single()
+
+            if (!profile || !profile.isFilled) {
+              next = '/onboarding'
+            } else {
+              next = '/student/dashboard'
+            }
+          } 
+          else if (role === 'representative') {
+            next = '/company/dashboard'
+          }
+          else if (role === 'admin') {
+            next = '/admin/'
+          }
         }
       }
 
