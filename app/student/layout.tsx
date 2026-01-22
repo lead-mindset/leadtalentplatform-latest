@@ -14,6 +14,7 @@ import {
   SidebarMenuItem,
   SidebarProvider,
 } from '@/components/ui/sidebar'
+import { LogoutButton } from '@/components/logout-button'
 
 const navigation = [
   { name: 'Profile', href: '/student/profile', icon: User },
@@ -68,10 +69,7 @@ export default function StudentLayout({
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href="/api/auth/signout">
-                    <LogOut />
-                    <span>Sign Out</span>
-                  </a>
+                  <LogoutButton/>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
