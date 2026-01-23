@@ -173,23 +173,7 @@ export default function StudentSettingsPage() {
         </CardContent>
       </Card>
 
-      <Card className="border-destructive">
-        <CardHeader>
-          <CardTitle className="text-destructive">Danger Zone</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Button 
-            variant="destructive" 
-            onClick={handleDeleteAccount}
-            disabled={deleteLoading}
-          >
-            {deleteLoading ? 'Deleting...' : 'Delete Account'}
-          </Button>
-          <p className="text-sm text-muted-foreground mt-2">
-            Once you delete your account, there is no going back
-          </p>
-        </CardContent>
-      </Card>
+    
     </div>
   )
 }
