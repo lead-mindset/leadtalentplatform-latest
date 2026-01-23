@@ -19,7 +19,6 @@ import { LogoutButton } from '@/components/logout-button'
 const navigation = [
   { name: 'Profile', href: '/student/profile', icon: User },
   { name: 'Resume', href: '/student/resume', icon: FileText },
-  { name: 'Settings', href: '/student/settings', icon: Settings },
 ]
 
 export default function StudentLayout({
