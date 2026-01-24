@@ -2,21 +2,16 @@ import { createClient } from '@/lib/supabase/server'
 import { DynamicSidebar } from '@/components/global/navigation/dynamic-sidebar'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { redirect } from 'next/navigation'
+import { Suspense } from 'react'
 
-export default async function StudentLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+async function SidebarContent() {
   const supabase = await createClient()
   
-  // Check authentication
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     redirect('/auth/login')
   }
 
-  // Get user data with chapter info
   const { data: userData, error } = await supabase
     .from('User')
     .select(`
@@ -37,7 +32,6 @@ export default async function StudentLayout({
     redirect('/auth/login')
   }
 
-  // Check for pending approvals ONLY if user is an editor
   let hasPendingApprovals = false
   if (userData.role === 'editor' && userData.chapterId) {
     const { data: chapterUsers } = await supabase
@@ -54,19 +48,39 @@ export default async function StudentLayout({
         .in('userId', userIds)
         .is('approvedById', null)
         .eq('isFilled', true)
-        .limit(1)  // Just check if any exist
+        .limit(1)
       
       hasPendingApprovals = (count || 0) > 0
     }
   }
 
   return (
+    <DynamicSidebar 
+      user={userData} 
+      hasPendingApprovals={hasPendingApprovals}
+    />
+  )
+}
+
+function SidebarFallback() {
+  return (
+    <div className="w-64 border-r bg-muted/40">
+      <div className="p-4">Loading...</div>
+    </div>
+  )
+}
+
+export default function StudentLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
-        <DynamicSidebar 
-          user={userData} 
-          hasPendingApprovals={hasPendingApprovals}
-        />
+        <Suspense fallback={<SidebarFallback />}>
+          <SidebarContent />
+        </Suspense>
         <main className="flex-1 overflow-y-auto bg-background p-8">
           {children}
         </main>
