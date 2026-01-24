@@ -21,7 +21,7 @@ async function requireChapterEditorOrAdmin(
     return { user, isAdmin: true }
   }
 
-  if (dbUser?.role === 'chapter_editor' && dbUser.chapterId === chapterId) {
+  if (dbUser?.role === 'editor' && dbUser.chapterId === chapterId) {
     return { user, isAdmin: false }
   }
 

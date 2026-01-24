@@ -92,7 +92,7 @@ export async function GET(req: NextRequest) {
 const CreateUserSchema = z.object({
   email: z.string().email("Invalid email format"),
   name: z.string().min(1, "Name is required").max(100),
-  role: z.enum(['member', 'chapter_editor', 'admin', 'recruiter']),
+  role: z.enum(['member', 'editor', 'admin', 'recruiter']),
   chapterId: z.string().optional(),
   phone: z.string().optional(),
 })

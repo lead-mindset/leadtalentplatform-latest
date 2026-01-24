@@ -91,7 +91,7 @@ export async function GET(
 
 const UpdateUserSchema = z.object({
   name: z.string().min(1).max(100).optional(),
-  role: z.enum(['member', 'chapter_editor', 'admin', 'recruiter']).optional(),
+  role: z.enum(['member', 'editor', 'admin', 'recruiter']).optional(),
   chapterId: z.string().nullable().optional(),
   phone: z.string().nullable().optional(),
 })
