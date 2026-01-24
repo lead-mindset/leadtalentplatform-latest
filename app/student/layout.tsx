@@ -1,97 +1,28 @@
-import { createClient } from '@/lib/supabase/server'
-import { DynamicSidebar } from '@/components/global/navigation/dynamic-sidebar'
-import { SidebarProvider } from '@/components/ui/sidebar'
-import { redirect } from 'next/navigation'
+import { SidebarLayout } from '@/components/ui/sidebars/sidebar-layout'
+import { DynamicSidebar } from '@/components/ui/sidebars/dynamic-sidebar'
+import { requireUser } from '@/lib/auth'
 import { Suspense } from 'react'
 
-async function SidebarContent() {
-  const supabase = await createClient()
+import type { ReactNode } from 'react'
+import { SkeletonSidebar } from '@/components/ui/sidebars/skeleton-sidebar'
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    redirect('/auth/login')
-  }
-
-  const { data: userData, error } = await supabase
-    .from('User')
-    .select(`
-      id,
-      email,
-      name,
-      role,
-      chapterId,
-      Chapter (
-        name,
-        university
-      )
-    `)
-    .eq('id', user.id)
-    .single()
-
-  if (error || !userData) {
-    redirect('/auth/login')
-  }
-
-  let hasPendingApprovals = false
-  if (userData.role === 'editor' && userData.chapterId) {
-    const { data: chapterUsers } = await supabase
-      .from('User')
-      .select('id')
-      .eq('chapterId', userData.chapterId)
-
-    if (chapterUsers && chapterUsers.length > 0) {
-      const userIds = chapterUsers.map(u => u.id)
-
-      const { count } = await supabase
-        .from('StudentProfile')
-        .select('*', { count: 'exact', head: true })
-        .in('userId', userIds)
-        .is('approvedById', null)
-        .eq('isFilled', true)
-        .limit(1)
-
-      hasPendingApprovals = (count || 0) > 0
-    }
-  }
-
-  const normalizedUser = {
-    name: userData.name,
-    email: userData.email,
-    role: userData.role,
-    Chapter: userData.Chapter?.[0] ?? null,
-  }
-
-  return (
-    <DynamicSidebar
-      user={normalizedUser}
-      hasPendingApprovals={hasPendingApprovals}
-    />
-  )
+async function SidebarWithUser() {
+  const { user } = await requireUser()
+  return <DynamicSidebar user={user} />
 }
 
-function SidebarFallback() {
+export default function StudentLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="w-64 border-r bg-muted/40">
-      <div className="p-4">Loading...</div>
-    </div>
-  )
-}
-
-export default function StudentLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-full">
-        <Suspense fallback={<SidebarFallback />}>
-          <SidebarContent />
+    <SidebarLayout 
+      Sidebar={() => (
+        <Suspense fallback={<SkeletonSidebar/>}>
+          <SidebarWithUser />
         </Suspense>
-        <main className="flex-1 overflow-y-auto bg-background p-8">
-          {children}
-        </main>
-      </div>
-    </SidebarProvider>
+      )}
+    >
+      <Suspense fallback={<div>Loading...</div>}>
+        {children}
+      </Suspense>
+    </SidebarLayout>
   )
 }
