@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Suspense } from 'react'
 import { 
@@ -356,14 +357,7 @@ function MembersLoading() {
   )
 }
 
-export default async function ChapterMembersPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ status?: string }>
-}) {
-  const params = await searchParams
-  const status = params.status || 'all'
-  
+async function PageContent({ status }: { status: string }) {
   const supabase = await createClient()
   
   const { data: { user } } = await supabase.auth.getUser()
@@ -400,7 +394,7 @@ export default async function ChapterMembersPage({
   }
 
   return (
-    <div className="space-y-6">
+    <>
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Chapter Members</h1>
         <p className="text-muted-foreground mt-2">
@@ -434,6 +428,36 @@ export default async function ChapterMembersPage({
           </Suspense>
         </TabsContent>
       </Tabs>
+    </>
+  )
+}
+
+function PageLoading() {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <div className="h-8 w-64 bg-muted animate-pulse rounded" />
+        <div className="h-4 w-96 bg-muted animate-pulse rounded" />
+      </div>
+      <div className="h-10 w-full bg-muted animate-pulse rounded" />
+      <MembersLoading />
+    </div>
+  )
+}
+
+export default function ChapterMembersPage({
+  searchParams,
+}: {
+  searchParams: { status?: string }
+}) {
+  // searchParams is now synchronous in the function signature
+  const status = searchParams.status || 'all'
+
+  return (
+    <div className="space-y-6">
+      <Suspense fallback={<PageLoading />}>
+        <PageContent status={status} />
+      </Suspense>
     </div>
   )
 }
