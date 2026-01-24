@@ -6,7 +6,7 @@ import { Suspense } from 'react'
 
 async function SidebarContent() {
   const supabase = await createClient()
-  
+
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     redirect('/auth/login')
@@ -41,7 +41,7 @@ async function SidebarContent() {
 
     if (chapterUsers && chapterUsers.length > 0) {
       const userIds = chapterUsers.map(u => u.id)
-      
+
       const { count } = await supabase
         .from('StudentProfile')
         .select('*', { count: 'exact', head: true })
@@ -49,14 +49,21 @@ async function SidebarContent() {
         .is('approvedById', null)
         .eq('isFilled', true)
         .limit(1)
-      
+
       hasPendingApprovals = (count || 0) > 0
     }
   }
 
+  const normalizedUser = {
+    name: userData.name,
+    email: userData.email,
+    role: userData.role,
+    Chapter: userData.Chapter?.[0] ?? null,
+  }
+
   return (
-    <DynamicSidebar 
-      user={userData} 
+    <DynamicSidebar
+      user={normalizedUser}
       hasPendingApprovals={hasPendingApprovals}
     />
   )
