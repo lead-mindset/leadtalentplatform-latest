@@ -35,7 +35,6 @@ const studentNav = [
 const chapterNav = [
   { name: 'Overview', href: '/chapter', icon: LayoutDashboard },
   { name: 'Members', href: '/chapter/members', icon: Users, showIndicator: true },
-  { name: 'Activity', href: '/chapter/activity', icon: Activity },
   { name: 'Settings', href: '/chapter/settings', icon: Settings },
 ]
 
