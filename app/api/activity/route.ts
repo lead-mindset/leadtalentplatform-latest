@@ -16,7 +16,7 @@ async function requireAdminOrChapterEditor(
     .eq('id', user.id)
     .single()
 
-  if (!dbUser || (dbUser.role !== 'admin' && dbUser.role !== 'chapter_editor')) {
+  if (!dbUser || (dbUser.role !== 'admin' && dbUser.role !== 'editor')) {
     throw new Error("Forbidden")
   }
 
@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
 
       if (approvals) {
         for (const approval of approvals) {
-          if (dbUser.role === 'chapter_editor' && approval.user.chapterId !== dbUser.chapterId) {
+          if (dbUser.role === 'editor' && approval.user.chapterId !== dbUser.chapterId) {
             continue
           }
 
