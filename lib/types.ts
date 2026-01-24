@@ -9,7 +9,7 @@ export type NavLink = {
 
 export const NAV_LINKS: NavLink[] = [
   { label: "About", href: "/about-us", auth: "public" },
-  { label: "Dashboard", href: "/dashboard", auth: "authenticated", roles: ["member", "editor", "admin"] },
-  { label: "Manage Content", href: "/content", auth: "authenticated", roles: ["editor", "admin"] },
+  { label: "Dashboard", href: "/student", auth: "authenticated", roles: ["member", "editor"] },
+  { label: "Manage Chapter", href: "/chapter", auth: "authenticated", roles: ["editor"] },
   { label: "Admin Panel", href: "/admin", auth: "authenticated", roles: ["admin"] },
 ];
