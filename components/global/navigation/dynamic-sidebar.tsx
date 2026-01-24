@@ -6,7 +6,6 @@ import {
   User, 
   FileText, 
   Users, 
-  Activity, 
   Building, 
   LayoutDashboard,
   Settings
