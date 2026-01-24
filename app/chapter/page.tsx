@@ -1,10 +1,10 @@
-// app/chapter/page.tsx
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
+import { Suspense } from 'react'
 import { 
   Users, 
   UserCheck, 
@@ -15,89 +15,113 @@ import {
   UserX
 } from 'lucide-react'
 
-async function getChapterMembers(chapterId: string, status?: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-  const url = new URL(`/api/chapters/${chapterId}/members`, baseUrl)
-  if (status) {
-    url.searchParams.set('status', status)
-  }
-
-  const res = await fetch(url.toString(), {
-    cache: 'no-store', // This prevents caching
-    next: { revalidate: 0 }, // Always fetch fresh data
-  })
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch members: ${res.statusText}`)
-  }
-
-  return res.json()
+type MemberWithProfile = {
+  id: string
+  email: string
+  name: string | null
+  phone: string | null
+  role: string
+  createdAt: string
+  StudentProfile: {
+    userId: string
+    major: string | null
+    graduationYear: number | null
+    linkedinUrl: string | null
+    skills: string[] | null
+    consentRecruiterVisibility: boolean
+    isRecruiterVisible: boolean | null
+    approvedById: string | null
+    isFilled: boolean | null
+    updatedAt: string
+  } | null
 }
 
-export default async function ChapterOverviewPage() {
-  const supabase = await createClient()
-  
-  // Get current user
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/auth/login')
-
-  // Get user data
-  const { data: userData } = await supabase
+async function getChapterMembers(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  chapterId: string,
+  status?: 'all' | 'pending' | 'approved'
+) {
+  // Use the hint from the error: specify which relationship to use
+  // We want StudentProfile where userId = User.id (not approvedById)
+  let query = supabase
     .from('User')
-    .select('role, chapterId, Chapter(name, university)')
-    .eq('id', user.id)
-    .single()
+    .select(`
+      id,
+      email,
+      name,
+      phone,
+      role,
+      createdAt,
+      StudentProfile!StudentProfile_userId_fkey (
+        userId,
+        major,
+        graduationYear,
+        linkedinUrl,
+        skills,
+        consentRecruiterVisibility,
+        isRecruiterVisible,
+        approvedById,
+        isFilled,
+        updatedAt
+      )
+    `)
+    .eq('chapterId', chapterId)
+    .order('createdAt', { ascending: false })
 
-  if (!userData || userData.role !== 'editor') {
-    redirect('/student')
+  const { data: members, error } = await query
+
+  if (error) {
+    console.error('Failed to fetch chapter members:', error)
+    return []
   }
 
-  if (!userData.chapterId) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Card className="max-w-md">
-          <CardHeader>
-            <CardTitle>No Chapter Assigned</CardTitle>
-            <CardDescription>
-              You are not currently assigned to a chapter. Please contact an administrator.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
+  if (!members) return []
+
+  // Filter based on status after fetching
+  // Note: We fetch all and filter in code because filtering on nested relations is complex
+  if (status === 'pending') {
+    return members.filter(m => 
+      m.StudentProfile && 
+      m.StudentProfile.isFilled === true && 
+      m.StudentProfile.approvedById === null
+    )
+  } else if (status === 'approved') {
+    return members.filter(m => 
+      m.StudentProfile && 
+      m.StudentProfile.approvedById !== null
     )
   }
 
-  // Fetch members using API
-  let allMembers: any[] = []
-  let pendingMembers: any[] = []
-  let approvedMembers: any[] = []
+  return members
+}
 
-  try {
-    const [allData, pendingData, approvedData] = await Promise.all([
-      getChapterMembers(userData.chapterId, 'all'),
-      getChapterMembers(userData.chapterId, 'pending'),
-      getChapterMembers(userData.chapterId, 'approved'),
-    ])
+async function ChapterStats({ chapterId }: { chapterId: string }) {
+  const supabase = await createClient()
 
-    allMembers = allData.members || []
-    pendingMembers = pendingData.members || []
-    approvedMembers = approvedData.members || []
-  } catch (error) {
-    console.error('Error fetching chapter data:', error)
-    // Continue with empty arrays
-  }
+  // Fetch all members once and filter in memory for better performance
+  const allMembers = await getChapterMembers(supabase, chapterId, 'all')
+  
+  const pendingMembers = allMembers.filter(m => 
+    m.StudentProfile && 
+    m.StudentProfile.isFilled === true && 
+    m.StudentProfile.approvedById === null
+  )
+  
+  const approvedMembers = allMembers.filter(m => 
+    m.StudentProfile && 
+    m.StudentProfile.approvedById !== null
+  )
 
-  // Calculate statistics
   const totalMembers = allMembers.length
   const pendingCount = pendingMembers.length
   const approvedCount = approvedMembers.length
 
   const completeProfiles = allMembers.filter(
-    m => m.StudentProfile?.[0]?.isFilled === true
+    m => m.StudentProfile?.isFilled === true
   ).length
 
   const visibleToRecruiters = allMembers.filter(
-    m => m.StudentProfile?.[0]?.isRecruiterVisible === true
+    m => m.StudentProfile?.isRecruiterVisible === true
   ).length
 
   const completionRate = totalMembers 
@@ -108,27 +132,17 @@ export default async function ChapterOverviewPage() {
     ? Math.round((approvedCount / totalMembers) * 100)
     : 0
 
-  // Get recent activity
   const recentActivity = approvedMembers
-    .filter(m => m.StudentProfile?.[0]?.approvedById)
+    .filter(m => m.StudentProfile?.approvedById && m.StudentProfile?.updatedAt)
     .sort((a, b) => {
-      const dateA = new Date(a.StudentProfile[0].updatedAt).getTime()
-      const dateB = new Date(b.StudentProfile[0].updatedAt).getTime()
+      const dateA = new Date(a.StudentProfile!.updatedAt).getTime()
+      const dateB = new Date(b.StudentProfile!.updatedAt).getTime()
       return dateB - dateA
     })
     .slice(0, 10)
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Chapter Overview</h1>
-        <p className="text-muted-foreground mt-2">
-          {userData.Chapter?.name} - {userData.Chapter?.university}
-        </p>
-      </div>
-
-      {/* Pending Approvals Alert */}
+    <>
       {pendingCount > 0 && (
         <Card className="border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-950">
           <CardHeader>
@@ -154,7 +168,6 @@ export default async function ChapterOverviewPage() {
         </Card>
       )}
 
-      {/* Statistics Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -163,9 +176,7 @@ export default async function ChapterOverviewPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalMembers}</div>
-            <p className="text-xs text-muted-foreground">
-              In your chapter
-            </p>
+            <p className="text-xs text-muted-foreground">In your chapter</p>
           </CardContent>
         </Card>
 
@@ -176,9 +187,7 @@ export default async function ChapterOverviewPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{pendingCount}</div>
-            <p className="text-xs text-muted-foreground">
-              Awaiting review
-            </p>
+            <p className="text-xs text-muted-foreground">Awaiting review</p>
           </CardContent>
         </Card>
 
@@ -189,9 +198,7 @@ export default async function ChapterOverviewPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{approvedCount}</div>
-            <p className="text-xs text-muted-foreground">
-              {approvalRate}% approval rate
-            </p>
+            <p className="text-xs text-muted-foreground">{approvalRate}% approval rate</p>
           </CardContent>
         </Card>
 
@@ -202,14 +209,11 @@ export default async function ChapterOverviewPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{visibleToRecruiters}</div>
-            <p className="text-xs text-muted-foreground">
-              Active profiles
-            </p>
+            <p className="text-xs text-muted-foreground">Active profiles</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Quick Actions */}
       <Card>
         <CardHeader>
           <CardTitle>Quick Actions</CardTitle>
@@ -220,9 +224,7 @@ export default async function ChapterOverviewPage() {
             <Link href="/chapter/members?status=pending">
               <Clock className="h-5 w-5 mb-2 text-orange-500" />
               <span className="font-semibold">Review Pending</span>
-              <span className="text-xs text-muted-foreground">
-                {pendingCount} members waiting
-              </span>
+              <span className="text-xs text-muted-foreground">{pendingCount} members waiting</span>
             </Link>
           </Button>
 
@@ -230,9 +232,7 @@ export default async function ChapterOverviewPage() {
             <Link href="/chapter/members?status=approved">
               <CheckCircle2 className="h-5 w-5 mb-2 text-green-500" />
               <span className="font-semibold">View Approved</span>
-              <span className="text-xs text-muted-foreground">
-                {approvedCount} approved members
-              </span>
+              <span className="text-xs text-muted-foreground">{approvedCount} approved members</span>
             </Link>
           </Button>
 
@@ -240,15 +240,12 @@ export default async function ChapterOverviewPage() {
             <Link href="/chapter/members">
               <Users className="h-5 w-5 mb-2 text-blue-500" />
               <span className="font-semibold">All Members</span>
-              <span className="text-xs text-muted-foreground">
-                View complete roster
-              </span>
+              <span className="text-xs text-muted-foreground">View complete roster</span>
             </Link>
           </Button>
         </CardContent>
       </Card>
 
-      {/* Recent Activity */}
       <Card>
         <CardHeader>
           <CardTitle>Recent Activity</CardTitle>
@@ -263,8 +260,8 @@ export default async function ChapterOverviewPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {recentActivity.map((member: any) => {
-                const profile = member.StudentProfile?.[0]
+              {recentActivity.map((member) => {
+                const profile = member.StudentProfile
                 return (
                   <div 
                     key={member.id}
@@ -309,7 +306,6 @@ export default async function ChapterOverviewPage() {
         </CardContent>
       </Card>
 
-      {/* Profile Completion Progress */}
       <Card>
         <CardHeader>
           <CardTitle>Chapter Health</CardTitle>
@@ -349,6 +345,83 @@ export default async function ChapterOverviewPage() {
           </div>
         </CardContent>
       </Card>
+    </>
+  )
+}
+
+function StatsLoading() {
+  return (
+    <div className="space-y-8">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
+          <Card key={i}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div className="h-4 w-24 bg-muted animate-pulse rounded" />
+            </CardHeader>
+            <CardContent>
+              <div className="h-8 w-16 bg-muted animate-pulse rounded mb-1" />
+              <div className="h-3 w-20 bg-muted animate-pulse rounded" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+async function ChapterHeader() {
+  const supabase = await createClient()
+  
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/auth/login')
+
+  const { data: userData } = await supabase
+    .from('User')
+    .select('role, chapterId, Chapter(name, university)')
+    .eq('id', user.id)
+    .single()
+
+  if (!userData || userData.role !== 'editor') {
+    redirect('/student')
+  }
+
+  if (!userData.chapterId) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Card className="max-w-md">
+          <CardHeader>
+            <CardTitle>No Chapter Assigned</CardTitle>
+            <CardDescription>
+              You are not currently assigned to a chapter. Please contact an administrator.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Chapter Overview</h1>
+        <p className="text-muted-foreground mt-2">
+          {userData.Chapter?.name} - {userData.Chapter?.university}
+        </p>
+      </div>
+
+      <Suspense fallback={<StatsLoading />}>
+        <ChapterStats chapterId={userData.chapterId} />
+      </Suspense>
+    </>
+  )
+}
+
+export default function ChapterOverviewPage() {
+  return (
+    <div className="space-y-8">
+      <Suspense fallback={<div className="h-20 bg-muted animate-pulse rounded" />}>
+        <ChapterHeader />
+      </Suspense>
     </div>
   )
 }
