@@ -1,4 +1,3 @@
-// app/chapter/members/member-tabs.tsx
 'use client'
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -17,7 +16,7 @@ export function MembersTabs({ currentStatus }: { currentStatus: string }) {
 
   return (
     <Tabs value={currentStatus} onValueChange={handleTabChange}>
-      <TabsList className="grid w-full grid-cols-4 lg:w-[600px]">
+      <TabsList className="grid w-full grid-cols-4 lg:w-150">
         <TabsTrigger value="all">All Members</TabsTrigger>
         <TabsTrigger value="pending">Pending</TabsTrigger>
         <TabsTrigger value="approved">Approved</TabsTrigger>
