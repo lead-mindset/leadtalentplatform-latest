@@ -71,14 +71,16 @@ export type MemberWithProfile = UserRow & {
 }
 
 export type ChapterStats = {
-  totalMembers: number
-  pendingCount: number
-  approvedCount: number
-  visibleToRecruiters: number
+  total: number
+  pending: number
+  approved: number
+  incomplete: number
   completeProfiles: number
-  completionRate: number
-  approvalRate: number
+  visibleToRecruiters?: number
+  pendingMembers: MemberWithProfile[]
+  approvedMembers: MemberWithProfile[]
 }
+
 
 export type RecentActivityMember = UserRow & {
   StudentProfile: StudentProfileRow
