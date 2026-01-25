@@ -46,7 +46,6 @@ function StatsDisplay({ data }: { data: ChapterData }) {
         </Card>
       )}
 
-      {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -94,7 +93,6 @@ function StatsDisplay({ data }: { data: ChapterData }) {
         </Card>
       </div>
 
-      {/* Quick Actions */}
       <Card>
         <CardHeader>
           <CardTitle>Quick Actions</CardTitle>
@@ -105,14 +103,14 @@ function StatsDisplay({ data }: { data: ChapterData }) {
             <Link href="/chapter/members?status=pending">
               <Clock className="h-5 w-5 mb-2 text-orange-500" />
               <span className="font-semibold">Review Pending</span>
-              <span className="text-xs text-muted-foreground">{stats.pendingCount} members waiting</span>
+              <span className="text-xs text-muted-foreground">{stats.pending} members waiting</span>
             </Link>
           </Button>
           <Button asChild variant="outline" className="h-auto flex-col items-start p-4">
             <Link href="/chapter/members?status=approved">
               <CheckCircle2 className="h-5 w-5 mb-2 text-green-500" />
               <span className="font-semibold">View Approved</span>
-              <span className="text-xs text-muted-foreground">{stats.approvedCount} approved members</span>
+              <span className="text-xs text-muted-foreground">{stats.approved} approved members</span>
             </Link>
           </Button>
           <Button asChild variant="outline" className="h-auto flex-col items-start p-4">
@@ -125,7 +123,6 @@ function StatsDisplay({ data }: { data: ChapterData }) {
         </CardContent>
       </Card>
 
-      {/* Recent Activity */}
       <Card>
         <CardHeader>
           <CardTitle>Recent Activity</CardTitle>
@@ -212,7 +209,6 @@ async function ChapterContent() {
     )
   }
 
-  // Fetch members & stats
   const allMembers = await getChapterMembers(user.chapterId)
   const stats = getMemberStats(allMembers)
   console.log(stats)
