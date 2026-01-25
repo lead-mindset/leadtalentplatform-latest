@@ -11,6 +11,7 @@ import { FormInput } from '@/components/ui/stepper'
 import { profileUpdateSchema } from '@/lib/memberschema'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase/client'
+import CareerCommandSelect from '@/components/ui/career-combobox'
 import { useRouter } from 'next/navigation'
 import {
   ToggleGroup,
@@ -249,11 +250,20 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
           </div>
 
           <div className="space-y-4">
-            <FormInput
-              label="Major / Career Field"
+
+
+            <Controller
+              control={control}
               name="career"
-              error={errors.career?.message}
+              render={({ field }) => (
+                <CareerCommandSelect
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={errors.career?.message}
+                />
+              )}
             />
+
 
             <FormInput
               label="Expected Graduation Year"
