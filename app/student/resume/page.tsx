@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useTransition } from 'react'
 import { uploadResume, deleteResume } from '@/lib/actions'
-import ResumeClient from './components/resume-uploader'
+import ResumeClient from './components/resume-form'
 import { supabase } from '@/lib/supabase/client'
 
 interface Resume {
