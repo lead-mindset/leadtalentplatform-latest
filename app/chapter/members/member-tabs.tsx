@@ -1,40 +1,28 @@
+// app/chapter/members/member-tabs.tsx
 'use client'
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useRouter } from 'next/navigation'
 
-export function MembersTabs({ 
-  defaultValue, 
-  children 
-}: { 
-  defaultValue: string
-  children: React.ReactNode 
-}) {
+export function MembersTabs({ currentStatus }: { currentStatus: string }) {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const currentStatus = searchParams.get('status') || 'all'
 
   const handleTabChange = (value: string) => {
-    const params = new URLSearchParams(searchParams.toString())
     if (value === 'all') {
-      params.delete('status')
+      router.push('/chapter/members')
     } else {
-      params.set('status', value)
+      router.push(`/chapter/members?status=${value}`)
     }
-    router.push(`/chapter/members?${params.toString()}`)
   }
 
   return (
     <Tabs value={currentStatus} onValueChange={handleTabChange}>
-      <TabsList>
+      <TabsList className="grid w-full grid-cols-4 lg:w-[600px]">
         <TabsTrigger value="all">All Members</TabsTrigger>
         <TabsTrigger value="pending">Pending</TabsTrigger>
         <TabsTrigger value="approved">Approved</TabsTrigger>
         <TabsTrigger value="incomplete">Incomplete</TabsTrigger>
       </TabsList>
-      <TabsContent value={currentStatus}>
-        {children}
-      </TabsContent>
     </Tabs>
   )
 }
