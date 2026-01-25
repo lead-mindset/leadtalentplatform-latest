@@ -140,3 +140,34 @@ export type UserWithDetailsRaw =
       "isFilled" | "approvedById" | "isRecruiterVisible"
     > | null
   }
+
+
+
+export type RecruiterInviteRaw = {
+  id: string
+  recruiterEmail: string
+  isActive: boolean
+  grantedAt: string
+  inviteExpiresAt: string | null
+  acceptedAt: string | null
+  revokedAt: string | null
+  companyId: string
+
+  Company: { name: string }[]
+  GrantedBy: { name: string; email: string }[]
+  AcceptedBy: { name: string; email: string }[]
+}
+export type RecruiterInvite = {
+  id: string
+  recruiterEmail: string
+  isActive: boolean
+  grantedAt: string
+  inviteExpiresAt: string | null
+  acceptedAt: string | null
+  revokedAt: string | null
+  companyId: string
+
+  Company: { name: string } | null
+  GrantedBy: { name: string; email: string } | null
+  AcceptedBy: { name: string; email: string } | null
+}

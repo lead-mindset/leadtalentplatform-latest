@@ -5,27 +5,18 @@ import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { Suspense } from 'react'
 import { Mail, Clock, CheckCircle2, XCircle, AlertCircle, Building } from 'lucide-react'
+import type { RecruiterInviteRaw } from '@/lib/types'
+import type { RecruiterInvite } from '@/lib/types'
 
-type RecruiterInvite = {
-  id: string
-  recruiterEmail: string
-  isActive: boolean
-  grantedAt: string
-  inviteExpiresAt: string | null
-  acceptedAt: string | null
-  revokedAt: string | null
-  companyId: string
-  Company: {
-    name: string
-  } | null
-  GrantedBy: {
-    name: string | null
-    email: string
-  } | null
-  AcceptedBy: {
-    name: string | null
-    email: string
-  } | null
+function normalizeRecruiterInvites(
+  invites: RecruiterInviteRaw[]
+): RecruiterInvite[] {
+  return invites.map(invite => ({
+    ...invite,
+    Company: invite.Company[0] ?? null,
+    GrantedBy: invite.GrantedBy[0] ?? null,
+    AcceptedBy: invite.AcceptedBy[0] ?? null,
+  }))
 }
 
 function getInviteStatus(invite: RecruiterInvite) {
@@ -92,7 +83,7 @@ async function getInvites() {
     return []
   }
 
-  return invites as RecruiterInvite[]
+return normalizeRecruiterInvites(invites as RecruiterInviteRaw[])
 }
 
 async function InvitesList() {
