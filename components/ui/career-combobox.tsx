@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Check, ChevronsUpDown, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,7 +15,16 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 
-const CAREER_OPTIONS = [
+// ---- Types ----
+export type CareerValue = string;
+
+export interface CareerCommandSelectProps {
+  value: CareerValue;
+  onChange: (value: CareerValue) => void;
+  error?: string;
+}
+
+const CAREER_OPTIONS: CareerValue[] = [
   'Computer Science',
   'Software Engineering',
   'Data Science',
@@ -79,30 +88,36 @@ const CAREER_OPTIONS = [
   'Paralegal Studies',
 ];
 
-export default function CareerCommandSelect({ value, onChange, error }) {
-  const [open, setOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState('');
+// ---- Component ----
+export default function CareerCommandSelect({
+  value,
+  onChange,
+  error,
+}: CareerCommandSelectProps) {
+  const [open, setOpen] = useState<boolean>(false);
+  const [searchValue, setSearchValue] = useState<string>('');
 
   const filteredOptions = CAREER_OPTIONS.filter((option) =>
     option.toLowerCase().includes(searchValue.toLowerCase())
   );
 
-  const handleSelect = (currentValue: string) => {
+  const handleSelect = (currentValue: CareerValue) => {
     onChange(currentValue === value ? '' : currentValue);
     setOpen(false);
     setSearchValue('');
   };
 
-  const handleCreateCustom = () => {
-    if (searchValue.trim()) {
-      onChange(searchValue.trim());
+  const handleCreateCustom = (): void => {
+    const trimmed = searchValue.trim();
+    if (trimmed) {
+      onChange(trimmed);
       setOpen(false);
       setSearchValue('');
     }
   };
 
-  const showCreateOption =
-    searchValue.trim() &&
+  const showCreateOption: boolean =
+    !!searchValue.trim() &&
     !CAREER_OPTIONS.some(
       (option) => option.toLowerCase() === searchValue.toLowerCase()
     );
