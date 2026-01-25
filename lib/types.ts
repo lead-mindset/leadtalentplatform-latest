@@ -1,4 +1,4 @@
-export type Role = "admin" | "editor" | "member";
+export type Role = "admin" | "editor" | "member" | "recruiter";
 
 export type NavLink = {
   label: string;
@@ -14,125 +14,93 @@ export const NAV_LINKS: NavLink[] = [
   { label: "Admin Panel", href: "/admin", auth: "authenticated", roles: ["admin"] },
 ];
 
-
-export type User = {
-  id: string
-  email: string
-  name: string
-  role: string
-  chapterId: string | null
-  Chapter?: ChapterRow | null
-}
-
-export type EditorSidebarStats = {
-  hasPendingApprovals: boolean
-}
-
-export type AdminSidebarStats = {
-  pendingInvites: number
-  pendingApprovals: number
-  totalUsers: number
-  totalChapters: number
-  totalCompanies: number
-}
-
-export interface Chapter {
-  id: string
-  name: string
-  university: string
-  city: string | null
-  region: string | null
-  createdAt: string | null
-  updatedAt: string
-}
-
-
-
-export interface SupabaseUserWithChapter {
-  id: string
-  email: string
-  name: string
-  role: string
-  chapterId: string | null
-  Chapter: Chapter | null
-}
-
-
-
 export type Database = {
   public: {
     Tables: {
       User: {
         Row: {
-          id: string
-          email: string
-          name: string | null
-          role: 'member' | 'editor' | 'admin' | 'recruiter'
-          chapterId: string | null
-          createdAt: string
-          updatedAt: string
-          phone: string | null
-        }
-      }
+          id: string;
+          email: string | null;
+          name: string | null;
+          role: Role;
+          chapterId: string | null;
+          createdAt: string;
+          updatedAt: string;
+          phone: string | null;
+        };
+      };
       Chapter: {
         Row: {
-          id: string
-          name: string
-          university: string
-          city: string | null
-          region: string | null
-          createdAt: string | null
-          updatedAt: string
-        }
-      }
+          id: string;
+          name: string;
+          university: string;
+          city: string | null;
+          region: string | null;
+          createdAt: string | null;
+          updatedAt: string;
+        };
+      };
       StudentProfile: {
         Row: {
-          userId: string
-          major: string | null
-          graduationYear: number | null
-          linkedinUrl: string | null
-          skills: string[] | null
-          consentRecruiterVisibility: boolean
-          isRecruiterVisible: boolean | null
-          approvedById: string | null
-          isFilled: boolean | null
-          updatedAt: string
-          createdAt: string
-          consentDate: string | null
-        }
-      }
-    }
-  }
-}
+          userId: string;
+          major: string | null;
+          graduationYear: number | null;
+          linkedinUrl: string | null;
+          skills: string[] | null;
+          consentRecruiterVisibility: boolean;
+          isRecruiterVisible: boolean | null;
+          approvedById: string | null;
+          isFilled: boolean | null;
+          createdAt: string;
+          updatedAt: string;
+          consentDate: string | null;
+        };
+      };
+    };
+  };
+};
 
-export type UserRow = Database['public']['Tables']['User']['Row']
-export type ChapterRow = Database['public']['Tables']['Chapter']['Row']
-export type StudentProfileRow = Database['public']['Tables']['StudentProfile']['Row']
+export type UserRow = Database["public"]["Tables"]["User"]["Row"];
+export type ChapterRow = Database["public"]["Tables"]["Chapter"]["Row"];
+export type StudentProfileRow = Database["public"]["Tables"]["StudentProfile"]["Row"];
+
+export type UserWithChapter = UserRow & { Chapter?: ChapterRow | null };
 
 export type MemberWithProfile = UserRow & {
-  StudentProfile: StudentProfileRow | null
-  Chapter: ChapterRow | null
-}
+  StudentProfile: StudentProfileRow | null;
+  Chapter: ChapterRow | null;
+};
+
+export type RecentActivityMember = Omit<MemberWithProfile, "StudentProfile"> & {
+  StudentProfile: StudentProfileRow;
+};
 
 export type ChapterStats = {
-    total: number;
-    pending: number;
-    approved: number;
-    incomplete: number;
-    pendingMembers: MemberWithProfile[];
-    approvedMembers: MemberWithProfile[];
-    completeProfiles: number;
-    visibleToRecruiters: number;
-}
-
-
-export type RecentActivityMember = UserRow & {
-  StudentProfile: StudentProfileRow
-}
+  total: number;
+  pending: number;
+  approved: number;
+  incomplete: number;
+  pendingMembers: MemberWithProfile[];
+  approvedMembers: MemberWithProfile[];
+  completeProfiles: number;
+  visibleToRecruiters: number;
+};
 
 export type ChapterData = {
   chapterName: string;
   university: string;
-  stats: ChapterStats
+  stats: ChapterStats;
   recentActivity: RecentActivityMember[];
-}
+};
+
+export type EditorSidebarStats = {
+  hasPendingApprovals: boolean;
+};
+
+export type AdminSidebarStats = {
+  pendingInvites: number;
+  pendingApprovals: number;
+  totalUsers: number;
+  totalChapters: number;
+  totalCompanies: number;
+};
