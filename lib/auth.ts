@@ -1,11 +1,7 @@
 import { createClient } from './supabase/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
-
-export type Chapter = {
-  name: string
-  university: string
-}
+import type { ChapterRow } from './types'
 
 export type User = {
   id: string
@@ -13,7 +9,7 @@ export type User = {
   name: string
   role: string
   chapterId: string | null
-  Chapter?: Chapter | null
+  Chapter?: ChapterRow | null
 }
 
 export type EditorSidebarStats = {
@@ -39,7 +35,7 @@ export async function requireUser(): Promise<{ supabase: SupabaseClient; user: U
     .from('User')
     .select(`
       id, email, name, role, chapterId,
-      Chapter(name, university)
+    Chapter(id, name, university, city, region, createdAt, updatedAt)
     `)
     .eq('id', authUser.id)
     .single()
@@ -53,6 +49,7 @@ export async function requireUser(): Promise<{ supabase: SupabaseClient; user: U
 
   return { supabase, user }
 }
+
 
 export async function requireUserWithRole(role: string): Promise<{ supabase: SupabaseClient; user: User }> {
   const { supabase, user } = await requireUser()
@@ -72,7 +69,7 @@ export async function getUserWithChapter(
     .from('User')
     .select(`
       id, email, name, role, chapterId,
-      Chapter(name, university)
+    Chapter(id, name, university, city, region, createdAt, updatedAt)
     `)
     .eq('id', userId)
     .single()
@@ -84,6 +81,7 @@ export async function getUserWithChapter(
     Chapter: data.Chapter?.[0] ?? null
   }
 }
+
 
 export async function getSidebarStatsForEditor(
   supabase: SupabaseClient,
