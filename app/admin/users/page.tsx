@@ -5,58 +5,50 @@ import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { Suspense } from 'react'
 import { Users, Mail, Building2, CheckCircle2, Clock, XCircle } from 'lucide-react'
+import type { UserWithDetails } from '@/lib/types'
+import type { UserWithDetailsRaw } from '@/lib/types'
 
-type UserWithDetails = {
-  id: string
-  email: string
-  name: string | null
-  role: string
-  phone: string | null
-  createdAt: string
-  chapterId: string | null
-  Chapter: {
-    name: string
-    university: string
-  } | null
-  StudentProfile: {
-    isFilled: boolean | null
-    approvedById: string | null
-    isRecruiterVisible: boolean | null
-  } | null
+function normalizeUserWithDetails(
+  users: UserWithDetailsRaw[]
+): UserWithDetails[] {
+  return users.map(user => ({
+    ...user,
+    Chapter: user.Chapter[0] ?? null,
+    StudentProfile: user.StudentProfile[0] ?? null,
+  }))
 }
 
-async function getUsers() {
+export async function getUsers() {
   const supabase = await createClient()
 
-  // Specify the userId relationship explicitly
-  const { data: users, error } = await supabase
+  const { data, error } = await supabase
     .from('User')
     .select(`
-      id,
-      email,
-      name,
-      role,
-      phone,
-      createdAt,
-      chapterId,
-      Chapter (
-        name,
-        university
-      ),
-      StudentProfile!StudentProfile_userId_fkey (
-        isFilled,
-        approvedById,
-        isRecruiterVisible
-      )
-    `)
+  id,
+  email,
+  name,
+  role,
+  phone,
+  createdAt,
+  updatedAt,
+  chapterId,
+  Chapter (
+    name,
+    university
+  ),
+  StudentProfile!StudentProfile_userId_fkey (
+    isFilled,
+    approvedById,
+    isRecruiterVisible
+  )
+`)
     .order('createdAt', { ascending: false })
-
   if (error) {
-    console.error('Failed to fetch users:', error)
+    console.error("Failed to fetch users:", error)
     return []
   }
-
-  return users as UserWithDetails[]
+  if (!data) return []
+  return normalizeUserWithDetails(data as UserWithDetailsRaw[])
 }
 
 function getRoleColor(role: string) {
@@ -112,7 +104,7 @@ async function UsersTable() {
             <div className="text-2xl font-bold">{stats.total}</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Admins</CardTitle>
@@ -181,7 +173,7 @@ async function UsersTable() {
                   {users.map((user) => {
                     const status = getProfileStatus(user)
                     const StatusIcon = status.icon
-                    
+
                     return (
                       <tr key={user.id} className="border-b last:border-0 hover:bg-muted/50">
                         <td className="p-3">
