@@ -1,3 +1,4 @@
+
 export type Role = "admin" | "editor" | "member" | "recruiter";
 
 export type NavLink = {
@@ -20,13 +21,13 @@ export type Database = {
       User: {
         Row: {
           id: string;
-          email: string | null;
-          name: string | null;
+          email: string;
+          name: string;
           role: Role;
-          chapterId: string | null;
+          chapterId: string;
           createdAt: string;
           updatedAt: string;
-          phone: string | null;
+          phone: string;
         };
       };
       Chapter: {
@@ -97,10 +98,24 @@ export type EditorSidebarStats = {
   hasPendingApprovals: boolean;
 };
 
-export type AdminSidebarStats = {
-  pendingInvites: number;
-  pendingApprovals: number;
-  totalUsers: number;
-  totalChapters: number;
-  totalCompanies: number;
-};
+export interface AdminStats {
+  pendingInvites: number
+  pendingApprovals: number
+  totalUsers: number
+  totalChapters: number
+  totalCompanies: number
+}
+
+export interface AdminSidebarProps {
+  user: UserRow
+  stats: AdminStats
+}
+
+export interface NavItemConfig {
+  name: string
+  href: string
+  icon: React.ComponentType<any>
+  showIndicatorKey?: keyof AdminStats
+  showCountKey?: keyof AdminStats
+  description?: string
+}
