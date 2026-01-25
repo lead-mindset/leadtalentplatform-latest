@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { Suspense } from 'react'
 import { Users, UserCheck, Clock, TrendingUp, AlertCircle, CheckCircle2, UserX } from 'lucide-react'
 import { requireUser } from '@/lib/auth'
-import type { User } from '@/lib/auth'
 import type { ChapterData, RecentActivityMember } from '@/lib/types'
 import { getChapterMembers, getMemberStats } from './members/page'
 

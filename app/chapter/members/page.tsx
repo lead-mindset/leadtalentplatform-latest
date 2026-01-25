@@ -13,7 +13,6 @@ import {
   AlertCircle
 } from 'lucide-react'
 import { MembersTabs } from './components/member-tabs'
-
 import type { MemberWithProfile } from '@/lib/types'
 
 export async function getChapterMembers(

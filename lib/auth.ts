@@ -1,50 +1,10 @@
 import { createClient } from './supabase/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
-import type { ChapterRow } from './types'
-
-export type User = {
-  id: string
-  email: string
-  name: string
-  role: string
-  chapterId: string | null
-  Chapter?: ChapterRow | null
-}
-
-export type EditorSidebarStats = {
-  hasPendingApprovals: boolean
-}
-
-export type AdminSidebarStats = {
-  pendingInvites: number
-  pendingApprovals: number
-  totalUsers: number
-  totalChapters: number
-  totalCompanies: number
-}
-
-export interface Chapter {
-  id: string
-  name: string
-  university: string
-  city: string | null
-  region: string | null
-  createdAt: string | null
-  updatedAt: string
-}
-
-
-
-interface SupabaseUserWithChapter {
-  id: string
-  email: string
-  name: string
-  role: string
-  chapterId: string | null
-  Chapter: Chapter | null
-}
-
+import type { User } from './types'
+import type { EditorSidebarStats } from './types'
+import type { AdminSidebarStats } from './types'
+import type { SupabaseUserWithChapter } from './types'
 
 export async function requireUser(): Promise<{ supabase: SupabaseClient; user: User }> {
   const supabase = await createClient()
