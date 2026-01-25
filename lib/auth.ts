@@ -1,12 +1,12 @@
 import { createClient } from './supabase/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
-import type { User } from './types'
+import type { UserRow } from './types'
 import type { EditorSidebarStats } from './types'
 import type { AdminSidebarStats } from './types'
-import type { SupabaseUserWithChapter } from './types'
+import type { UserWithChapter } from './types'
 
-export async function requireUser(): Promise<{ supabase: SupabaseClient; user: User }> {
+export async function requireUser(): Promise<{ supabase: SupabaseClient; user: UserRow }> {
   const supabase = await createClient()
   const { data: { user: authUser } } = await supabase.auth.getUser()
 
@@ -19,12 +19,12 @@ export async function requireUser(): Promise<{ supabase: SupabaseClient; user: U
     Chapter(id, name, university, city, region, createdAt, updatedAt)
   `)
     .eq('id', authUser.id)
-    .single<SupabaseUserWithChapter>()
+    .single<UserWithChapter>()
 
   if (error || !userData) redirect('/auth/login')
   console.log('userdata:', userData)
 
-  const user: User = {
+  const user: UserWithChapter = {
     ...userData,
     Chapter: userData.Chapter ?? null
   }
