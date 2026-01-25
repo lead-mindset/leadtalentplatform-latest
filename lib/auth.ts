@@ -9,7 +9,7 @@ export type User = {
   name: string
   role: string
   chapterId: string | null
-  Chapter?: ChapterRow[] | null
+  Chapter?: ChapterRow | null
 }
 
 export type EditorSidebarStats = {
@@ -24,6 +24,27 @@ export type AdminSidebarStats = {
   totalCompanies: number
 }
 
+export interface Chapter {
+  id: string
+  name: string
+  university: string
+  city: string | null
+  region: string | null
+  createdAt: string | null
+  updatedAt: string
+}
+
+
+
+interface SupabaseUserWithChapter {
+  id: string
+  email: string
+  name: string
+  role: string
+  chapterId: string | null
+  Chapter: Chapter | null
+}
+
 
 export async function requireUser(): Promise<{ supabase: SupabaseClient; user: User }> {
   const supabase = await createClient()
@@ -34,20 +55,22 @@ export async function requireUser(): Promise<{ supabase: SupabaseClient; user: U
   const { data: userData, error } = await supabase
     .from('User')
     .select(`
-      id, email, name, role, chapterId,
+    id, email, name, role, chapterId,
     Chapter(id, name, university, city, region, createdAt, updatedAt)
-    `)
+  `)
     .eq('id', authUser.id)
-    .single()
+    .single<SupabaseUserWithChapter>()
 
   if (error || !userData) redirect('/auth/login')
-  console.log('whwwwwha', userData)
+  console.log('userdata:', userData)
 
   const user: User = {
     ...userData,
     Chapter: userData.Chapter ?? null
   }
 
+
+  console.log('Authenticated user:', user)
   return { supabase, user }
 }
 
