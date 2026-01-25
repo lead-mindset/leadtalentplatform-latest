@@ -171,3 +171,30 @@ export type RecruiterInvite = {
   GrantedBy: { name: string; email: string } | null
   AcceptedBy: { name: string; email: string } | null
 }
+
+
+export type CompanyRaw = {
+  id: string
+  name: string
+  createdat: string
+  createdbyid: string
+  CreatedBy: {
+    name: string | null
+    email: string
+  }[]
+}
+
+export type Company = {
+  id: string
+  name: string
+  createdat: string
+  createdbyid: string
+  CreatedBy: {
+    name: string | null
+    email: string
+  } | null
+  _count?: {
+    activeRecruiters: number
+    pendingInvites: number
+  }
+}

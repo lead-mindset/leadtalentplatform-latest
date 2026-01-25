@@ -5,17 +5,8 @@ import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { Suspense } from 'react'
 import { Building, Plus, Users, Mail, CheckCircle2, Clock } from 'lucide-react'
-
-type Company = {
-  id: string
-  name: string
-  createdat: string
-  createdbyid: string
-  CreatedBy: {
-    name: string | null
-    email: string
-  } | null
-}
+import type { CompanyRaw } from '@/lib/types'
+import type { Company } from '@/lib/types'
 
 async function getCompanies() {
   const supabase = await createClient()
@@ -40,33 +31,35 @@ async function getCompanies() {
   }
 
   // Get recruiter counts for each company
-  const companiesWithCounts = await Promise.all(
-    (companies || []).map(async (company) => {
-      const { count: activeCount } = await supabase
-        .from('RecruiterAccess')
-        .select('*', { count: 'exact', head: true })
-        .eq('companyId', company.id)
-        .eq('isActive', true)
+const companiesWithCounts = await Promise.all(
+  (companies as CompanyRaw[]).map(async (company) => {
+    const { count: activeCount } = await supabase
+      .from('RecruiterAccess')
+      .select('*', { count: 'exact', head: true })
+      .eq('companyId', company.id)
+      .eq('isActive', true)
 
-      const { count: pendingCount } = await supabase
-        .from('RecruiterAccess')
-        .select('*', { count: 'exact', head: true })
-        .eq('companyId', company.id)
-        .is('acceptedAt', null)
-        .is('revokedAt', null)
-        .gt('inviteExpiresAt', new Date().toISOString())
+    const { count: pendingCount } = await supabase
+      .from('RecruiterAccess')
+      .select('*', { count: 'exact', head: true })
+      .eq('companyId', company.id)
+      .is('acceptedAt', null)
+      .is('revokedAt', null)
+      .gt('inviteExpiresAt', new Date().toISOString())
 
-      return {
-        ...company,
-        _count: {
-          activeRecruiters: activeCount || 0,
-          pendingInvites: pendingCount || 0
-        }
+    return {
+      ...company,
+      CreatedBy: company.CreatedBy[0] ?? null, // 🔥 normalize here
+      _count: {
+        activeRecruiters: activeCount || 0,
+        pendingInvites: pendingCount || 0
       }
-    })
-  )
+    }
+  })
+)
 
-  return companiesWithCounts
+return companiesWithCounts as Company[]
+
 }
 
 async function CompaniesList() {
