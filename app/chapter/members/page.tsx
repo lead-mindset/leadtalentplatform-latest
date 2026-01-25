@@ -1,9 +1,8 @@
+// app/chapter/members/page.tsx
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Suspense } from 'react'
 import { 
   CheckCircle2, 
@@ -18,6 +17,9 @@ import {
   AlertCircle
 } from 'lucide-react'
 import { ApproveMemberButton, RejectMemberButton } from './components/member-actions'
+import { MembersTabs } from './member-tabs'
+
+
 type MemberWithProfile = {
   id: string
   email: string
@@ -402,32 +404,15 @@ async function PageContent({ status }: { status: string }) {
         </p>
       </div>
 
-      <Tabs value={status} className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="all" asChild>
-            <a href="/chapter/members?status=all">All Members</a>
-          </TabsTrigger>
-          <TabsTrigger value="pending" asChild>
-            <a href="/chapter/members?status=pending">Pending</a>
-          </TabsTrigger>
-          <TabsTrigger value="approved" asChild>
-            <a href="/chapter/members?status=approved">Approved</a>
-          </TabsTrigger>
-          <TabsTrigger value="incomplete" asChild>
-            <a href="/chapter/members?status=incomplete">Incomplete</a>
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value={status} className="space-y-4">
-          <Suspense fallback={<MembersLoading />}>
-            <MembersContent 
-              chapterId={userData.chapterId}
-              currentUserId={user.id}
-              status={status}
-            />
-          </Suspense>
-        </TabsContent>
-      </Tabs>
+      <MembersTabs defaultValue={status}>
+        <Suspense fallback={<MembersLoading />}>
+          <MembersContent 
+            chapterId={userData.chapterId}
+            currentUserId={user.id}
+            status={status}
+          />
+        </Suspense>
+      </MembersTabs>
     </>
   )
 }
@@ -450,12 +435,11 @@ export default function ChapterMembersPage({
 }: {
   searchParams: { status?: string }
 }) {
-  // searchParams is now synchronous in the function signature
   const status = searchParams.status || 'all'
 
   return (
     <div className="space-y-6">
-      <Suspense fallback={<PageLoading />}>
+      <Suspense key={status} fallback={<PageLoading />}>
         <PageContent status={status} />
       </Suspense>
     </div>
