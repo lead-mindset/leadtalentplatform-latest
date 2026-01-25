@@ -71,14 +71,14 @@ export type MemberWithProfile = UserRow & {
 }
 
 export type ChapterStats = {
-  total: number
-  pending: number
-  approved: number
-  incomplete: number
-  completeProfiles: number
-  visibleToRecruiters?: number
-  pendingMembers: MemberWithProfile[]
-  approvedMembers: MemberWithProfile[]
+    total: number;
+    pending: number;
+    approved: number;
+    incomplete: number;
+    pendingMembers: MemberWithProfile[];
+    approvedMembers: MemberWithProfile[];
+    completeProfiles: number;
+    visibleToRecruiters: number;
 }
 
 
@@ -87,10 +87,8 @@ export type RecentActivityMember = UserRow & {
 }
 
 export type ChapterData = {
-  chapterId: string
-  chapterName: string
-  university: string
+  chapterName: string;
+  university: string;
   stats: ChapterStats
-  pendingMembers: MemberWithProfile[]
-  recentActivity: RecentActivityMember[]
+  recentActivity: RecentActivityMember[];
 }
