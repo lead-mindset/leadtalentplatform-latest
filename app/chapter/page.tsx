@@ -212,15 +212,18 @@ async function ChapterContent() {
 
   const allMembers = await getChapterMembers(user.chapterId)
   const stats = getMemberStats(allMembers)
-  console.log(stats)
 
   const recentActivity: RecentActivityMember[] = allMembers
-    .filter((m): m is RecentActivityMember => m.StudentProfile?.approvedById != null)
-    .sort((a, b) => new Date(b.StudentProfile!.updatedAt).getTime() - new Date(a.StudentProfile!.updatedAt).getTime())
-    .slice(0, 10)
+  .filter(m => m.StudentProfile?.approvedById != null)
+  .map(m => ({
+    ...m,
+    StudentProfile: m.StudentProfile!,
+  }))
+  .sort((a, b) => new Date(b.StudentProfile.updatedAt).getTime() - new Date(a.StudentProfile.updatedAt).getTime())
+  .slice(0, 10)
 
-  const chapterName = user.Chapter?.name || 'Unknown Chapter'
-  const university = user.Chapter?.university || 'Unknown University'
+  const chapterName = user.Chapter?.name ?? 'Unknown Chapter'
+  const university = user.Chapter?.university ?? 'Unknown University'
 
   return <StatsDisplay data={{ chapterName, university, stats, recentActivity }} />
 }
