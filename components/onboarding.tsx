@@ -13,6 +13,7 @@ import { Button } from './ui/button'
 import { useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import CareerCommandSelect from './ui/career-combobox'
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -242,10 +243,17 @@ export default function Onboarding() {
           </div>
 
           <div className="space-y-4">
-            <FormInput
-              label="Major / Career Field"
+
+            <Controller
+              control={control}
               name="career"
-              error={errors.career?.message}
+              render={({ field }) => (
+                <CareerCommandSelect
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={errors.career?.message}
+                />
+              )}
             />
 
             <FormInput
