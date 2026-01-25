@@ -17,7 +17,7 @@ interface DynamicSidebarProps {
     name: string
     email?: string
     role: string
-    Chapter?: ChapterRow[] | null
+    Chapter?: ChapterRow | null
   }
   hasPendingApprovals?: boolean
 }
