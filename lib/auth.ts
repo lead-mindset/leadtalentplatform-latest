@@ -43,9 +43,9 @@ export async function requireUser(): Promise<{ supabase: SupabaseClient; user: U
   if (error || !userData) redirect('/auth/login')
 
   const user: User = {
-    ...userData,
-    Chapter: userData.Chapter?.[0] ?? null
-  }
+  ...userData,
+  Chapter: (userData.Chapter && userData.Chapter[0]) ?? null
+}
 
   return { supabase, user }
 }
@@ -76,10 +76,10 @@ export async function getUserWithChapter(
 
   if (error || !data) redirect('/auth/login')
 
-  return {
-    ...data,
-    Chapter: data.Chapter?.[0] ?? null
-  }
+  const user: User = {
+  ...userData,
+  Chapter: (userData.Chapter && userData.Chapter[0]) ?? null
+}
 }
 
 
