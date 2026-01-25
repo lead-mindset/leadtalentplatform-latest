@@ -119,3 +119,24 @@ export interface NavItemConfig {
   showCountKey?: keyof AdminStats
   description?: string
 }
+
+
+
+export type UserWithDetailsRaw =
+  UserRow & {
+    Chapter: Pick<ChapterRow, "name" | "university">[]
+    StudentProfile: Pick<
+      StudentProfileRow,
+      "isFilled" | "approvedById" | "isRecruiterVisible"
+    >[]
+  }
+
+
+  export type UserWithDetails =
+  UserRow & {
+    Chapter: Pick<ChapterRow, "name" | "university"> | null
+    StudentProfile: Pick<
+      StudentProfileRow,
+      "isFilled" | "approvedById" | "isRecruiterVisible"
+    > | null
+  }
