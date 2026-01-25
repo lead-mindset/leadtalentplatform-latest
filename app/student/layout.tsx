@@ -2,7 +2,6 @@ import { SidebarLayout } from '@/components/ui/sidebars/sidebar-layout'
 import { DynamicSidebar } from '@/components/ui/sidebars/dynamic-sidebar'
 import { requireUser } from '@/lib/auth'
 import { Suspense } from 'react'
-
 import type { ReactNode } from 'react'
 import { SkeletonSidebar } from '@/components/ui/sidebars/skeleton-sidebar'
 
