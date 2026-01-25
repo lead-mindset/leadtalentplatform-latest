@@ -19,28 +19,8 @@ import {
   Settings,
   ShieldCheck
 } from 'lucide-react'
-
-interface AdminStats {
-  pendingInvites: number
-  pendingApprovals: number
-  totalUsers: number
-  totalChapters: number
-  totalCompanies: number
-}
-
-interface AdminSidebarProps {
-  user: { name: string; email?: string; role: string }
-  stats: AdminStats
-}
-
-interface NavItemConfig {
-  name: string
-  href: string
-  icon: React.ComponentType<any>
-  showIndicatorKey?: keyof AdminStats
-  showCountKey?: keyof AdminStats
-  description?: string
-}
+import type { AdminSidebarProps } from '@/lib/types'
+import type { NavItemConfig } from '@/lib/types'
 
 const adminNav: NavItemConfig[] = [
   { name: 'Overview', href: '/admin', icon: LayoutDashboard, description: 'System dashboard' },
