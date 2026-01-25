@@ -7,16 +7,15 @@ import { SkeletonSidebar } from '@/components/ui/sidebars/skeleton-sidebar'
 
 async function SidebarContent() {
   const { supabase, user } = await requireUser()
-  const userData = await getUserWithChapter(supabase, user.id)
 
-  if (userData.role !== 'editor') redirect('/student')
+  if (user.role !== 'editor') redirect('/student')
 
   const { hasPendingApprovals } = await getSidebarStatsForEditor(
     supabase,
-    userData.chapterId
+    user.chapterId
   )
 
-  return <DynamicSidebar user={userData} hasPendingApprovals={hasPendingApprovals} />
+  return <DynamicSidebar user={user} hasPendingApprovals={hasPendingApprovals} />
 }
 
 export default function ChapterLayout({ children }: { children: React.ReactNode }) {
