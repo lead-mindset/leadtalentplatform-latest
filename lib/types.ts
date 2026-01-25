@@ -15,6 +15,50 @@ export const NAV_LINKS: NavLink[] = [
 ];
 
 
+export type User = {
+  id: string
+  email: string
+  name: string
+  role: string
+  chapterId: string | null
+  Chapter?: ChapterRow | null
+}
+
+export type EditorSidebarStats = {
+  hasPendingApprovals: boolean
+}
+
+export type AdminSidebarStats = {
+  pendingInvites: number
+  pendingApprovals: number
+  totalUsers: number
+  totalChapters: number
+  totalCompanies: number
+}
+
+export interface Chapter {
+  id: string
+  name: string
+  university: string
+  city: string | null
+  region: string | null
+  createdAt: string | null
+  updatedAt: string
+}
+
+
+
+export interface SupabaseUserWithChapter {
+  id: string
+  email: string
+  name: string
+  role: string
+  chapterId: string | null
+  Chapter: Chapter | null
+}
+
+
+
 export type Database = {
   public: {
     Tables: {
