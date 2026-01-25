@@ -10,18 +10,14 @@ import {
 } from '../sidebar'
 import { usePathname } from 'next/navigation'
 import { User, FileText, Users, LayoutDashboard } from 'lucide-react'
-
-interface Chapter {
-  name: string
-  university: string
-}
+import type { ChapterRow } from '@/lib/types'
 
 interface DynamicSidebarProps {
   user: {
     name: string
     email?: string
     role: string
-    Chapter?: Chapter | null
+    Chapter?: ChapterRow[] | null
   }
   hasPendingApprovals?: boolean
 }
