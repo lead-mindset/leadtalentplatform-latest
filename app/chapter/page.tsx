@@ -5,18 +5,19 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { Suspense } from 'react'
 import { Users, UserCheck, Clock, TrendingUp, AlertCircle, CheckCircle2, UserX } from 'lucide-react'
-import { getUserWithChapter, requireUser } from '@/lib/auth'
+import { requireUser } from '@/lib/auth'
 import type { User } from '@/lib/auth'
 import type { ChapterData, RecentActivityMember } from '@/lib/types'
 import { getChapterMembers, getMemberStats } from './members/page'
 
 function StatsDisplay({ data }: { data: ChapterData }) {
+
   const { stats, recentActivity, chapterName, university } = data
   console.log(stats)
 
-  const approvalRate = stats.total > 0 
-  ? Math.round((stats.approved / stats.total) * 100)
-  : 0;
+  const approvalRate = stats.total > 0
+    ? Math.round((stats.approved / stats.total) * 100)
+    : 0;
 
   return (
     <>
@@ -76,9 +77,9 @@ function StatsDisplay({ data }: { data: ChapterData }) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.approved}</div>
-<p className="text-xs text-muted-foreground">
-  {approvalRate}% approval rate
-</p>          </CardContent>
+            <p className="text-xs text-muted-foreground">
+              {approvalRate}% approval rate
+            </p>          </CardContent>
         </Card>
 
         <Card>
