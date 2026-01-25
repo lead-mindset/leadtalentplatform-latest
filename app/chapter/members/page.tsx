@@ -16,7 +16,7 @@ import { MembersTabs } from './components/member-tabs'
 
 import type { MemberWithProfile } from '@/lib/types'
 
-async function getChapterMembers(
+export async function getChapterMembers(
   chapterId: string
 ): Promise<MemberWithProfile[]> {
   const supabase = await createClient()
@@ -74,39 +74,33 @@ async function getChapterMembers(
   })) as MemberWithProfile[]
 }
 
-function getMemberStats(members: MemberWithProfile[]) {
+export function getMemberStats(members: MemberWithProfile[]) {
   const pending = members.filter(
-    m =>
-      m.StudentProfile?.isFilled === true &&
-      m.StudentProfile?.approvedById === null
+    m => m.StudentProfile?.isFilled && m.StudentProfile?.approvedById === null
   )
-
-  const approved = members.filter(
-    m => m.StudentProfile?.approvedById !== null
-  )
-
-  const incomplete = members.filter(
-    m => !m.StudentProfile?.isFilled
-  )
+  const approved = members.filter(m => m.StudentProfile?.approvedById !== null)
+  const incomplete = members.filter(m => !m.StudentProfile?.isFilled)
 
   return {
     total: members.length,
     pending: pending.length,
     approved: approved.length,
-    incomplete: incomplete.length
+    incomplete: incomplete.length,
+    pendingMembers: pending,
+    approvedMembers: approved,
+    completeProfiles: members.filter(m => m.StudentProfile?.isFilled).length,
+    visibleToRecruiters: members.filter(m => m.StudentProfile?.isRecruiterVisible).length
   }
 }
 
-function filterMembers(
+export function filterMembers(
   members: MemberWithProfile[],
   status: 'all' | 'pending' | 'approved' | 'incomplete'
 ) {
   switch (status) {
     case 'pending':
       return members.filter(
-        m =>
-          m.StudentProfile?.isFilled === true &&
-          m.StudentProfile?.approvedById === null
+        m => m.StudentProfile?.isFilled && m.StudentProfile?.approvedById === null
       )
     case 'approved':
       return members.filter(m => m.StudentProfile?.approvedById !== null)
