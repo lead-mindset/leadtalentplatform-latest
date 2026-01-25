@@ -9,7 +9,7 @@ export type User = {
   name: string
   role: string
   chapterId: string | null
-  Chapter?: ChapterRow | null
+  Chapter?: ChapterRow[] | null
 }
 
 export type EditorSidebarStats = {
@@ -41,11 +41,12 @@ export async function requireUser(): Promise<{ supabase: SupabaseClient; user: U
     .single()
 
   if (error || !userData) redirect('/auth/login')
+  console.log('whwwwwha', userData)
 
   const user: User = {
-  ...userData,
-  Chapter: (userData.Chapter && userData.Chapter[0]) ?? null
-}
+    ...userData,
+    Chapter: userData.Chapter ?? null
+  }
 
   return { supabase, user }
 }
@@ -61,32 +62,13 @@ export async function requireUserWithRole(role: string): Promise<{ supabase: Sup
   return { supabase, user }
 }
 
-export async function getUserWithChapter(
-  supabase: SupabaseClient,
-  userId: string
-): Promise<User> {
-  const { data, error } = await supabase
-    .from('User')
-    .select(`
-      id, email, name, role, chapterId,
-    Chapter(id, name, university, city, region, createdAt, updatedAt)
-    `)
-    .eq('id', userId)
-    .single()
-
-  if (error || !data) redirect('/auth/login')
-
-  const user: User = {
-  ...userData,
-  Chapter: (userData.Chapter && userData.Chapter[0]) ?? null
-}
-}
 
 
 export async function getSidebarStatsForEditor(
   supabase: SupabaseClient,
   chapterId: string | null
 ): Promise<EditorSidebarStats> {
+
   if (!chapterId) return { hasPendingApprovals: false }
 
   const { data: chapterUsers } = await supabase
