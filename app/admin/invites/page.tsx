@@ -1,54 +1,68 @@
+// app/admin/invites/page.tsx - Updated with invite form
+
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { Suspense } from 'react'
-import { Mail, Clock, CheckCircle2, XCircle, AlertCircle, Building } from 'lucide-react'
-import type { RecruiterInviteRaw } from '@/lib/types'
-import type { RecruiterInvite } from '@/lib/types'
+import { Mail, Clock, CheckCircle2, XCircle, AlertCircle, Building, Plus } from 'lucide-react'
+import type { RecruiterInviteRaw, RecruiterInvite, CompanyRaw, Company } from '@/lib/types'
+import { InviteForm } from './components/invite-form'
+import { InviteActions } from './components/invite-actions'
 
 function normalizeRecruiterInvites(
   invites: RecruiterInviteRaw[]
 ): RecruiterInvite[] {
   return invites.map(invite => ({
     ...invite,
-    Company: invite.Company[0] ?? null,
-    GrantedBy: invite.GrantedBy[0] ?? null,
-    AcceptedBy: invite.AcceptedBy[0] ?? null,
+    // Handle null values when relationships don't exist
+    Company: Array.isArray(invite.Company) ? (invite.Company[0] ?? null) : null,
+    GrantedBy: Array.isArray(invite.GrantedBy) ? (invite.GrantedBy[0] ?? null) : null,
+    // AcceptedBy will be null if acceptedByUserId is NULL (invite not yet accepted)
+    AcceptedBy: Array.isArray(invite.AcceptedBy) ? (invite.AcceptedBy[0] ?? null) : null,
   }))
 }
 
-function getInviteStatus(invite: RecruiterInvite) {
-  if (invite.revokedAt) {
-    return {
-      label: 'Revoked',
-      variant: 'destructive' as const,
-      icon: XCircle,
-      color: 'text-red-500'
-    }
-  }
-  if (invite.acceptedAt) {
-    return {
-      label: 'Accepted',
-      variant: 'default' as const,
-      icon: CheckCircle2,
-      color: 'text-green-500'
-    }
-  }
-  if (invite.inviteExpiresAt && new Date(invite.inviteExpiresAt) < new Date()) {
-    return {
-      label: 'Expired',
-      variant: 'secondary' as const,
-      icon: AlertCircle,
-      color: 'text-orange-500'
-    }
-  }
-  return {
-    label: 'Pending',
-    variant: 'outline' as const,
-    icon: Clock,
-    color: 'text-blue-500'
+function getInviteStatus(invite: RecruiterInvite): 'pending' | 'accepted' | 'expired' | 'revoked' {
+  if (invite.revokedAt) return 'revoked'
+  if (invite.acceptedAt) return 'accepted'
+  if (invite.inviteExpiresAt && new Date(invite.inviteExpiresAt) < new Date()) return 'expired'
+  return 'pending'
+}
+
+function getInviteStatusDisplay(invite: RecruiterInvite) {
+  const status = getInviteStatus(invite)
+  
+  switch (status) {
+    case 'revoked':
+      return {
+        label: 'Revoked',
+        variant: 'destructive' as const,
+        icon: XCircle,
+        color: 'text-red-500'
+      }
+    case 'accepted':
+      return {
+        label: 'Accepted',
+        variant: 'default' as const,
+        icon: CheckCircle2,
+        color: 'text-green-500'
+      }
+    case 'expired':
+      return {
+        label: 'Expired',
+        variant: 'secondary' as const,
+        icon: AlertCircle,
+        color: 'text-orange-500'
+      }
+    default:
+      return {
+        label: 'Pending',
+        variant: 'outline' as const,
+        icon: Clock,
+        color: 'text-blue-500'
+      }
   }
 }
 
@@ -83,72 +97,111 @@ async function getInvites() {
     return []
   }
 
-return normalizeRecruiterInvites(invites as RecruiterInviteRaw[])
+  return normalizeRecruiterInvites(invites as RecruiterInviteRaw[])
+}
+
+async function getCompanies(): Promise<Company[]> {
+  const supabase = await createClient()
+
+  const { data: companies, error } = await supabase
+    .from('Company')
+    .select(`
+      id,
+      name,
+      createdat,
+      createdbyid,
+      CreatedBy:User!Company_createdbyid_fkey (
+        name,
+        email
+      )
+    `)
+    .order('name', { ascending: true })
+
+  if (error) {
+    console.error('Failed to fetch companies:', error)
+    return []
+  }
+
+  return (companies as CompanyRaw[]).map(company => ({
+    ...company,
+    CreatedBy: company.CreatedBy[0] ?? null,
+  }))
 }
 
 async function InvitesList() {
-  const invites = await getInvites()
+  const [invites, companies] = await Promise.all([
+    getInvites(),
+    getCompanies(),
+  ])
 
   const stats = {
     total: invites.length,
-    pending: invites.filter(i => !i.acceptedAt && !i.revokedAt && i.inviteExpiresAt && new Date(i.inviteExpiresAt) > new Date()).length,
-    accepted: invites.filter(i => i.acceptedAt).length,
-    expired: invites.filter(i => !i.acceptedAt && i.inviteExpiresAt && new Date(i.inviteExpiresAt) < new Date()).length,
-    revoked: invites.filter(i => i.revokedAt).length,
+    pending: invites.filter(i => getInviteStatus(i) === 'pending').length,
+    accepted: invites.filter(i => getInviteStatus(i) === 'accepted').length,
+    expired: invites.filter(i => getInviteStatus(i) === 'expired').length,
+    revoked: invites.filter(i => getInviteStatus(i) === 'revoked').length,
   }
 
   return (
     <>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5 mb-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Invites</CardTitle>
-            <Mail className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
-          </CardContent>
-        </Card>
+      <div className="grid gap-6 md:grid-cols-3 mb-6">
+        <div className="md:col-span-2">
+          <div className="grid gap-4 md:grid-cols-5">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Invites</CardTitle>
+                <Mail className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.total}</div>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending</CardTitle>
-            <Clock className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.pending}</div>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Pending</CardTitle>
+                <Clock className="h-4 w-4 text-blue-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.pending}</div>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Accepted</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.accepted}</div>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Accepted</CardTitle>
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.accepted}</div>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Expired</CardTitle>
-            <AlertCircle className="h-4 w-4 text-orange-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.expired}</div>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Expired</CardTitle>
+                <AlertCircle className="h-4 w-4 text-orange-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.expired}</div>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Revoked</CardTitle>
-            <XCircle className="h-4 w-4 text-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.revoked}</div>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Revoked</CardTitle>
+                <XCircle className="h-4 w-4 text-red-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.revoked}</div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        <div>
+          <InviteForm companies={companies} />
+        </div>
       </div>
 
       <Card>
@@ -164,7 +217,7 @@ async function InvitesList() {
               <Mail className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground">No invites yet</p>
               <p className="text-sm text-muted-foreground mt-2">
-                Invites will appear here when companies invite recruiters
+                Send your first invitation using the form above
               </p>
             </div>
           ) : (
@@ -183,8 +236,9 @@ async function InvitesList() {
                 </thead>
                 <tbody>
                   {invites.map((invite) => {
+                    const statusDisplay = getInviteStatusDisplay(invite)
                     const status = getInviteStatus(invite)
-                    const StatusIcon = status.icon
+                    const StatusIcon = statusDisplay.icon
                     
                     return (
                       <tr key={invite.id} className="border-b last:border-0 hover:bg-muted/50">
@@ -203,9 +257,9 @@ async function InvitesList() {
                           </div>
                         </td>
                         <td className="p-3">
-                          <Badge variant={status.variant} className="gap-1">
-                            <StatusIcon className={`h-3 w-3 ${status.color}`} />
-                            {status.label}
+                          <Badge variant={statusDisplay.variant} className="gap-1">
+                            <StatusIcon className={`h-3 w-3 ${statusDisplay.color}`} />
+                            {statusDisplay.label}
                           </Badge>
                         </td>
                         <td className="p-3">
@@ -233,11 +287,7 @@ async function InvitesList() {
                           )}
                         </td>
                         <td className="p-3 text-right">
-                          <Button asChild variant="ghost" size="sm">
-                            <Link href={`/admin/invites/${invite.id}`}>
-                              View
-                            </Link>
-                          </Button>
+                          <InviteActions inviteId={invite.id} status={status} />
                         </td>
                       </tr>
                     )
@@ -255,17 +305,33 @@ async function InvitesList() {
 function LoadingSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        {[...Array(5)].map((_, i) => (
-          <Card key={i}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div className="h-4 w-20 bg-muted animate-pulse rounded" />
-            </CardHeader>
-            <CardContent>
-              <div className="h-8 w-12 bg-muted animate-pulse rounded" />
-            </CardContent>
-          </Card>
-        ))}
+      <div className="grid gap-6 md:grid-cols-3">
+        <div className="md:col-span-2">
+          <div className="grid gap-4 md:grid-cols-5">
+            {[...Array(5)].map((_, i) => (
+              <Card key={i}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <div className="h-4 w-20 bg-muted animate-pulse rounded" />
+                </CardHeader>
+                <CardContent>
+                  <div className="h-8 w-12 bg-muted animate-pulse rounded" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+        <Card>
+          <CardHeader>
+            <div className="h-6 w-32 bg-muted animate-pulse rounded" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="h-10 bg-muted animate-pulse rounded" />
+              <div className="h-10 bg-muted animate-pulse rounded" />
+              <div className="h-10 bg-muted animate-pulse rounded" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
       <Card>
         <CardHeader>
@@ -286,11 +352,13 @@ function LoadingSkeleton() {
 export default function AdminInvitesPage() {
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Recruiter Invites</h1>
-        <p className="text-muted-foreground mt-2">
-          Manage recruiter invitations across all companies
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Recruiter Invites</h1>
+          <p className="text-muted-foreground mt-2">
+            Invite and manage recruiter access across all companies
+          </p>
+        </div>
       </div>
 
       <Suspense fallback={<LoadingSkeleton />}>
