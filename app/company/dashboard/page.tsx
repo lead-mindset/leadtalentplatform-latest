@@ -1,33 +1,119 @@
-import { Suspense } from "react"
-import DashboardContent from "./dashboard-content"
-import { Metadata } from "next"
+import { requireRecruiter, getCompanyStats, getSavedStudents } from '@/lib/company-actions';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Users, Heart, TrendingUp, Building } from 'lucide-react';
+import Link from 'next/link';
 
-export const metadata: Metadata = {
-  title: "Recruiter Dashboard | LEAD",
-  description: "Access LEAD talent",
-}
+export default async function CompanyDashboardPage() {
+  const { supabase, user } = await requireRecruiter();
+  
+  const [stats, recentSaved] = await Promise.all([
+    getCompanyStats(supabase, user.id),
+    getSavedStudents(supabase, user.id),
+  ]);
 
-export default function CompanyDashboardPage() {
+  const recentlySaved = recentSaved.slice(0, 5);
+
   return (
-    <main className="min-h-screen bg-gray-50">
-      <Suspense fallback={<DashboardSkeleton />}>
-        <DashboardContent />
-      </Suspense>
-    </main>
-  )
-}
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold mb-2">Recruiter Dashboard</h1>
+        <p className="text-muted-foreground">
+          Welcome back, {user.name}
+        </p>
+      </div>
 
-function DashboardSkeleton() {
-  return (
-    <div className="max-w-7xl mx-auto p-8">
-      <div className="animate-pulse">
-        <div className="h-8 bg-gray-200 rounded w-1/4 mb-8" />
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-32 bg-gray-200 rounded" />
-          ))}
-        </div>
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalStudents}</div>
+            <p className="text-xs text-muted-foreground">Available to view</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Saved Students</CardTitle>
+            <Heart className="h-4 w-4 text-red-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.savedStudents}</div>
+            <p className="text-xs text-muted-foreground">In your collection</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Company</CardTitle>
+            <Building className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-lg font-bold">{user.Company?.name}</div>
+            <p className="text-xs text-muted-foreground">Your organization</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+            <CardDescription>Common tasks and shortcuts</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Button asChild className="w-full justify-start">
+              <Link href="/company">
+                <Users className="mr-2 h-4 w-4" />
+                Browse All Students
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="w-full justify-start">
+              <Link href="/company/saved">
+                <Heart className="mr-2 h-4 w-4" />
+                View Saved Students
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Recently Saved</CardTitle>
+            <CardDescription>Students you've saved recently</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {recentlySaved.length === 0 ? (
+              <div className="text-center py-8">
+                <Heart className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground">No saved students yet</p>
+                <Button asChild variant="link" size="sm" className="mt-2">
+                  <Link href="/company">Start browsing</Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {recentlySaved.map((saved) => (
+                  <div key={saved.id} className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-sm">{saved.Student.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {saved.Student.StudentProfile?.major || 'No major listed'}
+                      </p>
+                    </div>
+                    <Button asChild size="sm" variant="ghost">
+                      <Link href={`/company/students/${saved.studentId}`}>View</Link>
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
-  )
+  );
 }
