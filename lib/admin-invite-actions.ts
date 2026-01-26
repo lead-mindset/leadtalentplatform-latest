@@ -105,6 +105,7 @@ export async function createRecruiterInvite(formData: {
 
     await transporter.verify()
 
+    // FIXED: Use /company/onboard?token= instead of /auth/login?token=
     const inviteLink = `${process.env.FRONTEND_URL}/company/onboard?token=${inviteToken}`
 
     await transporter.sendMail({
@@ -112,10 +113,33 @@ export async function createRecruiterInvite(formData: {
       to: formData.recruiterEmail,
       subject: `You're invited to LEAD - ${company.name}`,
       html: `
-        <p>Hello,</p>
-        <p>You've been invited to LEAD at <strong>${company.name}</strong>.</p>
-        <p><a href="${inviteLink}" target="_blank">Accept Invitation</a></p>
-        <p>This link expires on ${expiresAt.toISOString()}.</p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333;">Welcome to LEAD</h2>
+          <p>Hello,</p>
+          <p>You've been invited to join the LEAD talent platform as a recruiter for <strong>${company.name}</strong>.</p>
+          
+          <div style="margin: 30px 0;">
+            <a href="${inviteLink}" 
+               style="background-color: #0070f3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              Accept Invitation
+            </a>
+          </div>
+          
+          <p style="color: #666; font-size: 14px;">
+            Or copy and paste this link into your browser:<br/>
+            <a href="${inviteLink}" style="color: #0070f3;">${inviteLink}</a>
+          </p>
+          
+          <p style="color: #666; font-size: 14px;">
+            This invitation expires on ${expiresAt.toLocaleDateString()} at ${expiresAt.toLocaleTimeString()}.
+          </p>
+          
+          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
+          
+          <p style="color: #999; font-size: 12px;">
+            If you didn't expect this invitation, you can safely ignore this email.
+          </p>
+        </div>
       `,
     })
   } catch (err) {
@@ -209,7 +233,7 @@ export async function resendInvite(inviteId: string) {
   const { data: invite } = await supabase
     .from('RecruiterAccess')
     .select(
-      'id, recruiterEmail, acceptedAt, revokedAt, companyId, inviteToken, inviteExpiresAt'
+      'id, recruiterEmail, acceptedAt, revokedAt, companyId, inviteToken, inviteExpiresAt, Company (name)'
     )
     .eq('id', inviteId)
     .single()
@@ -235,17 +259,45 @@ export async function resendInvite(inviteId: string) {
     })
 
     await transporter.verify()
+    
     const inviteLink = `${process.env.FRONTEND_URL}/company/onboard?token=${newInviteToken}`
+
+    const companyName = Array.isArray(invite.Company) 
+      ? invite.Company[0]?.name 
+      : invite.Company?.name
 
     await transporter.sendMail({
       from: `"LEAD Platform" <${process.env.SMTP_USER}>`,
       to: invite.recruiterEmail,
-      subject: 'Your LEAD invitation has been resent',
+      subject: `Reminder: Your LEAD invitation - ${companyName}`,
       html: `
-        <p>Hello,</p>
-        <p>Your invitation to LEAD has been resent.</p>
-        <p><a href="${inviteLink}" target="_blank">Accept Invitation</a></p>
-        <p>This link expires on ${newExpiresAt.toISOString()}.</p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333;">LEAD Invitation Reminder</h2>
+          <p>Hello,</p>
+          <p>This is a reminder that you've been invited to join the LEAD talent platform for <strong>${companyName}</strong>.</p>
+          
+          <div style="margin: 30px 0;">
+            <a href="${inviteLink}" 
+               style="background-color: #0070f3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              Accept Invitation
+            </a>
+          </div>
+          
+          <p style="color: #666; font-size: 14px;">
+            Or copy and paste this link into your browser:<br/>
+            <a href="${inviteLink}" style="color: #0070f3;">${inviteLink}</a>
+          </p>
+          
+          <p style="color: #666; font-size: 14px;">
+            This invitation expires on ${newExpiresAt.toLocaleDateString()} at ${newExpiresAt.toLocaleTimeString()}.
+          </p>
+          
+          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
+          
+          <p style="color: #999; font-size: 12px;">
+            If you didn't expect this invitation, you can safely ignore this email.
+          </p>
+        </div>
       `,
     })
   } catch (err) {
