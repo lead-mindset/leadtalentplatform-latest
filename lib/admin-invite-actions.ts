@@ -15,11 +15,9 @@ export async function createRecruiterInvite(formData: {
 }) {
   const supabase = await createClient()
 
-  console.log('=== INVITE DEBUG START ===')
-  console.log('1. Form data:', formData)
-
-  const { data: { user: authUser } } = await supabase.auth.getUser()
-  console.log('2. Auth user:', authUser?.id, authUser?.email)
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser()
 
   if (!authUser) {
     return { success: false, error: 'Not authenticated' }
@@ -27,14 +25,12 @@ export async function createRecruiterInvite(formData: {
 
   const { data: adminUser } = await supabase
     .from('User')
-    .select('id, email, role')
+    .select('id, role')
     .eq('id', authUser.id)
     .single()
 
-  console.log('3. Admin user check:', adminUser)
-
   if (!adminUser || adminUser.role !== 'admin') {
-    return { success: false, error: 'Unauthorized - not an admin' }
+    return { success: false, error: 'Unauthorized' }
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -44,34 +40,43 @@ export async function createRecruiterInvite(formData: {
 
   const { data: company } = await supabase
     .from('Company')
-    .select('id, name')
+    .select('id')
     .eq('id', formData.companyId)
     .single()
-
-  console.log('4. Company check:', company)
 
   if (!company) {
     return { success: false, error: 'Company not found' }
   }
 
-  const { data: existingInvites } = await supabase
+  const { data: existingInvite, error: existingInviteError } = await supabase
     .from('RecruiterAccess')
-    .select('id, acceptedAt, revokedAt, inviteExpiresAt')
+    .select('id, acceptedAt, inviteExpiresAt')
     .eq('recruiterEmail', formData.recruiterEmail)
     .eq('companyId', formData.companyId)
     .is('revokedAt', null)
+    .maybeSingle()
 
-  console.log('5. Existing invites check:', existingInvites)
+  if (existingInviteError) {
+    return { success: false, error: 'Failed to validate existing invitations' }
+  }
 
-  if (existingInvites && existingInvites.length > 0) {
-    const activeInvite = existingInvites[0]
-
-    if (activeInvite.acceptedAt) {
-      return { success: false, error: 'This recruiter already has access to this company' }
+  if (existingInvite) {
+    if (existingInvite.acceptedAt) {
+      return {
+        success: false,
+        error: 'This recruiter already has access to this company',
+      }
     }
 
-    if (!activeInvite.inviteExpiresAt || new Date(activeInvite.inviteExpiresAt) > new Date()) {
-      return { success: false, error: 'A pending invitation already exists for this email and company' }
+    const isExpired =
+      existingInvite.inviteExpiresAt &&
+      new Date(existingInvite.inviteExpiresAt) <= new Date()
+
+    if (!isExpired) {
+      return {
+        success: false,
+        error: 'A pending invitation already exists for this email and company',
+      }
     }
   }
 
@@ -80,8 +85,6 @@ export async function createRecruiterInvite(formData: {
     : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
 
   const inviteToken = generateInviteToken()
-
-  console.log('6. Creating invitation (NOT a user yet)...')
 
   const { data: invite, error: inviteError } = await supabase
     .from('RecruiterAccess')
@@ -98,22 +101,15 @@ export async function createRecruiterInvite(formData: {
       revokedAt: null,
       revokedById: null,
     })
-    .select('id, inviteToken')
+    .select('id')
     .single()
 
-  console.log('7. Invite result:', invite)
-  console.log('7. Invite error:', inviteError)
-
   if (inviteError || !invite) {
-    console.error('Failed to create invite:', inviteError)
     return { success: false, error: 'Failed to create invitation' }
   }
 
   revalidatePath('/admin/invites')
   revalidatePath('/admin/companies')
-
-  console.log('=== INVITE DEBUG END - SUCCESS ===')
-  console.log('Invite token:', invite.inviteToken)
 
   return {
     success: true,
@@ -125,7 +121,10 @@ export async function createRecruiterInvite(formData: {
 export async function revokeInvite(inviteId: string) {
   const supabase = await createClient()
 
-  const { data: { user: authUser } } = await supabase.auth.getUser()
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser()
+
   if (!authUser) {
     return { success: false, error: 'Not authenticated' }
   }
@@ -164,23 +163,26 @@ export async function revokeInvite(inviteId: string) {
     .eq('id', inviteId)
 
   if (error) {
-    console.error('Failed to revoke invite:', error)
     return { success: false, error: 'Failed to revoke invitation' }
   }
 
   revalidatePath('/admin/invites')
 
-  const message = invite.acceptedAt
-    ? 'Recruiter access revoked successfully'
-    : 'Invitation revoked successfully'
-
-  return { success: true, message }
+  return {
+    success: true,
+    message: invite.acceptedAt
+      ? 'Recruiter access revoked successfully'
+      : 'Invitation revoked successfully',
+  }
 }
 
 export async function resendInvite(inviteId: string) {
   const supabase = await createClient()
 
-  const { data: { user: authUser } } = await supabase.auth.getUser()
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser()
+
   if (!authUser) {
     return { success: false, error: 'Not authenticated' }
   }
@@ -197,13 +199,7 @@ export async function resendInvite(inviteId: string) {
 
   const { data: invite } = await supabase
     .from('RecruiterAccess')
-    .select(`
-      id,
-      recruiterEmail,
-      acceptedAt,
-      revokedAt,
-      Company (name)
-    `)
+    .select('id, recruiterEmail, acceptedAt, revokedAt')
     .eq('id', inviteId)
     .single()
 
@@ -231,7 +227,6 @@ export async function resendInvite(inviteId: string) {
     .eq('id', inviteId)
 
   if (error) {
-    console.error('Failed to update invite:', error)
     return { success: false, error: 'Failed to resend invitation' }
   }
 
