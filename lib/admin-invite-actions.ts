@@ -9,12 +9,10 @@ function generateInviteToken(): string {
   return randomUUID()
 }
 
-// Audit logging
 async function auditLog(action: string, details: any) {
   console.log(`[AUDIT] ${new Date().toISOString()} - ${action}`, details)
 }
 
-// Create and send recruiter invite
 export async function createRecruiterInvite(formData: {
   recruiterEmail: string
   companyId: string
@@ -32,13 +30,13 @@ export async function createRecruiterInvite(formData: {
     .select('id, role')
     .eq('id', authUser.id)
     .single()
-  if (!adminUser || adminUser.role !== 'admin') return { success: false, error: 'Unauthorized' }
+  if (!adminUser || adminUser.role !== 'admin')
+    return { success: false, error: 'Unauthorized' }
 
-  // Validate email
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (!emailRegex.test(formData.recruiterEmail)) return { success: false, error: 'Invalid email address' }
+  if (!emailRegex.test(formData.recruiterEmail))
+    return { success: false, error: 'Invalid email address' }
 
-  // Check company exists
   const { data: company } = await supabase
     .from('Company')
     .select('id, name')
@@ -46,7 +44,6 @@ export async function createRecruiterInvite(formData: {
     .single()
   if (!company) return { success: false, error: 'Company not found' }
 
-  // Check for existing invite
   const { data: existingInvite } = await supabase
     .from('RecruiterAccess')
     .select('id, acceptedAt, inviteExpiresAt')
@@ -55,19 +52,21 @@ export async function createRecruiterInvite(formData: {
     .is('revokedAt', null)
     .maybeSingle()
   if (existingInvite) {
-    if (existingInvite.acceptedAt) return { success: false, error: 'Recruiter already has access' }
-    const isExpired = existingInvite.inviteExpiresAt && new Date(existingInvite.inviteExpiresAt) <= new Date()
-    if (!isExpired) return { success: false, error: 'Pending invite already exists' }
+    if (existingInvite.acceptedAt)
+      return { success: false, error: 'Recruiter already has access' }
+    const isExpired =
+      existingInvite.inviteExpiresAt &&
+      new Date(existingInvite.inviteExpiresAt) <= new Date()
+    if (!isExpired)
+      return { success: false, error: 'Pending invite already exists' }
   }
 
-  // Expiration
   const expiresAt = formData.expiresInDays
     ? new Date(Date.now() + formData.expiresInDays * 24 * 60 * 60 * 1000)
     : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
 
   const inviteToken = generateInviteToken()
 
-  // Insert invite in Supabase
   const { data: invite, error: inviteError } = await supabase
     .from('RecruiterAccess')
     .insert({
@@ -87,20 +86,24 @@ export async function createRecruiterInvite(formData: {
     .single()
   if (inviteError || !invite) {
     console.error('Invite creation error:', inviteError)
-    return { success: false, error: inviteError?.message || 'Failed to create invitation' }
+    return {
+      success: false,
+      error: inviteError?.message || 'Failed to create invitation',
+    }
   }
 
-  // Send email via Gmail SMTP
   try {
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT),
-      secure: false, // false for STARTTLS
+      secure: false,
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
     })
+
+    await transporter.verify()
 
     const inviteLink = `${process.env.FRONTEND_URL}/company/onboard?token=${inviteToken}`
 
@@ -117,12 +120,10 @@ export async function createRecruiterInvite(formData: {
     })
   } catch (err) {
     console.error('Failed to send email:', err)
-    // Optional: rollback Supabase insert
     await supabase.from('RecruiterAccess').delete().eq('id', invite.id)
     return { success: false, error: 'Failed to send invitation email' }
   }
 
-  // Audit log
   await auditLog('CREATE_INVITE', {
     adminId: authUser.id,
     recruiterEmail: formData.recruiterEmail,
@@ -133,9 +134,12 @@ export async function createRecruiterInvite(formData: {
   revalidatePath('/admin/invites')
   revalidatePath('/admin/companies')
 
-  return { success: true, inviteId: invite.id, message: `Invitation sent to ${formData.recruiterEmail}` }
-
-
+  return {
+    success: true,
+    inviteId: invite.id,
+    message: `Invitation sent to ${formData.recruiterEmail}`,
+  }
+}
 
 export async function revokeInvite(inviteId: string) {
   const supabase = await createClient()
@@ -149,17 +153,14 @@ export async function revokeInvite(inviteId: string) {
     .select('role')
     .eq('id', authUser.id)
     .single()
-
-  if (!adminUser || adminUser.role !== 'admin') {
+  if (!adminUser || adminUser.role !== 'admin')
     return { success: false, error: 'Unauthorized' }
-  }
 
   const { data: invite } = await supabase
     .from('RecruiterAccess')
     .select('id, acceptedAt, revokedAt, recruiterEmail, companyId')
     .eq('id', inviteId)
     .single()
-
   if (!invite) return { success: false, error: 'Invitation not found' }
   if (invite.revokedAt) return { success: false, error: 'Already revoked' }
 
@@ -171,7 +172,6 @@ export async function revokeInvite(inviteId: string) {
       isActive: false,
     })
     .eq('id', inviteId)
-
   if (error) return { success: false, error: 'Failed to revoke invitation' }
 
   await auditLog('REVOKE_INVITE', {
@@ -185,7 +185,9 @@ export async function revokeInvite(inviteId: string) {
 
   return {
     success: true,
-    message: invite.acceptedAt ? 'Recruiter access revoked successfully' : 'Invitation revoked successfully',
+    message: invite.acceptedAt
+      ? 'Recruiter access revoked successfully'
+      : 'Invitation revoked successfully',
   }
 }
 
@@ -201,15 +203,16 @@ export async function resendInvite(inviteId: string) {
     .select('role')
     .eq('id', authUser.id)
     .single()
-
-  if (!adminUser || adminUser.role !== 'admin') return { success: false, error: 'Unauthorized' }
+  if (!adminUser || adminUser.role !== 'admin')
+    return { success: false, error: 'Unauthorized' }
 
   const { data: invite } = await supabase
     .from('RecruiterAccess')
-    .select('id, recruiterEmail, acceptedAt, revokedAt')
+    .select(
+      'id, recruiterEmail, acceptedAt, revokedAt, companyId, inviteToken, inviteExpiresAt'
+    )
     .eq('id', inviteId)
     .single()
-
   if (!invite) return { success: false, error: 'Invitation not found' }
   if (invite.acceptedAt) return { success: false, error: 'Cannot resend an accepted invitation' }
   if (invite.revokedAt) return { success: false, error: 'Cannot resend a revoked invitation' }
@@ -219,13 +222,36 @@ export async function resendInvite(inviteId: string) {
 
   const { error } = await supabase
     .from('RecruiterAccess')
-    .update({
-      inviteToken: newInviteToken,
-      inviteExpiresAt: newExpiresAt.toISOString(),
-    })
+    .update({ inviteToken: newInviteToken, inviteExpiresAt: newExpiresAt.toISOString() })
     .eq('id', inviteId)
-
   if (error) return { success: false, error: 'Failed to resend invitation' }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT),
+      secure: false,
+      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    })
+
+    await transporter.verify()
+    const inviteLink = `${process.env.FRONTEND_URL}/company/onboard?token=${newInviteToken}`
+
+    await transporter.sendMail({
+      from: `"LEAD Platform" <${process.env.SMTP_USER}>`,
+      to: invite.recruiterEmail,
+      subject: 'Your LEAD invitation has been resent',
+      html: `
+        <p>Hello,</p>
+        <p>Your invitation to LEAD has been resent.</p>
+        <p><a href="${inviteLink}" target="_blank">Accept Invitation</a></p>
+        <p>This link expires on ${newExpiresAt.toISOString()}.</p>
+      `,
+    })
+  } catch (err) {
+    console.error('Failed to send email:', err)
+    return { success: false, error: 'Failed to resend invitation email' }
+  }
 
   await auditLog('RESEND_INVITE', {
     adminId: authUser.id,
@@ -234,7 +260,5 @@ export async function resendInvite(inviteId: string) {
   })
 
   revalidatePath('/admin/invites')
-
   return { success: true, message: 'Invitation resent successfully' }
-}
 }
