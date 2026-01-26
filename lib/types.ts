@@ -1,4 +1,3 @@
-
 export type Role = "admin" | "editor" | "member" | "recruiter";
 
 export type NavLink = {
@@ -24,10 +23,10 @@ export type Database = {
           email: string;
           name: string;
           role: Role;
-          chapterId: string;
+          chapterId: string | null;
           createdAt: string;
           updatedAt: string;
-          phone: string;
+          phone: string | null;
         };
       };
       Chapter: {
@@ -66,15 +65,8 @@ export type ChapterRow = Database["public"]["Tables"]["Chapter"]["Row"];
 export type StudentProfileRow = Database["public"]["Tables"]["StudentProfile"]["Row"];
 
 export type UserWithChapter = UserRow & { Chapter?: ChapterRow | null };
-
-export type MemberWithProfile = UserRow & {
-  StudentProfile: StudentProfileRow | null;
-  Chapter: ChapterRow | null;
-};
-
-export type RecentActivityMember = Omit<MemberWithProfile, "StudentProfile"> & {
-  StudentProfile: StudentProfileRow;
-};
+export type MemberWithProfile = UserRow & { StudentProfile: StudentProfileRow | null; Chapter: ChapterRow | null };
+export type RecentActivityMember = Omit<MemberWithProfile, "StudentProfile"> & { StudentProfile: StudentProfileRow };
 
 export type ChapterStats = {
   total: number;
@@ -94,121 +86,65 @@ export type ChapterData = {
   recentActivity: RecentActivityMember[];
 };
 
-export type EditorSidebarStats = {
-  hasPendingApprovals: boolean;
+export type EditorSidebarStats = { hasPendingApprovals: boolean };
+export interface AdminStats { pendingInvites: number; pendingApprovals: number; totalUsers: number; totalChapters: number; totalCompanies: number }
+export interface AdminSidebarProps { user: UserRow; stats: AdminStats }
+export interface NavItemConfig { name: string; href: string; icon: React.ComponentType<any>; showIndicatorKey?: keyof AdminStats; showCountKey?: keyof AdminStats; description?: string }
+
+export type UserWithDetailsRaw = UserRow & {
+  Chapter: Pick<ChapterRow, "name" | "university">[];
+  StudentProfile: Pick<StudentProfileRow, "isFilled" | "approvedById" | "isRecruiterVisible">[];
 };
 
-export interface AdminStats {
-  pendingInvites: number
-  pendingApprovals: number
-  totalUsers: number
-  totalChapters: number
-  totalCompanies: number
-}
-
-export interface AdminSidebarProps {
-  user: UserRow
-  stats: AdminStats
-}
-
-export interface NavItemConfig {
-  name: string
-  href: string
-  icon: React.ComponentType<any>
-  showIndicatorKey?: keyof AdminStats
-  showCountKey?: keyof AdminStats
-  description?: string
-}
-
-
-
-export type UserWithDetailsRaw =
-  UserRow & {
-    Chapter: Pick<ChapterRow, "name" | "university">[]
-    StudentProfile: Pick<
-      StudentProfileRow,
-      "isFilled" | "approvedById" | "isRecruiterVisible"
-    >[]
-  }
-
-
-  export type UserWithDetails =
-  UserRow & {
-    Chapter: Pick<ChapterRow, "name" | "university"> | null
-    StudentProfile: Pick<
-      StudentProfileRow,
-      "isFilled" | "approvedById" | "isRecruiterVisible"
-    > | null
-  }
-
-
+export type UserWithDetails = UserRow & {
+  Chapter: Pick<ChapterRow, "name" | "university"> | null;
+  StudentProfile: Pick<StudentProfileRow, "isFilled" | "approvedById" | "isRecruiterVisible"> | null;
+};
 
 export type RecruiterInviteRaw = {
-  id: string
-  recruiterEmail: string
-  isActive: boolean
-  grantedAt: string
-  inviteExpiresAt: string | null
-  acceptedAt: string | null
-  revokedAt: string | null
-  companyId: string
+  id: string;
+  recruiterEmail: string;
+  isActive: boolean;
+  grantedAt: string;
+  inviteExpiresAt: string | null;
+  acceptedAt: string | null;
+  revokedAt: string | null;
+  companyId: string;
+  Company: { name: string }[];
+  GrantedBy: { name: string; email: string }[];
+  AcceptedBy: { name: string; email: string }[];
+};
 
-  Company: { name: string }[]
-  GrantedBy: { name: string; email: string }[]
-  AcceptedBy: { name: string; email: string }[]
-}
 export type RecruiterInvite = {
-  id: string
-  recruiterEmail: string
-  isActive: boolean
-  grantedAt: string
-  inviteExpiresAt: string | null
-  acceptedAt: string | null
-  revokedAt: string | null
-  companyId: string
-
-  Company: { name: string } | null
-  GrantedBy: { name: string; email: string } | null
-  AcceptedBy: { name: string; email: string } | null
-}
-
+  id: string;
+  recruiterEmail: string;
+  isActive: boolean;
+  grantedAt: string;
+  inviteExpiresAt: string | null;
+  acceptedAt: string | null;
+  revokedAt: string | null;
+  companyId: string;
+  Company: { name: string } | null;
+  GrantedBy: { name: string; email: string } | null;
+  AcceptedBy: { name: string; email: string } | null;
+};
 
 export type CompanyRaw = {
-  id: string
-  name: string
-  createdat: string
-  createdbyid: string
-  CreatedBy: {
-    name: string | null
-    email: string
-  }[]
-}
+  id: string;
+  name: string;
+  createdat: string;
+  createdbyid: string;
+  CreatedBy: { name: string | null; email: string }[];
+};
 
 export type Company = {
-  id: string
-  name: string
-  createdat: string
-  createdbyid: string
-  CreatedBy: {
-    name: string | null
-    email: string
-  } | null
-  _count?: {
-    activeRecruiters: number
-    pendingInvites: number
-  }
-}
-
-
-
-
-
-
-
-
-
-
-
+  id: string;
+  name: string;
+  createdat: string;
+  createdbyid: string;
+  CreatedBy: { name: string | null; email: string } | null;
+  _count?: { activeRecruiters: number; pendingInvites: number };
+};
 
 export type RecruiterUser = UserRow & {
   RecruiterAccess: RecruiterAccessRow[];
@@ -217,7 +153,6 @@ export type RecruiterUser = UserRow & {
 
 export type RecruiterAccessRow = {
   id: string;
-  recruiterId: string;
   companyId: string;
   isActive: boolean;
   grantedById: string;
@@ -239,44 +174,28 @@ export type CompanyRow = {
 export type StudentForRecruiterRaw = {
   id: string;
   email: string;
-  name: string;
-  phone: string;
-  chapterId: string;
+  name: string | null;
+  phone: string | null;
+  chapterId: string | null;
   createdAt: string;
   Chapter: Pick<ChapterRow, "name" | "university" | "city" | "region">[];
-  StudentProfile: Pick<
-    StudentProfileRow,
-    | "major"
-    | "graduationYear"
-    | "linkedinUrl"
-    | "skills"
-    | "isRecruiterVisible"
-    | "updatedAt"
-  >[];
+  StudentProfile: Pick<StudentProfileRow, "major" | "graduationYear" | "linkedinUrl" | "skills" | "isRecruiterVisible" | "isFilled" | "updatedAt">[];
 };
 
 export type StudentForRecruiter = {
   id: string;
   email: string;
-  name: string;
-  phone: string;
-  chapterId: string;
+  name: string | null;
+  phone: string | null;
+  chapterId: string | null;
   createdAt: string;
   Chapter: Pick<ChapterRow, "name" | "university" | "city" | "region"> | null;
-  StudentProfile: Pick<
-    StudentProfileRow,
-    | "major"
-    | "graduationYear"
-    | "linkedinUrl"
-    | "skills"
-    | "isRecruiterVisible"
-    | "updatedAt"
-  > | null;
+  StudentProfile: Pick<StudentProfileRow, "major" | "graduationYear" | "linkedinUrl" | "skills" | "isRecruiterVisible" | "isFilled" | "updatedAt"> | null;
 };
 
 export type SavedStudent = {
   id: string;
-  recruiterId: string;
+  acceptedByUserId: string;
   studentId: string;
   savedAt: string;
   notes: string | null;
