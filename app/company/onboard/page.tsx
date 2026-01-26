@@ -1,18 +1,20 @@
-import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail } from 'lucide-react';
-import { Suspense } from 'react';
-import InviteContent from './invite-content';
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import { Suspense } from 'react'
+import InviteContent from './invite-content'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 
 async function checkRecruiterStatus(searchParams: { token?: string }) {
-  const supabase = await createClient();
+  const supabase = await createClient()
   const {
     data: { user: authUser },
-  } = await supabase.auth.getUser();
+  } = await supabase.auth.getUser()
 
-  // If there's a token in the URL and user is not authenticated, don't redirect yet
-  // Let the InviteContent component handle authentication
   if (!authUser && searchParams.token) {
     return {
       isAuthenticated: false,
@@ -20,96 +22,122 @@ async function checkRecruiterStatus(searchParams: { token?: string }) {
       pendingInvites: [],
       hasExpiredInvites: false,
       hasToken: true,
-    };
+    }
   }
 
   if (!authUser) {
-    redirect('/auth/login');
+    return {
+      isAuthenticated: false,
+      user: null,
+      pendingInvites: [],
+      hasExpiredInvites: false,
+      hasToken: false,
+    }
   }
 
   const { data: userData } = await supabase
     .from('User')
     .select(
       `
-      id, email, name, role,
+      id,
+      email,
+      name,
+      role,
       RecruiterAccess!RecruiterAccess_acceptedByUserId_fkey (
-        id, isActive, acceptedAt, revokedAt, inviteExpiresAt, inviteToken,
-        Company (name)
+        id,
+        isActive,
+        revokedAt,
+        acceptedAt,
+        inviteExpiresAt,
+        inviteToken,
+        Company ( id, name )
       )
     `
     )
     .eq('id', authUser.id)
-    .single();
+    .single()
 
-  if (!userData) redirect('/auth/login');
-
-  // If they're not a recruiter, redirect away
-  if (userData.role !== 'recruiter') {
-    redirect('/dashboard');
+  if (!userData) {
+    return {
+      isAuthenticated: false,
+      user: null,
+      pendingInvites: [],
+      hasExpiredInvites: false,
+      hasToken: !!searchParams.token,
+    }
   }
 
-  // Check for active access
-  const activeAccess = Array.isArray(userData.RecruiterAccess)
-    ? userData.RecruiterAccess.find((a: any) => a.isActive && !a.revokedAt)
-    : null;
+  const activeAccess = userData.RecruiterAccess?.find(
+    (a: any) => a.isActive && !a.revokedAt
+  )
 
   if (activeAccess) {
-    // They have active access, redirect to browse page
-    redirect('/company');
+    redirect('/company')
   }
 
-  // Check for pending invites by email
   const { data: pendingByEmail } = await supabase
     .from('RecruiterAccess')
     .select(
       `
-      id, recruiterEmail, inviteExpiresAt, acceptedAt, revokedAt, inviteToken,
-      Company (name)
+      id,
+      recruiterEmail,
+      inviteExpiresAt,
+      acceptedAt,
+      revokedAt,
+      inviteToken,
+      Company ( name )
     `
     )
     .eq('recruiterEmail', userData.email)
     .is('acceptedAt', null)
-    .is('revokedAt', null);
+    .is('revokedAt', null)
+
+  const now = new Date()
 
   const pendingInvites = (pendingByEmail || []).filter(
-    (a: any) => !a.inviteExpiresAt || new Date(a.inviteExpiresAt) > new Date()
-  );
+    (i: any) => !i.inviteExpiresAt || new Date(i.inviteExpiresAt) > now
+  )
+
+  const hasExpiredInvites = (pendingByEmail || []).some(
+    (i: any) => i.inviteExpiresAt && new Date(i.inviteExpiresAt) < now
+  )
 
   return {
     isAuthenticated: true,
     user: userData,
     pendingInvites,
-    hasExpiredInvites: (pendingByEmail || []).some(
-      (a: any) => a.inviteExpiresAt && new Date(a.inviteExpiresAt) < new Date()
-    ),
+    hasExpiredInvites,
     hasToken: !!searchParams.token,
-  };
+  }
 }
 
 export default async function CompanyOnboardPage({
   searchParams,
 }: {
-  searchParams: { token?: string };
+  searchParams: { token?: string }
 }) {
-  const status = await checkRecruiterStatus(searchParams);
+  const status = await checkRecruiterStatus(searchParams)
 
   return (
     <div className="flex items-center justify-center min-h-screen p-4">
       <div className="max-w-2xl w-full space-y-6">
         <div className="text-center">
-          <h1 className="text-3xl font-bold mb-2">Welcome to Recruiter Portal</h1>
+          <h1 className="text-3xl font-bold mb-2">
+            Welcome to Recruiter Portal
+          </h1>
           <p className="text-muted-foreground">
-            {status.hasToken 
+            {status.hasToken
               ? 'Accept your invitation to get started'
-              : 'Youl need an invitation to access student profiles'
-            }
+              : 'You need an invitation to access student profiles'}
           </p>
         </div>
 
         <Suspense fallback={<div>Loading...</div>}>
-          <InviteContent 
+          <InviteContent
             pendingInvites={status.isAuthenticated ? status.pendingInvites : []}
-            hasExpiredInvites={status.isAuthenticated ? status.hasExpiredInvites : false}
+            hasExpiredInvites={
+              status.isAuthenticated ? status.hasExpiredInvites : false
+            }
             isAuthenticated={status.isAuthenticated}
           />
         </Suspense>
@@ -121,27 +149,15 @@ export default async function CompanyOnboardPage({
             </CardHeader>
             <CardContent>
               <ol className="space-y-3 text-sm">
-                <li className="flex gap-2">
-                  <span className="font-semibold">1.</span>
-                  <span>Your company admin sends you an invitation email</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="font-semibold">2.</span>
-                  <span>Click the invitation link in your email</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="font-semibold">3.</span>
-                  <span>Accept the invitation to get instant access</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="font-semibold">4.</span>
-                  <span>Browse and connect with talented students</span>
-                </li>
+                <li>1. Your company admin sends an invitation email</li>
+                <li>2. Click the invitation link</li>
+                <li>3. Accept the invitation</li>
+                <li>4. Start recruiting</li>
               </ol>
             </CardContent>
           </Card>
         )}
       </div>
     </div>
-  );
+  )
 }
