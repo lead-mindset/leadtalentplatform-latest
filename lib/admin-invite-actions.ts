@@ -105,7 +105,6 @@ export async function createRecruiterInvite(formData: {
 
     await transporter.verify()
 
-    // FIXED: Use /company/onboard?token= instead of /auth/login?token=
     const inviteLink = `${process.env.FRONTEND_URL}/company/onboard?token=${inviteToken}`
 
     await transporter.sendMail({
