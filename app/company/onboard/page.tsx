@@ -1,19 +1,32 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, Clock, AlertCircle } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import { Suspense } from 'react';
 import InviteContent from './invite-content';
 
-async function checkRecruiterStatus() {
+async function checkRecruiterStatus(searchParams: { token?: string }) {
   const supabase = await createClient();
   const {
     data: { user: authUser },
   } = await supabase.auth.getUser();
 
-  if (!authUser) redirect('/auth/login');
+  // If there's a token in the URL and user is not authenticated, don't redirect yet
+  // Let the InviteContent component handle authentication
+  if (!authUser && searchParams.token) {
+    return {
+      isAuthenticated: false,
+      user: null,
+      pendingInvites: [],
+      hasExpiredInvites: false,
+      hasToken: true,
+    };
+  }
 
-  
+  if (!authUser) {
+    redirect('/auth/login');
+  }
+
   const { data: userData } = await supabase
     .from('User')
     .select(
@@ -63,16 +76,22 @@ async function checkRecruiterStatus() {
   );
 
   return {
+    isAuthenticated: true,
     user: userData,
     pendingInvites,
     hasExpiredInvites: (pendingByEmail || []).some(
       (a: any) => a.inviteExpiresAt && new Date(a.inviteExpiresAt) < new Date()
     ),
+    hasToken: !!searchParams.token,
   };
 }
 
-export default async function CompanyOnboardPage() {
-  const { user, pendingInvites, hasExpiredInvites } = await checkRecruiterStatus();
+export default async function CompanyOnboardPage({
+  searchParams,
+}: {
+  searchParams: { token?: string };
+}) {
+  const status = await checkRecruiterStatus(searchParams);
 
   return (
     <div className="flex items-center justify-center min-h-screen p-4">
@@ -80,42 +99,48 @@ export default async function CompanyOnboardPage() {
         <div className="text-center">
           <h1 className="text-3xl font-bold mb-2">Welcome to Recruiter Portal</h1>
           <p className="text-muted-foreground">
-            You'll need an invitation to access student profiles
+            {status.hasToken 
+              ? 'Accept your invitation to get started'
+              : 'Youl need an invitation to access student profiles'
+            }
           </p>
         </div>
 
         <Suspense fallback={<div>Loading...</div>}>
           <InviteContent 
-            pendingInvites={pendingInvites}
-            hasExpiredInvites={hasExpiredInvites}
+            pendingInvites={status.isAuthenticated ? status.pendingInvites : []}
+            hasExpiredInvites={status.isAuthenticated ? status.hasExpiredInvites : false}
+            isAuthenticated={status.isAuthenticated}
           />
         </Suspense>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>How it works</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ol className="space-y-3 text-sm">
-              <li className="flex gap-2">
-                <span className="font-semibold">1.</span>
-                <span>Your company admin sends you an invitation email</span>
-              </li>
-              <li className="flex gap-2">
-                <span className="font-semibold">2.</span>
-                <span>Click the invitation link in your email</span>
-              </li>
-              <li className="flex gap-2">
-                <span className="font-semibold">3.</span>
-                <span>Accept the invitation to get instant access</span>
-              </li>
-              <li className="flex gap-2">
-                <span className="font-semibold">4.</span>
-                <span>Browse and connect with talented students</span>
-              </li>
-            </ol>
-          </CardContent>
-        </Card>
+        {status.isAuthenticated && !status.hasToken && (
+          <Card>
+            <CardHeader>
+              <CardTitle>How it works</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ol className="space-y-3 text-sm">
+                <li className="flex gap-2">
+                  <span className="font-semibold">1.</span>
+                  <span>Your company admin sends you an invitation email</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="font-semibold">2.</span>
+                  <span>Click the invitation link in your email</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="font-semibold">3.</span>
+                  <span>Accept the invitation to get instant access</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="font-semibold">4.</span>
+                  <span>Browse and connect with talented students</span>
+                </li>
+              </ol>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
