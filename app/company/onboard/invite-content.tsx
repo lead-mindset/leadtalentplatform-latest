@@ -3,16 +3,16 @@
 import { useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { supabase } from "@/lib/supabase/client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, CheckCircle2, XCircle, Mail, Clock, AlertCircle } from "lucide-react"
-
+import { supabase } from "@/lib/supabase/client"
 type InviteState = 
   | { status: "loading" }
   | { status: "invalid"; message: string }
   | { status: "valid"; companyName: string; recruiterEmail: string; inviteId: string }
   | { status: "accepted" }
+  | { status: "needs_auth"; token: string; companyName: string }
 
 type PendingInvite = {
   id: string
@@ -24,10 +24,12 @@ type PendingInvite = {
 
 export default function InviteContent({ 
   pendingInvites, 
-  hasExpiredInvites 
+  hasExpiredInvites,
+  isAuthenticated 
 }: { 
   pendingInvites: PendingInvite[]
-  hasExpiredInvites: boolean 
+  hasExpiredInvites: boolean
+  isAuthenticated: boolean
 }) {
   const params = useSearchParams()
   const token = params.get("token")
@@ -79,6 +81,16 @@ export default function InviteContent({
         ? invite.Company[0]?.name 
         : invite.Company?.name
 
+      // Check if user is authenticated
+      if (!isAuthenticated) {
+        setState({ 
+          status: "needs_auth", 
+          token,
+          companyName: companyName || "Unknown Company"
+        })
+        return
+      }
+
       setState({ 
         status: "valid", 
         companyName: companyName || "Unknown Company",
@@ -95,6 +107,7 @@ export default function InviteContent({
     const { data: { user } } = await supabase.auth.getUser()
     
     if (!user) {
+      // Should not happen, but handle it
       const callbackUrl = encodeURIComponent(window.location.href)
       window.location.href = `/auth/login?redirect=${callbackUrl}`
       return
@@ -129,13 +142,49 @@ export default function InviteContent({
     }
   }
 
-  // Token-based invite flow
   if (token) {
     if (!state || state.status === "loading") {
       return (
         <Card>
           <CardContent className="flex items-center justify-center p-8">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </CardContent>
+        </Card>
+      )
+    }
+
+    if (state.status === "needs_auth") {
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle>Sign In Required</CardTitle>
+            <CardDescription>
+              You need to sign in to accept this invitation
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
+              <p className="font-medium text-blue-900 dark:text-blue-100 mb-1">
+                {state.companyName}
+              </p>
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                You've been invited to join as a recruiter
+              </p>
+            </div>
+
+            <Button 
+              onClick={() => {
+                const callbackUrl = encodeURIComponent(window.location.href)
+                window.location.href = `/auth/login?redirect=${callbackUrl}`
+              }}
+              className="w-full"
+            >
+              Sign In to Accept Invitation
+            </Button>
+
+            <p className="text-xs text-muted-foreground text-center">
+              If you don't have an account, you'll be able to create one
+            </p>
           </CardContent>
         </Card>
       )
@@ -202,7 +251,29 @@ export default function InviteContent({
     )
   }
 
-  // No token - show pending invites
+  if (!isAuthenticated) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Sign In Required</CardTitle>
+          <CardDescription>
+            Please sign in to view your invitations
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button 
+            onClick={() => {
+              window.location.href = `/auth/login?redirect=${encodeURIComponent('/company/onboard')}`
+            }}
+            className="w-full"
+          >
+            Sign In
+          </Button>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card>
       <CardHeader>
