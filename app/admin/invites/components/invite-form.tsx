@@ -33,7 +33,10 @@ export function InviteForm({ companies }: InviteFormProps) {
     setError(null);
     setSuccess(null);
 
-    const formData = new FormData(e.currentTarget);
+    // Store form reference before async operation
+    const form = e.currentTarget;
+    
+    const formData = new FormData(form);
     const email = formData.get('email') as string;
     const companyId = formData.get('companyId') as string;
     const expiresInDays = parseInt(formData.get('expiresInDays') as string) || 7;
@@ -46,10 +49,11 @@ export function InviteForm({ companies }: InviteFormProps) {
 
     if (result.success) {
       setSuccess(result.message || 'Invitation sent successfully');
-      e.currentTarget.reset();
+      form.reset();
       setTimeout(() => {
+        setSuccess(null);
         router.refresh();
-      }, 1000);
+      }, 1500);
     } else {
       setError(result.error || 'Failed to send invitation');
     }
