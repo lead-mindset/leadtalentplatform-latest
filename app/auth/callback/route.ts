@@ -49,7 +49,7 @@ export async function GET(request: Request) {
             }
           } 
           // Handle company representative role
-          else if (role === 'representative') {
+          else if (role === 'recruiter') {
             next = '/company'
           }
           // Handle admin role
