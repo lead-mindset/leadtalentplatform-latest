@@ -198,3 +198,93 @@ export type Company = {
     pendingInvites: number
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+export type RecruiterUser = UserRow & {
+  RecruiterAccess: RecruiterAccessRow[];
+  Company: CompanyRow | null;
+};
+
+export type RecruiterAccessRow = {
+  id: string;
+  recruiterId: string;
+  companyId: string;
+  isActive: boolean;
+  grantedById: string;
+  acceptedByUserId: string | null;
+  grantedAt: string;
+  acceptedAt: string | null;
+  revokedAt: string | null;
+  inviteExpiresAt: string | null;
+  recruiterEmail: string;
+};
+
+export type CompanyRow = {
+  id: string;
+  name: string;
+  createdat: string;
+  createdbyid: string;
+};
+
+export type StudentForRecruiterRaw = {
+  id: string;
+  email: string;
+  name: string;
+  phone: string;
+  chapterId: string;
+  createdAt: string;
+  Chapter: Pick<ChapterRow, "name" | "university" | "city" | "region">[];
+  StudentProfile: Pick<
+    StudentProfileRow,
+    | "major"
+    | "graduationYear"
+    | "linkedinUrl"
+    | "skills"
+    | "isRecruiterVisible"
+    | "updatedAt"
+  >[];
+};
+
+export type StudentForRecruiter = {
+  id: string;
+  email: string;
+  name: string;
+  phone: string;
+  chapterId: string;
+  createdAt: string;
+  Chapter: Pick<ChapterRow, "name" | "university" | "city" | "region"> | null;
+  StudentProfile: Pick<
+    StudentProfileRow,
+    | "major"
+    | "graduationYear"
+    | "linkedinUrl"
+    | "skills"
+    | "isRecruiterVisible"
+    | "updatedAt"
+  > | null;
+};
+
+export type SavedStudent = {
+  id: string;
+  recruiterId: string;
+  studentId: string;
+  savedAt: string;
+  notes: string | null;
+  Student: StudentForRecruiter;
+};
+
+export type CompanyStats = {
+  totalStudents: number;
+  savedStudents: number;
+  recentViews: number;
+};
