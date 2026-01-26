@@ -3,7 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
 import type { UserRow } from './types'
 import type { EditorSidebarStats } from './types'
-import type { AdminSidebarStats } from './types'
+import type { AdminStats } from './types'
 import type { UserWithChapter } from './types'
 
 export async function requireUser(): Promise<{ supabase: SupabaseClient; user: UserRow }> {
@@ -35,7 +35,7 @@ export async function requireUser(): Promise<{ supabase: SupabaseClient; user: U
 }
 
 
-export async function requireUserWithRole(role: string): Promise<{ supabase: SupabaseClient; user: User }> {
+export async function requireUserWithRole(role: string): Promise<{ supabase: SupabaseClient; user: UserRow }> {
   const { supabase, user } = await requireUser()
 
   if (role && user.role !== role) {
@@ -76,7 +76,7 @@ export async function getSidebarStatsForEditor(
 
 export async function getSidebarStatsForAdmin(
   supabase: SupabaseClient
-): Promise<AdminSidebarStats> {
+): Promise<AdminStats> {
   const [
     { count: pendingInvitesCount },
     { count: pendingApprovalsCount },
