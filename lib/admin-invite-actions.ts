@@ -2,10 +2,11 @@
 
 import { createClient } from './supabase/server'
 import { revalidatePath } from 'next/cache'
-import crypto from 'crypto'
+import { randomUUID } from 'crypto'
 
 function generateInviteToken(): string {
-  return crypto.randomBytes(32).toString('hex')
+  const inviteToken = randomUUID() // returns a valid UUID
+  return inviteToken
 }
 
 export async function createRecruiterInvite(formData: {
@@ -104,9 +105,10 @@ export async function createRecruiterInvite(formData: {
     .select('id')
     .single()
 
-  if (inviteError || !invite) {
-    return { success: false, error: 'Failed to create invitation' }
-  }
+if (inviteError || !invite) {
+  console.error('Invite creation error:', inviteError)
+  return { success: false, error: inviteError?.message || 'Failed to create invitation' }
+}
 
   revalidatePath('/admin/invites')
   revalidatePath('/admin/companies')
