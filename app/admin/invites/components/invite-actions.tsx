@@ -34,7 +34,7 @@ export function InviteActions({ inviteId, status }: InviteActionsProps) {
     if (result.success) {
       router.refresh();
     } else {
-      alert(result.error);
+      alert(result.error || 'Failed to revoke invite');
     }
     
     setIsRevoking(false);
@@ -45,76 +45,102 @@ export function InviteActions({ inviteId, status }: InviteActionsProps) {
     const result = await resendInvite(inviteId);
     
     if (result.success) {
-      alert(result.message);
+      alert(result.message || 'Invitation resent successfully');
       router.refresh();
     } else {
-      alert(result.error);
+      alert(result.error || 'Failed to resend invitation');
     }
     
     setIsResending(false);
   };
 
-  if (status === 'accepted') {
-    return (
-      <span className="text-sm text-muted-foreground">
-        Active
-      </span>
-    );
-  }
-
+  // Already revoked - no actions available
   if (status === 'revoked') {
     return (
       <span className="text-sm text-muted-foreground">
-        Revoked
+        No actions
       </span>
     );
   }
 
+  // Accepted invites (active access grants) - can only be revoked
+  if (status === 'accepted') {
+    return (
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={isRevoking}
+          >
+            {isRevoking && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
+            <XCircle className="h-3 w-3 mr-1" />
+            Revoke Access
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Revoke Recruiter Access</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to revoke this recruiter's access? 
+              They will immediately lose access to the company's student profiles.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRevoke} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Revoke Access
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    );
+  }
+
+  // Pending or expired invites - can resend or revoke
   return (
     <div className="flex gap-2">
-      {(status === 'pending' || status === 'expired') && (
-        <>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleResend}
-            disabled={isResending}
-          >
-            {isResending && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
-            <Mail className="h-3 w-3 mr-1" />
-            Resend
-          </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleResend}
+        disabled={isResending}
+      >
+        {isResending && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
+        <Mail className="h-3 w-3 mr-1" />
+        {status === 'expired' ? 'Resend' : 'Resend'}
+      </Button>
 
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={isRevoking}
-              >
-                {isRevoking && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
-                <XCircle className="h-3 w-3 mr-1" />
-                Revoke
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Revoke Invitation</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to revoke this invitation? This action cannot be undone.
-                  The recruiter will no longer be able to use this invite link.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleRevoke}>
-                  Revoke
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </>
-      )}
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={isRevoking}
+          >
+            {isRevoking && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
+            <XCircle className="h-3 w-3 mr-1" />
+            Revoke
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Revoke Invitation</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to revoke this invitation? 
+              The invite link will no longer work and the recruiter will not be able to accept it.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRevoke} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Revoke
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
