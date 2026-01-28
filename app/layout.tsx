@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { Raleway, Geist_Mono } from "next/font/google";
+import { Toaster } from "@/components/ui/sonner"
 
 const ralewaySans = Raleway({
   subsets: ["latin"],
@@ -41,6 +42,8 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <Toaster />
+
           {children}
         </ThemeProvider>
       </body>
