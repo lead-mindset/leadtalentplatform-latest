@@ -15,32 +15,22 @@ export async function acceptInvite(formData: {
   password?: string
   name?: string
 }) {
-  const supabase = createServiceClient()
+  const serviceSupabase = createServiceClient() // service role
+  const supabase = await createClient() // cookie-aware (for login)
 
-  console.log('🚀 acceptInvite', formData.inviteToken)
-
-
-  const { data: invite, error: inviteError } = await supabase
+  // Fetch invite
+  const { data: invite, error: inviteError } = await serviceSupabase
     .from('RecruiterAccess')
     .select('*')
     .eq('inviteToken', formData.inviteToken)
     .maybeSingle()
 
-  console.log('📦 invite', invite, inviteError)
+  if (!invite || inviteError) return { success: false, error: 'Invalid invite token' }
+  if (invite.revokedAt) return { success: false, error: 'Invite revoked' }
+  if (invite.acceptedAt) return { success: false, error: 'Invite already accepted' }
 
-  if (!invite || inviteError) {
-    return { success: false, error: 'Invalid invite token' }
-  }
-
-  if (invite.revokedAt) {
-    return { success: false, error: 'This invite has been revoked' }
-  }
-
-  if (invite.acceptedAt) {
-    return { success: false, error: 'This invite has already been accepted' }
-  }
-
-  const { data: existingUser } = await supabase
+  // Check for existing user
+  const { data: existingUser } = await serviceSupabase
     .from('User')
     .select('id')
     .eq('email', invite.recruiterEmail)
@@ -50,24 +40,18 @@ export async function acceptInvite(formData: {
 
   if (existingUser) {
     userId = existingUser.id
-    console.log('👤 Using existing user', userId)
   } else {
-    const { data: authData, error: authError } =
-      await supabase.auth.admin.createUser({
-        email: invite.recruiterEmail,
-        password: formData.password, 
-        email_confirm: true,
-      })
+    const { data: authData } = await serviceSupabase.auth.admin.createUser({
+      email: invite.recruiterEmail,
+      password: formData.password,
+      email_confirm: true,
+    })
 
-    console.log('🔐 auth user', authData, authError)
-
-    if (authError || !authData.user) {
-      return { success: false, error: 'Failed to create auth account' }
-    }
+    if (!authData.user) return { success: false, error: 'Failed to create auth account' }
 
     userId = authData.user.id
 
-    const { error: profileError } = await supabase
+    const { error: profileError } = await serviceSupabase
       .from('User')
       .insert({
         id: userId,
@@ -76,15 +60,11 @@ export async function acceptInvite(formData: {
         name: formData.name || invite.recruiterEmail.split('@')[0],
       })
 
-    console.log('🧾 profile insert', profileError)
-
-    if (profileError) {
-      return { success: false, error: 'Failed to create user profile' }
+    if (profileError) return { success: false, error: 'Failed to create profile' }
   }
-}
 
-
-  const { error: updateError } = await supabase
+  // Accept invite
+  await serviceSupabase
     .from('RecruiterAccess')
     .update({
       acceptedAt: new Date().toISOString(),
@@ -93,39 +73,18 @@ export async function acceptInvite(formData: {
     })
     .eq('id', invite.id)
 
-  console.log('✏️ invite update', updateError)
-
-  if (updateError) {
-    return { success: false, error: 'Failed to update invite' }
-  }
-
-
   if (formData.password) {
-    const { error: signInError } =
-      await supabase.auth.signInWithPassword({
-        email: invite.recruiterEmail,
-        password: formData.password,
-      })
-
-    console.log('🔑 sign-in', signInError)
-
-    if (signInError) {
-      return { success: false, error: 'Login failed' }
-    }
+    await supabase.auth.signInWithPassword({
+      email: invite.recruiterEmail,
+      password: formData.password,
+    })
   } else {
-    const { error: otpError } =
-      await supabase.auth.signInWithOtp({
-        email: invite.recruiterEmail,
-      })
-
-    console.log('✉️ magic link', otpError)
-
-    if (otpError) {
-      return { success: false, error: 'Login failed' }
-    }
+    await supabase.auth.signInWithOtp({
+      email: invite.recruiterEmail,
+    })
   }
 
-
+  // Now the browser will have a valid session
   redirect('/company')
 }
 
