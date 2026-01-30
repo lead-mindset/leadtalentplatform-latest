@@ -1,43 +1,60 @@
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Building2, Users, FileText, Settings, ArrowRight } from 'lucide-react'
+import { Building2, Users, FileText, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 
 export default async function CompanyDashboard() {
   const supabase = await createClient()
 
-  // Get current user
   const {
     data: { user: authUser },
   } = await supabase.auth.getUser()
 
   if (!authUser) {
-    return null
+    redirect('/auth/login')
   }
 
-  // Get user details
-  const { data: user } = await supabase
+  const { data: user, error: userError } = await supabase
     .from('User')
     .select('id, name, email, role')
     .eq('id', authUser.id)
     .single()
 
+  if (userError || !user) {
+    redirect('/auth/login')
+  }
+
   // Get company info
-  const { data: recruiterAccess } = await supabase
+  const { data: recruiterAccess, error: accessError } = await supabase
     .from('RecruiterAccess')
-    .select('companyId, Company(name, id)')
-    .eq('acceptedByUserId', user?.id)
+    .select(`
+      companyId, 
+      isActive,
+      Company (
+        name, 
+        id
+      )
+    `)
+    .eq('acceptedByUserId', user.id)
     .eq('isActive', true)
+    .is('revokedAt', null)
     .maybeSingle()
 
-  const company = recruiterAccess?.Company
+  // If no active access, redirect to onboarding
+  if (!recruiterAccess || !recruiterAccess.isActive) {
+    redirect('/company/onboard')
+  }
 
-  // Get profile completion status
+  const company = Array.isArray(recruiterAccess.Company)
+    ? recruiterAccess.Company[0]
+    : recruiterAccess.Company
+
   const { data: profile } = await supabase
     .from('RecruiterProfile')
     .select('isFilled')
-    .eq('userId', user?.id)
+    .eq('userId', user.id)
     .maybeSingle()
 
   const isProfileComplete = profile?.isFilled || false
@@ -46,7 +63,7 @@ export default async function CompanyDashboard() {
     <div className="container mx-auto py-8 px-4">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">
-          Welcome back, {user?.name || 'Recruiter'}!
+          Welcome back, {user.name || 'Recruiter'}!
         </h1>
         <p className="text-gray-600">
           Managing recruitment for {company?.name || 'your company'}
