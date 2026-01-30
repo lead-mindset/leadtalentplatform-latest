@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle, Loader2, Building, CheckCircle2 } from 'lucide-react'
+import { createCompany } from './action'
 
 interface CreateCompanyFormProps {
   userId: string
@@ -26,26 +27,17 @@ export function CreateCompanyForm({ userId }: CreateCompanyFormProps) {
     setSuccess(false)
 
     try {
-      const response = await fetch('/api/companies', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: companyName.trim(),
-          createdById: userId,
-        }),
+      const result = await createCompany({
+        name: companyName.trim(),
+        createdById: userId,
       })
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create company')
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to create company')
       }
 
       setSuccess(true)
       
-      // Redirect after a short delay
       setTimeout(() => {
         router.push('/admin/companies')
         router.refresh()
