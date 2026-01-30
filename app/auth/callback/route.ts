@@ -34,7 +34,7 @@ export async function GET(request: Request) {
           const role = userData.role
 
           // Handle student and editor roles
-          if (role === 'student' || role === 'editor') {
+          if (role === 'member' || role === 'editor') {
             const { data: profile, error: profileError } = await supabase
               .from('StudentProfile')
               .select('isFilled')
