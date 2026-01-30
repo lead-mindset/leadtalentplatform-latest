@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Eye, EyeOff, Building2, Mail, Loader2 } from 'lucide-react'
+import { Eye, EyeOff, Building2, Mail, Loader2, CheckCircle2 } from 'lucide-react'
 
 interface OnboardContentProps {
   inviteToken: string
@@ -28,6 +28,7 @@ export default function OnboardContent({
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -55,15 +56,67 @@ export default function OnboardContent({
       if (!result.success) {
         setError(result.error || 'Failed to accept invite')
         setLoading(false)
+        return
       }
+
+      // Check if we need email verification (OTP flow)
+      if (result.requiresEmailVerification) {
+        setEmailSent(true)
+        setLoading(false)
+        return
+      }
+
+      // Password flow - redirect will happen automatically via server action
+      // Keep loading state while redirect happens
     } catch (err) {
+      console.error('Accept invite error:', err)
       setError('An unexpected error occurred')
       setLoading(false)
     }
   }
 
+  if (emailSent) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-accent to-muted p-4">
+        <Card className="max-w-md w-full">
+          <CardHeader className="space-y-4">
+            {companyLogo ? (
+              <img
+                src={companyLogo}
+                alt={companyName}
+                className="h-12 w-auto mx-auto"
+              />
+            ) : (
+              <Building2 className="h-12 w-12 mx-auto text-primary" />
+            )}
+            <div className="text-center space-y-2">
+              <CheckCircle2 className="h-16 w-16 mx-auto text-chart-2" />
+              <CardTitle className="text-2xl">Check Your Email</CardTitle>
+              <CardDescription>
+                We've sent a login link to <strong>{recruiterEmail}</strong>
+              </CardDescription>
+            </div>
+          </CardHeader>
+
+          <CardContent className="space-y-4">
+            <Alert>
+              <Mail className="h-4 w-4" />
+              <AlertDescription>
+                Click the link in your email to complete your onboarding and access the dashboard.
+              </AlertDescription>
+            </Alert>
+
+            <p className="text-xs text-muted-foreground text-center">
+              Didn't receive the email? Check your spam folder or try again.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-accent to-muted p-4">
       <Card className="max-w-md w-full">
         <CardHeader className="space-y-4">
           {companyLogo ? (
@@ -73,7 +126,7 @@ export default function OnboardContent({
               className="h-12 w-auto mx-auto"
             />
           ) : (
-            <Building2 className="h-12 w-12 mx-auto text-blue-600" />
+            <Building2 className="h-12 w-12 mx-auto text-primary" />
           )}
           <div className="text-center space-y-2">
             <CardTitle className="text-2xl">Welcome to {companyName}</CardTitle>
@@ -94,7 +147,7 @@ export default function OnboardContent({
                 type="email"
                 value={recruiterEmail}
                 disabled
-                className="bg-gray-50"
+                className="bg-muted"
               />
             </div>
 
@@ -124,11 +177,14 @@ export default function OnboardContent({
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              <p className="text-xs text-muted-foreground">
+                If you skip this, we'll email you a login link each time
+              </p>
             </div>
 
             {password && (
@@ -158,14 +214,14 @@ export default function OnboardContent({
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Accepting Invite...
+                  {password ? 'Accepting Invite...' : 'Sending Email...'}
                 </>
               ) : (
                 'Accept Invite & Continue'
               )}
             </Button>
 
-            <p className="text-xs text-gray-500 text-center mt-4">
+            <p className="text-xs text-muted-foreground text-center mt-4">
               By accepting, you agree to the terms and conditions
             </p>
           </form>
