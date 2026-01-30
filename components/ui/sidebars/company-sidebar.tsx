@@ -30,28 +30,40 @@ export default async function CompanySidebar() {
 
   const { data: user } = await supabase
     .from('User')
-    .select('id, role, email, name, Company(name)')
+    .select('id, role, email, name')
     .eq('id', authUser.id)
-    .maybeSingle()
+    .single()
 
   if (!user || user.role !== 'recruiter') {
     redirect('/auth/login')
   }
 
+  // Get company info through RecruiterAccess
   const { data: recruiterAccess } = await supabase
     .from('RecruiterAccess')
-    .select('id')
+    .select(`
+      id,
+      isActive,
+      Company (
+        name,
+        id
+      )
+    `)
     .eq('acceptedByUserId', user.id)
     .eq('isActive', true)
+    .is('revokedAt', null)
     .maybeSingle()
 
   if (!recruiterAccess) {
-    redirect('/auth/login')
+    redirect('/company/onboard')
   }
 
-  const companyName = Array.isArray(user.Company)
-    ? user.Company[0]?.name
-    : user.Company?.name
+  // Normalize Company data (Supabase returns array or object depending on join)
+  const company = Array.isArray(recruiterAccess.Company)
+    ? recruiterAccess.Company[0]
+    : recruiterAccess.Company
+
+  const companyName = company?.name || 'Company'
 
   const navItems = [
     {
@@ -83,7 +95,7 @@ export default async function CompanySidebar() {
           <Building className="h-5 w-5 text-muted-foreground" />
           <div>
             <p className="text-sm font-semibold text-foreground">
-              {companyName || 'Company'}
+              {companyName}
             </p>
             <p className="text-xs text-muted-foreground">
               {user.email}
