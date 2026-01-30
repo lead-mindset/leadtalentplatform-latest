@@ -13,6 +13,9 @@ import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase/client'
 import CareerCommandSelect from '@/components/ui/career-combobox'
 import { useRouter } from 'next/navigation'
+import { getResume } from '../actions'
+import { updateProfile } from '../actions'
+
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -68,18 +71,7 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
     async function fetchResume() {
       if (!initialData?.id) return
 
-      const { data, error } = await supabase
-        .from("Resume")
-        .select("*")
-        .eq("studentId", initialData.id)
-        .order("uploadedAt", { ascending: false })
-        .limit(1)
-        .single()
-
-      if (error) {
-        console.error("Error fetching resume:", error)
-        return
-      }
+      const data = await getResume(initialData.id);
 
       if (data) {
         setResumeUrl(data.fileUrl)
@@ -131,14 +123,11 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
         formData.append("resume", data.resume_pdf);
       }
 
-      const res = await fetch("/api/profile", {
-        method: "PATCH",
-        body: formData,
-      });
+      // Use server action instead of API route
+      const result = await updateProfile(formData);
 
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error ?? "Failed to update profile");
+      if (!result.success) {
+        throw new Error(result.error ?? "Failed to update profile");
       }
 
       alert("Profile updated successfully!");
