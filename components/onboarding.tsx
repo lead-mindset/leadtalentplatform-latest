@@ -14,6 +14,7 @@ import { useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import CareerCommandSelect from './ui/career-combobox'
+import { submitOnboarding } from '@/app/onboarding/actions'
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -60,7 +61,9 @@ export default function Onboarding() {
 
   const [fileName, setFileName] = useState('')
   const [isUploading, setIsUploading] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [chapterOptions, setChapterOptions] = useState<{ label: string; value: string }[]>([]);
+  
   useEffect(() => {
     getLeadChapterOptions().then(setChapterOptions);
   }, []);
@@ -99,48 +102,38 @@ export default function Onboarding() {
     return trigger(stepFields[step])
   }
 
-  const handleComplete = async () => {
+const handleComplete = async () => {
+  const isValid = await trigger();
+  if (!isValid) return;
 
-    const isValid = await trigger();
-    if (!isValid) return;
+  const data = getValues()
 
-    const data = getValues()
+  setIsSubmitting(true)
+  
+  const formData = new FormData()
 
-    try {
-      const formData = new FormData()
-
-      Object.entries(data).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          if (key === 'resume_pdf' && value instanceof File) {
-            formData.append('resume', value)
-          } else if (Array.isArray(value) || typeof value === 'object') {
-            formData.append(key, JSON.stringify(value))
-          } else {
-            formData.append(key, String(value))
-          }
-        }
-      })
-
-      const res = await fetch('/api/onboarding', {
-        method: 'POST',
-        body: formData,
-      })
-
-      if (!res.ok) {
-        const error = await res.json()
-        console.error(error)
-        throw new Error(error.error ?? 'Failed to submit onboarding')
+  Object.entries(data).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      if (key === 'resume_pdf' && value instanceof File) {
+        formData.append('resume', value)
+      } else if (Array.isArray(value) || typeof value === 'object') {
+        formData.append(key, JSON.stringify(value))
+      } else {
+        formData.append(key, String(value))
       }
-
-
-      console.log('Onboarding completed')
-      router.push('/');
-
-    } catch (err) {
-      console.error(err)
     }
-  }
+  })
 
+  // Don't wrap in try-catch since redirect() throws NEXT_REDIRECT
+  const result = await submitOnboarding(formData)
+
+  // Only handle actual errors (redirect will never reach here)
+  if (result?.error) {
+    console.error(result.error)
+    setIsSubmitting(false)
+    // Optionally show error toast here
+  }
+}
 
   const handleFileChange =
     (onChange: any) => (e: React.ChangeEvent<HTMLInputElement>) => {
