@@ -1,18 +1,29 @@
 import { Suspense } from 'react'
 import OnboardContent from './onboard-content'
 import { redirect } from 'next/navigation'
-import { validateInviteToken } from './actions'
+import { validateInviteToken } from '@/lib/company-actions-client'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import { AlertCircle } from 'lucide-react'
 
 function OnboardLoading() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-md">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
-          <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-        </div>
-      </div>
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-primary/5 via-secondary/10 to-accent/5">
+      <Card className="max-w-md w-full shadow-lg">
+        <CardHeader>
+          <Skeleton className="h-8 w-3/4 mb-4" />
+          <Skeleton className="h-4 w-full mb-2" />
+          <Skeleton className="h-4 w-5/6" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
@@ -32,18 +43,27 @@ async function OnboardLoader({
 
   if (!result.success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-md">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">
-            Invalid Invite
-          </h1>
-          <p className="text-gray-600">{result.error}</p>
-            <a
-            href="/auth/login"
-            className="mt-6 inline-block text-blue-600 hover:underline">
-            Go to Login
-          </a>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-secondary/10 to-accent/5">
+        <Card className="max-w-md w-full shadow-lg">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-6 w-6 text-destructive" />
+              <CardTitle className="text-2xl text-destructive">
+                Invalid Invite
+              </CardTitle>
+            </div>
+            <CardDescription className="text-foreground">
+              {result.error}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant="default" className="w-full">
+              <a href="/auth/login">
+                Go to Login
+              </a>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     )
   }
