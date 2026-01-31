@@ -95,7 +95,7 @@ export default function ProfileForm({ user, profile, company }: ProfileFormProps
               )}
               <div>
                 <p className="font-semibold">{company.name}</p>
-                <p className="text-sm text-gray-500">{user.email}</p>
+                <p className="text-sm text-muted-foreground">{user.email}</p>
               </div>
             </div>
           </CardContent>
@@ -145,7 +145,7 @@ export default function ProfileForm({ user, profile, company }: ProfileFormProps
               type="email"
               value={user.email}
               disabled
-              className="bg-gray-50"
+              className="bg-muted"
             />
           </div>
         </CardContent>
@@ -196,7 +196,7 @@ export default function ProfileForm({ user, profile, company }: ProfileFormProps
               value={formData.skills}
               onChange={(e) => handleChange('skills', e.target.value)}
             />
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               Enter skills separated by commas
             </p>
           </div>
