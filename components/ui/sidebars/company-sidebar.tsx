@@ -3,9 +3,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
@@ -15,9 +12,9 @@ import {
   Users,
   Heart,
   Settings,
-  Building,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import BaseSidebar from './base-sidebar'
 
 export default async function CompanySidebar() {
   const supabase = await createClient()
@@ -38,7 +35,6 @@ export default async function CompanySidebar() {
     redirect('/auth/login')
   }
 
-  // Get company info through RecruiterAccess
   const { data: recruiterAccess } = await supabase
     .from('RecruiterAccess')
     .select(`
@@ -58,7 +54,6 @@ export default async function CompanySidebar() {
     redirect('/company/onboard')
   }
 
-  // Normalize Company data (Supabase returns array or object depending on join)
   const company = Array.isArray(recruiterAccess.Company)
     ? recruiterAccess.Company[0]
     : recruiterAccess.Company
@@ -89,35 +84,23 @@ export default async function CompanySidebar() {
   ]
 
   return (
-    <Sidebar>
-      <SidebarHeader className="border-b px-4 py-3">
-        <div className="flex items-center gap-2">
-          <Building className="h-5 w-5 text-muted-foreground" />
-          <div>
-            <p className="text-sm font-semibold text-foreground">
-              {companyName}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {user.email}
-            </p>
-          </div>
-        </div>
-      </SidebarHeader>
-
-      <SidebarContent>
-        <SidebarMenu>
-          {navItems.map((item) => (
-            <SidebarMenuItem key={item.href}>
-              <SidebarMenuButton asChild>
-                <Link href={item.href}>
-                  <item.icon className="h-4 w-4" />
-                  <span>{item.title}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarContent>
-    </Sidebar>
+    <BaseSidebar
+      userName={companyName}
+      userEmail={user.email}
+      userRole="Recruiter"
+    >
+      <SidebarMenu>
+        {navItems.map((item) => (
+          <SidebarMenuItem key={item.href}>
+            <SidebarMenuButton asChild>
+              <Link href={item.href}>
+                <item.icon className="h-4 w-4" />
+                <span>{item.title}</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ))}
+      </SidebarMenu>
+    </BaseSidebar>
   )
 }
