@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle, Loader2, Building2, CheckCircle2, GraduationCap, MapPin } from 'lucide-react'
+import { createChapter } from '../actions'
 
 export function CreateChapterForm() {
   const router = useRouter()
@@ -32,24 +33,16 @@ export function CreateChapterForm() {
     setSuccess(false)
 
     try {
-      const response = await fetch('/api/chapters', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id: formData.id.trim().toLowerCase().replace(/\s+/g, '-'),
-          name: formData.name.trim(),
-          university: formData.university.trim(),
-          city: formData.city.trim() || null,
-          region: formData.region.trim() || null,
-        }),
+      const result = await createChapter({
+        id: formData.id.trim().toLowerCase().replace(/\s+/g, '-'),
+        name: formData.name.trim(),
+        university: formData.university.trim(),
+        city: formData.city.trim() || undefined,
+        region: formData.region.trim() || undefined,
       })
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create chapter')
+      if (result.error) {
+        throw new Error(result.error)
       }
 
       setSuccess(true)
