@@ -24,7 +24,6 @@ export default function CompanyLayout({
     </SidebarProvider>
   )
 }
-
 function PageSkeleton() {
   return (
     <div className="container mx-auto py-8 px-4 animate-pulse">
