@@ -12,6 +12,7 @@ import {
   Users,
   Heart,
   Settings,
+  User,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import BaseSidebar from './base-sidebar'
@@ -66,6 +67,7 @@ export default async function CompanySidebar() {
       href: '/company/dashboard',
       icon: LayoutDashboard,
     },
+    { title: 'Profile', href: '/company/profile', icon: User },
     {
       title: 'Browse Students',
       href: '/company',
