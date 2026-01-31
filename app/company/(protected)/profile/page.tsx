@@ -12,7 +12,7 @@ export default async function ProfilePage() {
   const { user, profile, company } = result.data!
 
   return (
-    <div className="container max-w-4xl py-8">
+    <div className="max-w-4xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Recruiter Profile</h1>
         <p className="text-muted-foreground mt-2">
