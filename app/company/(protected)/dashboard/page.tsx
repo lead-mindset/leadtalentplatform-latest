@@ -3,10 +3,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Users, Heart, TrendingUp, Building } from 'lucide-react';
 import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 
 export default async function CompanyDashboardPage() {
   const { supabase, user } = await requireRecruiter();
-  
+
   const [stats, recentSaved] = await Promise.all([
     getCompanyStats(supabase, user.id),
     getSavedStudents(supabase, user.id),
@@ -22,6 +23,26 @@ export default async function CompanyDashboardPage() {
           Welcome back, {user.name}
         </p>
       </div>
+
+      <Card className="mb-6 border-chart-2 bg-chart-2/10">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-chart-2">Complete Your Profile</h3>
+              <p className="text-sm text-chart-2/80">
+                Add your details to get the most out of the platform
+              </p>
+            </div>
+            <Link href="/company/profile">
+              <Button variant="outline" size="sm">
+                Complete Profile
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
