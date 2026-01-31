@@ -73,17 +73,6 @@ export default async function CompanySettingsPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Preferences</CardTitle>
-          <CardDescription>Customize your experience</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Additional preferences and settings will be available here.
-          </p>
-        </CardContent>
-      </Card>
     </div>
   );
 }
