@@ -1,3 +1,5 @@
+'use client'
+
 import { Sidebar, SidebarHeader, SidebarContent, SidebarFooter } from "../sidebar"
 import { LogoutButton } from "../../logout-button"
 import { Badge } from "../badge"
@@ -12,17 +14,23 @@ interface BaseSidebarProps {
 export default function BaseSidebar({ userName, userEmail, userRole, children }: BaseSidebarProps) {
   return (
     <Sidebar>
-      <SidebarHeader>
-        <div>
-          <p>{userName}</p>
-          <p>{userEmail}</p>
-          <Badge>{userRole}</Badge>
+      <SidebarHeader className="p-4 border-b border-sidebar-border">
+        <div className="space-y-2">
+          <p className="text-sm font-semibold text-sidebar-foreground">{userName}</p>
+          {userEmail && (
+            <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
+          )}
+          {userRole && (
+            <Badge variant="secondary" className="text-xs">
+              {userRole}
+            </Badge>
+          )}
         </div>
       </SidebarHeader>
-
-      <SidebarContent>{children}</SidebarContent>
-
-      <SidebarFooter>
+      <SidebarContent className="p-4">
+        {children}
+      </SidebarContent>
+      <SidebarFooter className="p-4 border-t border-sidebar-border mt-auto">
         <LogoutButton />
       </SidebarFooter>
     </Sidebar>
