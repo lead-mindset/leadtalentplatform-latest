@@ -65,18 +65,18 @@ export default async function CompanyDashboard() {
         <h1 className="text-3xl font-bold mb-2">
           Welcome back, {user.name || 'Recruiter'}!
         </h1>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           Managing recruitment for {company?.name || 'your company'}
         </p>
       </div>
 
       {!isProfileComplete && (
-        <Card className="mb-6 border-yellow-200 bg-yellow-50">
+        <Card className="mb-6 border-chart-2 bg-chart-2/10">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-yellow-900">Complete Your Profile</h3>
-                <p className="text-sm text-yellow-700">
+                <h3 className="font-semibold text-chart-2">Complete Your Profile</h3>
+                <p className="text-sm text-chart-2/80">
                   Add your details to get the most out of the platform
                 </p>
               </div>
@@ -94,7 +94,7 @@ export default async function CompanyDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <Card className="hover:shadow-lg transition-shadow cursor-pointer">
           <CardHeader>
-            <Building2 className="h-8 w-8 text-blue-600 mb-2" />
+            <Building2 className="h-8 w-8 text-chart-5 mb-2" />
             <CardTitle>Company Info</CardTitle>
             <CardDescription>
               View and manage company details
@@ -108,7 +108,7 @@ export default async function CompanyDashboard() {
         <Link href="/company/profile">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
             <CardHeader>
-              <Users className="h-8 w-8 text-green-600 mb-2" />
+              <Users className="h-8 w-8 text-chart-4 mb-2" />
               <CardTitle>Your Profile</CardTitle>
               <CardDescription>
                 Update your recruiter information
@@ -125,14 +125,14 @@ export default async function CompanyDashboard() {
 
         <Card className="hover:shadow-lg transition-shadow cursor-pointer">
           <CardHeader>
-            <FileText className="h-8 w-8 text-purple-600 mb-2" />
+            <FileText className="h-8 w-8 text-chart-3 mb-2" />
             <CardTitle>Job Posts</CardTitle>
             <CardDescription>
               Manage your active job listings
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-gray-500">Coming soon...</p>
+            <p className="text-sm text-muted-foreground">Coming soon...</p>
           </CardContent>
         </Card>
       </div>
@@ -183,8 +183,8 @@ export default async function CompanyDashboard() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8 text-gray-500">
-            <FileText className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+          <div className="text-center py-8 text-muted-foreground">
+            <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground/60" />
             <p>No recent activity to display</p>
             <p className="text-sm mt-2">Start by completing your profile or creating a job post</p>
           </div>
