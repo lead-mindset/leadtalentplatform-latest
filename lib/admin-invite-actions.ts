@@ -22,17 +22,71 @@ function generateInviteToken(): string {
   return randomUUID()
 }
 
-async function sendInviteEmail(email: string, inviteToken: string) {
-  const url = `${FRONTEND_URL}/company/onboard?inviteToken=${inviteToken}`
+async function sendInviteEmail(email: string, inviteToken: string, companyName?: string) {
+const url = `${FRONTEND_URL}/company/onboard?inviteToken=${inviteToken}`
+
   await transporter.sendMail({
-    from: `"Admin" <${process.env.SMTP_USER}>`,
+    from: `"${companyName || 'Company'} Admin" <${process.env.SMTP_USER}>`,
     to: email,
-    subject: 'Your recruiter invite',
-    text: `You have been invited to join the company dashboard. Click here to accept: ${url}`,
-    html: `<p>You have been invited to join the company dashboard.</p>
-           <p><a href="${url}">Click here to accept your invitation</a></p>`,
+    subject: `You're invited to join ${companyName || 'the team'}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2563eb;">Welcome to ${companyName || 'the Team'}!</h2>
+        
+        <p>You've been invited to join the recruiter portal. Click the button below to get started:</p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+<a href="${url}">Accept Invitation</a>
+  Log in
+</a>
+
+        </div>
+        
+        <p style="color: #666; font-size: 14px;">
+          <strong>What happens next:</strong>
+        </p>
+        <ol style="color: #666; font-size: 14px; line-height: 1.6;">
+          <li>Click the button above to accept your invitation</li>
+          <li>Complete your profile</li>
+          <li>You'll receive a login link via email (no password needed!)</li>
+          <li>Start accessing candidate profiles</li>
+        </ol>
+        
+        <div style="background-color: #eff6ff; border-left: 4px solid #2563eb; padding: 12px; margin: 20px 0;">
+          <p style="margin: 0; color: #1e40af; font-size: 14px;">
+            🔒 <strong>Passwordless Access:</strong> We use secure email links for login. No passwords to remember!
+          </p>
+        </div>
+        
+        <p style="color: #999; font-size: 12px; margin-top: 30px;">
+          This invitation link will expire in 7 days.
+        </p>
+        
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+        
+        <p style="color: #666; font-size: 12px;">
+          If you didn't expect this invitation, you can safely ignore this email.
+        </p>
+      </div>
+    `,
+    text: `
+You've been invited to join ${companyName || 'the team'} as a recruiter!
+
+Click here to accept your invitation: ${url}
+
+What happens next:
+1. Click the link above to accept your invitation
+2. Complete your profile
+3. You'll receive a login link via email (no password needed!)
+4. Start accessing candidate profiles
+
+This invitation will expire in 7 days.
+
+If you didn't expect this invitation, you can safely ignore this email.
+    `.trim(),
   })
 }
+
 
 async function auditLog(action: string, details: any) {
   console.log(`[AUDIT] ${new Date().toISOString()} - ${action}`, details)
