@@ -17,7 +17,6 @@ import {
   Mail,
   Activity,
   Settings,
-  ShieldCheck
 } from 'lucide-react'
 import type { AdminSidebarProps } from '@/lib/types'
 import type { NavItemConfig } from '@/lib/types'
@@ -94,9 +93,9 @@ export function AdminSidebar({ user, stats }: AdminSidebarProps) {
               <span className="font-semibold">{stats.totalCompanies}</span>
             </div>
             {stats.pendingApprovals > 0 && (
-              <div className="flex justify-between pt-1 border-t">
-                <span className="text-orange-600 dark:text-orange-400">Pending Approvals</span>
-                <span className="font-semibold text-orange-600 dark:text-orange-400">
+              <div className="flex justify-between pt-1 border-t border-border">
+                <span className="text-chart-2">Pending Approvals</span>
+                <span className="font-semibold text-chart-2">
                   {stats.pendingApprovals}
                 </span>
               </div>
