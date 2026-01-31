@@ -20,16 +20,8 @@ async function SidebarContent() {
 
 export default function ChapterLayout({ children }: { children: React.ReactNode }) {
   return (
-    <SidebarLayout 
-      Sidebar={() => (
-        <Suspense fallback={<SkeletonSidebar />}>
-          <SidebarContent />
-        </Suspense>
-      )}
-    >
-      <Suspense fallback={<div>Loading...</div>}>
-        {children}
-      </Suspense>
+    <SidebarLayout Sidebar={SidebarContent}>
+      {children}
     </SidebarLayout>
   )
 }
