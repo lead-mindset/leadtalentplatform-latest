@@ -1,114 +1,71 @@
 'use client'
 
 import { useState } from 'react'
-import { acceptInvite } from './actions'
+import { acceptInvite } from '@/lib/company-actions-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Eye, EyeOff, Building2, Mail, Loader2, CheckCircle2 } from 'lucide-react'
-
-interface OnboardContentProps {
-  inviteToken: string
-  companyName: string
-  companyLogo?: string | null
-  recruiterEmail: string
-}
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { CheckCircle2, AlertCircle, Info, Lock } from 'lucide-react'
 
 export default function OnboardContent({
   inviteToken,
   companyName,
-  companyLogo,
   recruiterEmail,
-}: OnboardContentProps) {
+}: {
+  inviteToken: string
+  companyName: string | null
+  recruiterEmail: string
+}) {
   const [name, setName] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [emailSent, setEmailSent] = useState(false)
+  const [result, setResult] = useState<{
+    success: boolean
+    message?: string
+    warning?: string
+    error?: string
+  } | null>(null)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setError('')
-
-    if (password && password !== confirmPassword) {
-      setError('Passwords do not match')
-      return
-    }
-
-    if (password && password.length < 8) {
-      setError('Password must be at least 8 characters')
-      return
-    }
-
     setLoading(true)
 
-    try {
-      const result = await acceptInvite({
-        inviteToken,
-        password: password || undefined,
-        name: name || undefined,
-      })
+    const res = await acceptInvite({
+      inviteToken,
+      name: name.trim(),
+    })
 
-      if (!result.success) {
-        setError(result.error || 'Failed to accept invite')
-        setLoading(false)
-        return
-      }
-
-      // Check if we need email verification (OTP flow)
-      if (result.requiresEmailVerification) {
-        setEmailSent(true)
-        setLoading(false)
-        return
-      }
-
-      // Password flow - redirect will happen automatically via server action
-      // Keep loading state while redirect happens
-    } catch (err) {
-      console.error('Accept invite error:', err)
-      setError('An unexpected error occurred')
-      setLoading(false)
-    }
+    setResult(res)
+    setLoading(false)
   }
 
-  if (emailSent) {
+  if (result?.success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-accent to-muted p-4">
-        <Card className="max-w-md w-full">
-          <CardHeader className="space-y-4">
-            {companyLogo ? (
-              <img
-                src={companyLogo}
-                alt={companyName}
-                className="h-12 w-auto mx-auto"
-              />
-            ) : (
-              <Building2 className="h-12 w-12 mx-auto text-primary" />
-            )}
-            <div className="text-center space-y-2">
-              <CheckCircle2 className="h-16 w-16 mx-auto text-chart-2" />
-              <CardTitle className="text-2xl">Check Your Email</CardTitle>
-              <CardDescription>
-                We've sent a login link to <strong>{recruiterEmail}</strong>
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-primary/5 via-secondary/10 to-accent/5">
+        <Card className="max-w-md w-full shadow-lg">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 mb-4">
+                <CheckCircle2 className="h-6 w-6 text-primary" />
+              </div>
+              <CardTitle className="text-2xl mb-2">
+                {result.warning ? 'Almost Done!' : 'Check Your Email'}
+              </CardTitle>
+              <CardDescription className="mb-4">
+                {result.message || result.warning}
               </CardDescription>
+              <p className="text-sm text-muted-foreground">
+                Login link sent to <strong className="text-foreground">{recruiterEmail}</strong>
+              </p>
+              {result.warning && (
+                <Button asChild className="mt-6">
+                  <a href="/company/login">
+                    Go to Login
+                  </a>
+                </Button>
+              )}
             </div>
-          </CardHeader>
-
-          <CardContent className="space-y-4">
-            <Alert>
-              <Mail className="h-4 w-4" />
-              <AlertDescription>
-                Click the link in your email to complete your onboarding and access the dashboard.
-              </AlertDescription>
-            </Alert>
-
-            <p className="text-xs text-muted-foreground text-center">
-              Didn't receive the email? Check your spam folder or try again.
-            </p>
           </CardContent>
         </Card>
       </div>
@@ -116,114 +73,66 @@ export default function OnboardContent({
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-accent to-muted p-4">
-      <Card className="max-w-md w-full">
-        <CardHeader className="space-y-4">
-          {companyLogo ? (
-            <img
-              src={companyLogo}
-              alt={companyName}
-              className="h-12 w-auto mx-auto"
-            />
-          ) : (
-            <Building2 className="h-12 w-12 mx-auto text-primary" />
-          )}
-          <div className="text-center space-y-2">
-            <CardTitle className="text-2xl">Welcome to {companyName}</CardTitle>
-            <CardDescription>
-              Complete your onboarding to access the recruiter dashboard
-            </CardDescription>
-          </div>
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-primary/5 via-secondary/10 to-accent/5">
+      <Card className="max-w-md w-full shadow-lg">
+        <CardHeader>
+          <CardTitle className="text-2xl">
+            Welcome to {companyName || 'the Team'}!
+          </CardTitle>
+          <CardDescription>
+            Complete your profile to get started
+          </CardDescription>
         </CardHeader>
 
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                Email Address
-              </Label>
+              <Label htmlFor="email">Work Email</Label>
               <Input
+                id="email"
                 type="email"
                 value={recruiterEmail}
                 disabled
-                className="bg-muted"
+                className="bg-muted text-muted-foreground"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name (Optional)</Label>
+              <Label htmlFor="name">Full Name *</Label>
               <Input
                 id="name"
                 type="text"
-                placeholder="Enter your full name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                placeholder="John Doe"
+                required
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">
-                Password (Optional - for future login)
-              </Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Create a password (min 8 characters)"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                If you skip this, we'll email you a login link each time
-              </p>
-            </div>
-
-            {password && (
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input
-                  id="confirmPassword"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Confirm your password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
-              </div>
-            )}
-
-            {error && (
+            {result?.error && (
               <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{result.error}</AlertDescription>
               </Alert>
             )}
 
             <Button
               type="submit"
-              className="w-full"
               disabled={loading}
+              className="w-full"
             >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {password ? 'Accepting Invite...' : 'Sending Email...'}
-                </>
-              ) : (
-                'Accept Invite & Continue'
-              )}
+              {loading ? 'Setting up...' : 'Complete Setup'}
             </Button>
 
-            <p className="text-xs text-muted-foreground text-center mt-4">
-              By accepting, you agree to the terms and conditions
-            </p>
+            <Alert className="border-primary/20 bg-primary/5">
+              <Lock className="h-4 w-4 text-primary" />
+              <AlertDescription className="ml-2">
+                <strong className="text-foreground">Passwordless login:</strong>{' '}
+                <span className="text-muted-foreground">
+                  You'll receive a secure login link via email each time you sign in. No password needed!
+                </span>
+              </AlertDescription>
+            </Alert>
           </form>
         </CardContent>
       </Card>
