@@ -6,6 +6,43 @@ import type { EditorSidebarStats } from './types'
 import type { AdminStats } from './types'
 import type { UserWithChapter } from './types'
 
+
+export async function requireAdmin(): Promise<{ supabase: SupabaseClient; user: { id: string; role: string } }> {
+  const supabase = await createClient()
+  console.log('[requireAdmin] Supabase client created')
+
+  const { data: { user: authUser } } = await supabase.auth.getUser()
+  console.log('[requireAdmin] Authenticated user:', authUser)
+
+  if (!authUser) {
+    console.log('[requireAdmin] No authenticated user, redirecting')
+    redirect('/auth/login')
+  }
+
+  console.log('[requireAdmin] Fetching user data from User table')
+  const { data: userData, error } = await supabase
+    .from('User')
+    .select('id, role')
+    .eq('id', authUser.id)
+    .single<{ id: string; role: string }>()
+
+  console.log('[requireAdmin] DB query result:', { userData, error })
+
+  if (error || !userData) {
+    console.log('[requireAdmin] User not found in DB, redirecting')
+    redirect('/auth/login')
+  }
+
+  if (userData.role !== 'admin') {
+    console.log('[requireAdmin] User is not admin, redirecting')
+    redirect('/auth/login')
+  }
+
+  console.log('[requireAdmin] Authenticated admin user:', userData)
+  return { supabase, user: userData }
+}
+
+
 export async function requireUser(): Promise<{ supabase: SupabaseClient; user: UserRow }> {
   const supabase = await createClient()
   const { data: { user: authUser } } = await supabase.auth.getUser()
@@ -28,7 +65,6 @@ export async function requireUser(): Promise<{ supabase: SupabaseClient; user: U
     ...userData,
     Chapter: userData.Chapter ?? null
   }
-
 
   console.log('Authenticated user:', user)
   return { supabase, user }
