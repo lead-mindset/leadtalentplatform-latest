@@ -1,26 +1,13 @@
 'use server'
 
-import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/auth";
 import { profileUpdateSchema } from "@/lib/memberschema";
 import { createServiceClient } from "@/lib/supabase/server-service";
 import { revalidatePath } from "next/cache";
 
 export async function getProfileData() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError || !user) {
-    throw new Error("Unauthorized");
-  }
-
-  const { data: userData, error: userDataError } = await supabase
-    .from("User")
-    .select("*")
-    .eq("id", user.id)
-    .single();
+  const { user } = await requireUser();
+  const supabase = createServiceClient();
 
   const { data: profileData, error: profileError } = await supabase
     .from("StudentProfile")
@@ -28,20 +15,20 @@ export async function getProfileData() {
     .eq("userId", user.id)
     .single();
 
-  if (userDataError || profileError) {
-    throw new Error("User not found");
+  if (profileError) {
+    throw new Error("User profile not found");
   }
 
   return {
-    id: userData.id,
-    full_name: userData.name || '',
-    phone: userData.phone || '',
-    lead_chapter: userData.chapterId || '',
-    career: profileData.major || '',
-    graduationYear: profileData.graduationYear || 0,
+    id: user.id,
+    full_name: user.name,
+    phone: user.phone || '',
+    lead_chapter: profileData.chapterId,
+    career: profileData.major,
+    graduationYear: profileData.graduationYear,
     skills: profileData.skills || [],
-    linkedin_url: profileData.linkedinUrl || '',
-    consentRecruiterVisibility: profileData.consentRecruiterVisibility || false,
+    linkedin_url: profileData.linkedinUrl,
+    consentRecruiterVisibility: profileData.consentRecruiterVisibility,
   };
 }
 
@@ -71,15 +58,7 @@ export async function getResume(studentId: string) {
 
 export async function updateProfile(formData: FormData) {
   try {
-    const authSupabase = await createClient();
-    const {
-      data: { user },
-      error: userError,
-    } = await authSupabase.auth.getUser();
-
-    if (userError || !user) {
-      return { success: false, error: "Unauthorized" };
-    }
+    const { user } = await requireUser();
     const supabase = createServiceClient();
 
     const resume = formData.get("resume") as File | null;
@@ -95,8 +74,6 @@ export async function updateProfile(formData: FormData) {
       consentRecruiterVisibility: formData.get("consentRecruiterVisibility") === "true",
       resume_pdf: resume || undefined,
     };
-
-    console.log("Parsed form data:", profileData);
 
     const parsed = profileUpdateSchema.safeParse(profileData);
     if (!parsed.success) {
@@ -116,7 +93,6 @@ export async function updateProfile(formData: FormData) {
       .update({
         name: data.full_name,
         phone: data.phone,
-        chapterId: data.lead_chapter,
         updatedAt: now,
       })
       .eq("id", user.id);
@@ -138,6 +114,7 @@ export async function updateProfile(formData: FormData) {
           consentRecruiterVisibility: data.consentRecruiterVisibility,
           consentDate: data.consentRecruiterVisibility ? now : null,
           updatedAt: now,
+          chapterId: data.lead_chapter,
         },
         { onConflict: "userId" }
       );
@@ -166,13 +143,18 @@ export async function updateProfile(formData: FormData) {
         .from("resumes")
         .getPublicUrl(filePath);
 
-      const { error: resumeInsertError } = await supabase.from("Resume").insert({
-        studentId: user.id,
-        fileUrl: publicUrl,
-        fileName: data.resume_pdf.name,
-        fileSize: data.resume_pdf.size,
-        uploadedAt: now,
-      });
+      const { error: resumeInsertError } = await supabase
+        .from("Resume")
+        .upsert(
+          {
+            studentId: user.id,
+            fileUrl: publicUrl,
+            fileName: data.resume_pdf.name,
+            fileSize: data.resume_pdf.size,
+            uploadedAt: now,
+          },
+          { onConflict: 'studentId' }
+        );
 
       if (resumeInsertError) {
         console.error("Resume insert error:", resumeInsertError);
