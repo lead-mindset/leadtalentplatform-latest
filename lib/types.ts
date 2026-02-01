@@ -137,14 +137,22 @@ export type RecruiterUser = UserRow & {
 // ============================================================================
 
 export type UserWithDetailsRaw = UserRow & {
-  Chapter: Pick<ChapterRow, "name" | "university">[];
-  StudentProfile: Pick<StudentProfileRow, "isFilled" | "approvedById" | "isRecruiterVisible">[];
+  StudentProfile: (Pick<
+    StudentProfileRow,
+    "isFilled" | "approvedById" | "isRecruiterVisible" | "chapterId"
+  > & {
+    Chapter: Pick<ChapterRow, "name" | "university"> | null;
+  }) | null;
 };
 
 export type UserWithDetails = UserRow & {
   Chapter: Pick<ChapterRow, "name" | "university"> | null;
-  StudentProfile: Pick<StudentProfileRow, "isFilled" | "approvedById" | "isRecruiterVisible"> | null;
+  StudentProfile: Pick<
+    StudentProfileRow,
+    "isFilled" | "approvedById" | "isRecruiterVisible"
+  > | null;
 };
+
 
 export type RecruiterInviteRaw = {
   id: string;
@@ -223,6 +231,15 @@ export type SavedStudent = {
 // ============================================================================
 // STATS & DASHBOARD TYPES
 // ============================================================================
+
+
+export type UserWithFullProfile = UserRow & {
+  StudentProfile: (StudentProfileRow & {
+    Chapter: ChapterRow | null
+  }) | null
+}
+
+
 
 export type ChapterStats = {
   total: number;
