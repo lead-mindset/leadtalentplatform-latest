@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Mail, Loader2 } from 'lucide-react';
-import { createRecruiterInvite } from '@/lib/admin-invite-actions';
+import { createRecruiterInvite } from '@/lib/actions/admin/invite-recruiter';
 import type { Company } from '@/lib/types';
 
 interface InviteFormProps {

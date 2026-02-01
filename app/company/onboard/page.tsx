@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import OnboardContent from './onboard-content'
 import { redirect } from 'next/navigation'
-import { validateInviteToken } from '@/lib/company-actions-client'
+import { validateInviteToken } from '@/lib/actions/company/handle-invite'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'

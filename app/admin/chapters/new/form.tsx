@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle, Loader2, Building2, CheckCircle2, GraduationCap, MapPin } from 'lucide-react'
-import { createChapter } from '../actions'
+import { createChapter } from '@/lib/actions/admin/create-chapter'
 
 export function CreateChapterForm() {
   const router = useRouter()

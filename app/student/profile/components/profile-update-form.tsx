@@ -13,8 +13,8 @@ import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase/client'
 import CareerCommandSelect from '@/components/ui/career-combobox'
 import { useRouter } from 'next/navigation'
-import { getResume } from '../actions'
-import { updateProfile } from '../actions'
+import { getResume } from '@/lib/actions/student/profile'
+import { updateProfile } from '@/lib/actions/student/profile'
 
 import {
   ToggleGroup,

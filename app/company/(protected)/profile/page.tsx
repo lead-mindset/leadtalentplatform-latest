@@ -1,4 +1,4 @@
-import { getRecruiterProfile } from './actions'
+import { getRecruiterProfile } from '../../../../lib/actions/company/profile'
 import { redirect } from 'next/navigation'
 import ProfileForm from './profile-form'
 

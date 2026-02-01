@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useTransition } from 'react'
-import { uploadResume, deleteResume } from '@/lib/actions'
+import { uploadResume, deleteResume } from '@/lib/actions/student/handle-resume'
 import ResumeClient from './components/resume-form'
 import { supabase } from '@/lib/supabase/client'
 

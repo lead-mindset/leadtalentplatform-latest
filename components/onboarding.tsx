@@ -14,7 +14,7 @@ import { useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import CareerCommandSelect from './ui/career-combobox'
-import { submitOnboarding } from '@/app/onboarding/actions'
+import { submitOnboarding } from '@/lib/actions/student/onboarding'
 import {
   ToggleGroup,
   ToggleGroupItem,

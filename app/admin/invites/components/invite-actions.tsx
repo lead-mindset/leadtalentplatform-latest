@@ -15,7 +15,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Loader2, Mail, XCircle } from 'lucide-react'
-import { revokeInvite, resendInvite } from '@/lib/admin-invite-actions'
+import { revokeInvite, resendInvite } from '@/lib/actions/admin/invite-recruiter'
 
 interface InviteActionsProps {
   inviteId: string

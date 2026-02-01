@@ -1,4 +1,4 @@
-import { requireRecruiter, getCompanyStats, getSavedStudents } from '@/lib/company-actions';
+import { requireRecruiter, getCompanyStats, getSavedStudents } from '@/lib/actions/company/get-data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Users, Heart, TrendingUp, Building } from 'lucide-react';

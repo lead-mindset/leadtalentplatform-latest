@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle, Loader2, Building, CheckCircle2 } from 'lucide-react'
-import { createCompany } from './action'
+import { createCompany } from '@/lib/actions/admin/create-company'
 
 interface CreateCompanyFormProps {
   userId: string
