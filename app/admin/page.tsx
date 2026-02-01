@@ -1,10 +1,10 @@
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { Suspense } from 'react'
+import { getSystemStats } from '@/lib/actions/admin/get-data'
+import { getRecentActivity } from '@/lib/actions/admin/get-data'
 import { 
   Users, 
   Building2,
@@ -18,93 +18,6 @@ import {
   ArrowUpRight
 } from 'lucide-react'
 
-async function getSystemStats() {
-  const supabase = await createClient()
-
-  const [
-    { count: totalUsers },
-    { count: totalChapters },
-    { count: totalCompanies },
-    { count: totalProfiles },
-    { count: completeProfiles },
-    { count: visibleProfiles },
-    { count: pendingApprovals },
-    { count: activeRecruiters },
-    { count: pendingInvites }
-  ] = await Promise.all([
-    supabase.from('User').select('*', { count: 'exact', head: true }),
-    supabase.from('Chapter').select('*', { count: 'exact', head: true }),
-    supabase.from('Company').select('*', { count: 'exact', head: true }),
-    supabase.from('StudentProfile').select('*', { count: 'exact', head: true }),
-    supabase.from('StudentProfile').select('*', { count: 'exact', head: true }).eq('isFilled', true),
-    supabase.from('StudentProfile').select('*', { count: 'exact', head: true }).eq('isRecruiterVisible', true),
-    supabase.from('StudentProfile').select('*', { count: 'exact', head: true }).is('approvedById', null).eq('isFilled', true),
-    supabase.from('RecruiterAccess').select('*', { count: 'exact', head: true }).eq('isActive', true),
-    supabase.from('RecruiterAccess').select('*', { count: 'exact', head: true }).is('acceptedAt', null).is('revokedAt', null).gt('inviteExpiresAt', new Date().toISOString())
-  ])
-
-  const completionRate = totalProfiles && totalProfiles > 0 
-    ? Math.round(((completeProfiles || 0) / totalProfiles) * 100)
-    : 0
-
-  return {
-    totalUsers: totalUsers || 0,
-    totalChapters: totalChapters || 0,
-    totalCompanies: totalCompanies || 0,
-    totalProfiles: totalProfiles || 0,
-    completeProfiles: completeProfiles || 0,
-    visibleProfiles: visibleProfiles || 0,
-    pendingApprovals: pendingApprovals || 0,
-    activeRecruiters: activeRecruiters || 0,
-    pendingInvites: pendingInvites || 0,
-    completionRate
-  }
-}
-
-async function getRecentActivity() {
-  const supabase = await createClient()
-
-  // Get recently approved profiles - specify the userId relationship
-  const { data: recentApprovals } = await supabase
-    .from('StudentProfile')
-    .select(`
-      userId,
-      updatedAt,
-      User!StudentProfile_userId_fkey (
-        name,
-        email,
-        chapterId,
-        Chapter (name)
-      ),
-      ApprovedBy:User!StudentProfile_approvedById_fkey (
-        name
-      )
-    `)
-    .not('approvedById', 'is', null)
-    .order('updatedAt', { ascending: false })
-    .limit(5)
-
-  // Get recently accepted invites
-  const { data: recentInvites } = await supabase
-    .from('RecruiterAccess')
-    .select(`
-      id,
-      acceptedAt,
-      recruiterEmail,
-      Company (name),
-      AcceptedBy:User!RecruiterAccess_acceptedByUserId_fkey (
-        name
-      )
-    `)
-    .not('acceptedAt', 'is', null)
-    .order('acceptedAt', { ascending: false })
-    .limit(5)
-
-  return {
-    recentApprovals: recentApprovals || [],
-    recentInvites: recentInvites || []
-  }
-}
 
 async function AdminStats() {
   const stats = await getSystemStats()
