@@ -275,3 +275,30 @@ export type CompanyStats = {
   savedStudents: number;
   recentViews: number;
 };
+
+export type ActivityItem = {
+  id: string
+  type: 'approval' | 'invite_sent' | 'invite_accepted' | 'invite_revoked'
+  timestamp: string
+  actor: {
+    name: string | null
+    email: string
+  } | null
+  target: {
+    name: string | null
+    email: string
+  } | null
+  company?: {
+    name: string
+  } | null
+  chapter?: {
+    name: string
+  } | null
+}
+
+export type SidebarLayoutProps = {
+  Sidebar: React.ComponentType
+  children: React.ReactNode
+  sidebarFallback?: React.ReactNode
+  contentFallback?: React.ReactNode
+}

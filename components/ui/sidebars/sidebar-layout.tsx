@@ -1,13 +1,7 @@
 import { SidebarProvider } from "../sidebar"
 import { Suspense } from "react"
 import { SkeletonSidebar } from "./skeleton-sidebar"
-
-type SidebarLayoutProps = {
-  Sidebar: React.ComponentType
-  children: React.ReactNode
-  sidebarFallback?: React.ReactNode
-  contentFallback?: React.ReactNode
-}
+import { SidebarLayoutProps } from "@/lib/types"
 
 export function SidebarLayout({ 
   Sidebar, 

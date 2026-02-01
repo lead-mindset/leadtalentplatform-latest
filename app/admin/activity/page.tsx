@@ -3,27 +3,7 @@ import { Badge } from '@/components/ui/badge'
 import { Suspense } from 'react'
 import { Activity, CheckCircle2, Mail, Calendar } from 'lucide-react'
 import { getActivityLog } from '@/lib/actions/admin/get-data'
-
-type ActivityItem = {
-  id: string
-  type: 'approval' | 'invite_sent' | 'invite_accepted' | 'invite_revoked'
-  timestamp: string
-  actor: {
-    name: string | null
-    email: string
-  } | null
-  target: {
-    name: string | null
-    email: string
-  } | null
-  company?: {
-    name: string
-  } | null
-  chapter?: {
-    name: string
-  } | null
-}
-
+import { ActivityItem } from '@/lib/types'
 
 function getActivityDescription(activity: ActivityItem) {
   const actorName = activity.actor?.name || activity.actor?.email || 'Unknown'

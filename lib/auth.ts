@@ -3,7 +3,6 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
 import type { UserRow, EditorSidebarStats, AdminStats, UserWithChapter } from './types'
 import type { RecruiterUser } from './types'
-// Add missing type
 
 
 export async function assertAdmin(supabase: SupabaseClient) {
