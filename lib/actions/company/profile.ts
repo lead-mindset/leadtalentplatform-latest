@@ -6,9 +6,6 @@ import { revalidatePath } from 'next/cache'
 export async function updateProfile(formData: {
   name?: string
   phone?: string
-  title?: string
-  department?: string
-  skills?: string[]
 }) {
   const supabase = await createClient()
 
@@ -30,56 +27,24 @@ export async function updateProfile(formData: {
     return { success: false, error: 'Unauthorized - recruiters only' }
   }
 
-  const userUpdates: any = {}
+  const userUpdates: {
+    name?: string
+    phone?: string
+    updatedAt: string
+  } = {
+    updatedAt: new Date().toISOString()
+  }
+
   if (formData.name) userUpdates.name = formData.name
+  if (formData.phone !== undefined) userUpdates.phone = formData.phone
 
-  if (Object.keys(userUpdates).length > 0) {
-    const { error: userError } = await supabase
-      .from('User')
-      .update(userUpdates)
-      .eq('id', user.id)
+  const { error: userError } = await supabase
+    .from('User')
+    .update(userUpdates)
+    .eq('id', user.id)
 
-    if (userError) {
-      return { success: false, error: 'Failed to update user information' }
-    }
-  }
-
-  const { data: existingProfile } = await supabase
-    .from('RecruiterProfile')
-    .select('id')
-    .eq('userId', user.id)
-    .maybeSingle()
-
-  const profileData = {
-    userId: user.id,
-    phone: formData.phone,
-    title: formData.title,
-    department: formData.department,
-    skills: formData.skills,
-    isFilled: !!(formData.name && formData.phone && formData.title),
-    updatedAt: new Date().toISOString(),
-  }
-
-  if (existingProfile) {
-    const { error: profileError } = await supabase
-      .from('RecruiterProfile')
-      .update(profileData)
-      .eq('userId', user.id)
-
-    if (profileError) {
-      return { success: false, error: 'Failed to update profile' }
-    }
-  } else {
-    const { error: profileError } = await supabase
-      .from('RecruiterProfile')
-      .insert({
-        ...profileData,
-        createdAt: new Date().toISOString(),
-      })
-
-    if (profileError) {
-      return { success: false, error: 'Failed to create profile' }
-    }
+  if (userError) {
+    return { success: false, error: 'Failed to update profile information' }
   }
 
   revalidatePath('/company/profile')
@@ -101,7 +66,7 @@ export async function getRecruiterProfile() {
 
   const { data: user, error: userError } = await supabase
     .from('User')
-    .select('id, email, name, role')
+    .select('id, email, name, role, phone, createdAt, updatedAt')
     .eq('id', authUser.id)
     .single()
 
@@ -113,25 +78,108 @@ export async function getRecruiterProfile() {
     return { success: false, error: 'Unauthorized' }
   }
 
-  const { data: profile } = await supabase
-    .from('RecruiterProfile')
-    .select('*')
-    .eq('userId', user.id)
-    .maybeSingle()
+  type RecruiterAccessWithCompany = {
+    id: string
+    companyId: string
+    isActive: boolean
+    acceptedAt: string | null
+    Company: { id: string; name: string; createdat: string; createdbyid: string }[]
+  }
 
   const { data: recruiterAccess } = await supabase
     .from('RecruiterAccess')
-    .select('companyId, Company(name, id)')
+    .select(`
+      id,
+      companyId,
+      isActive,
+      acceptedAt,
+      Company!inner (id, name, createdat, createdbyid)
+    `)
     .eq('acceptedByUserId', user.id)
     .eq('isActive', true)
-    .maybeSingle()
+    .is('revokedAt', null)
+    .maybeSingle<RecruiterAccessWithCompany>()
+
+  const company = recruiterAccess?.Company?.[0] ?? null
 
   return {
     success: true,
     data: {
       user,
-      profile,
-      company: recruiterAccess?.Company,
+      company,
+      accessInfo: recruiterAccess ? {
+        accessId: recruiterAccess.id,
+        acceptedAt: recruiterAccess.acceptedAt,
+      } : null
     },
+  }
+}
+
+export async function getRecruiterCompanies() {
+  const supabase = await createClient()
+
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser()
+
+  if (!authUser) {
+    return { success: false, error: 'Not authenticated' }
+  }
+
+  const { data: user } = await supabase
+    .from('User')
+    .select('id, role')
+    .eq('id', authUser.id)
+    .single()
+
+  if (!user || user.role !== 'recruiter') {
+    return { success: false, error: 'Unauthorized' }
+  }
+
+  type AccessWithCompany = {
+    id: string
+    companyId: string
+    isActive: boolean
+    acceptedAt: string | null
+    grantedAt: string
+    revokedAt: string | null
+    Company: { id: string; name: string; createdat: string; createdbyid: string }[]
+  }
+
+  const { data: allAccess, error } = await supabase
+    .from('RecruiterAccess')
+    .select(`
+      id,
+      companyId,
+      isActive,
+      acceptedAt,
+      grantedAt,
+      revokedAt,
+      Company!inner (id, name, createdat, createdbyid)
+    `)
+    .eq('acceptedByUserId', user.id)
+    .order('acceptedAt', { ascending: false })
+
+  if (error) {
+    return { success: false, error: 'Failed to fetch companies' }
+  }
+
+  const companies = (allAccess as AccessWithCompany[]).map(access => ({
+    accessId: access.id,
+    companyId: access.companyId,
+    companyName: access.Company[0]?.name ?? 'Unknown',
+    isActive: access.isActive,
+    acceptedAt: access.acceptedAt,
+    grantedAt: access.grantedAt,
+    revokedAt: access.revokedAt,
+    company: access.Company[0] ?? null
+  }))
+
+  return {
+    success: true,
+    data: {
+      activeCompany: companies.find(c => c.isActive && !c.revokedAt) ?? null,
+      allCompanies: companies
+    }
   }
 }
