@@ -1,8 +1,18 @@
 import { createClient } from '@/lib/supabase/server'
+import type { 
+  CompanyRaw, 
+  Company, 
+  RecruiterInvite, 
+  RecruiterInviteRaw,
+  UserWithDetailsRaw,
+  UserWithDetails,
+  ChapterRow,
+  ActivityItem
+} from '@/lib/types'
 
-import type { CompanyRaw } from '@/lib/types'
-import type { Company } from '@/lib/types'
-import type { RecruiterInvite, RecruiterInviteRaw } from '@/lib/types'
+// ============================================================================
+// SYSTEM STATS
+// ============================================================================
 
 export async function getSystemStats() {
   const supabase = await createClient()
@@ -50,7 +60,6 @@ export async function getSystemStats() {
 export async function getRecentActivity() {
   const supabase = await createClient()
 
-  // Get recently approved profiles - specify the userId relationship
   const { data: recentApprovals } = await supabase
     .from('StudentProfile')
     .select(`
@@ -58,9 +67,7 @@ export async function getRecentActivity() {
       updatedAt,
       User!StudentProfile_userId_fkey (
         name,
-        email,
-        chapterId,
-        Chapter (name)
+        email
       ),
       ApprovedBy:User!StudentProfile_approvedById_fkey (
         name
@@ -70,7 +77,6 @@ export async function getRecentActivity() {
     .order('updatedAt', { ascending: false })
     .limit(5)
 
-  // Get recently accepted invites
   const { data: recentInvites } = await supabase
     .from('RecruiterAccess')
     .select(`
@@ -92,7 +98,14 @@ export async function getRecentActivity() {
   }
 }
 
-export async function getChapters() {
+
+type ChapterWithCount = ChapterRow & {
+  _count: {
+    users: number
+  }
+}
+
+export async function getChapters(): Promise<ChapterWithCount[]> {
   const supabase = await createClient()
 
   const { data: chapters, error } = await supabase
@@ -100,16 +113,15 @@ export async function getChapters() {
     .select('*')
     .order('name', { ascending: true })
 
-  if (error) {
+  if (error || !chapters) {
     console.error('Failed to fetch chapters:', error)
     return []
   }
 
-  // Get user counts for each chapter
   const chaptersWithCounts = await Promise.all(
-    (chapters || []).map(async (chapter) => {
+    chapters.map(async (chapter) => {
       const { count } = await supabase
-        .from('User')
+        .from('StudentProfile')
         .select('*', { count: 'exact', head: true })
         .eq('chapterId', chapter.id)
 
@@ -125,9 +137,6 @@ export async function getChapters() {
   return chaptersWithCounts
 }
 
-import type { UserWithDetailsRaw } from '@/lib/types'
-import type { UserWithDetails } from '@/lib/types'
-
 function normalizeUserWithDetails(
   users: UserWithDetailsRaw[]
 ): UserWithDetails[] {
@@ -138,42 +147,41 @@ function normalizeUserWithDetails(
   }))
 }
 
-
-export async function getUsers() {
+export async function getUsers(): Promise<UserWithDetails[]> {
   const supabase = await createClient()
 
   const { data, error } = await supabase
     .from('User')
     .select(`
-  id,
-  email,
-  name,
-  role,
-  phone,
-  createdAt,
-  updatedAt,
-  chapterId,
-  Chapter (
-    name,
-    university
-  ),
-  StudentProfile!StudentProfile_userId_fkey (
-    isFilled,
-    approvedById,
-    isRecruiterVisible
-  )
-`)
+      id,
+      email,
+      name,
+      role,
+      phone,
+      createdAt,
+      updatedAt,
+      StudentProfile!StudentProfile_userId_fkey (
+        isFilled,
+        approvedById,
+        isRecruiterVisible,
+        chapterId,
+        Chapter (
+          name,
+          university
+        )
+      )
+    `)
     .order('createdAt', { ascending: false })
-  if (error) {
+
+  if (error || !data) {
     console.error("Failed to fetch users:", error)
     return []
   }
-  if (!data) return []
+
   return normalizeUserWithDetails(data as UserWithDetailsRaw[])
 }
 
-
-export async function getActivityLog() {
+export async function getActivityLog(): Promise<ActivityItem[]> {
   const supabase = await createClient()
 
   const { data: approvals } = await supabase
@@ -181,11 +189,12 @@ export async function getActivityLog() {
     .select(`
       userId,
       updatedAt,
+      chapterId,
       Student:User!StudentProfile_userId_fkey (
         name,
-        email,
-        Chapter (name)
+        email
       ),
+      Chapter (name),
       ApprovedBy:User!StudentProfile_approvedById_fkey (
         name,
         email
@@ -195,7 +204,6 @@ export async function getActivityLog() {
     .order('updatedAt', { ascending: false })
     .limit(20)
 
-  // Get invite activities
   const { data: invites } = await supabase
     .from('RecruiterAccess')
     .select(`
@@ -230,9 +238,9 @@ export async function getActivityLog() {
         id: `approval-${approval.userId}`,
         type: 'approval',
         timestamp: approval.updatedAt,
-        actor: approval.ApprovedBy,
-        target: approval.Student,
-        chapter: approval.Student?.Chapter
+        actor: approval.ApprovedBy?.[0] ?? null,
+        target: approval.Student?.[0] ?? null,
+        chapter: approval.Chapter?.[0] ?? null
       })
     })
   }
@@ -245,9 +253,9 @@ export async function getActivityLog() {
         id: `invite-sent-${invite.id}`,
         type: 'invite_sent',
         timestamp: invite.grantedAt,
-        actor: invite.GrantedBy,
+        actor: invite.GrantedBy?.[0] ?? null,
         target: { name: null, email: invite.recruiterEmail },
-        company: invite.Company
+        company: invite.Company?.[0] ?? null
       })
 
       // Invite accepted
@@ -256,9 +264,9 @@ export async function getActivityLog() {
           id: `invite-accepted-${invite.id}`,
           type: 'invite_accepted',
           timestamp: invite.acceptedAt,
-          actor: invite.AcceptedBy,
+          actor: invite.AcceptedBy?.[0] ?? null,
           target: { name: null, email: invite.recruiterEmail },
-          company: invite.Company
+          company: invite.Company?.[0] ?? null
         })
       }
 
@@ -268,9 +276,9 @@ export async function getActivityLog() {
           id: `invite-revoked-${invite.id}`,
           type: 'invite_revoked',
           timestamp: invite.revokedAt,
-          actor: invite.RevokedBy,
+          actor: invite.RevokedBy?.[0] ?? null,
           target: { name: null, email: invite.recruiterEmail },
-          company: invite.Company
+          company: invite.Company?.[0] ?? null
         })
       }
     })
@@ -282,21 +290,7 @@ export async function getActivityLog() {
   return activities.slice(0, 50)
 }
 
-function normalizeRecruiterInvites(
-  invites: RecruiterInviteRaw[]
-): RecruiterInvite[] {
-  return invites.map(invite => ({
-    ...invite,
-    // Handle null values when relationships don't exist
-    Company: Array.isArray(invite.Company) ? (invite.Company[0] ?? null) : null,
-    GrantedBy: Array.isArray(invite.GrantedBy) ? (invite.GrantedBy[0] ?? null) : null,
-    // AcceptedBy will be null if acceptedByUserId is NULL (invite not yet accepted)
-    AcceptedBy: Array.isArray(invite.AcceptedBy) ? (invite.AcceptedBy[0] ?? null) : null,
-  }))
-}
-
-
-export async function getCompanies() {
+export async function getCompanies(): Promise<Company[]> {
   const supabase = await createClient()
 
   const { data: companies, error } = await supabase
@@ -313,47 +307,53 @@ export async function getCompanies() {
     `)
     .order('createdat', { ascending: false })
 
-  if (error) {
+  if (error || !companies) {
     console.error('Failed to fetch companies:', error)
     return []
   }
 
   // Get recruiter counts for each company
-const companiesWithCounts = await Promise.all(
-  (companies as CompanyRaw[]).map(async (company) => {
-    const { count: activeCount } = await supabase
-      .from('RecruiterAccess')
-      .select('*', { count: 'exact', head: true })
-      .eq('companyId', company.id)
-      .eq('isActive', true)
+  const companiesWithCounts = await Promise.all(
+    (companies as CompanyRaw[]).map(async (company) => {
+      const { count: activeCount } = await supabase
+        .from('RecruiterAccess')
+        .select('*', { count: 'exact', head: true })
+        .eq('companyId', company.id)
+        .eq('isActive', true)
 
-    const { count: pendingCount } = await supabase
-      .from('RecruiterAccess')
-      .select('*', { count: 'exact', head: true })
-      .eq('companyId', company.id)
-      .is('acceptedAt', null)
-      .is('revokedAt', null)
-      .gt('inviteExpiresAt', new Date().toISOString())
+      const { count: pendingCount } = await supabase
+        .from('RecruiterAccess')
+        .select('*', { count: 'exact', head: true })
+        .eq('companyId', company.id)
+        .is('acceptedAt', null)
+        .is('revokedAt', null)
+        .gt('inviteExpiresAt', new Date().toISOString())
 
-    return {
-      ...company,
-      CreatedBy: company.CreatedBy[0] ?? null, // 🔥 normalize here
-      _count: {
-        activeRecruiters: activeCount || 0,
-        pendingInvites: pendingCount || 0
+      return {
+        ...company,
+        CreatedBy: company.CreatedBy[0] ?? null,
+        _count: {
+          activeRecruiters: activeCount || 0,
+          pendingInvites: pendingCount || 0
+        }
       }
-    }
-  })
-)
+    })
+  )
 
-return companiesWithCounts as Company[]
-
+  return companiesWithCounts as Company[]
+}
+function normalizeRecruiterInvites(
+  invites: RecruiterInviteRaw[]
+): RecruiterInvite[] {
+  return invites.map(invite => ({
+    ...invite,
+    Company: Array.isArray(invite.Company) ? (invite.Company[0] ?? null) : null,
+    GrantedBy: Array.isArray(invite.GrantedBy) ? (invite.GrantedBy[0] ?? null) : null,
+    AcceptedBy: Array.isArray(invite.AcceptedBy) ? (invite.AcceptedBy[0] ?? null) : null,
+  }))
 }
 
-
-
-
-export async function getInvites() {
+export async function getInvites(): Promise<RecruiterInvite[]> {
   const supabase = await createClient()
 
   const { data: invites, error } = await supabase
@@ -379,40 +379,10 @@ export async function getInvites() {
     `)
     .order('grantedAt', { ascending: false })
 
-  if (error) {
+  if (error || !invites) {
     console.error('Failed to fetch invites:', error)
     return []
   }
 
   return normalizeRecruiterInvites(invites as RecruiterInviteRaw[])
-}
-
-
-
-async function getCompanies(): Promise<Company[]> {
-  const supabase = await createClient()
-
-  const { data: companies, error } = await supabase
-    .from('Company')
-    .select(`
-      id,
-      name,
-      createdat,
-      createdbyid,
-      CreatedBy:User!Company_createdbyid_fkey (
-        name,
-        email
-      )
-    `)
-    .order('name', { ascending: true })
-
-  if (error) {
-    console.error('Failed to fetch companies:', error)
-    return []
-  }
-
-  return (companies as CompanyRaw[]).map(company => ({
-    ...company,
-    CreatedBy: company.CreatedBy[0] ?? null,
-  }))
 }
