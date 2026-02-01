@@ -1,0 +1,128 @@
+'use server'
+
+import { createClient } from '@/lib/supabase/server';
+import { fullMemberSchemaBackend } from '@/lib/memberschema';
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
+
+export async function submitOnboarding(formData: FormData) {
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user?.id || !user?.email) {
+            return { error: 'Unauthorized' };
+        }
+
+        const resume = formData.get('resume') as File | null;
+
+        const profileData = {
+            full_name: formData.get('full_name')?.toString() || '',
+            phone: formData.get('phone')?.toString() || '',
+            career: formData.get('career')?.toString() || '',
+            lead_chapter: formData.get('lead_chapter')?.toString(),
+            graduationYear: Number(formData.get('graduationYear')) || undefined,
+            skills: JSON.parse(formData.get('skills')?.toString() || '[]'),
+            linkedin_url: formData.get('linkedin_url')?.toString() || '',
+            consentRecruiterVisibility: formData.get('consentRecruiterVisibility') === 'true',
+        };
+
+        const parsed = fullMemberSchemaBackend.safeParse(profileData);
+        if (!parsed.success) {
+            return { error: "Validation failed", details: parsed.error };
+        }
+
+        const data = parsed.data;
+        const now = new Date().toISOString();
+
+        const { error: userError } = await supabase
+            .from('User')
+            .upsert({
+                id: user.id,
+                email: user.email,
+                name: data.full_name,
+                phone: data.phone,
+                chapterId: data.lead_chapter,
+                updatedAt: now,
+            })
+            .eq('id', user.id);
+
+        if (userError) {
+            return { error: userError.message };
+        }
+
+        const { data: existingUser } = await supabase
+            .from('User')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+
+        if (!existingUser) {
+            return { error: 'User row does not exist for StudentProfile insert' };
+        }
+
+        const { error: profileError } = await supabase
+            .from('StudentProfile')
+            .upsert({
+                userId: user.id,
+                major: data.career,
+                graduationYear: data.graduationYear,
+                linkedinUrl: data.linkedin_url,
+                skills: data.skills,
+                consentRecruiterVisibility: data.consentRecruiterVisibility,
+                consentDate: data.consentRecruiterVisibility ? now : null,
+                updatedAt: now,
+                isFilled: true,
+            });
+
+        if (profileError) {
+            return { error: profileError.message };
+        }
+
+        if (resume) {
+            if (resume.type !== "application/pdf") {
+                return { error: "Only PDF resumes are allowed" };
+            }
+
+            const filePath = `${user.id}/${crypto.randomUUID()}.pdf`;
+
+            const { error: uploadError } = await supabase.storage
+                .from("resumes")
+                .upload(filePath, resume, {
+                    contentType: "application/pdf",
+                    upsert: true,
+                });
+
+            if (uploadError) {
+                return { error: uploadError.message };
+            }
+
+            const { data: publicUrlData } = supabase.storage
+                .from("resumes")
+                .getPublicUrl(filePath);
+
+            const fileUrl = publicUrlData.publicUrl;
+
+            const { error: resumeDbError } = await supabase
+                .from("Resume")
+                .insert({
+                    studentId: user.id,
+                    fileUrl,
+                    fileName: resume.name,
+                    fileSize: resume.size,
+                    uploadedAt: now,
+                });
+
+            if (resumeDbError) {
+                return { error: resumeDbError.message };
+            }
+        }
+
+    } catch (error) {
+        console.error('Profile update error:', error);
+        return { error: 'Internal server error' };
+    }
+
+    revalidatePath('/');
+    redirect('/');
+}
