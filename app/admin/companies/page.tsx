@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { Suspense } from 'react'
-import { Building, Plus, Users, Mail, CheckCircle2, Clock } from 'lucide-react'
+import { Building, Plus, Mail, CheckCircle2, Clock } from 'lucide-react'
 import { getCompanies } from '@/lib/actions/admin/get-data'
 
 async function CompaniesList() {
