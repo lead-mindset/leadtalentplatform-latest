@@ -17,7 +17,7 @@ export default function GoogleButton() {
     <Button
       onClick={signInWithGoogle}
       variant="outline"
-      className="flex items-center justify-center gap-2"
+      className="w-full"
     >
       Continue with Google
     </Button>
