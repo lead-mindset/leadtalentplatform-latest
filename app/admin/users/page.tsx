@@ -159,7 +159,9 @@ async function UsersTable() {
                               </div>
                             </div>
                           ) : (
-                            <span className="text-sm text-muted-foreground">No chapter</span>
+                            <span className="text-sm text-muted-foreground">
+                              {user.role === 'member' ? 'No chapter assigned' : '—'}
+                            </span>
                           )}
                         </td>
                         <td className="p-3">
