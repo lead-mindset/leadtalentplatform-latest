@@ -123,6 +123,6 @@ export async function submitOnboarding(formData: FormData) {
         return { error: 'Internal server error' };
     }
 
-    revalidatePath('/');
-    redirect('/');
+    revalidatePath('/student');
+    redirect('/student');
 }
