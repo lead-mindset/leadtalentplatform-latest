@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useTransition } from 'react'
-import { uploadResume, deleteResume } from '@/lib/actions/student/handle-resume'
+import { uploadResume } from '@/lib/actions/student/handle-resume'
 import ResumeClient from './components/resume-form'
 import { supabase } from '@/lib/supabase/client'
 
@@ -29,9 +29,7 @@ export default function StudentResumePage() {
           .from('Resume')
           .select('*')
           .eq('studentId', user.id)
-          .order('uploadedAt', { ascending: false })
-          .limit(1)
-          .single()
+          .maybeSingle()
 
         setResume(resumeData || null)
       } catch (err) {
@@ -56,30 +54,12 @@ export default function StudentResumePage() {
           .from('Resume')
           .select('*')
           .eq('studentId', user.id)
-          .order('uploadedAt', { ascending: false })
-          .limit(1)
-          .single()
+          .maybeSingle()
 
         setResume(resumeData || null)
       } catch (err: any) {
         console.error(err)
         alert(err.message || 'Failed to upload resume')
-      }
-    })
-  }
-
-  async function handleDelete() {
-    if (!resume) return
-    if (!confirm('Are you sure you want to delete your resume?')) return
-
-    startTransition(async () => {
-      try {
-        await deleteResume(resume.id)
-        setResume(null)
-        alert('Resume deleted successfully')
-      } catch (err: any) {
-        console.error(err)
-        alert(err.message || 'Failed to delete resume')
       }
     })
   }
@@ -94,7 +74,6 @@ export default function StudentResumePage() {
         resume={resume}
         isPending={isPending}
         onUpload={handleUpload}
-        onDelete={handleDelete}
       />
     </div>
   )
