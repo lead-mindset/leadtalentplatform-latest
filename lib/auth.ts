@@ -1,7 +1,7 @@
 import { createClient } from './supabase/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
-import type { UserRow, EditorSidebarStats, AdminStats } from './types'
+import type { UserRow, EditorSidebarStats, AdminStats, CompanyRow } from './types'
 import type { RecruiterUser } from './types'
 
 export async function assertAdmin(supabase: SupabaseClient) {
@@ -173,6 +173,22 @@ export async function requireRecruiter(): Promise<{
     redirect('/auth/login')
   }
 
+  type ActiveAccessRaw = {
+    id: string;
+    companyId: string;
+    isActive: boolean;
+    grantedById: string;
+    acceptedByUserId: string | null;
+    grantedAt: string;
+    acceptedAt: string | null;
+    revokedAt: string | null;
+    inviteExpiresAt: string | null;
+    recruiterEmail: string;
+    inviteToken: string;
+    revokedById: string | null;
+    Company: { id: string; name: string; createdat: string; createdbyid: string }[];
+  }
+
   const { data: activeAccess, error: accessError } = await supabase
     .from('RecruiterAccess')
     .select(`
@@ -184,7 +200,7 @@ export async function requireRecruiter(): Promise<{
     .eq('acceptedByUserId', authUser.id)
     .eq('isActive', true)
     .is('revokedAt', null)
-    .maybeSingle()
+    .maybeSingle<ActiveAccessRaw>()
 
   if (accessError || !activeAccess) {
     redirect('/company/onboard')
@@ -199,10 +215,12 @@ export async function requireRecruiter(): Promise<{
     `)
     .eq('acceptedByUserId', authUser.id)
 
+  const company = activeAccess.Company?.[0] ?? null
+  
   const user: RecruiterUser = {
     ...userData,
     RecruiterAccess: allAccess ?? [],
-    Company: activeAccess.Company ?? null,
+    Company: company as CompanyRow | null,
   }
 
   return { supabase, user }
