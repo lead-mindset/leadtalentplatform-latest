@@ -13,9 +13,7 @@ import {
 } from 'lucide-react'
 import { MembersTabs } from './components/member-tabs'
 import type { MemberWithProfile } from '@/lib/types'
-import { getChapterMembers } from '@/lib/actions/chapter/get-data'
-import { getMemberStats } from '@/lib/actions/chapter/get-data'
-
+import { getChapterMembers, getMemberStats } from '@/lib/actions/chapter/get-data'
 
 export function filterMembers(
   members: MemberWithProfile[],
@@ -44,7 +42,21 @@ export default async function ChapterMembersPage({
 
   const { supabase, user } = await requireUserWithRole('editor')
 
-  if (!user.chapterId) {
+  // Get the user's chapter via StudentProfile
+  const { data: profile } = await supabase
+    .from('StudentProfile')
+    .select(`
+      chapterId,
+      Chapter (
+        id,
+        name,
+        university
+      )
+    `)
+    .eq('userId', user.id)
+    .maybeSingle()
+
+  if (!profile?.chapterId || !profile.Chapter) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Card>
@@ -62,7 +74,10 @@ export default async function ChapterMembersPage({
     )
   }
 
-  const allMembers = await getChapterMembers(user.chapterId)
+  const chapterId = profile.chapterId
+  const chapter = Array.isArray(profile.Chapter) ? profile.Chapter[0] : profile.Chapter
+
+  const allMembers = await getChapterMembers(chapterId)
   const stats = getMemberStats(allMembers)
   const displayMembers = filterMembers(allMembers, status)
 
@@ -71,7 +86,7 @@ export default async function ChapterMembersPage({
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Chapter Members</h1>
         <p className="text-muted-foreground mt-2">
-          Manage members from {user.Chapter?.name}
+          Manage members from {chapter?.name ?? 'Unknown Chapter'}
         </p>
       </div>
 
