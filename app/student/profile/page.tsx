@@ -1,35 +1,32 @@
-import { createClient } from "@/lib/supabase/server";
 import { Suspense } from "react";
+import { requireUser } from "@/lib/auth";
 import ProfileUpdateForm from "./components/profile-update-form";
 import type { ProfileData } from "@/lib/memberschema";
+import type { UserRow, StudentProfileRow } from "@/lib/types";
 
 async function ProfileData() {
-  const supabase = await createClient();
-  
-  const { data: { user } } = await supabase.auth.getUser();
+  const { supabase, user } = await requireUser();
 
-  const { data: userData } = await supabase
-    .from("User")
-    .select("*")
-    .eq("id", user!.id)
-    .single();
-
-  const { data: profileData } = await supabase
+  const { data: profileData, error: profileError } = await supabase
     .from("StudentProfile")
     .select("*")
-    .eq("userId", user!.id)
-    .single();
+    .eq("userId", user.id)
+    .maybeSingle<StudentProfileRow>();
+
+  if (profileError) {
+    console.error("Failed to fetch student profile:", profileError);
+  }
 
   const combinedData: ProfileData = {
-    id: userData!.id,
-    full_name: userData!.name || '',
-    phone: userData!.phone || '',
-    lead_chapter: userData!.chapterId || '',
-    career: profileData!.major || '',
-    graduationYear: profileData!.graduationYear || 0,
-    skills: profileData!.skills || [],
-    linkedin_url: profileData!.linkedinUrl || '',
-    consentRecruiterVisibility: profileData!.consentRecruiterVisibility || false,
+    id: user.id,
+    full_name: user.name || '',
+    phone: user.phone || '',
+    lead_chapter: profileData?.chapterId || '',
+    career: profileData?.major || '',
+    graduationYear: profileData?.graduationYear || 0,
+    skills: profileData?.skills || [],
+    linkedin_url: profileData?.linkedinUrl || '',
+    consentRecruiterVisibility: profileData?.consentRecruiterVisibility || false,
   };
 
   return <ProfileUpdateForm initialData={combinedData} />;
