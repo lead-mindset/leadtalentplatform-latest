@@ -1,24 +1,21 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { requireAdmin } from '@/lib/auth'
 
 interface CreateCompanyInput {
   name: string
-  createdById: string
 }
 
-interface CreateCompanyResponse {
-  success: boolean
-  error?: string
-  companyId?: string
-}
+type CreateCompanyResponse = 
+  | { success: true; companyId: string }
+  | { success: false; error: string }
 
 export async function createCompany(
   input: CreateCompanyInput
 ): Promise<CreateCompanyResponse> {
   try {
-    const supabase = await createClient()
+    const { supabase, user } = await requireAdmin()
 
     if (!input.name || input.name.trim().length < 2) {
       return {
@@ -27,18 +24,11 @@ export async function createCompany(
       }
     }
 
-    if (!input.createdById) {
-      return {
-        success: false,
-        error: 'User ID is required',
-      }
-    }
-
     const { data, error } = await supabase
       .from('Company')
       .insert({
         name: input.name.trim(),
-        createdbyid: input.createdById,
+        createdbyid: user.id,
       })
       .select('id')
       .single()
@@ -52,6 +42,13 @@ export async function createCompany(
       }
 
       console.error('Error creating company:', error)
+      return {
+        success: false,
+        error: 'Failed to create company',
+      }
+    }
+
+    if (!data) {
       return {
         success: false,
         error: 'Failed to create company',
