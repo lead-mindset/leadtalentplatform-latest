@@ -23,76 +23,76 @@ export type Database = {
     Tables: {
       User: {
         Row: {
-          id: string; // uuid
+          id: string;
           email: string;
-          name: string | null;
+          name: string;
           role: Role;
-          chapterId: string | null; // text (references Chapter.id)
-          createdAt: string; // timestamp without time zone
-          updatedAt: string; // timestamp without time zone
+          createdAt: string;
+          updatedAt: string;
           phone: string | null;
         };
       };
       Chapter: {
         Row: {
-          id: string; // text (not uuid)
+          id: string;
           name: string;
           university: string;
           city: string | null;
           region: string | null;
-          createdAt: string | null; // date (nullable!)
-          updatedAt: string; // timestamp without time zone
+          createdAt: string | null;
+          updatedAt: string;
         };
       };
       StudentProfile: {
         Row: {
-          userId: string; // uuid
-          major: string | null;
-          graduationYear: number | null;
-          linkedinUrl: string | null;
+          userId: string;
+          major: string;
+          graduationYear: number;
+          linkedinUrl: string;
           skills: string[] | null;
           consentRecruiterVisibility: boolean;
-          consentDate: string | null; // timestamp without time zone
-          createdAt: string; // timestamp without time zone
-          updatedAt: string; // timestamp without time zone
-          isRecruiterVisible: boolean | null;
-          approvedById: string | null; // uuid
-          isFilled: boolean | null;
+          consentDate: string | null;
+          createdAt: string;
+          updatedAt: string;
+          isRecruiterVisible: boolean;
+          approvedById: string | null;
+          isFilled: boolean;
+          chapterId: string;
         };
       };
       Company: {
         Row: {
-          id: string; // uuid
+          id: string;
           name: string;
-          createdat: string; // timestamp with time zone
-          createdbyid: string; // uuid
+          createdat: string;
+          createdbyid: string;
         };
       };
       RecruiterAccess: {
         Row: {
-          id: string; // uuid
+          id: string;
           recruiterEmail: string;
           isActive: boolean;
-          grantedAt: string; // timestamp with time zone
-          grantedById: string; // uuid
-          inviteToken: string; // uuid - IMPORTANT: was missing!
-          inviteExpiresAt: string | null; // timestamp with time zone
-          acceptedAt: string | null; // timestamp with time zone
-          acceptedByUserId: string | null; // uuid
-          companyId: string; // uuid
-          revokedAt: string | null; // timestamp with time zone
-          revokedById: string | null; // uuid - IMPORTANT: was missing!
+          grantedAt: string;
+          grantedById: string;
+          inviteToken: string;
+          inviteExpiresAt: string | null;
+          acceptedAt: string | null;
+          acceptedByUserId: string | null;
+          companyId: string;
+          revokedAt: string | null;
+          revokedById: string | null;
         };
       };
       Resume: {
         Row: {
-          id: string; // uuid
-          studentId: string; // uuid
+          id: string;
+          studentId: string;
           fileUrl: string;
-          fileName: string | null;
-          fileSize: number | null;
-          uploadedAt: string; // timestamp without time zone
-          parsedData: any | null; // jsonb
+          fileName: string;
+          fileSize: number;
+          uploadedAt: string;
+          parsedData: any | null;
         };
       };
     };
@@ -194,23 +194,21 @@ export type Company = {
 export type StudentForRecruiterRaw = {
   id: string;
   email: string;
-  name: string | null;
+  name: string;
   phone: string | null;
-  chapterId: string | null;
   createdAt: string;
   Chapter: Pick<ChapterRow, "name" | "university" | "city" | "region">[];
-  StudentProfile: Pick<StudentProfileRow, "major" | "graduationYear" | "linkedinUrl" | "skills" | "isRecruiterVisible" | "isFilled" | "updatedAt">[];
+  StudentProfile: Pick<StudentProfileRow, "major" | "graduationYear" | "linkedinUrl" | "skills" | "isRecruiterVisible" | "isFilled" | "updatedAt" | "chapterId">[];
 };
 
 export type StudentForRecruiter = {
   id: string;
   email: string;
-  name: string | null;
+  name: string;
   phone: string | null;
-  chapterId: string | null;
   createdAt: string;
   Chapter: Pick<ChapterRow, "name" | "university" | "city" | "region"> | null;
-  StudentProfile: Pick<StudentProfileRow, "major" | "graduationYear" | "linkedinUrl" | "skills" | "isRecruiterVisible" | "isFilled" | "updatedAt"> | null;
+  StudentProfile: Pick<StudentProfileRow, "major" | "graduationYear" | "linkedinUrl" | "skills" | "isRecruiterVisible" | "isFilled" | "updatedAt" | "chapterId"> | null;
 };
 
 export type SavedStudent = {
