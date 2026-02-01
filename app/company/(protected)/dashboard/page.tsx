@@ -1,8 +1,9 @@
-import { requireRecruiter, getCompanyStats, getSavedStudents } from '@/lib/actions/company/get-data';
+import { getCompanyStats, getSavedStudents } from '@/lib/actions/company/get-data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Users, Heart, TrendingUp, Building } from 'lucide-react';
 import Link from 'next/link';
+import { requireRecruiter } from '@/lib/auth';
 import { ArrowRight } from 'lucide-react';
 
 export default async function CompanyDashboardPage() {
