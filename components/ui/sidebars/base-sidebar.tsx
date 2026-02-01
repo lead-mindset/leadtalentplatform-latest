@@ -21,13 +21,13 @@ export default function BaseSidebar({ userName, userEmail, userRole, children }:
             <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
           )}
           {userRole && (
-            <Badge variant="secondary" className="text-xs">
+            <Badge variant='secondary' className="text-xs">
               {userRole}
             </Badge>
           )}
         </div>
       </SidebarHeader>
-      <SidebarContent className="p-4">
+      <SidebarContent>
         {children}
       </SidebarContent>
       <SidebarFooter className="p-4 border-t border-sidebar-border mt-auto">
