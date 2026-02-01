@@ -16,7 +16,6 @@ import {
   Building2,
   Mail,
   Activity,
-  Settings,
 } from 'lucide-react'
 import type { AdminSidebarProps } from '@/lib/types'
 import type { NavItemConfig } from '@/lib/types'
