@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -7,12 +6,10 @@ import { Suspense } from 'react'
 import { Users, UserCheck, Clock, TrendingUp, AlertCircle, CheckCircle2, UserX } from 'lucide-react'
 import { requireUser } from '@/lib/auth'
 import type { ChapterData, RecentActivityMember } from '@/lib/types'
-import { getChapterMembers, getMemberStats } from './members/page'
+import { getChapterMembers, getMemberStats } from '@/lib/actions/chapter/get-data'
 
 function StatsDisplay({ data }: { data: ChapterData }) {
-
   const { stats, recentActivity, chapterName, university } = data
-  console.log(stats)
 
   const approvalRate = stats.total > 0
     ? Math.round((stats.approved / stats.total) * 100)
@@ -78,7 +75,8 @@ function StatsDisplay({ data }: { data: ChapterData }) {
             <div className="text-2xl font-bold">{stats.approved}</div>
             <p className="text-xs text-muted-foreground">
               {approvalRate}% approval rate
-            </p>          </CardContent>
+            </p>
+          </CardContent>
         </Card>
 
         <Card>
@@ -150,7 +148,7 @@ function StatsDisplay({ data }: { data: ChapterData }) {
                   </div>
                   <div className="text-right">
                     <Badge variant="outline" className="text-xs">
-                      {member.StudentProfile && new Date(member.StudentProfile.updatedAt).toLocaleDateString()}
+                      {new Date(member.StudentProfile.updatedAt).toLocaleDateString()}
                     </Badge>
                   </div>
                 </div>
@@ -194,7 +192,21 @@ function StatsLoading() {
 async function ChapterContent() {
   const { supabase, user } = await requireUser()
 
-  if (!user.chapterId) {
+  // Get the user's chapter via StudentProfile
+  const { data: profile } = await supabase
+    .from('StudentProfile')
+    .select(`
+      chapterId,
+      Chapter (
+        id,
+        name,
+        university
+      )
+    `)
+    .eq('userId', user.id)
+    .maybeSingle()
+
+  if (!profile?.chapterId || !profile.Chapter) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Card className="max-w-md">
@@ -209,20 +221,23 @@ async function ChapterContent() {
     )
   }
 
-  const allMembers = await getChapterMembers(user.chapterId)
+  const chapterId = profile.chapterId
+  const chapter = Array.isArray(profile.Chapter) ? profile.Chapter[0] : profile.Chapter
+
+  const allMembers = await getChapterMembers(chapterId)
   const stats = getMemberStats(allMembers)
 
   const recentActivity: RecentActivityMember[] = allMembers
-  .filter(m => m.StudentProfile?.approvedById != null)
-  .map(m => ({
-    ...m,
-    StudentProfile: m.StudentProfile!,
-  }))
-  .sort((a, b) => new Date(b.StudentProfile.updatedAt).getTime() - new Date(a.StudentProfile.updatedAt).getTime())
-  .slice(0, 10)
+    .filter(m => m.StudentProfile?.approvedById != null)
+    .map(m => ({
+      ...m,
+      StudentProfile: m.StudentProfile!,
+    }))
+    .sort((a, b) => new Date(b.StudentProfile.updatedAt).getTime() - new Date(a.StudentProfile.updatedAt).getTime())
+    .slice(0, 10)
 
-  const chapterName = user.Chapter?.name ?? 'Unknown Chapter'
-  const university = user.Chapter?.university ?? 'Unknown University'
+  const chapterName = chapter?.name ?? 'Unknown Chapter'
+  const university = chapter?.university ?? 'Unknown University'
 
   return <StatsDisplay data={{ chapterName, university, stats, recentActivity }} />
 }
