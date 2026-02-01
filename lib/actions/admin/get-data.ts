@@ -1,8 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
-import type { 
-  CompanyRaw, 
-  Company, 
-  RecruiterInvite, 
+import type {
+  CompanyRaw,
+  Company,
+  RecruiterInvite,
   RecruiterInviteRaw,
   UserWithDetailsRaw,
   UserWithDetails,
@@ -39,7 +39,7 @@ export async function getSystemStats() {
     supabase.from('RecruiterAccess').select('*', { count: 'exact', head: true }).is('acceptedAt', null).is('revokedAt', null).gt('inviteExpiresAt', new Date().toISOString())
   ])
 
-  const completionRate = totalProfiles && totalProfiles > 0 
+  const completionRate = totalProfiles && totalProfiles > 0
     ? Math.round(((completeProfiles || 0) / totalProfiles) * 100)
     : 0
 
@@ -137,49 +137,92 @@ export async function getChapters(): Promise<ChapterWithCount[]> {
   return chaptersWithCounts
 }
 
-function normalizeUserWithDetails(
+
+export function normalizeUserWithDetails(
   users: UserWithDetailsRaw[]
 ): UserWithDetails[] {
-  return users.map(user => ({
-    ...user,
-    Chapter: user.Chapter[0] ?? null,
-    StudentProfile: user.StudentProfile[0] ?? null,
-  }))
+  return users.map(user => {
+    const studentProfile = user.StudentProfile
+
+    const chapter = studentProfile?.Chapter ?? null
+
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      phone: user.phone,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      Chapter: chapter,
+      StudentProfile: studentProfile ? {
+        isFilled: studentProfile.isFilled,
+        approvedById: studentProfile.approvedById,
+        isRecruiterVisible: studentProfile.isRecruiterVisible
+      } : null
+    }
+  })
 }
+
 
 export async function getUsers(): Promise<UserWithDetails[]> {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
+  const { data: users, error: usersError } = await supabase
     .from('User')
-    .select(`
-      id,
-      email,
-      name,
-      role,
-      phone,
-      createdAt,
-      updatedAt,
-      StudentProfile!StudentProfile_userId_fkey (
-        isFilled,
-        approvedById,
-        isRecruiterVisible,
-        chapterId,
-        Chapter (
-          name,
-          university
-        )
-      )
-    `)
+    .select('id, email, name, role, phone, createdAt, updatedAt')
     .order('createdAt', { ascending: false })
 
-  if (error || !data) {
-    console.error("Failed to fetch users:", error)
+  if (usersError || !users) {
+    console.error('Failed to fetch users:', usersError)
     return []
   }
 
-  return normalizeUserWithDetails(data as UserWithDetailsRaw[])
+  const { data: profiles, error: profilesError } = await supabase
+    .from('StudentProfile')
+    .select(`
+      userId,
+      isFilled,
+      approvedById,
+      isRecruiterVisible,
+      chapterId,
+      Chapter (name, university)
+    `)
+
+  if (profilesError) {
+    console.error('Failed to fetch profiles:', profilesError)
+    return []
+  }
+
+  const rawUsers: UserWithDetailsRaw[] = users.map(user => {
+    const profile = profiles?.find(p => p.userId === user.id) ?? null
+
+    const chapter = profile?.Chapter
+      ? Array.isArray(profile.Chapter)
+        ? profile.Chapter[0]
+        : profile.Chapter
+      : null
+
+    return {
+      ...user,
+      StudentProfile: profile
+        ? {
+          isFilled: profile.isFilled,
+          approvedById: profile.approvedById,
+          isRecruiterVisible: profile.isRecruiterVisible,
+          chapterId: profile.chapterId,
+          Chapter: chapter
+        }
+        : null
+    }
+  })
+
+
+  return normalizeUserWithDetails(rawUsers)
 }
+
+
+
 
 export async function getActivityLog(): Promise<ActivityItem[]> {
   const supabase = await createClient()
@@ -385,4 +428,39 @@ export async function getInvites(): Promise<RecruiterInvite[]> {
   }
 
   return normalizeRecruiterInvites(invites as RecruiterInviteRaw[])
+}
+
+import type { UserWithFullProfile } from '@/lib/types'
+
+export async function getUserById(id: string): Promise<UserWithFullProfile | null> {
+  const supabase = await createClient()
+
+  const { data: user, error } = await supabase
+    .from('User')
+    .select(`
+      *,
+      StudentProfile!StudentProfile_userId_fkey (
+        *,
+        Chapter (*)
+      )
+    `)
+    .eq('id', id)
+    .single()
+
+  if (error) {
+    console.error('getUserById error:', error)
+    return null
+  }
+
+  if (!user) return null
+
+  return {
+    ...user,
+    StudentProfile: user.StudentProfile
+      ? {
+        ...user.StudentProfile,
+        Chapter: user.StudentProfile.Chapter ?? null,
+      }
+      : null,
+  }
 }
