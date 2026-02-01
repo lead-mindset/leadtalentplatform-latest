@@ -8,9 +8,19 @@ async function SidebarContent() {
 
   if (user.role !== 'editor') redirect('/student')
 
+  const { data: profile } = await supabase
+    .from('StudentProfile')
+    .select('chapterId')
+    .eq('userId', user.id)
+    .maybeSingle()
+
+  if (!profile?.chapterId) {
+    redirect('/student')
+  }
+
   const { hasPendingApprovals } = await getSidebarStatsForEditor(
     supabase,
-    user.chapterId
+    profile.chapterId
   )
 
   return <DynamicSidebar user={user} hasPendingApprovals={hasPendingApprovals} />
