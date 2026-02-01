@@ -14,82 +14,127 @@ export const NAV_LINKS: NavLink[] = [
   { label: "Admin Panel", href: "/admin", auth: "authenticated", roles: ["admin"] },
 ];
 
+// ============================================================================
+// DATABASE TYPES - Core schema types matching database exactly
+// ============================================================================
+
 export type Database = {
   public: {
     Tables: {
       User: {
         Row: {
-          id: string;
+          id: string; // uuid
           email: string;
-          name: string;
+          name: string | null;
           role: Role;
-          chapterId: string | null;
-          createdAt: string;
-          updatedAt: string;
+          chapterId: string | null; // text (references Chapter.id)
+          createdAt: string; // timestamp without time zone
+          updatedAt: string; // timestamp without time zone
           phone: string | null;
         };
       };
       Chapter: {
         Row: {
-          id: string;
+          id: string; // text (not uuid)
           name: string;
           university: string;
           city: string | null;
           region: string | null;
-          createdAt: string | null;
-          updatedAt: string;
+          createdAt: string | null; // date (nullable!)
+          updatedAt: string; // timestamp without time zone
         };
       };
       StudentProfile: {
         Row: {
-          userId: string;
+          userId: string; // uuid
           major: string | null;
           graduationYear: number | null;
           linkedinUrl: string | null;
           skills: string[] | null;
           consentRecruiterVisibility: boolean;
+          consentDate: string | null; // timestamp without time zone
+          createdAt: string; // timestamp without time zone
+          updatedAt: string; // timestamp without time zone
           isRecruiterVisible: boolean | null;
-          approvedById: string | null;
+          approvedById: string | null; // uuid
           isFilled: boolean | null;
-          createdAt: string;
-          updatedAt: string;
-          consentDate: string | null;
+        };
+      };
+      Company: {
+        Row: {
+          id: string; // uuid
+          name: string;
+          createdat: string; // timestamp with time zone
+          createdbyid: string; // uuid
+        };
+      };
+      RecruiterAccess: {
+        Row: {
+          id: string; // uuid
+          recruiterEmail: string;
+          isActive: boolean;
+          grantedAt: string; // timestamp with time zone
+          grantedById: string; // uuid
+          inviteToken: string; // uuid - IMPORTANT: was missing!
+          inviteExpiresAt: string | null; // timestamp with time zone
+          acceptedAt: string | null; // timestamp with time zone
+          acceptedByUserId: string | null; // uuid
+          companyId: string; // uuid
+          revokedAt: string | null; // timestamp with time zone
+          revokedById: string | null; // uuid - IMPORTANT: was missing!
+        };
+      };
+      Resume: {
+        Row: {
+          id: string; // uuid
+          studentId: string; // uuid
+          fileUrl: string;
+          fileName: string | null;
+          fileSize: number | null;
+          uploadedAt: string; // timestamp without time zone
+          parsedData: any | null; // jsonb
         };
       };
     };
   };
 };
 
+// ============================================================================
+// EXTRACTED ROW TYPES
+// ============================================================================
+
 export type UserRow = Database["public"]["Tables"]["User"]["Row"];
 export type ChapterRow = Database["public"]["Tables"]["Chapter"]["Row"];
 export type StudentProfileRow = Database["public"]["Tables"]["StudentProfile"]["Row"];
+export type CompanyRow = Database["public"]["Tables"]["Company"]["Row"];
+export type RecruiterAccessRow = Database["public"]["Tables"]["RecruiterAccess"]["Row"];
+export type ResumeRow = Database["public"]["Tables"]["Resume"]["Row"];
 
-export type UserWithChapter = UserRow & { Chapter?: ChapterRow | null };
-export type MemberWithProfile = UserRow & { StudentProfile: StudentProfileRow | null; Chapter: ChapterRow | null };
-export type RecentActivityMember = Omit<MemberWithProfile, "StudentProfile"> & { StudentProfile: StudentProfileRow };
+// ============================================================================
+// COMPOSITE TYPES - Used in queries with joins
+// ============================================================================
 
-export type ChapterStats = {
-  total: number;
-  pending: number;
-  approved: number;
-  incomplete: number;
-  pendingMembers: MemberWithProfile[];
-  approvedMembers: MemberWithProfile[];
-  completeProfiles: number;
-  visibleToRecruiters: number;
+export type UserWithChapter = UserRow & { 
+  Chapter: ChapterRow | null 
 };
 
-export type ChapterData = {
-  chapterName: string;
-  university: string;
-  stats: ChapterStats;
-  recentActivity: RecentActivityMember[];
+export type MemberWithProfile = UserRow & { 
+  StudentProfile: StudentProfileRow | null;
+  Chapter: ChapterRow | null;
 };
 
-export type EditorSidebarStats = { hasPendingApprovals: boolean };
-export interface AdminStats { pendingInvites: number; pendingApprovals: number; totalUsers: number; totalChapters: number; totalCompanies: number }
-export interface AdminSidebarProps { user: UserRow; stats: AdminStats }
-export interface NavItemConfig { name: string; href: string; icon: React.ComponentType<any>; showIndicatorKey?: keyof AdminStats; showCountKey?: keyof AdminStats; description?: string }
+export type RecentActivityMember = Omit<MemberWithProfile, "StudentProfile"> & { 
+  StudentProfile: StudentProfileRow // Non-nullable for recent activity
+};
+
+export type RecruiterUser = UserRow & {
+  RecruiterAccess: RecruiterAccessRow[];
+  Company: CompanyRow | null;
+};
+
+// ============================================================================
+// QUERY RESULT TYPES - Raw types from Supabase queries
+// ============================================================================
 
 export type UserWithDetailsRaw = UserRow & {
   Chapter: Pick<ChapterRow, "name" | "university">[];
@@ -146,31 +191,6 @@ export type Company = {
   _count?: { activeRecruiters: number; pendingInvites: number };
 };
 
-export type RecruiterUser = UserRow & {
-  RecruiterAccess: RecruiterAccessRow[];
-  Company: CompanyRow | null;
-};
-
-export type RecruiterAccessRow = {
-  id: string;
-  companyId: string;
-  isActive: boolean;
-  grantedById: string;
-  acceptedByUserId: string | null;
-  grantedAt: string;
-  acceptedAt: string | null;
-  revokedAt: string | null;
-  inviteExpiresAt: string | null;
-  recruiterEmail: string;
-};
-
-export type CompanyRow = {
-  id: string;
-  name: string;
-  createdat: string;
-  createdbyid: string;
-};
-
 export type StudentForRecruiterRaw = {
   id: string;
   email: string;
@@ -201,6 +221,54 @@ export type SavedStudent = {
   notes: string | null;
   Student: StudentForRecruiter;
 };
+
+// ============================================================================
+// STATS & DASHBOARD TYPES
+// ============================================================================
+
+export type ChapterStats = {
+  total: number;
+  pending: number;
+  approved: number;
+  incomplete: number;
+  pendingMembers: MemberWithProfile[];
+  approvedMembers: MemberWithProfile[];
+  completeProfiles: number;
+  visibleToRecruiters: number;
+};
+
+export type ChapterData = {
+  chapterName: string;
+  university: string;
+  stats: ChapterStats;
+  recentActivity: RecentActivityMember[];
+};
+
+export type EditorSidebarStats = { 
+  hasPendingApprovals: boolean 
+};
+
+export interface AdminStats { 
+  pendingInvites: number;
+  pendingApprovals: number;
+  totalUsers: number;
+  totalChapters: number;
+  totalCompanies: number;
+}
+
+export interface AdminSidebarProps { 
+  user: UserRow;
+  stats: AdminStats;
+}
+
+export interface NavItemConfig { 
+  name: string;
+  href: string;
+  icon: React.ComponentType<any>;
+  showIndicatorKey?: keyof AdminStats;
+  showCountKey?: keyof AdminStats;
+  description?: string;
+}
 
 export type CompanyStats = {
   totalStudents: number;
