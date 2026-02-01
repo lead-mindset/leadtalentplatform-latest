@@ -42,7 +42,6 @@ export async function submitOnboarding(formData: FormData) {
                 email: user.email,
                 name: data.full_name,
                 phone: data.phone,
-                chapterId: data.lead_chapter,
                 updatedAt: now,
             })
             .eq('id', user.id);
@@ -53,7 +52,7 @@ export async function submitOnboarding(formData: FormData) {
 
         const { data: existingUser } = await supabase
             .from('User')
-            .select('*')
+            .select('id')
             .eq('id', user.id)
             .single();
 
@@ -73,6 +72,7 @@ export async function submitOnboarding(formData: FormData) {
                 consentDate: data.consentRecruiterVisibility ? now : null,
                 updatedAt: now,
                 isFilled: true,
+                chapterId: data.lead_chapter,
             });
 
         if (profileError) {
@@ -105,13 +105,16 @@ export async function submitOnboarding(formData: FormData) {
 
             const { error: resumeDbError } = await supabase
                 .from("Resume")
-                .insert({
-                    studentId: user.id,
-                    fileUrl,
-                    fileName: resume.name,
-                    fileSize: resume.size,
-                    uploadedAt: now,
-                });
+                .upsert(
+                    {
+                        studentId: user.id,
+                        fileUrl,
+                        fileName: resume.name,
+                        fileSize: resume.size,
+                        uploadedAt: now,
+                    },
+                    { onConflict: 'studentId' }
+                );
 
             if (resumeDbError) {
                 return { error: resumeDbError.message };
