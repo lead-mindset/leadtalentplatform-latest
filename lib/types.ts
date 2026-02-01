@@ -135,22 +135,15 @@ export type RecruiterUser = UserRow & {
 // ============================================================================
 // QUERY RESULT TYPES - Raw types from Supabase queries
 // ============================================================================
-
 export type UserWithDetailsRaw = UserRow & {
-  StudentProfile: (Pick<
-    StudentProfileRow,
-    "isFilled" | "approvedById" | "isRecruiterVisible" | "chapterId"
-  > & {
-    Chapter: Pick<ChapterRow, "name" | "university"> | null;
+  StudentProfile: (Pick<StudentProfileRow, "isFilled" | "approvedById" | "isRecruiterVisible" | "chapterId"> & {
+    Chapter: Pick<ChapterRow, "name" | "university"> | null; // NOT array
   }) | null;
 };
 
 export type UserWithDetails = UserRow & {
   Chapter: Pick<ChapterRow, "name" | "university"> | null;
-  StudentProfile: Pick<
-    StudentProfileRow,
-    "isFilled" | "approvedById" | "isRecruiterVisible"
-  > | null;
+  StudentProfile: Pick<StudentProfileRow, "isFilled" | "approvedById" | "isRecruiterVisible"> | null;
 };
 
 
