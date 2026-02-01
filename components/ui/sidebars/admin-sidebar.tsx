@@ -63,20 +63,6 @@ export function AdminSidebar({ user, stats }: AdminSidebarProps) {
       </SidebarGroup>
 
       <SidebarGroup>
-        <SidebarGroupLabel>System</SidebarGroupLabel>
-        <SidebarGroupContent>
-          <SidebarMenu>
-            <NavItem
-              name="Settings"
-              href="/admin/settings"
-              icon={Settings}
-              isActive={pathname === '/admin/settings'}
-            />
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
-
-      <SidebarGroup>
         <SidebarGroupLabel>Quick Stats</SidebarGroupLabel>
         <SidebarGroupContent>
           <div className="px-3 py-2 space-y-2 text-xs">
