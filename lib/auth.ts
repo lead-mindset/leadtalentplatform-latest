@@ -4,29 +4,23 @@ import { redirect } from 'next/navigation'
 import type { UserRow, EditorSidebarStats, AdminStats, CompanyRow } from './types'
 import type { RecruiterUser } from './types'
 
-export async function assertAdmin(supabase: SupabaseClient) {
-  const { data: { user }, error } = await supabase.auth.getUser()
-  
-  if (error) {
-    throw new Error(`Authentication failed: ${error.message}`)
-  }
-  
-  if (!user) {
-    throw new Error('No authenticated user')
+export async function assertAdmin(
+  supabase: SupabaseClient
+): Promise<UserRow> {
+  const { data: auth, error } = await supabase.auth.getUser()
+
+  if (error || !auth.user) {
+    throw new Error('Not authenticated')
   }
 
   const { data: dbUser, error: dbError } = await supabase
     .from('User')
-    .select('id, role')
-    .eq('id', user.id)
-    .single<{ id: string; role: string }>()
+    .select('*')
+    .eq('id', auth.user.id)
+    .single<UserRow>()
 
-  if (dbError) {
-    throw new Error(`Database error: ${dbError.message}`)
-  }
-  
-  if (!dbUser) {
-    throw new Error('User not found in database')
+  if (dbError || !dbUser) {
+    throw new Error('User not found')
   }
 
   if (dbUser.role !== 'admin') {
@@ -35,6 +29,7 @@ export async function assertAdmin(supabase: SupabaseClient) {
 
   return dbUser
 }
+
 
 export async function requireAdmin() {
   const supabase = await createClient()
