@@ -2,7 +2,8 @@
 import { useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Upload, Trash2, Download, FileText } from 'lucide-react'
+import { Upload, Download, FileText } from 'lucide-react'
+
 interface Resume {
   id: string
   fileName: string
@@ -10,18 +11,18 @@ interface Resume {
   fileUrl: string
   uploadedAt: string
 }
+
 export default function ResumeClient({
   resume,
   isPending,
   onUpload,
-  onDelete,
 }: {
   resume: Resume | null
   isPending: boolean
   onUpload: (formData: FormData) => Promise<void>
-  onDelete: () => Promise<void>
 }) {
   const formRef = useRef<HTMLFormElement>(null)
+  
   return (
     <div className="space-y-6">
       {resume && (
@@ -39,25 +40,20 @@ export default function ResumeClient({
                   {new Date(resume.uploadedAt).toLocaleDateString()}
                 </p>
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" asChild>
-                  <a href={resume.fileUrl} target="_blank" rel="noopener noreferrer">
-                    <Download className="h-4 w-4 mr-2" />
-                    Download
-                  </a>
-                </Button>
-                <Button variant="destructive" size="sm" onClick={onDelete}>
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </Button>
-              </div>
+              <Button variant="outline" size="sm" asChild>
+                <a href={resume.fileUrl} target="_blank" rel="noopener noreferrer">
+                  <Download className="h-4 w-4 mr-2" />
+                  Download
+                </a>
+              </Button>
             </div>
           </CardContent>
         </Card>
       )}
+      
       <Card>
         <CardHeader>
-          <CardTitle>{resume ? 'Upload New Resume' : 'Upload Resume'}</CardTitle>
+          <CardTitle>{resume ? 'Replace Resume' : 'Upload Resume'}</CardTitle>
         </CardHeader>
         <CardContent>
           <form
@@ -74,7 +70,7 @@ export default function ResumeClient({
             <input type="file" name="resume" accept=".pdf" required />
             <Button type="submit" disabled={isPending}>
               <Upload className="h-4 w-4 mr-2" />
-              {isPending ? 'Uploading...' : 'Upload'}
+              {isPending ? 'Uploading...' : resume ? 'Replace Resume' : 'Upload Resume'}
             </Button>
           </form>
         </CardContent>
