@@ -15,9 +15,8 @@ import type { ChapterRow } from '@/lib/types'
 interface DynamicSidebarProps {
   user: {
     name: string
-    email?: string
+    email: string
     role: string
-    Chapter?: ChapterRow | null
   }
   hasPendingApprovals?: boolean
 }
