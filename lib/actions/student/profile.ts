@@ -81,7 +81,7 @@ export async function updateProfile(formData: FormData) {
       return { 
         success: false, 
         error: "Validation failed",
-        details: parsed.error.errors 
+        details: parsed.error 
       };
     }
 
