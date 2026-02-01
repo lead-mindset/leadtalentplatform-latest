@@ -420,7 +420,7 @@ const handleComplete = async () => {
 
                       <div className="flex-1">
                         <p className="text-sm font-medium text-foreground">
-                          Make my profile visible to recruiters
+                          Make my profile visible
                         </p>
                         <p className="mt-1 text-xs text-muted-foreground">
                           Connect with companies partnered with LEAD. You can change this anytime in settings.
