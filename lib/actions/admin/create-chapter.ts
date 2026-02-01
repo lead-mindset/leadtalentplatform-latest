@@ -2,8 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
-import { requireUser } from '@/lib/auth'
-import { requireAdmin } from '@/lib/auth'
+import { requireUser, requireAdmin } from '@/lib/auth'
+import type { ChapterRow } from '@/lib/types'
 
 const ChapterSchema = z.object({
   id: z.string().min(1, "Chapter ID required"),
@@ -13,13 +13,13 @@ const ChapterSchema = z.object({
   region: z.string().optional(),
 })
 
-export async function createChapter(formData: {
-  id: string
-  name: string
-  university: string
-  city?: string
-  region?: string
-}) {
+type CreateChapterInput = z.infer<typeof ChapterSchema>
+
+type CreateChapterResponse = 
+  | { success: true; chapter: ChapterRow }
+  | { error: string; details?: z.ZodError['errors'] }
+
+export async function createChapter(formData: CreateChapterInput): Promise<CreateChapterResponse> {
   const { supabase } = await requireAdmin()
 
   const parsed = ChapterSchema.safeParse(formData)
@@ -37,7 +37,7 @@ export async function createChapter(formData: {
     .from('Chapter')
     .select('id')
     .eq('id', id)
-    .single()
+    .maybeSingle()
 
   if (existing) {
     return { error: 'Chapter ID already exists' }
@@ -57,10 +57,10 @@ export async function createChapter(formData: {
       updatedAt: now,
     })
     .select()
-    .single()
+    .single<ChapterRow>()
 
-  if (insertError) {
-    console.error(insertError)
+  if (insertError || !chapter) {
+    console.error('Failed to create chapter:', insertError)
     return { error: 'Failed to create chapter' }
   }
 
@@ -72,7 +72,11 @@ export async function createChapter(formData: {
   }
 }
 
-export async function getChapters() {
+type GetChaptersResponse = 
+  | { chapters: ChapterRow[] }
+  | { error: string }
+
+export async function getChapters(): Promise<GetChaptersResponse> {
   const { supabase } = await requireUser()
 
   const { data: chapters, error } = await supabase
@@ -80,8 +84,8 @@ export async function getChapters() {
     .select('*')
     .order('name', { ascending: true })
 
-  if (error) {
-    console.error(error)
+  if (error || !chapters) {
+    console.error('Failed to fetch chapters:', error)
     return { error: 'Failed to fetch chapters' }
   }
 
