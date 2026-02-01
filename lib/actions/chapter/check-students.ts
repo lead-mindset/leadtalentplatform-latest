@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import type { MemberWithProfile } from '@/lib/types'
 
 export async function approveMember(userId: string, editorId: string) {
   try {
@@ -11,27 +12,43 @@ export async function approveMember(userId: string, editorId: string) {
     if (!user || user.id !== editorId) {
       return { success: false, error: 'Unauthorized' }
     }
-
-    const { data: editor } = await supabase
+    const { data: editor, error: editorError } = await supabase
       .from('User')
-      .select('role, chapterId')
+      .select('id, role')
       .eq('id', editorId)
       .single()
 
-    if (!editor || editor.role !== 'editor') {
+    if (editorError || !editor || editor.role !== 'editor') {
       return { success: false, error: 'Only editors can approve members' }
     }
 
-    const { data: member } = await supabase
-      .from('User')
+    const { data: editorProfile, error: editorProfileError } = await supabase
+      .from('StudentProfile')
       .select('chapterId')
-      .eq('id', userId)
+      .eq('userId', editorId)
       .single()
 
-    if (!member || member.chapterId !== editor.chapterId) {
+    if (editorProfileError || !editorProfile) {
+      return { success: false, error: 'Editor must have a chapter assignment' }
+    }
+
+    const { data: memberProfile, error: memberProfileError } = await supabase
+      .from('StudentProfile')
+      .select('chapterId, isFilled')
+      .eq('userId', userId)
+      .single()
+
+    if (memberProfileError || !memberProfile) {
+      return { success: false, error: 'Member profile not found' }
+    }
+    if (memberProfile.chapterId !== editorProfile.chapterId) {
       return { success: false, error: 'Member not in your chapter' }
     }
 
+    // Verify profile is filled before approving
+    if (!memberProfile.isFilled) {
+      return { success: false, error: 'Cannot approve incomplete profile' }
+    }
     const { error: updateError } = await supabase
       .from('StudentProfile')
       .update({ 
@@ -42,7 +59,7 @@ export async function approveMember(userId: string, editorId: string) {
       .eq('userId', userId)
 
     if (updateError) {
-      console.error('Error approving member:', updateError)
+      console.error('[approveMember] Error:', updateError)
       return { success: false, error: 'Failed to approve member' }
     }
 
@@ -51,7 +68,7 @@ export async function approveMember(userId: string, editorId: string) {
     
     return { success: true }
   } catch (error) {
-    console.error('Unexpected error:', error)
+    console.error('[approveMember] Unexpected error:', error)
     return { success: false, error: 'An unexpected error occurred' }
   }
 }
@@ -65,23 +82,38 @@ export async function rejectMember(userId: string) {
       return { success: false, error: 'Unauthorized' }
     }
 
-    const { data: editor } = await supabase
+    const { data: editor, error: editorError } = await supabase
       .from('User')
-      .select('role, chapterId')
+      .select('id, role')
       .eq('id', user.id)
       .single()
 
-    if (!editor || editor.role !== 'editor') {
+    if (editorError || !editor || editor.role !== 'editor') {
       return { success: false, error: 'Only editors can reject members' }
     }
 
-    const { data: member } = await supabase
-      .from('User')
+    // Get editor's chapter from their StudentProfile
+    const { data: editorProfile, error: editorProfileError } = await supabase
+      .from('StudentProfile')
       .select('chapterId')
-      .eq('id', userId)
+      .eq('userId', user.id)
       .single()
 
-    if (!member || member.chapterId !== editor.chapterId) {
+    if (editorProfileError || !editorProfile) {
+      return { success: false, error: 'Editor must have a chapter assignment' }
+    }
+
+    // Get member's chapter from their StudentProfile
+    const { data: memberProfile, error: memberProfileError } = await supabase
+      .from('StudentProfile')
+      .select('chapterId')
+      .eq('userId', userId)
+      .single()
+
+    if (memberProfileError || !memberProfile) {
+      return { success: false, error: 'Member profile not found' }
+    }
+    if (memberProfile.chapterId !== editorProfile.chapterId) {
       return { success: false, error: 'Member not in your chapter' }
     }
 
@@ -90,13 +122,12 @@ export async function rejectMember(userId: string) {
       .update({ 
         approvedById: null,
         isRecruiterVisible: false,
-        isFilled: false,
         updatedAt: new Date().toISOString()
       })
       .eq('userId', userId)
 
     if (updateError) {
-      console.error('Error rejecting member:', updateError)
+      console.error('[rejectMember] Error:', updateError)
       return { success: false, error: 'Failed to reject member' }
     }
 
@@ -105,7 +136,9 @@ export async function rejectMember(userId: string) {
     
     return { success: true }
   } catch (error) {
-    console.error('Unexpected error:', error)
+    console.error('[rejectMember] Unexpected error:', error)
     return { success: false, error: 'An unexpected error occurred' }
   }
 }
+
+
