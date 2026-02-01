@@ -1,9 +1,8 @@
 import { createClient } from './supabase/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
-import type { UserRow, EditorSidebarStats, AdminStats, UserWithChapter } from './types'
+import type { UserRow, EditorSidebarStats, AdminStats } from './types'
 import type { RecruiterUser } from './types'
-
 
 export async function assertAdmin(supabase: SupabaseClient) {
   const { data: { user }, error } = await supabase.auth.getUser()
@@ -44,14 +43,13 @@ export async function requireAdmin() {
     const user = await assertAdmin(supabase)
     return { supabase, user }
   } catch (err) {
-    // Could log error here for monitoring
     redirect('/auth/login')
   }
 }
 
 export async function requireUser(): Promise<{ 
   supabase: SupabaseClient; 
-  user: UserWithChapter 
+  user: UserRow 
 }> {
   const supabase = await createClient()
   const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
@@ -62,33 +60,25 @@ export async function requireUser(): Promise<{
 
   const { data: userData, error } = await supabase
     .from('User')
-    .select(`
-      id, email, name, role, chapterId, phone, createdAt, updatedAt,
-      Chapter(id, name, university, city, region, createdAt, updatedAt)
-    `)
+    .select('id, email, name, role, phone, createdAt, updatedAt')
     .eq('id', authUser.id)
-    .single<UserWithChapter>()
+    .single<UserRow>()
 
   if (error || !userData) {
     redirect('/auth/login')
   }
 
-  const user: UserWithChapter = {
-    ...userData,
-    Chapter: userData.Chapter ?? null
-  }
-
-  return { supabase, user }
+  return { supabase, user: userData }
 }
 
 export async function requireUserWithRole(role: string): Promise<{ 
   supabase: SupabaseClient; 
-  user: UserWithChapter 
+  user: UserRow 
 }> {
   const { supabase, user } = await requireUser()
 
   if (user.role !== role) {
-    redirect('/unauthorized') // More specific redirect
+    redirect('/unauthorized')
   }
 
   return { supabase, user }
@@ -96,33 +86,17 @@ export async function requireUserWithRole(role: string): Promise<{
 
 export async function getSidebarStatsForEditor(
   supabase: SupabaseClient,
-  chapterId: string | null
+  chapterId: string
 ): Promise<EditorSidebarStats> {
-  if (!chapterId) {
-    return { hasPendingApprovals: false }
-  }
-
-  const { data: chapterUsers, error: usersError } = await supabase
-    .from('User')
-    .select('id')
-    .eq('chapterId', chapterId)
-
-  if (usersError || !chapterUsers?.length) {
-    return { hasPendingApprovals: false }
-  }
-
-  const userIds = chapterUsers.map(u => u.id)
-
   const { count, error: countError } = await supabase
     .from('StudentProfile')
     .select('*', { count: 'exact', head: true })
-    .in('userId', userIds)
+    .eq('chapterId', chapterId)
     .is('approvedById', null)
     .eq('isFilled', true)
     .limit(1)
 
   if (countError) {
-    // Log error but don't fail
     console.error('Error fetching pending approvals:', countError)
     return { hasPendingApprovals: false }
   }
@@ -163,7 +137,6 @@ export async function getSidebarStatsForAdmin(
       .select('*', { count: 'exact', head: true })
   ])
 
-  // Handle errors appropriately
   if (e1 || e2 || e3 || e4 || e5) {
     const errors = [e1, e2, e3, e4, e5].filter(Boolean)
     console.error('Errors fetching admin stats:', errors)
@@ -191,10 +164,10 @@ export async function requireRecruiter(): Promise<{
 
   const { data: userData, error } = await supabase
     .from('User')
-    .select('id, email, name, role, chapterId, phone, createdAt, updatedAt')
+    .select('id, email, name, role, phone, createdAt, updatedAt')
     .eq('id', authUser.id)
     .eq('role', 'recruiter')
-    .single()
+    .single<UserRow>()
 
   if (error || !userData) {
     redirect('/auth/login')
@@ -205,7 +178,7 @@ export async function requireRecruiter(): Promise<{
     .select(`
       id, companyId, isActive, grantedById,
       acceptedByUserId, grantedAt, acceptedAt, revokedAt,
-      inviteExpiresAt, recruiterEmail,
+      inviteExpiresAt, recruiterEmail, inviteToken, revokedById,
       Company!inner (id, name, createdat, createdbyid)
     `)
     .eq('acceptedByUserId', authUser.id)
@@ -222,7 +195,7 @@ export async function requireRecruiter(): Promise<{
     .select(`
       id, companyId, isActive, grantedById,
       acceptedByUserId, grantedAt, acceptedAt, revokedAt,
-      inviteExpiresAt, recruiterEmail
+      inviteExpiresAt, recruiterEmail, inviteToken, revokedById
     `)
     .eq('acceptedByUserId', authUser.id)
 
