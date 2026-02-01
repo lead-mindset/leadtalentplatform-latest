@@ -1,8 +1,9 @@
 'use client'
 
+import { Button } from "@/components/ui/button"
 import { supabase } from "@/lib/supabase/client"
-export default function GoogleButton() {
 
+export default function GoogleButton() {
   const signInWithGoogle = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -13,11 +14,12 @@ export default function GoogleButton() {
   }
 
   return (
-    <button
+    <Button
       onClick={signInWithGoogle}
-      className="flex items-center justify-center gap-2 rounded-md border px-4 py-2 hover:bg-gray-100"
+      variant="outline"
+      className="flex items-center justify-center gap-2"
     >
       Continue with Google
-    </button>
+    </Button>
   )
 }
