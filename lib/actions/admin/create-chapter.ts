@@ -17,7 +17,7 @@ type CreateChapterInput = z.infer<typeof ChapterSchema>
 
 type CreateChapterResponse = 
   | { success: true; chapter: ChapterRow }
-  | { error: string; details?: z.ZodError['errors'] }
+  | { error: string }
 
 export async function createChapter(formData: CreateChapterInput): Promise<CreateChapterResponse> {
   const { supabase } = await requireAdmin()
@@ -27,7 +27,6 @@ export async function createChapter(formData: CreateChapterInput): Promise<Creat
   if (!parsed.success) {
     return {
       error: 'Validation failed',
-      details: parsed.error.errors,
     }
   }
 
