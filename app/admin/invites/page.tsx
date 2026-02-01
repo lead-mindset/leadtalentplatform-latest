@@ -1,28 +1,16 @@
 // app/admin/invites/page.tsx - Updated with invite form
 
-import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import Link from 'next/link'
 import { Suspense } from 'react'
 import { Mail, Clock, CheckCircle2, XCircle, AlertCircle, Building, Plus } from 'lucide-react'
-import type { RecruiterInviteRaw, RecruiterInvite, CompanyRaw, Company } from '@/lib/types'
+import type { RecruiterInvite } from '@/lib/types'
 import { InviteForm } from './components/invite-form'
 import { InviteActions } from './components/invite-actions'
+import { getInvites } from '@/lib/actions/admin/get-data'
+import { getCompanies } from '@/lib/actions/admin/get-data'
 
-function normalizeRecruiterInvites(
-  invites: RecruiterInviteRaw[]
-): RecruiterInvite[] {
-  return invites.map(invite => ({
-    ...invite,
-    // Handle null values when relationships don't exist
-    Company: Array.isArray(invite.Company) ? (invite.Company[0] ?? null) : null,
-    GrantedBy: Array.isArray(invite.GrantedBy) ? (invite.GrantedBy[0] ?? null) : null,
-    // AcceptedBy will be null if acceptedByUserId is NULL (invite not yet accepted)
-    AcceptedBy: Array.isArray(invite.AcceptedBy) ? (invite.AcceptedBy[0] ?? null) : null,
-  }))
-}
+
 
 function getInviteStatus(invite: RecruiterInvite): 'pending' | 'accepted' | 'expired' | 'revoked' {
   if (invite.revokedAt) return 'revoked'
@@ -66,67 +54,8 @@ function getInviteStatusDisplay(invite: RecruiterInvite) {
   }
 }
 
-async function getInvites() {
-  const supabase = await createClient()
 
-  const { data: invites, error } = await supabase
-    .from('RecruiterAccess')
-    .select(`
-      id,
-      recruiterEmail,
-      isActive,
-      grantedAt,
-      inviteExpiresAt,
-      acceptedAt,
-      revokedAt,
-      companyId,
-      Company (name),
-      GrantedBy:User!RecruiterAccess_grantedById_fkey (
-        name,
-        email
-      ),
-      AcceptedBy:User!RecruiterAccess_acceptedByUserId_fkey (
-        name,
-        email
-      )
-    `)
-    .order('grantedAt', { ascending: false })
 
-  if (error) {
-    console.error('Failed to fetch invites:', error)
-    return []
-  }
-
-  return normalizeRecruiterInvites(invites as RecruiterInviteRaw[])
-}
-
-async function getCompanies(): Promise<Company[]> {
-  const supabase = await createClient()
-
-  const { data: companies, error } = await supabase
-    .from('Company')
-    .select(`
-      id,
-      name,
-      createdat,
-      createdbyid,
-      CreatedBy:User!Company_createdbyid_fkey (
-        name,
-        email
-      )
-    `)
-    .order('name', { ascending: true })
-
-  if (error) {
-    console.error('Failed to fetch companies:', error)
-    return []
-  }
-
-  return (companies as CompanyRaw[]).map(company => ({
-    ...company,
-    CreatedBy: company.CreatedBy[0] ?? null,
-  }))
-}
 
 async function InvitesList() {
   const [invites, companies] = await Promise.all([

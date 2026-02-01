@@ -2,8 +2,6 @@ import { SidebarLayout } from '@/components/ui/sidebars/sidebar-layout'
 import { DynamicSidebar } from '@/components/ui/sidebars/dynamic-sidebar'
 import { redirect } from 'next/navigation'
 import { requireUser, getSidebarStatsForEditor } from '@/lib/auth'
-import { Suspense } from 'react'
-import { SkeletonSidebar } from '@/components/ui/sidebars/skeleton-sidebar'
 
 async function SidebarContent() {
   const { supabase, user } = await requireUser()

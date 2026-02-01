@@ -1,56 +1,10 @@
-import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { Suspense } from 'react'
 import { Building2, Users, Plus, MapPin } from 'lucide-react'
-
-type Chapter = {
-  id: string
-  name: string
-  university: string
-  city: string | null
-  region: string | null
-  createdAt: string | null
-  updatedAt: string
-  _count?: {
-    users: number
-  }
-}
-
-async function getChapters() {
-  const supabase = await createClient()
-
-  const { data: chapters, error } = await supabase
-    .from('Chapter')
-    .select('*')
-    .order('name', { ascending: true })
-
-  if (error) {
-    console.error('Failed to fetch chapters:', error)
-    return []
-  }
-
-  // Get user counts for each chapter
-  const chaptersWithCounts = await Promise.all(
-    (chapters || []).map(async (chapter) => {
-      const { count } = await supabase
-        .from('User')
-        .select('*', { count: 'exact', head: true })
-        .eq('chapterId', chapter.id)
-
-      return {
-        ...chapter,
-        _count: {
-          users: count || 0
-        }
-      }
-    })
-  )
-
-  return chaptersWithCounts
-}
+import { getChapters } from '@/lib/actions/admin/get-data'
 
 async function ChaptersList() {
   const chapters = await getChapters()

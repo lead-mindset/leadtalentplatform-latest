@@ -6,50 +6,9 @@ import Link from 'next/link'
 import { Suspense } from 'react'
 import { Users, Mail, Building2, CheckCircle2, Clock, XCircle } from 'lucide-react'
 import type { UserWithDetails } from '@/lib/types'
-import type { UserWithDetailsRaw } from '@/lib/types'
+import { getUsers } from '@/lib/actions/admin/get-data'
 
-function normalizeUserWithDetails(
-  users: UserWithDetailsRaw[]
-): UserWithDetails[] {
-  return users.map(user => ({
-    ...user,
-    Chapter: user.Chapter[0] ?? null,
-    StudentProfile: user.StudentProfile[0] ?? null,
-  }))
-}
 
-export async function getUsers() {
-  const supabase = await createClient()
-
-  const { data, error } = await supabase
-    .from('User')
-    .select(`
-  id,
-  email,
-  name,
-  role,
-  phone,
-  createdAt,
-  updatedAt,
-  chapterId,
-  Chapter (
-    name,
-    university
-  ),
-  StudentProfile!StudentProfile_userId_fkey (
-    isFilled,
-    approvedById,
-    isRecruiterVisible
-  )
-`)
-    .order('createdAt', { ascending: false })
-  if (error) {
-    console.error("Failed to fetch users:", error)
-    return []
-  }
-  if (!data) return []
-  return normalizeUserWithDetails(data as UserWithDetailsRaw[])
-}
 
 function getRoleColor(role: string) {
   switch (role) {

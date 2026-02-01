@@ -1,66 +1,10 @@
-import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { Suspense } from 'react'
 import { Building, Plus, Users, Mail, CheckCircle2, Clock } from 'lucide-react'
-import type { CompanyRaw } from '@/lib/types'
-import type { Company } from '@/lib/types'
-
-async function getCompanies() {
-  const supabase = await createClient()
-
-  const { data: companies, error } = await supabase
-    .from('Company')
-    .select(`
-      id,
-      name,
-      createdat,
-      createdbyid,
-      CreatedBy:User!Company_createdbyid_fkey (
-        name,
-        email
-      )
-    `)
-    .order('createdat', { ascending: false })
-
-  if (error) {
-    console.error('Failed to fetch companies:', error)
-    return []
-  }
-
-  // Get recruiter counts for each company
-const companiesWithCounts = await Promise.all(
-  (companies as CompanyRaw[]).map(async (company) => {
-    const { count: activeCount } = await supabase
-      .from('RecruiterAccess')
-      .select('*', { count: 'exact', head: true })
-      .eq('companyId', company.id)
-      .eq('isActive', true)
-
-    const { count: pendingCount } = await supabase
-      .from('RecruiterAccess')
-      .select('*', { count: 'exact', head: true })
-      .eq('companyId', company.id)
-      .is('acceptedAt', null)
-      .is('revokedAt', null)
-      .gt('inviteExpiresAt', new Date().toISOString())
-
-    return {
-      ...company,
-      CreatedBy: company.CreatedBy[0] ?? null, // 🔥 normalize here
-      _count: {
-        activeRecruiters: activeCount || 0,
-        pendingInvites: pendingCount || 0
-      }
-    }
-  })
-)
-
-return companiesWithCounts as Company[]
-
-}
+import { getCompanies } from '@/lib/actions/admin/get-data'
 
 async function CompaniesList() {
   const companies = await getCompanies()

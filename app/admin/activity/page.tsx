@@ -1,8 +1,8 @@
-import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Suspense } from 'react'
 import { Activity, CheckCircle2, Mail, Calendar } from 'lucide-react'
+import { getActivityLog } from '@/lib/actions/admin/get-data'
 
 type ActivityItem = {
   id: string
@@ -24,115 +24,6 @@ type ActivityItem = {
   } | null
 }
 
-async function getActivityLog() {
-  const supabase = await createClient()
-
-  // Get profile approvals - specify userId relationship
-  const { data: approvals } = await supabase
-    .from('StudentProfile')
-    .select(`
-      userId,
-      updatedAt,
-      Student:User!StudentProfile_userId_fkey (
-        name,
-        email,
-        Chapter (name)
-      ),
-      ApprovedBy:User!StudentProfile_approvedById_fkey (
-        name,
-        email
-      )
-    `)
-    .not('approvedById', 'is', null)
-    .order('updatedAt', { ascending: false })
-    .limit(20)
-
-  // Get invite activities
-  const { data: invites } = await supabase
-    .from('RecruiterAccess')
-    .select(`
-      id,
-      grantedAt,
-      acceptedAt,
-      revokedAt,
-      recruiterEmail,
-      Company (name),
-      GrantedBy:User!RecruiterAccess_grantedById_fkey (
-        name,
-        email
-      ),
-      AcceptedBy:User!RecruiterAccess_acceptedByUserId_fkey (
-        name,
-        email
-      ),
-      RevokedBy:User!RecruiterAccess_revokedById_fkey (
-        name,
-        email
-      )
-    `)
-    .order('grantedAt', { ascending: false })
-    .limit(20)
-
-  const activities: ActivityItem[] = []
-
-  // Process approvals
-  if (approvals) {
-    approvals.forEach((approval: any) => {
-      activities.push({
-        id: `approval-${approval.userId}`,
-        type: 'approval',
-        timestamp: approval.updatedAt,
-        actor: approval.ApprovedBy,
-        target: approval.Student,
-        chapter: approval.Student?.Chapter
-      })
-    })
-  }
-
-  // Process invites
-  if (invites) {
-    invites.forEach((invite: any) => {
-      // Invite sent
-      activities.push({
-        id: `invite-sent-${invite.id}`,
-        type: 'invite_sent',
-        timestamp: invite.grantedAt,
-        actor: invite.GrantedBy,
-        target: { name: null, email: invite.recruiterEmail },
-        company: invite.Company
-      })
-
-      // Invite accepted
-      if (invite.acceptedAt) {
-        activities.push({
-          id: `invite-accepted-${invite.id}`,
-          type: 'invite_accepted',
-          timestamp: invite.acceptedAt,
-          actor: invite.AcceptedBy,
-          target: { name: null, email: invite.recruiterEmail },
-          company: invite.Company
-        })
-      }
-
-      // Invite revoked
-      if (invite.revokedAt) {
-        activities.push({
-          id: `invite-revoked-${invite.id}`,
-          type: 'invite_revoked',
-          timestamp: invite.revokedAt,
-          actor: invite.RevokedBy,
-          target: { name: null, email: invite.recruiterEmail },
-          company: invite.Company
-        })
-      }
-    })
-  }
-
-  // Sort by timestamp descending
-  activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-
-  return activities.slice(0, 50)
-}
 
 function getActivityDescription(activity: ActivityItem) {
   const actorName = activity.actor?.name || activity.actor?.email || 'Unknown'

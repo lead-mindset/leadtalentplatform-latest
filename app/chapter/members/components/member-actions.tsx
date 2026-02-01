@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { CheckCircle2, XCircle } from 'lucide-react'
 import { useTransition } from 'react'
 import { toast } from 'sonner'
-import { approveMember, rejectMember } from '@/app/lib/actions/chapter/check-students'
+import { approveMember, rejectMember } from '@/lib/actions/chapter/check-students'
 
 export function ApproveMemberButton({ 
   userId, 
