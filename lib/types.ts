@@ -8,8 +8,8 @@ export type NavLink = {
 };
 
 export const NAV_LINKS: NavLink[] = [
-  { label: "About", href: "/about-us", auth: "public" },
   { label: "Dashboard", href: "/student", auth: "authenticated", roles: ["member", "editor"] },
+  { label: "Dashboard", href: "/company", auth: "authenticated", roles: ["recruiter"] },
   { label: "Manage Chapter", href: "/chapter", auth: "authenticated", roles: ["editor"] },
   { label: "Admin Panel", href: "/admin", auth: "authenticated", roles: ["admin"] },
 ];
