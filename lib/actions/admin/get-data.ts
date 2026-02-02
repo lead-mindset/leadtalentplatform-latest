@@ -221,11 +221,10 @@ export async function getUsers(): Promise<UserWithDetails[]> {
   return normalizeUserWithDetails(rawUsers)
 }
 
-
 export async function getActivityLog(): Promise<ActivityItem[]> {
   const supabase = await createClient()
 
-  const { data: approvals } = await supabase
+  const { data: approvals, error: approvalsError } = await supabase
     .from('StudentProfile')
     .select(`
       userId,
@@ -245,7 +244,11 @@ export async function getActivityLog(): Promise<ActivityItem[]> {
     .order('updatedAt', { ascending: false })
     .limit(20)
 
-  const { data: invites } = await supabase
+  if (approvalsError) {
+    console.error('[getActivityLog] Approvals error:', approvalsError)
+  }
+
+  const { data: invites, error: invitesError } = await supabase
     .from('RecruiterAccess')
     .select(`
       id,
@@ -270,33 +273,60 @@ export async function getActivityLog(): Promise<ActivityItem[]> {
     .order('grantedAt', { ascending: false })
     .limit(20)
 
+  if (invitesError) {
+    console.error('[getActivityLog] Invites error:', invitesError)
+  }
+
   const activities: ActivityItem[] = []
 
   // Process approvals
   if (approvals) {
     approvals.forEach((approval: any) => {
+      // Supabase returns objects directly, not arrays
+      const student = Array.isArray(approval.Student) 
+        ? approval.Student[0] 
+        : approval.Student
+      const approver = Array.isArray(approval.ApprovedBy) 
+        ? approval.ApprovedBy[0] 
+        : approval.ApprovedBy
+      const chapter = Array.isArray(approval.Chapter) 
+        ? approval.Chapter[0] 
+        : approval.Chapter
+
       activities.push({
         id: `approval-${approval.userId}`,
         type: 'approval',
         timestamp: approval.updatedAt,
-        actor: approval.ApprovedBy?.[0] ?? null,
-        target: approval.Student?.[0] ?? null,
-        chapter: approval.Chapter?.[0] ?? null
+        actor: approver ?? null,
+        target: student ?? null,
+        chapter: chapter ?? null
       })
     })
   }
 
-  // Process invites
   if (invites) {
     invites.forEach((invite: any) => {
+      const company = Array.isArray(invite.Company) 
+        ? invite.Company[0] 
+        : invite.Company
+      const grantedBy = Array.isArray(invite.GrantedBy) 
+        ? invite.GrantedBy[0] 
+        : invite.GrantedBy
+      const acceptedBy = Array.isArray(invite.AcceptedBy) 
+        ? invite.AcceptedBy[0] 
+        : invite.AcceptedBy
+      const revokedBy = Array.isArray(invite.RevokedBy) 
+        ? invite.RevokedBy[0] 
+        : invite.RevokedBy
+
       // Invite sent
       activities.push({
         id: `invite-sent-${invite.id}`,
         type: 'invite_sent',
         timestamp: invite.grantedAt,
-        actor: invite.GrantedBy?.[0] ?? null,
+        actor: grantedBy ?? null,
         target: { name: null, email: invite.recruiterEmail },
-        company: invite.Company?.[0] ?? null
+        company: company ?? null
       })
 
       // Invite accepted
@@ -305,9 +335,9 @@ export async function getActivityLog(): Promise<ActivityItem[]> {
           id: `invite-accepted-${invite.id}`,
           type: 'invite_accepted',
           timestamp: invite.acceptedAt,
-          actor: invite.AcceptedBy?.[0] ?? null,
+          actor: acceptedBy ?? null,
           target: { name: null, email: invite.recruiterEmail },
-          company: invite.Company?.[0] ?? null
+          company: company ?? null
         })
       }
 
@@ -317,9 +347,9 @@ export async function getActivityLog(): Promise<ActivityItem[]> {
           id: `invite-revoked-${invite.id}`,
           type: 'invite_revoked',
           timestamp: invite.revokedAt,
-          actor: invite.RevokedBy?.[0] ?? null,
+          actor: revokedBy ?? null,
           target: { name: null, email: invite.recruiterEmail },
-          company: invite.Company?.[0] ?? null
+          company: company ?? null
         })
       }
     })
