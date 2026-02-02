@@ -7,9 +7,9 @@ import type {
   UserWithDetailsRaw,
   UserWithDetails,
   ChapterRow,
-  ActivityItem
+  ActivityItem,
+  ChapterMember
 } from '@/lib/types'
-
 // ============================================================================
 // SYSTEM STATS
 // ============================================================================
@@ -220,8 +220,6 @@ export async function getUsers(): Promise<UserWithDetails[]> {
 
   return normalizeUserWithDetails(rawUsers)
 }
-
-
 
 
 export async function getActivityLog(): Promise<ActivityItem[]> {
@@ -463,4 +461,90 @@ export async function getUserById(id: string): Promise<UserWithFullProfile | nul
       }
       : null,
   }
+}
+
+
+
+export async function getChapterById(id: string): Promise<ChapterRow | null> {
+  const supabase = await createClient()
+
+  const { data: chapter, error } = await supabase
+    .from('Chapter')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (error) {
+    console.error('Failed to fetch chapter:', error)
+    return null
+  }
+
+  return chapter
+}
+
+export async function getChapterMemberCount(chapterId: string): Promise<number> {
+  const supabase = await createClient()
+
+  const { count } = await supabase
+    .from('StudentProfile')
+    .select('*', { count: 'exact', head: true })
+    .eq('chapterId', chapterId)
+
+  return count || 0
+}
+
+export async function getChapterMembers(chapterId: string): Promise<ChapterMember[]> {
+  const supabase = await createClient()
+
+  const { data: profiles, error } = await supabase
+    .from('StudentProfile')
+    .select(`
+      userId,
+      isFilled,
+      approvedById,
+      isRecruiterVisible,
+      chapterId,
+      updatedAt
+    `)
+    .eq('chapterId', chapterId)
+    .order('updatedAt', { ascending: false })
+
+  if (error || !profiles) {
+    console.error('Failed to fetch members:', error)
+    return []
+  }
+
+  const userIds = profiles.map(p => p.userId)
+  
+  const { data: users, error: usersError } = await supabase
+    .from('User')
+    .select('id, email, name, role, phone, createdAt, updatedAt')
+    .in('id', userIds)
+
+  if (usersError || !users) {
+    console.error('Failed to fetch users:', usersError)
+    return []
+  }
+
+  const { data: chapter } = await supabase
+    .from('Chapter')
+    .select('name, university')
+    .eq('id', chapterId)
+    .single()
+
+  return users.map(user => {
+    const profile = profiles.find(p => p.userId === user.id)
+    return {
+      ...user,
+      StudentProfile: profile ? {
+        userId: profile.userId,
+        isFilled: profile.isFilled,
+        approvedById: profile.approvedById,
+        isRecruiterVisible: profile.isRecruiterVisible,
+        chapterId: profile.chapterId,
+        updatedAt: profile.updatedAt
+      } : null,
+      Chapter: chapter || null
+    }
+  })
 }
