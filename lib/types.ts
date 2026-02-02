@@ -310,3 +310,8 @@ export type SidebarLayoutProps = {
   sidebarFallback?: React.ReactNode
   contentFallback?: React.ReactNode
 }
+
+export type ChapterMember = UserRow & {
+  StudentProfile: Pick<StudentProfileRow, 'userId' | 'isFilled' | 'approvedById' | 'isRecruiterVisible' | 'chapterId' | 'updatedAt'> | null
+  Chapter: Pick<ChapterRow, 'name' | 'university'> | null
+}
