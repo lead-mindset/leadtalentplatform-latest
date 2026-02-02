@@ -1,77 +1,88 @@
 'use client'
 
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { CheckCircle2, XCircle } from 'lucide-react'
-import { useTransition } from 'react'
-import { toast } from 'sonner'
+import { CheckCircle2, XCircle, Loader2 } from 'lucide-react'
 import { approveMember, rejectMember } from '@/lib/actions/chapter/check-students'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
-export function ApproveMemberButton({ 
-  userId, 
-  editorId,
-  userName 
-}: { 
+interface ApprovalButtonsProps {
   userId: string
-  editorId: string
-  userName: string
-}) {
-  const [isPending, startTransition] = useTransition()
+  currentUserId: string
+  isApproved: boolean
+}
 
-  const handleApprove = () => {
-    startTransition(async () => {
-      const result = await approveMember(userId, editorId)
+export function ApprovalButtons({ userId, currentUserId, isApproved }: ApprovalButtonsProps) {
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
+
+  async function handleApprove() {
+    setIsLoading(true)
+    try {
+      const result = await approveMember(userId, currentUserId)
       
       if (result.success) {
-        toast.success(`${userName} has been approved!`)
+        toast.success('Member approved successfully')
+        router.refresh()
       } else {
         toast.error(result.error || 'Failed to approve member')
       }
-    })
+    } catch (error) {
+      toast.error('An unexpected error occurred')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  return (
-    <Button
-      onClick={handleApprove}
-      disabled={isPending}
-      className="flex-1"
-      variant="default"
-    >
-      <CheckCircle2 className="h-4 w-4 mr-2" />
-      {isPending ? 'Approving...' : 'Approve'}
-    </Button>
-  )
-}
-
-export function RejectMemberButton({ 
-  userId,
-  userName 
-}: { 
-  userId: string
-  userName: string
-}) {
-  const [isPending, startTransition] = useTransition()
-
-  const handleReject = () => {
-    startTransition(async () => {
-      const result = await rejectMember(userId)
+  async function handleReject() {
+    setIsLoading(true)
+    try {
+      const result = await rejectMember(userId, currentUserId)
       
       if (result.success) {
-        toast.success(`${userName}'s profile has been reset`)
+        toast.success('Member approval revoked')
+        router.refresh()
       } else {
-        toast.error(result.error || 'Failed to reject member')
+        toast.error(result.error || 'Failed to revoke approval')
       }
-    })
+    } catch (error) {
+      toast.error('An unexpected error occurred')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
-    <Button
-      onClick={handleReject}
-      disabled={isPending}
-      className="flex-1"
-      variant="outline"
-    >
-      <XCircle className="h-4 w-4 mr-2" />
-      {isPending ? 'Rejecting...' : 'Reject'}
-    </Button>
+    <div className="flex gap-3">
+      {!isApproved ? (
+        <Button 
+          onClick={handleApprove} 
+          disabled={isLoading}
+          className="flex-1"
+        >
+          {isLoading ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <CheckCircle2 className="mr-2 h-4 w-4" />
+          )}
+          Approve Member
+        </Button>
+      ) : (
+        <Button 
+          onClick={handleReject} 
+          disabled={isLoading}
+          variant="outline"
+          className="flex-1"
+        >
+          {isLoading ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <XCircle className="mr-2 h-4 w-4" />
+          )}
+          Revoke Approval
+        </Button>
+      )}
+    </div>
   )
 }
