@@ -2,20 +2,9 @@ import { createClient } from '@/lib/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
   StudentForRecruiter,
-  StudentForRecruiterRaw,
   SavedStudent,
   CompanyStats,
 } from '@/lib/types';
-
-function normalizeStudents(
-  students: StudentForRecruiterRaw[]
-): StudentForRecruiter[] {
-  return students.map((student) => ({
-    ...student,
-    Chapter: student.Chapter[0] ?? null,
-    StudentProfile: student.StudentProfile[0] ?? null,
-  }));
-}
 
 export async function getVisibleStudents(
   supabase: SupabaseClient
@@ -24,10 +13,12 @@ export async function getVisibleStudents(
     .from('User')
     .select(`
       id, email, name, phone, createdAt,
-      Chapter (name, university, city, region),
       StudentProfile!StudentProfile_userId_fkey (
         major, graduationYear, linkedinUrl, skills,
-        isRecruiterVisible, isFilled, updatedAt, chapterId
+        isRecruiterVisible, isFilled, updatedAt, chapterId,
+        Chapter:Chapter!StudentProfile_chapterId_fkey (
+          name, university, city, region
+        )
       )
     `)
     .eq('role', 'member')
@@ -39,10 +30,42 @@ export async function getVisibleStudents(
   }
   if (!data) return [];
 
-  const normalized = normalizeStudents(data as StudentForRecruiterRaw[]);
+  // Transform the data to match StudentForRecruiter type
+  const transformed: StudentForRecruiter[] = [];
+  
+  for (const user of data) {
+    const profile = Array.isArray(user.StudentProfile)
+      ? user.StudentProfile[0]
+      : user.StudentProfile;
+
+    if (!profile) continue;
+
+    const chapter = Array.isArray(profile.Chapter)
+      ? profile.Chapter[0]
+      : profile.Chapter;
+
+    transformed.push({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      phone: user.phone,
+      createdAt: user.createdAt,
+      Chapter: chapter ?? null,
+      StudentProfile: {
+        major: profile.major,
+        graduationYear: profile.graduationYear,
+        linkedinUrl: profile.linkedinUrl,
+        skills: profile.skills,
+        isRecruiterVisible: profile.isRecruiterVisible,
+        isFilled: profile.isFilled,
+        updatedAt: profile.updatedAt,
+        chapterId: profile.chapterId,
+      },
+    });
+  }
 
   // Filter for students that are visible to recruiters
-  return normalized.filter(
+  return transformed.filter(
     (s) => s.StudentProfile?.isRecruiterVisible === true &&
            s.StudentProfile?.isFilled === true
   );
@@ -56,10 +79,12 @@ export async function getStudentById(
     .from('User')
     .select(`
       id, email, name, phone, createdAt,
-      Chapter (name, university, city, region),
       StudentProfile!StudentProfile_userId_fkey (
         major, graduationYear, linkedinUrl, skills,
-        isRecruiterVisible, isFilled, updatedAt, chapterId
+        isRecruiterVisible, isFilled, updatedAt, chapterId,
+        Chapter:Chapter!StudentProfile_chapterId_fkey (
+          name, university, city, region
+        )
       )
     `)
     .eq('id', studentId)
@@ -73,11 +98,37 @@ export async function getStudentById(
 
   if (!data) return null;
 
-  const normalized = normalizeStudents([data as StudentForRecruiterRaw]);
-  const student = normalized[0];
+  const profile = Array.isArray(data.StudentProfile)
+    ? data.StudentProfile[0]
+    : data.StudentProfile;
 
-  if (student?.StudentProfile?.isRecruiterVisible !== true ||
-      student?.StudentProfile?.isFilled !== true) {
+  if (!profile) return null;
+
+  const chapter = Array.isArray(profile.Chapter)
+    ? profile.Chapter[0]
+    : profile.Chapter;
+
+  const student: StudentForRecruiter = {
+    id: data.id,
+    email: data.email,
+    name: data.name,
+    phone: data.phone,
+    createdAt: data.createdAt,
+    Chapter: chapter ?? null,
+    StudentProfile: {
+      major: profile.major,
+      graduationYear: profile.graduationYear,
+      linkedinUrl: profile.linkedinUrl,
+      skills: profile.skills,
+      isRecruiterVisible: profile.isRecruiterVisible,
+      isFilled: profile.isFilled,
+      updatedAt: profile.updatedAt,
+      chapterId: profile.chapterId,
+    },
+  };
+
+  if (student.StudentProfile?.isRecruiterVisible !== true ||
+      student.StudentProfile?.isFilled !== true) {
     return null;
   }
 
@@ -94,10 +145,12 @@ export async function getSavedStudents(
       id, acceptedByUserId, studentId, savedAt, notes,
       Student:User!SavedStudent_studentId_fkey (
         id, email, name, phone, createdAt,
-        Chapter (name, university, city, region),
         StudentProfile!StudentProfile_userId_fkey (
           major, graduationYear, linkedinUrl, skills,
-          isRecruiterVisible, isFilled, updatedAt, chapterId
+          isRecruiterVisible, isFilled, updatedAt, chapterId,
+          Chapter:Chapter!StudentProfile_chapterId_fkey (
+            name, university, city, region
+          )
         )
       )
     `)
@@ -112,10 +165,21 @@ export async function getSavedStudents(
   if (!data) return [];
 
   return data.map((saved: any) => {
-    // Normalize the nested Student data
     const studentData = Array.isArray(saved.Student)
       ? saved.Student[0]
       : saved.Student;
+
+    const profile = studentData?.StudentProfile
+      ? Array.isArray(studentData.StudentProfile)
+        ? studentData.StudentProfile[0]
+        : studentData.StudentProfile
+      : null;
+
+    const chapter = profile?.Chapter
+      ? Array.isArray(profile.Chapter)
+        ? profile.Chapter[0]
+        : profile.Chapter
+      : null;
 
     return {
       id: saved.id,
@@ -129,12 +193,17 @@ export async function getSavedStudents(
         name: studentData?.name,
         phone: studentData?.phone,
         createdAt: studentData?.createdAt,
-        Chapter: Array.isArray(studentData?.Chapter)
-          ? studentData.Chapter[0] ?? null
-          : studentData?.Chapter ?? null,
-        StudentProfile: Array.isArray(studentData?.StudentProfile)
-          ? studentData.StudentProfile[0] ?? null
-          : studentData?.StudentProfile ?? null,
+        Chapter: chapter,
+        StudentProfile: profile ? {
+          major: profile.major,
+          graduationYear: profile.graduationYear,
+          linkedinUrl: profile.linkedinUrl,
+          skills: profile.skills,
+          isRecruiterVisible: profile.isRecruiterVisible,
+          isFilled: profile.isFilled,
+          updatedAt: profile.updatedAt,
+          chapterId: profile.chapterId,
+        } : null,
       },
     };
   });
@@ -177,7 +246,7 @@ export async function toggleSaveStudent(
         acceptedByUserId: userId,
         studentId,
         savedAt: new Date().toISOString(),
-        notes: null, // Can be updated later
+        notes: null,
       });
     if (insertError) {
       console.error('[toggleSaveStudent] Insert error:', insertError);
@@ -252,19 +321,20 @@ export async function searchStudents(
     city?: string;
   }
 ): Promise<StudentForRecruiter[]> {
-  let query = supabase
+  const { data, error } = await supabase
     .from('User')
     .select(`
       id, email, name, phone, createdAt,
-      Chapter (name, university, city, region),
       StudentProfile!StudentProfile_userId_fkey (
         major, graduationYear, linkedinUrl, skills,
-        isRecruiterVisible, isFilled, updatedAt, chapterId
+        isRecruiterVisible, isFilled, updatedAt, chapterId,
+        Chapter:Chapter!StudentProfile_chapterId_fkey (
+          name, university, city, region
+        )
       )
     `)
-    .eq('role', 'member');
-
-  const { data, error } = await query.order('createdAt', { ascending: false });
+    .eq('role', 'member')
+    .order('createdAt', { ascending: false });
 
   if (error) {
     console.error('[searchStudents] Error:', error);
@@ -273,10 +343,41 @@ export async function searchStudents(
 
   if (!data) return [];
 
-  const normalized = normalizeStudents(data as StudentForRecruiterRaw[]);
+  const transformed: StudentForRecruiter[] = [];
+  
+  for (const user of data) {
+    const profile = Array.isArray(user.StudentProfile)
+      ? user.StudentProfile[0]
+      : user.StudentProfile;
+
+    if (!profile) continue;
+
+    const chapter = Array.isArray(profile.Chapter)
+      ? profile.Chapter[0]
+      : profile.Chapter;
+
+    transformed.push({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      phone: user.phone,
+      createdAt: user.createdAt,
+      Chapter: chapter ?? null,
+      StudentProfile: {
+        major: profile.major,
+        graduationYear: profile.graduationYear,
+        linkedinUrl: profile.linkedinUrl,
+        skills: profile.skills,
+        isRecruiterVisible: profile.isRecruiterVisible,
+        isFilled: profile.isFilled,
+        updatedAt: profile.updatedAt,
+        chapterId: profile.chapterId,
+      },
+    });
+  }
 
   // Filter visible students
-  let results = normalized.filter(
+  let results = transformed.filter(
     (s) => s.StudentProfile?.isRecruiterVisible === true &&
            s.StudentProfile?.isFilled === true
   );
@@ -328,10 +429,12 @@ export async function getStudentsByChapter(
     .from('User')
     .select(`
       id, email, name, phone, createdAt,
-      Chapter!inner (name, university, city, region),
       StudentProfile!StudentProfile_userId_fkey (
         major, graduationYear, linkedinUrl, skills,
-        isRecruiterVisible, isFilled, updatedAt, chapterId
+        isRecruiterVisible, isFilled, updatedAt, chapterId,
+        Chapter:Chapter!StudentProfile_chapterId_fkey (
+          name, university, city, region
+        )
       )
     `)
     .eq('role', 'member')
@@ -345,9 +448,40 @@ export async function getStudentsByChapter(
 
   if (!data) return [];
 
-  const normalized = normalizeStudents(data as StudentForRecruiterRaw[]);
+  const transformed: StudentForRecruiter[] = [];
+  
+  for (const user of data) {
+    const profile = Array.isArray(user.StudentProfile)
+      ? user.StudentProfile[0]
+      : user.StudentProfile;
 
-  return normalized.filter(
+    if (!profile) continue;
+
+    const chapter = Array.isArray(profile.Chapter)
+      ? profile.Chapter[0]
+      : profile.Chapter;
+
+    transformed.push({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      phone: user.phone,
+      createdAt: user.createdAt,
+      Chapter: chapter ?? null,
+      StudentProfile: {
+        major: profile.major,
+        graduationYear: profile.graduationYear,
+        linkedinUrl: profile.linkedinUrl,
+        skills: profile.skills,
+        isRecruiterVisible: profile.isRecruiterVisible,
+        isFilled: profile.isFilled,
+        updatedAt: profile.updatedAt,
+        chapterId: profile.chapterId,
+      },
+    });
+  }
+
+  return transformed.filter(
     (s) => s.StudentProfile?.isRecruiterVisible === true &&
            s.StudentProfile?.isFilled === true
   );
