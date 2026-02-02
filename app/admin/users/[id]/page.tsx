@@ -5,8 +5,8 @@ import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { ArrowLeft, Mail, Phone, Calendar, Building2, GraduationCap, Linkedin, CheckCircle2, XCircle, Clock } from 'lucide-react'
 import { getUserById } from '@/lib/actions/admin/get-data'
-
-
+import { createClient } from '@/lib/supabase/server'
+import { ApprovalButtons } from '@/app/chapter/members/components/member-actions'
 
 function getRoleColor(role: string) {
   switch (role) {
@@ -34,7 +34,19 @@ export default async function UserDetailPage({
     notFound()
   }
 
+  // Get current user to check permissions
+  const supabase = await createClient()
+  const { data: { user: currentUser } } = await supabase.auth.getUser()
+  
+  const { data: currentUserData } = currentUser 
+    ? await supabase
+        .from('User')
+        .select('role')
+        .eq('id', currentUser.id)
+        .single()
+    : { data: null }
 
+  const canApprove = currentUserData && (currentUserData.role === 'admin' || currentUserData.role === 'editor')
   const profile = user.StudentProfile
 
   return (
@@ -56,8 +68,28 @@ export default async function UserDetailPage({
         <Badge className={getRoleColor(user.role)}>{user.role}</Badge>
       </div>
 
+      {/* Approval Actions */}
+      {canApprove && profile && profile.isFilled && currentUser && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Approval Actions</CardTitle>
+            <CardDescription>
+              {profile.approvedById 
+                ? 'This member has been approved. You can revoke approval if needed.'
+                : 'Review and approve this member to make them visible to recruiters.'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ApprovalButtons 
+              userId={user.id}
+              currentUserId={currentUser.id}
+              isApproved={!!profile.approvedById}
+            />
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Basic Info */}
         <Card>
           <CardHeader>
             <CardTitle>Basic Information</CardTitle>
