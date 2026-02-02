@@ -77,11 +77,9 @@ async function CompaniesList() {
               <thead>
                 <tr className="border-b">
                   <th className="text-left p-3 font-medium">Company Name</th>
-                  <th className="text-left p-3 font-medium">Created By</th>
                   <th className="text-left p-3 font-medium">Active Recruiters</th>
                   <th className="text-left p-3 font-medium">Pending Invites</th>
                   <th className="text-left p-3 font-medium">Created</th>
-                  <th className="text-right p-3 font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -93,16 +91,7 @@ async function CompaniesList() {
                         <span className="font-medium">{company.name}</span>
                       </div>
                     </td>
-                    <td className="p-3">
-                      <div className="text-sm">
-                        <p className="font-medium">
-                          {company.CreatedBy?.name || 'Unknown'}
-                        </p>
-                        <p className="text-muted-foreground">
-                          {company.CreatedBy?.email}
-                        </p>
-                      </div>
-                    </td>
+
                     <td className="p-3">
                       <Badge variant="outline" className="gap-1">
                         <CheckCircle2 className="h-3 w-3 text-green-500" />
@@ -123,20 +112,6 @@ async function CompaniesList() {
                       <span className="text-sm text-muted-foreground">
                         {new Date(company.createdat).toLocaleDateString()}
                       </span>
-                    </td>
-                    <td className="p-3 text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button asChild variant="outline" size="sm">
-                          <Link href={`/admin/companies/${company.id}`}>
-                            Manage
-                          </Link>
-                        </Button>
-                        <Button asChild variant="ghost" size="sm">
-                          <Link href={`/admin/companies/${company.id}/invite`}>
-                            <Mail className="h-4 w-4" />
-                          </Link>
-                        </Button>
-                      </div>
                     </td>
                   </tr>
                 ))}
