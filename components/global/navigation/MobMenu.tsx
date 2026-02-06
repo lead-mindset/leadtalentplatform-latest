@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Menu, X, ChevronDown } from "lucide-react";
-import Link from "next/link";
+import {Link} from '@/i18n/routing';
 import AuthButtons from "./auth-buttons";
 
 export interface MenuItem {
   name: string;
-  href?: string;
+  href: string;
   target?: string;
   subMenu?: MenuItem[];
 }
