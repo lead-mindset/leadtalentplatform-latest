@@ -21,16 +21,16 @@ export async function getVisibleStudents(
         )
       )
     `)
-    .eq('role', 'member')
     .order('createdAt', { ascending: false });
-
+    
   if (error) {
     console.error('[getVisibleStudents] Error:', error);
     return [];
   }
   if (!data) return [];
 
-  // Transform the data to match StudentForRecruiter type
+  console.log('Fetched students:', data);
+
   const transformed: StudentForRecruiter[] = [];
   
   for (const user of data) {
@@ -64,7 +64,6 @@ export async function getVisibleStudents(
     });
   }
 
-  // Filter for students that are visible to recruiters
   return transformed.filter(
     (s) => s.StudentProfile?.isRecruiterVisible === true &&
            s.StudentProfile?.isFilled === true
@@ -307,7 +306,7 @@ export async function getCompanyStats(
   return {
     totalStudents: visibleStudents.length,
     savedStudents: savedStudents.length,
-    recentViews: 0, // Implement if you add a StudentView table
+    recentViews: 0,
   };
 }
 
