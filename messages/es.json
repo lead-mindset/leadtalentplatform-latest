@@ -68,24 +68,33 @@
     "termsOfService": "Términos de Servicio",
     "privacyPolicy": "Política de Privacidad",
     "and": "y",
-    "byCreatingAccount": "Al crear una cuenta, aceptas nuestros"
+    "byCreatingAccount": "Al crear una cuenta, aceptas nuestros",
+    "signUpDescription": "Únete a la Plataforma de Talento LEAD para conectarte con oportunidades, capítulos y socios."
   },
   "home": {
-    "heroTitle": "Tu Perfil Profesional,",
-    "heroTitleHighlight": "Amplificado",
-    "heroSubtitle": "Conéctate con los mejores reclutadores y empresas de Perú. Construye tu perfil de talento y desbloquea oportunidades reales.",
-    "heroFeatures": "✓ Gratis para siempre · ✓ 2 minutos para configurar · ✓ Control total sobre tus datos",
-    "professionalVisibility": "Visibilidad Profesional",
-    "professionalVisibilityDesc": "Muestra tus habilidades, experiencia y potencial a reclutadores de empresas líderes que buscan activamente talento.",
-    "directConnections": "Conexiones Directas",
-    "directConnectionsDesc": "Sé descubierto por empresas asociadas y reclutadores que buscan estudiantes de tu universidad y campo de estudio.",
-    "careerOpportunities": "Oportunidades Profesionales",
-    "careerOpportunitiesDesc": "Accede a pasantías, programas de mentoría y eventos de networking diseñados para acelerar tu crecimiento profesional.",
-    "completeControl": "Tienes Control Total",
-    "completeControlDesc": "Tu perfil solo se comparte con reclutadores cuando explícitamente lo autorizas. Puedes actualizar tus preferencias o darte de baja en cualquier momento.",
-    "secureAuth": "✓ Autenticación segura de Google",
-    "dataPrivacy": "✓ Tus datos nunca se venden ni se comparten sin permiso",
-    "transparency": "✓ Transparencia total sobre quién ve tu perfil"
+    "logoAlt": "Logotipo LEAD",
+    "heroTitle": "Únete a la Plataforma de Talento LEAD",
+    "heroSubtitle": "Muestra tu perfil profesional y conéctate con oportunidades diseñadas para ti",
+    "heroCtaPrimary": "Crea tu Perfil",
+    "trustFree": "Gratis para unirse",
+    "trustPrivate": "Privado por defecto",
+    "trustControl": "Tú controlas el compartir",
+    "benefitsTitle": "Lo Que Obtienes",
+    "benefitsSubtitle": "Construye tu perfil, participa con tu capítulo y desbloquea oportunidades cuando estés listo.",
+    "benefit1Title": "Conéctate con tus compañeros",
+    "benefit1Desc": "Únete a la red de tu capítulo y colabora con líderes estudiantiles de toda la región.",
+    "benefit2Title": "Desarrolla tus habilidades",
+    "benefit2Desc": "Accede a talleres, eventos y recursos diseñados para liderazgo en tecnología.",
+    "benefit3Title": "Accede a oportunidades",
+    "benefit3Desc": "Comparte tu perfil con empresas asociadas para desbloquear pasantías y trayectorias profesionales.",
+    "privacyTitle": "Tus Datos, Tu Elección",
+    "privacyDesc": "Tu perfil permanece privado a menos que decidas compartirlo con los socios de LEAD.",
+    "privacyFeature1": "Autenticación cifrada",
+    "privacyFeature2": "Compartición opcional con socios",
+    "privacyFeature3": "Controla lo que es visible",
+    "ctaTitle": "¿Listo para Unirte?",
+    "ctaSubtitle": "Crea tu perfil de miembro y conéctate con la comunidad LEAD hoy.",
+    "ctaButton": "Comenzar"
   },
   "profile": {
     "personalInfo": {
@@ -108,7 +117,7 @@
       "subtitle": "Actualiza tu información profesional",
       "linkedin": "Perfil de LinkedIn",
       "visibility": "Hacer visible mi perfil",
-      "visibilityDesc": "Conecta con empresas asociadas con LEAD"
+      "visibilityDesc": "Comparte mi perfil con socios de LEAD"
     },
     "updateSuccess": "¡Perfil actualizado exitosamente!",
     "updateError": "Error al actualizar el perfil. Por favor, intenta de nuevo.",
