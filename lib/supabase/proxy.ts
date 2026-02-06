@@ -5,8 +5,11 @@ import { hasEnvVars } from "../utils";
 const PUBLIC_ROUTES = ['/', '/login', '/auth', '/company/onboard', '/company/login'];
 
 function isPublicRoute(pathname: string): boolean {
+  // Remove locale prefix if present (e.g., /en/auth/login -> /auth/login)
+  const pathWithoutLocale = pathname.replace(/^\/(en|es)/, '') || '/';
+  
   return PUBLIC_ROUTES.some(route => 
-    pathname === route || pathname.startsWith(`${route}/`)
+    pathWithoutLocale === route || pathWithoutLocale.startsWith(`${route}/`)
   );
 }
 
@@ -46,10 +49,14 @@ export async function updateSession(request: NextRequest) {
     }
 
     const user = data?.claims;
-    const isProtected = !isPublicRoute(request.nextUrl.pathname);
+    const pathname = request.nextUrl.pathname;
+    const isProtected = !isPublicRoute(pathname);
 
     if (!user && isProtected) {
-      return NextResponse.redirect(new URL('/auth/login', request.url));
+      // Preserve locale if present in the pathname
+      const localeMatch = pathname.match(/^\/(en|es)/);
+      const locale = localeMatch ? localeMatch[1] : 'en';
+      return NextResponse.redirect(new URL(`/${locale}/auth/login`, request.url));
     }
 
     return supabaseResponse;
