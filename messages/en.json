@@ -68,24 +68,33 @@
     "termsOfService": "Terms of Service",
     "privacyPolicy": "Privacy Policy",
     "and": "and",
-    "byCreatingAccount": "By creating an account, you agree to our"
+    "byCreatingAccount": "By creating an account, you agree to our",
+    "signUpDescription": "Join the LEAD Talent Platform to connect with opportunities, chapters, and partners."
   },
   "home": {
-    "heroTitle": "Your Professional Profile,",
-    "heroTitleHighlight": "Amplified",
-    "heroSubtitle": "Connect with top recruiters and companies across Peru. Build your talent profile and unlock real opportunities.",
-    "heroFeatures": "✓ Free forever · ✓ 2 minutes to set up · ✓ Full control over your data",
-    "professionalVisibility": "Professional Visibility",
-    "professionalVisibilityDesc": "Showcase your skills, experience, and potential to recruiters from leading companies actively seeking talent.",
-    "directConnections": "Direct Connections",
-    "directConnectionsDesc": "Get discovered by partner companies and recruiters looking for students from your university and field of study.",
-    "careerOpportunities": "Career Opportunities",
-    "careerOpportunitiesDesc": "Access internships, mentorship programs, and networking events designed to accelerate your professional growth.",
-    "completeControl": "You're in Complete Control",
-    "completeControlDesc": "Your profile is only shared with recruiters when you explicitly opt in. You can update your preferences or opt out at any time.",
-    "secureAuth": "✓ Secure Google authentication",
-    "dataPrivacy": "✓ Your data is never sold or shared without permission",
-    "transparency": "✓ Full transparency on who views your profile"
+    "logoAlt": "LEAD Logo",
+    "heroTitle": "Join Lead Talent Platform",
+    "heroSubtitle": "Showcase your professional profile and connect with opportunities made for you",
+    "heroCtaPrimary": "Create Your Profile",
+    "trustFree": "Free to join",
+    "trustPrivate": "Private by default",
+    "trustControl": "You control sharing",
+    "benefitsTitle": "What You Get",
+    "benefitsSubtitle": "Build your profile, engage with your chapter, and unlock opportunities when you're ready.",
+    "benefit1Title": "Connect With Peers",
+    "benefit1Desc": "Join your chapter network and collaborate with student leaders across the region.",
+    "benefit2Title": "Develop Your Skills",
+    "benefit2Desc": "Access workshops, events, and resources designed for leadership in tech.",
+    "benefit3Title": "Access Opportunities",
+    "benefit3Desc": "Share your profile with partner companies to unlock internships and career paths.",
+    "privacyTitle": "Your Data, Your Choice",
+    "privacyDesc": "Your profile stays private unless you choose to share it with LEAD partners.",
+    "privacyFeature1": "Encrypted authentication",
+    "privacyFeature2": "Optional partner sharing",
+    "privacyFeature3": "Control what's visible",
+    "ctaTitle": "Ready to Join?",
+    "ctaSubtitle": "Create your member profile and connect with the LEAD community today.",
+    "ctaButton": "Get Started"
   },
   "profile": {
     "personalInfo": {
@@ -108,7 +117,7 @@
       "subtitle": "Update your professional information",
       "linkedin": "LinkedIn Profile",
       "visibility": "Make my profile visible",
-      "visibilityDesc": "Connect with companies partnered with LEAD"
+      "visibilityDesc": "Share my profile with LEAD partners"
     },
     "updateSuccess": "Profile updated successfully!",
     "updateError": "Failed to update profile. Please try again.",
