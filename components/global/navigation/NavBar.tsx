@@ -6,6 +6,7 @@ import MobileNav from "./MobMenu";
 import type { NavLink } from "@/lib/types";
 import type { MenuItem } from "./MobMenu";
 import {useTranslations} from 'next-intl';
+import { LanguageSwitcher } from '@/components/language-switcher';
 
 interface NavBarProps {
   user: any | null;
@@ -22,14 +23,20 @@ export default function NavBar({ user, links }: NavBarProps) {
   }));
 
   return (
-    <nav className="flex items-center h-16 px-6 border-b bg-background relative z-50">
+    <nav className="flex justify-between items-center h-16 px-6 border-b bg-background relative z-50">
       <Link href="/" className="flex items-center font-bold gap-2">
         <img src="/leadl2.svg" alt="LEAD" width={32} height={32} />
         LEAD Talent Platform
       </Link>
-
+      <div className='flex gap-4 items-center'> 
+      <div>
       <DesktopNav user={user} items={menuItems} />
       <MobileNav menuItems={menuItems} user={user} />
+      </div>
+      <div className='max-sm:hidden'>
+      <LanguageSwitcher/>
+      </div>
+      </div>
     </nav>
   );
 }
