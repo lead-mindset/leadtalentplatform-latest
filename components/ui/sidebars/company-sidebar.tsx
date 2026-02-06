@@ -1,7 +1,6 @@
 'use server'
 
-import Link from 'next/link'
-import { redirect } from 'next/navigation'
+import {Link, redirect} from '@/i18n/routing'
 import {
   SidebarMenu,
   SidebarMenuItem,
