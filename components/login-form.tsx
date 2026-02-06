@@ -14,10 +14,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Building2, Users, Eye, EyeOff } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import {Link, useRouter} from '@/i18n/routing';
 import { useState } from "react";
 import GoogleButton from "./google-button";
+import {useTranslations} from 'next-intl';
 
 export function LoginForm({
   className,
@@ -29,6 +29,8 @@ export function LoginForm({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const t = useTranslations('auth');
+  const tCommon = useTranslations('common');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,7 +45,7 @@ export function LoginForm({
       if (error) throw error;
       router.push("/");
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      setError(error instanceof Error ? error.message : t('anErrorOccurred'));
     } finally {
       setIsLoading(false);
     }
@@ -56,24 +58,24 @@ export function LoginForm({
         <div className="inline-flex h-10 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground w-full">
           <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium bg-background text-foreground shadow-sm gap-2 flex-1">
             <Users className="h-4 w-4" />
-            Member Login
+            {t('memberLogin')}
           </div>
           <button
             onClick={() => router.push("/company/login")}
             className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 hover:bg-accent hover:text-accent-foreground gap-2 flex-1"
           >
             <Building2 className="h-4 w-4" />
-            Company Login
+            {t('companyLogin')}
           </button>
         </div>
 
         <Card>
           <CardHeader className="space-y-2">
             <CardTitle className="text-2xl font-semibold tracking-tight">
-              Welcome back
+              {t('welcomeBack')}
             </CardTitle>
             <CardDescription className="text-base">
-              Sign in to access your account
+              {t('signInToAccount')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -85,14 +87,14 @@ export function LoginForm({
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-card px-2 text-muted-foreground">
-                  Or continue with
+                  {t('orContinueWith')}
                 </span>
               </div>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="email">Email address</Label>
+                <Label htmlFor="email">{t('emailAddress')}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -109,13 +111,13 @@ export function LoginForm({
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">{t('password')}</Label>
                   <Link
                     href="/auth/forgot-password"
                     className="text-sm font-medium text-primary hover:text-primary/80 transition-colors underline-offset-4 hover:underline"
                     tabIndex={-1}
                   >
-                    Forgot password?
+                    {t('forgotPassword')}
                   </Link>
                 </div>
                 <div className="relative">
@@ -164,10 +166,10 @@ export function LoginForm({
                 {isLoading ? (
                   <span className="flex items-center gap-2">
                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    Signing in...
+                    {t('signingIn')}
                   </span>
                 ) : (
-                  "Sign in"
+                  t('signIn')
                 )}
               </Button>
             </form>
@@ -179,31 +181,31 @@ export function LoginForm({
             </div>
 
             <p className="text-center text-sm text-muted-foreground">
-              Don&apos;t have an account?{" "}
+              {t('dontHaveAccount')}{" "}
               <Link
                 href="/auth/sign-up"
                 className="font-medium text-primary hover:text-primary/80 transition-colors underline-offset-4 hover:underline"
               >
-                Create account
+                {t('createAccount')}
               </Link>
             </p>
           </CardContent>
         </Card>
 
         <p className="text-center text-xs text-muted-foreground leading-relaxed">
-          By continuing, you agree to our{" "}
+          {t('byContinuing')}{" "}
           <Link
             href="/terms"
             className="underline underline-offset-4 hover:text-foreground transition-colors"
           >
-            Terms of Service
+            {t('termsOfService')}
           </Link>{" "}
-          and{" "}
+          {t('and')}{" "}
           <Link
             href="/privacy"
             className="underline underline-offset-4 hover:text-foreground transition-colors"
           >
-            Privacy Policy
+            {t('privacyPolicy')}
           </Link>
         </p>
       </div>

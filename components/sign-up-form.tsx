@@ -14,10 +14,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Eye, EyeOff } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import {Link, useRouter} from '@/i18n/routing';
 import { useState } from "react";
 import GoogleButton from "./google-button";
+import {useTranslations} from 'next-intl';
 
 export function SignUpForm({
   className,
@@ -31,6 +31,8 @@ export function SignUpForm({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const t = useTranslations('auth');
+  const tCommon = useTranslations('common');
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,13 +40,13 @@ export function SignUpForm({
     setError(null);
 
     if (password !== repeatPassword) {
-      setError("Passwords do not match");
+      setError(t('passwordsDoNotMatch'));
       setIsLoading(false);
       return;
     }
 
     if (password.length < 8) {
-      setError("Password must be at least 8 characters");
+      setError(t('passwordTooShort'));
       setIsLoading(false);
       return;
     }
@@ -60,7 +62,7 @@ export function SignUpForm({
       if (error) throw error;
       router.push("/auth/sign-up-success");
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      setError(error instanceof Error ? error.message : t('anErrorOccurred'));
     } finally {
       setIsLoading(false);
     }
@@ -72,7 +74,7 @@ export function SignUpForm({
         <Card>
           <CardHeader className="space-y-2">
             <CardTitle className="text-2xl font-semibold tracking-tight">
-              Create an account
+              {t('createAccount')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -84,14 +86,14 @@ export function SignUpForm({
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-card px-2 text-muted-foreground">
-                  Or continue with
+                  {t('orContinueWith')}
                 </span>
               </div>
             </div>
 
             <form onSubmit={handleSignUp} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="email">Email address</Label>
+                <Label htmlFor="email">{t('emailAddress')}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -107,7 +109,7 @@ export function SignUpForm({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t('password')}</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -137,12 +139,12 @@ export function SignUpForm({
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Must be at least 8 characters
+                  {t('passwordMinLength')}
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="repeat-password">Confirm Password</Label>
+                <Label htmlFor="repeat-password">{t('confirmPassword')}</Label>
                 <div className="relative">
                   <Input
                     id="repeat-password"
@@ -189,10 +191,10 @@ export function SignUpForm({
                 {isLoading ? (
                   <span className="flex items-center gap-2">
                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    Creating account...
+                    {t('creatingAccount')}
                   </span>
                 ) : (
-                  "Create account"
+                  t('createAccount')
                 )}
               </Button>
             </form>
@@ -204,31 +206,31 @@ export function SignUpForm({
             </div>
 
             <p className="text-center text-sm text-muted-foreground">
-              Already have an account?{" "}
+              {t('alreadyHaveAccount')}{" "}
               <Link
                 href="/auth/login"
                 className="font-medium text-primary hover:text-primary/80 transition-colors underline-offset-4 hover:underline"
               >
-                Sign in
+                {t('signIn')}
               </Link>
             </p>
           </CardContent>
         </Card>
 
         <p className="text-center text-xs text-muted-foreground leading-relaxed">
-          By creating an account, you agree to our{" "}
+          {t('byCreatingAccount')}{" "}
           <Link
             href="/terms"
             className="underline underline-offset-4 hover:text-foreground transition-colors"
           >
-            Terms of Service
+            {t('termsOfService')}
           </Link>{" "}
-          and{" "}
+          {t('and')}{" "}
           <Link
             href="/privacy"
             className="underline underline-offset-4 hover:text-foreground transition-colors"
           >
-            Privacy Policy
+            {t('privacyPolicy')}
           </Link>
         </p>
       </div>

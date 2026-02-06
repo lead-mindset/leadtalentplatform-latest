@@ -2,7 +2,8 @@
 
 import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import {useRouter} from '@/i18n/routing';
+import {useTranslations} from 'next-intl';
 
 interface LogoutButtonProps {
   className?: string;
@@ -11,6 +12,7 @@ interface LogoutButtonProps {
 
 export function LogoutButton({ className, onClick }: LogoutButtonProps) {
   const router = useRouter();
+  const t = useTranslations('common');
 
   const logout = async () => {
     await supabase.auth.signOut();
@@ -20,7 +22,7 @@ export function LogoutButton({ className, onClick }: LogoutButtonProps) {
 
   return (
     <Button onClick={logout} className={className}>
-      Logout
+      {t('logout')}
     </Button>
   );
 }
