@@ -1,18 +1,25 @@
 "use client";
 
-import Link from "next/link";
+import {Link} from '@/i18n/routing';
 import DesktopNav from "./DesktopMenu";
 import MobileNav from "./MobMenu";
 import type { NavLink } from "@/lib/types";
 import type { MenuItem } from "./MobMenu";
+import {useTranslations} from 'next-intl';
 
 interface NavBarProps {
   user: any | null;
   links: NavLink[];
 }
 
+
 export default function NavBar({ user, links }: NavBarProps) {
-  const menuItems: MenuItem[] = links.map((l) => ({ name: l.label, href: l.href }));
+  const t = useTranslations('nav');
+
+  const menuItems: MenuItem[] = links.map((l) => ({
+    name: t(l.label),
+    href: l.href
+  }));
 
   return (
     <nav className="flex items-center h-16 px-6 border-b bg-background relative z-50">
@@ -21,7 +28,7 @@ export default function NavBar({ user, links }: NavBarProps) {
         LEAD Talent Platform
       </Link>
 
-      <DesktopNav user={user} links={links} />
+      <DesktopNav user={user} items={menuItems} />
       <MobileNav menuItems={menuItems} user={user} />
     </nav>
   );
