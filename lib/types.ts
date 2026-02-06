@@ -8,11 +8,32 @@ export type NavLink = {
 };
 
 export const NAV_LINKS: NavLink[] = [
-  { label: "Dashboard", href: "/student", auth: "authenticated", roles: ["member", "editor"] },
-  { label: "Dashboard", href: "/company", auth: "authenticated", roles: ["recruiter"] },
-  { label: "Manage Chapter", href: "/chapter", auth: "authenticated", roles: ["editor"] },
-  { label: "Admin Panel", href: "/admin", auth: "authenticated", roles: ["admin"] },
+  { 
+    label: "dashboard",
+    href: "/student", 
+    auth: "authenticated", 
+    roles: ["member", "editor"] 
+  },
+  { 
+    label: "dashboard",
+    href: "/company", 
+    auth: "authenticated", 
+    roles: ["recruiter"] 
+  },
+  { 
+    label: "manageChapter",
+    href: "/chapter", 
+    auth: "authenticated", 
+    roles: ["editor"] 
+  },
+  { 
+    label: "adminPanel",
+    href: "/admin", 
+    auth: "authenticated", 
+    roles: ["admin"] 
+  },
 ];
+
 
 // ============================================================================
 // DATABASE TYPES - Core schema types matching database exactly
