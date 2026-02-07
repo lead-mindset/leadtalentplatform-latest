@@ -30,7 +30,11 @@
     "adminPanel": "Panel de administración",
     "home": "Inicio",
     "help": "Ayuda",
-    "appName": "Plataforma de Talento LEAD"
+    "appName": "Plataforma de Talento LEAD",
+    "account": "Cuenta",
+    "billing": "Facturación",
+    "notifications": "Notificaciones",
+    "logout": "Cerrar sesión"
   },
   "auth": {
     "email": "Correo electrónico",

@@ -30,7 +30,11 @@
     "adminPanel": "Admin Panel",
     "home": "Home",
     "help": "Help",
-    "appName": "LEAD Talent Platform"
+    "appName": "LEAD Talent Platform",
+    "account": "Account",
+    "billing": "Billing",
+    "notifications": "Notifications",
+    "logout": "Log out"
   },
   "auth": {
     "email": "Email",
