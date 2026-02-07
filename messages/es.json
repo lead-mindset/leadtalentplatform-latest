@@ -69,11 +69,19 @@
     "privacyPolicy": "Política de Privacidad",
     "and": "y",
     "byCreatingAccount": "Al crear una cuenta, aceptas nuestros",
-    "signUpDescription": "Únete a la Plataforma de Talento LEAD para conectarte con oportunidades, capítulos y socios."
+    "signUpDescription": "Únete a la Plataforma de Talento LEAD para conectarte con oportunidades, capítulos y socios.",
+    "newPassword": "Nueva contraseña",
+    "saveNewPassword": "Guardar nueva contraseña",
+    "saving": "Guardando...",
+    "updatePasswordTitle": "Restablece tu contraseña",
+    "updatePasswordDescription": "Por favor ingresa tu nueva contraseña a continuación.",
+    "thankYouSignUp": "¡Gracias por registrarte!",
+    "checkEmailConfirm": "Revisa tu correo electrónico para confirmar",
+    "confirmAccountMessage": "Te has registrado exitosamente. Por favor revisa tu correo electrónico para confirmar tu cuenta antes de iniciar sesión."
   },
   "home": {
     "logoAlt": "Logotipo LEAD",
-    "heroTitle": "Únete a la Plataforma de Talento LEAD",
+    "heroTitle": "Únete a LEAD Talent Platform",
     "heroSubtitle": "Muestra tu perfil profesional y conéctate con oportunidades diseñadas para ti",
     "heroCtaPrimary": "Crea tu Perfil",
     "trustFree": "Gratis para unirse",

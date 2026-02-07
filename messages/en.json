@@ -69,7 +69,15 @@
     "privacyPolicy": "Privacy Policy",
     "and": "and",
     "byCreatingAccount": "By creating an account, you agree to our",
-    "signUpDescription": "Join the LEAD Talent Platform to connect with opportunities, chapters, and partners."
+    "signUpDescription": "Join the LEAD Talent Platform to connect with opportunities, chapters, and partners.",
+    "newPassword": "New password",
+    "saveNewPassword": "Save new password",
+    "saving": "Saving...",
+    "updatePasswordTitle": "Reset Your Password",
+    "updatePasswordDescription": "Please enter your new password below.",
+    "thankYouSignUp": "Thank you for signing up!",
+    "checkEmailConfirm": "Check your email to confirm",
+    "confirmAccountMessage": "You've successfully signed up. Please check your email to confirm your account before signing in."
   },
   "home": {
     "logoAlt": "LEAD Logo",
