@@ -1,6 +1,8 @@
-import { useState } from 'react';
-import { Check, ChevronsUpDown, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState } from 'react'
+import { Check, ChevronsUpDown, X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { useTranslations } from 'next-intl'
+import { useTranslatedCareers } from '@/lib/use-translated-options'
 import {
   Command,
   CommandEmpty,
@@ -8,124 +10,63 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@/components/ui/command';
+} from '@/components/ui/command'
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
+} from '@/components/ui/popover'
 
-// ---- Types ----
-export type CareerValue = string;
+export type CareerValue = string
 
 export interface CareerCommandSelectProps {
-  value: CareerValue;
-  onChange: (value: CareerValue) => void;
-  error?: string;
+  value: CareerValue
+  onChange: (value: CareerValue) => void
+  error?: string
 }
 
-const CAREER_OPTIONS: CareerValue[] = [
-  'Computer Science',
-  'Software Engineering',
-  'Data Science',
-  'Cybersecurity',
-  'Information Technology',
-  'Artificial Intelligence',
-  'Web Development',
-  'Mobile App Development',
-  'Cloud Computing',
-  'DevOps Engineering',
-  'Business Administration',
-  'Finance',
-  'Accounting',
-  'Marketing',
-  'Economics',
-  'Management',
-  'Entrepreneurship',
-  'International Business',
-  'Human Resources',
-  'Supply Chain Management',
-  'Mechanical Engineering',
-  'Electrical Engineering',
-  'Civil Engineering',
-  'Chemical Engineering',
-  'Aerospace Engineering',
-  'Biomedical Engineering',
-  'Industrial Engineering',
-  'Environmental Engineering',
-  'Nursing',
-  'Medicine',
-  'Public Health',
-  'Pharmacy',
-  'Physical Therapy',
-  'Psychology',
-  'Nutrition',
-  'Healthcare Administration',
-  'Biology',
-  'Chemistry',
-  'Physics',
-  'Mathematics',
-  'Environmental Science',
-  'Geology',
-  'Political Science',
-  'Sociology',
-  'Anthropology',
-  'History',
-  'English',
-  'Philosophy',
-  'Communications',
-  'Graphic Design',
-  'UX/UI Design',
-  'Fine Arts',
-  'Architecture',
-  'Fashion Design',
-  'Interior Design',
-  'Education',
-  'Early Childhood Education',
-  'Special Education',
-  'Law',
-  'Criminal Justice',
-  'Paralegal Studies',
-];
-
-// ---- Component ----
 export default function CareerCommandSelect({
   value,
   onChange,
   error,
 }: CareerCommandSelectProps) {
-  const [open, setOpen] = useState<boolean>(false);
-  const [searchValue, setSearchValue] = useState<string>('');
+  const t = useTranslations('onboarding')
+  const translatedCareers = useTranslatedCareers()
+  
+  const [open, setOpen] = useState<boolean>(false)
+  const [searchValue, setSearchValue] = useState<string>('')
 
-  const filteredOptions = CAREER_OPTIONS.filter((option) =>
-    option.toLowerCase().includes(searchValue.toLowerCase())
-  );
+  const filteredOptions = translatedCareers.filter((option) =>
+    option.label.toLowerCase().includes(searchValue.toLowerCase())
+  )
 
   const handleSelect = (currentValue: CareerValue) => {
-    onChange(currentValue === value ? '' : currentValue);
-    setOpen(false);
-    setSearchValue('');
-  };
+    onChange(currentValue === value ? '' : currentValue)
+    setOpen(false)
+    setSearchValue('')
+  }
 
   const handleCreateCustom = (): void => {
-    const trimmed = searchValue.trim();
+    const trimmed = searchValue.trim()
     if (trimmed) {
-      onChange(trimmed);
-      setOpen(false);
-      setSearchValue('');
+      onChange(trimmed)
+      setOpen(false)
+      setSearchValue('')
     }
-  };
+  }
 
   const showCreateOption: boolean =
     !!searchValue.trim() &&
-    !CAREER_OPTIONS.some(
-      (option) => option.toLowerCase() === searchValue.toLowerCase()
-    );
+    !translatedCareers.some(
+      (option) => option.label.toLowerCase() === searchValue.toLowerCase()
+    )
+
+  const displayValue = translatedCareers.find(c => c.value === value)?.label || value
 
   return (
     <div className="space-y-2">
       <label className="text-sm font-medium text-foreground">
-        Major / Career Field
+        {t('majorCareerField')}
       </label>
 
       <Popover open={open} onOpenChange={setOpen}>
@@ -136,7 +77,7 @@ export default function CareerCommandSelect({
             aria-expanded={open}
             className="w-full justify-between"
           >
-            {value || 'Select or type your career field...'}
+            {displayValue || t('selectCareerField')}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
@@ -144,7 +85,7 @@ export default function CareerCommandSelect({
         <PopoverContent className="w-full p-0" align="start">
           <Command shouldFilter={false}>
             <CommandInput
-              placeholder="Search career fields..."
+              placeholder={t('searchCareerFields')}
               value={searchValue}
               onValueChange={setSearchValue}
             />
@@ -158,12 +99,12 @@ export default function CareerCommandSelect({
                       className="w-full justify-start"
                       onClick={handleCreateCustom}
                     >
-                      ✨ Create "{searchValue}"
+                      {t('createCustom', { value: searchValue })}
                     </Button>
                   </div>
                 ) : (
                   <div className="py-6 text-center text-sm">
-                    No career field found.
+                    {t('noCareerFound')}
                   </div>
                 )}
               </CommandEmpty>
@@ -172,16 +113,16 @@ export default function CareerCommandSelect({
                 <CommandGroup>
                   {filteredOptions.map((option) => (
                     <CommandItem
-                      key={option}
-                      value={option}
+                      key={option.value}
+                      value={option.value}
                       onSelect={handleSelect}
                     >
                       <Check
                         className={`mr-2 h-4 w-4 ${
-                          value === option ? 'opacity-100' : 'opacity-0'
+                          value === option.value ? 'opacity-100' : 'opacity-0'
                         }`}
                       />
-                      <span>{option}</span>
+                      <span>{option.label}</span>
                     </CommandItem>
                   ))}
                 </CommandGroup>
@@ -190,7 +131,7 @@ export default function CareerCommandSelect({
               {showCreateOption && filteredOptions.length > 0 && (
                 <CommandGroup>
                   <CommandItem onSelect={handleCreateCustom}>
-                    ✨ Create "{searchValue}"
+                    {t('createCustom', { value: searchValue })}
                   </CommandItem>
                 </CommandGroup>
               )}
@@ -206,5 +147,5 @@ export default function CareerCommandSelect({
         </p>
       )}
     </div>
-  );
+  )
 }
