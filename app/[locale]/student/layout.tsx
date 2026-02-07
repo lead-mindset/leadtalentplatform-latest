@@ -1,12 +1,8 @@
+// app/[locale]/student/layout.tsx
 import { SidebarLayout } from '@/components/ui/sidebars/sidebar-layout'
 import { DynamicSidebar } from '@/components/ui/sidebars/dynamic-sidebar'
 import { requireUser } from '@/lib/auth'
 import type { ReactNode } from 'react'
-
-async function SidebarWithUser() {
-  const { user } = await requireUser()
-  return <DynamicSidebar user={user} />
-}
 
 type Props = {
   children: ReactNode
@@ -15,9 +11,13 @@ type Props = {
 
 export default async function StudentLayout({ children, params }: Props) {
   await params
+  const { user } = await requireUser()
   
   return (
-    <SidebarLayout Sidebar={SidebarWithUser}>
+    <SidebarLayout 
+      sidebar={<DynamicSidebar user={user} />}
+      mobileSidebar={<DynamicSidebar user={user} isMobile />}
+    >
       {children}
     </SidebarLayout>
   )
