@@ -1,3 +1,5 @@
+"use client";
+
 import {
   CreditCard,
   MoreVertical,
@@ -16,12 +18,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTranslations } from 'next-intl';
 
 export function NavUser({
   user,
 }: {
   user: { name: string; email: string; avatar: string };
 }) {
+  const t = useTranslations('nav');
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -54,15 +59,15 @@ export function NavUser({
         <DropdownMenuGroup>
           <DropdownMenuItem>
             <User />
-            Account
+            {t('account')}
           </DropdownMenuItem>
           <DropdownMenuItem>
             <CreditCard />
-            Billing
+            {t('billing')}
           </DropdownMenuItem>
           <DropdownMenuItem>
             <Bell />
-            Notifications
+            {t('notifications')}
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
