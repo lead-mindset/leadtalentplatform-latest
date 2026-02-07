@@ -1,5 +1,8 @@
+'use client'
+
 import {Link} from '@/i18n/routing'
 import { SidebarMenuItem, SidebarMenuButton } from '../sidebar'
+import { useMobileSidebar } from './mobile-header'
 
 interface NavItemProps {
   name: string
@@ -11,10 +14,16 @@ interface NavItemProps {
 }
 
 export function NavItem({ name, href, icon: Icon, isActive, badgeCount, showPing }: NavItemProps) {
+  const mobileSidebar = useMobileSidebar()
+
+  const handleClick = () => {
+    mobileSidebar?.closeSheet()
+  }
+
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={isActive}>
-        <Link href={href} className="relative flex items-center gap-2">
+        <Link href={href} className="relative flex items-center gap-2" onClick={handleClick}>
           <Icon />
           <span>{name}</span>
 

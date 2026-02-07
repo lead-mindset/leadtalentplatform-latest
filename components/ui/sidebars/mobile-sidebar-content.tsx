@@ -1,4 +1,3 @@
-// components/ui/sidebars/mobile-sidebar-content.tsx
 'use client'
 
 import { LogoutButton } from "../../logout-button"
