@@ -11,8 +11,8 @@ interface DesktopNavProps {
 
 export default function DesktopNav({ user, items }: DesktopNavProps) {
   return (
-    <>
-      <ul className="hidden lg:flex gap-6 ml-10">
+    <div className='w-full flex items-center'>
+      <ul className="hidden lg:flex underline underline-offset-4 gap-6 ml-10 text-sm">
         {items.map((item) => (
           <li key={item.href}>
             <Link href={item.href}>{item.name}</Link>
@@ -23,6 +23,6 @@ export default function DesktopNav({ user, items }: DesktopNavProps) {
       <div className="ml-auto hidden lg:flex gap-2">
         <AuthButtons user={user} />
       </div>
-    </>
+    </div>
   );
 }
