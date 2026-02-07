@@ -1,6 +1,8 @@
+// components/ui/sidebars/dynamic-sidebar.tsx
 'use client'
 
 import BaseSidebar from './base-sidebar'
+import { MobileSidebarContent } from './mobile-sidebar-content'
 import { NavItem } from './nav-item'
 import {
   SidebarMenu,
@@ -19,6 +21,7 @@ interface DynamicSidebarProps {
     role: string
   }
   hasPendingApprovals?: boolean
+  isMobile?: boolean
 }
 
 interface NavItemConfig {
@@ -38,7 +41,7 @@ const chapterNavConfig: NavItemConfig[] = [
   { nameKey: 'members', href: '/chapter/members', icon: Users, showPingKey: 'hasPendingApprovals' },
 ]
 
-export function DynamicSidebar({ user, hasPendingApprovals = false }: DynamicSidebarProps) {
+export function DynamicSidebar({ user, hasPendingApprovals = false, isMobile = false }: DynamicSidebarProps) {
   const pathname = usePathname()
   const t = useTranslations('sidebar')
 
@@ -58,12 +61,8 @@ export function DynamicSidebar({ user, hasPendingApprovals = false }: DynamicSid
     showPingKey: item.showPingKey
   }))
 
-  return (
-    <BaseSidebar
-      userName={user.name}
-      userEmail={user.email}
-      userRole={isEditor ? t('chapterEditor') : t('member')}
-    >
+  const navContent = (
+    <>
       <SidebarGroup>
         <SidebarGroupLabel>{t('myProfile')}</SidebarGroupLabel>
         <SidebarGroupContent>
@@ -100,6 +99,28 @@ export function DynamicSidebar({ user, hasPendingApprovals = false }: DynamicSid
           </SidebarGroupContent>
         </SidebarGroup>
       )}
+    </>
+  )
+
+  if (isMobile) {
+    return (
+      <MobileSidebarContent
+        userName={user.name}
+        userEmail={user.email}
+        userRole={isEditor ? t('chapterEditor') : t('member')}
+      >
+        {navContent}
+      </MobileSidebarContent>
+    )
+  }
+
+  return (
+    <BaseSidebar
+      userName={user.name}
+      userEmail={user.email}
+      userRole={isEditor ? t('chapterEditor') : t('member')}
+    >
+      {navContent}
     </BaseSidebar>
   )
 }
