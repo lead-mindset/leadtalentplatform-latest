@@ -2,25 +2,22 @@
 
 import { useForm, FormProvider, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { useState } from 'react'
 import { Upload, X, FileText, Loader2 } from 'lucide-react'
 import { Checkbox } from "@/components/ui/checkbox"
-import { SKILL_OPTIONS, LEAD_CHAPTER_OPTIONS } from '@/lib/options'
 import { FormStepper, FormInput } from './ui/stepper'
-import { fullMemberSchemaFrontend } from '@/lib/memberschema'
+import { createFullMemberSchemaFrontend } from '@/lib/memberschema'
 import { Button } from './ui/button'
-import { useEffect } from 'react'
-import { supabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import CareerCommandSelect from './ui/career-combobox'
 import { submitOnboarding } from '@/lib/actions/student/onboarding'
+import z from 'zod'
+import { useTranslations } from 'next-intl'
+import { useTranslatedSkills, useTranslatedChapters } from '@/lib/use-translated-options'
 import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@/components/ui/toggle-group"
-
-
 import {
   Select,
   SelectContent,
@@ -29,47 +26,23 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-export function validateResume(file: File | null) {
-  if (!file) return "Debes subir un archivo PDF";
-  if (file.type !== "application/pdf") return "Solo se permite PDF";
-  if (file.size > 10 * 1024 * 1024) return "El PDF debe ser menor a 10MB";
-  return null;
-}
-
-export async function getLeadChapterOptions() {
-
-  const { data, error } = await supabase
-    .from("Chapter")
-    .select("id, name")
-    .order("name");
-
-  if (error) {
-    console.error("Error fetching chapters:", error);
-    return [];
-  }
-
-  return data.map((chapter) => ({
-    label: chapter.name,
-    value: chapter.id,
-  }));
-}
-
-export type OnboardingValues = z.infer<typeof fullMemberSchemaFrontend>
-
 export default function Onboarding() {
-  const router = useRouter();
+  const router = useRouter()
+  const t = useTranslations('onboarding')
+  const tValidation = useTranslations()
+
+  const translatedSkills = useTranslatedSkills()
+  const translatedChapters = useTranslatedChapters()
 
   const [fileName, setFileName] = useState('')
   const [isUploading, setIsUploading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [chapterOptions, setChapterOptions] = useState<{ label: string; value: string }[]>([]);
-  
-  useEffect(() => {
-    getLeadChapterOptions().then(setChapterOptions);
-  }, []);
+
+  const fullMemberSchema = createFullMemberSchemaFrontend(tValidation)
+  type OnboardingValues = z.infer<typeof fullMemberSchema>
 
   const methods = useForm<OnboardingValues>({
-    resolver: zodResolver(fullMemberSchemaFrontend),
+    resolver: zodResolver(fullMemberSchema),
     mode: 'onChange',
     defaultValues: {
       full_name: '',
@@ -81,6 +54,7 @@ export default function Onboarding() {
       linkedin_url: '',
       resume_pdf: undefined,
       consentRecruiterVisibility: false,
+      emailNotificationsEnabled: true,
     },
   })
 
@@ -88,7 +62,6 @@ export default function Onboarding() {
     trigger,
     getValues,
     control,
-    watch,
     formState: { errors },
   } = methods
 
@@ -102,38 +75,34 @@ export default function Onboarding() {
     return trigger(stepFields[step])
   }
 
-const handleComplete = async () => {
-  const isValid = await trigger();
-  if (!isValid) return;
+  const handleComplete = async () => {
+    const isValid = await trigger()
+    if (!isValid) return
 
-  const data = getValues()
+    const data = getValues()
+    setIsSubmitting(true)
 
-  setIsSubmitting(true)
-  
-  const formData = new FormData()
+    const formData = new FormData()
 
-  Object.entries(data).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
-      if (key === 'resume_pdf' && value instanceof File) {
-        formData.append('resume', value)
-      } else if (Array.isArray(value) || typeof value === 'object') {
-        formData.append(key, JSON.stringify(value))
-      } else {
-        formData.append(key, String(value))
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        if (key === 'resume_pdf' && value instanceof File) {
+          formData.append('resume', value)
+        } else if (Array.isArray(value) || typeof value === 'object') {
+          formData.append(key, JSON.stringify(value))
+        } else {
+          formData.append(key, String(value))
+        }
       }
+    })
+
+    const result = await submitOnboarding(formData)
+
+    if (result?.error) {
+      console.error(result.error)
+      setIsSubmitting(false)
     }
-  })
-
-  // Don't wrap in try-catch since redirect() throws NEXT_REDIRECT
-  const result = await submitOnboarding(formData)
-
-  // Only handle actual errors (redirect will never reach here)
-  if (result?.error) {
-    console.error(result.error)
-    setIsSubmitting(false)
-    // Optionally show error toast here
   }
-}
 
   const handleFileChange =
     (onChange: any) => (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -162,25 +131,25 @@ const handleComplete = async () => {
         <div className="space-y-5">
           <div className="space-y-2">
             <h2 className="text-3xl font-bold text-foreground">
-              👋 Welcome to LEAD
+              {t('step1Title')}
             </h2>
             <p className="text-base text-muted-foreground">
-              Let's start by getting to know you better
+              {t('step1Subtitle')}
             </p>
           </div>
 
           <div className="space-y-4">
             <FormInput
-              label="Full Name"
+              label={t('fullName')}
               name="full_name"
-              placeholder="John Doe"
+              placeholder={t('fullNamePlaceholder')}
               error={errors.full_name?.message}
             />
 
             <FormInput
-              label="Phone Number"
+              label={t('phoneNumber')}
               name="phone"
-              placeholder="+1 (555) 123-4567"
+              placeholder={t('phonePlaceholder')}
               error={errors.phone?.message}
             />
 
@@ -190,7 +159,7 @@ const handleComplete = async () => {
               render={({ field }) => (
                 <div className="space-y-2">
                   <label className="text-sm font-medium">
-                    LEAD Chapter
+                    {t('leadChapter')}
                   </label>
 
                   <Select
@@ -198,11 +167,11 @@ const handleComplete = async () => {
                     onValueChange={field.onChange}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select your chapter" />
+                      <SelectValue placeholder={t('selectChapter')} />
                     </SelectTrigger>
 
                     <SelectContent>
-                      {LEAD_CHAPTER_OPTIONS.map((option) => (
+                      {translatedChapters.map((option) => (
                         <SelectItem
                           key={option.value}
                           value={option.value}
@@ -228,15 +197,14 @@ const handleComplete = async () => {
         <div className="space-y-5">
           <div className="space-y-2">
             <h2 className="text-3xl font-bold text-foreground">
-              🎓 Your Academic Journey
+              {t('step2Title')}
             </h2>
             <p className="text-base text-muted-foreground">
-              Tell us about your studies and expertise
+              {t('step2Subtitle')}
             </p>
           </div>
 
           <div className="space-y-4">
-
             <Controller
               control={control}
               name="career"
@@ -250,7 +218,7 @@ const handleComplete = async () => {
             />
 
             <FormInput
-              label="Expected Graduation Year"
+              label={t('expectedGradYear')}
               name="graduationYear"
               type="number"
               validation={{ valueAsNumber: true }}
@@ -264,10 +232,10 @@ const handleComplete = async () => {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <label className="text-sm font-medium text-foreground">
-                      Skills & Expertise
+                      {t('skillsExpertise')}
                     </label>
                     <span className="text-xs text-muted-foreground">
-                      {field.value.length} selected
+                      {field.value.length} {t('selected')}
                     </span>
                   </div>
 
@@ -280,26 +248,20 @@ const handleComplete = async () => {
                     spacing={2}
                     className="grid grid-cols-2 w-full"
                   >
-                    {SKILL_OPTIONS.map((skill) => (
+                    {translatedSkills.map((skill) => (
                       <ToggleGroupItem
                         key={skill.value}
                         value={skill.value}
                         aria-label={skill.value}
-                        className=" 
-        justify-start gap-2
-        data-[state=on]:bg-primary
-        data-[state=on]:text-primary-foreground
-        data-[state=on]:border-primary
-      "
+                        className="justify-start gap-2 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:border-primary"
                       >
                         <span className="text-base">{skill.icon}</span>
                         <span className="flex-1 text-left">
-                          {skill.value}
+                          {skill.label}
                         </span>
                       </ToggleGroupItem>
                     ))}
                   </ToggleGroup>
-
 
                   {errors.skills && (
                     <p className="flex items-center gap-1 text-sm text-destructive">
@@ -310,23 +272,22 @@ const handleComplete = async () => {
                 </div>
               )}
             />
-
           </div>
         </div>
 
         <div className="space-y-5">
           <div className="space-y-2">
             <h2 className="text-3xl font-bold text-foreground">
-              💼 Professional Profile
+              {t('step3Title')}
             </h2>
             <p className="text-base text-muted-foreground">
-              Help recruiters discover your potential
+              {t('step3Subtitle')}
             </p>
           </div>
 
           <div className="space-y-4">
             <FormInput
-              label="LinkedIn Profile"
+              label={t('linkedinProfile')}
               name="linkedin_url"
               type="url"
               error={errors.linkedin_url?.message}
@@ -335,11 +296,10 @@ const handleComplete = async () => {
             <Controller
               control={control}
               name="resume_pdf"
-
               render={({ field }) => (
                 <div className="space-y-2">
                   <label className="text-sm font-medium">
-                    Resume (PDF)
+                    {t('resumePdf')}
                   </label>
 
                   {!fileName ? (
@@ -349,9 +309,7 @@ const handleComplete = async () => {
                           type="file"
                           accept="application/pdf"
                           className="hidden"
-                          onChange={handleFileChange(
-                            field.onChange
-                          )}
+                          onChange={handleFileChange(field.onChange)}
                         />
                         <div className="flex flex-col items-center gap-2">
                           {isUploading ? (
@@ -360,12 +318,10 @@ const handleComplete = async () => {
                             <Upload className="h-8 w-8 text-muted-foreground" />
                           )}
                           <p className="text-sm font-medium">
-                            {isUploading
-                              ? 'Uploading...'
-                              : 'Click to upload'}
+                            {isUploading ? t('uploading') : t('clickToUpload')}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            PDF up to 10MB
+                            {t('pdfUpTo10MB')}
                           </p>
                         </div>
                       </div>
@@ -380,7 +336,7 @@ const handleComplete = async () => {
                           {fileName}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Ready to upload
+                          {t('readyToUpload')}
                         </p>
                       </div>
                       <Button
@@ -391,7 +347,8 @@ const handleComplete = async () => {
                         onClick={() => removeFile(field.onChange)}
                       >
                         <X className="h-4 w-4" />
-                      </Button></div>
+                      </Button>
+                    </div>
                   )}
                   {errors.resume_pdf && (
                     <p className="flex items-center gap-1 text-sm text-destructive">
@@ -420,10 +377,10 @@ const handleComplete = async () => {
 
                       <div className="flex-1">
                         <p className="text-sm font-medium text-foreground">
-                          Make my profile visible
+                          {t('makeProfileVisible')}
                         </p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          Connect with companies partnered with LEAD. You can change this anytime in settings.
+                          {t('profileVisibilityDesc')}
                         </p>
                       </div>
                     </label>
@@ -439,6 +396,34 @@ const handleComplete = async () => {
               )}
             />
 
+            <Controller
+              control={control}
+              name="emailNotificationsEnabled"
+              render={({ field }) => (
+                <div className="space-y-2">
+                  <div className="rounded-lg border border-border bg-muted/50 p-4">
+                    <label className="flex cursor-pointer items-start gap-3">
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={(checked) =>
+                          field.onChange(Boolean(checked))
+                        }
+                        className="mt-0.5"
+                      />
+
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-foreground">
+                          {t('emailNotificationsLabel')}
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {t('emailNotificationsDesc')}
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              )}
+            />
           </div>
         </div>
       </FormStepper>
