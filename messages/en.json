@@ -158,5 +158,19 @@
     "remove": "Remove",
     "uploading": "Uploading...",
     "fileTooLarge": "File size exceeds 10MB. Please choose a smaller file."
+  },
+  "sidebar": {
+    "myProfile": "My Profile",
+    "chapterManagement": "Chapter Management",
+    "profileNav": "Profile",
+    "resumeNav": "Resume",
+    "overview": "Overview",
+    "members": "Members",
+    "chapterEditor": "Chapter Editor",
+    "member": "Member"
+  },
+  "metadata": {
+    "title": "LEAD Talent Platform",
+    "description": "Connect with opportunities, chapters, and partners through the LEAD Talent Platform"
   }
 }

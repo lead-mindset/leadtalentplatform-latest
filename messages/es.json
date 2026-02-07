@@ -158,5 +158,19 @@
     "remove": "Eliminar",
     "uploading": "Subiendo...",
     "fileTooLarge": "El archivo excede 10MB. Por favor elige un archivo más pequeño."
+  },
+  "sidebar": {
+    "myProfile": "Mi Perfil",
+    "chapterManagement": "Gestión de Capítulo",
+    "profileNav": "Perfil",
+    "resumeNav": "Currículum",
+    "overview": "Resumen",
+    "members": "Miembros",
+    "chapterEditor": "Editor de Capítulo",
+    "member": "Miembro"
+  },
+  "metadata": {
+    "title": "Plataforma de Talento LEAD",
+    "description": "Conéctate con oportunidades, capítulos y socios a través de la Plataforma de Talento LEAD"
   }
 }
