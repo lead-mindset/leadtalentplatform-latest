@@ -10,7 +10,7 @@ import {
 } from '../sidebar'
 import { usePathname } from 'next/navigation'
 import { User, FileText, Users, LayoutDashboard } from 'lucide-react'
-import type { ChapterRow } from '@/lib/types'
+import { useTranslations } from 'next-intl'
 
 interface DynamicSidebarProps {
   user: {
@@ -22,35 +22,50 @@ interface DynamicSidebarProps {
 }
 
 interface NavItemConfig {
-  name: string
+  nameKey: string
   href: string
   icon: React.ComponentType<any>
   showPingKey?: 'hasPendingApprovals'
 }
 
-const studentNav: NavItemConfig[] = [
-  { name: 'Profile', href: '/student/profile', icon: User },
-  { name: 'Resume', href: '/student/resume', icon: FileText },
+const studentNavConfig: NavItemConfig[] = [
+  { nameKey: 'profileNav', href: '/student/profile', icon: User },
+  { nameKey: 'resumeNav', href: '/student/resume', icon: FileText },
 ]
 
-const chapterNav: NavItemConfig[] = [
-  { name: 'Overview', href: '/chapter', icon: LayoutDashboard },
-  { name: 'Members', href: '/chapter/members', icon: Users, showPingKey: 'hasPendingApprovals' },
+const chapterNavConfig: NavItemConfig[] = [
+  { nameKey: 'overview', href: '/chapter', icon: LayoutDashboard },
+  { nameKey: 'members', href: '/chapter/members', icon: Users, showPingKey: 'hasPendingApprovals' },
 ]
 
 export function DynamicSidebar({ user, hasPendingApprovals = false }: DynamicSidebarProps) {
   const pathname = usePathname()
+  const t = useTranslations('sidebar')
 
   const isEditor = user.role === 'editor'
+
+  const studentNav = studentNavConfig.map(item => ({
+    name: t(item.nameKey),
+    href: item.href,
+    icon: item.icon,
+    showPingKey: item.showPingKey
+  }))
+
+  const chapterNav = chapterNavConfig.map(item => ({
+    name: t(item.nameKey),
+    href: item.href,
+    icon: item.icon,
+    showPingKey: item.showPingKey
+  }))
 
   return (
     <BaseSidebar
       userName={user.name}
       userEmail={user.email}
-      userRole={isEditor ? 'Chapter Editor' : 'Member'}
+      userRole={isEditor ? t('chapterEditor') : t('member')}
     >
       <SidebarGroup>
-        <SidebarGroupLabel>My Profile</SidebarGroupLabel>
+        <SidebarGroupLabel>{t('myProfile')}</SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
             {studentNav.map(item => (
@@ -66,7 +81,7 @@ export function DynamicSidebar({ user, hasPendingApprovals = false }: DynamicSid
 
       {isEditor && (
         <SidebarGroup>
-          <SidebarGroupLabel>Chapter Management</SidebarGroupLabel>
+          <SidebarGroupLabel>{t('chapterManagement')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {chapterNav.map(item => (
