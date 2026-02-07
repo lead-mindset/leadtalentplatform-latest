@@ -4,19 +4,18 @@ import { useForm, FormProvider, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useState, useEffect } from 'react'
-import { Upload, X, FileText, Loader2, Save } from 'lucide-react'
+import { X, Loader2, Save } from 'lucide-react'
 import { Checkbox } from "@/components/ui/checkbox"
-import { SKILL_OPTIONS } from '@/lib/options'
 import { FormInput } from '@/components/ui/stepper'
-import { profileUpdateSchema } from '@/lib/memberschema'
+import { createProfileUpdateSchema, ProfileData } from '@/lib/memberschema'
 import { Button } from '@/components/ui/button'
-import { supabase } from '@/lib/supabase/client'
 import CareerCommandSelect from '@/components/ui/career-combobox'
 import { useRouter } from 'next/navigation'
 import { getResume } from '@/lib/actions/student/profile'
 import { updateProfile } from '@/lib/actions/student/profile'
 import { useTranslations } from 'next-intl'
-
+import { useTranslatedSkills, useTranslatedChapters } from '@/lib/use-translated-options'
+import type { SubmitHandler } from 'react-hook-form'
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -29,26 +28,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-export type OnboardingValues = z.infer<typeof profileUpdateSchema>
-import { ProfileData } from '@/lib/memberschema'
-
-async function getLeadChapterOptions() {
-  const { data, error } = await supabase
-    .from("Chapter")
-    .select("id, name")
-    .order("name");
-
-  if (error) {
-    console.error("Error fetching chapters:", error);
-    return [];
-  }
-
-  return data.map((chapter) => ({
-    label: chapter.name,
-    value: chapter.id,
-  }));
-}
-
 interface ProfileUpdateFormProps {
   initialData: ProfileData
 }
@@ -56,23 +35,26 @@ interface ProfileUpdateFormProps {
 export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProps) {
   const t = useTranslations('profile')
   const tCommon = useTranslations('common')
+  const tOnboarding = useTranslations('onboarding')
+  const tValidation = useTranslations()
+  
+  const translatedSkills = useTranslatedSkills()
+  const translatedChapters = useTranslatedChapters()
   
   const [fileName, setFileName] = useState('')
   const [isUploading, setIsUploading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [chapterOptions, setChapterOptions] = useState<{ label: string; value: string }[]>([]);
   const [resumeUrl, setResumeUrl] = useState<string | null>(null)
   const router = useRouter()
 
-  useEffect(() => {
-    getLeadChapterOptions().then(setChapterOptions);
-  }, []);
+const profileUpdateSchema = createProfileUpdateSchema(tValidation)
+  type OnboardingValues = z.infer<typeof profileUpdateSchema>
 
   useEffect(() => {
     async function fetchResume() {
       if (!initialData?.id) return
 
-      const data = await getResume(initialData.id);
+      const data = await getResume(initialData.id)
 
       if (data) {
         setResumeUrl(data.fileUrl)
@@ -96,6 +78,8 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
       linkedin_url: initialData?.linkedin_url || '',
       resume_pdf: undefined,
       consentRecruiterVisibility: initialData?.consentRecruiterVisibility || false,
+      emailNotificationsEnabled: initialData?.emailNotificationsEnabled ?? true,
+
     },
   })
 
@@ -105,58 +89,41 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
     formState: { errors, isDirty },
   } = methods
 
-  const onSubmit = async (data: OnboardingValues) => {
-    setIsSaving(true);
+const onSubmit: SubmitHandler<OnboardingValues> = async (data) => {
+  setIsSaving(true)
 
-    try {
-      const formData = new FormData();
+  try {
+    const formData = new FormData()
 
-      formData.append("full_name", data.full_name);
-      formData.append("phone", data.phone);
-      formData.append("lead_chapter", data.lead_chapter || "");
-      formData.append("career", data.career);
-      formData.append("graduationYear", String(data.graduationYear || 0));
-      formData.append("skills", JSON.stringify(data.skills));
-      formData.append("linkedin_url", data.linkedin_url || "");
-      formData.append("consentRecruiterVisibility", String(data.consentRecruiterVisibility));
+    formData.append("full_name", data.full_name)
+    formData.append("phone", data.phone)
+    formData.append("lead_chapter", data.lead_chapter || "")
+    formData.append("career", data.career)
+    formData.append("graduationYear", String(data.graduationYear || 0))
+    formData.append("skills", JSON.stringify(data.skills))
+    formData.append("linkedin_url", data.linkedin_url || "")
+    formData.append("consentRecruiterVisibility", String(data.consentRecruiterVisibility))
+    formData.append("emailNotificationsEnabled", String(data.emailNotificationsEnabled)) 
 
-      if (data.resume_pdf) {
-        formData.append("resume", data.resume_pdf);
-      }
-
-      const result = await updateProfile(formData);
-
-      if (!result.success) {
-        throw new Error(result.error ?? t('updateFailed'));
-      }
-
-      alert(t('updateSuccess'));
-      router.refresh();
-    } catch (err: any) {
-      console.error(err);
-      alert(t('updateError'));
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleFileChange =
-    (onChange: any) => (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0]
-      if (!file) return
-
-      setIsUploading(true)
-      setTimeout(() => {
-        setFileName(file.name)
-        onChange(file)
-        setIsUploading(false)
-      }, 500)
+    if (data.resume_pdf) {
+      formData.append("resume", data.resume_pdf)
     }
 
-  const removeFile = (onChange: any) => {
-    setFileName('')
-    onChange(undefined)
+    const result = await updateProfile(formData)
+
+    if (!result.success) {
+      throw new Error(result.error ?? t('updateFailed'))
+    }
+
+    alert(t('updateSuccess'))
+    router.refresh()
+  } catch (err: any) {
+    console.error(err)
+    alert(t('updateError'))
+  } finally {
+    setIsSaving(false)
   }
+}
 
   return (
     <FormProvider {...methods}>
@@ -170,7 +137,6 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
               {t('personalInfo.subtitle')}
             </p>
           </div>
-
           <div className="space-y-4">
             <FormInput
               label={t('personalInfo.fullName')}
@@ -204,7 +170,7 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
                     </SelectTrigger>
 
                     <SelectContent>
-                      {chapterOptions.map((option: any) => (
+                      {translatedChapters.map((option) => (
                         <SelectItem
                           key={option.value}
                           value={option.value}
@@ -281,7 +247,7 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
                     spacing={2}
                     className="grid grid-cols-2 w-full"
                   >
-                    {SKILL_OPTIONS.map((skill) => (
+                    {translatedSkills.map((skill) => (
                       <ToggleGroupItem
                         key={skill.value}
                         value={skill.value}
@@ -290,7 +256,7 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
                       >
                         <span className="text-base">{skill.icon}</span>
                         <span className="flex-1 text-left">
-                          {skill.value}
+                          {skill.label}
                         </span>
                       </ToggleGroupItem>
                     ))}
@@ -361,6 +327,37 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
                 </div>
               )}
             />
+
+              <Controller
+              control={control}
+              name="emailNotificationsEnabled"
+              render={({ field }) => (
+                <div className="space-y-2">
+                  <div className="rounded-lg border border-border bg-muted/50 p-4">
+                    <label className="flex cursor-pointer items-start gap-3">
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={(checked) =>
+                          field.onChange(Boolean(checked))
+                        }
+                        className="mt-0.5"
+                      />
+
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-foreground">
+                          {t('professional.emailNotificationsLabel')}
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {t('professional.emailNotificationsDesc')}
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              )}
+            />
+
+
           </div>
         </div>
 
