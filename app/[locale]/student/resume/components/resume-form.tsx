@@ -79,7 +79,7 @@ export default function ResumeClient({
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 p-6">
+    <div className="w-full max-w-2xl mx-auto space-y-6 px-4 py-6 sm:px-6">
       {resume && (
         <Card className="border-border/50 shadow-sm">
           <CardHeader className="pb-3">
@@ -92,16 +92,16 @@ export default function ResumeClient({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-start gap-4 p-4 rounded-lg bg-muted/30 border border-border/50 transition-colors hover:bg-muted/50">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                <FileText className="h-6 w-6 text-primary" />
+            <div className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg bg-muted/30 border border-border/50 transition-colors hover:bg-muted/50">
+              <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
               </div>
               <div className="flex-1 min-w-0 space-y-1">
-                <p className="font-medium text-foreground truncate">{resume.fileName}</p>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <p className="font-medium text-foreground truncate text-sm sm:text-base">{resume.fileName}</p>
+                <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
                   <span>{formatFileSize(resume.fileSize)}</span>
-                  <span>•</span>
-                  <span>{t('uploaded')} {formatDate(resume.uploadedAt)}</span>
+                  <span className="hidden sm:inline">•</span>
+                  <span className="w-full sm:w-auto">{t('uploaded')} {formatDate(resume.uploadedAt)}</span>
                 </div>
               </div>
               <Button 
@@ -117,7 +117,7 @@ export default function ResumeClient({
                   className="inline-flex items-center gap-2"
                 >
                   <Download className="h-4 w-4" />
-                  {t('download')}
+                  <span className="hidden sm:inline">{t('download')}</span>
                 </a>
               </Button>
             </div>
@@ -174,14 +174,14 @@ export default function ResumeClient({
                 disabled={isPending}
               />
               
-              <div className="p-8 text-center">
+              <div className="p-6 sm:p-8 text-center">
                 {selectedFile ? (
                   <div className="space-y-3">
                     <div className="flex h-12 w-12 mx-auto items-center justify-center rounded-lg bg-primary/10">
                       <FileText className="h-6 w-6 text-primary" />
                     </div>
-                    <div className="space-y-1">
-                      <p className="font-medium text-foreground">{selectedFile.name}</p>
+                    <div className="space-y-1 min-w-0">
+                      <p className="font-medium text-foreground break-words px-2">{selectedFile.name}</p>
                       <p className="text-sm text-muted-foreground">
                         {formatFileSize(selectedFile.size)}
                       </p>
