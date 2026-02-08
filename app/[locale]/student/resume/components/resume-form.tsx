@@ -2,7 +2,7 @@
 import { useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Upload, Download, FileText, CheckCircle2, AlertCircle, X } from 'lucide-react'
+import { Upload, Download, FileText, CheckCircle2, AlertCircle, X, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
 
@@ -79,58 +79,71 @@ export default function ResumeClient({
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto space-y-6">
+    <div className="w-full max-w-2xl mx-auto space-y-5">
       {resume && (
-        <Card className="border-border/50 shadow-sm">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-primary" />
-              <CardTitle className="text-lg">{t('currentResume')}</CardTitle>
+        <Card className="overflow-hidden border-border/60 bg-gradient-to-br from-card/50 to-card/30 shadow-sm backdrop-blur-sm">
+          <CardHeader className="pb-4 space-y-2">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                <CheckCircle2 className="h-4.5 w-4.5 text-primary" />
+              </div>
+              <CardTitle className="text-lg font-semibold tracking-tight">
+                {t('currentResume')}
+              </CardTitle>
             </div>
-            <CardDescription>
+            <CardDescription className="text-sm">
               {t('currentResumeDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg bg-muted/30 border border-border/50 transition-colors hover:bg-muted/50">
-              <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0 space-y-1 max-w-[120px] xs:max-w-[150px] sm:max-w-none">
-                <p className="font-medium text-foreground truncate text-sm sm:text-base overflow-hidden">{resume.fileName}</p>
-                <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
-                  <span className="whitespace-nowrap">{formatFileSize(resume.fileSize)}</span>
-                  <span className="hidden sm:inline">•</span>
-                  <span className="whitespace-nowrap">{t('uploaded')} {formatDate(resume.uploadedAt)}</span>
+            <div className="group relative overflow-hidden rounded-lg border border-border/60 bg-gradient-to-br from-muted/40 to-muted/20 p-4 transition-all duration-200 hover:border-border hover:shadow-sm">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 transition-transform duration-200 group-hover:scale-105">
+                  <FileText className="h-6 w-6 text-primary" />
                 </div>
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="shrink-0"
-                asChild
-              >
-                <a 
-                  href={resume.fileUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2"
+                <div className="flex-1 min-w-0 space-y-1.5">
+                  <p className="font-medium text-foreground truncate text-sm sm:text-base">
+                    {resume.fileName}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <span className="whitespace-nowrap font-medium">{formatFileSize(resume.fileSize)}</span>
+                    <span className="hidden sm:inline text-muted-foreground/50">•</span>
+                    <span className="whitespace-nowrap">{t('uploaded')} {formatDate(resume.uploadedAt)}</span>
+                  </div>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="shrink-0 shadow-sm hover:shadow transition-shadow"
+                  asChild
                 >
-                  <Download className="h-4 w-4" />
-                  <span className="hidden sm:inline">{t('download')}</span>
-                </a>
-              </Button>
+                  <a 
+                    href={resume.fileUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2"
+                  >
+                    <Download className="h-4 w-4" />
+                    <span className="hidden sm:inline">{t('download')}</span>
+                  </a>
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
       )}
       
-      <Card className="border-border/50 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg">
-            {resume ? t('updateResume') : t('uploadResume')}
-          </CardTitle>
-          <CardDescription>
+      <Card className="overflow-hidden border-border/60 bg-gradient-to-br from-card/50 to-card/30 shadow-sm backdrop-blur-sm">
+        <CardHeader className="pb-4 space-y-2">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+              <Upload className="h-4.5 w-4.5 text-primary" />
+            </div>
+            <CardTitle className="text-lg font-semibold tracking-tight">
+              {resume ? t('updateResume') : t('uploadResume')}
+            </CardTitle>
+          </div>
+          <CardDescription className="text-sm">
             {resume 
               ? t('updateResumeDesc') 
               : t('uploadResumeDesc')
@@ -156,11 +169,11 @@ export default function ResumeClient({
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               className={cn(
-                "relative rounded-lg border-2 border-dashed transition-all duration-200",
+                "relative overflow-hidden rounded-xl border-2 border-dashed transition-all duration-300",
                 isDragging 
-                  ? "border-primary bg-primary/5 scale-[1.02]" 
-                  : "border-border hover:border-primary/50 hover:bg-muted/30",
-                selectedFile && "border-primary bg-primary/5"
+                  ? "border-primary bg-primary/5 scale-[1.01] shadow-sm" 
+                  : "border-border/60 hover:border-primary/40 hover:bg-muted/20",
+                selectedFile && "border-primary/60 bg-primary/5 shadow-sm"
               )}
             >
               <input
@@ -174,15 +187,24 @@ export default function ResumeClient({
                 disabled={isPending}
               />
               
-              <div className="p-6 sm:p-8 text-center">
+              <div className="p-8 sm:p-10 text-center">
                 {selectedFile ? (
-                  <div className="space-y-3">
-                    <div className="flex h-12 w-12 mx-auto items-center justify-center rounded-lg bg-primary/10">
-                      <FileText className="h-6 w-6 text-primary" />
+                  <div className="space-y-4">
+                    <div className="relative mx-auto">
+                      <div className="flex h-14 w-14 mx-auto items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 to-primary/5">
+                        <FileText className="h-7 w-7 text-primary" />
+                      </div>
+                      <div className="absolute -top-1 -right-1">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary shadow-sm">
+                          <Sparkles className="h-3.5 w-3.5 text-primary-foreground" />
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-1 min-w-0">
-                      <p className="font-medium text-foreground break-words px-2">{selectedFile.name}</p>
-                      <p className="text-sm text-muted-foreground">
+                    <div className="space-y-1.5 min-w-0">
+                      <p className="font-medium text-foreground break-words px-2 text-sm">
+                        {selectedFile.name}
+                      </p>
+                      <p className="text-sm text-muted-foreground font-medium">
                         {formatFileSize(selectedFile.size)}
                       </p>
                     </div>
@@ -194,18 +216,18 @@ export default function ResumeClient({
                         setSelectedFile(null)
                         if (fileInputRef.current) fileInputRef.current.value = ''
                       }}
-                      className="mt-2"
+                      className="mt-2 hover:bg-destructive/10 hover:text-destructive"
                     >
                       <X className="h-4 w-4 mr-2" />
                       {t('remove')}
                     </Button>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    <div className="flex h-12 w-12 mx-auto items-center justify-center rounded-lg bg-muted">
-                      <Upload className="h-6 w-6 text-muted-foreground" />
+                  <div className="space-y-4">
+                    <div className="flex h-14 w-14 mx-auto items-center justify-center rounded-xl bg-gradient-to-br from-muted/60 to-muted/30 transition-transform duration-200 hover:scale-105">
+                      <Upload className="h-7 w-7 text-muted-foreground" />
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                       <p className="text-sm font-medium text-foreground">
                         {isDragging ? t('dropHere') : t('dropResume')}
                       </p>
@@ -214,24 +236,25 @@ export default function ResumeClient({
                         <button
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
-                          className="text-primary hover:underline font-medium"
+                          className="text-primary hover:underline font-semibold underline-offset-2 transition-colors"
                         >
                           {t('browse')}
                         </button>
                       </p>
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <div className="inline-flex items-center gap-1.5 rounded-full bg-muted/50 px-3 py-1 text-xs text-muted-foreground">
+                      <FileText className="h-3 w-3" />
                       {t('pdfOnly')}
-                    </p>
+                    </div>
                   </div>
                 )}
               </div>
             </div>
 
             {selectedFile && selectedFile.size > 10 * 1024 * 1024 && (
-              <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
-                <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
-                <p className="text-sm text-destructive">
+              <div className="flex items-start gap-2.5 p-3.5 rounded-lg bg-destructive/10 border border-destructive/20">
+                <AlertCircle className="h-4.5 w-4.5 text-destructive shrink-0 mt-0.5" />
+                <p className="text-sm text-destructive font-medium">
                   {t('fileTooLarge')}
                 </p>
               </div>
@@ -240,7 +263,7 @@ export default function ResumeClient({
             <Button 
               type="submit" 
               disabled={isPending || !selectedFile || (selectedFile && selectedFile.size > 10 * 1024 * 1024)}
-              className="w-full"
+              className="w-full shadow-sm"
               size="lg"
             >
               {isPending ? (
