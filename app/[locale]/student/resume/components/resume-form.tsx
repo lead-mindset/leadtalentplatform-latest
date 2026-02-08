@@ -79,7 +79,7 @@ export default function ResumeClient({
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto space-y-6 px-4 py-6 sm:px-6">
+    <div className="w-full max-w-2xl mx-auto space-y-6">
       {resume && (
         <Card className="border-border/50 shadow-sm">
           <CardHeader className="pb-3">
@@ -96,12 +96,12 @@ export default function ResumeClient({
               <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10">
                 <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
               </div>
-              <div className="flex-1 min-w-0 space-y-1">
-                <p className="font-medium text-foreground truncate text-sm sm:text-base">{resume.fileName}</p>
+              <div className="flex-1 min-w-0 space-y-1 max-w-[120px] xs:max-w-[150px] sm:max-w-none">
+                <p className="font-medium text-foreground truncate text-sm sm:text-base overflow-hidden">{resume.fileName}</p>
                 <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
-                  <span>{formatFileSize(resume.fileSize)}</span>
+                  <span className="whitespace-nowrap">{formatFileSize(resume.fileSize)}</span>
                   <span className="hidden sm:inline">•</span>
-                  <span className="w-full sm:w-auto">{t('uploaded')} {formatDate(resume.uploadedAt)}</span>
+                  <span className="whitespace-nowrap">{t('uploaded')} {formatDate(resume.uploadedAt)}</span>
                 </div>
               </div>
               <Button 
