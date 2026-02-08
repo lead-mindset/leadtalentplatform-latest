@@ -1,35 +1,32 @@
-import { SidebarProvider } from "../sidebar"
-import { ReactNode } from "react"
-import { MobileSidebarWrapper } from "./mobile-header"
+'use client'
+
+import { 
+  SidebarProvider, 
+  SidebarInset, 
+  SidebarTrigger 
+} from '@/components/ui/sidebar'
+import type { ReactNode } from 'react'
 
 interface SidebarLayoutProps {
   sidebar: ReactNode
-  mobileSidebar: ReactNode
   children: ReactNode
 }
 
-export function SidebarLayout({ 
-  sidebar,
-  mobileSidebar,
-  children,
-}: SidebarLayoutProps) {
+export function SidebarLayout({ sidebar, children }: SidebarLayoutProps) {
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full">
-        <aside className="hidden md:flex">
-          {sidebar}
-        </aside>
-
-        <div className="flex-1 flex flex-col w-full">
-          <MobileSidebarWrapper>
-            {mobileSidebar}
-          </MobileSidebarWrapper>
-
-          <main className="flex-1 overflow-y-auto bg-background p-4 md:p-8">
-            {children}
-          </main>
-        </div>
-      </div>
+      {sidebar}
+      
+      <SidebarInset>
+        <header className="flex h-14 shrink-0 items-center gap-4 border-b px-4 md:hidden">
+          <SidebarTrigger />
+          <h1 className="text-sm font-semibold">Dashboard</h1>
+        </header>
+        
+        <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
+          {children}
+        </main>
+      </SidebarInset>
     </SidebarProvider>
   )
 }
