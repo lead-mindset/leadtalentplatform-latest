@@ -127,17 +127,25 @@ const onSubmit: SubmitHandler<OnboardingValues> = async (data) => {
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-        <div className="space-y-5">
-          <div className="space-y-2">
-            <h2 className="text-3xl font-bold text-foreground">
-              👋 {t('personalInfo.title')}
-            </h2>
-            <p className="text-base text-muted-foreground">
-              {t('personalInfo.subtitle')}
-            </p>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-12">
+        <div className="space-y-6">
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 text-2xl">
+                👋
+              </div>
+              <div>
+                <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+                  {t('personalInfo.title')}
+                </h2>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {t('personalInfo.subtitle')}
+                </p>
+              </div>
+            </div>
           </div>
-          <div className="space-y-4">
+          
+          <div className="grid gap-5 rounded-xl border border-border/60 bg-card/30 p-6 shadow-sm backdrop-blur-sm">
             <FormInput
               label={t('personalInfo.fullName')}
               name="full_name"
@@ -157,7 +165,7 @@ const onSubmit: SubmitHandler<OnboardingValues> = async (data) => {
               name="lead_chapter"
               render={({ field }) => (
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">
+                  <label className="text-sm font-medium text-foreground">
                     {t('personalInfo.leadChapter')}
                   </label>
 
@@ -165,7 +173,7 @@ const onSubmit: SubmitHandler<OnboardingValues> = async (data) => {
                     value={field.value}
                     onValueChange={field.onChange}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-11">
                       <SelectValue placeholder={t('personalInfo.selectChapter')} />
                     </SelectTrigger>
 
@@ -182,8 +190,8 @@ const onSubmit: SubmitHandler<OnboardingValues> = async (data) => {
                   </Select>
 
                   {errors.lead_chapter && (
-                    <p className="flex items-center gap-1 text-sm text-destructive">
-                      <X className="h-3 w-3" />
+                    <p className="flex items-center gap-1.5 text-sm text-destructive">
+                      <X className="h-3.5 w-3.5" />
                       {errors.lead_chapter.message}
                     </p>
                   )}
@@ -193,17 +201,24 @@ const onSubmit: SubmitHandler<OnboardingValues> = async (data) => {
           </div>
         </div>
 
-        <div className="space-y-5">
-          <div className="space-y-2">
-            <h2 className="text-3xl font-bold text-foreground">
-              🎓 {t('academic.title')}
-            </h2>
-            <p className="text-base text-muted-foreground">
-              {t('academic.subtitle')}
-            </p>
+        <div className="space-y-6">
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 text-2xl">
+                🎓
+              </div>
+              <div>
+                <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+                  {t('academic.title')}
+                </h2>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {t('academic.subtitle')}
+                </p>
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="grid gap-5 rounded-xl border border-border/60 bg-card/30 p-6 shadow-sm backdrop-blur-sm">
             <Controller
               control={control}
               name="career"
@@ -229,11 +244,11 @@ const onSubmit: SubmitHandler<OnboardingValues> = async (data) => {
               name="skills"
               render={({ field }) => (
                 <div className="space-y-3">
-                  <div className="flex justify-between">
+                  <div className="flex items-center justify-between">
                     <label className="text-sm font-medium text-foreground">
                       {t('academic.skills')}
                     </label>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
                       {field.value.length} {t('academic.selected')}
                     </span>
                   </div>
@@ -245,17 +260,17 @@ const onSubmit: SubmitHandler<OnboardingValues> = async (data) => {
                     variant="outline"
                     size="sm"
                     spacing={2}
-                    className="grid grid-cols-2 w-full"
+                    className="grid sm:grid-cols-2 gap-2.5 w-full"
                   >
                     {translatedSkills.map((skill) => (
                       <ToggleGroupItem
                         key={skill.value}
                         value={skill.value}
                         aria-label={skill.value}
-                        className="justify-start gap-2 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:border-primary"
+                        className="h-auto justify-start gap-2.5 px-3.5 py-1 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:border-primary data-[state=on]:shadow-sm transition-all duration-200"
                       >
-                        <span className="text-base">{skill.icon}</span>
-                        <span className="flex-1 text-left">
+                        <span className="text-lg">{skill.icon}</span>
+                        <span className="flex-1 text-left text-sm font-medium">
                           {skill.label}
                         </span>
                       </ToggleGroupItem>
@@ -263,8 +278,8 @@ const onSubmit: SubmitHandler<OnboardingValues> = async (data) => {
                   </ToggleGroup>
 
                   {errors.skills && (
-                    <p className="flex items-center gap-1 text-sm text-destructive">
-                      <X className="h-3 w-3" />
+                    <p className="flex items-center gap-1.5 text-sm text-destructive">
+                      <X className="h-3.5 w-3.5" />
                       {errors.skills.message}
                     </p>
                   )}
@@ -274,17 +289,24 @@ const onSubmit: SubmitHandler<OnboardingValues> = async (data) => {
           </div>
         </div>
 
-        <div className="space-y-5">
-          <div className="space-y-2">
-            <h2 className="text-3xl font-bold text-foreground">
-              💼 {t('professional.title')}
-            </h2>
-            <p className="text-base text-muted-foreground">
-              {t('professional.subtitle')}
-            </p>
+        <div className="space-y-6">
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 text-2xl">
+                💼
+              </div>
+              <div>
+                <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+                  {t('professional.title')}
+                </h2>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {t('professional.subtitle')}
+                </p>
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="grid gap-5 rounded-xl border border-border/60 bg-card/30 p-6 shadow-sm backdrop-blur-sm">
             <FormInput
               label={t('professional.linkedin')}
               name="linkedin_url"
@@ -297,21 +319,21 @@ const onSubmit: SubmitHandler<OnboardingValues> = async (data) => {
               name="consentRecruiterVisibility"
               render={({ field }) => (
                 <div className="space-y-2">
-                  <div className="rounded-lg border border-border bg-muted/50 p-4">
-                    <label className="flex cursor-pointer items-start gap-3">
+                  <div className="group relative overflow-hidden rounded-lg border border-border/60 bg-gradient-to-br from-muted/40 to-muted/20 p-4 transition-all duration-200 hover:border-border hover:shadow-sm">
+                    <label className="flex cursor-pointer items-start gap-3.5">
                       <Checkbox
                         checked={field.value}
                         onCheckedChange={(checked) =>
                           field.onChange(Boolean(checked))
                         }
-                        className="mt-0.5"
+                        className="mt-0.5 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                       />
 
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-foreground">
+                      <div className="flex-1 space-y-1">
+                        <p className="text-sm font-medium text-foreground leading-relaxed">
                           {t('professional.visibility')}
                         </p>
-                        <p className="mt-1 text-xs text-muted-foreground">
+                        <p className="text-xs text-muted-foreground leading-relaxed">
                           {t('professional.visibilityDesc')}
                         </p>
                       </div>
@@ -319,8 +341,8 @@ const onSubmit: SubmitHandler<OnboardingValues> = async (data) => {
                   </div>
 
                   {errors.consentRecruiterVisibility && (
-                    <p className="flex items-center gap-1 text-sm text-destructive">
-                      <X className="h-3 w-3" />
+                    <p className="flex items-center gap-1.5 text-sm text-destructive">
+                      <X className="h-3.5 w-3.5" />
                       {errors.consentRecruiterVisibility.message}
                     </p>
                   )}
@@ -328,26 +350,26 @@ const onSubmit: SubmitHandler<OnboardingValues> = async (data) => {
               )}
             />
 
-              <Controller
+            <Controller
               control={control}
               name="emailNotificationsEnabled"
               render={({ field }) => (
                 <div className="space-y-2">
-                  <div className="rounded-lg border border-border bg-muted/50 p-4">
-                    <label className="flex cursor-pointer items-start gap-3">
+                  <div className="group relative overflow-hidden rounded-lg border border-border/60 bg-gradient-to-br from-muted/40 to-muted/20 p-4 transition-all duration-200 hover:border-border hover:shadow-sm">
+                    <label className="flex cursor-pointer items-start gap-3.5">
                       <Checkbox
                         checked={field.value}
                         onCheckedChange={(checked) =>
                           field.onChange(Boolean(checked))
                         }
-                        className="mt-0.5"
+                        className="mt-0.5 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                       />
 
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-foreground">
+                      <div className="flex-1 space-y-1">
+                        <p className="text-sm font-medium text-foreground leading-relaxed">
                           {t('professional.emailNotificationsLabel')}
                         </p>
-                        <p className="mt-1 text-xs text-muted-foreground">
+                        <p className="text-xs text-muted-foreground leading-relaxed">
                           {t('professional.emailNotificationsDesc')}
                         </p>
                       </div>
@@ -356,16 +378,15 @@ const onSubmit: SubmitHandler<OnboardingValues> = async (data) => {
                 </div>
               )}
             />
-
-
           </div>
         </div>
 
-        <div className="flex justify-end gap-4 pt-4 border-t">
+        <div className="flex items-center justify-end gap-3 rounded-xl border border-border/60 bg-gradient-to-br from-muted/20 to-transparent p-5 shadow-sm backdrop-blur-sm">
           <Button
             type="submit"
             disabled={isSaving}
-            className="min-w-32"
+            className="min-w-32 shadow-sm"
+            size="lg"
           >
             {isSaving ? (
               <>
