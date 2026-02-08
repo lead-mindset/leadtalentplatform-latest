@@ -34,7 +34,57 @@ export const NAV_LINKS: NavLink[] = [
   },
 ];
 
+import type { LucideIcon } from 'lucide-react'
 
+export interface User {
+  name: string
+  email: string
+  role: string
+}
+
+export interface NavItem {
+  nameKey: string
+  href: string
+  icon: LucideIcon
+  showPingOn?: 'hasPendingApprovals'
+  badge?: number
+}
+
+export const USER_ROLES = {
+  EDITOR: 'editor',
+  MEMBER: 'member',
+} as const
+
+export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES]
+
+import { User, FileText, Users, LayoutDashboard } from 'lucide-react'
+
+export const STUDENT_NAV: readonly NavItem[] = [
+  { 
+    nameKey: 'profileNav', 
+    href: '/student/profile', 
+    icon: User 
+  },
+  { 
+    nameKey: 'resumeNav', 
+    href: '/student/resume', 
+    icon: FileText 
+  },
+] as const
+
+export const CHAPTER_NAV: readonly NavItem[] = [
+  { 
+    nameKey: 'overview', 
+    href: '/chapter', 
+    icon: LayoutDashboard 
+  },
+  { 
+    nameKey: 'members', 
+    href: '/chapter/members', 
+    icon: Users,
+    showPingOn: 'hasPendingApprovals'
+  },
+] as const
 // ============================================================================
 // DATABASE TYPES - Core schema types matching database exactly
 // ============================================================================
