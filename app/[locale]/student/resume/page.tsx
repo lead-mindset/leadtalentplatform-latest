@@ -67,7 +67,7 @@ export default function StudentResumePage() {
   if (loading) return <div className="p-8">Loading...</div>
 
   return (
-    <div className="p-8 max-w-3xl mx-auto space-y-6">
+    <div className="p-4 max-w-3xl mx-auto space-y-6">
       <h1 className="text-3xl font-bold">My Resume</h1>
 
       <ResumeClient
