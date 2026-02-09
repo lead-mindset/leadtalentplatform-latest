@@ -1,12 +1,20 @@
 import { SidebarLayout } from '@/components/ui/sidebars/sidebar-layout'
-import { DynamicSidebar } from '@/components/ui/sidebars/dynamic-sidebar'
-import { redirect } from 'next/navigation'
+import { BaseSidebar } from '@/components/ui/sidebars/base-sidebar'
+import { StudentNavigation } from '@/components/ui/sidebars/student-sidebar'
 import { requireUser, getSidebarStatsForEditor } from '@/lib/auth'
+import { redirect } from 'next/navigation'
+import type { ReactNode } from 'react'
 
-async function SidebarContent() {
+interface ChapterLayoutProps {
+  children: ReactNode
+}
+
+export default async function ChapterLayout({ children }: ChapterLayoutProps) {
   const { supabase, user } = await requireUser()
 
-  if (user.role !== 'editor') redirect('/student')
+  if (user.role !== 'editor') {
+    redirect('/student')
+  }
 
   const { data: profile } = await supabase
     .from('StudentProfile')
@@ -22,13 +30,22 @@ async function SidebarContent() {
     supabase,
     profile.chapterId
   )
-
-  return <DynamicSidebar user={user} hasPendingApprovals={hasPendingApprovals} />
-}
-
-export default function ChapterLayout({ children }: { children: React.ReactNode }) {
+  
   return (
-    <SidebarLayout Sidebar={SidebarContent}>
+    <SidebarLayout
+      sidebar={
+        <BaseSidebar
+          userName={user.name}
+          userEmail={user.email}
+          userRole={user.role}
+        >
+          <StudentNavigation 
+            userRole={user.role}
+            hasPendingApprovals={hasPendingApprovals}
+          />
+        </BaseSidebar>
+      }
+    >
       {children}
     </SidebarLayout>
   )
