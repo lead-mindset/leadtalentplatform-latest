@@ -3,31 +3,41 @@
 import { Link } from '@/i18n/routing'
 import { usePathname } from 'next/navigation'
 import { SidebarMenuItem, SidebarMenuButton, useSidebar } from '@/components/ui/sidebar'
-import type { LucideIcon } from 'lucide-react'
+import type { NavItemConfig } from '@/lib/nav-config'
 
 interface SidebarNavItemProps {
-  href: string
-  icon: LucideIcon
-  label: string
+  item: NavItemConfig
   badge?: number
   showPing?: boolean
+  exact?: boolean
+  onClick?: () => void
 }
 
 export function SidebarNavItem({ 
-  href,
-  icon: Icon,
-  label,
+  item,
   badge,
-  showPing
+  showPing,
+  exact = false,
+  onClick,
 }: SidebarNavItemProps) {
   const pathname = usePathname()
   const sidebar = useSidebar()
   
-  const isActive = href === '/chapter' 
-    ? pathname === '/chapter'
-    : pathname.startsWith(href)
+  const Icon = item.icon
+  
+  const isActive = exact
+    ? pathname === item.href
+    : item.href === '/' || 
+      item.href === '/chapter' || 
+      item.href === '/admin' || 
+      item.href === '/company' || 
+      item.href === '/student'
+      ? pathname === item.href
+      : pathname.startsWith(item.href)
 
   const handleClick = () => {
+    onClick?.()
+    
     if (sidebar?.isMobile) {
       sidebar.setOpenMobile(false)
     }
@@ -37,19 +47,19 @@ export function SidebarNavItem({
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={isActive}>
         <Link 
-          href={href} 
+          href={item.href} 
           className="relative"
           onClick={handleClick}
         >
           <Icon className="h-4 w-4" />
-          <span>{label}</span>
+          <span>{item.label}</span>
           
           {badge !== undefined && badge > 0 && (
             <span 
               className="ml-auto min-w-5 rounded-full bg-secondary px-1.5 py-0.5 text-xs font-medium tabular-nums"
               aria-label={`${badge} items`}
             >
-              {badge}
+              {badge > 99 ? '99+' : badge}
             </span>
           )}
           
