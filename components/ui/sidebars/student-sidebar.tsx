@@ -1,48 +1,35 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { SidebarNavItem } from './nav-item'
 import {
+  SidebarMenu,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarMenu,
 } from '@/components/ui/sidebar'
+import { STUDENT_NAV, CHAPTER_NAV } from '@/lib/nav-config'
 
-import { STUDENT_NAV, CHAPTER_NAV } from '@/lib/types'
-import { USER_ROLES } from '@/lib/types'
-import { SidebarNavItem } from './nav-item'
 interface StudentNavigationProps {
   userRole: string
-  hasPendingApprovals?: boolean
-}
-
-function isPathActive(pathname: string, href: string): boolean {
-  if (href === '/chapter') return pathname === '/chapter'
-  return pathname.startsWith(href)
+  hasPendingApprovals: boolean
 }
 
 export function StudentNavigation({ 
   userRole, 
-  hasPendingApprovals = false 
+  hasPendingApprovals 
 }: StudentNavigationProps) {
-  const pathname = usePathname()
-  const t = useTranslations('sidebar')
-  
-  const isEditor = userRole === USER_ROLES.EDITOR
+  const isEditor = userRole === 'editor'
 
   return (
     <>
       <SidebarGroup>
-        <SidebarGroupLabel>{t('myProfile')}</SidebarGroupLabel>
+        <SidebarGroupLabel>My Profile</SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
-            {STUDENT_NAV.map(({ nameKey, href, icon }) => (
+            {STUDENT_NAV.map((item) => (
               <SidebarNavItem
-                key={href}
-                href={href}
-                icon={icon}
-                label={t(nameKey)}
+                key={item.id}
+                item={item}
               />
             ))}
           </SidebarMenu>
@@ -51,16 +38,14 @@ export function StudentNavigation({
 
       {isEditor && (
         <SidebarGroup>
-          <SidebarGroupLabel>{t('chapterManagement')}</SidebarGroupLabel>
+          <SidebarGroupLabel>Chapter Management</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {CHAPTER_NAV.map(({ nameKey, href, icon, showPingOn }) => (
+              {CHAPTER_NAV.map((item) => (
                 <SidebarNavItem
-                  key={href}
-                  href={href}
-                  icon={icon}
-                  label={t(nameKey)}
-                  showPing={showPingOn === 'hasPendingApprovals' && hasPendingApprovals}
+                  key={item.id}
+                  item={item}
+                  showPing={item.id === 'students' && hasPendingApprovals}
                 />
               ))}
             </SidebarMenu>
