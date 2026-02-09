@@ -1,16 +1,29 @@
 import { SidebarLayout } from '@/components/ui/sidebars/sidebar-layout'
-import { AdminSidebar } from '@/components/ui/sidebars/admin-sidebar'
-import { getSidebarStatsForAdmin, requireAdmin } from '@/lib/auth'
+import { BaseSidebar } from '@/components/ui/sidebars/base-sidebar'
+import { AdminNavigation } from '@/components/ui/sidebars/admin-sidebar'
+import { requireAdmin, getSidebarStatsForAdmin } from '@/lib/auth'
+import type { ReactNode } from 'react'
 
-async function SidebarContent() {
-  const { supabase, user } = await requireAdmin()
-  const stats = await getSidebarStatsForAdmin(supabase)
-  return <AdminSidebar user={user} stats={stats} />
+interface AdminLayoutProps {
+  children: ReactNode
 }
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({ children }: AdminLayoutProps) {
+  const { supabase, user } = await requireAdmin()
+  const stats = await getSidebarStatsForAdmin(supabase)
+  
   return (
-    <SidebarLayout Sidebar={SidebarContent}>
+    <SidebarLayout
+      sidebar={
+        <BaseSidebar
+          userName={user.name}
+          userEmail={user.email}
+          userRole={user.role}
+        >
+          <AdminNavigation stats={stats} />
+        </BaseSidebar>
+      }
+    >
       {children}
     </SidebarLayout>
   )
