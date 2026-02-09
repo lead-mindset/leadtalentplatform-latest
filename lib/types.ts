@@ -1,5 +1,7 @@
 export type Role = "admin" | "editor" | "member" | "recruiter";
 
+import type { LucideIcon } from 'lucide-react';
+
 export type NavLink = {
   label: string;
   href: string;
@@ -34,7 +36,6 @@ export const NAV_LINKS: NavLink[] = [
   },
 ];
 
-import type { LucideIcon } from 'lucide-react'
 
 export interface User {
   name: string
@@ -59,32 +60,6 @@ export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES]
 
 import { User, FileText, Users, LayoutDashboard } from 'lucide-react'
 
-export const STUDENT_NAV: readonly NavItem[] = [
-  { 
-    nameKey: 'profileNav', 
-    href: '/student/profile', 
-    icon: User 
-  },
-  { 
-    nameKey: 'resumeNav', 
-    href: '/student/resume', 
-    icon: FileText 
-  },
-] as const
-
-export const CHAPTER_NAV: readonly NavItem[] = [
-  { 
-    nameKey: 'overview', 
-    href: '/chapter', 
-    icon: LayoutDashboard 
-  },
-  { 
-    nameKey: 'members', 
-    href: '/chapter/members', 
-    icon: Users,
-    showPingOn: 'hasPendingApprovals'
-  },
-] as const
 // ============================================================================
 // DATABASE TYPES - Core schema types matching database exactly
 // ============================================================================
@@ -338,15 +313,6 @@ export interface AdminStats {
 export interface AdminSidebarProps { 
   user: UserRow;
   stats: AdminStats;
-}
-
-export interface NavItemConfig { 
-  name: string;
-  href: string;
-  icon: React.ComponentType<any>;
-  showIndicatorKey?: keyof AdminStats;
-  showCountKey?: keyof AdminStats;
-  description?: string;
 }
 
 export type CompanyStats = {
