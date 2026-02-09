@@ -1,60 +1,38 @@
 'use client'
 
-import BaseSidebar from './base-sidebar'
-import { NavItem } from './nav-item'
+import { SidebarNavItem } from './nav-item'
 import {
   SidebarMenu,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-} from '../sidebar'
-import { usePathname } from 'next/navigation'
-import {
-  LayoutDashboard,
-  Users,
-  Building,
-  Building2,
-  Mail,
-  Activity,
-} from 'lucide-react'
-import type { AdminSidebarProps } from '@/lib/types'
-import type { NavItemConfig } from '@/lib/types'
+} from '@/components/ui/sidebar'
+import { ADMIN_NAV } from '@/lib/nav-config'
+import type { AdminStats } from '@/lib/types'
 
-const adminNav: NavItemConfig[] = [
-  { name: 'Overview', href: '/admin', icon: LayoutDashboard, description: 'System dashboard' },
-  { name: 'Chapters', href: '/admin/chapters', icon: Building2, showCountKey: 'totalChapters' },
-  { name: 'Users', href: '/admin/users', icon: Users, showCountKey: 'totalUsers' },
-  { name: 'Companies', href: '/admin/companies', icon: Building, showCountKey: 'totalCompanies' },
-  { name: 'Invites', href: '/admin/invites', icon: Mail, showIndicatorKey: 'pendingInvites' },
-  { name: 'Activity', href: '/admin/activity', icon: Activity },
-]
+interface AdminNavigationProps {
+  stats: AdminStats
+}
 
-export function AdminSidebar({ user, stats }: AdminSidebarProps) {
-  const pathname = usePathname()
-
+export function AdminNavigation({ stats }: AdminNavigationProps) {
   return (
-    <BaseSidebar userName={user.name} userEmail={user.email} userRole="Administrator">
+    <>
       <SidebarGroup>
         <SidebarGroupLabel>Administration</SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
-            {adminNav.map(item => (
-              <NavItem
-                key={item.name}
-                name={item.name}
-                href={item.href}
-                icon={item.icon}
-                isActive={
-                  item.href === '/admin'
-                    ? pathname === '/admin'
-                    : pathname.startsWith(item.href)
+            {ADMIN_NAV.map((item) => (
+              <SidebarNavItem
+                key={item.id}
+                item={item}
+                exact={item.id === 'overview'}
+                badge={
+                  item.id === 'chapters' ? stats.totalChapters :
+                  item.id === 'users' ? stats.totalUsers :
+                  item.id === 'companies' ? stats.totalCompanies :
+                  undefined
                 }
-                badgeCount={
-                  item.showCountKey ? stats[item.showCountKey] : undefined
-                }
-                showPing={
-                  item.showIndicatorKey ? (stats[item.showIndicatorKey] ?? 0) > 0 : false
-                }
+                showPing={item.id === 'invites' && stats.pendingInvites > 0}
               />
             ))}
           </SidebarMenu>
@@ -88,6 +66,6 @@ export function AdminSidebar({ user, stats }: AdminSidebarProps) {
           </div>
         </SidebarGroupContent>
       </SidebarGroup>
-    </BaseSidebar>
+    </>
   )
 }
