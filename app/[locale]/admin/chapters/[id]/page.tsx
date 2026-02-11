@@ -119,13 +119,6 @@ export default async function ChapterDetailPage({
               </div>
             </div>
 
-            <div className="pt-4 flex gap-2">
-              <Button asChild variant="outline">
-                <Link href={`/admin/chapters/${chapter.id}/edit`}>
-                  Edit Chapter
-                </Link>
-              </Button>
-            </div>
           </CardContent>
         </Card>
 
