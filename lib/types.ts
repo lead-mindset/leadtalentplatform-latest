@@ -63,6 +63,7 @@ import { User, FileText, Users, LayoutDashboard } from 'lucide-react'
 // ============================================================================
 // DATABASE TYPES - Core schema types matching database exactly
 // ============================================================================
+export type ApprovalStatus = 'pending' | 'approved' | 'rejected'
 
 export type Database = {
   public: {
@@ -100,6 +101,7 @@ export type Database = {
           consentDate: string | null;
           createdAt: string;
           updatedAt: string;
+          approvalStatus: ApprovalStatus
           isRecruiterVisible: boolean;
           approvedById: string | null;
           isFilled: boolean;
@@ -189,7 +191,7 @@ export type UserWithDetailsRaw = UserRow & {
 
 export type UserWithDetails = UserRow & {
   Chapter: Pick<ChapterRow, "name" | "university"> | null;
-  StudentProfile: Pick<StudentProfileRow, "isFilled" | "approvedById" | "isRecruiterVisible"> | null;
+  StudentProfile: Pick<StudentProfileRow, "isFilled" | "approvedById" | "isRecruiterVisible" | 'approvalStatus'> | null;
 };
 
 
