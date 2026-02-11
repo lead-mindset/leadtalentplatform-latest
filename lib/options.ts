@@ -82,3 +82,17 @@ export const CAREER_VALUES = [
   "medical_technology",
   "other",
 ] as const
+
+
+export function getRoleColor(role: string) {
+  switch (role) {
+    case 'admin':
+      return 'bg-chart-3 text-primary-foreground'
+    case 'editor':
+      return 'bg-chart-2 text-primary-foreground'
+    case 'recruiter':
+      return 'bg-chart-1 text-primary-foreground'
+    default:
+      return 'bg-muted text-muted-foreground'
+  }
+}
