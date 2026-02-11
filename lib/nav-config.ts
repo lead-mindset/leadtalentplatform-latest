@@ -37,6 +37,12 @@ export const STUDENT_NAV: NavItemConfig[] = [
 
 export const CHAPTER_NAV: NavItemConfig[] = [
   {
+    id: 'overview',
+    label: 'Overview',
+    href: '/chapter',
+    icon: LayoutDashboard,
+  },
+  {
     id: 'students',
     label: 'Members',
     href: '/chapter/members',
