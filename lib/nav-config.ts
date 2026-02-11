@@ -38,16 +38,18 @@ export const STUDENT_NAV: NavItemConfig[] = [
 export const CHAPTER_NAV: NavItemConfig[] = [
   {
     id: 'students',
-    label: 'Students',
-    href: '/chapter/students',
+    label: 'Members',
+    href: '/chapter/members',
     icon: BookOpen,
   },
+  /* add settings later
   {
     id: 'settings',
     label: 'Settings',
     href: '/chapter/settings',
     icon: Settings,
   },
+  */
 ]
 
 export const ADMIN_NAV: NavItemConfig[] = [
