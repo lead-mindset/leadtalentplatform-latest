@@ -3,8 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import {Link} from '@/i18n/routing'
-import { ArrowLeft, Mail, Phone, Calendar, Building2, GraduationCap, Linkedin, CheckCircle2, XCircle, Clock, Eye, EyeOff, Shield } from 'lucide-react'
+import { Link } from '@/i18n/routing'
+import { ArrowLeft, Mail, Phone, GraduationCap, Linkedin, CheckCircle2, XCircle, Clock, Eye, EyeOff, Shield, AlertCircle } from 'lucide-react'
 import { getUserById } from '@/lib/actions/admin/get-data'
 import { createClient } from '@/lib/supabase/server'
 import { MemberActionButtons } from '@/app/[locale]/chapter/members/components/member-actions'
@@ -25,19 +25,18 @@ export default async function UserDetailPage({
 
   const supabase = await createClient()
   const { data: { user: currentUser } } = await supabase.auth.getUser()
-  
-  const { data: currentUserData } = currentUser 
+
+  const { data: currentUserData } = currentUser
     ? await supabase
-        .from('User')
-        .select('role')
-        .eq('id', currentUser.id)
-        .single()
+      .from('User')
+      .select('role')
+      .eq('id', currentUser.id)
+      .single()
     : { data: null }
 
   const canApprove = currentUserData && (currentUserData.role === 'admin' || currentUserData.role === 'editor')
   const profile = user.StudentProfile
-  const isPending = profile?.isFilled === true && profile?.approvedById === null
-  const isApproved = profile?.approvedById !== null
+  const approvalStatus = profile?.approvalStatus || 'pending'
 
   const getStatusConfig = () => {
     if (!profile?.isFilled) {
@@ -49,30 +48,33 @@ export default async function UserDetailPage({
         description: 'Member needs to complete their profile'
       }
     }
-    if (isApproved) {
-      return {
-        label: 'Approved',
-        icon: CheckCircle2,
-        color: 'text-chart-1',
-        bgColor: 'bg-chart-1/10',
-        description: 'Visible to recruiters'
-      }
-    }
-    if (isPending) {
-      return {
-        label: 'Pending Approval',
-        icon: Clock,
-        color: 'text-chart-4',
-        bgColor: 'bg-chart-4/10',
-        description: 'Awaiting admin review'
-      }
-    }
-    return {
-      label: 'Not Ready',
-      icon: XCircle,
-      color: 'text-muted-foreground',
-      bgColor: 'bg-muted',
-      description: 'Profile incomplete'
+
+    switch (approvalStatus) {
+      case 'approved':
+        return {
+          label: 'Approved',
+          icon: CheckCircle2,
+          color: 'text-chart-1',
+          bgColor: 'bg-chart-1/10',
+          description: 'Visible to recruiters'
+        }
+      case 'rejected':
+        return {
+          label: 'Rejected',
+          icon: XCircle,
+          color: 'text-destructive',
+          bgColor: 'bg-destructive/10',
+          description: 'Profile was reviewed and rejected'
+        }
+      case 'pending':
+      default:
+        return {
+          label: 'Pending Approval',
+          icon: AlertCircle,
+          color: 'text-chart-4',
+          bgColor: 'bg-chart-4/10',
+          description: 'Awaiting admin review'
+        }
     }
   }
 
@@ -93,7 +95,7 @@ export default async function UserDetailPage({
       </div>
 
       <div className="container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        
+
         <div className="relative">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
             <div className="space-y-3 flex-1">
@@ -103,7 +105,7 @@ export default async function UserDetailPage({
                   {user.role}
                 </Badge>
               </div>
-              
+
               <div className="flex flex-col sm:flex-row sm:items-center gap-3 text-muted-foreground">
                 <a href={`mailto:${user.email}`} className="flex items-center gap-2 hover:text-foreground transition-colors">
                   <Mail className="h-4 w-4" />
@@ -121,9 +123,9 @@ export default async function UserDetailPage({
               </div>
 
               {profile?.linkedinUrl && (
-                <a 
-                  href={profile.linkedinUrl} 
-                  target="_blank" 
+                <a
+                  href={profile.linkedinUrl}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
                 >
@@ -157,17 +159,19 @@ export default async function UserDetailPage({
                 <CardTitle>Admin Actions</CardTitle>
               </div>
               <CardDescription>
-                {isApproved
+                {approvalStatus === 'approved'
                   ? 'This member is approved and visible to recruiters.'
-                  : 'Review this member\'s profile and approve to make them visible to recruiters.'}
+                  : approvalStatus === 'rejected'
+                  ? 'This profile was reviewed and rejected. You can reconsider and approve if needed.'
+                  : 'Review this member\'s profile and approve or reject.'}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <MemberActionButtons 
+              <MemberActionButtons
                 userId={user.id}
                 currentUserId={currentUser.id}
                 userName={user.name ?? user.email}
-                currentState={isApproved ? 'approved' : 'pending'}
+                currentState={approvalStatus}
               />
             </CardContent>
           </Card>
@@ -175,9 +179,9 @@ export default async function UserDetailPage({
 
         {profile ? (
           <div className="grid lg:grid-cols-3 gap-6">
-            
+
             <div className="lg:col-span-2 space-y-6">
-              
+
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -191,7 +195,7 @@ export default async function UserDetailPage({
                       <div className="text-sm text-muted-foreground">Major</div>
                       <div className="font-medium">{profile.major}</div>
                     </div>
-                    
+
                     <div className="space-y-1">
                       <div className="text-sm text-muted-foreground">Graduation Year</div>
                       <div className="font-medium">{profile.graduationYear}</div>
@@ -227,7 +231,7 @@ export default async function UserDetailPage({
             </div>
 
             <div className="space-y-6">
-              
+
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base">Visibility Settings</CardTitle>
@@ -296,9 +300,9 @@ export default async function UserDetailPage({
                       })}
                     </div>
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="space-y-1">
                     <div className="text-xs text-muted-foreground">Last Updated</div>
                     <div className="text-sm font-medium">
