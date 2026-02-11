@@ -6,8 +6,9 @@ import { Suspense } from 'react'
 import { Users, Mail, Building2, CheckCircle2, Clock, XCircle } from 'lucide-react'
 import type { UserWithDetails } from '@/lib/types'
 import { getUsers } from '@/lib/actions/admin/get-data'
+import { UserTabs } from './user-tabs'
 
-
+type UserRole = 'all' | 'members' | 'editors' | 'recruiters' | 'admins'
 
 function getRoleColor(role: string) {
   switch (role) {
@@ -38,16 +39,36 @@ function getProfileStatus(user: UserWithDetails) {
   return { icon: CheckCircle2, label: 'Approved', color: 'text-blue-500' }
 }
 
-async function UsersTable() {
-  const users = await getUsers()
+function filterUsersByRole(users: UserWithDetails[], role: UserRole): UserWithDetails[] {
+  if (role === 'all') return users
+  
+  // Members includes both 'member' role and 'editor' role users
+  if (role === 'members') {
+    return users.filter(u => u.role === 'member' || u.role === 'editor')
+  }
+  
+  // Map 'recruiters' to 'recruiter' role, 'admins' to 'admin' role, etc.
+  const roleMap: Record<string, string> = {
+    'editors': 'editor',
+    'recruiters': 'recruiter',
+    'admins': 'admin'
+  }
+  
+  const targetRole = roleMap[role] || role
+  return users.filter(u => u.role === targetRole)
+}
+
+async function UsersTable({ role }: { role: UserRole }) {
+  const allUsers = await getUsers()
+  const users = filterUsersByRole(allUsers, role)
 
   const stats = {
-    total: users.length,
-    admins: users.filter(u => u.role === 'admin').length,
-    editors: users.filter(u => u.role === 'editor').length,
-    members: users.filter(u => u.role === 'member').length,
-    recruiters: users.filter(u => u.role === 'recruiter').length,
-    pending: users.filter(u => u.StudentProfile?.isFilled && !u.StudentProfile?.approvedById).length,
+    total: allUsers.length,
+    admins: allUsers.filter(u => u.role === 'admin').length,
+    editors: allUsers.filter(u => u.role === 'editor').length,
+    members: allUsers.filter(u => u.role === 'member' || u.role === 'editor').length,
+    recruiters: allUsers.filter(u => u.role === 'recruiter').length,
+    pending: allUsers.filter(u => u.StudentProfile?.isFilled && !u.StudentProfile?.approvedById).length,
   }
 
   return (
@@ -65,28 +86,29 @@ async function UsersTable() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Admins</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.admins}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Editors</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.editors}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Members</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.members}</div>
+            <p className="text-xs text-muted-foreground mt-1">Students & Editors</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Recruiters</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.recruiters}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Admins</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.admins}</div>
           </CardContent>
         </Card>
 
@@ -103,16 +125,22 @@ async function UsersTable() {
 
       <Card>
         <CardHeader>
-          <CardTitle>All Users</CardTitle>
+          <CardTitle>
+            {role === 'all' && 'All Users'}
+            {role === 'members' && 'Members (Students & Editors)'}
+            {role === 'editors' && 'Editors'}
+            {role === 'recruiters' && 'Company Representatives'}
+            {role === 'admins' && 'Administrators'}
+          </CardTitle>
           <CardDescription>
-            Manage user accounts and permissions
+            {users.length} {users.length === 1 ? 'user' : 'users'} found
           </CardDescription>
         </CardHeader>
         <CardContent>
           {users.length === 0 ? (
             <div className="text-center py-12">
               <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">No users found</p>
+              <p className="text-muted-foreground">No users found in this category</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -159,7 +187,7 @@ async function UsersTable() {
                             </div>
                           ) : (
                             <span className="text-sm text-muted-foreground">
-                              {user.role === 'member' ? 'No chapter assigned' : '—'}
+                              {user.role === 'member' || user.role === 'editor' ? 'No chapter assigned' : '—'}
                             </span>
                           )}
                         </td>
@@ -225,7 +253,13 @@ function LoadingSkeleton() {
   )
 }
 
-export default function AdminUsersPage() {
+export default async function AdminUsersPage({
+  searchParams
+}: {
+  searchParams: Promise<{ role?: UserRole }>
+}) {
+  const { role = 'all' } = await searchParams
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
@@ -237,8 +271,10 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
+      <UserTabs currentRole={role} />
+
       <Suspense fallback={<LoadingSkeleton />}>
-        <UsersTable />
+        <UsersTable role={role} />
       </Suspense>
     </div>
   )
