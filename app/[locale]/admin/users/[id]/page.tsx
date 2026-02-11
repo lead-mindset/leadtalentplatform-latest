@@ -6,7 +6,7 @@ import {Link} from '@/i18n/routing'
 import { ArrowLeft, Mail, Phone, Calendar, Building2, GraduationCap, Linkedin, CheckCircle2, XCircle, Clock } from 'lucide-react'
 import { getUserById } from '@/lib/actions/admin/get-data'
 import { createClient } from '@/lib/supabase/server'
-import { ApprovalButtons } from '@/app/[locale]/chapter/members/components/member-actions'
+import { MemberActionButtons } from '@/app/[locale]/chapter/members/components/member-actions'
 
 function getRoleColor(role: string) {
   switch (role) {
@@ -47,6 +47,8 @@ export default async function UserDetailPage({
 
   const canApprove = currentUserData && (currentUserData.role === 'admin' || currentUserData.role === 'editor')
   const profile = user.StudentProfile
+  const isPending = profile?.isFilled === true && profile?.approvedById === null
+  const isApproved = profile?.approvedById !== null
 
   return (
     <div className="space-y-6">
@@ -72,16 +74,19 @@ export default async function UserDetailPage({
           <CardHeader>
             <CardTitle>Approval Actions</CardTitle>
             <CardDescription>
-              {profile.approvedById 
+              {isApproved
                 ? 'This member has been approved. You can revoke approval if needed.'
-                : 'Review and approve this member to make them visible to recruiters.'}
+                : isPending
+                ? 'Review and approve this member to make them visible to recruiters.'
+                : 'This profile is incomplete and cannot be approved yet.'}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ApprovalButtons 
+            <MemberActionButtons 
               userId={user.id}
               currentUserId={currentUser.id}
-              isApproved={!!profile.approvedById}
+              userName={user.name ?? user.email}
+              currentState={isApproved ? 'approved' : 'pending'}
             />
           </CardContent>
         </Card>
@@ -165,15 +170,20 @@ export default async function UserDetailPage({
 
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Approved</span>
-                  {profile.approvedById ? (
+                  {isApproved ? (
                     <div className="flex items-center gap-2 text-green-600">
                       <CheckCircle2 className="h-4 w-4" />
                       <span className="text-sm">Yes</span>
                     </div>
-                  ) : (
+                  ) : isPending ? (
                     <div className="flex items-center gap-2 text-orange-500">
                       <Clock className="h-4 w-4" />
                       <span className="text-sm">Pending</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-gray-400">
+                      <XCircle className="h-4 w-4" />
+                      <span className="text-sm">Not Ready</span>
                     </div>
                   )}
                 </div>
