@@ -11,7 +11,7 @@ import {
   GraduationCap,
   Calendar,
 } from 'lucide-react'
-import { ApproveMemberButton, RejectMemberButton } from "./member-actions"
+import { MemberActionButtons } from "./member-actions"
 export default function MemberCard({
   member,
   currentUserId
@@ -109,25 +109,30 @@ export default function MemberCard({
           </div>
 
           {isPending && (
-            <div className="flex gap-2 pt-4 border-t">
-              <ApproveMemberButton
-                userId={member.id}
-                editorId={currentUserId}
-                userName={member.name ?? member.email}
-              />
-              <RejectMemberButton
-                userId={member.id}
-                userName={member.name ?? member.email}
-              />
-            </div>
-          )}
+  <div className="pt-4 border-t">
+    <MemberActionButtons
+      userId={member.id}
+      currentUserId={currentUserId}
+      userName={member.name ?? member.email}
+      currentState="pending"
+    />
+  </div>
+)}
 
-          {isApproved && (
-            <div className="flex items-center gap-2 pt-4 border-t text-sm text-muted-foreground">
-              <UserCheck className="h-4 w-4 text-green-600" />
-              Approved on {new Date(profile.updatedAt).toLocaleDateString()}
-            </div>
-          )}
+{isApproved && (
+  <div className="pt-4 border-t space-y-3">
+    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <UserCheck className="h-4 w-4 text-green-600" />
+      Approved on {new Date(profile.updatedAt).toLocaleDateString()}
+    </div>
+    <MemberActionButtons
+      userId={member.id}
+      currentUserId={currentUserId}
+      userName={member.name ?? member.email}
+      currentState="approved"
+    />
+  </div>
+)}
         </CardContent>
       ) : (
         <CardContent>
