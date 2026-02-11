@@ -102,29 +102,28 @@ export async function revokeApproval(userId: string, revokerId: string) {
       return { success: false, error: 'Unauthorized' }
     }
 
-    const { data: rejecter, error: rejecterError } = await supabase
+    const { data: revoker, error: revokerError } = await supabase
       .from('User')
       .select('id, role')
       .eq('id', revokerId)
       .single()
 
-    if (rejecterError || !rejecter) {
+    if (revokerError || !revoker) {
       return { success: false, error: 'User not found' }
     }
 
-    // Admins can reject anyone, editors can only reject in their chapter
-    if (rejecter.role !== 'admin' && rejecter.role !== 'editor') {
-      return { success: false, error: 'Only admins and editors can reject members' }
+    if (revoker.role !== 'admin' && revoker.role !== 'editor') {
+      return { success: false, error: 'Only admins and editors can revoke approval' }
     }
 
-    if (rejecter.role === 'editor') {
-      const { data: rejecterProfile, error: rejecterProfileError } = await supabase
+    if (revoker.role === 'editor') {
+      const { data: revokerProfile, error: revokerProfileError } = await supabase
         .from('StudentProfile')
         .select('chapterId')
         .eq('userId', revokerId)
         .single()
 
-      if (rejecterProfileError || !rejecterProfile) {
+      if (revokerProfileError || !revokerProfile) {
         return { success: false, error: 'Editor must have a chapter assignment' }
       }
 
@@ -138,7 +137,7 @@ export async function revokeApproval(userId: string, revokerId: string) {
         return { success: false, error: 'Member profile not found' }
       }
 
-      if (memberProfile.chapterId !== rejecterProfile.chapterId) {
+      if (memberProfile.chapterId !== revokerProfile.chapterId) {
         return { success: false, error: 'Member not in your chapter' }
       }
     }
@@ -153,8 +152,8 @@ export async function revokeApproval(userId: string, revokerId: string) {
       .eq('userId', userId)
 
     if (updateError) {
-      console.error('[rejectMember] Error:', updateError)
-      return { success: false, error: 'Failed to reject member' }
+      console.error('[revokeApproval] Error:', updateError)
+      return { success: false, error: 'Failed to revoke approval' }
     }
 
     revalidatePath('/chapter/members')
@@ -165,7 +164,7 @@ export async function revokeApproval(userId: string, revokerId: string) {
     
     return { success: true }
   } catch (error) {
-    console.error('[rejectMember] Unexpected error:', error)
+    console.error('[revokeApproval] Unexpected error:', error)
     return { success: false, error: 'An unexpected error occurred' }
   }
 }
