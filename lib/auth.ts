@@ -30,7 +30,6 @@ export async function assertAdmin(
   return dbUser
 }
 
-
 export async function requireAdmin() {
   const supabase = await createClient()
 
@@ -87,7 +86,7 @@ export async function getSidebarStatsForEditor(
     .from('StudentProfile')
     .select('*', { count: 'exact', head: true })
     .eq('chapterId', chapterId)
-    .is('approvedById', null)
+    .eq('approvalStatus', 'pending')
     .eq('isFilled', true)
     .limit(1)
 
@@ -119,7 +118,7 @@ export async function getSidebarStatsForAdmin(
 
     supabase.from('StudentProfile')
       .select('*', { count: 'exact', head: true })
-      .is('approvedById', null)
+      .eq('approvalStatus', 'pending')
       .eq('isFilled', true),
 
     supabase.from('User')
