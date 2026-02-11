@@ -80,7 +80,8 @@ async function UsersTable({ role }: { role: UserRole }) {
     editors: allUsers.filter(u => u.role === 'editor').length,
     members: allUsers.filter(u => u.role === 'member' || u.role === 'editor').length,
     recruiters: allUsers.filter(u => u.role === 'recruiter').length,
-    pending: allUsers.filter(u => u.StudentProfile?.isFilled && !u.StudentProfile?.approvedById).length,
+    pending: allUsers.filter(u => u.StudentProfile?.isFilled && u.StudentProfile?.approvalStatus === 'pending').length,
+    rejected: allUsers.filter(u => u.StudentProfile?.approvalStatus === 'rejected').length,
     visible: allUsers.filter(u => u.StudentProfile?.isRecruiterVisible).length,
   }
 
