@@ -16,15 +16,15 @@ import type {
 
 export async function getSystemStats() {
   const supabase = await createClient()
-
+  
   const [
     { count: totalUsers },
     { count: totalChapters },
     { count: totalCompanies },
     { count: totalProfiles },
     { count: completeProfiles },
-    { count: visibleProfiles },
     { count: pendingApprovals },
+    { count: visibleProfiles },
     { count: activeRecruiters },
     { count: pendingInvites }
   ] = await Promise.all([
@@ -33,29 +33,41 @@ export async function getSystemStats() {
     supabase.from('Company').select('*', { count: 'exact', head: true }),
     supabase.from('StudentProfile').select('*', { count: 'exact', head: true }),
     supabase.from('StudentProfile').select('*', { count: 'exact', head: true }).eq('isFilled', true),
-    supabase.from('StudentProfile').select('*', { count: 'exact', head: true }).eq('isRecruiterVisible', true),
-    supabase.from('StudentProfile').select('*', { count: 'exact', head: true }).is('approvedById', null).eq('isFilled', true),
-    supabase.from('RecruiterAccess').select('*', { count: 'exact', head: true }).eq('isActive', true),
-    supabase.from('RecruiterAccess').select('*', { count: 'exact', head: true }).is('acceptedAt', null).is('revokedAt', null).gt('inviteExpiresAt', new Date().toISOString())
+    supabase.from('StudentProfile').select('*', { count: 'exact', head: true })
+      .eq('isFilled', true)
+      .eq('approvalStatus', 'pending'),
+    supabase.from('StudentProfile').select('*', { count: 'exact', head: true })
+      .eq('isRecruiterVisible', true),
+    supabase.from('RecruiterAccess').select('*', { count: 'exact', head: true })
+      .eq('isActive', true)
+      .is('revokedAt', null),
+    supabase.from('RecruiterAccess').select('*', { count: 'exact', head: true })
+      .is('acceptedAt', null)
+      .is('revokedAt', null)
+      .gt('inviteExpiresAt', new Date().toISOString())
   ])
 
-  const completionRate = totalProfiles && totalProfiles > 0
-    ? Math.round(((completeProfiles || 0) / totalProfiles) * 100)
+  const totalProfilesCount = totalProfiles ?? 0
+  const completeProfilesCount = completeProfiles ?? 0
+  
+  const completionRate = totalProfilesCount > 0 
+    ? Math.round((completeProfilesCount / totalProfilesCount) * 100) 
     : 0
 
   return {
-    totalUsers: totalUsers || 0,
-    totalChapters: totalChapters || 0,
-    totalCompanies: totalCompanies || 0,
-    totalProfiles: totalProfiles || 0,
-    completeProfiles: completeProfiles || 0,
-    visibleProfiles: visibleProfiles || 0,
-    pendingApprovals: pendingApprovals || 0,
-    activeRecruiters: activeRecruiters || 0,
-    pendingInvites: pendingInvites || 0,
+    totalUsers: totalUsers ?? 0,
+    totalChapters: totalChapters ?? 0,
+    totalCompanies: totalCompanies ?? 0,
+    totalProfiles: totalProfilesCount,
+    completeProfiles: completeProfilesCount,
+    pendingApprovals: pendingApprovals ?? 0,
+    visibleProfiles: visibleProfiles ?? 0,
+    activeRecruiters: activeRecruiters ?? 0,
+    pendingInvites: pendingInvites ?? 0,
     completionRate
   }
 }
+
 
 export async function getRecentActivity() {
   const supabase = await createClient()
