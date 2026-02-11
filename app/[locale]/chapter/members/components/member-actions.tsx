@@ -1,19 +1,26 @@
+// member-actions.tsx
 'use client'
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react'
-import { approveMember, rejectMember } from '@/lib/actions/chapter/check-students'
+import { approveMember, revokeApproval } from '@/lib/actions/chapter/check-students'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
-interface ApprovalButtonsProps {
+interface MemberActionButtonsProps {
   userId: string
   currentUserId: string
-  isApproved: boolean
+  userName: string
+  currentState: 'pending' | 'approved'
 }
 
-export function ApprovalButtons({ userId, currentUserId, isApproved }: ApprovalButtonsProps) {
+export function MemberActionButtons({ 
+  userId, 
+  currentUserId, 
+  userName,
+  currentState 
+}: MemberActionButtonsProps) {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
@@ -23,7 +30,7 @@ export function ApprovalButtons({ userId, currentUserId, isApproved }: ApprovalB
       const result = await approveMember(userId, currentUserId)
       
       if (result.success) {
-        toast.success('Member approved successfully')
+        toast.success(`${userName} approved successfully`)
         router.refresh()
       } else {
         toast.error(result.error || 'Failed to approve member')
@@ -35,13 +42,13 @@ export function ApprovalButtons({ userId, currentUserId, isApproved }: ApprovalB
     }
   }
 
-  async function handleReject() {
+  async function handleRevoke() {
     setIsLoading(true)
     try {
-      const result = await rejectMember(userId, currentUserId)
+      const result = await revokeApproval(userId, currentUserId)
       
       if (result.success) {
-        toast.success('Member approval revoked')
+        toast.success(`${userName}'s approval has been revoked`)
         router.refresh()
       } else {
         toast.error(result.error || 'Failed to revoke approval')
@@ -53,36 +60,36 @@ export function ApprovalButtons({ userId, currentUserId, isApproved }: ApprovalB
     }
   }
 
+  if (currentState === 'pending') {
+    return (
+      <Button 
+        onClick={handleApprove} 
+        disabled={isLoading}
+        className="w-full"
+      >
+        {isLoading ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          <CheckCircle2 className="mr-2 h-4 w-4" />
+        )}
+        Approve Profile
+      </Button>
+    )
+  }
+
   return (
-    <div className="flex gap-3">
-      {!isApproved ? (
-        <Button 
-          onClick={handleApprove} 
-          disabled={isLoading}
-          className="flex-1"
-        >
-          {isLoading ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <CheckCircle2 className="mr-2 h-4 w-4" />
-          )}
-          Approve Member
-        </Button>
+    <Button 
+      onClick={handleRevoke} 
+      disabled={isLoading}
+      variant="outline"
+      size="sm"
+    >
+      {isLoading ? (
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
       ) : (
-        <Button 
-          onClick={handleReject} 
-          disabled={isLoading}
-          variant="outline"
-          className="flex-1"
-        >
-          {isLoading ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <XCircle className="mr-2 h-4 w-4" />
-          )}
-          Revoke Approval
-        </Button>
+        <XCircle className="mr-2 h-4 w-4" />
       )}
-    </div>
+      Revoke Approval
+    </Button>
   )
 }
