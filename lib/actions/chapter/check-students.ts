@@ -93,19 +93,19 @@ export async function approveMember(userId: string, approverId: string) {
   }
 }
 
-export async function rejectMember(userId: string, rejecterId: string) {
+export async function revokeApproval(userId: string, revokerId: string) {
   try {
     const supabase = await createClient()
     
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user || user.id !== rejecterId) {
+    if (!user || user.id !== revokerId) {
       return { success: false, error: 'Unauthorized' }
     }
 
     const { data: rejecter, error: rejecterError } = await supabase
       .from('User')
       .select('id, role')
-      .eq('id', rejecterId)
+      .eq('id', revokerId)
       .single()
 
     if (rejecterError || !rejecter) {
@@ -121,7 +121,7 @@ export async function rejectMember(userId: string, rejecterId: string) {
       const { data: rejecterProfile, error: rejecterProfileError } = await supabase
         .from('StudentProfile')
         .select('chapterId')
-        .eq('userId', rejecterId)
+        .eq('userId', revokerId)
         .single()
 
       if (rejecterProfileError || !rejecterProfile) {
