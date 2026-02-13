@@ -170,7 +170,8 @@ export function normalizeUserWithDetails(
       StudentProfile: studentProfile ? {
         isFilled: studentProfile.isFilled,
         approvedById: studentProfile.approvedById,
-        isRecruiterVisible: studentProfile.isRecruiterVisible
+        isRecruiterVisible: studentProfile.isRecruiterVisible,
+        approvalStatus: studentProfile.approvalStatus
       } : null
     }
   })
@@ -197,6 +198,7 @@ export async function getUsers(): Promise<UserWithDetails[]> {
       isFilled,
       approvedById,
       isRecruiterVisible,
+      approvalStatus,
       chapterId,
       Chapter (name, university)
     `)
@@ -222,6 +224,7 @@ export async function getUsers(): Promise<UserWithDetails[]> {
           isFilled: profile.isFilled,
           approvedById: profile.approvedById,
           isRecruiterVisible: profile.isRecruiterVisible,
+          approvalStatus: profile.approvalStatus,
           chapterId: profile.chapterId,
           Chapter: chapter
         }
