@@ -7,38 +7,35 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
-import { Loader2, User, Briefcase, Phone, Building2 } from 'lucide-react'
+import { Loader2, User, Phone, Building2, Mail } from 'lucide-react'
 
 interface ProfileFormProps {
   user: {
     id: string
     email: string
-    name?: string
-    role: string
+    name: string
+    phone: string | null
+    createdAt: string
+    updatedAt: string
   }
-  profile?: {
-    phone?: string
-    title?: string
-    department?: string
-    skills?: string[]
-    isFilled?: boolean
-  } | null
-  company?: {
+  company: {
     id: string
     name: string
-    logo?: string
+    createdat: string
+    createdbyid: string
+  } | null
+  accessInfo: {
+    accessId: string
+    acceptedAt: string | null
   } | null
 }
 
-export default function ProfileForm({ user, profile, company }: ProfileFormProps) {
+export default function ProfileForm({ user, company, accessInfo }: ProfileFormProps) {
   const [loading, setLoading] = useState(false)
 
   const [formData, setFormData] = useState({
     name: user.name || '',
-    phone: profile?.phone || '',
-    title: profile?.title || '',
-    department: profile?.department || '',
-    skills: profile?.skills?.join(', ') || '',
+    phone: user.phone || '',
   })
 
   const handleChange = (field: string, value: string) => {
@@ -52,12 +49,7 @@ export default function ProfileForm({ user, profile, company }: ProfileFormProps
     try {
       const result = await updateProfile({
         name: formData.name,
-        phone: formData.phone,
-        title: formData.title,
-        department: formData.department,
-        skills: formData.skills
-          ? formData.skills.split(',').map(s => s.trim())
-          : [],
+        phone: formData.phone || undefined,
       })
 
       if (!result.success) {
@@ -90,12 +82,18 @@ export default function ProfileForm({ user, profile, company }: ProfileFormProps
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="flex items-center gap-4">
-              {company.logo && (
-                <img src={company.logo} alt={company.name} className="h-12 w-12 rounded" />
-              )}
               <div>
                 <p className="font-semibold">{company.name}</p>
                 <p className="text-sm text-muted-foreground">{user.email}</p>
+                {accessInfo?.acceptedAt && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Access granted on {new Date(accessInfo.acceptedAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -113,9 +111,21 @@ export default function ProfileForm({ user, profile, company }: ProfileFormProps
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name *</Label>
+          <div className="space-y-2">
+            <Label htmlFor="email">Email Address</Label>
+            <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+              <Mail className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">{user.email}</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Email cannot be changed
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="name">Full Name *</Label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 id="name"
                 type="text"
@@ -123,82 +133,26 @@ export default function ProfileForm({ user, profile, company }: ProfileFormProps
                 value={formData.name}
                 onChange={(e) => handleChange('name', e.target.value)}
                 required
+                className="pl-10"
+                minLength={2}
+                maxLength={100}
               />
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
+          <div className="space-y-2">
+            <Label htmlFor="phone">Phone Number</Label>
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 id="phone"
                 type="tel"
                 placeholder="+1 (555) 123-4567"
                 value={formData.phone}
                 onChange={(e) => handleChange('phone', e.target.value)}
+                className="pl-10"
               />
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email Address</Label>
-            <Input
-              id="email"
-              type="email"
-              value={user.email}
-              disabled
-              className="bg-muted"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Briefcase className="h-5 w-5" />
-            Professional Information
-          </CardTitle>
-          <CardDescription>
-            Share your role and expertise
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Job Title *</Label>
-              <Input
-                id="title"
-                type="text"
-                placeholder="Senior Recruiter"
-                value={formData.title}
-                onChange={(e) => handleChange('title', e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="department">Department</Label>
-              <Input
-                id="department"
-                type="text"
-                placeholder="Human Resources"
-                value={formData.department}
-                onChange={(e) => handleChange('department', e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="skills">Skills (comma-separated)</Label>
-            <Input
-              id="skills"
-              type="text"
-              placeholder="Technical Recruiting, Talent Acquisition, Interviewing"
-              value={formData.skills}
-              onChange={(e) => handleChange('skills', e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">
-              Enter skills separated by commas
-            </p>
           </div>
         </CardContent>
       </Card>
