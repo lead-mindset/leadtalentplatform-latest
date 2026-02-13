@@ -41,8 +41,8 @@ export function CreateChapterForm() {
         region: formData.region.trim() || undefined,
       })
 
-      if (result.error) {
-        throw new Error(result.error)
+      if (!result) {
+        throw new Error('Failed to create chapter')
       }
 
       setSuccess(true)
