@@ -9,7 +9,7 @@ export default async function ProfilePage() {
     redirect('/auth/login')
   }
 
-  const { user, profile, company } = result.data!
+  const { user, company, accessInfo } = result.data!
 
   return (
     <div className="max-w-4xl">
@@ -22,8 +22,8 @@ export default async function ProfilePage() {
 
       <ProfileForm
         user={user}
-        profile={profile}
         company={company}
+        accessInfo={accessInfo}
       />
     </div>
   )
