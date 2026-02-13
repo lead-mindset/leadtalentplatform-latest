@@ -73,7 +73,7 @@ export function StudentsTable({ students, savedStudentIds = [] }: StudentsTableP
                     ))}
                     {(student.StudentProfile?.skills?.length || 0) > 3 && (
                       <Badge variant="outline" className="text-xs">
-                        +{student.StudentProfile.skills.length - 3}
+                        +{(student.StudentProfile?.skills?.length || 0) - 3}
                       </Badge>
                     )}
                   </div>
