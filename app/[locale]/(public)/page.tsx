@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Users, Building2, TrendingUp, Shield, ArrowRight, CheckCircle2 } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from 'next-intl';
+import Link from "next/link";
 
 export default function Home() {
 
@@ -44,9 +45,11 @@ export default function Home() {
               <p className="text-xl md:text-2xl mb-10 text-muted-foreground leading-relaxed">
                 {t('heroSubtitle')}
               </p>
-              <Button size="lg" className="text-lg px-8 py-6 h-auto font-semibold group mb-8 bg-primary text-primary-foreground">
-                {t('heroCtaPrimary')}
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              <Button asChild size="lg" className="text-lg px-8 py-6 h-auto font-semibold group mb-8 bg-primary text-primary-foreground">
+                <Link href="/auth/sign-up">
+                  {t('heroCtaPrimary')}
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
               </Button>
               <div className="flex flex-wrap gap-6 justify-center items-center text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
@@ -164,9 +167,11 @@ export default function Home() {
               <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
                 {t('ctaSubtitle')}
               </p>
-              <Button size="lg" className="text-lg px-8 py-6 h-auto font-semibold group bg-primary text-primary-foreground">
-                {t('ctaButton')}
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              <Button asChild size="lg" className="text-lg px-8 py-6 h-auto font-semibold group bg-primary text-primary-foreground">
+                <Link href="/auth/sign-up">
+                  {t('ctaButton')}
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
               </Button>
             </div>
           </div>
