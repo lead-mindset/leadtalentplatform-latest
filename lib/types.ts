@@ -10,29 +10,29 @@ export type NavLink = {
 };
 
 export const NAV_LINKS: NavLink[] = [
-  { 
+  {
     label: "dashboard",
-    href: "/student", 
-    auth: "authenticated", 
-    roles: ["member", "editor"] 
+    href: "/student",
+    auth: "authenticated",
+    roles: ["member", "editor"]
   },
-  { 
+  {
     label: "dashboard",
-    href: "/company", 
-    auth: "authenticated", 
-    roles: ["recruiter"] 
+    href: "/company",
+    auth: "authenticated",
+    roles: ["recruiter"]
   },
-  { 
+  {
     label: "manageChapter",
-    href: "/chapter", 
-    auth: "authenticated", 
-    roles: ["editor"] 
+    href: "/chapter",
+    auth: "authenticated",
+    roles: ["editor"]
   },
-  { 
+  {
     label: "adminPanel",
-    href: "/admin", 
-    auth: "authenticated", 
-    roles: ["admin"] 
+    href: "/admin",
+    auth: "authenticated",
+    roles: ["admin"]
   },
 ];
 
@@ -106,6 +106,8 @@ export type Database = {
           approvedById: string | null;
           isFilled: boolean;
           chapterId: string;
+          emailNotificationsEnabled: boolean;
+
         };
       };
       Company: {
@@ -162,16 +164,16 @@ export type ResumeRow = Database["public"]["Tables"]["Resume"]["Row"];
 // COMPOSITE TYPES - Used in queries with joins
 // ============================================================================
 
-export type UserWithChapter = UserRow & { 
-  Chapter: ChapterRow | null 
+export type UserWithChapter = UserRow & {
+  Chapter: ChapterRow | null
 };
 
-export type MemberWithProfile = UserRow & { 
+export type MemberWithProfile = UserRow & {
   StudentProfile: StudentProfileRow | null;
   Chapter: ChapterRow | null;
 };
 
-export type RecentActivityMember = Omit<MemberWithProfile, "StudentProfile"> & { 
+export type RecentActivityMember = Omit<MemberWithProfile, "StudentProfile"> & {
   StudentProfile: StudentProfileRow // Non-nullable for recent activity
 };
 
@@ -300,11 +302,11 @@ export type ChapterData = {
   recentActivity: RecentActivityMember[];
 };
 
-export type EditorSidebarStats = { 
-  hasPendingApprovals: boolean 
+export type EditorSidebarStats = {
+  hasPendingApprovals: boolean
 };
 
-export interface AdminStats { 
+export interface AdminStats {
   pendingInvites: number;
   pendingApprovals: number;
   totalUsers: number;
@@ -312,7 +314,7 @@ export interface AdminStats {
   totalCompanies: number;
 }
 
-export interface AdminSidebarProps { 
+export interface AdminSidebarProps {
   user: UserRow;
   stats: AdminStats;
 }

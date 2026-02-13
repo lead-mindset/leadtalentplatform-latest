@@ -27,6 +27,7 @@ async function ProfileData() {
     skills: profileData?.skills || [],
     linkedin_url: profileData?.linkedinUrl || '',
     consentRecruiterVisibility: profileData?.consentRecruiterVisibility || false,
+    emailNotificationsEnabled: profileData?.emailNotificationsEnabled ?? true,
   };
 
   return <ProfileUpdateForm initialData={combinedData} />;
