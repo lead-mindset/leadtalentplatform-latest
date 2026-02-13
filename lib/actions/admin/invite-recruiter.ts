@@ -17,13 +17,18 @@ const transporter = nodemailer.createTransport({
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000'
 
-// ===== HELPERS =====
 function generateInviteToken(): string {
   return randomUUID()
 }
 
+function calculateExpirationDate(expiresInDays: number): string {
+  const expirationDate = new Date()
+  expirationDate.setDate(expirationDate.getDate() + expiresInDays)
+  return expirationDate.toISOString()
+}
+
 async function sendInviteEmail(email: string, inviteToken: string, companyName?: string) {
-const url = `${FRONTEND_URL}/company/onboard?inviteToken=${inviteToken}`
+  const url = `${FRONTEND_URL}/company/onboard?inviteToken=${inviteToken}`
 
   await transporter.sendMail({
     from: `"${companyName || 'Company'} Admin" <${process.env.SMTP_USER}>`,
@@ -36,10 +41,9 @@ const url = `${FRONTEND_URL}/company/onboard?inviteToken=${inviteToken}`
         <p>You've been invited to join the recruiter portal. Click the button below to get started:</p>
         
         <div style="text-align: center; margin: 30px 0;">
-<a href="${url}">Accept Invitation</a>
-  Log in
-</a>
-
+          <a href="${url}" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-weight: 500;">
+            Accept Invitation
+          </a>
         </div>
         
         <p style="color: #666; font-size: 14px;">
@@ -87,7 +91,6 @@ If you didn't expect this invitation, you can safely ignore this email.
   })
 }
 
-
 async function auditLog(action: string, details: any) {
   console.log(`[AUDIT] ${new Date().toISOString()} - ${action}`, details)
 }
@@ -96,6 +99,7 @@ async function auditLog(action: string, details: any) {
 export async function createRecruiterInvite(formData: {
   recruiterEmail: string
   companyId: string
+  expiresInDays?: number
 }) {
   const supabase = await createClient()
   const {
@@ -115,7 +119,7 @@ export async function createRecruiterInvite(formData: {
   // Validate company exists
   const { data: company } = await supabase
     .from('Company')
-    .select('id')
+    .select('id, name')
     .eq('id', formData.companyId)
     .single()
   if (!company) return { success: false, error: 'Company not found' }
@@ -141,6 +145,8 @@ export async function createRecruiterInvite(formData: {
   }
 
   const inviteToken = generateInviteToken()
+  const expiresInDays = formData.expiresInDays || 7
+  const expirationDate = calculateExpirationDate(expiresInDays)
 
   // Insert invite into DB
   const { data: invite, error: inviteError } = await supabase
@@ -151,6 +157,7 @@ export async function createRecruiterInvite(formData: {
       grantedById: authUser.id,
       grantedAt: new Date().toISOString(),
       inviteToken,
+      inviteExpiresAt: expirationDate,
       isActive: false,
     })
     .select('id')
@@ -161,7 +168,7 @@ export async function createRecruiterInvite(formData: {
 
   // Send onboarding email
   try {
-    await sendInviteEmail(formData.recruiterEmail, inviteToken)
+    await sendInviteEmail(formData.recruiterEmail, inviteToken, company.name)
   } catch (e: any) {
     // Clean up if email fails
     await supabase.from('RecruiterAccess').delete().eq('id', invite.id)
@@ -173,6 +180,7 @@ export async function createRecruiterInvite(formData: {
     recruiterEmail: formData.recruiterEmail,
     companyId: formData.companyId,
     inviteId: invite.id,
+    expiresInDays,
   })
 
   revalidatePath('/admin/invites')
@@ -197,24 +205,30 @@ export async function resendInvite(inviteId: string) {
 
   const { data: invite } = await supabase
     .from('RecruiterAccess')
-    .select('*')
+    .select('*, Company(name)')
     .eq('id', inviteId)
     .single()
   if (!invite) return { success: false, error: 'Invite not found' }
   if (invite.revokedAt) return { success: false, error: 'Invite revoked' }
   if (invite.acceptedAt) return { success: false, error: 'Invite already accepted' }
 
-  // Optionally regenerate token
+  // Regenerate token and extend expiration
   const newToken = generateInviteToken()
+  const newExpiration = calculateExpirationDate(7)
+  
   const { error: updateError } = await supabase
     .from('RecruiterAccess')
-    .update({ inviteToken: newToken })
+    .update({ 
+      inviteToken: newToken,
+      inviteExpiresAt: newExpiration
+    })
     .eq('id', inviteId)
   if (updateError) return { success: false, error: 'Failed to update invite token' }
 
   // Resend email
   try {
-    await sendInviteEmail(invite.recruiterEmail, newToken)
+    const companyName = (invite as any).Company?.name
+    await sendInviteEmail(invite.recruiterEmail, newToken, companyName)
   } catch (e: any) {
     return { success: false, error: `Failed to send email: ${e.message}` }
   }
