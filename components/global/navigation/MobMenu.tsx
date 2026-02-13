@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Menu, X, ChevronDown } from "lucide-react";
-import {Link} from '@/i18n/routing';
+import { Link } from '@/i18n/routing';
 import AuthButtons from "./auth-buttons";
 
 export interface MenuItem {
@@ -47,7 +47,7 @@ export default function MobileNav({ menuItems, user }: MobileNavProps) {
         animate={{ x: isOpen ? "0%" : "-100%" }}
       >
         <div className="mb-6">
-          <AuthButtons user={user} onClick={toggleDrawer} />
+          <AuthButtons user={user} />
         </div>
 
         <ul>
@@ -67,7 +67,7 @@ export default function MobileNav({ menuItems, user }: MobileNavProps) {
                   </Link>
                 </div>
 
-    
+
               </li>
             );
           })}
