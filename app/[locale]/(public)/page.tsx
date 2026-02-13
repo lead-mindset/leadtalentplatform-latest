@@ -7,6 +7,14 @@ import Image from "next/image";
 import { useTranslations } from 'next-intl';
 
 export default function Home() {
+
+  console.log('Env check:', {
+    hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+    hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 30)
+  });
+
+
   const t = useTranslations('home');
   const tCommon = useTranslations('common');
 
