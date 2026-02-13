@@ -23,7 +23,7 @@ async function AuthCheck() {
     redirect('/student')
   }
 
-  return <CreateCompanyForm userId={user.id} />
+  return <CreateCompanyForm />
 }
 
 function FormLoading() {
