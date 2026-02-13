@@ -1,9 +1,9 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {Link} from '@/i18n/routing';
+import { Link } from '@/i18n/routing';
 import { NavUser } from "./nav-user";
-import {useTranslations} from 'next-intl';
+import { useTranslations } from 'next-intl';
 
 interface AuthButtonsProps {
   user: {
@@ -12,11 +12,12 @@ interface AuthButtonsProps {
     avatar: string;
   } | null;
   className?: string;
+  onClick?: () => void;
 }
 
-export default function AuthButtons({ user, className }: AuthButtonsProps) {
+export default function AuthButtons({ user, className, onClick }: AuthButtonsProps) {
   const t = useTranslations('auth');
-  
+
   if (user) {
     return <NavUser user={user} />;
   }
@@ -24,10 +25,10 @@ export default function AuthButtons({ user, className }: AuthButtonsProps) {
   return (
     <div className={`flex gap-2 ${className || ""}`}>
       <Button asChild size="sm" variant="outline">
-        <Link href="/auth/login">{t('signIn')}</Link>
+        <Link href="/auth/login" onClick={onClick}>{t('signIn')}</Link>
       </Button>
       <Button asChild size="sm">
-        <Link href="/auth/sign-up">{t('signUp')}</Link>
+        <Link href="/auth/sign-up" onClick={onClick}>{t('signUp')}</Link>
       </Button>
     </div>
   );
