@@ -9,11 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle, Loader2, Building, CheckCircle2 } from 'lucide-react'
 import { createCompany } from '@/lib/actions/admin/create-company'
 
-interface CreateCompanyFormProps {
-  userId: string
-}
-
-export function CreateCompanyForm({ userId }: CreateCompanyFormProps) {
+export function CreateCompanyForm() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -29,7 +25,6 @@ export function CreateCompanyForm({ userId }: CreateCompanyFormProps) {
     try {
       const result = await createCompany({
         name: companyName.trim(),
-        createdById: userId,
       })
 
       if (!result.success) {
