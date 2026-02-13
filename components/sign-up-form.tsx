@@ -3,6 +3,8 @@
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { useLocale } from 'next-intl';
+
 import {
   Card,
   CardContent,
@@ -14,10 +16,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Eye, EyeOff } from "lucide-react";
-import {Link, useRouter} from '@/i18n/routing';
+import { Link, useRouter } from '@/i18n/routing';
 import { useState } from "react";
 import GoogleButton from "./google-button";
-import {useTranslations} from 'next-intl';
+import { useTranslations } from 'next-intl';
 
 export function SignUpForm({
   className,
@@ -33,6 +35,7 @@ export function SignUpForm({
   const router = useRouter();
   const t = useTranslations('auth');
   const tCommon = useTranslations('common');
+  const locale = useLocale(); // This will get 'en' or 'es'
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,6 +59,9 @@ export function SignUpForm({
         email,
         password,
         options: {
+          data: {
+            locale: locale,
+          },
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });

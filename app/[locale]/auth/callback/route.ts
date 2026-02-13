@@ -38,6 +38,12 @@ export async function GET(
     return NextResponse.redirect(`${origin}/${locale}/auth/error`)
   }
 
+  if (!user.user_metadata?.locale) {
+    await supabase.auth.updateUser({
+      data: { locale }
+    })
+  }
+
   const { data: userData, error: userError } = await supabase
     .from('User')
     .select('role')
