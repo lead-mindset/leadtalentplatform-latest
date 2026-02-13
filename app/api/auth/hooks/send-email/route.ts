@@ -34,8 +34,15 @@ export async function POST(request: Request) {
   return Response.json({ success: true });
 }
 
-function getEmailTemplate(type: string, locale: string, data: any) {
-  const templates = {
+type EmailType = 'signup' | 'magiclink' | 'recovery';
+type Locale = 'en' | 'es';
+
+function getEmailTemplate(
+  type: string,
+  locale: string,
+  data: { confirmationUrl?: string; email?: string; token?: string }
+) {
+  const templates: Record<EmailType, Record<Locale, { subject: string; html: string }>> = {
     signup: {
       en: {
         subject: 'Confirm your email',
@@ -68,5 +75,10 @@ function getEmailTemplate(type: string, locale: string, data: any) {
     }
   };
 
-  return templates[type]?.[locale] || templates[type]?.en;
+  const emailType = type as EmailType;
+  const emailLocale = locale as Locale;
+
+  return templates[emailType]?.[emailLocale] || 
+         templates[emailType]?.en || 
+         templates.signup.en;
 }
