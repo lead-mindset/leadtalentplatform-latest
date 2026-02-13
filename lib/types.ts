@@ -101,15 +101,16 @@ export type Database = {
           consentDate: string | null;
           createdAt: string;
           updatedAt: string;
-          approvalStatus: ApprovalStatus
+          approvalStatus: ApprovalStatus;
           isRecruiterVisible: boolean;
           approvedById: string | null;
           isFilled: boolean;
           chapterId: string;
           emailNotificationsEnabled: boolean;
-
         };
       };
+
+
       Company: {
         Row: {
           id: string;
@@ -186,7 +187,7 @@ export type RecruiterUser = UserRow & {
 // QUERY RESULT TYPES - Raw types from Supabase queries
 // ============================================================================
 export type UserWithDetailsRaw = UserRow & {
-  StudentProfile: (Pick<StudentProfileRow, "isFilled" | "approvedById" | "isRecruiterVisible" | "chapterId"> & {
+StudentProfile: (Pick<StudentProfileRow, "isFilled" | "approvedById" | "isRecruiterVisible" | "approvalStatus" | "chapterId"> & {
     Chapter: Pick<ChapterRow, "name" | "university"> | null; // NOT array
   }) | null;
 };
