@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { createHmac } from 'crypto';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -6,34 +7,50 @@ export async function POST(request: Request) {
   try {
     console.log('=== AUTH HOOK DEBUG ===');
     
-    // Try multiple ways to get the auth header
-    const authHeader = request.headers.get('authorization');
-    const authHeaderLower = request.headers.get('Authorization');
+    // Get webhook headers
+    const signature = request.headers.get('webhook-signature');
+    const timestamp = request.headers.get('webhook-timestamp');
+    const webhookId = request.headers.get('webhook-id');
     
-    console.log('All headers:', Object.fromEntries(request.headers.entries()));
-    console.log('auth (lowercase):', authHeader);
-    console.log('Authorization (uppercase):', authHeaderLower);
-    console.log('Expected:', `Bearer ${process.env.SUPABASE_HOOK_SECRET}`);
+    console.log('Webhook signature:', signature);
+    console.log('Webhook timestamp:', timestamp);
+    console.log('Webhook ID:', webhookId);
     
-    const actualAuth = authHeader || authHeaderLower;
-    
-    if (!actualAuth) {
-      console.error('❌ No authorization header found');
-      return Response.json({ error: 'No authorization header' }, { status: 401 });
+    if (!signature || !timestamp) {
+      console.error('❌ Missing webhook headers');
+      return Response.json({ error: 'Missing webhook headers' }, { status: 401 });
     }
     
-    if (actualAuth !== `Bearer ${process.env.SUPABASE_HOOK_SECRET}`) {
-      console.error('❌ Authorization mismatch');
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    // Get the raw body
+    const body = await request.text();
+    const payload = JSON.parse(body);
+    
+    // Verify the signature
+    const secret = process.env.SUPABASE_HOOK_SECRET?.replace('v1,whsec_', '') || '';
+    const signedContent = `${webhookId}.${timestamp}.${body}`;
+    const expectedSignature = createHmac('sha256', secret)
+      .update(signedContent)
+      .digest('base64');
+    
+    const signatures = signature.split(',');
+    const versionedSignature = signatures.find(sig => sig.startsWith('v1,'));
+    const actualSignature = versionedSignature?.replace('v1,', '');
+    
+    console.log('Expected signature:', expectedSignature);
+    console.log('Actual signature:', actualSignature);
+    
+    if (actualSignature !== expectedSignature) {
+      console.error('❌ Signature verification failed');
+      return Response.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
-    console.log('✅ Authorization passed');
-
-    const payload = await request.json();
-    console.log('Payload:', JSON.stringify(payload, null, 2));
+    console.log('✅ Signature verified');
     
     const { user, email_data } = payload;
     const locale = user.user_metadata?.locale || 'en';
+    
+    console.log('User locale:', locale);
+    console.log('Email type:', email_data.token_type);
     
     const emailContent = getEmailTemplate(email_data.token_type, locale, {
       confirmationUrl: email_data.confirmation_url,
@@ -59,7 +76,6 @@ export async function POST(request: Request) {
     }, { status: 500 });
   }
 }
-
 
 type EmailType = 'signup' | 'magiclink' | 'recovery';
 type Locale = 'en' | 'es';
