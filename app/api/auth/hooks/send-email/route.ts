@@ -1,35 +1,39 @@
 import { Resend } from 'resend';
-import { createServiceClient } from '@/lib/supabase/server-service';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
   try {
     console.log('=== AUTH HOOK DEBUG ===');
-    console.log('RESEND_API_KEY exists:', !!process.env.RESEND_API_KEY);
-    console.log('HOOK_SECRET exists:', !!process.env.SUPABASE_HOOK_SECRET);
-    console.log('HOOK_SECRET value:', process.env.SUPABASE_HOOK_SECRET);
     
+    // Try multiple ways to get the auth header
     const authHeader = request.headers.get('authorization');
-    console.log('Auth header received:', authHeader);
-    console.log('Expected:', `Bearer ${process.env.SUPABASE_HOOK_SECRET}`);
-    console.log('Match:', authHeader === `Bearer ${process.env.SUPABASE_HOOK_SECRET}`);
+    const authHeaderLower = request.headers.get('Authorization');
     
-    if (authHeader !== `Bearer ${process.env.SUPABASE_HOOK_SECRET}`) {
-      console.error('❌ Authorization failed');
+    console.log('All headers:', Object.fromEntries(request.headers.entries()));
+    console.log('auth (lowercase):', authHeader);
+    console.log('Authorization (uppercase):', authHeaderLower);
+    console.log('Expected:', `Bearer ${process.env.SUPABASE_HOOK_SECRET}`);
+    
+    const actualAuth = authHeader || authHeaderLower;
+    
+    if (!actualAuth) {
+      console.error('❌ No authorization header found');
+      return Response.json({ error: 'No authorization header' }, { status: 401 });
+    }
+    
+    if (actualAuth !== `Bearer ${process.env.SUPABASE_HOOK_SECRET}`) {
+      console.error('❌ Authorization mismatch');
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     console.log('✅ Authorization passed');
 
     const payload = await request.json();
-    console.log('Payload received:', JSON.stringify(payload, null, 2));
+    console.log('Payload:', JSON.stringify(payload, null, 2));
     
     const { user, email_data } = payload;
-    
     const locale = user.user_metadata?.locale || 'en';
-    console.log('User locale:', locale);
-    console.log('Email type:', email_data.token_type);
     
     const emailContent = getEmailTemplate(email_data.token_type, locale, {
       confirmationUrl: email_data.confirmation_url,
@@ -37,26 +41,25 @@ export async function POST(request: Request) {
       token: email_data.token
     });
     
-    console.log('Email template:', emailContent.subject);
-    
     const result = await resend.emails.send({
-      from: 'noreply@leadmindset.org', // UPDATE THIS to your verified domain
+      from: 'noreply@leadmindset.org',
       to: user.email,
       subject: emailContent.subject,
       html: emailContent.html
     });
 
-    console.log('✅ Email sent successfully:', result);
+    console.log('✅ Email sent:', result);
     return Response.json({ success: true });
     
   } catch (error) {
-    console.error('❌ Error in auth hook:', error);
+    console.error('❌ Error:', error);
     return Response.json({ 
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }
 }
+
 
 type EmailType = 'signup' | 'magiclink' | 'recovery';
 type Locale = 'en' | 'es';
