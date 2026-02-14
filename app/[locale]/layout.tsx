@@ -19,8 +19,8 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
 });
 
-const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
+const defaultUrl = process.env.FRONTEND_URL
+  ? `https://${process.env.FRONTEND_URL}`
   : "http://localhost:3000";
 
 export const metadata: Metadata = {
