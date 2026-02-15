@@ -7,7 +7,6 @@ export async function POST(request: Request) {
   try {
     console.log('=== AUTH HOOK DEBUG ===');
     
-    // Get webhook headers
     const signature = request.headers.get('webhook-signature');
     const timestamp = request.headers.get('webhook-timestamp');
     const webhookId = request.headers.get('webhook-id');
@@ -21,20 +20,21 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Missing webhook headers' }, { status: 401 });
     }
     
-    // Get the raw body
     const body = await request.text();
     const payload = JSON.parse(body);
     
-    // Verify the signature
-    const secret = process.env.SUPABASE_HOOK_SECRET?.replace('v1,whsec_', '') || '';
+    const secretWithPrefix = process.env.SUPABASE_HOOK_SECRET || '';
+    const base64Secret = secretWithPrefix.replace('v1,whsec_', '');
+    const secret = Buffer.from(base64Secret, 'base64'); // Decode base64 secret
+    
     const signedContent = `${webhookId}.${timestamp}.${body}`;
     const expectedSignature = createHmac('sha256', secret)
       .update(signedContent)
       .digest('base64');
     
-    const signatures = signature.split(',');
-    const versionedSignature = signatures.find(sig => sig.startsWith('v1,'));
-    const actualSignature = versionedSignature?.replace('v1,', '');
+    const actualSignature = signature.startsWith('v1,') 
+      ? signature.substring(3) // Remove 'v1,' prefix
+      : signature;
     
     console.log('Expected signature:', expectedSignature);
     console.log('Actual signature:', actualSignature);
