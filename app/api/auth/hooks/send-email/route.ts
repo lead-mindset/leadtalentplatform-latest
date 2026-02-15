@@ -11,8 +11,7 @@ export async function POST(request: Request) {
     console.log('=== AUTH HOOK CALLED ===');
     console.log('Timestamp:', new Date().toISOString());
     console.log('========================================');
-    
-    // Get the raw body as text
+
     const payload = await request.text();
     console.log('✓ Payload received, length:', payload.length);
     
@@ -59,8 +58,8 @@ export async function POST(request: Request) {
     console.log('✓ Event data extracted');
     console.log('  - User email:', user?.email || 'MISSING');
     console.log('  - User locale:', user?.user_metadata?.locale || 'not set (defaulting to en)');
-    console.log('  - Email type:', email_data?.token_type || 'UNDEFINED');
-    console.log('  - Has confirmation URL:', !!email_data?.confirmation_url);
+    console.log('  - Email action type:', email_data?.email_action_type || 'UNDEFINED');
+    console.log('  - Has token_hash:', !!email_data?.token_hash);
     
     if (!user || !user.email) {
       console.error('❌ Missing user or email in event payload');
@@ -71,9 +70,8 @@ export async function POST(request: Request) {
       );
     }
     
-    if (!email_data || !email_data.confirmation_url) {
-      console.error('❌ Missing email_data or confirmation_url');
-      console.log('email_data:', JSON.stringify(email_data, null, 2));
+    if (!email_data) {
+      console.error('❌ Missing email_data');
       return new Response(
         JSON.stringify({ error: 'Missing email data' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
@@ -82,13 +80,20 @@ export async function POST(request: Request) {
     
     const locale = user.user_metadata?.locale || 'en';
     
+    // BUILD CONFIRMATION URL from token_hash
+    // Supabase Send Email Hook doesn't provide confirmation_url pre-made
+    // We need to construct it ourselves from the token_hash
+    const confirmationUrl = email_data.confirmation_url || 
+      `${email_data.site_url}/verify?token_hash=${email_data.token_hash}&type=${email_data.email_action_type || 'signup'}&redirect_to=${encodeURIComponent(email_data.redirect_to || '')}`;
+    
     console.log('→ Preparing to send email...');
     console.log('  - Recipient:', user.email);
     console.log('  - Locale:', locale);
-    console.log('  - Email type:', email_data.token_type || 'signup (default)');
+    console.log('  - Email action type:', email_data.email_action_type || 'signup');
+    console.log('  - Confirmation URL:', confirmationUrl);
     
-    const emailContent = getEmailTemplate(email_data.token_type, locale, {
-      confirmationUrl: email_data.confirmation_url,
+    const emailContent = getEmailTemplate(email_data.email_action_type || 'signup', locale, {
+      confirmationUrl: confirmationUrl,
       email: user.email,
       token: email_data.token
     });
@@ -108,10 +113,10 @@ export async function POST(request: Request) {
     });
     
     const emailDuration = Date.now() - emailStartTime;
+    
     if (result.error) {
       console.error('❌ Resend returned an error');
       console.error('Error details:', result.error);
-      // Return 503 to trigger Supabase retry
       return new Response(
         JSON.stringify({ 
           error: 'Email service unavailable',
