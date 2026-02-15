@@ -4,16 +4,8 @@ import { Webhook } from 'standardwebhooks';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
-  const startTime = Date.now();
-  
   try {
-    console.log('========================================');
-    console.log('=== AUTH HOOK CALLED ===');
-    console.log('Timestamp:', new Date().toISOString());
-    console.log('========================================');
-
     const payload = await request.text();
-    console.log('✓ Payload received, length:', payload.length);
     
     const headers = {
       'webhook-id': request.headers.get('webhook-id') || '',
@@ -21,32 +13,23 @@ export async function POST(request: Request) {
       'webhook-signature': request.headers.get('webhook-signature') || ''
     };
     
-    console.log('✓ Headers extracted');
-    console.log('  - webhook-id:', headers['webhook-id']);
-    console.log('  - webhook-timestamp:', headers['webhook-timestamp']);
-    console.log('  - webhook-signature:', headers['webhook-signature'] ? 'present' : 'MISSING');
-    
     const hookSecret = process.env.SUPABASE_HOOK_SECRET?.replace('v1,whsec_', '') || '';
     
     if (!hookSecret) {
-      console.error('❌ SUPABASE_HOOK_SECRET not configured!');
+      console.error('SUPABASE_HOOK_SECRET not configured');
       return new Response(
         JSON.stringify({ error: 'Server configuration error' }), 
         { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
     }
     
-    console.log('✓ Hook secret configured');
-    
     const wh = new Webhook(hookSecret);
     
     let event;
     try {
       event = wh.verify(payload, headers) as any;
-      console.log('✅ Webhook signature verified');
     } catch (err) {
-      console.error('❌ Webhook verification failed');
-      console.error('Error details:', err);
+      console.error('Webhook verification failed:', err);
       return new Response(
         JSON.stringify({ error: 'Invalid signature' }), 
         { status: 401, headers: { 'Content-Type': 'application/json' } }
@@ -55,15 +38,8 @@ export async function POST(request: Request) {
     
     const { user, email_data } = event;
     
-    console.log('✓ Event data extracted');
-    console.log('  - User email:', user?.email || 'MISSING');
-    console.log('  - User locale:', user?.user_metadata?.locale || 'not set (defaulting to en)');
-    console.log('  - Email action type:', email_data?.email_action_type || 'UNDEFINED');
-    console.log('  - Has token_hash:', !!email_data?.token_hash);
-    
     if (!user || !user.email) {
-      console.error('❌ Missing user or email in event payload');
-      console.log('Full event:', JSON.stringify(event, null, 2));
+      console.error('Missing user or email in payload');
       return new Response(
         JSON.stringify({ error: 'Missing user data' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
@@ -71,7 +47,7 @@ export async function POST(request: Request) {
     }
     
     if (!email_data) {
-      console.error('❌ Missing email_data');
+      console.error('Missing email_data');
       return new Response(
         JSON.stringify({ error: 'Missing email data' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
@@ -80,29 +56,14 @@ export async function POST(request: Request) {
     
     const locale = user.user_metadata?.locale || 'en';
     
-    // BUILD CONFIRMATION URL from token_hash
-    // Supabase Send Email Hook doesn't provide confirmation_url pre-made
-    // We need to construct it ourselves from the token_hash
     const confirmationUrl = email_data.confirmation_url || 
       `${email_data.site_url}/verify?token_hash=${email_data.token_hash}&type=${email_data.email_action_type || 'signup'}&redirect_to=${encodeURIComponent(email_data.redirect_to || '')}`;
-    
-    console.log('→ Preparing to send email...');
-    console.log('  - Recipient:', user.email);
-    console.log('  - Locale:', locale);
-    console.log('  - Email action type:', email_data.email_action_type || 'signup');
-    console.log('  - Confirmation URL:', confirmationUrl);
     
     const emailContent = getEmailTemplate(email_data.email_action_type || 'signup', locale, {
       confirmationUrl: confirmationUrl,
       email: user.email,
       token: email_data.token
     });
-    
-    console.log('✓ Email template generated');
-    console.log('  - Subject:', emailContent.subject);
-    
-    console.log('→ Calling Resend API...');
-    const emailStartTime = Date.now();
     
     const result = await resend.emails.send({
       from: 'LeadMindset <noreply@leadmindset.org>',
@@ -112,11 +73,8 @@ export async function POST(request: Request) {
       text: emailContent.text
     });
     
-    const emailDuration = Date.now() - emailStartTime;
-    
     if (result.error) {
-      console.error('❌ Resend returned an error');
-      console.error('Error details:', result.error);
+      console.error('Resend error:', result.error);
       return new Response(
         JSON.stringify({ 
           error: 'Email service unavailable',
@@ -132,15 +90,7 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log('✅ Email sent successfully!');
-    console.log('  - Email ID:', result.data?.id);
-    console.log('  - Duration:', emailDuration + 'ms');
-    
-    const totalDuration = Date.now() - startTime;
-    console.log('========================================');
-    console.log('✅ WEBHOOK COMPLETED SUCCESSFULLY');
-    console.log('Total duration:', totalDuration + 'ms');
-    console.log('========================================');
+    console.log('Email sent:', result.data?.id);
     
     return new Response(
       JSON.stringify({ success: true }),
@@ -148,14 +98,7 @@ export async function POST(request: Request) {
     );
     
   } catch (error) {
-    const totalDuration = Date.now() - startTime;
-    console.error('========================================');
-    console.error('❌ WEBHOOK FAILED');
-    console.error('Error:', error);
-    console.error('Error message:', error instanceof Error ? error.message : 'Unknown error');
-    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
-    console.error('Duration before error:', totalDuration + 'ms');
-    console.error('========================================');
+    console.error('Webhook failed:', error instanceof Error ? error.message : 'Unknown error');
     
     return new Response(
       JSON.stringify({ 
