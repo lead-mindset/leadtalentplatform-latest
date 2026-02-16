@@ -2,29 +2,68 @@ import { EmailLayout } from '../EmailLayout'
 
 type WelcomeEmailProps = {
   dashboardUrl?: string
+  locale?: 'en' | 'es'
 }
 
 export default function WelcomeEmail({
   dashboardUrl,
+  locale = 'es'
 }: WelcomeEmailProps) {
+  const content = {
+    es: {
+      title: "Bienvenido/a a LEAD Mindset 🚀",
+      greeting: "Hola 👋",
+      intro: "Tu cuenta en LEAD Mindset ya está activa. Nos alegra tenerte como parte de una comunidad enfocada en liderazgo, mentalidad y crecimiento continuo.",
+      listTitle: "Desde LEAD Platform podrás:",
+      listItems: [
+        "Acceder a contenidos y experiencias exclusivas",
+        "Conectar con personas con mentalidad de crecimiento",
+        "Desarrollar habilidades clave para tu futuro profesional"
+      ],
+      button: "Ir a la plataforma",
+      closing: "Gracias por ser parte de este camino.",
+      signature: "Equipo LEAD Mindset"
+    },
+    en: {
+      title: "Welcome to LEAD Mindset 🚀",
+      greeting: "Hi 👋",
+      intro: "Your LEAD Mindset account is now active. We're thrilled to have you as part of a community focused on leadership, mindset, and continuous growth.",
+      listTitle: "With LEAD Platform you can:",
+      listItems: [
+        "Access exclusive content and experiences",
+        "Connect with growth-minded people",
+        "Develop key skills for your professional future"
+      ],
+      button: "Go to platform",
+      closing: "Thanks for being part of this journey.",
+      signature: "LEAD Mindset Team"
+    }
+  }[locale];
+
   return (
-    <EmailLayout title="Bienvenido/a a LEAD Mindset 🚀">
-      <p>Hola 👋</p>
+    <EmailLayout title={content.title}>
+      <p>{content.greeting}</p>
 
       <p>
-        Tu cuenta en <strong>LEAD Mindset</strong> ya está activa.
-        Nos alegra tenerte como parte de una comunidad enfocada en
-        liderazgo, mentalidad y crecimiento continuo.
+        {content.intro.includes('LEAD Mindset') ? (
+          <>
+            {content.intro.split('LEAD Mindset')[0]}
+            <strong>LEAD Mindset</strong>
+            {content.intro.split('LEAD Mindset')[1]}
+          </>
+        ) : (
+          content.intro
+        )}
       </p>
 
       <p>
-        Desde LEAD Platform podrás:
+        {content.listTitle}
       </p>
 
       <ul style={{ paddingLeft: 20 }}>
-        <li>Acceder a contenidos y experiencias exclusivas</li>
-        <li>Conectar con personas con mentalidad de crecimiento</li>
-        <li>Desarrollar habilidades clave para tu futuro profesional</li>
+        {content.listItems.map((item, index) => (
+          <li key={index}>{item}</li>
+        ))}
       </ul>
 
       {dashboardUrl && (
@@ -40,17 +79,25 @@ export default function WelcomeEmail({
               display: 'inline-block',
             }}
           >
-            Ir a la plataforma
+            {content.button}
           </a>
         </p>
       )}
 
       <p>
-        Gracias por ser parte de este camino.
+        {content.closing}
       </p>
 
       <p>
-        — Equipo <strong>LEAD Mindset</strong>
+        — {content.signature.includes('LEAD Mindset') ? (
+          <>
+            {content.signature.split('LEAD Mindset')[0]}
+            <strong>LEAD Mindset</strong>
+            {content.signature.split('LEAD Mindset')[1]}
+          </>
+        ) : (
+          content.signature
+        )}
       </p>
     </EmailLayout>
   )
