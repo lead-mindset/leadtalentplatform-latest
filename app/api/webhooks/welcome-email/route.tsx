@@ -28,11 +28,22 @@ export async function POST(request: Request) {
   const meta = authUser?.user?.user_metadata ?? {};
   const locale = (['en', 'es'].includes(meta.locale) ? meta.locale : 'es') as 'en' | 'es';
 
+  const appUrl = process.env.FRONTEND_URL;
+
+  // Role-based dashboard URL
+  const role = record.role ?? 'member';
+  const dashboardPath =
+    role === 'admin' ? 'admin' :
+    role === 'recruiter' ? 'company' :
+    'student/profile';
+
+  const dashboardUrl = `${appUrl}/${locale}/${dashboardPath}`;
+
   const html = await render(
     <WelcomeEmail
-      dashboardUrl={`${process.env.NEXT_PUBLIC_APP_URL}/dashboard`}
+      dashboardUrl={dashboardUrl}
       name={record.name}
-      role={record.role}
+      role={role}
       locale={locale}
     />
   );
@@ -53,5 +64,6 @@ export async function POST(request: Request) {
     return new Response(JSON.stringify({ error: result.error }), { status: 503 });
   }
 
+  console.log('Welcome email sent:', result.data?.id);
   return new Response(JSON.stringify({ success: true }), { status: 200 });
 }
