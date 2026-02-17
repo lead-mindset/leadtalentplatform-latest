@@ -1,93 +1,77 @@
-import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import {routing} from '@/i18n/routing';
+import { createClient } from "@/lib/supabase/server";
+import { type EmailOtpType } from "@supabase/supabase-js";
+import { type NextRequest, NextResponse } from "next/server";
+import { routing } from "@/i18n/routing";
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ locale: string }> | { locale: string } }
-) {
-  const { searchParams, origin, pathname } = new URL(request.url)
-  const code = searchParams.get('code')
-  let next = searchParams.get('next') ?? '/'
-  
-  const resolvedParams = await Promise.resolve(params);
-  const localeFromPath = pathname.split('/')[1];
-  const locale = resolvedParams?.locale || (routing.locales.includes(localeFromPath as any) ? localeFromPath : routing.defaultLocale);
+export async function GET(request: NextRequest) {
+  const { searchParams, origin, pathname } = new URL(request.url);
+  const token_hash = searchParams.get("token_hash");
+  const type = searchParams.get("type") as EmailOtpType | null;
 
-  if (!next.startsWith('/')) {
-    next = '/'
+  // Get locale from the path /[locale]/auth/confirm
+  const localeFromPath = pathname.split("/")[1];
+  const locale = routing.locales.includes(localeFromPath as any)
+    ? localeFromPath
+    : routing.defaultLocale;
+
+  console.log("[confirm] params:", { token_hash: token_hash?.slice(0, 20), type, locale });
+
+  if (!token_hash || !type) {
+    return NextResponse.redirect(`${origin}/${locale}/auth/error?error=Missing+token_hash+or+type`);
   }
 
-  if (!code) {
-    return NextResponse.redirect(`${origin}/${locale}/auth/error`)
+  const supabase = await createClient();
+
+  const { error } = await supabase.auth.verifyOtp({ type, token_hash });
+
+  console.log("[confirm] verifyOtp error:", error ?? "none");
+
+  if (error) {
+    return NextResponse.redirect(
+      `${origin}/${locale}/auth/error?error=${encodeURIComponent(error.message)}`
+    );
   }
 
-  const supabase = await createClient()
+  // User is now authenticated — do role-based routing same as auth/callback
+  const { data: { user } } = await supabase.auth.getUser();
 
-  const { error: exchangeError } =
-    await supabase.auth.exchangeCodeForSession(code)
-
-  if (exchangeError) {
-    return NextResponse.redirect(`${origin}/${locale}/auth/error`)
+  if (!user) {
+    return NextResponse.redirect(`${origin}/${locale}/auth/error?error=No+user+after+verify`);
   }
 
-  const { data: { user }, error: userFetchError } =
-    await supabase.auth.getUser()
+  const { data: userData } = await supabase
+    .from("User")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
 
-  if (!user || userFetchError) {
-    return NextResponse.redirect(`${origin}/${locale}/auth/error`)
-  }
-
-  if (!user.user_metadata?.locale) {
-    await supabase.auth.updateUser({
-      data: { locale }
-    })
-  }
-
-  const { data: userData, error: userError } = await supabase
-    .from('User')
-    .select('role')
-    .eq('id', user.id)
-    .maybeSingle()
-
-  if (userError) {
-    return NextResponse.redirect(`${origin}/${locale}/auth/error`)
-  }
-
+  // New user — no record yet
   if (!userData) {
-    return NextResponse.redirect(`${origin}/${locale}/onboarding`)
+    return NextResponse.redirect(`${origin}/${locale}/onboarding`);
   }
 
-  const role = userData.role ?? 'member'
+  const role = userData.role ?? "member";
 
-  if (role === 'member' || role === 'editor') {
-    const { data: profile, error: profileError } = await supabase
-      .from('StudentProfile')
-      .select('isFilled')
-      .eq('userId', user.id)
-      .maybeSingle()
+  if (role === "member" || role === "editor") {
+    const { data: profile } = await supabase
+      .from("StudentProfile")
+      .select("isFilled")
+      .eq("userId", user.id)
+      .maybeSingle();
 
-    if (!profile || profileError || !profile.isFilled) {
-      next = `/${locale}/onboarding`
-    } else {
-      next = `/${locale}/student/profile`
+    if (!profile?.isFilled) {
+      return NextResponse.redirect(`${origin}/${locale}/onboarding`);
     }
-  } else if (role === 'recruiter') {
-    next = `/${locale}/company`
-  } else if (role === 'admin') {
-    next = `/${locale}/admin`
-  } else {
-    return NextResponse.redirect(`${origin}/${locale}/auth/error`)
+    return NextResponse.redirect(`${origin}/${locale}/student/profile`);
   }
 
-  const forwardedHost = request.headers.get('x-forwarded-host')
-  const isLocalEnv = process.env.NODE_ENV === 'development'
-
-  if (isLocalEnv) {
-    return NextResponse.redirect(`${origin}${next}`)
-  } else if (forwardedHost) {
-    return NextResponse.redirect(`https://${forwardedHost}${next}`)
-  } else {
-    return NextResponse.redirect(`${origin}${next}`)
+  if (role === "recruiter") {
+    return NextResponse.redirect(`${origin}/${locale}/company`);
   }
+
+  if (role === "admin") {
+    return NextResponse.redirect(`${origin}/${locale}/admin`);
+  }
+
+  return NextResponse.redirect(`${origin}/${locale}/auth/error?error=Unknown+role`);
 }
