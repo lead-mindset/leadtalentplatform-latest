@@ -1,34 +1,74 @@
 import { createClient } from "@/lib/supabase/server";
 import { type EmailOtpType } from "@supabase/supabase-js";
-import { redirect } from "next/navigation";
-import { type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
+import { routing } from "@/i18n/routing";
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
+  const { searchParams, origin, pathname } = new URL(request.url);
   const token_hash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
-  const next = searchParams.get("next") ?? "/";
 
-  console.log('[confirm] params:', { token_hash: token_hash?.slice(0, 20), type, next });
+  const localeFromPath = pathname.split("/")[1];
+  const locale = routing.locales.includes(localeFromPath as any)
+    ? localeFromPath
+    : routing.defaultLocale;
+
+  console.log("[confirm] params:", { token_hash: token_hash?.slice(0, 20), type, locale });
 
   if (!token_hash || !type) {
-    redirect(`/auth/error?error=Missing+token_hash+or+type`);
+    return NextResponse.redirect(`${origin}/${locale}/auth/error?error=Missing+token_hash+or+type`);
   }
 
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.verifyOtp({
-    type,
-    token_hash,
-  });
+  const { error } = await supabase.auth.verifyOtp({ type, token_hash });
 
-  console.log('[confirm] verifyOtp result:', {
-    error: error ? { message: error.message, status: error.status } : null,
-    user: data?.user?.id ?? null,
-  });
+  console.log("[confirm] verifyOtp error:", error ?? "none");
 
   if (error) {
-    redirect(`/auth/error?error=${encodeURIComponent(error.message)}&status=${error.status}`);
+    return NextResponse.redirect(
+      `${origin}/${locale}/auth/error?error=${encodeURIComponent(error.message)}`
+    );
   }
 
-  redirect(next);
+  // User is authenticated — route based on role
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.redirect(`${origin}/${locale}/auth/error?error=No+user+after+verify`);
+  }
+
+  const { data: userData } = await supabase
+    .from("User")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (!userData) {
+    return NextResponse.redirect(`${origin}/${locale}/onboarding`);
+  }
+
+  const role = userData.role ?? "member";
+
+  if (role === "member" || role === "editor") {
+    const { data: profile } = await supabase
+      .from("StudentProfile")
+      .select("isFilled")
+      .eq("userId", user.id)
+      .maybeSingle();
+
+    if (!profile?.isFilled) {
+      return NextResponse.redirect(`${origin}/${locale}/onboarding`);
+    }
+    return NextResponse.redirect(`${origin}/${locale}/student/profile`);
+  }
+
+  if (role === "recruiter") {
+    return NextResponse.redirect(`${origin}/${locale}/company`);
+  }
+
+  if (role === "admin") {
+    return NextResponse.redirect(`${origin}/${locale}/admin`);
+  }
+
+  return NextResponse.redirect(`${origin}/${locale}/auth/error?error=Unknown+role`);
 }
