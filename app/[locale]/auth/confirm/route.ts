@@ -9,18 +9,26 @@ export async function GET(request: NextRequest) {
   const type = searchParams.get("type") as EmailOtpType | null;
   const next = searchParams.get("next") ?? "/";
 
-  if (token_hash && type) {
-    const supabase = await createClient()
-    const { error } = await supabase.auth.verifyOtp({
-      type,
-      token_hash,
-    });
-    if (!error) {
-      redirect(next);
-    } else {
-      redirect(`/auth/error?error=${error?.message}`);
-    }
+  console.log('[confirm] params:', { token_hash: token_hash?.slice(0, 20), type, next });
+
+  if (!token_hash || !type) {
+    redirect(`/auth/error?error=Missing+token_hash+or+type`);
   }
 
-  redirect(`/auth/error?error=No token hash or type`);
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.verifyOtp({
+    type,
+    token_hash,
+  });
+
+  console.log('[confirm] verifyOtp result:', {
+    error: error ? { message: error.message, status: error.status } : null,
+    user: data?.user?.id ?? null,
+  });
+
+  if (error) {
+    redirect(`/auth/error?error=${encodeURIComponent(error.message)}&status=${error.status}`);
+  }
+
+  redirect(next);
 }
