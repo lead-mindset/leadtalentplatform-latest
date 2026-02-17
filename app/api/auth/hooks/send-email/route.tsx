@@ -57,16 +57,14 @@ export async function POST(request: Request) {
       );
     }
     
-    const locale = (user.user_metadata?.locale || 'en') as 'en' | 'es';
+    const locale = (user.user_metadata?.locale || 'es') as 'en' | 'es';
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || email_data.site_url;
+    const emailType = email_data.email_action_type || 'signup';
+
+    const confirmationUrl = `${appUrl}/${locale}/auth/confirm?token_hash=${email_data.token_hash}&type=${emailType}&next=${encodeURIComponent(email_data.redirect_to || `/${locale}/dashboard`)}`;
     
-    const confirmationUrl = email_data.confirmation_url || 
-      `${email_data.site_url}/verify?token_hash=${email_data.token_hash}&type=${email_data.email_action_type || 'signup'}&redirect_to=${encodeURIComponent(email_data.redirect_to || '')}`;
-    
-    // Render Oscar's React components to HTML
     let html = '';
     let subject = '';
-    
-    const emailType = email_data.email_action_type || 'signup';
     
     if (emailType === 'recovery') {
       html = await render(
@@ -76,7 +74,6 @@ export async function POST(request: Request) {
         ? 'Restablece tu contraseña - LEAD Mindset'
         : 'Reset your password - LEAD Mindset';
     } else {
-      // signup or magiclink
       html = await render(
         <ConfirmSignupEmail confirmationUrl={confirmationUrl} locale={locale} />
       );
@@ -88,8 +85,8 @@ export async function POST(request: Request) {
     const result = await resend.emails.send({
       from: 'LEAD Mindset <noreply@leadmindset.org>',
       to: user.email,
-      subject: subject,
-      html: html,
+      subject,
+      html,
     });
     
     if (result.error) {
