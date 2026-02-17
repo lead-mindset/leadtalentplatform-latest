@@ -1,77 +1,71 @@
-import { createClient } from "@/lib/supabase/server";
-import { type EmailOtpType } from "@supabase/supabase-js";
-import { type NextRequest, NextResponse } from "next/server";
-import { routing } from "@/i18n/routing";
+import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { routing } from '@/i18n/routing';
 
-export async function GET(request: NextRequest) {
-  const { searchParams, origin, pathname } = new URL(request.url);
-  const token_hash = searchParams.get("token_hash");
-  const type = searchParams.get("type") as EmailOtpType | null;
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ locale: string }> | { locale: string } }
+) {
+  const { searchParams, origin, pathname } = new URL(request.url)
+  const code = searchParams.get('code')
+  let next = searchParams.get('next') ?? '/'
+  
+  const resolvedParams = await Promise.resolve(params);
+  const localeFromPath = pathname.split('/')[1];
+  const locale = resolvedParams?.locale || (routing.locales.includes(localeFromPath as any) ? localeFromPath : routing.defaultLocale);
 
-  // Get locale from the path /[locale]/auth/confirm
-  const localeFromPath = pathname.split("/")[1];
-  const locale = routing.locales.includes(localeFromPath as any)
-    ? localeFromPath
-    : routing.defaultLocale;
-
-  console.log("[confirm] params:", { token_hash: token_hash?.slice(0, 20), type, locale });
-
-  if (!token_hash || !type) {
-    return NextResponse.redirect(`${origin}/${locale}/auth/error?error=Missing+token_hash+or+type`);
+  if (!next.startsWith('/')) {
+    next = '/'
   }
 
-  const supabase = await createClient();
-
-  const { error } = await supabase.auth.verifyOtp({ type, token_hash });
-
-  console.log("[confirm] verifyOtp error:", error ?? "none");
-
-  if (error) {
-    return NextResponse.redirect(
-      `${origin}/${locale}/auth/error?error=${encodeURIComponent(error.message)}`
-    );
+  if (!code) {
+    return NextResponse.redirect(`${origin}/${locale}/auth/error`)
   }
 
-  // User is now authenticated — do role-based routing same as auth/callback
-  const { data: { user } } = await supabase.auth.getUser();
+  const supabase = await createClient()
+  const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
 
-  if (!user) {
-    return NextResponse.redirect(`${origin}/${locale}/auth/error?error=No+user+after+verify`);
+  if (exchangeError) {
+    return NextResponse.redirect(`${origin}/${locale}/auth/error`)
+  }
+
+  const { data: { user }, error: userFetchError } = await supabase.auth.getUser()
+
+  if (!user || userFetchError) {
+    return NextResponse.redirect(`${origin}/${locale}/auth/error`)
+  }
+
+  if (!user.user_metadata?.locale) {
+    await supabase.auth.updateUser({ data: { locale } })
   }
 
   const { data: userData } = await supabase
-    .from("User")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
+    .from('User')
+    .select('role')
+    .eq('id', user.id)
+    .maybeSingle()
 
-  // New user — no record yet
   if (!userData) {
-    return NextResponse.redirect(`${origin}/${locale}/onboarding`);
+    return NextResponse.redirect(`${origin}/${locale}/onboarding`)
   }
 
-  const role = userData.role ?? "member";
+  const role = userData.role ?? 'member'
 
-  if (role === "member" || role === "editor") {
+  if (role === 'member' || role === 'editor') {
     const { data: profile } = await supabase
-      .from("StudentProfile")
-      .select("isFilled")
-      .eq("userId", user.id)
-      .maybeSingle();
+      .from('StudentProfile')
+      .select('isFilled')
+      .eq('userId', user.id)
+      .maybeSingle()
 
     if (!profile?.isFilled) {
-      return NextResponse.redirect(`${origin}/${locale}/onboarding`);
+      return NextResponse.redirect(`${origin}/${locale}/onboarding`)
     }
-    return NextResponse.redirect(`${origin}/${locale}/student/profile`);
+    return NextResponse.redirect(`${origin}/${locale}/student/profile`)
   }
 
-  if (role === "recruiter") {
-    return NextResponse.redirect(`${origin}/${locale}/company`);
-  }
+  if (role === 'recruiter') return NextResponse.redirect(`${origin}/${locale}/company`)
+  if (role === 'admin') return NextResponse.redirect(`${origin}/${locale}/admin`)
 
-  if (role === "admin") {
-    return NextResponse.redirect(`${origin}/${locale}/admin`);
-  }
-
-  return NextResponse.redirect(`${origin}/${locale}/auth/error?error=Unknown+role`);
+  return NextResponse.redirect(`${origin}/${locale}/auth/error`)
 }
