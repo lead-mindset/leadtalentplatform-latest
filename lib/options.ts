@@ -9,6 +9,13 @@ export const SKILL_OPTIONS = [
   { value: 'projectmanagement', icon: '📋', category: 'Soft Skills', key: 'projectManagement' },
 ] as const
 
+export const GENDER_VALUES = [
+  "man",
+  "woman", 
+  "non_binary",
+  "prefer_not_to_say",
+] as const
+
 export const LEAD_ROLE_VALUES = [
   "president",
   "vicepresident",
