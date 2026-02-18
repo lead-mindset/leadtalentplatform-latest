@@ -26,6 +26,7 @@ export async function submitOnboarding(formData: FormData) {
             phone: formData.get('phone')?.toString() || '',
             career: formData.get('career')?.toString() || '',
             lead_chapter: formData.get('lead_chapter')?.toString() || '',
+            gender: formData.get('gender')?.toString() || '',
             graduationYear: Number(formData.get('graduationYear')) || 0,
             skills: JSON.parse(formData.get('skills')?.toString() || '[]'),
             linkedin_url: formData.get('linkedin_url')?.toString() || '',
@@ -80,6 +81,7 @@ export async function submitOnboarding(formData: FormData) {
             .upsert({
                 userId: user.id,
                 major: data.career,
+                gender: data.gender,
                 graduationYear: data.graduationYear,
                 linkedinUrl: data.linkedin_url,
                 skills: data.skills,
