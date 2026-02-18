@@ -6,7 +6,9 @@ export function createBaseProfileSchema(t: (key: string, values?: any) => string
     full_name: z.string().min(1, t('validation.nameRequired')),
     phone: z.string().min(5, t('validation.phoneInvalid')),
     career: z.string().min(1, t('validation.careerRequired')),
-
+    gender: z.enum(["man", "woman", "non_binary", "prefer_not_to_say"], {
+      message: t('validation.selectGender')
+    }),
     graduationYear: z.coerce
       .number({ message: t('validation.enterGraduationYear') })
       .refine(val => val !== 0, {
@@ -65,5 +67,5 @@ export type ProfileData = {
   lead_chapter: string
   linkedin_url: string
   consentRecruiterVisibility: boolean
-  emailNotificationsEnabled: boolean 
+  emailNotificationsEnabled: boolean
 }
