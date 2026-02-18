@@ -83,6 +83,13 @@
     "checkEmailConfirm": "Check your email to confirm",
     "confirmAccountMessage": "You've successfully signed up. Please check your email to confirm your account before signing in."
   },
+  "gender": {
+    "label": "Gender",
+    "man": "Man",
+    "woman": "Woman",
+    "non_binary": "Non-binary",
+    "prefer_not_to_say": "Prefer not to say"
+  },
   "home": {
     "logoAlt": "LEAD Logo",
     "heroTitle": "Join Lead Talent Platform",
@@ -211,6 +218,7 @@
   },
   "validation": {
     "nameRequired": "Name is required",
+    "selectGender": "Please select your gender",
     "phoneInvalid": "Invalid phone number",
     "phoneMinLength": "Phone number must be at least 5 characters",
     "careerRequired": "Career field is required",

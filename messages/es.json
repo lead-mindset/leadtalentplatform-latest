@@ -212,6 +212,7 @@
   "validation": {
     "nameRequired": "El nombre es requerido",
     "phoneInvalid": "Teléfono inválido",
+    "selectGender": "Por favor selecciona tu género",
     "phoneMinLength": "El teléfono debe tener al menos 5 caracteres",
     "careerRequired": "La carrera es requerida",
     "enterGraduationYear": "Por favor ingresa tu año de graduación",
@@ -250,6 +251,13 @@
     "lead_academy_director": "Director de LEAD Academia",
     "participant": "Participante",
     "other": "Otro"
+  },
+  "gender": {
+    "label": "Género",
+    "man": "Hombre",
+    "woman": "Mujer",
+    "non_binary": "No binario",
+    "prefer_not_to_say": "Prefiero no decirlo"
   },
   "chapters": {
     "leadpucp": "LEAD PUCP",
