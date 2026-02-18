@@ -14,6 +14,7 @@ import { submitOnboarding } from '@/lib/actions/student/onboarding'
 import z from 'zod'
 import { useTranslations } from 'next-intl'
 import { useTranslatedSkills, useTranslatedChapters } from '@/lib/use-translated-options'
+import { useTranslatedGender } from '@/lib/use-translated-options'
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -33,6 +34,7 @@ export default function Onboarding() {
 
   const translatedSkills = useTranslatedSkills()
   const translatedChapters = useTranslatedChapters()
+  const translatedGender = useTranslatedGender()
 
   const [fileName, setFileName] = useState('')
   const [isUploading, setIsUploading] = useState(false)
@@ -50,6 +52,7 @@ export default function Onboarding() {
       career: '',
       graduationYear: 0,
       skills: [],
+      gender: undefined,
       lead_chapter: '',
       linkedin_url: '',
       resume_pdf: undefined,
@@ -66,7 +69,7 @@ export default function Onboarding() {
   } = methods
 
   const stepFields: Record<number, (keyof OnboardingValues)[]> = {
-    1: ['full_name', 'phone', 'lead_chapter'],
+    1: ['full_name', 'phone', 'gender', 'lead_chapter'],
     2: ['career', 'graduationYear', 'skills'],
     3: ['linkedin_url', 'resume_pdf', 'consentRecruiterVisibility'],
   }
@@ -151,6 +154,42 @@ export default function Onboarding() {
               name="phone"
               placeholder={t('phonePlaceholder')}
               error={errors.phone?.message}
+            />
+
+            <Controller
+              control={control}
+              name="gender"
+              render={({ field }) => (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">
+                    {t('gender.label')}
+                  </label>
+                  <ToggleGroup
+                    type="single"
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    variant="outline"
+                    size="sm"
+                    className="grid grid-cols-2 w-full"
+                  >
+                    {translatedGender.map((option) => (
+                      <ToggleGroupItem
+                        key={option.value}
+                        value={option.value}
+                        className="justify-center data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:border-primary"
+                      >
+                        {option.label}
+                      </ToggleGroupItem>
+                    ))}
+                  </ToggleGroup>
+                  {errors.gender && (
+                    <p className="flex items-center gap-1 text-sm text-destructive">
+                      <X className="h-3 w-3" />
+                      {errors.gender.message}
+                    </p>
+                  )}
+                </div>
+              )}
             />
 
             <Controller
