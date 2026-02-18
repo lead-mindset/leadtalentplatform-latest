@@ -8,7 +8,7 @@ export function createBaseProfileSchema(t: (key: string, values?: any) => string
     career: z.string().min(1, t('validation.careerRequired')),
     gender: z.enum(["man", "woman", "non_binary", "prefer_not_to_say"], {
       message: t('validation.selectGender')
-    }),
+    }).optional(),
     graduationYear: z.coerce
       .number({ message: t('validation.enterGraduationYear') })
       .refine(val => val !== 0, {
