@@ -5,6 +5,7 @@ import { createBaseProfileSchema } from '@/lib/memberschema'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
+import { generateUniqueMemberId } from './generate-member-ids'
 
 export async function submitOnboarding(formData: FormData) {
     try {
@@ -66,6 +67,14 @@ export async function submitOnboarding(formData: FormData) {
             return { error: 'User row does not exist for StudentProfile insert' }
         }
 
+        const { data: existingProfile } = await supabase
+            .from('StudentProfile')
+            .select('memberId')
+            .eq('userId', user.id)
+            .maybeSingle()
+
+        const memberId = existingProfile?.memberId ?? await generateUniqueMemberId(supabase)
+
         const { error: profileError } = await supabase
             .from('StudentProfile')
             .upsert({
@@ -80,6 +89,7 @@ export async function submitOnboarding(formData: FormData) {
                 updatedAt: now,
                 isFilled: true,
                 chapterId: data.lead_chapter,
+                memberId,
             })
 
         if (profileError) {
