@@ -1,5 +1,5 @@
 import { useTranslations } from 'next-intl'
-import { SKILL_OPTIONS, LEAD_ROLE_VALUES, LEAD_CHAPTER_VALUES, AVAILABILITY_VALUES, CAREER_VALUES } from '@/lib/options'
+import { SKILL_OPTIONS, GENDER_VALUES, LEAD_ROLE_VALUES, LEAD_CHAPTER_VALUES, AVAILABILITY_VALUES, CAREER_VALUES } from '@/lib/options'
 
 export function useTranslatedSkills() {
   const t = useTranslations('skills')
@@ -43,5 +43,14 @@ export function useTranslatedCareers() {
   return CAREER_VALUES.map(career => ({
     value: career,
     label: t(career)
+  }))
+}
+
+export function useTranslatedGender() {
+  const t = useTranslations('gender')
+  
+  return GENDER_VALUES.map(gender => ({
+    value: gender,
+    label: t(gender)
   }))
 }
