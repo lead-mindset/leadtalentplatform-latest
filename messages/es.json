@@ -196,6 +196,7 @@
     "createCustom": "✨ Crear \"{value}\"",
     "selectSkills": "Selecciona habilidades...",
     "searchSkills": "Buscar habilidades...",
+    "genderLabel": "Género",
     "noSkillFound": "No se encontró ninguna habilidad.",
     "expectedGradYear": "Año de Graduación Esperado",
     "skillsExpertise": "Habilidades y Experiencia",

@@ -203,6 +203,7 @@
      "selectSkills": "Select skills...",
     "searchSkills": "Search skills...",
     "noSkillFound": "No skill found.",
+    "genderLabel": "Gender",
     "createCustom": "✨ Create \"{value}\"",
     "expectedGradYear": "Expected Graduation Year",
     "skillsExpertise": "Skills & Expertise",
