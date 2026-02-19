@@ -15,7 +15,13 @@ export default async function StudentLayout({
 }: StudentLayoutProps) {
   await params
   
-  const { user } = await requireUser()
+  const { supabase, user } = await requireUser()
+
+  const { data: profile } = await supabase
+    .from('StudentProfile')
+    .select('memberId')
+    .eq('userId', user.id)
+    .single()
   
   return (
     <SidebarLayout
@@ -24,6 +30,7 @@ export default async function StudentLayout({
           userName={user.name}
           userEmail={user.email}
           userRole={user.role}
+          memberId={profile?.memberId ?? undefined}
         >
           <StudentNavigation 
             userRole={user.role}

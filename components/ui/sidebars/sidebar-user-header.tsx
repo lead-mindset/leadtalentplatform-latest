@@ -5,6 +5,7 @@ interface SidebarUserHeaderProps {
   name: string
   email?: string
   role?: string
+  memberId?: string
 }
 
 function getInitials(name: string): string {
@@ -16,7 +17,7 @@ function getInitials(name: string): string {
     .slice(0, 2)
 }
 
-export function SidebarUserHeader({ name, email, role }: SidebarUserHeaderProps) {
+export function SidebarUserHeader({ name, email, role, memberId }: SidebarUserHeaderProps) {
   return (
     <div className="flex items-center gap-3 border-b p-4">
       <Avatar className="h-10 w-10 border-2 border-primary/20">
@@ -36,11 +37,18 @@ export function SidebarUserHeader({ name, email, role }: SidebarUserHeaderProps)
           </p>
         )}
         
-        {role && (
-          <Badge variant="secondary" className="text-xs">
-            {role}
-          </Badge>
-        )}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {role && (
+            <Badge variant="secondary" className="text-xs">
+              {role}
+            </Badge>
+          )}
+          {memberId && (
+            <Badge variant="outline" className="text-xs font-mono text-muted-foreground">
+              #{memberId}
+            </Badge>
+          )}
+        </div>
       </div>
     </div>
   )

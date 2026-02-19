@@ -14,13 +14,15 @@ interface BaseSidebarProps {
   userName: string
   userEmail?: string
   userRole?: string
+  memberId?: string
   children: ReactNode
 }
 
 export function BaseSidebar({ 
   userName, 
   userEmail, 
-  userRole, 
+  userRole,
+  memberId,
   children 
 }: BaseSidebarProps) {
   return (
@@ -30,6 +32,7 @@ export function BaseSidebar({
           name={userName}
           email={userEmail}
           role={userRole}
+          memberId={memberId}
         />
       </SidebarHeader>
 
