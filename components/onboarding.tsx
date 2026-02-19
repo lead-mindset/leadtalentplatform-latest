@@ -15,6 +15,7 @@ import z from 'zod'
 import { useTranslations } from 'next-intl'
 import { useTranslatedSkills, useTranslatedChapters } from '@/lib/use-translated-options'
 import { useTranslatedGender } from '@/lib/use-translated-options'
+import { SkillsCombobox } from './ui/skills-combobox'
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -162,7 +163,7 @@ export default function Onboarding() {
               render={({ field }) => (
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-foreground">
-                    {t('gender.label')}
+                    {t('genderLabel')}
                   </label>
                   <ToggleGroup
                     type="single"
@@ -268,47 +269,18 @@ export default function Onboarding() {
               control={control}
               name="skills"
               render={({ field }) => (
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <label className="text-sm font-medium text-foreground">
-                      {t('skillsExpertise')}
-                    </label>
-                    <span className="text-xs text-muted-foreground">
-                      {field.value.length} {t('selected')}
-                    </span>
-                  </div>
-
-                  <ToggleGroup
-                    type="multiple"
-                    value={field.value}
-                    onValueChange={field.onChange}
-                    variant="outline"
-                    size="sm"
-                    spacing={2}
-                    className="grid grid-cols-2 w-full"
-                  >
-                    {translatedSkills.map((skill) => (
-                      <ToggleGroupItem
-                        key={skill.value}
-                        value={skill.value}
-                        aria-label={skill.value}
-                        className="justify-start gap-2 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:border-primary"
-                      >
-                        <span className="text-base">{skill.icon}</span>
-                        <span className="flex-1 text-left">
-                          {skill.label}
-                        </span>
-                      </ToggleGroupItem>
-                    ))}
-                  </ToggleGroup>
-
-                  {errors.skills && (
-                    <p className="flex items-center gap-1 text-sm text-destructive">
-                      <X className="h-3 w-3" />
-                      {errors.skills.message}
-                    </p>
-                  )}
-                </div>
+                <SkillsCombobox
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={translatedSkills}
+                  label={t('skillsExpertise')}
+                  countLabel={t('selected')}
+                  placeholder={t('selectSkills')}
+                  searchPlaceholder={t('searchSkills')}
+                  createLabel={(input) => t('createCustom', { value: input })}
+                  noResultsLabel={t('noSkillFound')}
+                  error={errors.skills?.message}
+                />
               )}
             />
           </div>
