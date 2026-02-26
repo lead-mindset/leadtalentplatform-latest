@@ -208,62 +208,71 @@ interface StepContentWrapperProps {
   className?: string;
 }
 
+
 function StepContentWrapper({
   isCompleted,
   currentStep,
   direction,
   children,
-  className = ''
+  className = '',
 }: StepContentWrapperProps) {
-  const [parentHeight, setParentHeight] = useState<number>(0);
+  const [height, setHeight] = useState<number | 'auto'>(0)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   return (
     <motion.div
+      animate={{ height: isCompleted ? 0 : height }}
+      transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
       style={{ position: 'relative', overflow: 'hidden' }}
-      animate={{ height: isCompleted ? 0 : parentHeight }}
-      transition={{ type: 'spring', duration: 0.4 }}
       className={className}
     >
       <AnimatePresence initial={false} mode="sync" custom={direction}>
         {!isCompleted && (
-          <SlideTransition key={currentStep} direction={direction} onHeightReady={h => setParentHeight(h)}>
+          <SlideTransition
+            key={currentStep}
+            direction={direction}
+            onHeightReady={setHeight}
+          >
             {children}
           </SlideTransition>
         )}
       </AnimatePresence>
     </motion.div>
-  );
+  )
 }
 
 interface SlideTransitionProps {
-  children: ReactNode;
-  direction: number;
-  onHeightReady: (height: number) => void;
+  children: ReactNode
+  direction: number
+  onHeightReady: (h: number) => void
 }
 
 function SlideTransition({ children, direction, onHeightReady }: SlideTransitionProps) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  const ref = useRef<HTMLDivElement>(null)
 
   useLayoutEffect(() => {
-    if (containerRef.current) {
-      onHeightReady(containerRef.current.offsetHeight);
-    }
-  }, [children, onHeightReady]);
+    if (!ref.current) return
+    const ro = new ResizeObserver(([entry]) => {
+      onHeightReady(entry.contentRect.height)
+    })
+    ro.observe(ref.current)
+    return () => ro.disconnect()
+  }, [onHeightReady])
 
   return (
     <motion.div
-      ref={containerRef}
+      ref={ref}
       custom={direction}
       variants={stepVariants}
       initial="enter"
       animate="center"
       exit="exit"
-      transition={{ duration: 0.4 }}
+      transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
       style={{ position: 'absolute', left: 0, right: 0, top: 0 }}
     >
       {children}
     </motion.div>
-  );
+  )
 }
 
 const stepVariants: Variants = {
@@ -595,7 +604,7 @@ export function FormInput({
         aria-invalid={!!error}
       />
 
-       {error && (
+      {error && (
         <p className="flex items-center gap-1 text-sm text-destructive">
           <X className="h-3 w-3" />
           {error}
