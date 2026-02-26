@@ -165,24 +165,27 @@ export default function Onboarding() {
                   <label className="text-sm font-medium text-foreground">
                     {t('genderLabel')}
                   </label>
-                  <ToggleGroup
-                    type="single"
+
+                  <Select
                     value={field.value}
                     onValueChange={field.onChange}
-                    variant="outline"
-                    size="sm"
-                    className="grid grid-cols-2 w-full"
                   >
-                    {translatedGender.map((option) => (
-                      <ToggleGroupItem
-                        key={option.value}
-                        value={option.value}
-                        className="justify-center data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:border-primary"
-                      >
-                        {option.label}
-                      </ToggleGroupItem>
-                    ))}
-                  </ToggleGroup>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('selectGender')} />
+                    </SelectTrigger>
+
+                    <SelectContent>
+                      {translatedGender.map((option) => (
+                        <SelectItem
+                          key={option.value}
+                          value={option.value}
+                        >
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
                   {errors.gender && (
                     <p className="flex items-center gap-1 text-sm text-destructive">
                       <X className="h-3 w-3" />
@@ -192,7 +195,6 @@ export default function Onboarding() {
                 </div>
               )}
             />
-
             <Controller
               control={control}
               name="lead_chapter"
