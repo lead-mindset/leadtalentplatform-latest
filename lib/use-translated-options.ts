@@ -3,10 +3,9 @@ import { SKILL_OPTIONS, GENDER_VALUES, LEAD_ROLE_VALUES, LEAD_CHAPTER_VALUES, AV
 
 export function useTranslatedSkills() {
   const t = useTranslations('skills')
-  
   return SKILL_OPTIONS.map(skill => ({
     ...skill,
-    label: t(skill.key)
+    label: t(skill.value)
   }))
 }
 
