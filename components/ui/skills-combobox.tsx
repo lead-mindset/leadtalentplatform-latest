@@ -97,24 +97,6 @@ export function SkillsCombobox({
         </div>
       )}
 
-      {value.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {value.map((skill) => (
-            <Badge key={skill} variant="secondary" className="gap-1 pr-1 text-xs">
-              {getLabel(skill)}
-              <button
-                type="button"
-                onClick={() => remove(skill)}
-                className="ml-0.5 rounded-full p-0.5 hover:bg-secondary-foreground/10 transition-colors"
-                aria-label={`Remove ${getLabel(skill)}`}
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
-        </div>
-      )}
-
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -135,24 +117,12 @@ export function SkillsCombobox({
               value={search}
               onValueChange={setSearch}
             />
-            <CommandList>
-              <CommandEmpty>
-                {showCreate ? (
-                  <div className="px-2 py-3">
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start"
-                      onClick={createCustom}
-                    >
-                      {createLabel(search)}
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="py-6 text-center text-sm text-muted-foreground">
-                    {noResultsLabel}
-                  </div>
-                )}
-              </CommandEmpty>
+            <CommandList className="max-h-60 overflow-y-auto">
+              {filteredOptions.length === 0 && !showCreate && (
+                <p className="py-4 text-center text-sm text-muted-foreground">
+                  {noResultsLabel}
+                </p>
+              )}
 
               {filteredOptions.length > 0 && (
                 <CommandGroup>
@@ -175,10 +145,10 @@ export function SkillsCombobox({
                 </CommandGroup>
               )}
 
-              {showCreate && filteredOptions.length > 0 && (
-                <CommandGroup heading="Custom">
+              {showCreate && (
+                <CommandGroup>
                   <CommandItem onSelect={createCustom}>
-                    <span className="text-muted-foreground">{createLabel(search)}</span>
+                    <span>{createLabel(search)}</span>
                   </CommandItem>
                 </CommandGroup>
               )}
@@ -186,6 +156,24 @@ export function SkillsCombobox({
           </Command>
         </PopoverContent>
       </Popover>
+
+      {value.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {value.map((skill) => (
+            <Badge key={skill} variant="secondary" className="gap-1 pr-1 text-xs">
+              {getLabel(skill)}
+              <button
+                type="button"
+                onClick={() => remove(skill)}
+                className="ml-0.5 rounded-full p-0.5 hover:bg-secondary-foreground/10 transition-colors"
+                aria-label={`Remove ${getLabel(skill)}`}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ))}
+        </div>
+      )}
 
       {error && (
         <p className="flex items-center gap-1 text-sm text-destructive">
