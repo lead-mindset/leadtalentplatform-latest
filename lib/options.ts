@@ -1,17 +1,48 @@
 export const SKILL_OPTIONS = [
-  { value: 'javascript', icon: '⚡', category: 'Technical', key: 'javascript' },
-  { value: 'python', icon: '🐍', category: 'Technical', key: 'python' },
-  { value: 'dataanalysis', icon: '📊', category: 'Technical', key: 'dataAnalysis' },
-  { value: 'uxui', icon: '🎨', category: 'Design', key: 'uxui' },
-  { value: 'aiml', icon: '🤖', category: 'Technical', key: 'aiml' },
-  { value: 'leadership', icon: '👥', category: 'Soft Skills', key: 'leadership' },
-  { value: 'publicspeaking', icon: '🎤', category: 'Soft Skills', key: 'publicSpeaking' },
-  { value: 'projectmanagement', icon: '📋', category: 'Soft Skills', key: 'projectManagement' },
+  // Technical - Programming
+  { value: 'javascript', category: 'Technical' },
+  { value: 'python', category: 'Technical' },
+  { value: 'typescript', category: 'Technical' },
+  { value: 'java', category: 'Technical' },
+  { value: 'cpp', category: 'Technical' },
+  { value: 'sql', category: 'Technical' },
+  { value: 'react', category: 'Technical' },
+  { value: 'nodejs', category: 'Technical' },
+
+  // Technical - Data & AI
+  { value: 'dataAnalysis', category: 'Technical' },
+  { value: 'aiml', category: 'Technical' },
+  { value: 'machineLearning', category: 'Technical' },
+  { value: 'dataVisualization', category: 'Technical' },
+  { value: 'powerbi', category: 'Technical' },
+  { value: 'excel', category: 'Technical' },
+
+  // Technical - Cloud & DevOps
+  { value: 'azure', category: 'Technical' },
+  { value: 'aws', category: 'Technical' },
+  { value: 'git', category: 'Technical' },
+  { value: 'agile', category: 'Technical' },
+
+  // Design
+  { value: 'uxui', category: 'Design' },
+  { value: 'figma', category: 'Design' },
+
+  // Soft Skills
+  { value: 'leadership', category: 'Soft Skills' },
+  { value: 'publicSpeaking', category: 'Soft Skills' },
+  { value: 'projectManagement', category: 'Soft Skills' },
+  { value: 'teamwork', category: 'Soft Skills' },
+  { value: 'criticalThinking', category: 'Soft Skills' },
+  { value: 'communication', category: 'Soft Skills' },
+  { value: 'networking', category: 'Soft Skills' },
+  { value: 'mentoring', category: 'Soft Skills' },
+  { value: 'eventPlanning', category: 'Soft Skills' },
+  { value: 'fundraising', category: 'Soft Skills' },
 ] as const
 
 export const GENDER_VALUES = [
   "man",
-  "woman", 
+  "woman",
   "non_binary",
   "prefer_not_to_say",
 ] as const
