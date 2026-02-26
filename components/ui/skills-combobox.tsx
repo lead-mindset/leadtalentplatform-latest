@@ -21,7 +21,7 @@ import {
 interface SkillOption {
   value: string
   label: string
-  icon?: string
+  category: string
 }
 
 interface SkillsComboboxProps {
@@ -84,9 +84,6 @@ export function SkillsCombobox({
   const getLabel = (skill: string) =>
     options.find((o) => o.value === skill)?.label ?? skill
 
-  const getIcon = (skill: string) =>
-    options.find((o) => o.value === skill)?.icon
-
   return (
     <div className="space-y-2">
       {label && (
@@ -104,7 +101,6 @@ export function SkillsCombobox({
         <div className="flex flex-wrap gap-1.5">
           {value.map((skill) => (
             <Badge key={skill} variant="secondary" className="gap-1 pr-1 text-xs">
-              {getIcon(skill) && <span>{getIcon(skill)}</span>}
               {getLabel(skill)}
               <button
                 type="button"
@@ -172,9 +168,6 @@ export function SkillsCombobox({
                         }}
                       >
                         <Check className={`mr-2 h-4 w-4 ${selected ? 'opacity-100' : 'opacity-0'}`} />
-                        {option.icon && (
-                          <span className="mr-2 text-base">{option.icon}</span>
-                        )}
                         {option.label}
                       </CommandItem>
                     )
