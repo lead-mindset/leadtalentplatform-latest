@@ -17,16 +17,13 @@ import { useTranslatedSkills, useTranslatedChapters } from '@/lib/use-translated
 import { useTranslatedGender } from '@/lib/use-translated-options'
 import { SkillsCombobox } from './ui/skills-combobox'
 import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@/components/ui/toggle-group"
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import Link from 'next/link'
 
 export default function Onboarding() {
   const router = useRouter()
@@ -40,6 +37,8 @@ export default function Onboarding() {
   const [fileName, setFileName] = useState('')
   const [isUploading, setIsUploading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [termsAccepted, setTermsAccepted] = useState(false)
+  const [termsError, setTermsError] = useState(false)
 
   const fullMemberSchema = createFullMemberSchemaFrontend(tValidation)
   type OnboardingValues = z.infer<typeof fullMemberSchema>
@@ -72,7 +71,8 @@ export default function Onboarding() {
   const stepFields: Record<number, (keyof OnboardingValues)[]> = {
     1: ['full_name', 'phone', 'gender', 'lead_chapter'],
     2: ['career', 'graduationYear', 'skills'],
-    3: ['linkedin_url', 'resume_pdf', 'consentRecruiterVisibility'],
+    3: ['linkedin_url', 'resume_pdf'],
+    4: [],
   }
 
   const validateCurrentStep = async (step: number) => {
@@ -80,6 +80,10 @@ export default function Onboarding() {
   }
 
   const handleComplete = async () => {
+    if (!termsAccepted) {
+      setTermsError(true)
+      return
+    }
     const isValid = await trigger()
     if (!isValid) return
 
@@ -87,7 +91,6 @@ export default function Onboarding() {
     setIsSubmitting(true)
 
     const formData = new FormData()
-
     Object.entries(data).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         if (key === 'resume_pdf' && value instanceof File) {
@@ -101,7 +104,6 @@ export default function Onboarding() {
     })
 
     const result = await submitOnboarding(formData)
-
     if (result?.error) {
       console.error(result.error)
       setIsSubmitting(false)
@@ -112,7 +114,6 @@ export default function Onboarding() {
     (onChange: any) => (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0]
       if (!file) return
-
       setIsUploading(true)
       setTimeout(() => {
         setFileName(file.name)
@@ -134,14 +135,9 @@ export default function Onboarding() {
       >
         <div className="space-y-5">
           <div className="space-y-2">
-            <h2 className="text-3xl font-bold text-foreground">
-              {t('step1Title')}
-            </h2>
-            <p className="text-base text-muted-foreground">
-              {t('step1Subtitle')}
-            </p>
+            <h2 className="text-3xl font-bold text-foreground">{t('step1Title')}</h2>
+            <p className="text-base text-muted-foreground">{t('step1Subtitle')}</p>
           </div>
-
           <div className="space-y-4">
             <FormInput
               label={t('fullName')}
@@ -149,47 +145,33 @@ export default function Onboarding() {
               placeholder={t('fullNamePlaceholder')}
               error={errors.full_name?.message}
             />
-
             <FormInput
               label={t('phoneNumber')}
               name="phone"
               placeholder={t('phonePlaceholder')}
               error={errors.phone?.message}
             />
-
             <Controller
               control={control}
               name="gender"
               render={({ field }) => (
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">
-                    {t('genderLabel')}
-                  </label>
-
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  >
+                  <label className="text-sm font-medium text-foreground">{t('genderLabel')}</label>
+                  <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger>
                       <SelectValue placeholder={t('selectGender')} />
                     </SelectTrigger>
-
                     <SelectContent>
                       {translatedGender.map((option) => (
-                        <SelectItem
-                          key={option.value}
-                          value={option.value}
-                        >
+                        <SelectItem key={option.value} value={option.value}>
                           {option.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-
                   {errors.gender && (
                     <p className="flex items-center gap-1 text-sm text-destructive">
-                      <X className="h-3 w-3" />
-                      {errors.gender.message}
+                      <X className="h-3 w-3" />{errors.gender.message}
                     </p>
                   )}
                 </div>
@@ -200,34 +182,22 @@ export default function Onboarding() {
               name="lead_chapter"
               render={({ field }) => (
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">
-                    {t('leadChapter')}
-                  </label>
-
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  >
+                  <label className="text-sm font-medium">{t('leadChapter')}</label>
+                  <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger>
                       <SelectValue placeholder={t('selectChapter')} />
                     </SelectTrigger>
-
                     <SelectContent>
                       {translatedChapters.map((option) => (
-                        <SelectItem
-                          key={option.value}
-                          value={option.value}
-                        >
+                        <SelectItem key={option.value} value={option.value}>
                           {option.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-
                   {errors.lead_chapter && (
                     <p className="flex items-center gap-1 text-sm text-destructive">
-                      <X className="h-3 w-3" />
-                      {errors.lead_chapter.message}
+                      <X className="h-3 w-3" />{errors.lead_chapter.message}
                     </p>
                   )}
                 </div>
@@ -238,14 +208,9 @@ export default function Onboarding() {
 
         <div className="space-y-5">
           <div className="space-y-2">
-            <h2 className="text-3xl font-bold text-foreground">
-              {t('step2Title')}
-            </h2>
-            <p className="text-base text-muted-foreground">
-              {t('step2Subtitle')}
-            </p>
+            <h2 className="text-3xl font-bold text-foreground">{t('step2Title')}</h2>
+            <p className="text-base text-muted-foreground">{t('step2Subtitle')}</p>
           </div>
-
           <div className="space-y-4">
             <Controller
               control={control}
@@ -258,7 +223,6 @@ export default function Onboarding() {
                 />
               )}
             />
-
             <FormInput
               label={t('expectedGradYear')}
               name="graduationYear"
@@ -266,7 +230,6 @@ export default function Onboarding() {
               validation={{ valueAsNumber: true }}
               error={errors.graduationYear?.message}
             />
-
             <Controller
               control={control}
               name="skills"
@@ -290,14 +253,9 @@ export default function Onboarding() {
 
         <div className="space-y-5">
           <div className="space-y-2">
-            <h2 className="text-3xl font-bold text-foreground">
-              {t('step3Title')}
-            </h2>
-            <p className="text-base text-muted-foreground">
-              {t('step3Subtitle')}
-            </p>
+            <h2 className="text-3xl font-bold text-foreground">{t('step3Title')}</h2>
+            <p className="text-base text-muted-foreground">{t('step3Subtitle')}</p>
           </div>
-
           <div className="space-y-4">
             <FormInput
               label={t('linkedinProfile')}
@@ -305,16 +263,12 @@ export default function Onboarding() {
               type="url"
               error={errors.linkedin_url?.message}
             />
-
             <Controller
               control={control}
               name="resume_pdf"
               render={({ field }) => (
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">
-                    {t('resumePdf')}
-                  </label>
-
+                  <label className="text-sm font-medium">{t('resumePdf')}</label>
                   {!fileName ? (
                     <label className="cursor-pointer">
                       <div className="rounded-lg border-2 border-dashed border-border p-6 text-center transition hover:bg-muted/50">
@@ -325,17 +279,14 @@ export default function Onboarding() {
                           onChange={handleFileChange(field.onChange)}
                         />
                         <div className="flex flex-col items-center gap-2">
-                          {isUploading ? (
-                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                          ) : (
-                            <Upload className="h-8 w-8 text-muted-foreground" />
-                          )}
+                          {isUploading
+                            ? <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                            : <Upload className="h-8 w-8 text-muted-foreground" />
+                          }
                           <p className="text-sm font-medium">
                             {isUploading ? t('uploading') : t('clickToUpload')}
                           </p>
-                          <p className="text-xs text-muted-foreground">
-                            {t('pdfUpTo10MB')}
-                          </p>
+                          <p className="text-xs text-muted-foreground">{t('pdfUpTo10MB')}</p>
                         </div>
                       </div>
                     </label>
@@ -345,12 +296,8 @@ export default function Onboarding() {
                         <FileText className="h-5 w-5 text-primary" />
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-foreground truncate">
-                          {fileName}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {t('readyToUpload')}
-                        </p>
+                        <p className="text-sm font-medium text-foreground truncate">{fileName}</p>
+                        <p className="text-xs text-muted-foreground">{t('readyToUpload')}</p>
                       </div>
                       <Button
                         type="button"
@@ -365,47 +312,37 @@ export default function Onboarding() {
                   )}
                   {errors.resume_pdf && (
                     <p className="flex items-center gap-1 text-sm text-destructive">
-                      <X className="h-3 w-3" />
-                      {errors.resume_pdf.message}
+                      <X className="h-3 w-3" />{errors.resume_pdf.message}
                     </p>
                   )}
                 </div>
               )}
             />
+          </div>
+        </div>
 
+        <div className="space-y-5">
+          <div className="space-y-2">
+            <h2 className="text-3xl font-bold text-foreground">{t('step4Title')}</h2>
+            <p className="text-base text-muted-foreground">{t('step4Subtitle')}</p>
+          </div>
+
+          <div className="space-y-3">
             <Controller
               control={control}
               name="consentRecruiterVisibility"
               render={({ field }) => (
-                <div className="space-y-2">
-                  <div className="rounded-lg border border-border bg-muted/50 p-4">
-                    <label className="flex cursor-pointer items-start gap-3">
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={(checked) =>
-                          field.onChange(Boolean(checked))
-                        }
-                        className="mt-0.5"
-                      />
-
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-foreground">
-                          {t('makeProfileVisible')}
-                        </p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {t('profileVisibilityDesc')}
-                        </p>
-                      </div>
-                    </label>
+                <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-muted/50 p-4 transition hover:bg-muted">
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={(checked) => field.onChange(Boolean(checked))}
+                    className="mt-0.5"
+                  />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-foreground">{t('makeProfileVisible')}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">{t('profileVisibilityDesc')}</p>
                   </div>
-
-                  {errors.consentRecruiterVisibility && (
-                    <p className="flex items-center gap-1 text-sm text-destructive">
-                      <X className="h-3 w-3" />
-                      {errors.consentRecruiterVisibility.message}
-                    </p>
-                  )}
-                </div>
+                </label>
               )}
             />
 
@@ -413,30 +350,52 @@ export default function Onboarding() {
               control={control}
               name="emailNotificationsEnabled"
               render={({ field }) => (
-                <div className="space-y-2">
-                  <div className="rounded-lg border border-border bg-muted/50 p-4">
-                    <label className="flex cursor-pointer items-start gap-3">
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={(checked) =>
-                          field.onChange(Boolean(checked))
-                        }
-                        className="mt-0.5"
-                      />
-
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-foreground">
-                          {t('emailNotificationsLabel')}
-                        </p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {t('emailNotificationsDesc')}
-                        </p>
-                      </div>
-                    </label>
+                <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-muted/50 p-4 transition hover:bg-muted">
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={(checked) => field.onChange(Boolean(checked))}
+                    className="mt-0.5"
+                  />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-foreground">{t('emailNotificationsLabel')}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">{t('emailNotificationsDesc')}</p>
                   </div>
-                </div>
+                </label>
               )}
             />
+
+            <div className="border-t border-border pt-3">
+              <div className="space-y-2">
+                    <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-muted/50 p-4 transition hover:bg-muted">
+                      <Checkbox
+                        checked={termsAccepted}
+                        onCheckedChange={(checked) => {
+                          setTermsAccepted(Boolean(checked))
+                          setTermsError(false)
+                        }}
+                        className="mt-0.5"
+                      />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-foreground">
+                          {t('termsLabel')}{' '}
+                          <Link href="/terms" target="_blank" className="text-primary underline underline-offset-2 hover:opacity-80 transition-opacity">
+                            {t('termsLink')}
+                          </Link>
+                          {' '}&amp;{' '}
+                          <Link href="/privacy" target="_blank" className="text-primary underline underline-offset-2 hover:opacity-80 transition-opacity">
+                            {t('privacyLink')}
+                          </Link>
+                        </p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">{t('termsDesc')}</p>
+                      </div>
+                    </label>
+                    {termsError && (
+                      <p className="flex items-center gap-1 text-sm text-destructive">
+                        <X className="h-3 w-3" />{t('termsRequired')}
+                      </p>
+                    )}
+                  </div>
+            </div>
           </div>
         </div>
       </FormStepper>
