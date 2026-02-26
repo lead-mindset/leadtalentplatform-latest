@@ -241,7 +241,6 @@
     "pdfMaxSize": "PDF must be smaller than 10MB"
   },
   "skills": {
-    "skills": {
       "javascript": "JavaScript",
       "python": "Python",
       "typescript": "TypeScript",
@@ -273,7 +272,7 @@
       "eventPlanning": "Event Planning",
       "fundraising": "Fundraising"
     }
-  },
+  ,
   "roles": {
     "president": "President",
     "vicepresident": "Vice President",
