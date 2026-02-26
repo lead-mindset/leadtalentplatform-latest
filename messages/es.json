@@ -201,6 +201,12 @@
     "noSkillFound": "No se encontró ninguna habilidad.",
     "expectedGradYear": "Año de Graduación Esperado",
     "skillsExpertise": "Habilidades y Experiencia",
+    "step4Title": "Ya casi terminas",
+    "step4Subtitle": "Elige tus preferencias y confirma que estás listo para unirte",
+    "termsLabel": "Acepto los",
+    "termsLink": "Términos de Servicio",
+    "privacyLink": "Política de Privacidad",
+    "termsDesc": "Requerido para crear tu cuenta en LEAD.",
     "selected": "seleccionados",
     "linkedinProfile": "Perfil de LinkedIn",
     "resumePdf": "Currículum (PDF)",
@@ -231,7 +237,8 @@
     "consentRequired": "Debes indicar tu consentimiento",
     "uploadPdfFile": "Debes subir un archivo PDF",
     "onlyPdfAllowed": "Solo se permite PDF",
-    "pdfMaxSize": "PDF debe ser menor a 10MB"
+    "pdfMaxSize": "PDF debe ser menor a 10MB",
+    "termsRequired": "Debes aceptar los términos para continuar"
   },
   "skills": {
     "javascript": "JavaScript",
