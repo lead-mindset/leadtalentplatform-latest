@@ -53,12 +53,16 @@ const resumeSchema = (t: (key: string, values?: any) => string) =>
 export function createFullMemberSchemaFrontend(t: (key: string, values?: any) => string) {
   return createBaseProfileSchema(t).extend({
     resume_pdf: resumeSchema(t),
+    termsAccepted: z.literal(true, {
+      message: t('validation.termsRequired'),
+    }),
   })
 }
 
 export function createProfileUpdateSchema(t: (key: string, values?: any) => string) {
   return createBaseProfileSchema(t).extend({
     resume_pdf: resumeSchema(t).optional(),
+
   })
 }
 
