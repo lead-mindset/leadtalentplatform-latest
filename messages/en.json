@@ -120,6 +120,8 @@
       "title": "Personal Information",
       "subtitle": "Update your basic information",
       "fullName": "Full Name",
+      "gender": "Gender",
+      "selectGender": "Select your gender",
       "phone": "Phone Number",
       "leadChapter": "LEAD Chapter",
       "selectChapter": "Select your chapter"

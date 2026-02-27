@@ -114,6 +114,8 @@
       "subtitle": "Actualiza tu información básica",
       "fullName": "Nombre Completo",
       "phone": "Número de Teléfono",
+      "gender": "Género",
+      "selectGender": "Selecciona tu género",
       "leadChapter": "Capítulo LEAD",
       "selectChapter": "Selecciona tu capítulo"
     },
