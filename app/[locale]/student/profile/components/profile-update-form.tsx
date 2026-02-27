@@ -302,7 +302,6 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
                         aria-label={skill.value}
                         className="h-auto justify-start gap-2.5 px-3.5 py-1 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:border-primary data-[state=on]:shadow-sm transition-all duration-200"
                       >
-                        <span className="text-lg">{skill.icon}</span>
                         <span className="flex-1 text-left text-sm font-medium">
                           {skill.label}
                         </span>
