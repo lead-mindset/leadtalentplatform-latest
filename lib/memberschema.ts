@@ -11,7 +11,7 @@ export function createBaseProfileSchema(t: (key: string, values?: any) => string
 
     gender: z.enum(['man', 'woman', 'non_binary', 'prefer_not_to_say'], {
       message: t('validation.selectGender'),
-    }).optional(),
+    }),
 
     lead_chapter: z
       .string({ message: t('validation.selectYourChapter') })
