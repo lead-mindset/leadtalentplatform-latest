@@ -19,10 +19,8 @@ const COLORS = {
 }
 
 const SOCIAL_LINKS = [
-  { name: 'LinkedIn',   url: 'https://linkedin.com',  icon: 'in' },
-  { name: 'Instagram',  url: 'https://instagram.com', icon: '⬡' },
-  { name: 'Twitter',    url: 'https://twitter.com',   icon: '𝕏'  },
-  { name: 'Facebook',   url: 'https://facebook.com',  icon: 'f'  },
+  { name: 'LinkedIn',   url: 'https://www.linkedin.com/company/leadmindsetorg/posts/?feedView=all',  icon: 'in' },
+  { name: 'Instagram',  url: 'https://www.instagram.com/lead_peru/', icon: '⬡' },
 ]
 
 export function EmailLayout({ title, children, preview }: EmailLayoutProps) {
