@@ -18,9 +18,19 @@ const COLORS = {
   destructive: '#D94F4F',    // oklch(0.58 0.22 27)
 }
 
+const LOGO_URL = 'https://leadmindset.org/emails/logo.png'
+
 const SOCIAL_LINKS = [
-  { name: 'LinkedIn',   url: 'https://www.linkedin.com/company/leadmindsetorg/posts/?feedView=all',  icon: 'in' },
-  { name: 'Instagram',  url: 'https://www.instagram.com/lead_peru/', icon: '⬡' },
+  {
+    name: 'LinkedIn',
+    url: 'https://www.linkedin.com/company/leadmindsetorg/posts/?feedView=all',
+    icon: 'https://leadmindset.org/emails/linkedin.png',
+  },
+  {
+    name: 'Instagram',
+    url: 'https://www.instagram.com/lead_peru/',
+    icon: 'https://leadmindset.org/emails/instagram.png',
+  },
 ]
 
 export function EmailLayout({ title, children, preview }: EmailLayoutProps) {
@@ -59,24 +69,13 @@ export function EmailLayout({ title, children, preview }: EmailLayoutProps) {
             background: `linear-gradient(90deg, ${COLORS.primary}, #F4A0B5)`,
           }} />
 
-          <div style={{
-            display: 'inline-block',
-            backgroundColor: COLORS.primary,
-            borderRadius: 12,
-            padding: '10px 20px',
-            marginBottom: 12,
-          }}>
-            <span style={{
-              color: COLORS.white,
-              fontWeight: 800,
-              fontSize: 18,
-              letterSpacing: '2px',
-              textTransform: 'uppercase' as const,
-            }}>
-              LEAD
-            </span>
-          </div>
-
+          <img
+            src={LOGO_URL}
+            alt="LEAD Mindset"
+            width={120}
+            height={40}
+            style={{ display: 'block', margin: '0 auto 12px' }}
+          />
           <div style={{
             fontSize: 11,
             color: 'rgba(255,255,255,0.5)',
@@ -136,21 +135,24 @@ export function EmailLayout({ title, children, preview }: EmailLayoutProps) {
                   href={s.url}
                   title={s.name}
                   style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    display: 'inline-block',
                     width: 34,
                     height: 34,
                     borderRadius: '50%',
-                    backgroundColor: COLORS.white,
+                    overflow: 'hidden',
                     border: `1.5px solid ${COLORS.border}`,
-                    color: COLORS.primary,
                     textDecoration: 'none',
-                    fontSize: 13,
-                    fontWeight: 700,
+                    marginLeft: 5,
+                    marginRight: 5,
                   }}
                 >
-                  {s.icon}
+                  <img
+                    src={s.icon}
+                    alt={s.name}
+                    width={34}
+                    height={34}
+                    style={{ display: 'block' }}
+                  />
                 </a>
               ))}
             </div>
@@ -172,7 +174,7 @@ export function EmailLayout({ title, children, preview }: EmailLayoutProps) {
         </div>
 
       </div>
-    </div>
+    </div >
   )
 }
 
