@@ -24,6 +24,7 @@ export async function getProfileData() {
     id: user.id,
     full_name: user.name,
     phone: user.phone || '',
+    gender: profileData.gender ?? undefined,
     lead_chapter: profileData.chapterId || '',
     career: profileData.major || '',
     graduationYear: profileData.graduationYear || 0,
@@ -72,6 +73,7 @@ export async function updateProfile(formData: FormData) {
     const profileData = {
       full_name: formData.get("full_name")?.toString() || "",
       phone: formData.get("phone")?.toString() || "",
+      gender: formData.get("gender")?.toString() || undefined,
       lead_chapter: formData.get("lead_chapter")?.toString() || "",
       career: formData.get("career")?.toString() || "",
       graduationYear: Number(formData.get("graduationYear") ?? 0),
@@ -117,6 +119,7 @@ export async function updateProfile(formData: FormData) {
         {
           userId: user.id,
           major: data.career,
+          gender: data.gender,
           graduationYear: data.graduationYear,
           skills: data.skills,
           linkedinUrl: data.linkedin_url,
