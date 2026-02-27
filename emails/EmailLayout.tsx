@@ -5,31 +5,33 @@ type EmailLayoutProps = {
 }
 
 const COLORS = {
-  primary: '#E05A7A',        // oklch(0.59 0.22 1)
+  primary: '#E05A7A',
   primaryLight: '#FFF0F3',
   primaryBorder: '#F9C0CC',
-  foreground: '#1A2357',     // oklch(0.1947 0.0984 266.07)
-  card: '#222B5E',           // oklch(0.2294 0.1343 264.04)
-  background: '#F5F5F0',     // oklch(0.985 0.001 106.424)
-  muted: '#78716C',          // oklch(0.553 0.013 58.071)
-  mutedBg: '#F7F6F3',        // oklch(0.97 0.001 106.424)
-  border: '#E8E5DF',         // oklch(0.923 0.003 48.717)
+  foreground: '#1A2357',
+  card: '#222B5E',
+  background: '#F5F5F0',
+  muted: '#78716C',
+  mutedBg: '#F7F6F3',
+  border: '#E8E5DF',
   white: '#FFFFFF',
-  destructive: '#D94F4F',    // oklch(0.58 0.22 27)
+  destructive: '#D94F4F',
 }
 
-const LOGO_URL = 'https://leadmindset.org/emails/logo.png'
+const BASE_URL = 'https://leadmindset.org'
+
+const LOGO_URL = `${BASE_URL}/emails/logo.png`
 
 const SOCIAL_LINKS = [
   {
     name: 'LinkedIn',
     url: 'https://www.linkedin.com/company/leadmindsetorg/posts/?feedView=all',
-    icon: 'https://leadmindset.org/emails/linkedin.png',
+    icon: `${BASE_URL}/emails/linkedin.png`,
   },
   {
     name: 'Instagram',
     url: 'https://www.instagram.com/lead_peru/',
-    icon: 'https://leadmindset.org/emails/instagram.png',
+    icon: `${BASE_URL}/emails/instagram.png`,
   },
 ]
 
@@ -41,6 +43,10 @@ export function EmailLayout({ title, children, preview }: EmailLayoutProps) {
       padding: '40px 16px',
       minHeight: '100vh',
     }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Raleway:wght@400;600;700;800&display=swap');
+      `}</style>
+
       {preview && (
         <div style={{ display: 'none', maxHeight: 0, overflow: 'hidden', opacity: 0 }}>
           {preview}
@@ -72,16 +78,21 @@ export function EmailLayout({ title, children, preview }: EmailLayoutProps) {
           <img
             src={LOGO_URL}
             alt="LEAD Mindset"
-            width={120}
-            height={40}
-            style={{ display: 'block', margin: '0 auto 12px' }}
+            width={140}
+            height={48}
+            style={{
+              display: 'block',
+              margin: '0 auto 10px',
+              objectFit: 'contain',
+            }}
           />
+
           <div style={{
             fontSize: 11,
             color: 'rgba(255,255,255,0.5)',
             textTransform: 'uppercase' as const,
             letterSpacing: '3px',
-            marginTop: 4,
+            fontFamily: '"Raleway", "Helvetica Neue", Arial, sans-serif',
           }}>
             Mindset Platform
           </div>
@@ -98,6 +109,7 @@ export function EmailLayout({ title, children, preview }: EmailLayoutProps) {
             fontSize: 22,
             fontWeight: 700,
             lineHeight: 1.3,
+            fontFamily: '"Raleway", "Helvetica Neue", Arial, sans-serif',
           }}>
             {title}
           </h1>
@@ -108,6 +120,7 @@ export function EmailLayout({ title, children, preview }: EmailLayoutProps) {
           color: COLORS.foreground,
           fontSize: 15,
           lineHeight: 1.7,
+          fontFamily: '"Raleway", "Helvetica Neue", Arial, sans-serif',
         }}>
           {children}
         </div>
@@ -125,6 +138,7 @@ export function EmailLayout({ title, children, preview }: EmailLayoutProps) {
               textTransform: 'uppercase' as const,
               letterSpacing: '1.5px',
               fontWeight: 600,
+              fontFamily: '"Raleway", "Helvetica Neue", Arial, sans-serif',
             }}>
               Síguenos
             </p>
@@ -142,8 +156,7 @@ export function EmailLayout({ title, children, preview }: EmailLayoutProps) {
                     overflow: 'hidden',
                     border: `1.5px solid ${COLORS.border}`,
                     textDecoration: 'none',
-                    marginLeft: 5,
-                    marginRight: 5,
+                    backgroundColor: COLORS.white,
                   }}
                 >
                   <img
@@ -161,20 +174,31 @@ export function EmailLayout({ title, children, preview }: EmailLayoutProps) {
           <div style={{ height: 1, backgroundColor: COLORS.border, margin: '0 0 20px 0' }} />
 
           <div style={{ textAlign: 'center' }}>
-            <p style={{ margin: '0 0 6px 0', fontSize: 12, color: COLORS.muted }}>
+            <p style={{
+              margin: '0 0 6px 0',
+              fontSize: 12,
+              color: COLORS.muted,
+              fontFamily: '"Raleway", "Helvetica Neue", Arial, sans-serif',
+            }}>
               © {new Date().getFullYear()}{' '}
               <a href="https://leadmindset.org" style={{ color: COLORS.primary, textDecoration: 'none', fontWeight: 600 }}>
                 LEAD Mindset
               </a>
             </p>
-            <p style={{ margin: 0, fontSize: 11, color: COLORS.muted, fontStyle: 'italic' }}>
+            <p style={{
+              margin: 0,
+              fontSize: 11,
+              color: COLORS.muted,
+              fontStyle: 'italic',
+              fontFamily: '"Raleway", "Helvetica Neue", Arial, sans-serif',
+            }}>
               Este correo fue enviado porque estás registrado en nuestra plataforma.
             </p>
           </div>
         </div>
 
       </div>
-    </div >
+    </div>
   )
 }
 
@@ -191,6 +215,7 @@ export const buttonStyle: React.CSSProperties = {
   fontSize: 15,
   letterSpacing: '0.3px',
   boxShadow: '0 4px 14px rgba(224, 90, 122, 0.35)',
+  fontFamily: '"Raleway", "Helvetica Neue", Arial, sans-serif',
 }
 
 export const infoBoxStyle: React.CSSProperties = {
@@ -201,6 +226,7 @@ export const infoBoxStyle: React.CSSProperties = {
   fontSize: 13,
   lineHeight: 1.6,
   marginTop: 24,
+  fontFamily: '"Raleway", "Helvetica Neue", Arial, sans-serif',
 }
 
 export const featureBoxStyle: React.CSSProperties = {
@@ -218,10 +244,12 @@ export const featureItemStyle: React.CSSProperties = {
   gap: '12px',
   lineHeight: 1.5,
   borderBottom: `1px solid ${COLORS.border}`,
+  fontFamily: '"Raleway", "Helvetica Neue", Arial, sans-serif',
 }
 
 export const helpTextStyle: React.CSSProperties = {
   marginTop: 24,
   fontSize: 13,
   color: COLORS.muted,
+  fontFamily: '"Raleway", "Helvetica Neue", Arial, sans-serif',
 }
