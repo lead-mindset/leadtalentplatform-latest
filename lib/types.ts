@@ -107,6 +107,7 @@ export type Database = {
           isFilled: boolean;
           chapterId: string;
           emailNotificationsEnabled: boolean;
+          gender: 'man' | 'woman' | 'non_binary' | 'prefer_not_to_say' | null; // ← ADD THIS
         };
       };
 
