@@ -15,6 +15,7 @@ import { getResume } from '@/lib/actions/student/profile'
 import { updateProfile } from '@/lib/actions/student/profile'
 import { useTranslations } from 'next-intl'
 import { useTranslatedSkills, useTranslatedChapters } from '@/lib/use-translated-options'
+import { useTranslatedGender } from '@/lib/use-translated-options'
 import type { SubmitHandler } from 'react-hook-form'
 import {
   ToggleGroup,
@@ -37,17 +38,17 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
   const tCommon = useTranslations('common')
   const tOnboarding = useTranslations('onboarding')
   const tValidation = useTranslations()
-  
+  const translatedGender = useTranslatedGender()
   const translatedSkills = useTranslatedSkills()
   const translatedChapters = useTranslatedChapters()
-  
+
   const [fileName, setFileName] = useState('')
   const [isUploading, setIsUploading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [resumeUrl, setResumeUrl] = useState<string | null>(null)
   const router = useRouter()
 
-const profileUpdateSchema = createProfileUpdateSchema(tValidation)
+  const profileUpdateSchema = createProfileUpdateSchema(tValidation)
   type OnboardingValues = z.infer<typeof profileUpdateSchema>
 
   useEffect(() => {
@@ -72,6 +73,7 @@ const profileUpdateSchema = createProfileUpdateSchema(tValidation)
       full_name: initialData?.full_name || '',
       phone: initialData?.phone || '',
       career: initialData?.career || '',
+      gender: initialData?.gender ?? undefined,
       graduationYear: initialData?.graduationYear || 0,
       skills: initialData?.skills || [],
       lead_chapter: initialData?.lead_chapter || '',
@@ -89,41 +91,42 @@ const profileUpdateSchema = createProfileUpdateSchema(tValidation)
     formState: { errors, isDirty },
   } = methods
 
-const onSubmit: SubmitHandler<OnboardingValues> = async (data) => {
-  setIsSaving(true)
+  const onSubmit: SubmitHandler<OnboardingValues> = async (data) => {
+    setIsSaving(true)
 
-  try {
-    const formData = new FormData()
+    try {
+      const formData = new FormData()
 
-    formData.append("full_name", data.full_name)
-    formData.append("phone", data.phone)
-    formData.append("lead_chapter", data.lead_chapter || "")
-    formData.append("career", data.career)
-    formData.append("graduationYear", String(data.graduationYear || 0))
-    formData.append("skills", JSON.stringify(data.skills))
-    formData.append("linkedin_url", data.linkedin_url || "")
-    formData.append("consentRecruiterVisibility", String(data.consentRecruiterVisibility))
-    formData.append("emailNotificationsEnabled", String(data.emailNotificationsEnabled)) 
+      formData.append("full_name", data.full_name)
+      formData.append("phone", data.phone)
+      formData.append("lead_chapter", data.lead_chapter || "")
+      formData.append("career", data.career)
+      formData.append("graduationYear", String(data.graduationYear || 0))
+      formData.append("skills", JSON.stringify(data.skills))
+      formData.append("linkedin_url", data.linkedin_url || "")
+      formData.append("consentRecruiterVisibility", String(data.consentRecruiterVisibility))
+      formData.append("emailNotificationsEnabled", String(data.emailNotificationsEnabled))
+      formData.append("gender", data.gender)
 
-    if (data.resume_pdf) {
-      formData.append("resume", data.resume_pdf)
+      if (data.resume_pdf) {
+        formData.append("resume", data.resume_pdf)
+      }
+
+      const result = await updateProfile(formData)
+
+      if (!result.success) {
+        throw new Error(result.error ?? t('updateFailed'))
+      }
+
+      alert(t('updateSuccess'))
+      router.refresh()
+    } catch (err: any) {
+      console.error(err)
+      alert(t('updateError'))
+    } finally {
+      setIsSaving(false)
     }
-
-    const result = await updateProfile(formData)
-
-    if (!result.success) {
-      throw new Error(result.error ?? t('updateFailed'))
-    }
-
-    alert(t('updateSuccess'))
-    router.refresh()
-  } catch (err: any) {
-    console.error(err)
-    alert(t('updateError'))
-  } finally {
-    setIsSaving(false)
   }
-}
 
   return (
     <FormProvider {...methods}>
@@ -144,7 +147,7 @@ const onSubmit: SubmitHandler<OnboardingValues> = async (data) => {
               </div>
             </div>
           </div>
-          
+
           <div className="grid gap-5 rounded-xl border border-border/60 bg-card/30 p-6 shadow-sm backdrop-blur-sm">
             <FormInput
               label={t('personalInfo.fullName')}
@@ -158,6 +161,36 @@ const onSubmit: SubmitHandler<OnboardingValues> = async (data) => {
               name="phone"
               placeholder="+1 (555) 123-4567"
               error={errors.phone?.message}
+            />
+
+            <Controller
+              control={control}
+              name="gender"
+              render={({ field }) => (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">
+                    {t('personalInfo.gender')}
+                  </label>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="h-11">
+                      <SelectValue placeholder={t('personalInfo.selectGender')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {translatedGender.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.gender && (
+                    <p className="flex items-center gap-1.5 text-sm text-destructive">
+                      <X className="h-3.5 w-3.5" />
+                      {errors.gender.message}
+                    </p>
+                  )}
+                </div>
+              )}
             />
 
             <Controller
