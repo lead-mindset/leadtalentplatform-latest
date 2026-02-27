@@ -1,89 +1,69 @@
-import { EmailLayout } from '../EmailLayout'
+import {
+  EmailLayout,
+  EMAIL_COLORS as C,
+  buttonStyle,
+  infoBoxStyle,
+  helpTextStyle,
+} from '../EmailLayout'
 
 type ConfirmSignupEmailProps = {
   confirmationUrl: string
   locale?: 'en' | 'es'
 }
 
-const BUTTON_STYLES = {
-  backgroundColor: '#3759E8',
-  color: '#ffffff',
-  padding: '14px 32px',
-  borderRadius: 8,
-  textDecoration: 'none',
-  display: 'inline-block',
-  fontWeight: 600,
-  fontSize: 15,
-  letterSpacing: '0.5px',
-  boxShadow: '0 4px 12px rgba(55, 89, 232, 0.3)',
-}
-
-export default function ConfirmSignupEmail({
-  confirmationUrl,
-  locale = 'es',
-}: ConfirmSignupEmailProps) {
-  const content = {
+export default function ConfirmSignupEmail({ confirmationUrl, locale = 'es' }: ConfirmSignupEmailProps) {
+  const t = {
     es: {
-      title: 'Confirma tu registro en LEAD Mindset ✓',
+      title: 'Confirma tu registro ✓',
+      preview: 'Un último paso para activar tu cuenta en LEAD Mindset.',
       greeting: '¡Hola! 👋',
       intro: 'Gracias por registrarte en LEAD Mindset. Estamos emocionados de tenerte como parte de nuestra comunidad.',
-      cta: 'Solo necesitamos verificar tu correo electrónico para completar tu registro.',
-      ctaBold: 'Haz clic en el botón a continuación para confirmar tu cuenta:',
+      cta: 'Solo un paso más — confirma tu correo electrónico para activar tu cuenta:',
       button: '✓ Confirmar mi correo',
-      note: 'Este enlace expira en 24 horas. Si no solicitaste este registro, puedes ignorar este mensaje de forma segura.',
+      noteTitle: 'Importante',
+      note: 'Este enlace expira en 24 horas. Si no realizaste este registro, puedes ignorar este mensaje de forma segura.',
       help: '¿Necesitas ayuda? Contáctanos en',
     },
     en: {
       title: 'Confirm your registration ✓',
+      preview: 'One last step to activate your LEAD Mindset account.',
       greeting: 'Hi! 👋',
       intro: 'Thanks for signing up for LEAD Mindset. We are excited to have you as part of our community.',
-      cta: 'We just need to verify your email address to complete your registration.',
-      ctaBold: 'Click the button below to confirm your account:',
+      cta: 'Just one more step — confirm your email address to activate your account:',
       button: '✓ Confirm my email',
+      noteTitle: 'Important',
       note: 'This link expires in 24 hours. If you did not sign up, you can safely ignore this message.',
       help: 'Need help? Contact us at',
     },
   }[locale]
 
   return (
-    <EmailLayout title={content.title}>
-      <p style={{ fontSize: 16, marginBottom: 20 }}>{content.greeting}</p>
+    <EmailLayout title={t.title} preview={t.preview}>
+      <p style={{ fontSize: 20, fontWeight: 700, margin: '0 0 16px 0', color: C.foreground }}>
+        {t.greeting}
+      </p>
 
-      <p style={{ marginBottom: 16, lineHeight: 1.7 }}>
-        {content.intro.split('LEAD Mindset').map((part, i, arr) =>
+      <p style={{ margin: '0 0 20px 0' }}>
+        {t.intro.split('LEAD Mindset').map((part, i, arr) =>
           i < arr.length - 1 ? (
-            <span key={i}>{part}<strong>LEAD Mindset</strong></span>
-          ) : (
-            <span key={i}>{part}</span>
-          )
+            <span key={i}>{part}<strong style={{ color: C.primary }}>LEAD Mindset</strong></span>
+          ) : <span key={i}>{part}</span>
         )}
       </p>
 
-      <p style={{ marginBottom: 24, lineHeight: 1.7 }}>
-        {content.cta} <strong>{content.ctaBold}</strong>
-      </p>
+      <p style={{ margin: '0 0 28px 0', color: C.muted }}>{t.cta}</p>
 
-      <div style={{ margin: '32px 0', textAlign: 'center' }}>
-        <a href={confirmationUrl} style={BUTTON_STYLES}>
-          {content.button}
-        </a>
+      <div style={{ textAlign: 'center', margin: '32px 0' }}>
+        <a href={confirmationUrl} style={buttonStyle}>{t.button}</a>
       </div>
 
-      <p style={{
-        backgroundColor: '#F8FAFF',
-        padding: '16px',
-        borderRadius: 6,
-        borderLeft: '4px solid #3759E8',
-        fontSize: 13,
-        lineHeight: 1.6,
-        marginTop: 24,
-      }}>
-        <strong>Nota:</strong> {content.note}
-      </p>
+      <div style={infoBoxStyle}>
+        <strong>📋 {t.noteTitle}:</strong>{' '}{t.note}
+      </div>
 
-      <p style={{ marginTop: 24, fontSize: 13, color: '#8E95A5' }}>
-        {content.help}{' '}
-        <a href="mailto:soporte@leadmindset.org" style={{ color: '#3759E8', textDecoration: 'none' }}>
+      <p style={helpTextStyle}>
+        {t.help}{' '}
+        <a href="mailto:soporte@leadmindset.org" style={{ color: C.primary, textDecoration: 'none', fontWeight: 600 }}>
           soporte@leadmindset.org
         </a>
       </p>

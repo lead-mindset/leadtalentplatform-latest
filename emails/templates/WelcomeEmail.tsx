@@ -1,4 +1,12 @@
-import { EmailLayout } from '../EmailLayout'
+import {
+  EmailLayout,
+  EMAIL_COLORS as C,
+  buttonStyle,
+  infoBoxStyle,
+  featureBoxStyle,
+  featureItemStyle,
+  helpTextStyle,
+} from '../EmailLayout'
 
 type Role = 'member' | 'admin' | 'recruiter'
 
@@ -9,25 +17,45 @@ type WelcomeEmailProps = {
   role?: Role
 }
 
-const BUTTON_STYLES = {
-  backgroundColor: '#3759E8',
-  color: '#ffffff',
-  padding: '14px 32px',
-  borderRadius: 8,
-  textDecoration: 'none',
-  display: 'inline-block',
-  fontWeight: 600,
-  fontSize: 15,
-  letterSpacing: '0.5px',
-  boxShadow: '0 4px 12px rgba(55, 89, 232, 0.3)',
-}
-
-const FEATURE_ITEM_STYLE = {
-  padding: '12px 0',
-  display: 'flex',
-  alignItems: 'flex-start' as const,
-  gap: '12px',
-  lineHeight: 1.5,
+const roleFeatures: Record<Role, Record<'en' | 'es', { icon: string; text: string }[]>> = {
+  member: {
+    es: [
+      { icon: '📚', text: 'Contenidos y experiencias exclusivas diseñadas por expertos' },
+      { icon: '🤝', text: 'Conecta con personas con mentalidad de crecimiento' },
+      { icon: '🎯', text: 'Desarrolla habilidades clave para tu futuro profesional' },
+      { icon: '🏆', text: 'Participa en desafíos y certificaciones reconocidas' },
+    ],
+    en: [
+      { icon: '📚', text: 'Exclusive content and experiences designed by experts' },
+      { icon: '🤝', text: 'Connect with growth-minded people' },
+      { icon: '🎯', text: 'Develop key skills for your professional future' },
+      { icon: '🏆', text: 'Participate in recognized challenges and certifications' },
+    ],
+  },
+  recruiter: {
+    es: [
+      { icon: '🔍', text: 'Explora perfiles de estudiantes listos para el mundo profesional' },
+      { icon: '🎯', text: 'Conecta con talento filtrado por capítulo y habilidades' },
+      { icon: '💾', text: 'Guarda y gestiona candidatos desde tu panel' },
+    ],
+    en: [
+      { icon: '🔍', text: 'Browse student profiles ready for the professional world' },
+      { icon: '🎯', text: 'Connect with talent filtered by chapter and skills' },
+      { icon: '💾', text: 'Save and manage candidates from your dashboard' },
+    ],
+  },
+  admin: {
+    es: [
+      { icon: '⚙️', text: 'Gestiona usuarios y capítulos desde el panel de administración' },
+      { icon: '✅', text: 'Aprueba perfiles de estudiantes' },
+      { icon: '👥', text: 'Supervisa el acceso de reclutadores' },
+    ],
+    en: [
+      { icon: '⚙️', text: 'Manage users and chapters from the admin panel' },
+      { icon: '✅', text: 'Approve student profiles' },
+      { icon: '👥', text: 'Oversee recruiter access' },
+    ],
+  },
 }
 
 export default function WelcomeEmail({
@@ -36,141 +64,86 @@ export default function WelcomeEmail({
   name,
   role = 'member',
 }: WelcomeEmailProps) {
-  const roleFeatures: Record<Role, Record<'en' | 'es', { icon: string; text: string }[]>> = {
-    member: {
-      es: [
-        { icon: '📚', text: 'Acceder a contenidos y experiencias exclusivas diseñadas por expertos' },
-        { icon: '🤝', text: 'Conectar con personas con mentalidad de crecimiento' },
-        { icon: '🎯', text: 'Desarrollar habilidades clave para tu futuro profesional' },
-        { icon: '🏆', text: 'Participa en desafíos y certificaciones reconocidas' },
-      ],
-      en: [
-        { icon: '📚', text: 'Access exclusive content and experiences designed by experts' },
-        { icon: '🤝', text: 'Connect with growth-minded people' },
-        { icon: '🎯', text: 'Develop key skills for your professional future' },
-        { icon: '🏆', text: 'Participate in recognized challenges and certifications' },
-      ],
-    },
-    recruiter: {
-      es: [
-        { icon: '🔍', text: 'Explorar perfiles de estudiantes listos para el mundo profesional' },
-        { icon: '🎯', text: 'Conectar con talento filtrado por capítulo y habilidades' },
-        { icon: '💾', text: 'Guardar y gestionar candidatos desde tu panel' },
-      ],
-      en: [
-        { icon: '🔍', text: 'Browse student profiles ready for the professional world' },
-        { icon: '🎯', text: 'Connect with talent filtered by chapter and skills' },
-        { icon: '💾', text: 'Save and manage candidates from your dashboard' },
-      ],
-    },
-    admin: {
-      es: [
-        { icon: '⚙️', text: 'Gestionar usuarios y capítulos desde el panel de administración' },
-        { icon: '✅', text: 'Aprobar perfiles de estudiantes' },
-        { icon: '👥', text: 'Supervisar el acceso de reclutadores' },
-      ],
-      en: [
-        { icon: '⚙️', text: 'Manage users and chapters from the admin panel' },
-        { icon: '✅', text: 'Approve student profiles' },
-        { icon: '👥', text: 'Oversee recruiter access' },
-      ],
-    },
-  }
-
-  const content = {
+  const t = {
     es: {
       title: '¡Bienvenido/a a LEAD Mindset! 🚀',
-      greeting: name ? `¡Hola, ${name}! 👋` : '¡Hola! 👋',
-      intro:
-        role === 'recruiter'
-          ? 'Tu acceso como reclutador en LEAD Mindset ya está activo. Estamos felices de tenerte con nosotros.'
-          : role === 'admin'
-          ? 'Tu cuenta de administrador en LEAD Mindset ya está activa. Tienes acceso completo a la plataforma.'
-          : 'Tu cuenta en LEAD Mindset ya está activa. Nos emociona tenerte como parte de nuestra comunidad global de líderes comprometidos con el crecimiento continuo.',
-      listTitle: 'Ahora puedes acceder a:',
-      tip: '💡 Consejo: Completa tu perfil lo antes posible. Esto nos ayuda a personalizar tu experiencia y recomendarte contenido relevante.',
-      button: '🚀 Acceder a la plataforma',
-      closing: 'Gracias por ser parte de este camino de transformación y liderazgo.\nEstamos aquí para apoyarte en cada paso.',
+      preview: 'Tu cuenta ya está activa. ¡Empieza tu camino hoy!',
+      greeting: name ? `¡Hola, ${name}!` : '¡Hola!',
+      intro: {
+        member: 'Tu cuenta en LEAD Mindset ya está activa. Nos emociona tenerte como parte de nuestra comunidad global de líderes comprometidos con el crecimiento continuo.',
+        recruiter: 'Tu acceso como reclutador en LEAD Mindset ya está activo. Estamos felices de tenerte con nosotros.',
+        admin: 'Tu cuenta de administrador en LEAD Mindset ya está activa. Tienes acceso completo a la plataforma.',
+      }[role],
+      listTitle: 'Ahora tienes acceso a:',
+      tip: 'Completa tu perfil lo antes posible para que podamos personalizar tu experiencia y recomendarte contenido relevante.',
+      button: '🚀 Ir a la plataforma',
+      closing: 'Gracias por ser parte de este camino.',
       signature: 'Equipo LEAD Mindset',
+      help: '¿Necesitas ayuda?',
     },
     en: {
       title: 'Welcome to LEAD Mindset! 🚀',
-      greeting: name ? `Hi, ${name}! 👋` : 'Hi! 👋',
-      intro:
-        role === 'recruiter'
-          ? 'Your recruiter access to LEAD Mindset is now active. We are glad to have you on board.'
-          : role === 'admin'
-          ? 'Your admin account on LEAD Mindset is now active. You have full access to the platform.'
-          : 'Your LEAD Mindset account is now active. We are thrilled to have you as part of our global community of leaders committed to continuous growth.',
+      preview: 'Your account is now active. Start your journey today!',
+      greeting: name ? `Hi, ${name}!` : 'Hi!',
+      intro: {
+        member: 'Your LEAD Mindset account is now active. We are thrilled to have you as part of our global community of leaders committed to continuous growth.',
+        recruiter: 'Your recruiter access to LEAD Mindset is now active. We are glad to have you on board.',
+        admin: 'Your admin account on LEAD Mindset is now active. You have full access to the platform.',
+      }[role],
       listTitle: 'You now have access to:',
-      tip: '💡 Tip: Complete your profile as soon as possible. This helps us personalize your experience and recommend relevant content.',
+      tip: 'Complete your profile as soon as possible so we can personalize your experience and recommend relevant content.',
       button: '🚀 Go to platform',
-      closing: 'Thanks for being part of this journey of transformation and leadership.\nWe are here to support you every step of the way.',
+      closing: 'Thanks for being part of this journey.',
       signature: 'LEAD Mindset Team',
+      help: 'Need help?',
     },
   }[locale]
 
-  return (
-    <EmailLayout title={content.title}>
-      <p style={{ fontSize: 16, marginBottom: 20 }}>{content.greeting}</p>
+  const features = roleFeatures[role][locale]
+  const lastIdx = features.length - 1
 
-      <p style={{ marginBottom: 24, lineHeight: 1.7 }}>
-        {content.intro.split('LEAD Mindset').map((part, i, arr) =>
+  return (
+    <EmailLayout title={t.title} preview={t.preview}>
+      <p style={{ fontSize: 20, fontWeight: 700, margin: '0 0 16px 0', color: C.foreground }}>
+        {t.greeting} 👋
+      </p>
+
+      <p style={{ margin: '0 0 24px 0' }}>
+        {t.intro.split('LEAD Mindset').map((part, i, arr) =>
           i < arr.length - 1 ? (
-            <span key={i}>{part}<strong>LEAD Mindset</strong></span>
-          ) : (
-            <span key={i}>{part}</span>
-          )
+            <span key={i}>{part}<strong style={{ color: C.primary }}>LEAD Mindset</strong></span>
+          ) : <span key={i}>{part}</span>
         )}
       </p>
 
-      <div style={{
-        backgroundColor: '#F8FAFF',
-        padding: '20px',
-        borderRadius: 8,
-        borderLeft: '4px solid #3759E8',
-        marginBottom: 24,
-      }}>
-        <p style={{ margin: '0 0 16px 0', fontWeight: 600, color: '#3759E8', fontSize: 14 }}>
-          {content.listTitle}
+      <div style={featureBoxStyle}>
+        <p style={{ margin: '0 0 12px 0', fontWeight: 700, fontSize: 13, color: C.primary, textTransform: 'uppercase', letterSpacing: '1px' }}>
+          {t.listTitle}
         </p>
-        {roleFeatures[role][locale].map((item, i) => (
-          <div key={i} style={FEATURE_ITEM_STYLE}>
-            <span style={{ fontSize: 18 }}>{item.icon}</span>
-            <span>{item.text}</span>
+        {features.map((item, i) => (
+          <div key={i} style={{ ...featureItemStyle, ...(i === lastIdx ? { borderBottom: 'none', paddingBottom: 0 } : {}) }}>
+            <span style={{ fontSize: 20, lineHeight: 1 }}>{item.icon}</span>
+            <span style={{ color: C.foreground }}>{item.text}</span>
           </div>
         ))}
       </div>
 
       {dashboardUrl && (
-        <div style={{ margin: '32px 0', textAlign: 'center' }}>
-          <a href={dashboardUrl} style={BUTTON_STYLES}>
-            {content.button}
-          </a>
+        <div style={{ textAlign: 'center', margin: '32px 0' }}>
+          <a href={dashboardUrl} style={buttonStyle}>{t.button}</a>
         </div>
       )}
 
-      <p style={{
-        backgroundColor: '#F0F4FF',
-        padding: '16px',
-        borderRadius: 6,
-        fontSize: 13,
-        lineHeight: 1.6,
-        margin: '24px 0',
-      }}>
-        {content.tip}
-      </p>
+      <div style={infoBoxStyle}>
+        <strong>💡 {locale === 'es' ? 'Consejo:' : 'Tip:'}</strong>{' '}{t.tip}
+      </div>
 
-      <p style={{ marginTop: 24, marginBottom: 12, lineHeight: 1.7 }}>
-        {content.closing.split('\n').map((line, i) => (
-          <span key={i}>{line}{i === 0 && <br />}</span>
-        ))}
-      </p>
+      <p style={{ marginTop: 28, marginBottom: 4 }}>{t.closing}</p>
+      <p style={{ margin: 0, fontWeight: 600, color: C.foreground }}>— {t.signature}</p>
 
-      <p style={{ marginTop: 24, paddingTop: 16, fontSize: 13, color: '#8E95A5', borderTop: '1px solid #E2E8F0' }}>
-        — <strong>{content.signature}</strong>
-        <br />
-        <a href="mailto:soporte@leadmindset.org" style={{ color: '#3759E8', textDecoration: 'none' }}>
+      <p style={helpTextStyle}>
+        {t.help}{' '}
+        <a href="mailto:soporte@leadmindset.org" style={{ color: C.primary, textDecoration: 'none', fontWeight: 600 }}>
           soporte@leadmindset.org
         </a>
       </p>
