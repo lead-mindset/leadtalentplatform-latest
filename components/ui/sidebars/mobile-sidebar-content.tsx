@@ -3,6 +3,7 @@
 import { LogoutButton } from "../../logout-button"
 import { Badge } from "../badge"
 import { Avatar, AvatarFallback } from "../avatar"
+import { getInitials } from "@/lib/utils"
 
 interface MobileSidebarContentProps {
   userName: string
@@ -12,14 +13,6 @@ interface MobileSidebarContentProps {
 }
 
 export function MobileSidebarContent({ userName, userEmail, userRole, children }: MobileSidebarContentProps) {
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2)
-  }
 
   return (
     <div className="flex flex-col h-full">
