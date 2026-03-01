@@ -192,7 +192,7 @@ export function LoginForm({
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-muted-foreground leading-relaxed">
+        {/*  <p className="text-center text-xs text-muted-foreground leading-relaxed">
           {t('byContinuing')}{" "}
           <Link
             href="/terms"
@@ -207,7 +207,7 @@ export function LoginForm({
           >
             {t('privacyPolicy')}
           </Link>
-        </p>
+        </p>*/}
       </div>
     </div>
   );
