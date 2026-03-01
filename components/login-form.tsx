@@ -52,14 +52,15 @@ export function LoginForm({
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="flex items-center justify-center p-4">
       <div className={cn("w-full max-w-md space-y-6", className)} {...props}>
-        {/* Tab Navigation */}
+       {/*  Tab Navigation 
         <div className="inline-flex h-10 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground w-full">
           <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium bg-background text-foreground shadow-sm gap-2 flex-1">
             <Users className="h-4 w-4" />
             {t('memberLogin')}
           </div>
+
           <button
             onClick={() => router.push("/company/login")}
             className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 hover:bg-accent hover:text-accent-foreground gap-2 flex-1"
@@ -67,7 +68,7 @@ export function LoginForm({
             <Building2 className="h-4 w-4" />
             {t('companyLogin')}
           </button>
-        </div>
+        </div>*/}
 
         <Card>
           <CardHeader className="space-y-2">
