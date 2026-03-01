@@ -24,12 +24,12 @@ export default function AuthButtons({ user, memberId, className, onClick }: Auth
   }
 
   return (
-    <div className={`flex flex-col gap-2 w-full ${className || ""}`}>
-      <Button asChild size="lg" className="w-full">
-        <Link href="/auth/sign-up" onClick={onClick}>{t('signUp')}</Link>
-      </Button>
-      <Button asChild size="lg" variant="outline" className="w-full">
+    <div className={`flex gap-2 ${className || ""}`}>
+      <Button asChild size="sm" variant="outline">
         <Link href="/auth/login" onClick={onClick}>{t('signIn')}</Link>
+      </Button>
+      <Button asChild size="sm">
+        <Link href="/auth/sign-up" onClick={onClick}>{t('signUp')}</Link>
       </Button>
     </div>
   );
