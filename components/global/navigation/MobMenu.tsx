@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Link } from '@/i18n/routing';
 import AuthButtons from "./auth-buttons";
 
@@ -16,62 +16,60 @@ export interface MenuItem {
 interface MobileNavProps {
   menuItems: MenuItem[];
   user: any | null;
+  memberId?: string | null;
 }
 
-export default function MobileNav({ menuItems, user }: MobileNavProps) {
+export default function MobileNav({ menuItems, user, memberId }: MobileNavProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [clicked, setClicked] = useState<number | null>(null);
-
-  const toggleDrawer = () => {
-    setIsOpen(!isOpen);
-    setClicked(null);
-  };
-
-  const subMenuDrawer = {
-    enter: { height: "auto", overflow: "hidden" },
-    exit: { height: 0, overflow: "hidden" },
-  };
+  const toggleDrawer = () => setIsOpen(prev => !prev);
 
   return (
-    <div className="lg:hidden ml-auto">
+    <div className="lg:hidden relative z-50">
       <button
-        className="z-[999] relative bg-background/90 p-4 rounded-full"
+        className="relative z-[51] p-2 rounded-full hover:bg-muted transition-colors"
         onClick={toggleDrawer}
+        aria-label="Toggle menu"
       >
         {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
       </button>
 
       <motion.div
-        className="fixed left-0 right-0 top-0 bottom-0 h-full bg-background/90 text-foreground font-bold rounded-3xl p-4 overflow-y-auto"
+        className="fixed inset-0 z-[50] bg-background flex flex-col pt-16 px-6 pb-6 overflow-y-auto"
         initial={{ x: "-100%" }}
         animate={{ x: isOpen ? "0%" : "-100%" }}
+        transition={{ type: "tween", duration: 0.25 }}
       >
         <div className="mb-6">
-          <AuthButtons user={user} />
+          <AuthButtons
+            user={user}
+            memberId={memberId}
+            onClick={toggleDrawer}
+          />
         </div>
 
-        <ul>
-          {menuItems.map(({ name, href, target, subMenu }, i) => {
-            const isClicked = clicked === i;
-            const hasSubMenu = subMenu?.length;
-            return (
-              <li key={name}>
-                <div className="flex items-center justify-between p-4 hover:bg-white/5 rounded-md">
-                  <Link
-                    href={href || "#"}
-                    target={target === "_blank" ? "_blank" : undefined}
-                    className="flex-1"
-                    onClick={toggleDrawer}
-                  >
-                    {name}
-                  </Link>
-                </div>
-
-
-              </li>
-            );
-          })}
+        <ul className="flex-1">
+          {menuItems.map(({ name, href, target }) => (
+            <li key={name}>
+              <Link
+                href={href || "#"}
+                target={target === "_blank" ? "_blank" : undefined}
+                className="flex items-center p-4 font-semibold hover:bg-muted rounded-md text-base transition-colors"
+                onClick={toggleDrawer}
+              >
+                {name}
+              </Link>
+            </li>
+          ))}
         </ul>
+
+        <div className="mt-auto pt-6 border-t space-y-4">
+
+          <p className="text-sm font-normal text-muted-foreground leading-relaxed">
+            Learn. Aspire. Discover. Explore
+            
+          </p>
+        </div>
+
       </motion.div>
     </div>
   );
