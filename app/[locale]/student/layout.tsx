@@ -1,6 +1,7 @@
 import { SidebarLayout } from '@/components/ui/sidebars/sidebar-layout'
 import { BaseSidebar } from '@/components/ui/sidebars/base-sidebar'
 import { StudentNavigation } from '@/components/ui/sidebars/student-sidebar'
+import { MobileUserBadge } from '@/components/ui/sidebars/mobile-user-badge'
 import { requireUser } from '@/lib/auth'
 import type { ReactNode } from 'react'
 
@@ -25,6 +26,12 @@ export default async function StudentLayout({
   
   return (
     <SidebarLayout
+      headerRight={
+        <MobileUserBadge
+          name={user.name}
+          memberId={profile?.memberId ?? undefined}
+        />
+      }
       sidebar={
         <BaseSidebar
           userName={user.name}
