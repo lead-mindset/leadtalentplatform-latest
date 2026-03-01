@@ -19,7 +19,7 @@ export default function Home() {
       </Suspense>
 
       <main className="min-h-screen bg-background">
-        <section className="relative">
+        <section className="relative min-h-screen flex items-center justify-center">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20 md:pt-24 md:pb-28">
             <div className="max-w-3xl mx-auto text-center">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-lg mb-8 overflow-hidden">
