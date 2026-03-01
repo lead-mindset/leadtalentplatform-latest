@@ -22,7 +22,7 @@ const BASE_URL = 'https://leadmindset.org'
 
 const LOGO_URL = `${BASE_URL}/emails/logo.png`
 
-const SOCIAL_LINKS = [
+export const SOCIAL_LINKS = [
   {
     name: 'LinkedIn',
     url: 'https://www.linkedin.com/company/leadmindsetorg/posts/?feedView=all',
