@@ -1,20 +1,12 @@
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { getInitials } from '@/lib/utils'
 
 interface SidebarUserHeaderProps {
   name: string
   email?: string
   role?: string
   memberId?: string
-}
-
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .map(word => word[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
 }
 
 export function SidebarUserHeader({ name, email, role, memberId }: SidebarUserHeaderProps) {
