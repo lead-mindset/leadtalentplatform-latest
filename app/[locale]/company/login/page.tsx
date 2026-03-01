@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import {Link, useRouter} from '@/i18n/routing'
+import { Link, useRouter } from '@/i18n/routing'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -73,7 +73,7 @@ export default function CompanyLoginPage() {
                   </CardDescription>
                   <p className="font-semibold text-foreground break-all">{email}</p>
                 </div>
-                
+
                 <Alert className="text-left">
                   <Info className="h-4 w-4" />
                   <AlertDescription>
@@ -112,7 +112,7 @@ export default function CompanyLoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
-        {/* Tab Navigation */}
+
         <div className="inline-flex h-10 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground w-full">
           <button
             onClick={() => router.push('/auth/login')}
@@ -133,11 +133,14 @@ export default function CompanyLoginPage() {
               Company Portal
             </CardTitle>
             <CardDescription className="text-base">
-              Access your company dashboard
+              Coming soon...
             </CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-6">
+
+
+            {/* 
             <form onSubmit={handleSendOTP} className="space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="email">Work Email</Label>
@@ -223,20 +226,9 @@ export default function CompanyLoginPage() {
                   Go to Member Portal
                 </Link>
               </p>
-            </div>
+            </div>*/}
           </CardContent>
         </Card>
-
-        <p className="text-center text-xs text-muted-foreground leading-relaxed">
-          By continuing, you agree to our{' '}
-          <Link href="/terms" className="underline underline-offset-4 hover:text-foreground transition-colors">
-            Terms of Service
-          </Link>{' '}
-          and{' '}
-          <Link href="/privacy" className="underline underline-offset-4 hover:text-foreground transition-colors">
-            Privacy Policy
-          </Link>
-        </p>
       </div>
     </div>
   )
