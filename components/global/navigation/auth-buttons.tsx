@@ -11,15 +11,16 @@ interface AuthButtonsProps {
     email: string;
     avatar: string;
   } | null;
+  memberId?: string | null;
   className?: string;
   onClick?: () => void;
 }
 
-export default function AuthButtons({ user, className, onClick }: AuthButtonsProps) {
+export default function AuthButtons({ user, memberId, className, onClick }: AuthButtonsProps) {
   const t = useTranslations('auth');
 
   if (user) {
-    return <NavUser user={user} />;
+    return <NavUser user={user} memberId={memberId} onNavigate={onClick} />;
   }
 
   return (
