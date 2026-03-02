@@ -9,11 +9,11 @@ import {
 import { LogoutButton } from '@/components/logout-button'
 import { SidebarUserHeader } from './sidebar-user-header'
 import type { ReactNode } from 'react'
-
+import type { Role } from '@/lib/types'
 interface BaseSidebarProps {
   userName: string
   userEmail?: string
-  userRole?: string
+  userRole?: Role
   memberId?: string
   children: ReactNode
 }
