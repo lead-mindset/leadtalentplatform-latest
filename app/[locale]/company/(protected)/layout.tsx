@@ -19,7 +19,7 @@ export default async function CompanyLayout({ children }: CompanyLayoutProps) {
         <BaseSidebar
           userName={companyName}
           userEmail={user.email}
-          userRole="Company"
+          userRole="recruiter"
         >
           <CompanyNavigation />
         </BaseSidebar>
