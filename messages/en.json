@@ -81,6 +81,13 @@
     "updatePasswordDescription": "Please enter your new password below.",
     "thankYouSignUp": "Thank you for signing up!",
     "checkEmailConfirm": "Check your email to confirm",
+    "invalidCredentials": "Invalid login credentials",
+    "emailNotConfirmed": "Please confirm your email before signing in",
+    "userAlreadyRegistered": "An account with this email already exists",
+    "tooManyRequests": "Too many attempts. Please try again later",
+    "networkError": "Network error. Please check your connection",
+    "userNotFound": "No account found with this email",
+    "emailAlreadyInUse": "This email is already in use",
     "confirmAccountMessage": "You've successfully signed up. Please check your email to confirm your account before signing in."
   },
   "gender": {
