@@ -14,11 +14,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Building2, Users, Eye, EyeOff } from "lucide-react";
-import {Link, useRouter} from '@/i18n/routing';
+import { Link, useRouter } from '@/i18n/routing';
 import { useState } from "react";
 import GoogleButton from "./google-button";
-import {useTranslations} from 'next-intl';
-
+import { useTranslations } from 'next-intl';
+import { getAuthErrorKey } from '@/lib/auth-errors'
 export function LoginForm({
   className,
   ...props
@@ -45,7 +45,7 @@ export function LoginForm({
       if (error) throw error;
       router.push("/");
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : t('anErrorOccurred'));
+      setError(t(getAuthErrorKey(error)));
     } finally {
       setIsLoading(false);
     }
@@ -54,7 +54,7 @@ export function LoginForm({
   return (
     <div className="flex items-center justify-center p-4">
       <div className={cn("w-full max-w-md space-y-6", className)} {...props}>
-       {/*  Tab Navigation 
+        {/*  Tab Navigation 
         <div className="inline-flex h-10 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground w-full">
           <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium bg-background text-foreground shadow-sm gap-2 flex-1">
             <Users className="h-4 w-4" />
