@@ -312,7 +312,8 @@
     "leadupc": "LEAD UPC",
     "leadupn": "LEAD UPN",
     "leadtecsup": "LEAD TECSUP",
-    "leadutp": "LEAD UTP"
+    "leadutp": "LEAD UTP",
+    "other": "Otro"
   },
   "availability": {
     "not_available": "No disponible",
