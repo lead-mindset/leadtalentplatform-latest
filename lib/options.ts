@@ -73,6 +73,7 @@ export const LEAD_CHAPTER_VALUES = [
   "leadupn",
   "leadtecsup",
   "leadutp",
+  'other',
 ] as const
 
 export const AVAILABILITY_VALUES = [
