@@ -12,10 +12,9 @@ import {
 } from '@/components/ui/select';
 import { Languages } from 'lucide-react';
 
-// Locale display configuration
 const LOCALE_CONFIG: Record<string, { native: string; english: string; flag: string }> = {
   en: { native: 'English', english: 'English', flag: '🇺🇸' },
-  es: { native: 'Español', english: 'Spanish', flag: '🇵🇪' },
+  es: { native: 'Español', english: 'Spanish', flag: '🇪🇸' },
 };
 
 export function LanguageSwitcher() {
@@ -31,8 +30,8 @@ export function LanguageSwitcher() {
 
   return (
     <Select value={locale} onValueChange={handleLocaleChange}>
-      <SelectTrigger 
-        className="gap-2" 
+      <SelectTrigger
+        className="gap-2"
         aria-label="Select language"
       >
         <Languages className="h-4 w-4 shrink-0 opacity-70" />
@@ -46,8 +45,8 @@ export function LanguageSwitcher() {
           if (!config) return null;
 
           return (
-            <SelectItem 
-              key={localeCode} 
+            <SelectItem
+              key={localeCode}
               value={localeCode}
               className="cursor-pointer"
             >
