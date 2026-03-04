@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import Link from 'next/link'
+import { Link } from '@/i18n/routing'
 
 export default function Onboarding() {
   const router = useRouter()
