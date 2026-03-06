@@ -18,7 +18,7 @@ const COLORS = {
   destructive: '#D94F4F',
 }
 
-const BASE_URL = 'https://leadmindset.org'
+const BASE_URL = 'https://talent.leadmindset.org'
 
 const LOGO_URL = `${BASE_URL}/emails/logo.png`
 
