@@ -62,6 +62,7 @@ export const LEAD_ROLE_VALUES = [
   "other",
 ] as const
 
+
 export const LEAD_CHAPTER_VALUES = [
   "leadpucp",
   "leadunmsm",
@@ -71,9 +72,13 @@ export const LEAD_CHAPTER_VALUES = [
   "leaduni",
   "leadupc",
   "leadupn",
+  "leadupntrujillo",
   "leadtecsup",
   "leadutp",
-  'other',
+  "leaducsur",
+  "leadusil",
+  "leadunsa",
+  "other",
 ] as const
 
 export const AVAILABILITY_VALUES = [
