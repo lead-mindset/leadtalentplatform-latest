@@ -30,7 +30,7 @@ export const SOCIAL_LINKS = [
   },
   {
     name: 'Instagram',
-    url: 'https://www.instagram.com/lead_peru/',
+    url: 'https://www.instagram.com/lead_americas/',
     icon: `${BASE_URL}/emails/instagram.png`,
   },
 ]
