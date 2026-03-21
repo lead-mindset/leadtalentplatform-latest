@@ -42,13 +42,11 @@ export async function updateSession(request: NextRequest) {
   );
 
   try {
-    const { data, error } = await supabase.auth.getClaims();
-    
-    if (error) {
-      console.error('Failed to get auth claims:', error);
-    }
+    const { data: { user }, error } = await supabase.auth.getUser();
++
+    if (error) console.error('Failed to get user:', error);
 
-    const user = data?.claims;
+
     const pathname = request.nextUrl.pathname;
     const isProtected = !isPublicRoute(pathname);
 
