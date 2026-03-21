@@ -53,7 +53,6 @@ export default function Home() {
             </svg>
             <div className="absolute bottom-0 inset-x-0 h-48 bg-gradient-to-t from-background to-transparent" />
           </div>
-          <TestCrashButton />
 
           <div className="relative z-10  mx-auto w-full max-w-2xl pt-28 pb-24 sm:pt-28 sm:pb-28">
             <div className="mb-2 flex justify-center">
@@ -79,6 +78,7 @@ export default function Home() {
             <p className="mx-auto mb-9 max-w-[420px] text-[0.9375rem] leading-[1.7] text-muted-foreground sm:text-base">
               {t('heroSubtitle')}
             </p>
+          <TestCrashButton />
 
             <Button
               asChild
