@@ -43,7 +43,7 @@ export async function updateSession(request: NextRequest) {
 
   try {
     const { data: { user }, error } = await supabase.auth.getUser();
-+
+
     if (error) console.error('Failed to get user:', error);
 
 
