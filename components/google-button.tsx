@@ -11,7 +11,7 @@ export default function GoogleButton() {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${location.origin}/${locale}/auth/callback`,
+redirectTo: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/${locale}/auth/callback`,
       },
     })
   }
