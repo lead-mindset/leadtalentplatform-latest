@@ -83,6 +83,7 @@ export default function LocaleLayout({
 
           <Suspense fallback={null}>
             <LocaleContent params={params}>
+              
               {children}
             </LocaleContent>
           </Suspense>
