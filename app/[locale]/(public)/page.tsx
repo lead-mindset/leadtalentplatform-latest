@@ -78,7 +78,6 @@ export default function Home() {
             <p className="mx-auto mb-9 max-w-[420px] text-[0.9375rem] leading-[1.7] text-muted-foreground sm:text-base">
               {t('heroSubtitle')}
             </p>
-          <TestCrashButton />
 
             <Button
               asChild
