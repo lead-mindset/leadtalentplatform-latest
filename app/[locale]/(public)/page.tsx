@@ -5,6 +5,7 @@ import { ArrowRight, CheckCircle2, Lock, Zap, Globe, BadgeCheck } from "lucide-r
 import Image from "next/image";
 import { useTranslations } from 'next-intl';
 import { Link } from "@/i18n/routing";
+import TestCrashButton from "@/components/test-button";
 
 export default function Home() {
   const t = useTranslations('home');
@@ -52,6 +53,7 @@ export default function Home() {
             </svg>
             <div className="absolute bottom-0 inset-x-0 h-48 bg-gradient-to-t from-background to-transparent" />
           </div>
+          <TestCrashButton />
 
           <div className="relative z-10  mx-auto w-full max-w-2xl pt-28 pb-24 sm:pt-28 sm:pb-28">
             <div className="mb-2 flex justify-center">
@@ -66,9 +68,6 @@ export default function Home() {
                 />
               </div>
             </div>
-      <button onClick={() => { throw new Error('test debug UI') }}>
-        quick test
-      </button>
 
             <h1 className="mb-5 text-[2.5rem] leading-[1.04] sm:text-[3.5rem] md:text-[4.5rem] font-bold tracking-[-0.03em] text-foreground">
               {t('heroEyebrow')}{' '}
