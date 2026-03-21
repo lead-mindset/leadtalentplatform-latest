@@ -8,6 +8,7 @@ import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { Suspense } from 'react';
+import DebugConsole from '@/components/debug-console'
 
 const ralewaySans = Raleway({
   subsets: ["latin"],
@@ -78,6 +79,8 @@ export default function LocaleLayout({
           enableSystem
           disableTransitionOnChange
         >
+            {process.env.NEXT_PUBLIC_DEBUG === 'true' && <DebugConsole />}
+
           <Suspense fallback={null}>
             <LocaleContent params={params}>
               {children}
