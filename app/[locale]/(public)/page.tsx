@@ -30,9 +30,6 @@ export default function Home() {
       </Suspense>
 
       <main className="overflow-x-hidden bg-background">
-      <button onClick={() => { throw new Error('test debug UI') }}>
-        quick test
-      </button>
 
         <section className="relative flex min-h-[100svh] flex-col items-center justify-center text-center px-5 sm:px-6">
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -69,6 +66,9 @@ export default function Home() {
                 />
               </div>
             </div>
+      <button onClick={() => { throw new Error('test debug UI') }}>
+        quick test
+      </button>
 
             <h1 className="mb-5 text-[2.5rem] leading-[1.04] sm:text-[3.5rem] md:text-[4.5rem] font-bold tracking-[-0.03em] text-foreground">
               {t('heroEyebrow')}{' '}
