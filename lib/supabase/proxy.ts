@@ -7,8 +7,8 @@ const PUBLIC_ROUTES = ['/', '/login', '/auth', '/company/onboard', '/company/log
 function isPublicRoute(pathname: string): boolean {
   // Remove locale prefix if present (e.g., /en/auth/login -> /auth/login)
   const pathWithoutLocale = pathname.replace(/^\/(en|es)/, '') || '/';
-  
-  return PUBLIC_ROUTES.some(route => 
+
+  return PUBLIC_ROUTES.some(route =>
     pathWithoutLocale === route || pathWithoutLocale.startsWith(`${route}/`)
   );
 }
@@ -51,10 +51,10 @@ export async function updateSession(request: NextRequest) {
     const isProtected = !isPublicRoute(pathname);
 
     if (!user && isProtected) {
-      // Preserve locale if present in the pathname
       const localeMatch = pathname.match(/^\/(en|es)/);
       const locale = localeMatch ? localeMatch[1] : 'en';
-      return NextResponse.redirect(new URL(`/${locale}/auth/login`, request.url));
+      const redirectUrl = new URL(`/${locale}/auth/login`, process.env.NEXT_PUBLIC_FRONTEND_URL);
+      return NextResponse.redirect(redirectUrl);
     }
 
     return supabaseResponse;
