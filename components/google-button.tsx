@@ -6,12 +6,12 @@ import { useLocale } from 'next-intl'
 
 export default function GoogleButton() {
   const locale = useLocale();
-  
+
   const signInWithGoogle = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-redirectTo: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/${locale}/auth/callback`,
+        redirectTo: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/${locale}/auth/callback`
       },
     })
   }

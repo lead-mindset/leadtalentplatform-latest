@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { routing } from '@/i18n/routing';
 
+const SITE_URL = process.env.NEXT_PUBLIC_FRONTEND_URL!
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ locale: string }> | { locale: string } }
@@ -19,20 +21,20 @@ export async function GET(
   }
 
   if (!code) {
-    return NextResponse.redirect(`${origin}/${locale}/auth/error`)
+    return NextResponse.redirect(`${SITE_URL}/${locale}/auth/error`)
   }
 
   const supabase = await createClient()
   const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
 
   if (exchangeError) {
-    return NextResponse.redirect(`${origin}/${locale}/auth/error`)
+    return NextResponse.redirect(`${SITE_URL}/${locale}/auth/error`)
   }
 
   const { data: { user }, error: userFetchError } = await supabase.auth.getUser()
 
   if (!user || userFetchError) {
-    return NextResponse.redirect(`${origin}/${locale}/auth/error`)
+    return NextResponse.redirect(`${SITE_URL}/${locale}/auth/error`)
   }
 
   if (!user.user_metadata?.locale) {
@@ -46,7 +48,7 @@ export async function GET(
     .maybeSingle()
 
   if (!userData) {
-    return NextResponse.redirect(`${origin}/${locale}/onboarding`)
+    return NextResponse.redirect(`${SITE_URL}/${locale}/onboarding`)
   }
 
   const role = userData.role ?? 'member'
@@ -59,13 +61,13 @@ export async function GET(
       .maybeSingle()
 
     if (!profile?.isFilled) {
-      return NextResponse.redirect(`${origin}/${locale}/onboarding`)
+      return NextResponse.redirect(`${SITE_URL}/${locale}/onboarding`)
     }
-    return NextResponse.redirect(`${origin}/${locale}/student/profile`)
+    return NextResponse.redirect(`${SITE_URL}/${locale}/student/profile`)
   }
 
-  if (role === 'recruiter') return NextResponse.redirect(`${origin}/${locale}/company`)
-  if (role === 'admin') return NextResponse.redirect(`${origin}/${locale}/admin`)
+  if (role === 'recruiter') return NextResponse.redirect(`${SITE_URL}/${locale}/company`)
+  if (role === 'admin') return NextResponse.redirect(`${SITE_URL}/${locale}/admin`)
 
-  return NextResponse.redirect(`${origin}/${locale}/auth/error`)
+  return NextResponse.redirect(`${SITE_URL}/${locale}/auth/error`)
 }

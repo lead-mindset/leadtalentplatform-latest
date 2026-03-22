@@ -3,6 +3,8 @@ import { type EmailOtpType } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 import { routing } from "@/i18n/routing";
 
+const SITE_URL = process.env.NEXT_PUBLIC_FRONTEND_URL!
+
 export async function GET(request: NextRequest) {
   const { searchParams, origin, pathname } = new URL(request.url);
   const token_hash = searchParams.get("token_hash");
@@ -16,7 +18,7 @@ export async function GET(request: NextRequest) {
   console.log("[confirm] params:", { token_hash: token_hash?.slice(0, 20), type, locale });
 
   if (!token_hash || !type) {
-    return NextResponse.redirect(`${origin}/${locale}/auth/error?error=Missing+token_hash+or+type`);
+    return NextResponse.redirect(`${SITE_URL}/${locale}/auth/error?error=Missing+token_hash+or+type`);
   }
 
   const supabase = await createClient();
@@ -26,7 +28,7 @@ export async function GET(request: NextRequest) {
 
   if (error) {
     return NextResponse.redirect(
-      `${origin}/${locale}/auth/error?error=${encodeURIComponent(error.message)}`
+      `${SITE_URL}/${locale}/auth/error?error=${encodeURIComponent(error.message)}`
     );
   }
 
@@ -34,7 +36,7 @@ export async function GET(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.redirect(`${origin}/${locale}/auth/error?error=No+user+after+verify`);
+    return NextResponse.redirect(`${SITE_URL}/${locale}/auth/error?error=No+user+after+verify`);
   }
 
   const { data: userData } = await supabase
@@ -44,7 +46,7 @@ export async function GET(request: NextRequest) {
     .maybeSingle();
 
   if (!userData) {
-    return NextResponse.redirect(`${origin}/${locale}/onboarding`);
+    return NextResponse.redirect(`${SITE_URL}/${locale}/onboarding`);
   }
 
   const role = userData.role ?? "member";
@@ -57,18 +59,18 @@ export async function GET(request: NextRequest) {
       .maybeSingle();
 
     if (!profile?.isFilled) {
-      return NextResponse.redirect(`${origin}/${locale}/onboarding`);
+      return NextResponse.redirect(`${SITE_URL}/${locale}/onboarding`);
     }
-    return NextResponse.redirect(`${origin}/${locale}/student/profile`);
+    return NextResponse.redirect(`${SITE_URL}/${locale}/student/profile`);
   }
 
   if (role === "recruiter") {
-    return NextResponse.redirect(`${origin}/${locale}/company`);
+    return NextResponse.redirect(`${SITE_URL}/${locale}/company`);
   }
 
   if (role === "admin") {
-    return NextResponse.redirect(`${origin}/${locale}/admin`);
+    return NextResponse.redirect(`${SITE_URL}/${locale}/admin`);
   }
 
-  return NextResponse.redirect(`${origin}/${locale}/auth/error?error=Unknown+role`);
+  return NextResponse.redirect(`${SITE_URL}/${locale}/auth/error?error=Unknown+role`);
 }
