@@ -2,7 +2,7 @@ import { SidebarLayout } from '@/components/ui/sidebars/sidebar-layout'
 import { BaseSidebar } from '@/components/ui/sidebars/base-sidebar'
 import { StudentNavigation } from '@/components/ui/sidebars/student-sidebar'
 import { MobileUserBadge } from '@/components/ui/sidebars/mobile-user-badge'
-import { requireUser } from '@/lib/auth'
+import { requireUser, getSidebarStatsForEditor } from '@/lib/auth'
 import type { ReactNode } from 'react'
 
 interface StudentLayoutProps {
@@ -10,20 +10,26 @@ interface StudentLayoutProps {
   params: Promise<{ locale: string }>
 }
 
-export default async function StudentLayout({ 
-  children, 
-  params 
+export default async function StudentLayout({
+  children,
+  params
 }: StudentLayoutProps) {
   await params
-  
+
   const { supabase, user } = await requireUser()
 
   const { data: profile } = await supabase
     .from('StudentProfile')
-    .select('memberId')
+    .select('memberId, chapterId')
     .eq('userId', user.id)
     .single()
-  
+
+  let hasPendingApprovals = false
+  if (user.role === 'editor' && profile?.chapterId) {
+    const stats = await getSidebarStatsForEditor(supabase, profile.chapterId)
+    hasPendingApprovals = stats.hasPendingApprovals
+  }
+
   return (
     <SidebarLayout
       headerRight={
@@ -39,9 +45,9 @@ export default async function StudentLayout({
           userRole={user.role}
           memberId={profile?.memberId ?? undefined}
         >
-          <StudentNavigation 
+          <StudentNavigation
             userRole={user.role}
-            hasPendingApprovals={false}
+            hasPendingApprovals={hasPendingApprovals}
           />
         </BaseSidebar>
       }
