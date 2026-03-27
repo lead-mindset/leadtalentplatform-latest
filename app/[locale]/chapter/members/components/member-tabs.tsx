@@ -2,8 +2,9 @@
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useRouter } from 'next/navigation'
+import type { MemberFilterStatus } from '../page'
 
-export function MembersTabs({ currentStatus }: { currentStatus: string }) {
+export function MembersTabs({ currentStatus }: { currentStatus: MemberFilterStatus }) {
   const router = useRouter()
 
   const handleTabChange = (value: string) => {
@@ -16,10 +17,11 @@ export function MembersTabs({ currentStatus }: { currentStatus: string }) {
 
   return (
     <Tabs value={currentStatus} onValueChange={handleTabChange}>
-      <TabsList className="grid w-full grid-cols-4 lg:w-150">
-        <TabsTrigger value="all">All Members</TabsTrigger>
+      <TabsList className="grid w-full grid-cols-5">
+        <TabsTrigger value="all">All</TabsTrigger>
         <TabsTrigger value="pending">Pending</TabsTrigger>
         <TabsTrigger value="approved">Approved</TabsTrigger>
+        <TabsTrigger value="rejected">Rejected</TabsTrigger>
         <TabsTrigger value="incomplete">Incomplete</TabsTrigger>
       </TabsList>
     </Tabs>
