@@ -18,7 +18,7 @@ export default async function ChapterLayout({ children }: ChapterLayoutProps) {
 
   const { data: profile } = await supabase
     .from('StudentProfile')
-    .select('chapterId')
+    .select('chapterId, memberId')
     .eq('userId', user.id)
     .maybeSingle()
 
@@ -30,7 +30,7 @@ export default async function ChapterLayout({ children }: ChapterLayoutProps) {
     supabase,
     profile.chapterId
   )
-  
+
   return (
     <SidebarLayout
       sidebar={
@@ -38,8 +38,9 @@ export default async function ChapterLayout({ children }: ChapterLayoutProps) {
           userName={user.name}
           userEmail={user.email}
           userRole={user.role}
+          memberId={profile.memberId ?? undefined}
         >
-          <StudentNavigation 
+          <StudentNavigation
             userRole={user.role}
             hasPendingApprovals={hasPendingApprovals}
           />
