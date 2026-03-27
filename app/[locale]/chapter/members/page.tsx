@@ -7,25 +7,31 @@ import {
   CardTitle
 } from '@/components/ui/card'
 import MemberCard from './components/member-card'
-import {
-  Users,
-  AlertCircle
-} from 'lucide-react'
+import { Users, AlertCircle } from 'lucide-react'
 import { MembersTabs } from './components/member-tabs'
 import type { MemberWithProfile } from '@/lib/types'
 import { getChapterMembers, getMemberStats } from '@/lib/actions/chapter/get-data'
+import { redirect } from 'next/navigation'
+
+export type MemberFilterStatus = 'all' | 'pending' | 'approved' | 'rejected' | 'incomplete'
 
 export function filterMembers(
   members: MemberWithProfile[],
-  status: 'all' | 'pending' | 'approved' | 'incomplete'
-) {
+  status: MemberFilterStatus
+): MemberWithProfile[] {
   switch (status) {
     case 'pending':
       return members.filter(
-        m => m.StudentProfile?.isFilled && m.StudentProfile?.approvedById === null
+        m => m.StudentProfile?.isFilled && m.StudentProfile?.approvalStatus === 'pending'
       )
     case 'approved':
-      return members.filter(m => m.StudentProfile?.approvedById !== null)
+      return members.filter(
+        m => m.StudentProfile?.approvalStatus === 'approved'
+      )
+    case 'rejected':
+      return members.filter(
+        m => m.StudentProfile?.approvalStatus === 'rejected'
+      )
     case 'incomplete':
       return members.filter(m => !m.StudentProfile?.isFilled)
     default:
@@ -36,13 +42,15 @@ export function filterMembers(
 export default async function ChapterMembersPage({
   searchParams
 }: {
-  searchParams: Promise<{ status?: 'all' | 'pending' | 'approved' | 'incomplete' }>
+  searchParams: Promise<{ status?: MemberFilterStatus }>
 }) {
   const { status = 'all' } = await searchParams
 
+  const validStatuses: MemberFilterStatus[] = ['all', 'pending', 'approved', 'rejected', 'incomplete']
+  const safeStatus: MemberFilterStatus = validStatuses.includes(status) ? status : 'all'
+
   const { supabase, user } = await requireUserWithRole('editor')
 
-  // Get the user's chapter via StudentProfile
   const { data: profile } = await supabase
     .from('StudentProfile')
     .select(`
@@ -65,7 +73,7 @@ export default async function ChapterMembersPage({
             <div>
               <CardTitle>No Chapter Assigned</CardTitle>
               <CardDescription>
-                You are not currently assigned to a chapter.
+                You are not currently assigned to a chapter. Please contact an administrator.
               </CardDescription>
             </div>
           </CardHeader>
@@ -79,7 +87,7 @@ export default async function ChapterMembersPage({
 
   const allMembers = await getChapterMembers(chapterId)
   const stats = getMemberStats(allMembers)
-  const displayMembers = filterMembers(allMembers, status)
+  const displayMembers = filterMembers(allMembers, safeStatus)
 
   return (
     <div className="space-y-6">
@@ -90,7 +98,7 @@ export default async function ChapterMembersPage({
         </p>
       </div>
 
-      <MembersTabs currentStatus={status} />
+      <MembersTabs currentStatus={safeStatus} />
 
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
