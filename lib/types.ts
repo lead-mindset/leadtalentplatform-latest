@@ -107,11 +107,9 @@ export type Database = {
           isFilled: boolean;
           chapterId: string;
           emailNotificationsEnabled: boolean;
-          gender: 'man' | 'woman' | 'non_binary' | 'prefer_not_to_say' | null; // ← ADD THIS
+          gender: 'man' | 'woman' | 'non_binary' | 'prefer_not_to_say' | null;
         };
       };
-
-
       Company: {
         Row: {
           id: string;
@@ -188,8 +186,8 @@ export type RecruiterUser = UserRow & {
 // QUERY RESULT TYPES - Raw types from Supabase queries
 // ============================================================================
 export type UserWithDetailsRaw = UserRow & {
-StudentProfile: (Pick<StudentProfileRow, "isFilled" | "approvedById" | "isRecruiterVisible" | "approvalStatus" | "chapterId"> & {
-    Chapter: Pick<ChapterRow, "name" | "university"> | null; // NOT array
+  StudentProfile: (Pick<StudentProfileRow, "isFilled" | "approvedById" | "isRecruiterVisible" | "approvalStatus" | "chapterId"> & {
+    Chapter: Pick<ChapterRow, "name" | "university"> | null;
   }) | null;
 };
 
@@ -197,7 +195,6 @@ export type UserWithDetails = UserRow & {
   Chapter: Pick<ChapterRow, "name" | "university"> | null;
   StudentProfile: Pick<StudentProfileRow, "isFilled" | "approvedById" | "isRecruiterVisible" | 'approvalStatus'> | null;
 };
-
 
 export type RecruiterInviteRaw = {
   id: string;
@@ -277,22 +274,21 @@ export type SavedStudent = {
 // STATS & DASHBOARD TYPES
 // ============================================================================
 
-
 export type UserWithFullProfile = UserRow & {
   StudentProfile: (StudentProfileRow & {
     Chapter: ChapterRow | null
   }) | null
 }
 
-
-
 export type ChapterStats = {
   total: number;
+  incomplete: number;
   pending: number;
   approved: number;
-  incomplete: number;
+  rejected: number;
   pendingMembers: MemberWithProfile[];
   approvedMembers: MemberWithProfile[];
+  rejectedMembers: MemberWithProfile[];
   completeProfiles: number;
   visibleToRecruiters: number;
 };
