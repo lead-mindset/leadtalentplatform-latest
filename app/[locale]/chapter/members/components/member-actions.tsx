@@ -14,11 +14,11 @@ interface MemberActionButtonsProps {
   currentState: 'pending' | 'approved' | 'rejected'
 }
 
-export function MemberActionButtons({ 
-  userId, 
-  currentUserId, 
+export function MemberActionButtons({
+  userId,
+  currentUserId,
   userName,
-  currentState 
+  currentState
 }: MemberActionButtonsProps) {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
@@ -27,14 +27,13 @@ export function MemberActionButtons({
     setIsLoading(true)
     try {
       const result = await approveMember(userId, currentUserId)
-      
       if (result.success) {
         toast.success(`${userName} approved successfully`)
         router.refresh()
       } else {
         toast.error(result.error || 'Failed to approve member')
       }
-    } catch (error) {
+    } catch {
       toast.error('An unexpected error occurred')
     } finally {
       setIsLoading(false)
@@ -45,14 +44,13 @@ export function MemberActionButtons({
     setIsLoading(true)
     try {
       const result = await rejectMember(userId, currentUserId)
-      
       if (result.success) {
         toast.success(`${userName}'s profile has been rejected`)
         router.refresh()
       } else {
         toast.error(result.error || 'Failed to reject member')
       }
-    } catch (error) {
+    } catch {
       toast.error('An unexpected error occurred')
     } finally {
       setIsLoading(false)
@@ -63,14 +61,13 @@ export function MemberActionButtons({
     setIsLoading(true)
     try {
       const result = await revokeApproval(userId, currentUserId)
-      
       if (result.success) {
         toast.success(`${userName}'s approval has been revoked`)
         router.refresh()
       } else {
         toast.error(result.error || 'Failed to revoke approval')
       }
-    } catch (error) {
+    } catch {
       toast.error('An unexpected error occurred')
     } finally {
       setIsLoading(false)
@@ -80,10 +77,10 @@ export function MemberActionButtons({
   if (currentState === 'pending') {
     return (
       <div className="flex gap-2">
-        <Button 
-          onClick={handleApprove} 
+        <Button
+          onClick={handleApprove}
           disabled={isLoading}
-          className="flex-1 bg-green-700"
+          className="flex-1 bg-success text-success-foreground hover:bg-success/90"
         >
           {isLoading ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -92,8 +89,8 @@ export function MemberActionButtons({
           )}
           Approve
         </Button>
-        <Button 
-          onClick={handleReject} 
+        <Button
+          onClick={handleReject}
           disabled={isLoading}
           variant="destructive"
           className="flex-1"
@@ -111,8 +108,8 @@ export function MemberActionButtons({
 
   if (currentState === 'rejected') {
     return (
-      <Button 
-        onClick={handleApprove} 
+      <Button
+        onClick={handleApprove}
         disabled={isLoading}
         variant="outline"
         className="w-full"
@@ -128,8 +125,8 @@ export function MemberActionButtons({
   }
 
   return (
-    <Button 
-      onClick={handleRevoke} 
+    <Button
+      onClick={handleRevoke}
       disabled={isLoading}
       variant="outline"
       className="w-full"

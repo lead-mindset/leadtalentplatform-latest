@@ -11,7 +11,6 @@ import { Users, AlertCircle } from 'lucide-react'
 import { MembersTabs } from './components/member-tabs'
 import type { MemberWithProfile } from '@/lib/types'
 import { getChapterMembers, getMemberStats } from '@/lib/actions/chapter/get-data'
-import { redirect } from 'next/navigation'
 
 export type MemberFilterStatus = 'all' | 'pending' | 'approved' | 'rejected' | 'incomplete'
 
@@ -69,7 +68,7 @@ export default async function ChapterMembersPage({
       <div className="flex items-center justify-center min-h-[60vh]">
         <Card>
           <CardHeader className="flex gap-3">
-            <AlertCircle className="h-5 w-5 text-orange-500" />
+            <AlertCircle className="h-5 w-5 text-warning" />
             <div>
               <CardTitle>No Chapter Assigned</CardTitle>
               <CardDescription>
@@ -115,7 +114,7 @@ export default async function ChapterMembersPage({
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Pending Approval
             </CardTitle>
-            <div className="text-2xl font-bold text-orange-600">
+            <div className="text-2xl font-bold text-warning">
               {stats.pending}
             </div>
           </CardHeader>
@@ -126,7 +125,7 @@ export default async function ChapterMembersPage({
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Approved
             </CardTitle>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-success">
               {stats.approved}
             </div>
           </CardHeader>
@@ -137,7 +136,7 @@ export default async function ChapterMembersPage({
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Incomplete
             </CardTitle>
-            <div className="text-2xl font-bold text-gray-500">
+            <div className="text-2xl font-bold text-muted-foreground">
               {stats.incomplete}
             </div>
           </CardHeader>

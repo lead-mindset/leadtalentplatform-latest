@@ -44,25 +44,34 @@ export default function MemberCard({
 
           <div className="flex flex-col items-end gap-2">
             {isPending && (
-              <Badge variant="outline" className="border-orange-500 text-orange-700">
+              <Badge
+                variant="outline"
+                className="border-warning text-warning"
+              >
                 <Clock className="h-3 w-3 mr-1" />
                 Pending
               </Badge>
             )}
             {isApproved && (
-              <Badge variant="outline" className="border-green-500 text-green-700">
+              <Badge
+                variant="outline"
+                className="border-success text-success"
+              >
                 <CheckCircle2 className="h-3 w-3 mr-1" />
                 Approved
               </Badge>
             )}
             {isRejected && (
-              <Badge variant="outline" className="border-red-500 text-red-700">
+              <Badge
+                variant="outline"
+                className="border-destructive text-destructive"
+              >
                 <XCircle className="h-3 w-3 mr-1" />
                 Rejected
               </Badge>
             )}
             {!profile?.isFilled && (
-              <Badge variant="outline" className="border-gray-400 text-gray-600">
+              <Badge variant="outline" className="text-muted-foreground">
                 Incomplete
               </Badge>
             )}
@@ -96,12 +105,12 @@ export default function MemberCard({
 
             {profile.linkedinUrl && (
               <div className="flex items-center gap-2">
-                <Linkedin className="h-4 w-4 text-blue-600" />
+                <Linkedin className="h-4 w-4 text-info" />
                 <a
                   href={profile.linkedinUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline text-sm"
+                  className="text-info hover:underline text-sm"
                 >
                   LinkedIn Profile
                 </a>
@@ -133,7 +142,7 @@ export default function MemberCard({
           {isApproved && (
             <div className="pt-4 border-t space-y-3">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <UserCheck className="h-4 w-4 text-green-600" />
+                <UserCheck className="h-4 w-4 text-success" />
                 Approved on {new Date(profile.updatedAt).toLocaleDateString()}
               </div>
               <MemberActionButtons
@@ -148,7 +157,7 @@ export default function MemberCard({
           {isRejected && (
             <div className="pt-4 border-t space-y-3">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <XCircle className="h-4 w-4 text-red-500" />
+                <XCircle className="h-4 w-4 text-destructive" />
                 Rejected on {new Date(profile.updatedAt).toLocaleDateString()}
               </div>
               <MemberActionButtons
