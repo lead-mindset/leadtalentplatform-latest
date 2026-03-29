@@ -1,190 +1,180 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { Suspense } from 'react'
-import { Users, UserCheck, Clock, TrendingUp, AlertCircle, CheckCircle2, UserX } from 'lucide-react'
+import {
+  Users,
+  UserCheck,
+  Clock,
+  TrendingUp,
+  ChevronRight,
+  CheckCircle2,
+} from 'lucide-react'
 import { requireUser } from '@/lib/auth'
-import type { ChapterData, RecentActivityMember } from '@/lib/types'
-import { getChapterMembers, getMemberStats } from '@/lib/actions/chapter/get-data'
+import type { MemberWithProfile, RecentActivityMember } from '@/lib/types'
+import { getChapterMembers, getMemberStats, getRecentChapterActivity } from '@/lib/actions/chapter/get-data'
+import MemberCard from './members/components/member-card'
 
-function StatsDisplay({ data }: { data: ChapterData }) {
-  const { stats, recentActivity, chapterName, university } = data
 
-  const approvalRate = stats.total > 0
-    ? Math.round((stats.approved / stats.total) * 100)
-    : 0;
+function StatCard({
+  label,
+  value,
+  sub,
+  icon: Icon,
+  variant = 'default',
+}: {
+  label: string
+  value: number
+  sub?: string
+  icon: React.ElementType
+  variant?: 'default' | 'warning' | 'success' | 'info'
+}) {
+  const iconClass =
+    variant === 'warning'
+      ? 'text-[var(--chart-1)]'
+      : variant === 'success'
+      ? 'text-[var(--chart-2)]'
+      : variant === 'info'
+      ? 'text-[var(--chart-3)]'
+      : 'text-muted-foreground'
+
+  const valueClass =
+    variant === 'warning'
+      ? 'text-[var(--chart-1)]'
+      : variant === 'success'
+      ? 'text-[var(--chart-2)]'
+      : 'text-foreground'
 
   return (
-    <>
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Chapter Overview</h1>
-        <p className="text-muted-foreground mt-2">{chapterName} - {university}</p>
-      </div>
-
-      {stats.pending > 0 && (
-        <Card className="border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-950">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <AlertCircle className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-                <div>
-                  <CardTitle className="text-orange-900 dark:text-orange-100">Pending Approvals</CardTitle>
-                  <CardDescription className="text-orange-700 dark:text-orange-300">
-                    {stats.pending} {stats.pending === 1 ? 'member is' : 'members are'} waiting for approval
-                  </CardDescription>
-                </div>
-              </div>
-              <Button asChild>
-                <Link href="/chapter/members?status=pending">Review Members</Link>
-              </Button>
-            </div>
-          </CardHeader>
-        </Card>
-      )}
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Members</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
-            <p className="text-xs text-muted-foreground">In your chapter</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Approval</CardTitle>
-            <Clock className="h-4 w-4 text-orange-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.pending}</div>
-            <p className="text-xs text-muted-foreground">Awaiting review</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Approved Members</CardTitle>
-            <UserCheck className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.approved}</div>
-            <p className="text-xs text-muted-foreground">
-              {approvalRate}% approval rate
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Visible to Recruiters</CardTitle>
-            <TrendingUp className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.visibleToRecruiters}</div>
-            <p className="text-xs text-muted-foreground">Active profiles</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>Common chapter management tasks</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-3">
-          <Button asChild variant="outline" className="h-auto flex-col items-start p-4">
-            <Link href="/chapter/members?status=pending">
-              <Clock className="h-5 w-5 mb-2 text-orange-500" />
-              <span className="font-semibold">Review Pending</span>
-              <span className="text-xs text-muted-foreground">{stats.pending} members waiting</span>
-            </Link>
-          </Button>
-          <Button asChild variant="outline" className="h-auto flex-col items-start p-4">
-            <Link href="/chapter/members?status=approved">
-              <CheckCircle2 className="h-5 w-5 mb-2 text-green-500" />
-              <span className="font-semibold">View Approved</span>
-              <span className="text-xs text-muted-foreground">{stats.approved} approved members</span>
-            </Link>
-          </Button>
-          <Button asChild variant="outline" className="h-auto flex-col items-start p-4">
-            <Link href="/chapter/members">
-              <Users className="h-5 w-5 mb-2 text-blue-500" />
-              <span className="font-semibold">All Members</span>
-              <span className="text-xs text-muted-foreground">View complete roster</span>
-            </Link>
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-          <CardDescription>Latest member approvals in your chapter</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {recentActivity.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <UserX className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>No recent activity</p>
-              <p className="text-sm">Approved members will appear here</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {recentActivity.map(member => (
-                <div key={member.id} className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
-                      <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">{member.name || 'Unknown User'}</p>
-                      <p className="text-xs text-muted-foreground">{member.email}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <Badge variant="outline" className="text-xs">
-                      {new Date(member.StudentProfile.updatedAt).toLocaleDateString()}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {recentActivity.length > 0 && (
-            <div className="mt-4 pt-4 border-t">
-              <Button asChild variant="ghost" className="w-full">
-                <Link href="/chapter/activity">View Full Activity Log</Link>
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium text-muted-foreground">
+          {label}
+        </CardTitle>
+        <Icon className={`h-4 w-4 ${iconClass}`} />
+      </CardHeader>
+      <CardContent>
+        <div className={`text-2xl font-bold ${valueClass}`}>{value}</div>
+        {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
+      </CardContent>
+    </Card>
   )
 }
 
-function StatsLoading() {
+function PendingInbox({
+  members,
+  currentUserId,
+  total,
+}: {
+  members: MemberWithProfile[]
+  currentUserId: string
+  total: number
+}) {
+  if (members.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-10 text-center">
+          <div className="mx-auto h-10 w-10 rounded-full bg-[var(--chart-2)]/10 flex items-center justify-center mb-3">
+            <CheckCircle2 className="h-5 w-5 text-[var(--chart-2)]" />
+          </div>
+          <p className="font-medium text-foreground">All caught up</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            No members waiting for approval
+          </p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  const preview = members.slice(0, 3)
+  const remaining = total - preview.length
+
   return (
-    <div className="space-y-8">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div className="h-4 w-24 bg-muted animate-pulse rounded" />
-            </CardHeader>
-            <CardContent>
-              <div className="h-8 w-16 bg-muted animate-pulse rounded mb-1" />
-              <div className="h-3 w-20 bg-muted animate-pulse rounded" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+    <div className="space-y-3">
+      {preview.map(member => (
+        <MemberCard
+          key={member.id}
+          member={member}
+          currentUserId={currentUserId}
+        />
+      ))}
+      {remaining > 0 && (
+        <Button asChild variant="outline" className="w-full">
+          <Link href="/chapter/members?status=pending">
+            View {remaining} more pending member{remaining > 1 ? 's' : ''}
+            <ChevronRight className="ml-2 h-4 w-4" />
+          </Link>
+        </Button>
+      )}
+    </div>
+  )
+}
+
+function RecentApprovals({ members }: { members: RecentActivityMember[] }) {
+  if (members.length === 0) {
+    return (
+      <p className="text-sm text-muted-foreground py-4 text-center">
+        Approved members will appear here
+      </p>
+    )
+  }
+
+  return (
+    <div className="space-y-1">
+      {members.map(member => (
+        <div
+          key={member.id}
+          className="flex items-center justify-between rounded-md px-2 py-2.5 hover:bg-accent transition-colors"
+        >
+          <div className="min-w-0">
+            <p className="text-sm font-medium truncate">{member.name || 'Unknown'}</p>
+            <p className="text-xs text-muted-foreground truncate">
+              {member.StudentProfile.major}
+            </p>
+          </div>
+          <p className="text-xs text-muted-foreground ml-3 shrink-0">
+            {new Date(member.StudentProfile.updatedAt).toLocaleDateString(undefined, {
+              month: 'short',
+              day: 'numeric',
+            })}
+          </p>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function QuickLinks({
+  stats,
+}: {
+  stats: {
+    total: number
+    approved: number
+    rejected: number
+    incomplete: number
+  }
+}) {
+  const links = [
+    { label: 'All members',        href: '/chapter/members',                    count: stats.total },
+    { label: 'Approved',           href: '/chapter/members?status=approved',    count: stats.approved },
+    { label: 'Rejected',           href: '/chapter/members?status=rejected',    count: stats.rejected },
+    { label: 'Incomplete profiles',href: '/chapter/members?status=incomplete',  count: stats.incomplete },
+  ]
+
+  return (
+    <div className="space-y-0.5">
+      {links.map(link => (
+        <Link
+          key={link.href}
+          href={link.href}
+          className="flex items-center justify-between rounded-md px-2 py-2 text-sm hover:bg-accent transition-colors group"
+        >
+          <span className="text-muted-foreground group-hover:text-foreground transition-colors">
+            {link.label}
+          </span>
+          <span className="font-medium tabular-nums text-foreground">{link.count}</span>
+        </Link>
+      ))}
     </div>
   )
 }
@@ -192,62 +182,200 @@ function StatsLoading() {
 async function ChapterContent() {
   const { supabase, user } = await requireUser()
 
-  // Get the user's chapter via StudentProfile
-  const { data: profile } = await supabase
+  const { data: profileData } = await supabase
     .from('StudentProfile')
-    .select(`
-      chapterId,
-      Chapter (
-        id,
-        name,
-        university
-      )
-    `)
+    .select(`chapterId, Chapter ( id, name, university )`)
     .eq('userId', user.id)
     .maybeSingle()
 
-  if (!profile?.chapterId || !profile.Chapter) {
+  if (!profileData?.chapterId || !profileData.Chapter) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Card className="max-w-md">
-          <CardHeader>
-            <CardTitle>No Chapter Assigned</CardTitle>
-            <CardDescription>
-              You are not currently assigned to a chapter. Please contact an administrator.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
+      <Card className="max-w-md mx-auto mt-20">
+        <CardHeader>
+          <CardTitle>No Chapter Assigned</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            You are not assigned to a chapter. Please contact an administrator.
+          </p>
+        </CardContent>
+      </Card>
     )
   }
 
-  const chapterId = profile.chapterId
-  const chapter = Array.isArray(profile.Chapter) ? profile.Chapter[0] : profile.Chapter
+  const chapterId = profileData.chapterId
+  const chapter = Array.isArray(profileData.Chapter)
+    ? profileData.Chapter[0]
+    : profileData.Chapter
 
-  const allMembers = await getChapterMembers(chapterId)
+  const [allMembers, recentActivity] = await Promise.all([
+    getChapterMembers(chapterId),
+    getRecentChapterActivity(chapterId, 4),
+  ])
+
   const stats = getMemberStats(allMembers)
+  const approvalRate =
+    stats.total > 0 ? Math.round((stats.approved / stats.total) * 100) : 0
 
-  const recentActivity: RecentActivityMember[] = allMembers
-    .filter(m => m.StudentProfile?.approvedById != null)
-    .map(m => ({
-      ...m,
-      StudentProfile: m.StudentProfile!,
-    }))
-    .sort((a, b) => new Date(b.StudentProfile.updatedAt).getTime() - new Date(a.StudentProfile.updatedAt).getTime())
-    .slice(0, 10)
+  const pendingMembers = allMembers.filter(
+    m => m.StudentProfile?.isFilled && m.StudentProfile?.approvalStatus === 'pending'
+  )
 
-  const chapterName = chapter?.name ?? 'Unknown Chapter'
-  const university = chapter?.university ?? 'Unknown University'
+  return (
+    <div className="space-y-8">
 
-  return <StatsDisplay data={{ chapterName, university, stats, recentActivity }} />
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Chapter Overview</h1>
+        <p className="text-muted-foreground mt-1">
+          {chapter?.name} — {chapter?.university}
+        </p>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          label="Total Members"
+          value={stats.total}
+          sub="In your chapter"
+          icon={Users}
+        />
+        <StatCard
+          label="Pending Approval"
+          value={stats.pending}
+          sub="Need your review"
+          icon={Clock}
+          variant="warning"
+        />
+        <StatCard
+          label="Approved"
+          value={stats.approved}
+          sub={`${approvalRate}% approval rate`}
+          icon={UserCheck}
+          variant="success"
+        />
+        <StatCard
+          label="Visible to Recruiters"
+          value={stats.visibleToRecruiters}
+          sub="Active profiles"
+          icon={TrendingUp}
+          variant="info"
+        />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+
+        <div className="lg:col-span-2 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-semibold">Pending Approvals</h2>
+              <p className="text-sm text-muted-foreground">
+                {stats.pending === 0
+                  ? 'Nothing to review right now'
+                  : `${stats.pending} member${stats.pending > 1 ? 's' : ''} waiting for your decision`}
+              </p>
+            </div>
+            {stats.pending > 3 && (
+              <Button asChild variant="outline" size="sm">
+                <Link href="/chapter/members?status=pending">
+                  View all
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Link>
+              </Button>
+            )}
+          </div>
+
+          <PendingInbox
+            members={pendingMembers}
+            currentUserId={user.id}
+            total={stats.pending}
+          />
+        </div>
+
+        <div className="space-y-4">
+
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-semibold">Recent Approvals</CardTitle>
+                <Button asChild variant="ghost" size="sm" className="h-auto px-2 py-1 text-xs text-muted-foreground hover:text-foreground">
+                  <Link href="/chapter/members?status=approved">View all</Link>
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <RecentApprovals members={recentActivity as RecentActivityMember[]} />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold">Member Roster</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <QuickLinks stats={stats} />
+            </CardContent>
+          </Card>
+
+        </div>
+      </div>
+    </div>
+  )
 }
+
+
+function Loading() {
+  return (
+    <div className="space-y-8 animate-pulse">
+      <div>
+        <div className="h-8 w-52 bg-muted rounded-md" />
+        <div className="h-4 w-72 bg-muted rounded-md mt-2" />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
+          <Card key={i}>
+            <CardHeader className="pb-2">
+              <div className="h-4 w-24 bg-muted rounded" />
+            </CardHeader>
+            <CardContent>
+              <div className="h-8 w-12 bg-muted rounded mb-2" />
+              <div className="h-3 w-20 bg-muted rounded" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-3">
+          {[...Array(2)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <div className="h-5 w-36 bg-muted rounded" />
+              </CardHeader>
+              <CardContent>
+                <div className="h-4 w-full bg-muted rounded mb-2" />
+                <div className="h-4 w-3/4 bg-muted rounded" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="space-y-4">
+          <Card>
+            <CardHeader><div className="h-4 w-28 bg-muted rounded" /></CardHeader>
+            <CardContent className="space-y-2">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-8 bg-muted rounded" />
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 
 export default function ChapterOverviewPage() {
   return (
-    <div className="space-y-8">
-      <Suspense fallback={<StatsLoading />}>
-        <ChapterContent />
-      </Suspense>
-    </div>
+    <Suspense fallback={<Loading />}>
+      <ChapterContent />
+    </Suspense>
   )
 }
