@@ -1,14 +1,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Suspense } from 'react'
-import { Mail, Clock, CheckCircle2, XCircle, AlertCircle, Building, Plus } from 'lucide-react'
+import { Mail, Clock, CheckCircle2, XCircle, AlertCircle, Building } from 'lucide-react'
 import type { RecruiterInvite } from '@/lib/types'
 import { InviteForm } from './components/invite-form'
 import { InviteActions } from './components/invite-actions'
-import { getInvites } from '@/lib/actions/admin/get-data'
-import { getCompanies } from '@/lib/actions/admin/get-data'
-
-
+import { getInvites, getCompanies } from '@/lib/actions/admin/get-data'
 
 function getInviteStatus(invite: RecruiterInvite): 'pending' | 'accepted' | 'expired' | 'revoked' {
   if (invite.revokedAt) return 'revoked'
@@ -17,49 +14,50 @@ function getInviteStatus(invite: RecruiterInvite): 'pending' | 'accepted' | 'exp
   return 'pending'
 }
 
-function getInviteStatusDisplay(invite: RecruiterInvite) {
+type InviteStatusDisplay = {
+  label: string
+  variant: 'destructive' | 'default' | 'secondary' | 'outline'
+  icon: React.ElementType
+  iconClass: string
+}
+
+function getInviteStatusDisplay(invite: RecruiterInvite): InviteStatusDisplay {
   const status = getInviteStatus(invite)
-  
+
   switch (status) {
     case 'revoked':
       return {
         label: 'Revoked',
-        variant: 'destructive' as const,
+        variant: 'destructive',
         icon: XCircle,
-        color: 'text-red-500'
+        iconClass: 'text-destructive',
       }
     case 'accepted':
       return {
         label: 'Accepted',
-        variant: 'default' as const,
+        variant: 'default',
         icon: CheckCircle2,
-        color: 'text-green-500'
+        iconClass: 'text-success',
       }
     case 'expired':
       return {
         label: 'Expired',
-        variant: 'secondary' as const,
+        variant: 'secondary',
         icon: AlertCircle,
-        color: 'text-orange-500'
+        iconClass: 'text-warning',
       }
     default:
       return {
         label: 'Pending',
-        variant: 'outline' as const,
+        variant: 'outline',
         icon: Clock,
-        color: 'text-blue-500'
+        iconClass: 'text-info',
       }
   }
 }
 
-
-
-
 async function InvitesList() {
-  const [invites, companies] = await Promise.all([
-    getInvites(),
-    getCompanies(),
-  ])
+  const [invites, companies] = await Promise.all([getInvites(), getCompanies()])
 
   const stats = {
     total: invites.length,
@@ -76,7 +74,7 @@ async function InvitesList() {
           <div className="grid gap-4 md:grid-cols-5">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Invites</CardTitle>
+                <CardTitle className="text-sm font-medium">Total</CardTitle>
                 <Mail className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -87,7 +85,7 @@ async function InvitesList() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Pending</CardTitle>
-                <Clock className="h-4 w-4 text-blue-500" />
+                <Clock className="h-4 w-4 text-info" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.pending}</div>
@@ -97,7 +95,7 @@ async function InvitesList() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Accepted</CardTitle>
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <CheckCircle2 className="h-4 w-4 text-success" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.accepted}</div>
@@ -107,7 +105,7 @@ async function InvitesList() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Expired</CardTitle>
-                <AlertCircle className="h-4 w-4 text-orange-500" />
+                <AlertCircle className="h-4 w-4 text-warning" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.expired}</div>
@@ -117,7 +115,7 @@ async function InvitesList() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Revoked</CardTitle>
-                <XCircle className="h-4 w-4 text-red-500" />
+                <XCircle className="h-4 w-4 text-destructive" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.revoked}</div>
@@ -134,9 +132,7 @@ async function InvitesList() {
       <Card>
         <CardHeader>
           <CardTitle>All Invites</CardTitle>
-          <CardDescription>
-            Recruiter invitations across all companies
-          </CardDescription>
+          <CardDescription>Recruiter invitations across all companies</CardDescription>
         </CardHeader>
         <CardContent>
           {invites.length === 0 ? (
@@ -166,9 +162,12 @@ async function InvitesList() {
                     const statusDisplay = getInviteStatusDisplay(invite)
                     const status = getInviteStatus(invite)
                     const StatusIcon = statusDisplay.icon
-                    
+
                     return (
-                      <tr key={invite.id} className="border-b last:border-0 hover:bg-muted/50">
+                      <tr
+                        key={invite.id}
+                        className="border-b last:border-0 hover:bg-muted/50"
+                      >
                         <td className="p-3">
                           <div className="flex items-center gap-2">
                             <Mail className="h-4 w-4 text-muted-foreground" />
@@ -185,15 +184,13 @@ async function InvitesList() {
                         </td>
                         <td className="p-3">
                           <Badge variant={statusDisplay.variant} className="gap-1">
-                            <StatusIcon className={`h-3 w-3 ${statusDisplay.color}`} />
+                            <StatusIcon className={`h-3 w-3 ${statusDisplay.iconClass}`} />
                             {statusDisplay.label}
                           </Badge>
                         </td>
                         <td className="p-3">
                           <div className="text-sm">
-                            <p className="font-medium">
-                              {invite.GrantedBy?.name || 'Unknown'}
-                            </p>
+                            <p className="font-medium">{invite.GrantedBy?.name || 'Unknown'}</p>
                             <p className="text-muted-foreground text-xs">
                               {invite.GrantedBy?.email}
                             </p>
@@ -205,13 +202,11 @@ async function InvitesList() {
                           </span>
                         </td>
                         <td className="p-3">
-                          {invite.inviteExpiresAt ? (
-                            <span className="text-sm text-muted-foreground">
-                              {new Date(invite.inviteExpiresAt).toLocaleDateString()}
-                            </span>
-                          ) : (
-                            <span className="text-sm text-muted-foreground">Never</span>
-                          )}
+                          <span className="text-sm text-muted-foreground">
+                            {invite.inviteExpiresAt
+                              ? new Date(invite.inviteExpiresAt).toLocaleDateString()
+                              : 'Never'}
+                          </span>
                         </td>
                         <td className="p-3 text-right">
                           <InviteActions inviteId={invite.id} status={status} />
@@ -279,15 +274,12 @@ function LoadingSkeleton() {
 export default function AdminInvitesPage() {
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Recruiter Invites</h1>
-          <p className="text-muted-foreground mt-2">
-            Invite and manage recruiter access across all companies
-          </p>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Recruiter Invites</h1>
+        <p className="text-muted-foreground mt-2">
+          Invite and manage recruiter access across all companies
+        </p>
       </div>
-
       <Suspense fallback={<LoadingSkeleton />}>
         <InvitesList />
       </Suspense>
