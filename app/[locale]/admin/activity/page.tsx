@@ -1,9 +1,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Suspense } from 'react'
-import { Activity, CheckCircle2, Mail, Calendar } from 'lucide-react'
+import { Activity, CheckCircle2, Mail, Calendar, XCircle } from 'lucide-react'
 import { getActivityLog } from '@/lib/actions/admin/get-data'
-import { ActivityItem } from '@/lib/types'
+import type { ActivityItem } from '@/lib/types'
 
 function getActivityDescription(activity: ActivityItem) {
   const actorName = activity.actor?.name || activity.actor?.email || 'Unknown'
@@ -13,42 +13,47 @@ function getActivityDescription(activity: ActivityItem) {
     case 'approval':
       return {
         icon: CheckCircle2,
-        color: 'text-green-500',
+        iconClass: 'text-success',
+        bgClass: 'bg-success-muted',
         title: 'Profile Approved',
         description: `${actorName} approved ${targetName}'s profile`,
-        badge: activity.chapter?.name
+        badge: activity.chapter?.name,
       }
     case 'invite_sent':
       return {
         icon: Mail,
-        color: 'text-blue-500',
+        iconClass: 'text-info',
+        bgClass: 'bg-info-muted',
         title: 'Invite Sent',
         description: `${actorName} invited ${targetName} to ${activity.company?.name || 'a company'}`,
-        badge: activity.company?.name
+        badge: activity.company?.name,
       }
     case 'invite_accepted':
       return {
         icon: CheckCircle2,
-        color: 'text-green-500',
+        iconClass: 'text-success',
+        bgClass: 'bg-success-muted',
         title: 'Invite Accepted',
         description: `${targetName} accepted invite to ${activity.company?.name || 'a company'}`,
-        badge: activity.company?.name
+        badge: activity.company?.name,
       }
     case 'invite_revoked':
       return {
-        icon: Mail,
-        color: 'text-red-500',
+        icon: XCircle,
+        iconClass: 'text-destructive',
+        bgClass: 'bg-destructive/10',
         title: 'Invite Revoked',
         description: `${actorName} revoked invite for ${targetName}`,
-        badge: activity.company?.name
+        badge: activity.company?.name,
       }
     default:
       return {
         icon: Activity,
-        color: 'text-gray-500',
+        iconClass: 'text-muted-foreground',
+        bgClass: 'bg-muted',
         title: 'Unknown Activity',
         description: 'Unknown activity type',
-        badge: undefined
+        badge: undefined,
       }
   }
 }
@@ -65,7 +70,6 @@ function formatTimestamp(timestamp: string) {
   if (diffMins < 60) return `${diffMins}m ago`
   if (diffHours < 24) return `${diffHours}h ago`
   if (diffDays < 7) return `${diffDays}d ago`
-  
   return date.toLocaleDateString()
 }
 
@@ -76,9 +80,7 @@ async function ActivityLog() {
     <Card>
       <CardHeader>
         <CardTitle>System Activity Log</CardTitle>
-        <CardDescription>
-          Recent actions across the platform (last 50 events)
-        </CardDescription>
+        <CardDescription>Recent actions across the platform (last 50 events)</CardDescription>
       </CardHeader>
       <CardContent>
         {activities.length === 0 ? (
@@ -94,24 +96,26 @@ async function ActivityLog() {
             {activities.map((activity) => {
               const details = getActivityDescription(activity)
               const Icon = details.icon
-              
+
               return (
-                <div 
+                <div
                   key={activity.id}
                   className="flex items-start gap-4 pb-4 border-b last:border-0 last:pb-0"
                 >
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-full bg-muted flex-shrink-0 ${details.color}`}>
-                    <Icon className="h-5 w-5" />
+                  <div
+                    className={`flex h-10 w-10 items-center justify-center rounded-full flex-shrink-0 ${details.bgClass}`}
+                  >
+                    <Icon className={`h-5 w-5 ${details.iconClass}`} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
                         <p className="font-medium">{details.title}</p>
-                        <p className="text-sm text-muted-foreground break-words">
+                        <p className="text-sm text-muted-foreground wrap-break-word">
                           {details.description}
                         </p>
                       </div>
-                      <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                      <div className="flex flex-col items-end gap-2 shrink-0">
                         <span className="text-xs text-muted-foreground whitespace-nowrap">
                           {formatTimestamp(activity.timestamp)}
                         </span>
@@ -148,7 +152,7 @@ function LoadingSkeleton() {
         <div className="space-y-4">
           {[...Array(8)].map((_, i) => (
             <div key={i} className="flex items-start gap-4 pb-4 border-b">
-              <div className="h-10 w-10 bg-muted animate-pulse rounded-full flex-shrink-0" />
+              <div className="h-10 w-10 bg-muted animate-pulse rounded-full shrink-0" />
               <div className="flex-1 space-y-2">
                 <div className="h-5 w-32 bg-muted animate-pulse rounded" />
                 <div className="h-4 w-full bg-muted animate-pulse rounded" />
@@ -171,7 +175,6 @@ export default function AdminActivityPage() {
           Audit log of all system events and administrative actions
         </p>
       </div>
-
       <Suspense fallback={<LoadingSkeleton />}>
         <ActivityLog />
       </Suspense>
