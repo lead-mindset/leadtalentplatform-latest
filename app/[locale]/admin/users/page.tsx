@@ -5,7 +5,16 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
 import Link from 'next/link'
 import { Suspense } from 'react'
-import { Users, Building2, CheckCircle2, Clock, XCircle, ChevronRight, TrendingUp, AlertCircle } from 'lucide-react'
+import {
+  Users,
+  Building2,
+  CheckCircle2,
+  Clock,
+  XCircle,
+  ChevronRight,
+  TrendingUp,
+  AlertCircle,
+} from 'lucide-react'
 import type { UserWithDetails } from '@/lib/types'
 import { getUsers } from '@/lib/actions/admin/get-data'
 import { UserTabs } from './user-tabs'
@@ -18,41 +27,48 @@ function getProfileStatus(user: UserWithDetails) {
     return {
       icon: XCircle,
       label: 'No Profile',
-      color: 'text-muted-foreground'
+      colorClass: 'text-muted-foreground',
     }
   }
   if (!user.StudentProfile.isFilled) {
     return {
       icon: Clock,
       label: 'Incomplete',
-      color: 'text-chart-4'
+      colorClass: 'text-muted-foreground',
     }
   }
 
   switch (user.StudentProfile.approvalStatus) {
     case 'approved':
-      return user.StudentProfile.isRecruiterVisible
-        ? { icon: CheckCircle2, label: 'Visible', color: 'text-chart-1' }
-        : { icon: CheckCircle2, label: 'Approved', color: 'text-chart-1' }
+      return {
+        icon: CheckCircle2,
+        label: user.StudentProfile.isRecruiterVisible ? 'Visible' : 'Approved',
+        colorClass: 'text-success',
+      }
     case 'rejected':
-      return { icon: XCircle, label: 'Rejected', color: 'text-destructive' }
+      return {
+        icon: XCircle,
+        label: 'Rejected',
+        colorClass: 'text-destructive',
+      }
     case 'pending':
     default:
-      return { icon: AlertCircle, label: 'Pending', color: 'text-chart-4' }
+      return {
+        icon: AlertCircle,
+        label: 'Pending',
+        colorClass: 'text-warning',
+      }
   }
 }
 
 function filterUsersByRole(users: UserWithDetails[], role: UserRole): UserWithDetails[] {
   if (role === 'all') return users
-
-  if (role === 'members') {
-    return users.filter(u => u.role === 'member' || u.role === 'editor')
-  }
+  if (role === 'members') return users.filter(u => u.role === 'member' || u.role === 'editor')
 
   const roleMap: Record<string, string> = {
-    'editors': 'editor',
-    'recruiters': 'recruiter',
-    'admins': 'admin'
+    editors: 'editor',
+    recruiters: 'recruiter',
+    admins: 'admin',
   }
 
   const targetRole = roleMap[role] || role
@@ -62,9 +78,7 @@ function filterUsersByRole(users: UserWithDetails[], role: UserRole): UserWithDe
 function getInitials(name: string | null, email: string): string {
   if (name) {
     const parts = name.split(' ')
-    if (parts.length >= 2) {
-      return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
-    }
+    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
     return name.substring(0, 2).toUpperCase()
   }
   return email.substring(0, 2).toUpperCase()
@@ -76,12 +90,11 @@ async function UsersTable({ role }: { role: UserRole }) {
 
   const stats = {
     total: allUsers.length,
-    admins: allUsers.filter(u => u.role === 'admin').length,
-    editors: allUsers.filter(u => u.role === 'editor').length,
     members: allUsers.filter(u => u.role === 'member' || u.role === 'editor').length,
     recruiters: allUsers.filter(u => u.role === 'recruiter').length,
-    pending: allUsers.filter(u => u.StudentProfile?.isFilled && u.StudentProfile?.approvalStatus === 'pending').length,
-    rejected: allUsers.filter(u => u.StudentProfile?.approvalStatus === 'rejected').length,
+    pending: allUsers.filter(
+      u => u.StudentProfile?.isFilled && u.StudentProfile?.approvalStatus === 'pending'
+    ).length,
     visible: allUsers.filter(u => u.StudentProfile?.isRecruiterVisible).length,
   }
 
@@ -95,7 +108,7 @@ async function UsersTable({ role }: { role: UserRole }) {
           <CardContent>
             <div className="flex items-baseline gap-2">
               <div className="text-3xl font-bold">{stats.total}</div>
-              <TrendingUp className="h-4 w-4 text-chart-1" />
+              <TrendingUp className="h-4 w-4 text-[var(--success)]" />
             </div>
             <p className="text-xs text-muted-foreground mt-2">Across all roles</p>
           </CardContent>
@@ -127,8 +140,8 @@ async function UsersTable({ role }: { role: UserRole }) {
           </CardHeader>
           <CardContent>
             <div className="flex items-baseline gap-2">
-              <div className="text-3xl font-bold">{stats.pending}</div>
-              {stats.pending > 0 && <AlertCircle className="h-4 w-4 text-chart-4" />}
+              <div className="text-3xl font-bold text-[var(--warning)]">{stats.pending}</div>
+              {stats.pending > 0 && <AlertCircle className="h-4 w-4 text-[var(--warning)]" />}
             </div>
             <p className="text-xs text-muted-foreground mt-2">
               {stats.visible} visible to recruiters
@@ -184,14 +197,11 @@ async function UsersTable({ role }: { role: UserRole }) {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="font-semibold truncate">
-                          {user.name || 'No name'}
-                        </p>
+                        <p className="font-semibold truncate">{user.name || 'No name'}</p>
                         <Badge className={getRoleColor(user.role)} variant="outline">
                           {user.role}
                         </Badge>
                       </div>
-
                       <div className="flex items-center gap-3 text-sm text-muted-foreground">
                         <span className="truncate">{user.email}</span>
                         {user.Chapter && (
@@ -207,8 +217,8 @@ async function UsersTable({ role }: { role: UserRole }) {
                     </div>
 
                     <div className="hidden sm:flex items-center gap-2">
-                      <StatusIcon className={`h-4 w-4 ${status.color}`} />
-                      <span className={`text-sm font-medium ${status.color}`}>
+                      <StatusIcon className={`h-4 w-4 ${status.colorClass}`} />
+                      <span className={`text-sm font-medium ${status.colorClass}`}>
                         {status.label}
                       </span>
                     </div>
@@ -271,7 +281,7 @@ function LoadingSkeleton() {
 }
 
 export default async function AdminUsersPage({
-  searchParams
+  searchParams,
 }: {
   searchParams: Promise<{ role?: UserRole }>
 }) {
