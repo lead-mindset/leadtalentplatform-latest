@@ -65,16 +65,16 @@ export async function requireUser(): Promise<{
   return { supabase, user: userData }
 }
 
-export async function requireUserWithRole(role: string): Promise<{ 
-  supabase: SupabaseClient; 
-  user: UserRow 
+export async function requireUserWithRole(role: string): Promise<{
+  supabase: SupabaseClient
+  user: UserRow
 }> {
   const { supabase, user } = await requireUser()
-
+ 
   if (user.role !== role) {
-    redirect('/unauthorized')
+    redirect('/student')
   }
-
+ 
   return { supabase, user }
 }
 
