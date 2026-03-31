@@ -2,9 +2,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { notFound } from 'next/navigation'
-import {Link} from '@/i18n/routing'
-import { ArrowLeft, Users, MapPin, Calendar, Mail, Phone, CheckCircle, Clock, XCircle } from 'lucide-react'
-import { getChapterById, getChapterMembers, getChapterMemberCount } from '@/lib/actions/admin/get-data'
+import { Link } from '@/i18n/routing'
+import {
+  ArrowLeft,
+  Users,
+  MapPin,
+  Calendar,
+  Mail,
+  Phone,
+  CheckCircle,
+  Clock,
+  XCircle,
+} from 'lucide-react'
+import { getChapterById, getChapterMembers } from '@/lib/actions/admin/get-data'
 
 export default async function ChapterDetailPage({
   params,
@@ -14,17 +24,11 @@ export default async function ChapterDetailPage({
   const { id } = await params
   const chapter = await getChapterById(id)
 
-  if (!chapter) {
-    notFound()
-  }
-
-  const [memberCount, members] = await Promise.all([
-    getChapterMemberCount(chapter.id),
-    getChapterMembers(chapter.id)
-  ])
-
-  const approvedMembers = members.filter(m => m.StudentProfile?.approvedById)
-  const pendingMembers = members.filter(m => m.StudentProfile?.isFilled && !m.StudentProfile?.approvedById)
+  if (!chapter) notFound()
+  const members = await getChapterMembers(chapter.id)
+  const approvedMembers  = members.filter(m => m.StudentProfile?.approvalStatus === 'approved')
+  const pendingMembers   = members.filter(m => m.StudentProfile?.isFilled && m.StudentProfile?.approvalStatus === 'pending')
+  const rejectedMembers  = members.filter(m => m.StudentProfile?.approvalStatus === 'rejected')
   const incompleteMembers = members.filter(m => !m.StudentProfile?.isFilled)
 
   return (
@@ -51,10 +55,8 @@ export default async function ChapterDetailPage({
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{memberCount}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Total chapter members
-              </p>
+              <div className="text-2xl font-bold">{members.length}</div>
+              <p className="text-xs text-muted-foreground mt-1">Total chapter members</p>
             </CardContent>
           </Card>
 
@@ -65,9 +67,7 @@ export default async function ChapterDetailPage({
                 <MapPin className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  {chapter.city || chapter.region}
-                </div>
+                <div className="text-2xl font-bold">{chapter.city || chapter.region}</div>
                 <p className="text-xs text-muted-foreground mt-1">
                   {chapter.city && chapter.region ? chapter.region : 'Chapter location'}
                 </p>
@@ -85,12 +85,10 @@ export default async function ChapterDetailPage({
                 <div className="text-2xl font-bold">
                   {new Date(chapter.createdAt).toLocaleDateString('en-US', {
                     month: 'short',
-                    year: 'numeric'
+                    year: 'numeric',
                   })}
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Chapter established
-                </p>
+                <p className="text-xs text-muted-foreground mt-1">Chapter established</p>
               </CardContent>
             </Card>
           )}
@@ -101,7 +99,7 @@ export default async function ChapterDetailPage({
             <CardTitle>Chapter Information</CardTitle>
             <CardDescription>Details about this chapter</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Chapter ID</p>
@@ -113,34 +111,42 @@ export default async function ChapterDetailPage({
                   {new Date(chapter.updatedAt).toLocaleDateString('en-US', {
                     month: 'long',
                     day: 'numeric',
-                    year: 'numeric'
+                    year: 'numeric',
                   })}
                 </p>
               </div>
             </div>
-
           </CardContent>
         </Card>
 
+        {/* ── Member sections ── */}
         <div className="space-y-4">
-          <h2 className="text-2xl font-bold">Members ({memberCount})</h2>
-          
+          <h2 className="text-2xl font-bold">Members ({members.length})</h2>
+
           {pendingMembers.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-yellow-600" />
+                  <Clock className="h-5 w-5 text-warning" />
                   Pending Approval ({pendingMembers.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   {pendingMembers.map((member) => (
-                    <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div
+                      key={member.id}
+                      className="flex items-center justify-between p-3 border rounded-lg"
+                    >
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <p className="font-medium">{member.name}</p>
-                          <Badge variant="outline" className="text-yellow-600">Pending</Badge>
+                          <Badge
+                            variant="outline"
+                            className="border-warning text-warning"
+                          >
+                            Pending
+                          </Badge>
                         </div>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
@@ -156,9 +162,7 @@ export default async function ChapterDetailPage({
                         </div>
                       </div>
                       <Button asChild size="sm">
-                        <Link href={`/admin/users/${member.id}`}>
-                          Review
-                        </Link>
+                        <Link href={`/admin/users/${member.id}`}>Review</Link>
                       </Button>
                     </div>
                   ))}
@@ -171,18 +175,26 @@ export default async function ChapterDetailPage({
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <CheckCircle className="h-5 w-5 text-success" />
                   Approved Members ({approvedMembers.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   {approvedMembers.map((member) => (
-                    <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div
+                      key={member.id}
+                      className="flex items-center justify-between p-3 border rounded-lg"
+                    >
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <p className="font-medium">{member.name}</p>
-                          <Badge variant="outline" className="text-green-600">Approved</Badge>
+                          <Badge
+                            variant="outline"
+                            className="border-success text-success"
+                          >
+                            Approved
+                          </Badge>
                           {member.StudentProfile?.isRecruiterVisible && (
                             <Badge variant="secondary">Visible to Recruiters</Badge>
                           )}
@@ -201,9 +213,52 @@ export default async function ChapterDetailPage({
                         </div>
                       </div>
                       <Button asChild size="sm" variant="outline">
-                        <Link href={`/admin/users/${member.id}`}>
-                          View
-                        </Link>
+                        <Link href={`/admin/users/${member.id}`}>View</Link>
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {rejectedMembers.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <XCircle className="h-5 w-5 text-destructive" />
+                  Rejected ({rejectedMembers.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {rejectedMembers.map((member) => (
+                    <div
+                      key={member.id}
+                      className="flex items-center justify-between p-3 border rounded-lg"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium">{member.name}</p>
+                          <Badge variant="outline" className="border-destructive text-destructive">
+                            Rejected
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Mail className="h-3 w-3" />
+                            {member.email}
+                          </span>
+                          {member.phone && (
+                            <span className="flex items-center gap-1">
+                              <Phone className="h-3 w-3" />
+                              {member.phone}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <Button asChild size="sm" variant="outline">
+                        <Link href={`/admin/users/${member.id}`}>Review</Link>
                       </Button>
                     </div>
                   ))}
@@ -216,18 +271,23 @@ export default async function ChapterDetailPage({
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <XCircle className="h-5 w-5 text-gray-600" />
+                  <XCircle className="h-5 w-5 text-muted-foreground" />
                   Incomplete Profiles ({incompleteMembers.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   {incompleteMembers.map((member) => (
-                    <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg bg-muted/30">
+                    <div
+                      key={member.id}
+                      className="flex items-center justify-between p-3 border rounded-lg bg-muted/30"
+                    >
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <p className="font-medium">{member.name}</p>
-                          <Badge variant="outline" className="text-gray-600">Incomplete</Badge>
+                          <Badge variant="outline" className="text-muted-foreground">
+                            Incomplete
+                          </Badge>
                         </div>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
@@ -237,9 +297,7 @@ export default async function ChapterDetailPage({
                         </div>
                       </div>
                       <Button asChild size="sm" variant="outline">
-                        <Link href={`/admin/users/${member.id}`}>
-                          View
-                        </Link>
+                        <Link href={`/admin/users/${member.id}`}>View</Link>
                       </Button>
                     </div>
                   ))}
