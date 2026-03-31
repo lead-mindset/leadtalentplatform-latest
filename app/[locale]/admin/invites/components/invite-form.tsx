@@ -1,64 +1,59 @@
 'use client'
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Mail, Loader2 } from 'lucide-react';
-import { createRecruiterInvite } from '@/lib/actions/admin/invite-recruiter';
-import type { Company } from '@/lib/types';
+} from '@/components/ui/select'
+import { Mail, Loader2 } from 'lucide-react'
+import { createRecruiterInvite } from '@/lib/actions/admin/invite-recruiter'
+import type { Company } from '@/lib/types'
 
 interface InviteFormProps {
-  companies: Company[];
+  companies: Company[]
 }
 
 export function InviteForm({ companies }: InviteFormProps) {
-  const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const router = useRouter()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setError(null);
-    setSuccess(null);
+    e.preventDefault()
+    setIsSubmitting(true)
+    setError(null)
+    setSuccess(null)
 
-    const form = e.currentTarget;
-    
-    const formData = new FormData(form);
-    const email = formData.get('email') as string;
-    const companyId = formData.get('companyId') as string;
-    const expiresInDays = parseInt(formData.get('expiresInDays') as string) || 7;
+    const form = e.currentTarget
+    const formData = new FormData(form)
+    const email = formData.get('email') as string
+    const companyId = formData.get('companyId') as string
+    const expiresInDays = parseInt(formData.get('expiresInDays') as string) || 7
 
-    const result = await createRecruiterInvite({
-      recruiterEmail: email,
-      companyId,
-      expiresInDays,
-    });
+    const result = await createRecruiterInvite({ recruiterEmail: email, companyId, expiresInDays })
 
     if (result.success) {
-      setSuccess(result.message || 'Invitation sent successfully');
-      form.reset();
+      setSuccess(result.message || 'Invitation sent successfully')
+      form.reset()
       setTimeout(() => {
-        setSuccess(null);
-        router.refresh();
-      }, 1500);
+        setSuccess(null)
+        router.refresh()
+      }, 1500)
     } else {
-      setError(result.error || 'Failed to send invitation');
+      setError(result.error || 'Failed to send invitation')
     }
 
-    setIsSubmitting(false);
-  };
+    setIsSubmitting(false)
+  }
 
   return (
     <Card>
@@ -123,7 +118,7 @@ export function InviteForm({ companies }: InviteFormProps) {
           )}
 
           {success && (
-            <div className="p-3 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 rounded-lg text-sm">
+            <div className="p-3 bg-success-muted text-success rounded-lg text-sm">
               {success}
             </div>
           )}
@@ -135,5 +130,5 @@ export function InviteForm({ companies }: InviteFormProps) {
         </form>
       </CardContent>
     </Card>
-  );
+  )
 }
