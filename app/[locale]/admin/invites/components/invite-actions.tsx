@@ -15,6 +15,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Loader2, Mail, XCircle } from 'lucide-react'
+import { toast } from 'sonner'
 import { revokeInvite, resendInvite } from '@/lib/actions/admin/invite-recruiter'
 
 interface InviteActionsProps {
@@ -32,12 +33,13 @@ export function InviteActions({ inviteId, status }: InviteActionsProps) {
     try {
       const result = await revokeInvite(inviteId)
       if (result.success) {
+        toast.success('Invite revoked successfully')
         router.refresh()
       } else {
-        alert(result.error || 'Failed to revoke invite')
+        toast.error(result.error || 'Failed to revoke invite')
       }
-    } catch (error: any) {
-      alert(error.message || 'Unexpected error')
+    } catch {
+      toast.error('An unexpected error occurred')
     } finally {
       setIsRevoking(false)
     }
@@ -48,13 +50,13 @@ export function InviteActions({ inviteId, status }: InviteActionsProps) {
     try {
       const result = await resendInvite(inviteId)
       if (result.success) {
-        alert(result.message || 'Invite resent successfully')
+        toast.success(result.message || 'Invite resent successfully')
         router.refresh()
       } else {
-        alert(result.error || 'Failed to resend invite')
+        toast.error(result.error || 'Failed to resend invite')
       }
-    } catch (error: any) {
-      alert(error.message || 'Unexpected error')
+    } catch {
+      toast.error('An unexpected error occurred')
     } finally {
       setIsResending(false)
     }
@@ -78,9 +80,8 @@ export function InviteActions({ inviteId, status }: InviteActionsProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Revoke Recruiter Access</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to revoke this recruiter's access? 
-              They will immediately lose access to the company's student profiles.
-              This action cannot be undone.
+              Are you sure you want to revoke this recruiter's access? They will
+              immediately lose access to student profiles. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -107,7 +108,7 @@ export function InviteActions({ inviteId, status }: InviteActionsProps) {
       >
         {isResending && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
         <Mail className="h-3 w-3 mr-1" />
-        Resend Invite
+        Resend
       </Button>
 
       <AlertDialog>
@@ -122,9 +123,8 @@ export function InviteActions({ inviteId, status }: InviteActionsProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Revoke Invitation</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to revoke this invitation? 
-              The magic link will no longer work and the recruiter will not be able to access the platform.
-              This action cannot be undone.
+              Are you sure you want to revoke this invitation? The link will no longer
+              work and the recruiter will not be able to access the platform.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
