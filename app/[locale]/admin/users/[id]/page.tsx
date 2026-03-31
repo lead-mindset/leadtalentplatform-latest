@@ -4,7 +4,20 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Link } from '@/i18n/routing'
-import { ArrowLeft, Mail, Phone, GraduationCap, Linkedin, CheckCircle2, XCircle, Clock, Eye, EyeOff, Shield, AlertCircle } from 'lucide-react'
+import {
+  ArrowLeft,
+  Mail,
+  Phone,
+  GraduationCap,
+  Linkedin,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Eye,
+  EyeOff,
+  Shield,
+  AlertCircle,
+} from 'lucide-react'
 import { getUserById } from '@/lib/actions/admin/get-data'
 import { createClient } from '@/lib/supabase/server'
 import { MemberActionButtons } from '@/app/[locale]/chapter/members/components/member-actions'
@@ -16,36 +29,37 @@ export default async function UserDetailPage({
   params: Promise<{ id: string; locale: string }>
 }) {
   const { id } = await params
-
   const user = await getUserById(id)
 
-  if (!user) {
-    notFound()
-  }
+  if (!user) notFound()
 
   const supabase = await createClient()
   const { data: { user: currentUser } } = await supabase.auth.getUser()
 
   const { data: currentUserData } = currentUser
     ? await supabase
-      .from('User')
-      .select('role')
-      .eq('id', currentUser.id)
-      .single()
+        .from('User')
+        .select('role')
+        .eq('id', currentUser.id)
+        .single()
     : { data: null }
 
-  const canApprove = currentUserData && (currentUserData.role === 'admin' || currentUserData.role === 'editor')
+  const canApprove =
+    currentUserData &&
+    (currentUserData.role === 'admin' || currentUserData.role === 'editor')
+
   const profile = user.StudentProfile
-  const approvalStatus = profile?.approvalStatus || 'pending'
+  // approvalStatus is the single source of truth
+  const approvalStatus = profile?.approvalStatus ?? 'pending'
 
   const getStatusConfig = () => {
     if (!profile?.isFilled) {
       return {
         label: 'Incomplete Profile',
         icon: Clock,
-        color: 'text-muted-foreground',
-        bgColor: 'bg-muted',
-        description: 'Member needs to complete their profile'
+        colorClass: 'text-muted-foreground',
+        bgClass: 'bg-muted',
+        description: 'Member needs to complete their profile',
       }
     }
 
@@ -54,26 +68,28 @@ export default async function UserDetailPage({
         return {
           label: 'Approved',
           icon: CheckCircle2,
-          color: 'text-chart-1',
-          bgColor: 'bg-chart-1/10',
-          description: 'Visible to recruiters'
+          colorClass: 'text-[var(--success)]',
+          bgClass: 'bg-[var(--success-muted)]',
+          description: profile.isRecruiterVisible
+            ? 'Approved and visible to recruiters'
+            : 'Approved but not visible to recruiters',
         }
       case 'rejected':
         return {
           label: 'Rejected',
           icon: XCircle,
-          color: 'text-destructive',
-          bgColor: 'bg-destructive/10',
-          description: 'Profile was reviewed and rejected'
+          colorClass: 'text-destructive',
+          bgClass: 'bg-destructive/10',
+          description: 'Profile was reviewed and rejected',
         }
       case 'pending':
       default:
         return {
           label: 'Pending Approval',
           icon: AlertCircle,
-          color: 'text-chart-4',
-          bgColor: 'bg-chart-4/10',
-          description: 'Awaiting admin review'
+          colorClass: 'text-[var(--warning)]',
+          bgClass: 'bg-[var(--warning-muted)]',
+          description: 'Awaiting chapter editor or admin review',
         }
     }
   }
@@ -96,62 +112,64 @@ export default async function UserDetailPage({
 
       <div className="container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
-        <div className="relative">
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
-            <div className="space-y-3 flex-1">
-              <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-4xl font-bold tracking-tight">{user.name}</h1>
-                <Badge className={getRoleColor(user.role)} variant="outline">
-                  {user.role}
-                </Badge>
-              </div>
-
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 text-muted-foreground">
-                <a href={`mailto:${user.email}`} className="flex items-center gap-2 hover:text-foreground transition-colors">
-                  <Mail className="h-4 w-4" />
-                  <span className="text-sm">{user.email}</span>
-                </a>
-                {user.phone && (
-                  <>
-                    <span className="hidden sm:block">•</span>
-                    <a href={`tel:${user.phone}`} className="flex items-center gap-2 hover:text-foreground transition-colors">
-                      <Phone className="h-4 w-4" />
-                      <span className="text-sm">{user.phone}</span>
-                    </a>
-                  </>
-                )}
-              </div>
-
-              {profile?.linkedinUrl && (
-                <a
-                  href={profile.linkedinUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
-                >
-                  <Linkedin className="h-4 w-4" />
-                  LinkedIn Profile
-                </a>
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+          <div className="space-y-3 flex-1">
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-4xl font-bold tracking-tight">{user.name}</h1>
+              <Badge className={getRoleColor(user.role)} variant="outline">
+                {user.role}
+              </Badge>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 text-muted-foreground">
+              <a
+                href={`mailto:${user.email}`}
+                className="flex items-center gap-2 hover:text-foreground transition-colors"
+              >
+                <Mail className="h-4 w-4" />
+                <span className="text-sm">{user.email}</span>
+              </a>
+              {user.phone && (
+                <>
+                  <span className="hidden sm:block">•</span>
+                  <a
+                    href={`tel:${user.phone}`}
+                    className="flex items-center gap-2 hover:text-foreground transition-colors"
+                  >
+                    <Phone className="h-4 w-4" />
+                    <span className="text-sm">{user.phone}</span>
+                  </a>
+                </>
               )}
             </div>
+            {profile?.linkedinUrl && (
+              <a
+                href={profile.linkedinUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm text-[var(--info)] hover:underline"
+              >
+                <Linkedin className="h-4 w-4" />
+                LinkedIn Profile
+              </a>
+            )}
+          </div>
 
-            <div className={`${statusConfig.bgColor} rounded-lg p-4 min-w-[240px]`}>
-              <div className="flex items-start gap-3">
-                <StatusIcon className={`h-5 w-5 ${statusConfig.color} mt-0.5`} />
-                <div className="space-y-1">
-                  <div className={`font-semibold ${statusConfig.color}`}>
-                    {statusConfig.label}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {statusConfig.description}
-                  </div>
+          <div className={`${statusConfig.bgClass} rounded-lg p-4 min-w-[240px]`}>
+            <div className="flex items-start gap-3">
+              <StatusIcon className={`h-5 w-5 ${statusConfig.colorClass} mt-0.5`} />
+              <div className="space-y-1">
+                <div className={`font-semibold ${statusConfig.colorClass}`}>
+                  {statusConfig.label}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {statusConfig.description}
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {canApprove && profile && profile.isFilled && currentUser && (
+        {canApprove && profile?.isFilled && currentUser && (
           <Card className="border-primary/20 bg-primary/5">
             <CardHeader>
               <div className="flex items-center gap-2">
@@ -160,10 +178,10 @@ export default async function UserDetailPage({
               </div>
               <CardDescription>
                 {approvalStatus === 'approved'
-                  ? 'This member is approved and visible to recruiters.'
+                  ? 'This member is approved. You can revoke approval if needed.'
                   : approvalStatus === 'rejected'
-                  ? 'This profile was reviewed and rejected. You can reconsider and approve if needed.'
-                  : 'Review this member\'s profile and approve or reject.'}
+                  ? 'This profile was rejected. You can reconsider and approve.'
+                  : "Review this member's profile and approve or reject."}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -179,9 +197,7 @@ export default async function UserDetailPage({
 
         {profile ? (
           <div className="grid lg:grid-cols-3 gap-6">
-
             <div className="lg:col-span-2 space-y-6">
-
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -195,17 +211,17 @@ export default async function UserDetailPage({
                       <div className="text-sm text-muted-foreground">Major</div>
                       <div className="font-medium">{profile.major}</div>
                     </div>
-
                     <div className="space-y-1">
                       <div className="text-sm text-muted-foreground">Graduation Year</div>
                       <div className="font-medium">{profile.graduationYear}</div>
                     </div>
-
                     {profile.Chapter && (
                       <div className="sm:col-span-2 space-y-1">
                         <div className="text-sm text-muted-foreground">Chapter</div>
                         <div className="font-medium">{profile.Chapter.name}</div>
-                        <div className="text-sm text-muted-foreground">{profile.Chapter.university}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {profile.Chapter.university}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -231,7 +247,6 @@ export default async function UserDetailPage({
             </div>
 
             <div className="space-y-6">
-
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base">Visibility Settings</CardTitle>
@@ -240,13 +255,16 @@ export default async function UserDetailPage({
                   <div className="flex items-center justify-between py-2">
                     <div className="flex items-center gap-2">
                       {profile.isRecruiterVisible ? (
-                        <Eye className="h-4 w-4 text-chart-1" />
+                        <Eye className="h-4 w-4 text-[var(--success)]" />
                       ) : (
                         <EyeOff className="h-4 w-4 text-muted-foreground" />
                       )}
                       <span className="text-sm">Recruiter Visible</span>
                     </div>
-                    <Badge variant={profile.isRecruiterVisible ? "default" : "secondary"} className="text-xs">
+                    <Badge
+                      variant={profile.isRecruiterVisible ? 'default' : 'secondary'}
+                      className="text-xs"
+                    >
                       {profile.isRecruiterVisible ? 'Yes' : 'No'}
                     </Badge>
                   </div>
@@ -256,13 +274,16 @@ export default async function UserDetailPage({
                   <div className="flex items-center justify-between py-2">
                     <div className="flex items-center gap-2">
                       {profile.consentRecruiterVisibility ? (
-                        <CheckCircle2 className="h-4 w-4 text-chart-1" />
+                        <CheckCircle2 className="h-4 w-4 text-[var(--success)]" />
                       ) : (
                         <XCircle className="h-4 w-4 text-muted-foreground" />
                       )}
                       <span className="text-sm">Consent Given</span>
                     </div>
-                    <Badge variant={profile.consentRecruiterVisibility ? "default" : "secondary"} className="text-xs">
+                    <Badge
+                      variant={profile.consentRecruiterVisibility ? 'default' : 'secondary'}
+                      className="text-xs"
+                    >
                       {profile.consentRecruiterVisibility ? 'Yes' : 'No'}
                     </Badge>
                   </div>
@@ -272,13 +293,16 @@ export default async function UserDetailPage({
                   <div className="flex items-center justify-between py-2">
                     <div className="flex items-center gap-2">
                       {profile.isFilled ? (
-                        <CheckCircle2 className="h-4 w-4 text-chart-1" />
+                        <CheckCircle2 className="h-4 w-4 text-[var(--success)]" />
                       ) : (
-                        <Clock className="h-4 w-4 text-chart-4" />
+                        <Clock className="h-4 w-4 text-[var(--warning)]" />
                       )}
                       <span className="text-sm">Profile Complete</span>
                     </div>
-                    <Badge variant={profile.isFilled ? "default" : "secondary"} className="text-xs">
+                    <Badge
+                      variant={profile.isFilled ? 'default' : 'secondary'}
+                      className="text-xs"
+                    >
                       {profile.isFilled ? 'Yes' : 'No'}
                     </Badge>
                   </div>
@@ -296,20 +320,18 @@ export default async function UserDetailPage({
                       {new Date(user.createdAt).toLocaleDateString('en-US', {
                         year: 'numeric',
                         month: 'short',
-                        day: 'numeric'
+                        day: 'numeric',
                       })}
                     </div>
                   </div>
-
                   <Separator />
-
                   <div className="space-y-1">
                     <div className="text-xs text-muted-foreground">Last Updated</div>
                     <div className="text-sm font-medium">
                       {new Date(user.updatedAt).toLocaleDateString('en-US', {
                         year: 'numeric',
                         month: 'short',
-                        day: 'numeric'
+                        day: 'numeric',
                       })}
                     </div>
                   </div>
@@ -325,7 +347,7 @@ export default async function UserDetailPage({
               </div>
               <h3 className="font-semibold text-lg mb-2">No Student Profile</h3>
               <p className="text-sm text-muted-foreground text-center max-w-sm">
-                This user hasn't created a student profile yet. Academic information and skills will appear here once they complete their profile.
+                This user hasn't created a student profile yet.
               </p>
             </CardContent>
           </Card>
