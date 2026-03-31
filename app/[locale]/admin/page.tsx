@@ -1,12 +1,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { Suspense } from 'react'
-import { getSystemStats } from '@/lib/actions/admin/get-data'
-import { getRecentActivity } from '@/lib/actions/admin/get-data'
-import { 
-  Users, 
+import { getSystemStats, getRecentActivity } from '@/lib/actions/admin/get-data'
+import {
+  Users,
   Building2,
   Building,
   Mail,
@@ -15,9 +13,8 @@ import {
   CheckCircle2,
   Clock,
   Activity,
-  ArrowUpRight
+  ArrowUpRight,
 } from 'lucide-react'
-
 
 async function AdminStats() {
   const stats = await getSystemStats()
@@ -27,24 +24,23 @@ async function AdminStats() {
       {(stats.pendingApprovals > 0 || stats.pendingInvites > 0) && (
         <div className="space-y-4">
           {stats.pendingApprovals > 0 && (
-            <Card className="border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-950">
+            <Card className="border-warning-muted bg-warning-muted">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <AlertCircle className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                    <AlertCircle className="h-5 w-5 text-warning" />
                     <div>
-                      <CardTitle className="text-orange-900 dark:text-orange-100">
+                      <CardTitle className="text-foreground">
                         Pending Profile Approvals
                       </CardTitle>
-                      <CardDescription className="text-orange-700 dark:text-orange-300">
-                        {stats.pendingApprovals} {stats.pendingApprovals === 1 ? 'student needs' : 'students need'} chapter approval
+                      <CardDescription>
+                        {stats.pendingApprovals}{' '}
+                        {stats.pendingApprovals === 1 ? 'student needs' : 'students need'} chapter approval
                       </CardDescription>
                     </div>
                   </div>
                   <Button asChild>
-                    <Link href="/admin/users?filter=pending">
-                      Review Users
-                    </Link>
+                    <Link href="/admin/users?role=members">Review Users</Link>
                   </Button>
                 </div>
               </CardHeader>
@@ -52,24 +48,21 @@ async function AdminStats() {
           )}
 
           {stats.pendingInvites > 0 && (
-            <Card className="border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950">
+            <Card className="border-info-muted bg-info-muted">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    <Mail className="h-5 w-5 text-info" />
                     <div>
-                      <CardTitle className="text-blue-900 dark:text-blue-100">
-                        Pending Invites
-                      </CardTitle>
-                      <CardDescription className="text-blue-700 dark:text-blue-300">
-                        {stats.pendingInvites} {stats.pendingInvites === 1 ? 'recruiter invite is' : 'recruiter invites are'} pending
+                      <CardTitle className="text-foreground">Pending Invites</CardTitle>
+                      <CardDescription>
+                        {stats.pendingInvites}{' '}
+                        {stats.pendingInvites === 1 ? 'recruiter invite is' : 'recruiter invites are'} pending
                       </CardDescription>
                     </div>
                   </div>
                   <Button asChild variant="outline">
-                    <Link href="/admin/invites">
-                      View Invites
-                    </Link>
+                    <Link href="/admin/invites">View Invites</Link>
                   </Button>
                 </div>
               </CardHeader>
@@ -119,13 +112,11 @@ async function AdminStats() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Visible Profiles</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-500" />
+            <TrendingUp className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.visibleProfiles}</div>
-            <p className="text-xs text-muted-foreground">
-              Recruiter-visible students
-            </p>
+            <p className="text-xs text-muted-foreground">Recruiter-visible students</p>
           </CardContent>
         </Card>
       </div>
@@ -138,7 +129,7 @@ async function AdminStats() {
         <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Button asChild variant="outline" className="h-auto flex-col items-start p-4">
             <Link href="/admin/chapters">
-              <Building2 className="h-5 w-5 mb-2 text-blue-500" />
+              <Building2 className="h-5 w-5 mb-2 text-info" />
               <span className="font-semibold">Manage Chapters</span>
               <span className="text-xs text-muted-foreground">{stats.totalChapters} chapters</span>
             </Link>
@@ -146,7 +137,7 @@ async function AdminStats() {
 
           <Button asChild variant="outline" className="h-auto flex-col items-start p-4">
             <Link href="/admin/companies">
-              <Building className="h-5 w-5 mb-2 text-purple-500" />
+              <Building className="h-5 w-5 mb-2 text-chart-3" />
               <span className="font-semibold">Manage Companies</span>
               <span className="text-xs text-muted-foreground">{stats.totalCompanies} companies</span>
             </Link>
@@ -154,7 +145,7 @@ async function AdminStats() {
 
           <Button asChild variant="outline" className="h-auto flex-col items-start p-4">
             <Link href="/admin/users">
-              <Users className="h-5 w-5 mb-2 text-green-500" />
+              <Users className="h-5 w-5 mb-2 text-success" />
               <span className="font-semibold">Manage Users</span>
               <span className="text-xs text-muted-foreground">{stats.totalUsers} users</span>
             </Link>
@@ -162,7 +153,7 @@ async function AdminStats() {
 
           <Button asChild variant="outline" className="h-auto flex-col items-start p-4">
             <Link href="/admin/invites">
-              <Mail className="h-5 w-5 mb-2 text-orange-500" />
+              <Mail className="h-5 w-5 mb-2 text-warning" />
               <span className="font-semibold">Manage Invites</span>
               <span className="text-xs text-muted-foreground">
                 {stats.pendingInvites} pending
@@ -183,9 +174,9 @@ async function AdminStats() {
               <span className="text-sm font-medium">Profile Completion Rate</span>
               <span className="text-sm text-muted-foreground">{stats.completionRate}%</span>
             </div>
-            <div className="h-2 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-blue-500 transition-all duration-500"
+            <div className="h-2 bg-muted rounded-full overflow-hidden">
+              <div
+                className="h-full bg-info transition-all duration-500"
                 style={{ width: `${stats.completionRate}%` }}
               />
             </div>
@@ -197,7 +188,9 @@ async function AdminStats() {
           <div className="grid grid-cols-2 gap-4 pt-2">
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">Pending Approvals</p>
-              <p className="text-2xl font-bold">{stats.pendingApprovals}</p>
+              <p className="text-2xl font-bold text-warning">
+                {stats.pendingApprovals}
+              </p>
             </div>
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">Active Recruiters</p>
@@ -233,31 +226,29 @@ async function RecentActivity() {
             </div>
           ) : (
             <div className="space-y-4">
-              {recentApprovals.map((approval: any) => (
-                <div 
-                  key={approval.userId}
-                  className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0"
-                >
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-green-100 dark:bg-green-900 flex-shrink-0">
-                      <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+              {recentApprovals.map((approval) => {
+                const user = Array.isArray(approval.User) ? approval.User[0] : approval.User
+                return (
+                  <div
+                    key={approval.userId}
+                    className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0"
+                  >
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-success-muted shrink-0">
+                        <CheckCircle2 className="h-4 w-4 text-success" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate">
+                          {user?.name || 'Unknown User'}
+                        </p>
+                      </div>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate">
-                        {approval.User?.name || 'Unknown User'}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {approval.User?.Chapter?.name || 'No chapter'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right flex-shrink-0 ml-2">
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground shrink-0 ml-2">
                       {new Date(approval.updatedAt).toLocaleDateString()}
                     </p>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
           <div className="mt-4 pt-4 border-t">
@@ -288,31 +279,30 @@ async function RecentActivity() {
             </div>
           ) : (
             <div className="space-y-4">
-              {recentInvites.map((invite: any) => (
-                <div 
-                  key={invite.id}
-                  className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0"
-                >
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900 flex-shrink-0">
-                      <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              {recentInvites.map((invite) => {
+                const company = Array.isArray(invite.Company) ? invite.Company[0] : invite.Company
+                return (
+                  <div
+                    key={invite.id}
+                    className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0"
+                  >
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted  shrink-0">
+                        <Mail className="h-4 w-4 text-info" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate">{invite.recruiterEmail}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {company?.name || 'Unknown company'}
+                        </p>
+                      </div>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate">
-                        {invite.recruiterEmail}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {invite.Company?.name || 'Unknown company'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right flex-shrink-0 ml-2">
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground shrink-0 ml-2">
                       {invite.acceptedAt && new Date(invite.acceptedAt).toLocaleDateString()}
                     </p>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
           <div className="mt-4 pt-4 border-t">
