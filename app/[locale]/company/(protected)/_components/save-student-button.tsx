@@ -1,0 +1,57 @@
+'use client'
+
+import { useState, useTransition } from 'react'
+import { Button } from '@/components/ui/button'
+import { Heart, Loader2 } from 'lucide-react'
+import { toggleSaveStudentAction } from '@/lib/actions/company/toggle-save'
+import { toast } from 'sonner'
+
+interface SaveStudentButtonProps {
+  studentId: string
+  studentName: string
+  initialSaved: boolean
+}
+
+export function SaveStudentButton({
+  studentId,
+  studentName,
+  initialSaved,
+}: SaveStudentButtonProps) {
+  const [isSaved, setIsSaved] = useState(initialSaved)
+  const [isPending, startTransition] = useTransition()
+
+  const handleToggle = () => {
+    startTransition(async () => {
+      setIsSaved(prev => !prev)
+
+      const result = await toggleSaveStudentAction(studentId, isSaved)
+
+      if (!result.success) {
+        setIsSaved(isSaved)
+        toast.error(result.error || 'Failed to update save status')
+      } else {
+        toast.success(
+          result.isSaved
+            ? `${studentName} saved to your collection`
+            : `${studentName} removed from saved`
+        )
+      }
+    })
+  }
+
+  return (
+    <Button
+      onClick={handleToggle}
+      disabled={isPending}
+      variant={isSaved ? 'default' : 'outline'}
+      className="gap-2 shrink-0"
+    >
+      {isPending ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : (
+        <Heart className={`h-4 w-4 ${isSaved ? 'fill-current' : ''}`} />
+      )}
+      {isSaved ? 'Saved' : 'Save Student'}
+    </Button>
+  )
+}
