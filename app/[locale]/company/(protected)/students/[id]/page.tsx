@@ -1,65 +1,68 @@
-import { getStudentById } from '@/lib/actions/company/get-data';
-import { requireRecruiter } from '@/lib/auth';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { getStudentById, isStudentSaved } from '@/lib/actions/company/get-data'
+import { requireRecruiter } from '@/lib/auth'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import {
   Building2,
   GraduationCap,
   Mail,
   Phone,
   Linkedin,
-  Heart,
   ArrowLeft,
   Calendar,
-} from 'lucide-react';
-import {Link} from '@/i18n/routing';
-import { notFound } from 'next/navigation';
+} from 'lucide-react'
+import { Link } from '@/i18n/routing'
+import { notFound } from 'next/navigation'
+import { SaveStudentButton } from '../../_components/save-student-button'
 
 export default async function StudentProfilePage({
   params,
 }: {
-  params: Promise<{ id: string; locale: string }>;
+  params: Promise<{ id: string; locale: string }>
 }) {
-  const { id } = await params;
-  const { supabase, user } = await requireRecruiter();
-  const student = await getStudentById(supabase, id);
+  const { id } = await params
+  const { supabase, user } = await requireRecruiter()
 
-  if (!student) {
-    notFound();
-  }
+  const [student, saved] = await Promise.all([
+    getStudentById(supabase, id),
+    isStudentSaved(supabase, user.id, id),
+  ])
+
+  if (!student) notFound()
 
   return (
     <div className="space-y-6 max-w-4xl">
       <div className="flex items-center gap-4">
         <Button asChild variant="ghost" size="sm">
-          <Link href="/company">
+          <Link href="/company/browse">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Browse
           </Link>
         </Button>
       </div>
 
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold mb-2">{student.name}</h1>
-          <div className="flex items-center gap-4 text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
             <div className="flex items-center gap-1">
               <Mail className="h-4 w-4" />
-              <span>{student.email}</span>
+              <span className="text-sm">{student.email}</span>
             </div>
             {student.phone && (
               <div className="flex items-center gap-1">
                 <Phone className="h-4 w-4" />
-                <span>{student.phone}</span>
+                <span className="text-sm">{student.phone}</span>
               </div>
             )}
           </div>
         </div>
-        <Button className="gap-2">
-          <Heart className="h-4 w-4" />
-          Save Student
-        </Button>
+        <SaveStudentButton
+          studentId={student.id}
+          studentName={student.name}
+          initialSaved={saved}
+        />
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -82,7 +85,9 @@ export default async function StudentProfilePage({
               <div className="flex items-start gap-3">
                 <Calendar className="h-5 w-5 mt-0.5 text-muted-foreground" />
                 <div>
-                  <p className="font-medium">Class of {student.StudentProfile.graduationYear}</p>
+                  <p className="font-medium">
+                    Class of {student.StudentProfile.graduationYear}
+                  </p>
                   <p className="text-sm text-muted-foreground">Expected Graduation</p>
                 </div>
               </div>
@@ -93,9 +98,7 @@ export default async function StudentProfilePage({
                 <Building2 className="h-5 w-5 mt-0.5 text-muted-foreground" />
                 <div>
                   <p className="font-medium">{student.Chapter.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {student.Chapter.university}
-                  </p>
+                  <p className="text-sm text-muted-foreground">{student.Chapter.university}</p>
                   {(student.Chapter.city || student.Chapter.region) && (
                     <p className="text-xs text-muted-foreground mt-1">
                       {[student.Chapter.city, student.Chapter.region]
@@ -173,5 +176,5 @@ export default async function StudentProfilePage({
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }
