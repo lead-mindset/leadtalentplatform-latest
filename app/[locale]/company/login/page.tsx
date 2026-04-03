@@ -2,13 +2,21 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import { Link, useRouter } from '@/i18n/routing'
+import { useRouter } from '@/i18n/routing'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Mail, Building2, CheckCircle2, Info, AlertCircle, ArrowLeft, Users } from 'lucide-react'
+import {
+  Mail,
+  Building2,
+  CheckCircle2,
+  Info,
+  AlertCircle,
+  ArrowLeft,
+  Users,
+} from 'lucide-react'
 
 export default function CompanyLoginPage() {
   const [email, setEmail] = useState('')
@@ -26,7 +34,7 @@ export default function CompanyLoginPage() {
       email: email.trim(),
       options: {
         emailRedirectTo: `${window.location.origin}/company/dashboard`,
-      }
+      },
     })
 
     setLoading(false)
@@ -38,42 +46,40 @@ export default function CompanyLoginPage() {
     }
   }
 
+  const TabBar = () => (
+    <div className="inline-flex h-10 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground w-full">
+      <button
+        onClick={() => router.push('/auth/login')}
+        className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-all hover:bg-accent hover:text-accent-foreground gap-2 flex-1"
+      >
+        <Users className="h-4 w-4" />
+        Member Login
+      </button>
+      <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium bg-background text-foreground shadow-sm gap-2 flex-1">
+        <Building2 className="h-4 w-4" />
+        Company Login
+      </div>
+    </div>
+  )
+
   if (otpSent) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-md space-y-6">
-          {/* Tab Navigation */}
-          <div className="inline-flex h-10 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground w-full">
-            <button
-              onClick={() => router.push('/auth/login')}
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 hover:bg-accent hover:text-accent-foreground gap-2 flex-1"
-            >
-              <Users className="h-4 w-4" />
-              Member Login
-            </button>
-            <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium bg-background text-foreground shadow-sm gap-2 flex-1">
-              <Building2 className="h-4 w-4" />
-              Company Login
-            </div>
-          </div>
-
+          <TabBar />
           <Card>
             <CardContent className="pt-6">
               <div className="text-center space-y-6">
                 <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-primary/10">
                   <CheckCircle2 className="h-8 w-8 text-primary" />
                 </div>
-
                 <div className="space-y-2">
-                  <CardTitle className="text-2xl font-semibold tracking-tight">
-                    Check Your Email
-                  </CardTitle>
+                  <CardTitle className="text-2xl">Check Your Email</CardTitle>
                   <CardDescription className="text-base">
                     We've sent a secure login link to
                   </CardDescription>
                   <p className="font-semibold text-foreground break-all">{email}</p>
                 </div>
-
                 <Alert className="text-left">
                   <Info className="h-4 w-4" />
                   <AlertDescription>
@@ -85,11 +91,9 @@ export default function CompanyLoginPage() {
                     </ol>
                   </AlertDescription>
                 </Alert>
-
                 <p className="text-sm text-muted-foreground">
                   The link will expire in 1 hour for security.
                 </p>
-
                 <Button
                   variant="ghost"
                   onClick={() => {
@@ -112,35 +116,15 @@ export default function CompanyLoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
-
-        <div className="inline-flex h-10 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground w-full">
-          <button
-            onClick={() => router.push('/auth/login')}
-            className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 hover:bg-accent hover:text-accent-foreground gap-2 flex-1"
-          >
-            <Users className="h-4 w-4" />
-            Member Login
-          </button>
-          <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium bg-background text-foreground shadow-sm gap-2 flex-1">
-            <Building2 className="h-4 w-4" />
-            Company Login
-          </div>
-        </div>
-
+        <TabBar />
         <Card>
           <CardHeader className="space-y-2">
-            <CardTitle className="text-2xl font-semibold tracking-tight">
-              Company Portal
-            </CardTitle>
+            <CardTitle className="text-2xl">Company Portal</CardTitle>
             <CardDescription className="text-base">
-              Coming soon...
+              Sign in to access student profiles for your company
             </CardDescription>
           </CardHeader>
-
           <CardContent className="space-y-6">
-
-
-            {/* 
             <form onSubmit={handleSendOTP} className="space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="email">Work Email</Label>
@@ -148,13 +132,13 @@ export default function CompanyLoginPage() {
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={e => setEmail(e.target.value)}
                   placeholder="you@company.com"
                   required
                   autoComplete="email"
                   autoFocus
                   disabled={loading}
-                  aria-describedby={error ? "error-message" : undefined}
+                  aria-describedby={error ? 'error-message' : undefined}
                 />
               </div>
 
@@ -195,38 +179,12 @@ export default function CompanyLoginPage() {
               </AlertDescription>
             </Alert>
 
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
-                <p className="text-sm font-medium text-foreground">
-                  Don't have access yet?
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Company representatives can only join via invitation. Contact your company admin or{' '}
-                  <a 
-                    href="mailto:support@yourcompany.com" 
-                    className="text-primary hover:text-primary/80 font-medium underline underline-offset-4 transition-colors"
-                  >
-                    reach out to support
-                  </a>
-                </p>
-              </div>
-
-              <p className="text-center text-sm text-muted-foreground">
-                Are you a student?{' '}
-                <Link 
-                  href="/auth/login" 
-                  className="font-medium text-primary hover:text-primary/80 underline underline-offset-4 transition-colors"
-                >
-                  Go to Member Portal
-                </Link>
+            <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
+              <p className="text-sm font-medium text-foreground">Don't have access yet?</p>
+              <p className="text-sm text-muted-foreground">
+                Company representatives can only join via invitation from a LEAD administrator.
               </p>
-            </div>*/}
+            </div>
           </CardContent>
         </Card>
       </div>
