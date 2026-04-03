@@ -105,15 +105,9 @@ export const COMPANY_NAV: NavItemConfig[] = [
     icon: LayoutDashboard,
   },
   {
-    id: 'profile',
-    label: 'Profile',
-    href: '/company/profile',
-    icon: User,
-  },
-  {
     id: 'browse',
     label: 'Browse Students',
-    href: '/company',
+    href: '/company/browse',
     icon: Users,
   },
   {
@@ -123,9 +117,11 @@ export const COMPANY_NAV: NavItemConfig[] = [
     icon: Heart,
   },
   {
-    id: 'settings',
-    label: 'Settings',
-    href: '/company/settings',
-    icon: Settings,
+    id: 'profile',
+    label: 'Profile',
+    href: '/company/profile',
+    icon: User,
   },
+  // Settings removed — page doesn't exist yet
 ]
+ 
