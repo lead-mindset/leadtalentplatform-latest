@@ -10,14 +10,12 @@ interface CompanyLayoutProps {
 
 export default async function CompanyLayout({ children }: CompanyLayoutProps) {
   const { user } = await requireRecruiter()
-  
-  const companyName = user.Company?.name || 'Company'
-  
+
   return (
     <SidebarLayout
       sidebar={
         <BaseSidebar
-          userName={companyName}
+          userName={user.name}
           userEmail={user.email}
           userRole="recruiter"
         >
