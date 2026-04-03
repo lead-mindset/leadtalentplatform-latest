@@ -1,49 +1,26 @@
-import { getCompanyStats, getSavedStudents } from '@/lib/actions/company/get-data';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Users, Heart, TrendingUp, Building } from 'lucide-react';
-import Link from 'next/link';
-import { requireRecruiter } from '@/lib/auth';
-import { ArrowRight } from 'lucide-react';
+import { getCompanyStats, getSavedStudents } from '@/lib/actions/company/get-data'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Users, Heart, Building } from 'lucide-react'
+import Link from 'next/link'
+import { requireRecruiter } from '@/lib/auth'
 
 export default async function CompanyDashboardPage() {
-  const { supabase, user } = await requireRecruiter();
+  const { supabase, user } = await requireRecruiter()
 
   const [stats, recentSaved] = await Promise.all([
     getCompanyStats(supabase, user.id),
     getSavedStudents(supabase, user.id),
-  ]);
+  ])
 
-  const recentlySaved = recentSaved.slice(0, 5);
+  const recentlySaved = recentSaved.slice(0, 5)
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold mb-2">Recruiter Dashboard</h1>
-        <p className="text-muted-foreground">
-          Welcome back, {user.name}
-        </p>
+        <p className="text-muted-foreground">Welcome back, {user.name}</p>
       </div>
-
-      <Card className="mb-6 border-chart-2 bg-chart-2/10">
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-chart-2">Complete Your Profile</h3>
-              <p className="text-sm text-chart-2/80">
-                Add your details to get the most out of the platform
-              </p>
-            </div>
-            <Link href="/company/profile">
-              <Button variant="outline" size="sm">
-                Complete Profile
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
-
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
@@ -60,7 +37,7 @@ export default async function CompanyDashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Saved Students</CardTitle>
-            <Heart className="h-4 w-4 text-red-500" />
+            <Heart className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.savedStudents}</div>
@@ -88,7 +65,7 @@ export default async function CompanyDashboardPage() {
           </CardHeader>
           <CardContent className="space-y-2">
             <Button asChild className="w-full justify-start">
-              <Link href="/company">
+              <Link href="/company/browse">
                 <Users className="mr-2 h-4 w-4" />
                 Browse All Students
               </Link>
@@ -113,7 +90,7 @@ export default async function CompanyDashboardPage() {
                 <Heart className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                 <p className="text-sm text-muted-foreground">No saved students yet</p>
                 <Button asChild variant="link" size="sm" className="mt-2">
-                  <Link href="/company">Start browsing</Link>
+                  <Link href="/company/browse">Start browsing</Link>
                 </Button>
               </div>
             ) : (
@@ -137,5 +114,5 @@ export default async function CompanyDashboardPage() {
         </Card>
       </div>
     </div>
-  );
+  )
 }
