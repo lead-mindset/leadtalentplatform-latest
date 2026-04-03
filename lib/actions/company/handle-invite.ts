@@ -1,6 +1,6 @@
 'use server'
 
-import { createServiceClient } from '@/lib/supabase/server-service';
+import { createServiceClient } from '@/lib/supabase/server-service'
 
 export async function acceptInvite(formData: {
   inviteToken: string
@@ -17,15 +17,17 @@ export async function acceptInvite(formData: {
   if (!invite || inviteError) {
     return { success: false, error: 'Invalid invite token' }
   }
-  
+
   if (invite.revokedAt) {
-    return { success: false, error: 'Invite has been revoked' }
+    return { success: false, error: 'This invitation has been revoked' }
   }
   if (invite.acceptedAt) {
-    return { success: false, error: 'Invite already accepted' }
+    return { success: false, error: 'This invitation has already been accepted' }
+  }
+  if (invite.inviteExpiresAt && new Date(invite.inviteExpiresAt) < new Date()) {
+    return { success: false, error: 'This invitation has expired. Please contact your administrator for a new invite.' }
   }
 
-  // 2. Check if user already exists
   const { data: existingUser } = await serviceSupabase
     .from('User')
     .select('id')
@@ -36,16 +38,14 @@ export async function acceptInvite(formData: {
 
   if (existingUser) {
     userId = existingUser.id
-    
+
     await serviceSupabase
       .from('User')
-      .update({ 
+      .update({
         name: formData.name,
-        updatedAt: new Date().toISOString() 
+        updatedAt: new Date().toISOString(),
       })
       .eq('id', userId)
-
-    console.log('[acceptInvite] Using existing user:', userId)
   } else {
     const { data: authData, error: authError } = await serviceSupabase.auth.admin.createUser({
       email: invite.recruiterEmail,
@@ -72,11 +72,9 @@ export async function acceptInvite(formData: {
       console.error('[acceptInvite] Profile creation failed:', profileError)
       return { success: false, error: 'Failed to create profile' }
     }
-    
-    console.log('[acceptInvite] Created new recruiter:', userId)
   }
 
-  // 3. Activate the invite
+  // Activate the invite
   const { error: updateError } = await serviceSupabase
     .from('RecruiterAccess')
     .update({
@@ -91,37 +89,32 @@ export async function acceptInvite(formData: {
     return { success: false, error: 'Failed to activate access' }
   }
 
-  console.log('[acceptInvite] Activated RecruiterAccess for:', invite.recruiterEmail)
-
-  // 4. Send OTP for login
+  // Send OTP magic link for login
   const { error: otpError } = await serviceSupabase.auth.signInWithOtp({
     email: invite.recruiterEmail,
     options: {
       emailRedirectTo: `${process.env.FRONTEND_URL}/auth/confirm?next=/company/dashboard`,
-    }
+    },
   })
-  
+
   if (otpError) {
     console.error('[acceptInvite] OTP send failed:', otpError)
-    return { 
+    return {
       success: true,
       warning: 'Account created! Please use the login page to access your dashboard.',
-      recruiterEmail: invite.recruiterEmail
+      recruiterEmail: invite.recruiterEmail,
     }
   }
 
-  return { 
+  return {
     success: true,
     message: 'Check your email for a login link',
-    recruiterEmail: invite.recruiterEmail
+    recruiterEmail: invite.recruiterEmail,
   }
 }
 
 export async function validateInviteToken(inviteToken: string) {
-  console.log('--- validateInviteToken START ---')
-  console.log('Token received:', inviteToken)
-
-  const supabase = createServiceClient() 
+  const supabase = createServiceClient()
 
   const { data: invite, error } = await supabase
     .from('RecruiterAccess')
@@ -129,22 +122,20 @@ export async function validateInviteToken(inviteToken: string) {
     .match({ inviteToken })
     .maybeSingle()
 
-  console.log('Supabase invite data:', invite, 'error:', error)
-
   if (error) {
     console.error('[validateInviteToken] Database error:', error)
     return { success: false, error: 'Database error: ' + error.message }
   }
 
   if (!invite) {
-    console.warn('[validateInviteToken] Token not found in database:', inviteToken)
     return { success: false, error: 'Invalid invite token' }
   }
 
-  if (invite.revokedAt) return { success: false, error: 'Invite revoked' }
-  if (invite.acceptedAt) return { success: false, error: 'Invite already accepted' }
-
-  console.log('[validateInviteToken] Invite row found:', invite)
+  if (invite.revokedAt) return { success: false, error: 'This invitation has been revoked' }
+  if (invite.acceptedAt) return { success: false, error: 'This invitation has already been accepted' }
+  if (invite.inviteExpiresAt && new Date(invite.inviteExpiresAt) < new Date()) {
+    return { success: false, error: 'This invitation has expired. Please contact your administrator.' }
+  }
 
   let company = null
   if (invite.companyId) {
@@ -156,7 +147,6 @@ export async function validateInviteToken(inviteToken: string) {
 
     if (companyError) console.error('[validateInviteToken] Company fetch error:', companyError)
     company = companyData
-    console.log('[validateInviteToken] Company row fetched:', company)
   }
 
   return {
