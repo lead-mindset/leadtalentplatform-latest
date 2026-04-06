@@ -7,6 +7,7 @@ import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { generateUniqueMemberId } from './generate-member-ids'
 
+
 export async function submitOnboarding(formData: FormData) {
     try {
         const supabase = await createClient()
