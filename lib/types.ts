@@ -2,6 +2,9 @@ export type Role = "admin" | "editor" | "member" | "recruiter";
 
 import type { LucideIcon } from 'lucide-react';
 
+export type EventType = 'in_person' | 'online' | 'hybrid'
+export type RegistrationStatus = 'registered' | 'cancelled' | 'attended'
+
 export type NavLink = {
   label: string;
   href: string;
@@ -10,6 +13,11 @@ export type NavLink = {
 };
 
 export const NAV_LINKS: NavLink[] = [
+  {
+    label: "events",
+    href: "/events",
+    auth: "public",
+  },
   {
     label: "dashboard",
     href: "/student",
@@ -145,6 +153,37 @@ export type Database = {
           parsedData: any | null;
         };
       };
+      Event: {
+        Row: {
+          id: string
+          title: string
+          description: string | null
+          coverImage: string | null
+          startAt: string
+          endAt: string
+          location: string | null
+          meetingUrl: string | null
+          eventType: EventType
+          capacity: number | null
+          isPublished: boolean
+          chapterId: string | null
+          createdById: string
+          createdAt: string
+          updatedAt: string
+        }
+      }
+      EventRegistration: {
+        Row: {
+          id: string
+          eventId: string
+          userId: string
+          registeredAt: string
+          status: RegistrationStatus
+          qrToken: string
+          checkedInAt: string | null
+          checkedInById: string | null
+        }
+      }
     };
   };
 };
@@ -159,6 +198,8 @@ export type StudentProfileRow = Database["public"]["Tables"]["StudentProfile"]["
 export type CompanyRow = Database["public"]["Tables"]["Company"]["Row"];
 export type RecruiterAccessRow = Database["public"]["Tables"]["RecruiterAccess"]["Row"];
 export type ResumeRow = Database["public"]["Tables"]["Resume"]["Row"];
+export type EventRow = Database["public"]["Tables"]["Event"]["Row"]
+export type EventRegistrationRow = Database["public"]["Tables"]["EventRegistration"]["Row"]
 
 // ============================================================================
 // COMPOSITE TYPES - Used in queries with joins
@@ -181,6 +222,26 @@ export type RecruiterUser = UserRow & {
   RecruiterAccess: RecruiterAccessRow[];
   Company: CompanyRow | null;
 };
+
+export type EventWithDetailsRaw = EventRow & {
+  Chapter: Pick<ChapterRow, 'id' | 'name' | 'university'>[]
+  CreatedBy: Pick<UserRow, 'id' | 'name' | 'email'>[]
+  EventRegistration: { id: string }[]
+}
+
+export type EventWithDetails = EventRow & {
+  Chapter: Pick<ChapterRow, 'id' | 'name' | 'university'> | null
+  CreatedBy: Pick<UserRow, 'id' | 'name' | 'email'> | null
+  _count: { registrations: number }
+}
+
+export type RegistrationWithUserRaw = EventRegistrationRow & {
+  User: Pick<UserRow, 'id' | 'name' | 'email' | 'phone'>[]
+}
+
+export type RegistrationWithUser = EventRegistrationRow & {
+  User: Pick<UserRow, 'id' | 'name' | 'email' | 'phone'> | null
+}
 
 // ============================================================================
 // QUERY RESULT TYPES - Raw types from Supabase queries
