@@ -34,7 +34,8 @@
     "account": "Account",
     "billing": "Billing",
     "notifications": "Notifications",
-    "logout": "Log out"
+    "logout": "Log out",
+    "events": "Events"
   },
   "auth": {
     "email": "Email",
