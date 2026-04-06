@@ -9,7 +9,8 @@ import {
   Activity,
   Heart,
   Settings,
-  Sheet
+  Sheet,
+  CalendarDays
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -28,6 +29,12 @@ export const STUDENT_NAV: NavItemConfig[] = [
     icon: User,
   },
   {
+    id: 'events',
+    label: 'Events',
+    href: '/student/events',
+    icon: CalendarDays,
+  },
+  {
     id: 'resume',
     label: 'Resume',
     href: '/student/resume',
@@ -41,6 +48,12 @@ export const CHAPTER_NAV: NavItemConfig[] = [
     label: 'Overview',
     href: '/chapter',
     icon: LayoutDashboard,
+  },
+  {
+    id: 'events',
+    label: 'Events',
+    href: '/chapter/events',
+    icon: CalendarDays,
   },
   {
     id: 'students',
@@ -64,6 +77,12 @@ export const ADMIN_NAV: NavItemConfig[] = [
     label: 'Overview',
     href: '/admin',
     icon: LayoutDashboard,
+  },
+  {
+    id: 'events',
+    label: 'Events',
+    href: '/admin/events',
+    icon: CalendarDays,
   },
   {
     id: 'chapters',
