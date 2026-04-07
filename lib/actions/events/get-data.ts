@@ -30,7 +30,7 @@ const EVENT_SELECT = `
   updatedAt,
   Chapter:Chapter!Event_chapterId_fkey ( id, name, university ),
   CreatedBy:User!Event_createdById_fkey ( id, name, email ),
-  EventRegistration:EventRegistration ( id )
+  EventRegistration:EventRegistration ( id, status )
 `
 
 function mapEvent(raw: any): EventWithDetails | null {
@@ -40,6 +40,7 @@ function mapEvent(raw: any): EventWithDetails | null {
   const registrations = Array.isArray(raw.EventRegistration)
     ? raw.EventRegistration
     : []
+  const registeredOnly = registrations.filter((r: { status: string }) => r.status === 'registered')
 
   return {
     id: raw.id,
@@ -59,7 +60,7 @@ function mapEvent(raw: any): EventWithDetails | null {
     updatedAt: raw.updatedAt,
     Chapter: chapter ?? null,
     CreatedBy: createdBy ?? null,
-    _count: { registrations: registrations.length },
+    _count: { registrations: registeredOnly.length },
   }
 }
 
