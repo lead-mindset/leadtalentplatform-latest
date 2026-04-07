@@ -6,6 +6,15 @@ import { requireUser } from '@/lib/auth'
 import { getEditorChapterId } from './get-data'
 import type { EventRow, EventType } from '@/lib/types'
 
+function sanitizeRichTextHtml(input: string): string {
+  return input
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
+    .replace(/\son\w+="[^"]*"/gi, '')
+    .replace(/\son\w+='[^']*'/gi, '')
+    .replace(/javascript:/gi, '')
+}
+
 const UpdateEventSchema = z.object({
   id: z.string().uuid(),
   title: z.string().min(1).optional(),
@@ -63,7 +72,9 @@ export async function updateEvent(input: UpdateEventInput): Promise<UpdateEventR
 
   const d = parsed.data
   if (d.title !== undefined) patch.title = d.title
-  if (d.description !== undefined) patch.description = d.description
+  if (d.description !== undefined) {
+    patch.description = d.description === null ? null : sanitizeRichTextHtml(d.description)
+  }
   if (d.coverImage !== undefined) patch.coverImage = d.coverImage
   if (d.startAt !== undefined) patch.startAt = d.startAt
   if (d.endAt !== undefined) patch.endAt = d.endAt
