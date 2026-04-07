@@ -16,10 +16,16 @@ import { MemberActionButtons } from "./member-actions"
 
 export default function MemberCard({
   member,
-  currentUserId
+  currentUserId,
+  selected = false,
+  onSelectChange,
+  showSelector = false,
 }: {
   member: MemberWithProfile
   currentUserId: string
+  selected?: boolean
+  onSelectChange?: (checked: boolean) => void
+  showSelector?: boolean
 }) {
   const profile = member.StudentProfile
 
@@ -33,6 +39,17 @@ export default function MemberCard({
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="space-y-1">
+            {showSelector && (
+              <label className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+                <input
+                  type="checkbox"
+                  checked={selected}
+                  onChange={(event) => onSelectChange?.(event.target.checked)}
+                  className="h-4 w-4 accent-primary"
+                />
+                Select for bulk approve
+              </label>
+            )}
             <CardTitle className="text-lg">
               {member.name ?? 'No name provided'}
             </CardTitle>
@@ -172,7 +189,7 @@ export default function MemberCard({
       ) : (
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            This member hasn't completed their profile yet.
+            This member hasn&apos;t completed their profile yet.
           </p>
         </CardContent>
       )}
