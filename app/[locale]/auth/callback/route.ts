@@ -8,13 +8,17 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ locale: string }> | { locale: string } }
 ) {
-  const { searchParams, origin, pathname } = new URL(request.url)
+  const { searchParams, pathname } = new URL(request.url)
   const code = searchParams.get('code')
   let next = searchParams.get('next') ?? '/'
   
   const resolvedParams = await Promise.resolve(params);
   const localeFromPath = pathname.split('/')[1];
-  const locale = resolvedParams?.locale || (routing.locales.includes(localeFromPath as any) ? localeFromPath : routing.defaultLocale);
+  const locale =
+    resolvedParams?.locale ||
+    ((routing.locales as readonly string[]).includes(localeFromPath)
+      ? localeFromPath
+      : routing.defaultLocale)
 
   if (!next.startsWith('/')) {
     next = '/'
@@ -39,6 +43,10 @@ export async function GET(
 
   if (!user.user_metadata?.locale) {
     await supabase.auth.updateUser({ data: { locale } })
+  }
+
+  if (next && next !== '/') {
+    return NextResponse.redirect(`${SITE_URL}/${locale}${next}`)
   }
 
   const { data: userData } = await supabase
