@@ -489,7 +489,7 @@ export async function getUsers(): Promise<UserWithDetails[]> {
 
   const { data: users, error: usersError } = await supabase
     .from('User')
-    .select('id, email, name, role, phone, createdAt, updatedAt')
+    .select('id, email, name, role, phone, createdAt, updatedAt, deactivatedAt')
     .order('createdAt', { ascending: false })
 
   if (usersError || !users) {
