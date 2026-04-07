@@ -1,0 +1,113 @@
+'use client'
+
+import Link from 'next/link'
+import { useTransition } from 'react'
+import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { updateEvent } from '@/lib/actions/events/update-event'
+import { deleteEvent } from '@/lib/actions/events/delete-event'
+import type { EventWithDetails } from '@/lib/types'
+import { useRouter } from 'next/navigation'
+
+function statusForEvent(event: EventWithDetails): 'Draft' | 'Published' | 'Past' {
+  const isPast = new Date(event.endAt) < new Date()
+  if (isPast) return 'Past'
+  return event.isPublished ? 'Published' : 'Draft'
+}
+
+function formatDate(value: string) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return date.toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+}
+
+export function EventsTable({ events }: { events: EventWithDetails[] }) {
+  const [isPending, startTransition] = useTransition()
+  const router = useRouter()
+
+  function onTogglePublish(event: EventWithDetails) {
+    startTransition(async () => {
+      const response = await updateEvent({ id: event.id, isPublished: !event.isPublished })
+      if ('error' in response) {
+        toast.error(response.error)
+        return
+      }
+      toast.success(response.event.isPublished ? 'Event published' : 'Event moved to draft')
+      router.refresh()
+    })
+  }
+
+  function onDelete(eventId: string) {
+    startTransition(async () => {
+      const response = await deleteEvent(eventId)
+      if ('error' in response) {
+        toast.error(response.error)
+        return
+      }
+      toast.success('Event deleted')
+      router.refresh()
+    })
+  }
+
+  return (
+    <div className="space-y-3">
+      {events.map((event) => {
+        const status = statusForEvent(event)
+        const registrations = event._count.registrations
+        const fillRate = event.capacity && event.capacity > 0
+          ? Math.min(100, Math.round((registrations / event.capacity) * 100))
+          : null
+
+        return (
+          <div
+            key={event.id}
+            className={`rounded-lg border p-4 space-y-3 ${status === 'Past' ? 'opacity-75' : ''}`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-semibold truncate">{event.title}</p>
+                <p className="text-sm text-muted-foreground">{formatDate(event.startAt)}</p>
+              </div>
+              <Badge variant={status === 'Published' ? 'secondary' : 'outline'}>{status}</Badge>
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">
+                {event.capacity === null
+                  ? `${registrations} registrations`
+                  : `${registrations}/${event.capacity} registrations`}
+              </p>
+              {fillRate !== null && (
+                <div className="h-2 rounded-full bg-muted overflow-hidden">
+                  <div className="h-full bg-primary" style={{ width: `${fillRate}%` }} />
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Button asChild size="sm" variant="outline">
+                <Link href={`/chapter/events/${event.id}`}>Edit</Link>
+              </Button>
+              <Button size="sm" variant="outline" disabled={isPending} onClick={() => onTogglePublish(event)}>
+                {event.isPublished ? 'Unpublish' : 'Publish'}
+              </Button>
+              <Button asChild size="sm" variant="outline">
+                <Link href={`/chapter/events/${event.id}/checkin`}>Check-in</Link>
+              </Button>
+              <Button size="sm" variant="destructive" disabled={isPending} onClick={() => onDelete(event.id)}>
+                Delete
+              </Button>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
