@@ -45,7 +45,7 @@ export function StudentNavigation({
                 <SidebarNavItem
                   key={item.id}
                   item={item}
-                  showPing={item.id === 'students' && hasPendingApprovals}
+                  showPing={item.id === 'overview' && hasPendingApprovals}
                 />
               ))}
             </SidebarMenu>
