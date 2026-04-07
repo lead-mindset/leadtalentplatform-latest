@@ -2,9 +2,18 @@
 
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
-import { requireAdmin, requireUser } from '@/lib/auth'
+import { requireUser } from '@/lib/auth'
 import { getEditorChapterId } from './get-data'
 import type { EventRow, EventType } from '@/lib/types'
+
+function sanitizeRichTextHtml(input: string): string {
+  return input
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
+    .replace(/\son\w+="[^"]*"/gi, '')
+    .replace(/\son\w+='[^']*'/gi, '')
+    .replace(/javascript:/gi, '')
+}
 
 const EventInputSchema = z.object({
   title: z.string().min(1),
@@ -41,7 +50,7 @@ export async function createEvent(input: CreateEventInput): Promise<CreateEventR
       .from('Event')
       .insert({
         title: data.title,
-        description: data.description ?? null,
+        description: data.description ? sanitizeRichTextHtml(data.description) : null,
         coverImage: data.coverImage || null,
         startAt: data.startAt,
         endAt: data.endAt,
@@ -76,7 +85,7 @@ export async function createEvent(input: CreateEventInput): Promise<CreateEventR
     .from('Event')
     .insert({
       title: data.title,
-      description: data.description ?? null,
+      description: data.description ? sanitizeRichTextHtml(data.description) : null,
       coverImage: data.coverImage || null,
       startAt: data.startAt,
       endAt: data.endAt,
