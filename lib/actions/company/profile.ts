@@ -66,7 +66,7 @@ export async function getRecruiterProfile() {
 
   const { data: user, error: userError } = await supabase
     .from('User')
-    .select('id, email, name, role, phone, createdAt, updatedAt')
+    .select('id, email, name, role, phone, createdAt, updatedAt, deactivatedAt')
     .eq('id', authUser.id)
     .single()
 
