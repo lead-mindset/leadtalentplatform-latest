@@ -82,8 +82,94 @@ export async function approveMember(userId: string, approverId: string) {
   }
 }
 
-export async function rejectMember(userId: string, rejecterId: string) {
+export async function approveMembersBulk(userIds: string[], approverId: string) {
   try {
+    if (!Array.isArray(userIds) || userIds.length === 0) {
+      return { success: false, error: 'No members selected' }
+    }
+
+    const uniqueUserIds = [...new Set(userIds)]
+    const supabase = await createClient()
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user || user.id !== approverId) {
+      return { success: false, error: 'Unauthorized' }
+    }
+
+    const { data: approver, error: approverError } = await supabase
+      .from('User')
+      .select('id, role')
+      .eq('id', approverId)
+      .single()
+
+    if (approverError || !approver) {
+      return { success: false, error: 'User not found' }
+    }
+
+    if (approver.role !== 'admin' && approver.role !== 'editor') {
+      return { success: false, error: 'Only admins and editors can approve members' }
+    }
+
+    let chapterId: string | null = null
+    if (approver.role === 'editor') {
+      const { data: approverProfile } = await supabase
+        .from('StudentProfile')
+        .select('chapterId')
+        .eq('userId', approverId)
+        .single()
+
+      chapterId = approverProfile?.chapterId ?? null
+      if (!chapterId) return { success: false, error: 'No chapter assigned' }
+    }
+
+    const { data: candidates, error: candidatesError } = await supabase
+      .from('StudentProfile')
+      .select('userId, chapterId, isFilled')
+      .in('userId', uniqueUserIds)
+
+    if (candidatesError || !candidates) {
+      return { success: false, error: 'Failed to load selected members' }
+    }
+
+    const validUserIds = candidates
+      .filter((profile) => profile.isFilled)
+      .filter((profile) => !chapterId || profile.chapterId === chapterId)
+      .map((profile) => profile.userId)
+
+    if (validUserIds.length === 0) {
+      return { success: false, error: 'No eligible members selected' }
+    }
+
+    const { error: updateError } = await supabase
+      .from('StudentProfile')
+      .update({
+        approvedById: approverId,
+        approvalStatus: 'approved',
+        isRecruiterVisible: true,
+        updatedAt: new Date().toISOString(),
+      })
+      .in('userId', validUserIds)
+
+    if (updateError) {
+      console.error('[approveMembersBulk] Error:', updateError)
+      return { success: false, error: 'Failed to approve selected members' }
+    }
+
+    revalidatePath('/chapter/members')
+    revalidatePath('/chapter')
+    revalidatePath('/admin/users')
+    revalidatePath('/admin/chapters')
+
+    return { success: true, count: validUserIds.length, skipped: uniqueUserIds.length - validUserIds.length }
+  } catch (error) {
+    console.error('[approveMembersBulk] Unexpected error:', error)
+    return { success: false, error: 'An unexpected error occurred' }
+  }
+}
+
+export async function rejectMember(userId: string, rejecterId: string, _reason?: string) {
+  try {
+    void _reason
     const supabase = await createClient()
     
     const { data: { user } } = await supabase.auth.getUser()
