@@ -66,8 +66,6 @@ export const USER_ROLES = {
 
 export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES]
 
-import { User, FileText, Users, LayoutDashboard } from 'lucide-react'
-
 // ============================================================================
 // DATABASE TYPES - Core schema types matching database exactly
 // ============================================================================
@@ -85,6 +83,7 @@ export type Database = {
           createdAt: string;
           updatedAt: string;
           phone: string | null;
+          deactivatedAt: string | null;
         };
       };
       Chapter: {
@@ -150,7 +149,7 @@ export type Database = {
           fileName: string;
           fileSize: number;
           uploadedAt: string;
-          parsedData: any | null;
+          parsedData: unknown | null;
         };
       };
       Event: {
