@@ -1,16 +1,19 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { createEvent } from '@/lib/actions/events/create-event'
-import { updateEvent } from '@/lib/actions/events/update-event'
+import { createEvent, type CreateEventInput } from '@/lib/actions/events/create-event'
+import { updateEvent, type UpdateEventInput } from '@/lib/actions/events/update-event'
 import { deleteEvent } from '@/lib/actions/events/delete-event'
 import type { EventRow, EventType } from '@/lib/types'
 import { useRouter } from 'next/navigation'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { uploadEventCover } from '@/lib/actions/events/upload-cover'
+import { ImagePlus } from 'lucide-react'
 
 type Mode = 'create' | 'edit'
 
@@ -66,13 +69,64 @@ export function EventForm({
   const [eventType, setEventType] = useState<EventType>(defaults.eventType)
   const [capacity, setCapacity] = useState(defaults.capacity)
   const [isPublished, setIsPublished] = useState(defaults.isPublished)
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
+  const [isAutoSaving, setIsAutoSaving] = useState(false)
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [isDraggingCover, setIsDraggingCover] = useState(false)
+  const [coverError, setCoverError] = useState<string | null>(null)
+  const editorRef = useRef<HTMLDivElement | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
-  async function onSubmit() {
+  function richTextIsEmpty(html: string) {
+    const text = html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, '').trim()
+    return text.length === 0
+  }
+
+  function applyFormat(command: 'bold' | 'italic' | 'insertUnorderedList') {
+    if (!editorRef.current) return
+    editorRef.current.focus()
+    document.execCommand(command)
+    setDescription(editorRef.current.innerHTML)
+  }
+
+  async function handleCoverFile(file: File | null) {
+    setCoverError(null)
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      setCoverError('Only image files are allowed')
+      return
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setCoverError('Cover image must be 2MB or smaller')
+      return
+    }
+
+    setError(null)
+    const formData = new FormData()
+    formData.set('cover', file)
+    try {
+      const result = await uploadEventCover(formData)
+      setCoverImage(result.publicUrl)
+    } catch (uploadError) {
+      setCoverError(uploadError instanceof Error ? uploadError.message : 'Failed to upload image')
+    }
+  }
+
+  async function submitEvent(targetPublished: boolean) {
     setError(null)
     startTransition(async () => {
+      if ((eventType === 'online' || eventType === 'hybrid') && !meetingUrl.trim()) {
+        setError('Meeting URL is required for online and hybrid events')
+        return
+      }
+      if ((eventType === 'in_person' || eventType === 'hybrid') && !location.trim()) {
+        setError('Location is required for in-person and hybrid events')
+        return
+      }
+
       const payload = {
         title,
-        description: description || undefined,
+        description: richTextIsEmpty(description) ? undefined : description,
         coverImage: coverImage || undefined,
         startAt: fromDateTimeLocal(startAt),
         endAt: fromDateTimeLocal(endAt),
@@ -80,18 +134,20 @@ export function EventForm({
         meetingUrl: meetingUrl || undefined,
         eventType,
         capacity: capacity === '' ? undefined : Number(capacity),
-        isPublished,
+        isPublished: targetPublished,
       }
 
       const res =
         mode === 'create'
-          ? await createEvent(payload as any)
-          : await updateEvent({ id: initial!.id, ...payload } as any)
+          ? await createEvent(payload as CreateEventInput)
+          : await updateEvent({ id: initial!.id, ...payload } as UpdateEventInput)
 
       if ('error' in res) {
         setError(res.error)
         return
       }
+      setLastSavedAt(new Date().toLocaleTimeString())
+      setIsPublished(res.event.isPublished)
 
       if (mode === 'create') {
         router.push(`/chapter/events/${res.event.id}`)
@@ -100,6 +156,34 @@ export function EventForm({
       }
     })
   }
+
+  useEffect(() => {
+    if (mode !== 'edit' || isPublished) return
+
+    const interval = window.setInterval(async () => {
+      setIsAutoSaving(true)
+      const payload = {
+        id: initial!.id,
+        title,
+        description: richTextIsEmpty(description) ? null : description,
+        coverImage: coverImage || null,
+        startAt: fromDateTimeLocal(startAt),
+        endAt: fromDateTimeLocal(endAt),
+        location: location || null,
+        meetingUrl: meetingUrl || null,
+        eventType,
+        capacity: capacity === '' ? null : Number(capacity),
+        isPublished: false,
+      }
+      const res = await updateEvent(payload as UpdateEventInput)
+      if (!('error' in res)) {
+        setLastSavedAt(new Date().toLocaleTimeString())
+      }
+      setIsAutoSaving(false)
+    }, 30000)
+
+    return () => window.clearInterval(interval)
+  }, [mode, isPublished, initial, title, description, coverImage, startAt, endAt, location, meetingUrl, eventType, capacity])
 
   async function onDelete() {
     if (!initial?.id) return
@@ -130,12 +214,26 @@ export function EventForm({
 
         <div className="space-y-2">
           <Label htmlFor="description">Description</Label>
-          <Textarea
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={5}
-          />
+          <div className="rounded-md border">
+            <div className="flex items-center gap-2 border-b p-2">
+              <Button type="button" size="sm" variant="outline" onClick={() => applyFormat('bold')}>
+                Bold
+              </Button>
+              <Button type="button" size="sm" variant="outline" onClick={() => applyFormat('italic')}>
+                Italic
+              </Button>
+              <Button type="button" size="sm" variant="outline" onClick={() => applyFormat('insertUnorderedList')}>
+                List
+              </Button>
+            </div>
+            <div
+              ref={editorRef}
+              contentEditable
+              className="min-h-32 p-3 text-sm outline-none"
+              onInput={(event) => setDescription(event.currentTarget.innerHTML)}
+              dangerouslySetInnerHTML={{ __html: description }}
+            />
+          </div>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -189,7 +287,13 @@ export function EventForm({
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="location">Location (optional)</Label>
-            <Input id="location" value={location} onChange={(e) => setLocation(e.target.value)} />
+            <Input
+              id="location"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              disabled={eventType === 'online'}
+              placeholder={eventType === 'online' ? 'Not required for online events' : 'Venue or address'}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="meetingUrl">Meeting URL (optional)</Label>
@@ -197,13 +301,65 @@ export function EventForm({
               id="meetingUrl"
               value={meetingUrl}
               onChange={(e) => setMeetingUrl(e.target.value)}
-              placeholder="https://..."
+              disabled={eventType === 'in_person'}
+              placeholder={eventType === 'in_person' ? 'Not required for in-person events' : 'https://...'}
             />
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="coverImage">Cover image URL (optional)</Label>
+          <Label>Cover image</Label>
+          <div
+            onDragOver={(event) => {
+              event.preventDefault()
+              setIsDraggingCover(true)
+            }}
+            onDragLeave={(event) => {
+              event.preventDefault()
+              setIsDraggingCover(false)
+            }}
+            onDrop={async (event) => {
+              event.preventDefault()
+              setIsDraggingCover(false)
+              await handleCoverFile(event.dataTransfer.files[0] ?? null)
+            }}
+            className={`rounded-lg border-2 border-dashed p-4 text-sm ${isDraggingCover ? 'border-primary bg-primary/5' : 'border-border'}`}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              onChange={async (event) => handleCoverFile(event.target.files?.[0] ?? null)}
+            />
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-medium">Drag and drop cover image (max 2MB)</p>
+                <p className="text-muted-foreground">
+                  JPG, PNG, WEBP supported
+                </p>
+              </div>
+              <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                <ImagePlus className="h-4 w-4 mr-2" />
+                Browse
+              </Button>
+            </div>
+          </div>
+          {coverError && (
+            <p className="text-sm text-destructive">{coverError}</p>
+          )}
+          {coverImage && (
+            <div className="rounded-md border p-2">
+              <Image
+                src={coverImage}
+                alt="Cover preview"
+                width={1200}
+                height={480}
+                className="h-36 w-full object-cover rounded"
+              />
+            </div>
+          )}
+          <Label htmlFor="coverImage">Or paste image URL</Label>
           <Input
             id="coverImage"
             value={coverImage}
@@ -224,7 +380,45 @@ export function EventForm({
         </div>
       </div>
 
+      <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+        <span>
+          {isAutoSaving ? 'Auto-saving draft...' : lastSavedAt ? `Last saved at ${lastSavedAt}` : 'Draft not saved yet'}
+        </span>
+      </div>
+
       <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
+        <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+          <DialogTrigger asChild>
+            <Button type="button" variant="outline">Preview as student</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{title || 'Untitled event'}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-2 text-sm">
+              <p className="text-muted-foreground">
+                {startAt ? new Date(fromDateTimeLocal(startAt)).toLocaleString() : 'No start date'}
+              </p>
+              <div
+                className="prose prose-sm dark:prose-invert max-w-none"
+                dangerouslySetInnerHTML={{ __html: description || '<p>No description yet.</p>' }}
+              />
+              <p>
+                <span className="font-medium">Type:</span> {eventType.replace('_', ' ')}
+              </p>
+              {(eventType === 'in_person' || eventType === 'hybrid') && (
+                <p><span className="font-medium">Location:</span> {location || 'Not set'}</p>
+              )}
+              {(eventType === 'online' || eventType === 'hybrid') && (
+                <p><span className="font-medium">Meeting:</span> {meetingUrl || 'Not set'}</p>
+              )}
+              <p>
+                <span className="font-medium">Capacity:</span> {capacity || 'Unlimited'}
+              </p>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {mode === 'edit' && (
           <Button
             type="button"
@@ -235,8 +429,11 @@ export function EventForm({
             Delete
           </Button>
         )}
-        <Button type="button" onClick={onSubmit} disabled={isPending}>
-          {mode === 'create' ? 'Create event' : 'Save changes'}
+        <Button type="button" variant="outline" onClick={() => submitEvent(false)} disabled={isPending}>
+          Save Draft
+        </Button>
+        <Button type="button" onClick={() => submitEvent(true)} disabled={isPending}>
+          {mode === 'create' ? 'Publish event' : 'Save & Publish'}
         </Button>
       </div>
     </div>
