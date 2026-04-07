@@ -36,7 +36,7 @@ export async function requireAdmin() {
   try {
     const user = await assertAdmin(supabase)
     return { supabase, user }
-  } catch (err) {
+  } catch {
     redirect('/auth/login')
   }
 }
@@ -54,7 +54,7 @@ export async function requireUser(): Promise<{
 
   const { data: userData, error } = await supabase
     .from('User')
-    .select('id, email, name, role, phone, createdAt, updatedAt')
+    .select('id, email, name, role, phone, createdAt, updatedAt, deactivatedAt')
     .eq('id', authUser.id)
     .single<UserRow>()
 
@@ -158,7 +158,7 @@ export async function requireRecruiter(): Promise<{
 
   const { data: userData, error } = await supabase
     .from('User')
-    .select('id, email, name, role, phone, createdAt, updatedAt')
+    .select('id, email, name, role, phone, createdAt, updatedAt, deactivatedAt')
     .eq('id', authUser.id)
     .eq('role', 'recruiter')
     .single<UserRow>()
