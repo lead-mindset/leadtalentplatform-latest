@@ -2,14 +2,13 @@ import { Suspense } from 'react'
 import NavHeader from '@/components/global/navigation/NavHeader'
 import { createClient } from '@/lib/supabase/server'
 import { getEventById } from '@/lib/actions/events/get-data'
-import { registerForEvent } from '@/lib/actions/events/register'
-import { cancelRegistration } from '@/lib/actions/events/cancel-registration'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Link, redirect } from '@/i18n/routing'
+import { Link } from '@/i18n/routing'
 import { Calendar, MapPin, Users, ExternalLink } from 'lucide-react'
 import Image from 'next/image'
+import { EventRegistrationCheckout } from '@/components/events/event-registration-checkout'
 
 function formatDateTime(value: string) {
   const d = new Date(value)
@@ -20,6 +19,7 @@ function formatDateTime(value: string) {
     day: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
+    timeZoneName: 'short',
   })
 }
 
@@ -27,6 +27,18 @@ function EventTypeBadge({ eventType }: { eventType: string }) {
   const label =
     eventType === 'online' ? 'Online' : eventType === 'hybrid' ? 'Hybrid' : 'In-person'
   return <Badge variant="secondary">{label}</Badge>
+}
+
+function capacityHint(
+  capacity: number | null,
+  registeredCount: number,
+  eventStarted: boolean
+) {
+  if (eventStarted || capacity === null) return null
+  const left = capacity - registeredCount
+  if (left <= 0) return 'This event is at capacity.'
+  if (left <= 10) return left === 1 ? '1 spot left' : `${left} spots left`
+  return null
 }
 
 async function EventContent({ id }: { id: string }) {
@@ -64,19 +76,26 @@ async function EventContent({ id }: { id: string }) {
     myRegistration = data ?? null
   }
 
-  const isRegistered = myRegistration?.status === 'registered' || myRegistration?.status === 'attended'
-  const canCancel = myRegistration?.status === 'registered' && !myRegistration.checkedInAt && !registrationClosed
+  const isRegistered =
+    myRegistration?.status === 'registered' || myRegistration?.status === 'attended'
+  const canCancel =
+    myRegistration?.status === 'registered' &&
+    !myRegistration.checkedInAt &&
+    !registrationClosed
+
+  const registeredCount = event._count.registrations
+  const capHint = capacityHint(event.capacity, registeredCount, registrationClosed)
 
   return (
     <main className="min-h-screen bg-background">
       <div className="mx-auto max-w-4xl px-6 pt-28 pb-16 space-y-6">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <EventTypeBadge eventType={event.eventType} />
               {event.capacity !== null && (
                 <Badge variant="outline" className="tabular-nums">
-                  {event._count.registrations}/{event.capacity}
+                  {registeredCount}/{event.capacity}
                 </Badge>
               )}
               {!event.isPublished && <Badge variant="destructive">Draft</Badge>}
@@ -117,24 +136,30 @@ async function EventContent({ id }: { id: string }) {
 
               <div className="grid gap-2 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
+                  <Calendar className="h-4 w-4 shrink-0" />
                   <span>
                     {formatDateTime(event.startAt)} — {formatDateTime(event.endAt)}
                   </span>
                 </div>
                 {event.location && (
                   <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4" />
+                    <MapPin className="h-4 w-4 shrink-0" />
                     <span>{event.location}</span>
                   </div>
                 )}
                 <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  <span>{event._count.registrations} registered</span>
+                  <Users className="h-4 w-4 shrink-0" />
+                  <span>
+                    {registeredCount} registered
+                    {event.capacity !== null ? ` · ${event.capacity} capacity` : ''}
+                  </span>
                 </div>
+                {capHint ? (
+                  <p className="text-sm text-amber-600 dark:text-amber-500 pl-6">{capHint}</p>
+                ) : null}
                 {event.meetingUrl && (
                   <div className="flex items-center gap-2">
-                    <ExternalLink className="h-4 w-4" />
+                    <ExternalLink className="h-4 w-4 shrink-0" />
                     <a
                       href={event.meetingUrl}
                       target="_blank"
@@ -153,52 +178,19 @@ async function EventContent({ id }: { id: string }) {
             <CardHeader>
               <CardTitle>Registration</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              {!auth.user ? (
-                <>
-                  <p className="text-sm text-muted-foreground">
-                    Sign in to register and receive your QR code.
-                  </p>
-                  <Button asChild className="w-full">
-                    <Link href={`/auth/login?next=/events/${event.id}`}>Sign in</Link>
-                  </Button>
-                </>
-              ) : isRegistered ? (
-                <>
-                  <Badge variant="secondary" className="w-fit">
-                    You’re registered
-                  </Badge>
-                  {canCancel ? (
-                    <form action={cancelRegistration}>
-                      <input type="hidden" name="registrationId" value={myRegistration?.id ?? ''} />
-                      <Button type="submit" variant="outline" className="w-full">
-                        Cancel registration
-                      </Button>
-                    </form>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      Cancellation isn’t available.
-                    </p>
-                  )}
-                  <Button asChild className="w-full">
-                    <Link href="/student/events">View my QR code</Link>
-                  </Button>
-                </>
-              ) : (
-                <>
-                  {registrationClosed ? (
-                    <p className="text-sm text-muted-foreground">
-                      Registration closed (event has started).
-                    </p>
-                  ) : null}
-                  <form action={registerForEvent}>
-                    <input type="hidden" name="eventId" value={event.id} />
-                    <Button type="submit" className="w-full" disabled={registrationClosed}>
-                      Register
-                    </Button>
-                  </form>
-                </>
-              )}
+            <CardContent>
+              <EventRegistrationCheckout
+                eventId={event.id}
+                eventTitle={event.title}
+                isLoggedIn={!!auth.user}
+                loginUrl={`/auth/login?next=/events/${event.id}`}
+                registrationClosed={registrationClosed}
+                isRegistered={isRegistered}
+                canCancel={canCancel}
+                registrationId={myRegistration?.id ?? null}
+                capacity={event.capacity}
+                registeredCount={registeredCount}
+              />
             </CardContent>
           </Card>
         </div>
@@ -224,4 +216,3 @@ export default async function EventDetailPage({
     </>
   )
 }
-
