@@ -8,9 +8,187 @@ import type {
   UserWithDetails,
   ChapterRow,
   ActivityItem,
-  ChapterMember,
   MemberWithProfile,
 } from '@/lib/types'
+
+export type AdminDashboardStats = {
+  totalStudents: number
+  activeChapters: number
+  eventsThisMonth: number
+  recruiterOptInRate: number
+}
+
+export type ChapterActivityItem = {
+  id: string
+  name: string
+  university: string
+  memberCount: number
+  pendingApprovals: number
+  lastEventAt: string | null
+}
+
+export type RecentJoinItem = {
+  id: string
+  name: string
+  email: string
+  role: string
+  createdAt: string
+  chapterName: string | null
+}
+
+export type PendingRecruiterRequestItem = {
+  id: string
+  recruiterEmail: string
+  companyName: string | null
+  grantedAt: string
+  inviteExpiresAt: string | null
+}
+
+export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
+  const supabase = await createClient()
+  const now = new Date()
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString()
+
+  const [studentsResult, chapterMembersResult, monthlyEventsResult, approvedProfilesResult, visibleApprovedProfilesResult] = await Promise.all([
+    supabase.from('User').select('id', { count: 'exact', head: true }).eq('role', 'member'),
+    supabase.from('StudentProfile').select('chapterId'),
+    supabase.from('Event').select('id', { count: 'exact', head: true }).gte('startAt', monthStart).lt('startAt', monthEnd),
+    supabase
+      .from('StudentProfile')
+      .select('userId', { count: 'exact', head: true })
+      .eq('approvalStatus', 'approved'),
+    supabase
+      .from('StudentProfile')
+      .select('userId', { count: 'exact', head: true })
+      .eq('approvalStatus', 'approved')
+      .eq('isRecruiterVisible', true),
+  ])
+
+  const chapterIds = new Set((chapterMembersResult.data ?? []).map((row) => row.chapterId).filter(Boolean))
+  const approvedCount = approvedProfilesResult.count ?? 0
+  const visibleApprovedCount = visibleApprovedProfilesResult.count ?? 0
+
+  return {
+    totalStudents: studentsResult.count ?? 0,
+    activeChapters: chapterIds.size,
+    eventsThisMonth: monthlyEventsResult.count ?? 0,
+    recruiterOptInRate: approvedCount > 0 ? Math.round((visibleApprovedCount / approvedCount) * 100) : 0,
+  }
+}
+
+export async function getChapterActivityList(): Promise<ChapterActivityItem[]> {
+  const supabase = await createClient()
+  const { data: chapters, error } = await supabase
+    .from('Chapter')
+    .select('id, name, university')
+    .order('name', { ascending: true })
+
+  if (error || !chapters) {
+    console.error('[getChapterActivityList] Failed:', error)
+    return []
+  }
+
+  const items = await Promise.all(
+    chapters.map(async (chapter) => {
+      const [memberCountResult, pendingApprovalsResult, lastEventResult] = await Promise.all([
+        supabase.from('StudentProfile').select('userId', { count: 'exact', head: true }).eq('chapterId', chapter.id),
+        supabase
+          .from('StudentProfile')
+          .select('userId', { count: 'exact', head: true })
+          .eq('chapterId', chapter.id)
+          .eq('approvalStatus', 'pending')
+          .eq('isFilled', true),
+        supabase
+          .from('Event')
+          .select('startAt')
+          .eq('chapterId', chapter.id)
+          .order('startAt', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ])
+
+      return {
+        id: chapter.id,
+        name: chapter.name,
+        university: chapter.university,
+        memberCount: memberCountResult.count ?? 0,
+        pendingApprovals: pendingApprovalsResult.count ?? 0,
+        lastEventAt: lastEventResult.data?.startAt ?? null,
+      }
+    })
+  )
+
+  return items
+}
+
+export async function getRecentJoins(limit = 10): Promise<RecentJoinItem[]> {
+  const supabase = await createClient()
+  const { data: users, error } = await supabase
+    .from('User')
+    .select('id, name, email, role, createdAt')
+    .order('createdAt', { ascending: false })
+    .limit(limit)
+
+  if (error || !users) {
+    console.error('[getRecentJoins] Failed:', error)
+    return []
+  }
+
+  const { data: profiles } = await supabase
+    .from('StudentProfile')
+    .select('userId, chapterId, Chapter(name)')
+    .in('userId', users.map((user) => user.id))
+
+  return users.map((user) => {
+    const profile = profiles?.find((item) => item.userId === user.id)
+    const chapter = profile?.Chapter
+    const chapterName = Array.isArray(chapter) ? (chapter[0]?.name ?? null) : (chapter?.name ?? null)
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt,
+      chapterName,
+    }
+  })
+}
+
+export async function getPendingRecruiterRequests(): Promise<PendingRecruiterRequestItem[]> {
+  const supabase = await createClient()
+  const now = new Date().toISOString()
+  const { data, error } = await supabase
+    .from('RecruiterAccess')
+    .select(`
+      id,
+      recruiterEmail,
+      grantedAt,
+      inviteExpiresAt,
+      Company(name)
+    `)
+    .is('acceptedAt', null)
+    .is('revokedAt', null)
+    .or(`inviteExpiresAt.is.null,inviteExpiresAt.gt.${now}`)
+    .order('grantedAt', { ascending: false })
+    .limit(10)
+
+  if (error || !data) {
+    console.error('[getPendingRecruiterRequests] Failed:', error)
+    return []
+  }
+
+  return data.map((item) => {
+    const company = Array.isArray(item.Company) ? item.Company[0] : item.Company
+    return {
+      id: item.id,
+      recruiterEmail: item.recruiterEmail,
+      companyName: company?.name ?? null,
+      grantedAt: item.grantedAt,
+      inviteExpiresAt: item.inviteExpiresAt ?? null,
+    }
+  })
+}
 
 export async function getSystemStats() {
   const supabase = await createClient()
@@ -206,39 +384,45 @@ const ADMIN_PROFILE_SELECT = `
   )
 `
 
-function mapAdminProfile(profile: any): MemberWithProfile | null {
+function mapAdminProfile(profile: Record<string, unknown>): MemberWithProfile | null {
   const user = Array.isArray(profile.User) ? profile.User[0] : profile.User
   const chapter = Array.isArray(profile.Chapter) ? profile.Chapter[0] : profile.Chapter
 
   if (!user) return null
+  const profileRecord = profile
+  const userRecord = user as Record<string, unknown>
+  const skillsValue = profileRecord.skills
+  const skills = Array.isArray(skillsValue)
+    ? skillsValue.filter((skill): skill is string => typeof skill === 'string')
+    : null
 
   return {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    phone: user.phone ?? null,
-    role: user.role,
-    createdAt: user.createdAt,
-    updatedAt: user.updatedAt,
+    id: String(userRecord.id ?? ''),
+    email: String(userRecord.email ?? ''),
+    name: String(userRecord.name ?? ''),
+    phone: userRecord.phone ? String(userRecord.phone) : null,
+    role: String(userRecord.role ?? 'member') as MemberWithProfile['role'],
+    createdAt: String(userRecord.createdAt ?? ''),
+    updatedAt: String(userRecord.updatedAt ?? ''),
     StudentProfile: {
-      userId: profile.userId,
-      major: profile.major,
-      graduationYear: profile.graduationYear,
-      linkedinUrl: profile.linkedinUrl,
-      skills: profile.skills,
-      consentRecruiterVisibility: profile.consentRecruiterVisibility,
-      isRecruiterVisible: profile.isRecruiterVisible,
-      approvedById: profile.approvedById,
-      approvalStatus: profile.approvalStatus,
-      isFilled: profile.isFilled,
-      updatedAt: profile.updatedAt,
-      createdAt: profile.createdAt,
-      consentDate: profile.consentDate,
-      chapterId: profile.chapterId,
-      emailNotificationsEnabled: profile.emailNotificationsEnabled,
-      gender: profile.gender,
+      userId: String(profileRecord.userId ?? ''),
+      major: String(profileRecord.major ?? ''),
+      graduationYear: Number(profileRecord.graduationYear ?? 0),
+      linkedinUrl: profileRecord.linkedinUrl ? String(profileRecord.linkedinUrl) : null,
+      skills,
+      consentRecruiterVisibility: Boolean(profileRecord.consentRecruiterVisibility),
+      isRecruiterVisible: Boolean(profileRecord.isRecruiterVisible),
+      approvedById: profileRecord.approvedById ? String(profileRecord.approvedById) : null,
+      approvalStatus: String(profileRecord.approvalStatus ?? 'pending') as MemberWithProfile['StudentProfile']['approvalStatus'],
+      isFilled: Boolean(profileRecord.isFilled),
+      updatedAt: String(profileRecord.updatedAt ?? ''),
+      createdAt: String(profileRecord.createdAt ?? ''),
+      consentDate: profileRecord.consentDate ? String(profileRecord.consentDate) : null,
+      chapterId: String(profileRecord.chapterId ?? ''),
+      emailNotificationsEnabled: Boolean(profileRecord.emailNotificationsEnabled),
+      gender: (profileRecord.gender ?? null) as MemberWithProfile['StudentProfile']['gender'],
     },
-    Chapter: chapter ?? null,
+    Chapter: (chapter ?? null) as MemberWithProfile['Chapter'],
   }
 }
 
@@ -416,7 +600,7 @@ export async function getActivityLog(): Promise<ActivityItem[]> {
   const activities: ActivityItem[] = []
 
   if (approvals) {
-    approvals.forEach((approval: any) => {
+    approvals.forEach((approval) => {
       const student = Array.isArray(approval.Student) ? approval.Student[0] : approval.Student
       const approver = Array.isArray(approval.ApprovedBy) ? approval.ApprovedBy[0] : approval.ApprovedBy
       const chapter = Array.isArray(approval.Chapter) ? approval.Chapter[0] : approval.Chapter
@@ -433,7 +617,7 @@ export async function getActivityLog(): Promise<ActivityItem[]> {
   }
 
   if (invites) {
-    invites.forEach((invite: any) => {
+    invites.forEach((invite) => {
       const company = Array.isArray(invite.Company) ? invite.Company[0] : invite.Company
       const grantedBy = Array.isArray(invite.GrantedBy) ? invite.GrantedBy[0] : invite.GrantedBy
       const acceptedBy = Array.isArray(invite.AcceptedBy) ? invite.AcceptedBy[0] : invite.AcceptedBy
