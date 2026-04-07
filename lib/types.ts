@@ -226,7 +226,7 @@ export type RecruiterUser = UserRow & {
 export type EventWithDetailsRaw = EventRow & {
   Chapter: Pick<ChapterRow, 'id' | 'name' | 'university'>[]
   CreatedBy: Pick<UserRow, 'id' | 'name' | 'email'>[]
-  EventRegistration: { id: string }[]
+  EventRegistration: { id: string; status: RegistrationStatus }[]
 }
 
 export type EventWithDetails = EventRow & {
