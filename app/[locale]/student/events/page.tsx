@@ -2,10 +2,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { getMyRegistrations } from '@/lib/actions/events/get-data'
-import { cancelRegistration } from '@/lib/actions/events/cancel-registration'
+import { CancelRegistrationDialog } from '@/components/events/cancel-registration-dialog'
+import { ScrollToHighlightedEvent } from '@/components/events/scroll-to-highlighted-event'
 import QRCode from 'qrcode'
 import Image from 'next/image'
-import Link from 'next/link'
+import { Link } from '@/i18n/routing'
 
 function formatDateTime(value: string) {
   const d = new Date(value)
@@ -16,10 +17,16 @@ function formatDateTime(value: string) {
     day: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
+    timeZoneName: 'short',
   })
 }
 
-export default async function StudentEventsPage() {
+export default async function StudentEventsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ event?: string }>
+}) {
+  const { event: highlightEventId } = await searchParams
   const registrations = await getMyRegistrations()
 
   const active = registrations.filter((r) => r.status === 'registered' || r.status === 'attended')
@@ -27,6 +34,8 @@ export default async function StudentEventsPage() {
 
   return (
     <div className="p-4 max-w-4xl mx-auto space-y-6">
+      <ScrollToHighlightedEvent eventId={highlightEventId} />
+
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">My Events</h1>
@@ -50,15 +59,17 @@ export default async function StudentEventsPage() {
           {await Promise.all(
             active.map(async (r) => {
               const event = r.Event
-              const qrDataUrl = await QRCode.toDataURL(r.qrToken, { margin: 1, width: 220 })
+              const qrDataUrl = await QRCode.toDataURL(r.qrToken, { margin: 1, width: 240 })
 
               return (
-                <Card key={r.id} className="overflow-hidden">
+                <Card
+                  key={r.id}
+                  id={`event-reg-${r.eventId}`}
+                  className="overflow-hidden scroll-mt-24"
+                >
                   <CardHeader className="space-y-2">
                     <div className="flex items-center justify-between gap-2">
-                      <CardTitle className="text-base">
-                        {event?.title ?? 'Event'}
-                      </CardTitle>
+                      <CardTitle className="text-base">{event?.title ?? 'Event'}</CardTitle>
                       <Badge variant={r.status === 'attended' ? 'secondary' : 'outline'}>
                         {r.status === 'attended' ? 'Attended' : 'Registered'}
                       </Badge>
@@ -68,26 +79,26 @@ export default async function StudentEventsPage() {
                     </p>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="flex items-center justify-center rounded-xl border bg-background p-4">
+                    <div className="flex items-center justify-center rounded-xl border bg-white p-4 dark:bg-white">
                       <Image
                         src={qrDataUrl}
-                        alt="QR code"
-                        width={220}
-                        height={220}
-                        className="h-auto w-auto"
+                        alt="Event check-in QR code"
+                        width={240}
+                        height={240}
+                        className="h-auto w-auto max-w-full"
+                        unoptimized
                       />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Button asChild variant="outline" className="w-full">
-                        <Link href={`/events/${r.eventId}`}>Details</Link>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                      <Button asChild variant="outline" className="w-full sm:flex-1">
+                        <Link href={`/events/${r.eventId}`}>Event details</Link>
                       </Button>
                       {r.status === 'registered' && !r.checkedInAt && (
-                        <form action={cancelRegistration} className="w-full">
-                          <input type="hidden" name="registrationId" value={r.id} />
-                          <Button type="submit" variant="outline" className="w-full">
-                            Cancel
-                          </Button>
-                        </form>
+                        <CancelRegistrationDialog
+                          registrationId={r.id}
+                          eventTitle={event?.title ?? 'this event'}
+                          triggerClassName="w-full sm:flex-1"
+                        />
                       )}
                     </div>
                   </CardContent>
@@ -118,4 +129,3 @@ export default async function StudentEventsPage() {
     </div>
   )
 }
-
