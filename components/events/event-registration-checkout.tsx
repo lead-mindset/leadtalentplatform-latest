@@ -1,0 +1,169 @@
+'use client'
+
+import { useActionState, useFormStatus } from 'react'
+import { registerForEvent, type RegisterForEventState } from '@/lib/actions/events/register'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Link } from '@/i18n/routing'
+import { Check, Loader2 } from 'lucide-react'
+import { CancelRegistrationDialog } from '@/components/events/cancel-registration-dialog'
+import { cn } from '@/lib/utils'
+
+function SubmitButton({ disabled, label }: { disabled?: boolean; label: string }) {
+  const { pending } = useFormStatus()
+  return (
+    <Button type="submit" className="w-full" disabled={disabled || pending}>
+      {pending ? (
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Registering…
+        </>
+      ) : (
+        label
+      )}
+    </Button>
+  )
+}
+
+type Props = {
+  eventId: string
+  eventTitle: string
+  isLoggedIn: boolean
+  loginUrl: string
+  registrationClosed: boolean
+  isRegistered: boolean
+  canCancel: boolean
+  registrationId: string | null
+  capacity: number | null
+  registeredCount: number
+}
+
+export function EventRegistrationCheckout({
+  eventId,
+  eventTitle,
+  isLoggedIn,
+  loginUrl,
+  registrationClosed,
+  isRegistered,
+  canCancel,
+  registrationId,
+  capacity,
+  registeredCount,
+}: Props) {
+  const [state, formAction] = useActionState(registerForEvent, null as RegisterForEventState | null)
+
+  const spotsLeft =
+    capacity !== null ? Math.max(0, capacity - registeredCount) : null
+  const isFull = capacity !== null && registeredCount >= capacity
+  const showLowSpots =
+    spotsLeft !== null && spotsLeft > 0 && spotsLeft <= 10 && !isRegistered
+
+  const registerDisabled = registrationClosed || isFull || isRegistered || !isLoggedIn
+  const qrHref = `/student/events?event=${eventId}`
+
+  const statusMessages =
+    isLoggedIn && !isRegistered ? (
+      <>
+        {registrationClosed ? (
+          <p className="text-sm text-muted-foreground">
+            Registration is closed — this event has already started.
+          </p>
+        ) : isFull ? (
+          <p className="text-sm text-muted-foreground">
+            This event is full. Someone may cancel — check back later.
+          </p>
+        ) : showLowSpots ? (
+          <p className="text-sm text-amber-600 dark:text-amber-500">
+            {spotsLeft === 1 ? '1 spot left' : `${spotsLeft} spots left`}
+          </p>
+        ) : null}
+      </>
+    ) : null
+
+  return (
+    <div
+      className={cn(
+        isLoggedIn && !isRegistered && !registrationClosed && !isFull
+          ? 'pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0'
+          : ''
+      )}
+    >
+      {!isLoggedIn ? (
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Sign in to register and receive your QR code for check-in.
+          </p>
+          <Button asChild className="w-full">
+            <Link href={loginUrl}>Sign in</Link>
+          </Button>
+        </div>
+      ) : isRegistered ? (
+        <div className="space-y-3">
+          <Badge variant="secondary" className="w-fit gap-1.5 pl-2">
+            <Check className="h-3.5 w-3.5" aria-hidden />
+            Registered
+          </Badge>
+          {canCancel && registrationId ? (
+            <CancelRegistrationDialog registrationId={registrationId} eventTitle={eventTitle} />
+          ) : (
+            <p className="text-sm text-muted-foreground">Cancellation isn’t available.</p>
+          )}
+          <Button asChild className="w-full">
+            <Link href={qrHref}>View my QR code</Link>
+          </Button>
+        </div>
+      ) : (
+        <form action={formAction} className="space-y-3">
+          <input type="hidden" name="eventId" value={eventId} />
+          {statusMessages}
+
+          <div className="hidden md:block space-y-2">
+            <SubmitButton disabled={registerDisabled} label="Register" />
+            {state?.error ? (
+              <p
+                className={cn(
+                  'text-sm',
+                  state.capacityExceeded ? 'text-muted-foreground' : 'text-destructive'
+                )}
+                role="alert"
+              >
+                {state.error}
+              </p>
+            ) : null}
+          </div>
+
+          <div
+            className={cn(
+              'md:hidden fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur',
+              'supports-backdrop-filter:bg-background/80',
+              'pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 px-4',
+              'shadow-[0_-4px_12px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_12px_rgba(0,0,0,0.35)]'
+            )}
+          >
+            {registrationClosed ? (
+              <p className="text-center text-xs text-muted-foreground mb-2">Registration closed</p>
+            ) : isFull ? (
+              <p className="text-center text-xs text-muted-foreground mb-2">Event is full</p>
+            ) : showLowSpots ? (
+              <p className="text-center text-xs text-amber-600 dark:text-amber-500 mb-2">
+                {spotsLeft === 1 ? '1 spot left' : `${spotsLeft} spots left`}
+              </p>
+            ) : null}
+            {state?.error ? (
+              <p
+                className={cn(
+                  'text-xs text-center mb-2',
+                  state.capacityExceeded ? 'text-muted-foreground' : 'text-destructive'
+                )}
+                role="alert"
+              >
+                {state.error}
+              </p>
+            ) : null}
+            <SubmitButton disabled={registerDisabled} label="Register" />
+          </div>
+        </form>
+      )}
+    </div>
+  )
+}
