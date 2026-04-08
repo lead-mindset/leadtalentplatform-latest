@@ -6,6 +6,15 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import type { AdminEventListItem } from '@/lib/actions/admin/events'
 
 type Props = {
@@ -82,28 +91,42 @@ export function EventsManagementClient({
             placeholder="Search event title"
             onChange={(e) => updateParam('search', e.target.value)}
           />
-          <div className="flex gap-2 flex-wrap">
-            {chapterOptions.map((chapter) => (
-              <Button
-                key={chapter.id}
-                size="sm"
-                variant={chapterFilters.includes(chapter.id) ? 'default' : 'outline'}
-                onClick={() => toggleMulti('chapter', chapter.id, chapterFilters)}
-              >
-                {chapter.name}
-              </Button>
-            ))}
-            {['published', 'draft', 'upcoming', 'past'].map((status) => (
-              <Button
-                key={status}
-                size="sm"
-                variant={statusFilters.includes(status) ? 'default' : 'outline'}
-                onClick={() => toggleMulti('status', status, statusFilters)}
-              >
-                {status}
-              </Button>
-            ))}
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">Chapters ({chapterFilters.length || 'all'})</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuLabel>Filter chapters</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {chapterOptions.map((chapter) => (
+                <DropdownMenuCheckboxItem
+                  key={chapter.id}
+                  checked={chapterFilters.includes(chapter.id)}
+                  onCheckedChange={() => toggleMulti('chapter', chapter.id, chapterFilters)}
+                >
+                  {chapter.name}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">Status ({statusFilters.length || 'all'})</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuLabel>Filter status</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {['published', 'draft', 'upcoming', 'past'].map((status) => (
+                <DropdownMenuCheckboxItem
+                  key={status}
+                  checked={statusFilters.includes(status)}
+                  onCheckedChange={() => toggleMulti('status', status, statusFilters)}
+                >
+                  {status}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button asChild className="ml-auto">
             <Link href="/admin/events/new">New Event</Link>
           </Button>
@@ -112,10 +135,9 @@ export function EventsManagementClient({
 
       <Card>
         <CardContent className="pt-6">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
+          <Table>
+            <TableHeader>
+              <TableRow>
                   {[
                     ['title', 'Title'],
                     ['startAt', 'Start Date'],
@@ -123,28 +145,33 @@ export function EventsManagementClient({
                     ['status', 'Status'],
                     ['registrations', 'Registrations'],
                   ].map(([key, label]) => (
-                    <th key={key} className="text-left p-2">
-                      <button className="hover:underline" onClick={() => toggleSort(key)}>{label}</button>
-                    </th>
+                    <TableHead key={key} className="text-left p-2">
+                      <button
+                        className="rounded-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        onClick={() => toggleSort(key)}
+                      >
+                        {label}
+                      </button>
+                    </TableHead>
                   ))}
-                  <th className="text-left p-2">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
+                <TableHead className="text-left p-2">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
                 {items.map((event) => {
                   const status = getStatus(event)
                   return (
-                    <tr key={event.id} className="border-b">
-                      <td className="p-2 font-medium">{event.title}</td>
-                      <td className="p-2">{new Date(event.startAt).toLocaleString()}</td>
-                      <td className="p-2">{event.chapterName ?? 'Global'}</td>
-                      <td className="p-2">
+                    <TableRow key={event.id}>
+                      <TableCell className="p-2 font-medium">{event.title}</TableCell>
+                      <TableCell className="p-2">{new Date(event.startAt).toLocaleString()}</TableCell>
+                      <TableCell className="p-2">{event.chapterName ?? 'Global'}</TableCell>
+                      <TableCell className="p-2">
                         <Badge variant={status === 'published' ? 'secondary' : 'outline'}>{status}</Badge>
-                      </td>
-                      <td className="p-2">
+                      </TableCell>
+                      <TableCell className="p-2">
                         {event.registrations}{event.capacity !== null ? ` / ${event.capacity}` : ''}
-                      </td>
-                      <td className="p-2">
+                      </TableCell>
+                      <TableCell className="p-2">
                         <div className="flex gap-2">
                           <Button asChild size="sm" variant="outline">
                             <Link href={`/admin/events/${event.id}`}>Manage</Link>
@@ -153,13 +180,12 @@ export function EventsManagementClient({
                             <Link href={`/events/${event.id}`}>Public</Link>
                           </Button>
                         </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   )
                 })}
-              </tbody>
-            </table>
-          </div>
+            </TableBody>
+          </Table>
 
           {items.length === 0 && (
             <div className="py-10 text-center text-sm text-muted-foreground">No events found.</div>
