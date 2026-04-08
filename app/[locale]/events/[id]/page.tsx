@@ -1,4 +1,5 @@
 import { Suspense } from 'react'
+import { unstable_noStore as noStore } from 'next/cache'
 import NavHeader from '@/components/global/navigation/NavHeader'
 import { createClient } from '@/lib/supabase/server'
 import { getEventById } from '@/lib/actions/events/get-data'
@@ -42,6 +43,7 @@ function capacityHint(
 }
 
 async function EventContent({ id }: { id: string }) {
+  noStore()
   const supabase = await createClient()
   const { data: auth } = await supabase.auth.getUser()
 
@@ -66,18 +68,22 @@ async function EventContent({ id }: { id: string }) {
 
   let myRegistration: { id: string; status: string; checkedInAt: string | null } | null = null
   if (auth.user) {
-    const { data } = await supabase
+    const { data, error: regError } = await supabase
       .from('EventRegistration')
       .select('id, status, checkedInAt')
       .eq('eventId', event.id)
       .eq('userId', auth.user.id)
       .maybeSingle()
 
+    if (regError) {
+      console.error('[EventContent] EventRegistration lookup:', regError)
+    }
     myRegistration = data ?? null
   }
 
   const isRegistered =
     myRegistration?.status === 'registered' || myRegistration?.status === 'attended'
+  const hadCancelledRegistration = myRegistration?.status === 'cancelled'
   const canCancel =
     myRegistration?.status === 'registered' &&
     !myRegistration.checkedInAt &&
@@ -186,6 +192,7 @@ async function EventContent({ id }: { id: string }) {
                 loginUrl={`/auth/login?next=/events/${event.id}`}
                 registrationClosed={registrationClosed}
                 isRegistered={isRegistered}
+                hadCancelledRegistration={hadCancelledRegistration}
                 canCancel={canCancel}
                 registrationId={myRegistration?.id ?? null}
                 capacity={event.capacity}
