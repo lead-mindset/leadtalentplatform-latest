@@ -118,7 +118,7 @@ export async function getSavedStudents(
   const { data, error } = await supabase
     .from('SavedStudent')
     .select(`
-      id, acceptedByUserId, studentId, savedAt, notes,
+      id, recruiterId, studentId, savedAt, notes,
       Student:User!SavedStudent_studentId_fkey (
         id, email, name, phone, createdAt,
         StudentProfile!StudentProfile_userId_fkey (
@@ -130,7 +130,7 @@ export async function getSavedStudents(
         )
       )
     `)
-    .eq('acceptedByUserId', userId)
+    .eq('recruiterId', userId)
     .order('savedAt', { ascending: false })
 
   if (error) {
@@ -159,7 +159,7 @@ export async function getSavedStudents(
 
     return {
       id: saved.id,
-      acceptedByUserId: saved.acceptedByUserId,
+      recruiterId: saved.recruiterId,
       studentId: saved.studentId,
       savedAt: saved.savedAt,
       notes: saved.notes,
@@ -197,7 +197,7 @@ export async function getSavedStudentIds(
   const { data, error } = await supabase
     .from('SavedStudent')
     .select('studentId')
-    .eq('acceptedByUserId', userId)
+    .eq('recruiterId', userId)
 
   if (error) {
     console.error('[getSavedStudentIds] Error:', error)
@@ -303,7 +303,7 @@ export async function toggleSaveStudent(
   const { data: existing, error: checkError } = await supabase
     .from('SavedStudent')
     .select('id')
-    .eq('acceptedByUserId', userId)
+    .eq('recruiterId', userId)
     .eq('studentId', studentId)
     .maybeSingle()
 
@@ -327,7 +327,7 @@ export async function toggleSaveStudent(
     const { error: insertError } = await supabase
       .from('SavedStudent')
       .insert({
-        acceptedByUserId: userId,
+        recruiterId: userId,
         studentId,
         savedAt: new Date().toISOString(),
         notes: null,
@@ -349,7 +349,7 @@ export async function isStudentSaved(
   const { data, error } = await supabase
     .from('SavedStudent')
     .select('id')
-    .eq('acceptedByUserId', userId)
+    .eq('recruiterId', userId)
     .eq('studentId', studentId)
     .maybeSingle()
 
