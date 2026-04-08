@@ -1,10 +1,25 @@
 'use server'
 
+import { randomUUID } from 'node:crypto'
 import { revalidatePath } from 'next/cache'
 import { isRedirectError } from 'next/dist/client/components/redirect-error'
-import { redirect } from '@/i18n/routing'
+import { redirect } from 'next/navigation'
 import { requireUser } from '@/lib/auth'
-import type { EventRow, EventRegistrationRow } from '@/lib/types'
+import type { EventRow, EventRegistrationRow, RegistrationStatus } from '@/lib/types'
+
+function isActiveRegistrationStatus(status: RegistrationStatus | string | undefined): boolean {
+  return status === 'registered' || status === 'attended'
+}
+
+function revalidateEventRegistrationPaths(eventId: string) {
+  revalidatePath('/events')
+  revalidatePath(`/events/${eventId}`)
+  revalidatePath('/student/events')
+}
+
+function redirectToStudentEventQr(eventId: string) {
+  redirect(`/student/events?event=${eventId}`)
+}
 
 const CAPACITY_MESSAGE =
   'Someone just took the last spot. Check back — cancellations open it back up.'
@@ -63,6 +78,45 @@ export async function registerForEvent(
 
     const now = new Date().toISOString()
 
+    const { data: existing, error: existingError } = await supabase
+      .from('EventRegistration')
+      .select('id, status')
+      .eq('eventId', eventId)
+      .eq('userId', user.id)
+      .maybeSingle<{ id: string; status: RegistrationStatus }>()
+
+    if (existingError) {
+      console.error('[registerForEvent] existing lookup:', existingError)
+    }
+
+    if (existing) {
+      if (isActiveRegistrationStatus(existing.status)) {
+        revalidateEventRegistrationPaths(eventId)
+        redirectToStudentEventQr(eventId)
+      }
+      if (existing.status === 'cancelled') {
+        const { data: revived, error: reviveError } = await supabase
+          .from('EventRegistration')
+          .update({
+            status: 'registered' as RegistrationStatus,
+            registeredAt: now,
+            qrToken: randomUUID(),
+            checkedInAt: null,
+            checkedInById: null,
+          })
+          .eq('id', existing.id)
+          .select()
+          .single<EventRegistrationRow>()
+
+        if (!reviveError && revived) {
+          revalidateEventRegistrationPaths(eventId)
+          redirectToStudentEventQr(eventId)
+        }
+        console.error('[registerForEvent] re-register after cancel failed:', reviveError)
+        return { error: 'Could not complete registration. Please try again.' }
+      }
+    }
+
     const { data: registration, error } = await supabase
       .from('EventRegistration')
       .insert({
@@ -70,6 +124,7 @@ export async function registerForEvent(
         userId: user.id,
         registeredAt: now,
         status: 'registered',
+        qrToken: randomUUID(),
         checkedInAt: null,
         checkedInById: null,
       })
@@ -78,23 +133,50 @@ export async function registerForEvent(
 
     if (error || !registration) {
       if (isCapacityExceededError(error)) {
-        revalidatePath('/events')
-        revalidatePath(`/events/${eventId}`)
-        revalidatePath('/student/events')
+        revalidateEventRegistrationPaths(eventId)
         return { error: CAPACITY_MESSAGE, capacityExceeded: true }
       }
       const msg = (error as { message?: string })?.message?.toLowerCase?.() ?? ''
       if (msg.includes('duplicate') || msg.includes('unique')) {
+        const { data: row } = await supabase
+          .from('EventRegistration')
+          .select('id, status')
+          .eq('eventId', eventId)
+          .eq('userId', user.id)
+          .maybeSingle<{ id: string; status: RegistrationStatus }>()
+
+        if (row && isActiveRegistrationStatus(row.status)) {
+          revalidateEventRegistrationPaths(eventId)
+          redirectToStudentEventQr(eventId)
+        }
+        if (row?.status === 'cancelled') {
+          const { data: revived, error: reviveError } = await supabase
+            .from('EventRegistration')
+            .update({
+              status: 'registered' as RegistrationStatus,
+              registeredAt: now,
+              qrToken: randomUUID(),
+              checkedInAt: null,
+              checkedInById: null,
+            })
+            .eq('id', row.id)
+            .select()
+            .single<EventRegistrationRow>()
+
+          if (!reviveError && revived) {
+            revalidateEventRegistrationPaths(eventId)
+            redirectToStudentEventQr(eventId)
+          }
+        }
         return { error: 'You are already registered for this event.' }
       }
+      console.error('[registerForEvent] insert failed:', error)
       return { error: 'Could not complete registration. Please try again.' }
     }
 
-    revalidatePath('/events')
-    revalidatePath(`/events/${eventId}`)
-    revalidatePath('/student/events')
+    revalidateEventRegistrationPaths(eventId)
 
-    redirect(`/student/events?event=${eventId}`)
+    redirectToStudentEventQr(eventId)
   } catch (err) {
     if (isRedirectError(err)) throw err
     console.error('[registerForEvent]', err)
