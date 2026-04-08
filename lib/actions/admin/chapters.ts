@@ -109,7 +109,7 @@ export async function getChaptersList(
   const [{ data: profiles }, { data: events }] = await Promise.all([
     supabase
       .from('StudentProfile')
-      .select('chapterId, userId, User(name, email, role)')
+      .select('chapterId, userId, User!StudentProfile_userId_fkey(name, email, role)')
       .in('chapterId', chapterIds),
     supabase
       .from('Event')
@@ -286,7 +286,7 @@ export async function getAvailableEditors(chapterId: string) {
   const { supabase } = await requireAdmin()
   const { data, error } = await supabase
     .from('StudentProfile')
-    .select('userId, User(id, name, email, role)')
+    .select('userId, User!StudentProfile_userId_fkey(id, name, email, role)')
     .eq('chapterId', chapterId)
 
   if (error) {
