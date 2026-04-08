@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import {
   Dialog,
   DialogContent,
@@ -103,10 +104,9 @@ export function CompaniesManagementClient({
 
       <Card>
         <CardContent className="pt-6">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
+          <Table>
+            <TableHeader>
+              <TableRow>
                   {[
                     ['name', 'Company Name'],
                     ['createdat', 'Created At'],
@@ -114,28 +114,31 @@ export function CompaniesManagementClient({
                     ['activeRecruiters', 'Active Recruiters'],
                     ['pendingInvites', 'Pending Invites'],
                   ].map(([key, label]) => (
-                    <th key={key} className="text-left p-2">
+                    <TableHead key={key} className="text-left p-2">
                       {key === 'createdByName' ? (
                         label
                       ) : (
-                        <button className="hover:underline" onClick={() => toggleSort(key)}>
+                        <button
+                          className="rounded-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          onClick={() => toggleSort(key)}
+                        >
                           {label}
                         </button>
                       )}
-                    </th>
+                    </TableHead>
                   ))}
-                  <th className="text-left p-2">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
+                <TableHead className="text-left p-2">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
                 {items.map((company) => (
-                  <tr key={company.id} className="border-b">
-                    <td className="p-2 font-medium">{company.name}</td>
-                    <td className="p-2">{new Date(company.createdat).toLocaleDateString()}</td>
-                    <td className="p-2">{company.createdByName ?? '—'}</td>
-                    <td className="p-2">{company.activeRecruiters}</td>
-                    <td className="p-2">{company.pendingInvites}</td>
-                    <td className="p-2">
+                  <TableRow key={company.id}>
+                    <TableCell className="p-2 font-medium">{company.name}</TableCell>
+                    <TableCell className="p-2">{new Date(company.createdat).toLocaleDateString()}</TableCell>
+                    <TableCell className="p-2">{company.createdByName ?? '—'}</TableCell>
+                    <TableCell className="p-2">{company.activeRecruiters}</TableCell>
+                    <TableCell className="p-2">{company.pendingInvites}</TableCell>
+                    <TableCell className="p-2">
                       <div className="flex gap-2">
                         <Button asChild size="sm" variant="outline">
                           <Link href={`/admin/companies/${company.id}`}>Manage</Link>
@@ -159,12 +162,11 @@ export function CompaniesManagementClient({
                           Delete
                         </Button>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
+            </TableBody>
+          </Table>
 
           {items.length === 0 && (
             <div className="py-10 text-center text-sm text-muted-foreground">
