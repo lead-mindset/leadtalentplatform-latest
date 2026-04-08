@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import MemberCard from './member-card'
 import type { MemberWithProfile } from '@/lib/types'
 import type { MemberFilterStatus } from '../page'
@@ -73,12 +74,10 @@ export function MembersList({
       {status === 'pending' && selectableMembers.length > 0 && (
         <div className="rounded-lg border p-3 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
-            <input
+            <Checkbox
               id="select-all-pending"
-              type="checkbox"
               checked={allSelected}
-              onChange={onToggleAll}
-              className="h-4 w-4 accent-primary"
+              onCheckedChange={onToggleAll}
             />
             <label htmlFor="select-all-pending" className="text-sm">
               Select all pending members ({selectableMembers.length})
