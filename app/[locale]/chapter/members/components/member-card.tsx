@@ -1,6 +1,7 @@
 import type { MemberWithProfile } from "@/lib/types"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   CheckCircle2,
   Clock,
@@ -41,11 +42,9 @@ export default function MemberCard({
           <div className="space-y-1">
             {showSelector && (
               <label className="inline-flex items-center gap-2 text-xs text-muted-foreground">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={selected}
-                  onChange={(event) => onSelectChange?.(event.target.checked)}
-                  className="h-4 w-4 accent-primary"
+                  onCheckedChange={(checked) => onSelectChange?.(checked === true)}
                 />
                 Select for bulk approve
               </label>
