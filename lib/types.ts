@@ -323,7 +323,7 @@ export type StudentForRecruiter = {
 
 export type SavedStudent = {
   id: string;
-  acceptedByUserId: string;
+  recruiterId: string;
   studentId: string;
   savedAt: string;
   notes: string | null;
