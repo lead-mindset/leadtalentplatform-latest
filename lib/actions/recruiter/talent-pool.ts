@@ -160,7 +160,7 @@ export async function getSavedStudents(filters: TalentPoolFilters, pagination?: 
       `,
       { count: 'exact' }
     )
-    .eq('acceptedByUserId', authUser.id)
+    .eq('recruiterId', authUser.id)
     .eq('Student.StudentProfile.isRecruiterVisible', true)
     .eq('Student.StudentProfile.approvalStatus', 'approved')
     .order('savedAt', { ascending: false })
@@ -260,7 +260,7 @@ export async function getSavedStatus(studentIds: string[]) {
   const { data, error } = await supabase
     .from('SavedStudent')
     .select('studentId')
-    .eq('acceptedByUserId', authUser.id)
+    .eq('recruiterId', authUser.id)
     .in('studentId', studentIds)
 
   if (error) {
@@ -280,7 +280,7 @@ export async function saveStudent(studentId: string, notes?: string) {
   if (!authUser) return { success: false, error: 'Not authenticated.' }
 
   const { error } = await supabase.from('SavedStudent').insert({
-    acceptedByUserId: authUser.id,
+    recruiterId: authUser.id,
     studentId,
     savedAt: new Date().toISOString(),
     notes: notes?.trim() || null,
@@ -307,7 +307,7 @@ export async function unsaveStudent(studentId: string) {
   const { error } = await supabase
     .from('SavedStudent')
     .delete()
-    .eq('acceptedByUserId', authUser.id)
+    .eq('recruiterId', authUser.id)
     .eq('studentId', studentId)
 
   if (error) {

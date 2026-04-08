@@ -16,7 +16,7 @@ export async function toggleSaveStudentAction(
     const { error } = await supabase
       .from('SavedStudent')
       .delete()
-      .eq('acceptedByUserId', authUser.id)
+      .eq('recruiterId', authUser.id)
       .eq('studentId', studentId)
 
     if (error) {
@@ -33,7 +33,7 @@ export async function toggleSaveStudentAction(
     const { error } = await supabase
       .from('SavedStudent')
       .insert({
-        acceptedByUserId: authUser.id,
+        recruiterId: authUser.id,
         studentId,
         savedAt: new Date().toISOString(),
         notes: null,
