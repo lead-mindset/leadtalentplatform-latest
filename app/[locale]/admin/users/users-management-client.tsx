@@ -13,10 +13,12 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -317,10 +319,8 @@ export function UsersManagementClient({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   {ROLE_OPTIONS.map((role) => (
-                    <Button
+                    <DropdownMenuItem
                       key={role}
-                      variant="ghost"
-                      className="w-full justify-start"
                       onClick={() =>
                         setConfirmState({
                           title: `Change selected users to ${role}?`,
@@ -335,7 +335,7 @@ export function UsersManagementClient({
                       }
                     >
                       {role}
-                    </Button>
+                    </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -346,31 +346,30 @@ export function UsersManagementClient({
 
       <Card>
         <CardContent className="pt-6 space-y-4">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left p-2">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-left p-2">
                     <Checkbox
                       checked={allVisibleSelected}
                       onCheckedChange={(checked) =>
                         setSelectedIds(checked ? users.map((user) => user.id) : [])
                       }
                     />
-                  </th>
-                  <th className="text-left p-2">Name</th>
-                  <th className="text-left p-2">Email</th>
-                  <th className="text-left p-2">Role</th>
-                  <th className="text-left p-2">Chapter</th>
-                  <th className="text-left p-2">Join Date</th>
-                  <th className="text-left p-2">Profile Status</th>
-                  <th className="text-left p-2">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
+                </TableHead>
+                <TableHead className="text-left p-2">Name</TableHead>
+                <TableHead className="text-left p-2">Email</TableHead>
+                <TableHead className="text-left p-2">Role</TableHead>
+                <TableHead className="text-left p-2">Chapter</TableHead>
+                <TableHead className="text-left p-2">Join Date</TableHead>
+                <TableHead className="text-left p-2">Profile Status</TableHead>
+                <TableHead className="text-left p-2">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
                 {users.map((user) => (
-                  <tr key={user.id} className="border-b align-top">
-                    <td className="p-2">
+                  <TableRow key={user.id} className="align-top">
+                    <TableCell className="p-2">
                       <Checkbox
                         checked={selectedIds.includes(user.id)}
                         onCheckedChange={(checked) =>
@@ -379,25 +378,25 @@ export function UsersManagementClient({
                           )
                         }
                       />
-                    </td>
-                    <td className="p-2 font-medium">
+                    </TableCell>
+                    <TableCell className="p-2 font-medium">
                       <Link className="hover:underline" href={`/admin/users/${user.id}`}>
                         {user.name || 'No name'}
                       </Link>
-                    </td>
-                    <td className="p-2">{user.email}</td>
-                    <td className="p-2">
+                    </TableCell>
+                    <TableCell className="p-2">{user.email}</TableCell>
+                    <TableCell className="p-2">
                       <Badge className={getRoleColor(user.role)}>{user.role}</Badge>
                       {user.deactivatedAt && (
                         <Badge variant="outline" className="ml-2">
                           Deactivated
                         </Badge>
                       )}
-                    </td>
-                    <td className="p-2">{user.chapterName ?? '—'}</td>
-                    <td className="p-2">{new Date(user.createdAt).toLocaleDateString()}</td>
-                    <td className="p-2">{formatProfileStatus(user.profileStatus)}</td>
-                    <td className="p-2">
+                    </TableCell>
+                    <TableCell className="p-2">{user.chapterName ?? '—'}</TableCell>
+                    <TableCell className="p-2">{new Date(user.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell className="p-2">{formatProfileStatus(user.profileStatus)}</TableCell>
+                    <TableCell className="p-2">
                       <div className="flex flex-wrap gap-2">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -405,10 +404,8 @@ export function UsersManagementClient({
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             {ROLE_OPTIONS.map((role) => (
-                              <Button
+                              <DropdownMenuItem
                                 key={role}
-                                variant="ghost"
-                                className="w-full justify-start"
                                 onClick={() =>
                                   setConfirmState({
                                     title: `Change role to ${role}?`,
@@ -423,7 +420,7 @@ export function UsersManagementClient({
                                 }
                               >
                                 {role}
-                              </Button>
+                              </DropdownMenuItem>
                             ))}
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -462,12 +459,11 @@ export function UsersManagementClient({
                           </Button>
                         )}
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
+            </TableBody>
+          </Table>
 
           {users.length === 0 && (
             <p className="text-sm text-muted-foreground py-8 text-center">No users found.</p>
@@ -500,14 +496,12 @@ export function UsersManagementClient({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   {[25, 50, 100].map((size) => (
-                    <Button
+                    <DropdownMenuItem
                       key={size}
-                      variant="ghost"
-                      className="w-full justify-start"
                       onClick={() => updateSingleParam('pageSize', String(size))}
                     >
                       {size}
-                    </Button>
+                    </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
