@@ -1,6 +1,7 @@
 'use client'
 
-import { useActionState, useFormStatus } from 'react'
+import { useActionState } from 'react'
+import { useFormStatus } from 'react-dom'
 import { registerForEvent, type RegisterForEventState } from '@/lib/actions/events/register'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -32,6 +33,8 @@ type Props = {
   loginUrl: string
   registrationClosed: boolean
   isRegistered: boolean
+  /** True when a row exists with status cancelled (re-register is allowed). */
+  hadCancelledRegistration?: boolean
   canCancel: boolean
   registrationId: string | null
   capacity: number | null
@@ -45,6 +48,7 @@ export function EventRegistrationCheckout({
   loginUrl,
   registrationClosed,
   isRegistered,
+  hadCancelledRegistration = false,
   canCancel,
   registrationId,
   capacity,
@@ -75,6 +79,10 @@ export function EventRegistrationCheckout({
         ) : showLowSpots ? (
           <p className="text-sm text-amber-600 dark:text-amber-500">
             {spotsLeft === 1 ? '1 spot left' : `${spotsLeft} spots left`}
+          </p>
+        ) : hadCancelledRegistration ? (
+          <p className="text-sm text-muted-foreground">
+            You cancelled earlier. Register again to get a QR code for check-in.
           </p>
         ) : null}
       </>
@@ -147,6 +155,10 @@ export function EventRegistrationCheckout({
             ) : showLowSpots ? (
               <p className="text-center text-xs text-amber-600 dark:text-amber-500 mb-2">
                 {spotsLeft === 1 ? '1 spot left' : `${spotsLeft} spots left`}
+              </p>
+            ) : hadCancelledRegistration ? (
+              <p className="text-center text-xs text-muted-foreground mb-2">
+                You cancelled earlier — tap Register to sign up again.
               </p>
             ) : null}
             {state?.error ? (
