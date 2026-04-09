@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
-import { Raleway, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
@@ -9,10 +8,16 @@ import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { Suspense } from 'react';
 import DebugConsole from '@/components/debug-console'
+import { Lora, Montserrat, Geist_Mono } from "next/font/google";
 
-const ralewaySans = Raleway({
+const montserrat = Montserrat({
   subsets: ["latin"],
-  variable: "--font-raleway-sans",
+  variable: "--font-montserrat",
+});
+
+const lora = Lora({
+  subsets: ["latin"],
+  variable: "--font-lora",
 });
 
 const geistMono = Geist_Mono({
@@ -69,7 +74,7 @@ export default function LocaleLayout({
   return (
     <html
       lang={routing.defaultLocale}
-      className={`${ralewaySans.variable} ${geistMono.variable}`}
+      className={`${montserrat.variable} ${lora.variable} ${geistMono.variable}`}
       suppressHydrationWarning
     >
       <body className="antialiased">
@@ -79,11 +84,11 @@ export default function LocaleLayout({
           enableSystem
           disableTransitionOnChange
         >
-            {process.env.NEXT_PUBLIC_DEBUG === 'true' && <DebugConsole />}
+          {process.env.NEXT_PUBLIC_DEBUG === 'true' && <DebugConsole />}
 
           <Suspense fallback={null}>
             <LocaleContent params={params}>
-              
+
               {children}
             </LocaleContent>
           </Suspense>
