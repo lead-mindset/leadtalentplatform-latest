@@ -21,7 +21,7 @@ export function SidebarUserHeader({ name, email, role, memberId }: SidebarUserHe
   return (
     <div className="flex flex-col gap-3 p-4">
       <div className="flex items-center gap-3">
-        <Avatar className="h-10 w-10 shrink-0 ring-2 ring-sidebar-border">
+        <Avatar className="h-10 w-10 shrink-0 ring-2 ring-sidebar-border/60">
           <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-sm font-semibold">
             {getInitials(name)}
           </AvatarFallback>

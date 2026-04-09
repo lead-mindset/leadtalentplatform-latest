@@ -45,7 +45,7 @@ export function MobileSidebarContent({ userName, userEmail, userRole, children }
         {children}
       </div>
 
-      <div className="p-4 border-t mt-auto">
+      <div className="p-4 border-t border-border/60 mt-auto">
         <LogoutButton className="w-full" />
       </div>
     </div>
