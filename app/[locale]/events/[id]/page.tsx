@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { unstable_noStore as noStore } from 'next/cache'
-import NavHeader from '@/components/global/navigation/NavHeader'
+import { Navbar } from '../../(public)/_components/navbar'
 import { createClient } from '@/lib/supabase/server'
 import { getEventById } from '@/lib/actions/events/get-data'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -215,7 +215,7 @@ export default async function EventDetailPage({
   return (
     <>
       <Suspense fallback={null}>
-        <NavHeader />
+        <Navbar />
       </Suspense>
       <Suspense fallback={<div className="p-8">Loading...</div>}>
         <EventContent id={id} />
