@@ -68,7 +68,7 @@ export function EventsTable({ events }: { events: EventWithDetails[] }) {
         return (
           <div
             key={event.id}
-            className={`rounded-lg border p-4 space-y-3 ${status === 'Past' ? 'opacity-75' : ''}`}
+            className={`rounded-lg border border-border/60 p-4 space-y-3 ${status === 'Past' ? 'opacity-75' : ''}`}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
