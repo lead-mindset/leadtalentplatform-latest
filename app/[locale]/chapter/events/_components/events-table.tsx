@@ -9,23 +9,12 @@ import { updateEvent } from '@/lib/actions/events/update-event'
 import { deleteEvent } from '@/lib/actions/events/delete-event'
 import type { EventWithDetails } from '@/lib/types'
 import { useRouter } from 'next/navigation'
+import LocalDate from './local_date'
 
 function statusForEvent(event: EventWithDetails): 'Draft' | 'Published' | 'Past' {
   const isPast = new Date(event.endAt) < new Date()
   if (isPast) return 'Past'
   return event.isPublished ? 'Published' : 'Draft'
-}
-
-function formatDate(value: string) {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  return date.toLocaleString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  })
 }
 
 export function EventsTable({ events }: { events: EventWithDetails[] }) {
@@ -73,7 +62,7 @@ export function EventsTable({ events }: { events: EventWithDetails[] }) {
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="font-semibold truncate">{event.title}</p>
-                <p className="text-sm text-muted-foreground">{formatDate(event.startAt)}</p>
+                <LocalDate isoString={event.startAt} />
               </div>
               <Badge variant={status === 'Published' ? 'secondary' : 'outline'}>{status}</Badge>
             </div>
