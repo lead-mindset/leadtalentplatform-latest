@@ -24,11 +24,13 @@ export function ProofStrip() {
 
   return (
     <section
-      className="border-b border-border/60 bg-muted/40"
+      className="bg-muted border border-border/60"
       aria-label="Cifras de la red LEAD"
     >
+      <div className="absolute inset-0 opacity-20" style={{ background: "var(--gradient-card)" }} />
+
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
-        <div className="flex items-stretch justify-center divide-x divide-border/60">
+        <div className="flex items-stretch justify-center">
 
           {communityStats.map((stat) => (
             <div
@@ -43,10 +45,6 @@ export function ProofStrip() {
               </span>
             </div>
           ))}
-
-          <div className="flex items-center">
-            <div className="w-px self-stretch bg-border mx-0" />
-          </div>
 
           {promiseStats.map((stat) => (
             <div
