@@ -53,7 +53,8 @@ export type CheckInSearchResult = {
 
 async function assertEventAccess(eventId: string) {
   const { supabase, user } = await requireUser()
-  if (user.role !== 'editor' && user.role !== 'admin') return { supabase, user, error: 'Insufficient permissions' as const }
+  if (user.role !== 'editor' && user.role !== 'admin')
+    return { supabase, user, error: 'Insufficient permissions' as const }
 
   const { data: event, error: eventError } = await supabase
     .from('Event')
@@ -84,8 +85,8 @@ export async function getCheckInCounter(eventId: string): Promise<CheckInCounter
 
   if (error || !data) return null
 
-  const checkedIn = data.filter((registration) => registration.status === 'attended').length
-  const total = data.filter((registration) => registration.status === 'registered' || registration.status === 'attended').length
+  const checkedIn = data.filter((r) => r.status === 'attended').length
+  const total = data.filter((r) => r.status === 'registered' || r.status === 'attended').length
 
   return { checkedIn, total }
 }
@@ -100,23 +101,27 @@ export async function resolveCheckInCandidate(formData: FormData): Promise<Check
   if ('error' in access) return { ok: false, error: access.error }
   const { supabase } = access
 
+  // Filter by both qrToken and eventId in the query to avoid post-fetch mismatch
   const { data: registration, error } = await supabase
     .from('EventRegistration')
-    .select(`
-      id, eventId, userId, checkedInAt, checkedInById, status,
-      User:User!EventRegistration_userId_fkey ( id, name, email )
-    `)
+    .select('id, eventId, userId, checkedInAt, checkedInById, status')
     .eq('qrToken', token)
+    .eq('eventId', eventId)  // ← moved here
     .maybeSingle()
 
   if (error || !registration) return { ok: false, error: 'Not registered for this event' }
-  if (registration.eventId !== eventId) return { ok: false, error: 'Not registered for this event' }
 
-  const attendee = Array.isArray(registration.User) ? registration.User[0] : registration.User
+  // Fetch attendee separately to avoid FK hint issues
+  const { data: attendeeData } = await supabase
+    .from('User')
+    .select('id, name, email')
+    .eq('id', registration.userId)
+    .maybeSingle()
+
   const attendeePayload = {
-    id: attendee?.id ?? registration.userId,
-    name: attendee?.name ?? 'Unknown attendee',
-    email: attendee?.email ?? 'unknown@email',
+    id: attendeeData?.id ?? registration.userId,
+    name: attendeeData?.name ?? 'Unknown attendee',
+    email: attendeeData?.email ?? 'unknown@email',
   }
 
   if (registration.checkedInAt || registration.status === 'attended') {
@@ -163,32 +168,39 @@ export async function searchAttendeesForCheckIn(formData: FormData): Promise<Che
   if ('error' in access) return []
   const { supabase } = access
 
+  const { data: users, error: userError } = await supabase
+    .from('User')
+    .select('id, name, email')
+    .or(`name.ilike.%${query}%,email.ilike.%${query}%`)
+    .limit(20)
+
+  if (userError || !users?.length) return []
+
+  const userIds = users.map((u) => u.id)
+
   const { data, error } = await supabase
     .from('EventRegistration')
-    .select(`
-      id, userId, status, checkedInAt,
-      User:User!EventRegistration_userId_fkey ( id, name, email )
-    `)
+    .select('id, userId, status, checkedInAt')
     .eq('eventId', eventId)
     .in('status', ['registered', 'attended'])
+    .in('userId', userIds)
+    .limit(8)
 
   if (error || !data) return []
 
-  const lowered = query.toLowerCase()
-  return data
-    .map((row) => {
-      const attendee = Array.isArray(row.User) ? row.User[0] : row.User
-      return {
-        registrationId: row.id,
-        userId: attendee?.id ?? row.userId,
-        name: attendee?.name ?? 'Unknown attendee',
-        email: attendee?.email ?? '',
-        status: row.status as RegistrationStatus,
-        checkedInAt: row.checkedInAt ?? null,
-      }
-    })
-    .filter((row) => row.name.toLowerCase().includes(lowered) || row.email.toLowerCase().includes(lowered))
-    .slice(0, 8)
+  const userMap = new Map(users.map((u) => [u.id, u]))
+
+  return data.map((row) => {
+    const user = userMap.get(row.userId)
+    return {
+      registrationId: row.id,
+      userId: row.userId,
+      name: user?.name ?? 'Unknown attendee',
+      email: user?.email ?? '',
+      status: row.status as RegistrationStatus,
+      checkedInAt: row.checkedInAt ?? null,
+    }
+  })
 }
 
 export async function checkInAttendee(formData: FormData): Promise<CheckInResponse> {
@@ -200,22 +212,27 @@ export async function checkInAttendee(formData: FormData): Promise<CheckInRespon
   if ('error' in access) return { error: access.error }
   const { supabase, user, event } = access
 
+  // Filter by both id and eventId in the query — no post-fetch comparison needed
   const { data: reg, error: regError } = await supabase
     .from('EventRegistration')
-    .select(`
-      *,
-      User:User!EventRegistration_userId_fkey ( id, name, email )
-    `)
+    .select('*')
     .eq('id', registrationId)
+    .eq('eventId', eventId)  // ← moved here
     .maybeSingle()
 
-  if (regError || !reg || reg.eventId !== eventId) return { error: 'Registration not found for this event' }
+  if (regError || !reg) return { error: 'Registration not found for this event' }
 
-  const attendee = Array.isArray(reg.User) ? reg.User[0] : reg.User
+  // Fetch attendee separately
+  const { data: attendeeData } = await supabase
+    .from('User')
+    .select('id, name, email')
+    .eq('id', reg.userId)
+    .maybeSingle()
+
   const attendeePayload = {
-    id: attendee?.id ?? reg.userId,
-    name: attendee?.name ?? 'Unknown attendee',
-    email: attendee?.email ?? '',
+    id: attendeeData?.id ?? reg.userId,
+    name: attendeeData?.name ?? 'Unknown attendee',
+    email: attendeeData?.email ?? '',
   }
 
   if (reg.checkedInAt || reg.status === 'attended') {
@@ -229,11 +246,12 @@ export async function checkInAttendee(formData: FormData): Promise<CheckInRespon
       counter: counter ?? { checkedIn: 0, total: 0 },
     }
   }
+
   if (reg.status !== 'registered') return { error: 'Not registered for this event' }
 
   const now = new Date().toISOString()
 
-  const { data: updated, error } = await supabase
+  const { data: updated, error: updateError } = await supabase
     .from('EventRegistration')
     .update({
       status: 'attended' as RegistrationStatus,
@@ -244,8 +262,8 @@ export async function checkInAttendee(formData: FormData): Promise<CheckInRespon
     .select()
     .single<EventRegistrationRow>()
 
-  if (error || !updated) {
-    console.error('[checkInAttendee] Error:', error)
+  if (updateError || !updated) {
+    console.error('[checkInAttendee] update error:', updateError)
     return { error: 'Failed to check in' }
   }
 
@@ -253,6 +271,7 @@ export async function checkInAttendee(formData: FormData): Promise<CheckInRespon
   revalidatePath('/admin/events')
   revalidatePath(`/chapter/events/${event.id}/checkin`)
   revalidatePath('/chapter/checkin')
+
   const counter = await getCheckInCounter(eventId)
   return {
     success: true,
@@ -263,4 +282,3 @@ export async function checkInAttendee(formData: FormData): Promise<CheckInRespon
     counter: counter ?? { checkedIn: 0, total: 0 },
   }
 }
-
