@@ -1,5 +1,4 @@
 import { Suspense } from 'react'
-import NavHeader from '@/components/global/navigation/NavHeader'
 import { getPublishedEvents } from '@/lib/actions/events/get-data'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -7,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Link } from '@/i18n/routing'
 import { Calendar, MapPin, Users } from 'lucide-react'
 import Image from 'next/image'
-
+import { Navbar } from '../(public)/_components/navbar'
 function formatDateTime(value: string) {
   const d = new Date(value)
   if (Number.isNaN(d.getTime())) return value
@@ -30,7 +29,7 @@ async function EventsContent() {
   const events = await getPublishedEvents()
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen ">
       <div className="mx-auto max-w-6xl px-6 pt-28 pb-16 space-y-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Events</h1>
@@ -106,9 +105,7 @@ async function EventsContent() {
 export default function EventsPage() {
   return (
     <>
-      <Suspense fallback={null}>
-        <NavHeader />
-      </Suspense>
+      <Navbar />
       <Suspense fallback={<div className="p-8">Loading...</div>}>
         <EventsContent />
       </Suspense>
