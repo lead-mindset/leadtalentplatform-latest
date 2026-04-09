@@ -1,27 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-/**
- * FinalCTA — Closing conversion section
- *
- * UX decisions (from audit):
- * - Chapter network angle: "Presente en 14 universidades del Perú"
- *   Closes on the most concrete, verifiable stat.
- *   "Tu capítulo ya está aquí" makes it personal — the student's specific
- *   university is in the network.
- * - Does NOT repeat the hero copy ("Conecta con empresas...").
- *   The final CTA closes the loop; it does not re-open the premise.
- * - Trust strip repeated at the point of decision (Gratis · Privado · 5 min).
- *   Reassurance exactly where needed — immediately below the CTA.
- * - Single CTA only. The user has seen the full page; they don't need
- *   a secondary "Iniciar sesión" here — that's the nav's job.
- *
- * PROOF_CHAPTERS must stay in sync with LEAD_CHAPTER_VALUES in constants.ts.
- */
-
-// ─── Config ───────────────────────────────────────────────────────────────────
-
-/** Must match number of entries in LEAD_CHAPTER_VALUES (constants.ts). */
 const PROOF_CHAPTERS = 14;
 
 const FINAL_TRUST_ITEMS = ["Gratis", "Privado por defecto", "5 minutos"] as const;
