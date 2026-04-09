@@ -74,20 +74,7 @@ export function EventForm({
   const [previewOpen, setPreviewOpen] = useState(false)
   const [isDraggingCover, setIsDraggingCover] = useState(false)
   const [coverError, setCoverError] = useState<string | null>(null)
-  const editorRef = useRef<HTMLDivElement | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
-
-  function richTextIsEmpty(html: string) {
-    const text = html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, '').trim()
-    return text.length === 0
-  }
-
-  function applyFormat(command: 'bold' | 'italic' | 'insertUnorderedList') {
-    if (!editorRef.current) return
-    editorRef.current.focus()
-    document.execCommand(command)
-    setDescription(editorRef.current.innerHTML)
-  }
 
   async function handleCoverFile(file: File | null) {
     setCoverError(null)
@@ -126,7 +113,7 @@ export function EventForm({
 
       const payload = {
         title,
-        description: richTextIsEmpty(description) ? undefined : description,
+        description: description.trim() || undefined,
         coverImage: coverImage || undefined,
         startAt: fromDateTimeLocal(startAt),
         endAt: fromDateTimeLocal(endAt),
@@ -165,7 +152,7 @@ export function EventForm({
       const payload = {
         id: initial!.id,
         title,
-        description: richTextIsEmpty(description) ? null : description,
+        description: description.trim() || null,
         coverImage: coverImage || null,
         startAt: fromDateTimeLocal(startAt),
         endAt: fromDateTimeLocal(endAt),
@@ -214,26 +201,12 @@ export function EventForm({
 
         <div className="space-y-2">
           <Label htmlFor="description">Description</Label>
-          <div className="rounded-md border">
-            <div className="flex items-center gap-2 border-b p-2">
-              <Button type="button" size="sm" variant="outline" onClick={() => applyFormat('bold')}>
-                Bold
-              </Button>
-              <Button type="button" size="sm" variant="outline" onClick={() => applyFormat('italic')}>
-                Italic
-              </Button>
-              <Button type="button" size="sm" variant="outline" onClick={() => applyFormat('insertUnorderedList')}>
-                List
-              </Button>
-            </div>
-            <div
-              ref={editorRef}
-              contentEditable
-              className="min-h-32 p-3 text-sm outline-none"
-              onInput={(event) => setDescription(event.currentTarget.innerHTML)}
-              dangerouslySetInnerHTML={{ __html: description }}
-            />
-          </div>
+          <textarea
+            id="description"
+            className="w-full min-h-32 rounded-md border border-border/60 px-3 py-2 text-sm outline-none resize-y focus-visible:ring-1 focus-visible:ring-ring"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -335,9 +308,7 @@ export function EventForm({
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <p className="font-medium">Drag and drop cover image (max 2MB)</p>
-                <p className="text-muted-foreground">
-                  JPG, PNG, WEBP supported
-                </p>
+                <p className="text-muted-foreground">JPG, PNG, WEBP supported</p>
               </div>
               <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
                 <ImagePlus className="h-4 w-4 mr-2" />
@@ -399,10 +370,7 @@ export function EventForm({
               <p className="text-muted-foreground">
                 {startAt ? new Date(fromDateTimeLocal(startAt)).toLocaleString() : 'No start date'}
               </p>
-              <div
-                className="prose prose-sm dark:prose-invert max-w-none"
-                dangerouslySetInnerHTML={{ __html: description || '<p>No description yet.</p>' }}
-              />
+              <p className="whitespace-pre-wrap">{description || 'No description yet.'}</p>
               <p>
                 <span className="font-medium">Type:</span> {eventType.replace('_', ' ')}
               </p>
@@ -439,4 +407,3 @@ export function EventForm({
     </div>
   )
 }
-
