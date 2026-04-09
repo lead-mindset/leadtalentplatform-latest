@@ -169,7 +169,7 @@ export default function CompanyLoginPage() {
               </Button>
             </form>
 
-            <Alert>
+            <Alert className='border bg-muted'>
               <Info className="h-4 w-4" />
               <AlertDescription>
                 <strong className="text-foreground">Passwordless login:</strong>{' '}
@@ -179,7 +179,7 @@ export default function CompanyLoginPage() {
               </AlertDescription>
             </Alert>
 
-            <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
+            <div className="rounded-lg  bg-muted/50 p-4 space-y-2">
               <p className="text-sm font-medium text-foreground">Don't have access yet?</p>
               <p className="text-sm text-muted-foreground">
                 Company representatives can only join via invitation from a LEAD administrator.
