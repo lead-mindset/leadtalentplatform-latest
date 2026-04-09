@@ -22,7 +22,7 @@ function formatDateTime(value: string) {
 function EventTypeBadge({ eventType }: { eventType: string }) {
   const label =
     eventType === 'online' ? 'Online' : eventType === 'hybrid' ? 'Hybrid' : 'In-person'
-  return <Badge variant="secondary">{label}</Badge>
+  return <Badge variant="outline">{label}</Badge>
 }
 
 async function EventsContent() {
