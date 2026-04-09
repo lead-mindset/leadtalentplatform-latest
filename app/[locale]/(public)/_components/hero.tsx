@@ -14,7 +14,7 @@ export function Hero() {
     <section
       className="
         relative overflow-hidden
-        bg-card text-card-foreground
+       text-card-foreground bg-background
         border-b border-border/60
       "
       aria-labelledby="hero-heading"
@@ -30,16 +30,18 @@ export function Hero() {
       <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20  text-center">
 
 
-        <div className="mb-6  mx-auto flex h-[68px] w-[68px] items-center justify-center
-         rounded-[18px] border border-border/50 bg-card/60 shadow-xl shadow-black/8 backdrop-blur-sm">
-           <Image
-                  src="/leadl2.svg"
-                  alt='lol'
-                  width={44}
-                  height={44}
-                  className="object-contain"
-                  priority
-                />
+        <div className="relative mb-6 mx-auto flex h-[68px] w-[68px] items-center justify-center
+    rounded-[18px] border border-border/50
+    overflow-hidden shadow-xl shadow-black/8">
+          <div className="absolute inset-0" style={{ background: "var(--gradient-card)" }} />
+          <Image
+            src="/leadl2.svg"
+            alt="logo"
+            width={44}
+            height={44}
+            className="relative z-10 object-contain"
+            priority
+          />
         </div>
 
         <h1

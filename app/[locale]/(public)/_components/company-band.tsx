@@ -22,8 +22,7 @@ export function CompanyBand() {
       id="para-empresas"
       className="
         py-16 sm:py-20
-        border-y border-border/60
-        bg-muted/30
+        
       "
       aria-labelledby="company-band-heading"
     >

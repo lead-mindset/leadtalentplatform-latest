@@ -33,7 +33,7 @@ function FooterLink({
 export function Footer() {
   return (
     <footer
-      className="border-t border-border/60 bg-muted/20"
+      className="border-t border-border/60 bg-card/80"
       aria-label="Pie de página"
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-14">
