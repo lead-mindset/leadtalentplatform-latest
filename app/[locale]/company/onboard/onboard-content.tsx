@@ -124,7 +124,7 @@ export default function OnboardContent({
               {loading ? 'Setting up...' : 'Complete Setup'}
             </Button>
 
-            <Alert className="border-primary/20 bg-primary/5">
+            <Alert>
               <Lock className="h-4 w-4 text-primary" />
               <AlertDescription className="ml-2">
                 <strong className="text-foreground">Passwordless login:</strong>{' '}
