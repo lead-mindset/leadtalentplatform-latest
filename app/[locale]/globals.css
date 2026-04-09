@@ -224,25 +224,6 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-lora), serif;
     font-weight: 400;
-    letter-spacing: -0.02em;
-    line-height: 1.2;
-  }
-
-  h1 {
-    font-size: 3.5rem;
-    letter-spacing: -0.03em;
-    line-height: 1.05;
-  }
-
-  h2 { font-size: 2.5rem; }
-  h3 { font-size: 2rem; }
-
-  p         { line-height: 1.7; }
-  ul, ol    { line-height: 1.8; }
-  li        { margin-bottom: 0.5rem; }
-
-  ul li::marker {
-    color: oklch(0.78 0.04 55);
   }
 
   * {
