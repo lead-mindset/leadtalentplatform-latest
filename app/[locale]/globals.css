@@ -163,15 +163,15 @@
 .dark {
   --background:         oklch(0.18 0.12 265);
   --foreground:         oklch(0.96 0.018 60);
-  --card:               oklch(0.24 0.11 268);
+  --card:               oklch(22.215% 0.12196 272.715);
   --card-foreground:    oklch(0.96 0.018 60);
   --popover:            oklch(0.24 0.11 268);
   --popover-foreground: oklch(0.96 0.018 60);
   --primary:            oklch(0.59 0.22 1);
   --primary-foreground: oklch(0.98 0.02 320);
-  --secondary:          oklch(0.27 0.10 268);
+  --secondary:          oklch(24.539% 0.11556 272.689);
   --secondary-foreground: oklch(0.94 0.02 60);
-  --muted:              oklch(0.255 0.10 268);
+  --muted:              oklch(23.182% 0.11548 272.236);
   --muted-foreground:   oklch(0.78 0.04 55);
   --accent:             oklch(0.30 0.13 285);
   --accent-foreground:  oklch(0.96 0.018 60);
@@ -220,47 +220,6 @@
     position: relative;
   }
 
-  .bg-card,
-  [class*="bg-card"] {
-    background: var(--gradient-card) !important;
-  }
-
-  .bg-popover,
-  [class*="bg-popover"] {
-    background: var(--gradient-popover) !important;
-  }
-
-  .bg-muted,
-  [class*="bg-muted"] {
-    background: var(--gradient-muted) !important;
-  }
-
-  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
-  textarea,
-  select,
-  .bg-input {
-    background: var(--gradient-input) !important;
-  }
-
-  [data-sidebar],
-  [class*="sidebar"]:not([class*="sidebar-"]) {
-    background: var(--gradient-sidebar) !important;
-  }
-
-  .bg-success-muted,
-  [class*="bg-success-muted"] {
-    background: var(--gradient-success-muted) !important;
-  }
-
-  .bg-warning-muted,
-  [class*="bg-warning-muted"] {
-    background: var(--gradient-warning-muted) !important;
-  }
-
-  .bg-info-muted,
-  [class*="bg-info-muted"] {
-    background: var(--gradient-info-muted) !important;
-  }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-lora), serif;
@@ -289,5 +248,43 @@
   * {
     position: relative;
     z-index: 1;
+  }
+}
+
+@layer utilities {
+  .bg-gradient-body {
+    background: var(--gradient-body);
+  }
+
+  .bg-gradient-card {
+    background: var(--gradient-card);
+  }
+
+  .bg-gradient-popover {
+    background: var(--gradient-popover);
+  }
+
+  .bg-gradient-sidebar {
+    background: var(--gradient-sidebar);
+  }
+
+  .bg-gradient-input {
+    background: var(--gradient-input);
+  }
+
+  .bg-gradient-muted {
+    background: var(--gradient-muted);
+  }
+
+  .bg-gradient-success-muted {
+    background: var(--gradient-success-muted);
+  }
+
+  .bg-gradient-warning-muted {
+    background: var(--gradient-warning-muted);
+  }
+
+  .bg-gradient-info-muted {
+    background: var(--gradient-info-muted);
   }
 }
