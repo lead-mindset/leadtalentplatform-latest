@@ -10,7 +10,7 @@ import { FinalCTA } from "./_components/final-cta";
 
 export default function MarketingHomePage() {
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground antialiased relative overflow-hidden">
+    <div className="min-h-screen flex flex-col text-foreground antialiased relative overflow-hidden">
 
       <div className="relative z-10">
         <Navbar />
