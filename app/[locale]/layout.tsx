@@ -7,7 +7,6 @@ import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { Suspense } from 'react';
-import DebugConsole from '@/components/debug-console'
 import { Lora, Montserrat, Geist_Mono } from "next/font/google";
 
 const montserrat = Montserrat({
@@ -84,8 +83,6 @@ export default function LocaleLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {process.env.NEXT_PUBLIC_DEBUG === 'true' && <DebugConsole />}
-
           <Suspense fallback={null}>
             <LocaleContent params={params}>
 
