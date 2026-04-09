@@ -11,8 +11,7 @@ export function FinalCTA() {
     <section
       className="
         relative overflow-hidden
-        py-20 sm:py-28
-        bg-card border-b border-border/60
+        py-20 sm:py-28 bg-background/80
         text-center
       "
       aria-labelledby="final-cta-heading"
