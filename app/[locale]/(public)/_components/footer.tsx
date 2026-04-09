@@ -98,7 +98,7 @@ export function Footer() {
             gap-3 text-xs text-muted-foreground
           "
         >
-          <span>© {new Date().getFullYear()} Red LEAD · Perú</span>
+          <span>© 2026 LEAD AMERICAS</span>
           <div className="flex gap-4">
             <Link
               href="/privacy"
