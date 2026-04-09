@@ -18,8 +18,6 @@ export default function MarketingHomePage() {
           <Hero />
           <ProofStrip />
           <ValueCards />
-          <EventsStrip />
-          <HowItWorks />
           <CompanyBand />
           <FinalCTA />
         </main>
