@@ -2,6 +2,8 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { generateUniqueMemberId } from '@/lib/utils/member-id'
+import { sendMemberApprovalEmail } from '@/lib/emails/send-email'
 
 export async function approveMember(userId: string, approverId: string) {
   try {
@@ -46,7 +48,7 @@ export async function approveMember(userId: string, approverId: string) {
 
     const { data: profile } = await supabase
       .from('StudentProfile')
-      .select('isFilled')
+      .select('isFilled, chapterId')
       .eq('userId', userId)
       .single()
 
@@ -54,11 +56,24 @@ export async function approveMember(userId: string, approverId: string) {
       return { success: false, error: 'Cannot approve incomplete profile' }
     }
 
+    // Generate unique member ID with retry logic
+    let memberId: string
+    try {
+      memberId = await generateUniqueMemberId(supabase)
+    } catch (error) {
+      console.error('Member ID generation failed:', error)
+      return {
+        success: false,
+        error: 'Could not generate a member ID - please try again.',
+      }
+    }
+
     const { error: updateError } = await supabase
       .from('StudentProfile')
       .update({ 
         approvedById: approverId,
         approvalStatus: 'approved',
+        memberId: memberId,
         isRecruiterVisible: true,
         updatedAt: new Date().toISOString()
       })
@@ -75,7 +90,28 @@ export async function approveMember(userId: string, approverId: string) {
     revalidatePath(`/admin/users/${userId}`)
     revalidatePath('/admin/chapters')
     
-    return { success: true }
+    const { data: userData } = await supabase
+      .from('User')
+      .select('email, name')
+      .eq('id', userId)
+      .single()
+    
+    const { data: chapterData } = await supabase
+      .from('Chapter')
+      .select('name')
+      .eq('id', profile?.chapterId || '')
+      .single()
+    
+    if (userData?.email && chapterData?.name) {
+      sendMemberApprovalEmail(
+        userData.email,
+        userData.name || userData.email.split('@')[0],
+        memberId,
+        chapterData.name
+      ).catch(err => console.error('Failed to send member approval email:', err))
+    }
+    
+    return { success: true, memberId: memberId }
   } catch (error) {
     console.error('[approveMember] Unexpected error:', error)
     return { success: false, error: 'An unexpected error occurred' }
@@ -140,27 +176,56 @@ export async function approveMembersBulk(userIds: string[], approverId: string) 
       return { success: false, error: 'No eligible members selected' }
     }
 
-    const { error: updateError } = await supabase
-      .from('StudentProfile')
-      .update({
-        approvedById: approverId,
-        approvalStatus: 'approved',
-        isRecruiterVisible: true,
-        updatedAt: new Date().toISOString(),
-      })
-      .in('userId', validUserIds)
+    const results = []
+    const errors = []
 
-    if (updateError) {
-      console.error('[approveMembersBulk] Error:', updateError)
-      return { success: false, error: 'Failed to approve selected members' }
+    for (const userId of validUserIds) {
+      try {
+        let memberId: string
+        try {
+          memberId = await generateUniqueMemberId(supabase)
+        } catch (error) {
+          console.error('Member ID generation failed for user:', userId, error)
+          errors.push({ userId, error: 'Could not generate member ID' })
+          continue
+        }
+
+        const { error: updateError } = await supabase
+          .from('StudentProfile')
+          .update({
+            approvedById: approverId,
+            approvalStatus: 'approved',
+            memberId: memberId,
+            isRecruiterVisible: true,
+            updatedAt: new Date().toISOString(),
+          })
+          .eq('userId', userId)
+
+        if (updateError) {
+          console.error('Failed to approve member:', userId, updateError)
+          errors.push({ userId, error: 'Failed to approve member' })
+        } else {
+          results.push({ userId, memberId, success: true })
+        }
+      } catch (error) {
+        errors.push({ userId, error: 'Failed to process' })
+      }
     }
+
+    const successCount = results.length
+    const failureCount = errors.length
 
     revalidatePath('/chapter/members')
     revalidatePath('/chapter')
     revalidatePath('/admin/users')
     revalidatePath('/admin/chapters')
 
-    return { success: true, count: validUserIds.length, skipped: uniqueUserIds.length - validUserIds.length }
+    return {
+      success: failureCount === 0,
+      count: successCount,
+      skipped: uniqueUserIds.length - validUserIds.length + failureCount,
+      errors: errors.length > 0 ? errors : undefined,
+    }
   } catch (error) {
     console.error('[approveMembersBulk] Unexpected error:', error)
     return { success: false, error: 'An unexpected error occurred' }
