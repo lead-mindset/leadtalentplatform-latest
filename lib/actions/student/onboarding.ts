@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { generateUniqueMemberId } from './generate-member-ids'
+import { sendWelcomeEmail } from '@/lib/emails/send-email'
 
 export async function submitOnboarding(formData: FormData) {
     try {
@@ -142,6 +143,21 @@ export async function submitOnboarding(formData: FormData) {
             if (resumeDbError) {
                 return { error: resumeDbError.message }
             }
+        }
+
+        const { data: chapterData } = await supabase
+            .from('Chapter')
+            .select('name')
+            .eq('id', data.lead_chapter)
+            .single()
+
+        if (chapterData?.name) {
+            void sendWelcomeEmail(
+                user.email,
+                data.full_name,
+                chapterData.name,
+                'es'
+            ).catch(err => console.error('Failed to send welcome email:', err))
         }
 
     } catch (error) {
