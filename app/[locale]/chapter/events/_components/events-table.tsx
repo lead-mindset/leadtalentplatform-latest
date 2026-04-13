@@ -10,6 +10,7 @@ import { deleteEvent } from '@/lib/actions/events/delete-event'
 import type { EventWithDetails } from '@/lib/types'
 import { useRouter } from 'next/navigation'
 import LocalDate from './local_date'
+import { Users } from 'lucide-react'
 
 function statusForEvent(event: EventWithDetails): 'Draft' | 'Published' | 'Past' {
   const isPast = new Date(event.endAt) < new Date()
@@ -84,6 +85,18 @@ export function EventsTable({ events }: { events: EventWithDetails[] }) {
               <Button asChild size="sm" variant="outline">
                 <Link href={`/chapter/events/${event.id}`}>Edit</Link>
               </Button>
+              {event.accessModel === 'application' && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  asChild
+                >
+                  <Link href={`/chapter/events/${event.id}/applications`}>
+                    <Users className="w-4 h-4 mr-1" />
+                    Applications ({event._count?.pendingApplications || 0})
+                  </Link>
+                </Button>
+              )}
               <Button size="sm" variant="outline" disabled={isPending} onClick={() => onTogglePublish(event)}>
                 {event.isPublished ? 'Unpublish' : 'Publish'}
               </Button>
