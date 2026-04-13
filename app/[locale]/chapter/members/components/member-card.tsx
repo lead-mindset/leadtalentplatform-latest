@@ -161,6 +161,14 @@ export default function MemberCard({
                 <UserCheck className="h-4 w-4 text-success" />
                 Approved on {new Date(profile.updatedAt).toLocaleDateString()}
               </div>
+              {profile.memberId && (
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="font-medium">Member ID:</span>{' '}
+                  <code className="px-1.5 py-0.5 bg-muted rounded text-sm font-mono">
+                    {profile.memberId}
+                  </code>
+                </div>
+              )}
               <MemberActionButtons
                 userId={member.id}
                 currentUserId={currentUserId}
