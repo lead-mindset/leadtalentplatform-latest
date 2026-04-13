@@ -27,7 +27,42 @@ const EventInputSchema = z.object({
   capacity: z.coerce.number().int().nonnegative().optional(),
   chapterId: z.string().optional().nullable(),
   isPublished: z.coerce.boolean().optional(),
-})
+  accessModel: z.enum(['open', 'application']).default('open'),
+  applicationFormUrl: z.string().url().nullable().optional(),
+}).refine(
+  (data) => {
+    // If accessModel is 'application', applicationFormUrl is required
+    if (data.accessModel === 'application') {
+      return data.applicationFormUrl && data.applicationFormUrl.trim().length > 0
+    }
+    return true
+  },
+  {
+    message: 'Application form URL is required for application-gated events',
+    path: ['applicationFormUrl'],
+  }
+).refine(
+  (data) => {
+    // For online/hybrid events, meetingUrl is required
+    if (data.eventType !== 'in_person') {
+      return data.meetingUrl && data.meetingUrl.trim().length > 0
+    }
+    return true
+  },
+  {
+    message: 'Meeting URL is required for online or hybrid events',
+    path: ['meetingUrl'],
+  }
+).refine(
+  (data) => {
+    // End time must be after start time
+    return new Date(data.endAt) > new Date(data.startAt)
+  },
+  {
+    message: 'End time must be after start time',
+    path: ['endAt'],
+  }
+)
 
 export type CreateEventInput = z.infer<typeof EventInputSchema>
 
@@ -60,6 +95,8 @@ export async function createEvent(input: CreateEventInput): Promise<CreateEventR
         capacity: data.capacity ?? null,
         isPublished: data.isPublished ?? false,
         chapterId: data.chapterId ?? null,
+        accessModel: data.accessModel,
+        applicationFormUrl: data.accessModel === 'application' ? data.applicationFormUrl : null,
         createdById: user.id,
         createdAt: now,
         updatedAt: now,
@@ -95,6 +132,8 @@ export async function createEvent(input: CreateEventInput): Promise<CreateEventR
       capacity: data.capacity ?? null,
       isPublished: data.isPublished ?? false,
       chapterId,
+      accessModel: data.accessModel,
+      applicationFormUrl: data.accessModel === 'application' ? data.applicationFormUrl : null,
       createdById: user.id,
       createdAt: now,
       updatedAt: now,
