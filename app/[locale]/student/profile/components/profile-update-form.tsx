@@ -131,6 +131,18 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
   return (
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-12">
+        {initialData.approvalStatus === 'approved' && initialData.memberId ? (
+          <div className="rounded-lg bg-primary/5 border border-primary/10 p-4">
+            <p className="text-sm text-muted-foreground mb-1">Member ID</p>
+            <p className="font-mono text-lg font-semibold">{initialData.memberId}</p>
+          </div>
+        ) : initialData.approvalStatus === 'pending' && (
+          <div className="rounded-lg bg-muted p-4">
+            <p className="text-sm text-muted-foreground">
+              Member ID assigned after your application is reviewed.
+            </p>
+          </div>
+        )}
         <div className="space-y-6">
           <div className="space-y-3">
             <div className="flex items-center gap-3">
