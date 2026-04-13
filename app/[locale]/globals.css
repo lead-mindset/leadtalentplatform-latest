@@ -61,8 +61,8 @@
   --gradient-body:    linear-gradient(160deg,
                         oklch(0.21 0.19 278) 0%,
                         oklch(0.17 0.13 262) 38%,
-                        oklch(0.19 0.18 300) 68%,
-                        oklch(0.24 0.17 16)  100%);
+                        oklch(0.26 0.17 320) 68%,
+                        oklch(41.651% 0.1673 359.003));
 
   --gradient-card:    linear-gradient(135deg,
                         oklch(0.25 0.19 274) 0%,
@@ -133,7 +133,7 @@
   --chart-1: oklch(0.6294 0.2102 21.34);
   --chart-2: oklch(0.487 0.2087 322.04);
   --chart-3: oklch(0.5584 0.2066 286.65);
-  --chart-4: oklch(0.52 0.20 4);
+  --chart-4: oklch(32.931% 0.12852 3.597);
   --chart-5: oklch(0.59 0.22 1);
 
   --radius: 1.5rem;
