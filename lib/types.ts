@@ -3,7 +3,9 @@ export type Role = "admin" | "editor" | "member" | "recruiter";
 import type { LucideIcon } from 'lucide-react';
 
 export type EventType = 'in_person' | 'online' | 'hybrid'
-export type RegistrationStatus = 'registered' | 'cancelled' | 'attended'
+export type EventAccessModel = 'open' | 'application'
+export type RegistrationStatus = 'registered' | 'pending_review' | 'rejected' | 'cancelled' | 'attended'
+export type CapacityStatus = 'ok' | 'at_capacity' | 'over_capacity'
 
 export type NavLink = {
   label: string;
@@ -43,7 +45,6 @@ export const NAV_LINKS: NavLink[] = [
     roles: ["admin"]
   },
 ];
-
 
 export interface User {
   name: string
@@ -169,6 +170,8 @@ export type Database = {
           createdById: string
           createdAt: string
           updatedAt: string
+          accessModel: EventAccessModel
+          applicationFormUrl: string | null
         }
       }
       EventRegistration: {
@@ -414,3 +417,24 @@ export type ChapterMember = UserRow & {
   StudentProfile: Pick<StudentProfileRow, 'userId' | 'isFilled' | 'approvedById' | 'isRecruiterVisible' | 'chapterId' | 'updatedAt'> | null
   Chapter: Pick<ChapterRow, 'name' | 'university'> | null
 }
+
+// ============================================================================
+// OPTIONS CONSTANTS
+// ============================================================================
+
+export const EVENT_ACCESS_MODEL_OPTIONS = [
+  { value: 'open', label: 'Open' },
+  { value: 'application', label: 'Application Required' }
+] as const
+
+export const REGISTRATION_STATUS_OPTIONS = [
+  { value: 'registered', label: 'Registered', color: 'green' },
+  { value: 'pending_review', label: 'Pending Review', color: 'amber' },
+  { value: 'rejected', label: 'Rejected', color: 'neutral' },
+  { value: 'cancelled', label: 'Cancelled', color: 'neutral' },
+  { value: 'attended', label: 'Attended', color: 'blue' }
+] as const
+
+export const CAPACITY_WARNING_MESSAGE = 'This event has reached capacity. You can still register, but you may be placed on a waitlist.'
+
+export const BULK_APPROVE_FAILURE_MESSAGE = 'Failed to approve some registrations. Please try again or contact support if the issue persists.'
