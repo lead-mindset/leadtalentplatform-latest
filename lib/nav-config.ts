@@ -75,6 +75,12 @@ export const CHAPTER_NAV: NavItemConfig[] = [
     href: '/chapter/members',
     icon: UserCheck,
   },
+  {
+    id: 'my-profile',
+    label: 'My Profile',
+    href: '/student/profile',
+    icon: User,
+  },
 ]
 
 export const ADMIN_NAV: NavItemConfig[] = [
