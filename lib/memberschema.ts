@@ -78,4 +78,6 @@ export type ProfileData = {
   linkedin_url: string
   consentRecruiterVisibility: boolean
   emailNotificationsEnabled: boolean
+  memberId?: string | null
+  approvalStatus?: 'pending' | 'approved' | 'rejected'
 }
