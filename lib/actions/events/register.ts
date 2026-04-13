@@ -6,6 +6,7 @@ import { isRedirectError } from 'next/dist/client/components/redirect-error'
 import { redirect } from 'next/navigation'
 import { requireUser } from '@/lib/auth'
 import type { EventRow, EventRegistrationRow, RegistrationStatus } from '@/lib/types'
+import { sendApplicationReceivedEmail } from '@/lib/emails/send-email'
 
 function isActiveRegistrationStatus(status: RegistrationStatus | string | undefined): boolean {
   return status === 'registered' || status === 'attended'
@@ -52,7 +53,7 @@ export async function applyForEvent(eventId: string): Promise<{ success: true; r
         userId: user.id,
         registeredAt: now,
         status: 'pending_review' as RegistrationStatus,
-        qrToken: null, // EXPLICITLY NULL - no QR token for applications
+        qrToken: null,
         checkedInAt: null,
         checkedInById: null,
       })
@@ -62,6 +63,23 @@ export async function applyForEvent(eventId: string): Promise<{ success: true; r
     if (error || !registration) {
       console.error('[applyForEvent] Error:', error)
       return { error: 'Could not submit application. Please try again.' }
+    }
+
+    const { data: eventData } = await supabase
+      .from('Event')
+      .select('title, chapterId, Chapter!inner(name)')
+      .eq('id', eventId)
+      .single()
+
+    const chapterName = eventData?.Chapter?.[0]?.name || 'LEAD Chapter'
+
+    if (eventData?.title) {
+      void sendApplicationReceivedEmail(
+        user.email!,
+        user.name || user.email!.split('@')[0],
+        eventData.title,
+        chapterName
+      ).catch(err => console.error('Failed to send application received email:', err))
     }
 
     revalidateEventRegistrationPaths(eventId)
