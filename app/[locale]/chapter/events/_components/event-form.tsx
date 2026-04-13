@@ -10,7 +10,7 @@ import { createEvent, type CreateEventInput } from '@/lib/actions/events/create-
 import { updateEvent, type UpdateEventInput } from '@/lib/actions/events/update-event'
 import { deleteEvent } from '@/lib/actions/events/delete-event'
 import type { EventRow, EventType, EventAccessModel } from '@/lib/types'
-import { EVENT_ACCESS_MODEL_OPTIONS } from '@/lib/types'
+import { EVENT_ACCESS_MODEL_OPTIONS, EVENT_TYPE_OPTIONS } from '@/lib/constants'
 import { useRouter } from 'next/navigation'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { uploadEventCover } from '@/lib/actions/events/upload-cover'
