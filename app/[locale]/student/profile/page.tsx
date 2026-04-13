@@ -28,6 +28,8 @@ async function ProfileData() {
     linkedin_url: profileData?.linkedinUrl || '',
     consentRecruiterVisibility: profileData?.consentRecruiterVisibility || false,
     emailNotificationsEnabled: profileData?.emailNotificationsEnabled ?? true,
+    memberId: profileData?.memberId || null,
+    approvalStatus: profileData?.approvalStatus || 'pending',
   };
 
   return <ProfileUpdateForm initialData={combinedData} />;
