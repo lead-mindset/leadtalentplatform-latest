@@ -9,11 +9,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { createEvent, type CreateEventInput } from '@/lib/actions/events/create-event'
 import { updateEvent, type UpdateEventInput } from '@/lib/actions/events/update-event'
 import { deleteEvent } from '@/lib/actions/events/delete-event'
-import type { EventRow, EventType } from '@/lib/types'
+import type { EventRow, EventType, EventAccessModel } from '@/lib/types'
+import { EVENT_ACCESS_MODEL_OPTIONS } from '@/lib/types'
 import { useRouter } from 'next/navigation'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { uploadEventCover } from '@/lib/actions/events/upload-cover'
-import { ImagePlus } from 'lucide-react'
+import { ImagePlus, HelpCircle } from 'lucide-react'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 type Mode = 'create' | 'edit'
 
@@ -56,6 +63,8 @@ export function EventForm({
       eventType: (e?.eventType ?? 'in_person') as EventType,
       capacity: e?.capacity?.toString?.() ?? '',
       isPublished: e?.isPublished ?? false,
+      accessModel: (e?.accessModel ?? 'open') as EventAccessModel,
+      applicationFormUrl: e?.applicationFormUrl ?? '',
     }
   }, [initial])
 
@@ -69,6 +78,8 @@ export function EventForm({
   const [eventType, setEventType] = useState<EventType>(defaults.eventType)
   const [capacity, setCapacity] = useState(defaults.capacity)
   const [isPublished, setIsPublished] = useState(defaults.isPublished)
+  const [accessModel, setAccessModel] = useState<EventAccessModel>(defaults.accessModel)
+  const [applicationFormUrl, setApplicationFormUrl] = useState(defaults.applicationFormUrl)
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
   const [isAutoSaving, setIsAutoSaving] = useState(false)
   const [previewOpen, setPreviewOpen] = useState(false)
@@ -110,6 +121,10 @@ export function EventForm({
         setError('Location is required for in-person and hybrid events')
         return
       }
+      if (accessModel === 'application' && !applicationFormUrl.trim()) {
+        setError('Application form URL is required for application-gated events')
+        return
+      }
 
       const payload = {
         title,
@@ -122,6 +137,8 @@ export function EventForm({
         eventType,
         capacity: capacity === '' ? undefined : Number(capacity),
         isPublished: targetPublished,
+        accessModel,
+        applicationFormUrl: accessModel === 'application' ? applicationFormUrl : undefined,
       }
 
       const res =
@@ -161,6 +178,8 @@ export function EventForm({
         eventType,
         capacity: capacity === '' ? null : Number(capacity),
         isPublished: false,
+        accessModel,
+        applicationFormUrl: accessModel === 'application' ? applicationFormUrl : null,
       }
       const res = await updateEvent(payload as UpdateEventInput)
       if (!('error' in res)) {
@@ -339,6 +358,70 @@ export function EventForm({
           />
         </div>
 
+        <div className="space-y-4 border-t pt-6">
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold">Access Settings</h3>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <HelpCircle className="w-4 h-4 text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="max-w-xs">
+                    Open: Students register instantly and get QR code immediately.
+                    Application: Students fill external form, editors approve/ reject manually.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+
+          <div className="space-y-3">
+            {EVENT_ACCESS_MODEL_OPTIONS.map((option) => (
+              <div key={option.value} className="flex items-start space-x-3">
+                <input
+                  type="radio"
+                  id={option.value}
+                  name="accessModel"
+                  value={option.value}
+                  checked={accessModel === option.value}
+                  onChange={(e) => setAccessModel(e.target.value as 'open' | 'application')}
+                  className="mt-1"
+                />
+                <div className="flex-1">
+                  <Label htmlFor={option.value} className="font-medium cursor-pointer">
+                    {option.label}
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    {option.value === 'open' 
+                      ? 'Students can register instantly. QR code generated immediately.'
+                      : 'Students apply via external form. Manual approval required before QR issuance.'
+                    }
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {accessModel === 'application' && (
+            <div className="ml-7 pl-4 border-l-2 border-primary/20">
+              <Label htmlFor="applicationFormUrl">
+                Application Form URL *
+              </Label>
+              <Input
+                id="applicationFormUrl"
+                value={applicationFormUrl}
+                onChange={(e) => setApplicationFormUrl(e.target.value)}
+                placeholder="https://forms.google.com/..."
+                className="mt-1"
+              />
+              <p className="text-sm text-muted-foreground mt-1">
+                Paste any form link — Google Forms, Typeform, or any URL. Students will be redirected here when they click "Apply".
+              </p>
+            </div>
+          )}
+        </div>
+
         <div className="flex items-center gap-3 pt-1">
           <input
             id="isPublished"
@@ -349,6 +432,7 @@ export function EventForm({
           />
           <Label htmlFor="isPublished">Published</Label>
         </div>
+
       </div>
 
       <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
@@ -374,6 +458,9 @@ export function EventForm({
               <p>
                 <span className="font-medium">Type:</span> {eventType.replace('_', ' ')}
               </p>
+              <p>
+                <span className="font-medium">Access:</span> {accessModel === 'open' ? 'Open Registration' : 'Application Required'}
+              </p>
               {(eventType === 'in_person' || eventType === 'hybrid') && (
                 <p><span className="font-medium">Location:</span> {location || 'Not set'}</p>
               )}
@@ -383,6 +470,9 @@ export function EventForm({
               <p>
                 <span className="font-medium">Capacity:</span> {capacity || 'Unlimited'}
               </p>
+              {accessModel === 'application' && (
+                <p><span className="font-medium">Application Form:</span> {applicationFormUrl || 'Not set'}</p>
+              )}
             </div>
           </DialogContent>
         </Dialog>
