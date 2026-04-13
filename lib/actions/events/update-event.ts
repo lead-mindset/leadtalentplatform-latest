@@ -28,6 +28,8 @@ const UpdateEventSchema = z.object({
   capacity: z.number().int().nonnegative().nullable().optional(),
   isPublished: z.boolean().optional(),
   chapterId: z.string().nullable().optional(),
+  accessModel: z.enum(['open', 'application']).optional(),
+  applicationFormUrl: z.string().url().nullable().optional(),
 })
 
 export type UpdateEventInput = z.infer<typeof UpdateEventSchema>
@@ -83,6 +85,8 @@ export async function updateEvent(input: UpdateEventInput): Promise<UpdateEventR
   if (d.eventType !== undefined) patch.eventType = d.eventType as EventType
   if (d.capacity !== undefined) patch.capacity = d.capacity
   if (d.isPublished !== undefined) patch.isPublished = d.isPublished
+  if (d.accessModel !== undefined) patch.accessModel = d.accessModel
+  if (d.applicationFormUrl !== undefined) patch.applicationFormUrl = d.applicationFormUrl
   if (user.role === 'admin' && d.chapterId !== undefined) patch.chapterId = d.chapterId
 
   const { data: event, error } = await supabase
