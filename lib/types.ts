@@ -116,6 +116,7 @@ export type Database = {
           chapterId: string;
           emailNotificationsEnabled: boolean;
           gender: 'man' | 'woman' | 'non_binary' | 'prefer_not_to_say' | null;
+          memberId: string | null;
         };
       };
       Company: {
@@ -181,7 +182,7 @@ export type Database = {
           userId: string
           registeredAt: string
           status: RegistrationStatus
-          qrToken: string
+          qrToken: string | null
           checkedInAt: string | null
           checkedInById: string | null
         }
@@ -234,7 +235,10 @@ export type EventWithDetailsRaw = EventRow & {
 export type EventWithDetails = EventRow & {
   Chapter: Pick<ChapterRow, 'id' | 'name' | 'university'> | null
   CreatedBy: Pick<UserRow, 'id' | 'name' | 'email'> | null
-  _count: { registrations: number }
+  _count: { 
+    registrations: number; 
+    pendingApplications?: number; 
+  }
 }
 
 export type RegistrationWithUserRaw = EventRegistrationRow & {
