@@ -36,6 +36,42 @@ function isCapacityExceededError(err: { message?: string; details?: string; hint
   return blob.includes('CAPACITY_EXCEEDED')
 }
 
+export async function applyForEvent(eventId: string): Promise<{ success: true; registration: EventRegistrationRow } | { error: string }> {
+  try {
+    const { supabase, user } = await requireUser()
+    if (!user) {
+      return { error: 'You need to sign in to apply.' }
+    }
+
+    const now = new Date().toISOString()
+
+    const { data: registration, error } = await supabase
+      .from('EventRegistration')
+      .insert({
+        eventId,
+        userId: user.id,
+        registeredAt: now,
+        status: 'pending_review' as RegistrationStatus,
+        qrToken: null, // EXPLICITLY NULL - no QR token for applications
+        checkedInAt: null,
+        checkedInById: null,
+      })
+      .select()
+      .single<EventRegistrationRow>()
+
+    if (error || !registration) {
+      console.error('[applyForEvent] Error:', error)
+      return { error: 'Could not submit application. Please try again.' }
+    }
+
+    revalidateEventRegistrationPaths(eventId)
+    return { success: true, registration }
+  } catch (err) {
+    console.error('[applyForEvent]', err)
+    return { error: 'Something went wrong. Please try again.' }
+  }
+}
+
 export async function registerForEvent(
   _prev: RegisterForEventState | null,
   formData: FormData
