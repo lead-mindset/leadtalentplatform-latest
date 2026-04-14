@@ -1,6 +1,15 @@
 import { createClient } from '@/lib/supabase/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { StudentForRecruiter, SavedStudent, CompanyStats } from '@/lib/types'
+import type {
+  ChapterRow,
+  CompanyStats,
+  Database,
+  SavedStudent,
+  SavedStudentRow,
+  StudentForRecruiter,
+  StudentProfileRow,
+  UserRow,
+} from '@/lib/types'
 
 // Shared select string — keeps both query functions consistent
 const STUDENT_SELECT = `
@@ -14,7 +23,22 @@ const STUDENT_SELECT = `
   )
 `
 
-function mapStudentRow(user: any): StudentForRecruiter | null {
+type StudentProfileRecruiterRow = Pick<
+  StudentProfileRow,
+  'major' | 'graduationYear' | 'linkedinUrl' | 'skills' | 'isRecruiterVisible' | 'isFilled' | 'updatedAt' | 'chapterId'
+> & {
+  Chapter: Pick<ChapterRow, 'name' | 'university' | 'city' | 'region'> | Pick<ChapterRow, 'name' | 'university' | 'city' | 'region'>[] | null
+}
+
+type RecruiterStudentRow = Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'createdAt'> & {
+  StudentProfile: StudentProfileRecruiterRow | StudentProfileRecruiterRow[] | null
+}
+
+type SavedStudentWithUserRow = SavedStudentRow & {
+  Student: RecruiterStudentRow | RecruiterStudentRow[] | null
+}
+
+function mapStudentRow(user: RecruiterStudentRow): StudentForRecruiter | null {
   const profile = Array.isArray(user.StudentProfile)
     ? user.StudentProfile[0]
     : user.StudentProfile
@@ -50,7 +74,7 @@ function mapStudentRow(user: any): StudentForRecruiter | null {
  * Filters by role=member AND isRecruiterVisible=true at the DB level.
  */
 export async function getVisibleStudents(
-  supabase: SupabaseClient
+  supabase: SupabaseClient<Database>
 ): Promise<StudentForRecruiter[]> {
   const { data, error } = await supabase
     .from('User')
@@ -65,9 +89,9 @@ export async function getVisibleStudents(
     return []
   }
 
-  if (!data) return []
+  const rows = (data ?? []) as RecruiterStudentRow[]
 
-  return data
+  return rows
     .map(mapStudentRow)
     .filter((s): s is StudentForRecruiter =>
       s !== null &&
@@ -80,7 +104,7 @@ export async function getVisibleStudents(
  * Returns a single student by ID, only if they are visible to recruiters.
  */
 export async function getStudentById(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   studentId: string
 ): Promise<StudentForRecruiter | null> {
   const { data, error } = await supabase
@@ -116,7 +140,7 @@ export async function getStudentById(
  * Returns saved students for a recruiter.
  */
 export async function getSavedStudents(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string
 ): Promise<SavedStudent[]> {
   const { data, error } = await supabase
@@ -144,10 +168,15 @@ export async function getSavedStudents(
 
   if (!data) return []
 
-  return data.map((saved: any) => {
+  return (data as SavedStudentWithUserRow[])
+    .map((saved) => {
     const studentData = Array.isArray(saved.Student)
       ? saved.Student[0]
       : saved.Student
+
+    if (!studentData) {
+      return null
+    }
 
     const profile = studentData?.StudentProfile
       ? Array.isArray(studentData.StudentProfile)
@@ -168,11 +197,11 @@ export async function getSavedStudents(
       savedAt: saved.savedAt,
       notes: saved.notes,
       Student: {
-        id: studentData?.id,
-        email: studentData?.email,
-        name: studentData?.name,
-        phone: studentData?.phone,
-        createdAt: studentData?.createdAt,
+        id: studentData.id,
+        email: studentData.email,
+        name: studentData.name,
+        phone: studentData.phone,
+        createdAt: studentData.createdAt,
         Chapter: chapter ?? null,
         StudentProfile: profile
           ? {
@@ -188,14 +217,15 @@ export async function getSavedStudents(
           : null,
       },
     }
-  })
+    })
+    .filter((saved): saved is SavedStudent => saved !== null)
 }
 
 /**
  * Returns saved student IDs for a recruiter — lightweight, for checking save state.
  */
 export async function getSavedStudentIds(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string
 ): Promise<string[]> {
   const { data, error } = await supabase
@@ -208,20 +238,20 @@ export async function getSavedStudentIds(
     return []
   }
 
-  return (data ?? []).map(r => r.studentId)
+  return (data ?? []).map((row: Pick<SavedStudentRow, 'studentId'>) => row.studentId)
 }
 
 /**
  * Company stats using a count query — does not fetch full student records.
  */
 export async function getCompanyStats(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string
 ): Promise<CompanyStats> {
   const [{ count: totalStudents }, savedStudents] = await Promise.all([
     supabase
       .from('StudentProfile')
-      .select('*', { count: 'exact', head: true })
+      .select('userId', { count: 'exact', head: true })
       .eq('isRecruiterVisible', true)
       .eq('isFilled', true),
     getSavedStudents(supabase, userId),
@@ -239,7 +269,7 @@ export async function getCompanyStats(
  * Client-side fallback only for skills (array containment via Supabase is limited).
  */
 export async function searchStudents(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   filters: {
     query?: string
     major?: string
@@ -281,9 +311,9 @@ export async function searchStudents(
     return []
   }
 
-  if (!data) return []
+  const rows = (data ?? []) as RecruiterStudentRow[]
 
-  return data
+  return rows
     .map(mapStudentRow)
     .filter((s): s is StudentForRecruiter =>
       s !== null &&
@@ -293,10 +323,15 @@ export async function searchStudents(
 }
 
 export async function toggleSaveStudent(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   studentId: string
 ): Promise<{ success: boolean; isSaved: boolean; error?: string }> {
+  const student = await getStudentById(supabase, studentId)
+  if (!student) {
+    return { success: false, isSaved: false, error: 'Student is not available to recruiters.' }
+  }
+
   const { data: existing, error: checkError } = await supabase
     .from('SavedStudent')
     .select('id')
@@ -339,7 +374,7 @@ export async function toggleSaveStudent(
 }
 
 export async function isStudentSaved(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   studentId: string
 ): Promise<boolean> {
