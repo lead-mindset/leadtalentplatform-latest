@@ -1,10 +1,11 @@
 'use client'
-import { useRef, useState } from 'react'
+import { useRef, useState, useTransition } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Upload, Download, FileText, CheckCircle2, AlertCircle, X, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
+import { useRouter } from 'next/navigation'
 
 interface Resume {
   id: string
@@ -16,18 +17,19 @@ interface Resume {
 
 export default function ResumeClient({
   resume,
-  isPending,
   onUpload,
 }: {
   resume: Resume | null
-  isPending: boolean
   onUpload: (formData: FormData) => Promise<void>
 }) {
   const t = useTranslations('resume')
+  const router = useRouter()
   const formRef = useRef<HTMLFormElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isDragging, setIsDragging] = useState(false)
+  const [feedback, setFeedback] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
 
   const handleFileSelect = (file: File | null) => {
     if (file && file.type === 'application/pdf') {
@@ -111,10 +113,10 @@ export default function ResumeClient({
                     <span className="whitespace-nowrap">{t('uploaded')} {formatDate(resume.uploadedAt)}</span>
                   </div>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="shrink-0 shadow-sm hover:shadow transition-shadow"
+                  <Button
+                    variant="outline" 
+                    size="sm" 
+                    className="shrink-0 shadow-sm hover:shadow transition-shadow"
                   asChild
                 >
                   <a 
@@ -153,14 +155,23 @@ export default function ResumeClient({
         <CardContent>
           <form
             ref={formRef}
-            onSubmit={async (e) => {
+            onSubmit={(e) => {
               e.preventDefault()
               if (!formRef.current || !selectedFile) return
               const formData = new FormData()
               formData.append('resume', selectedFile)
-              await onUpload(formData)
-              formRef.current.reset()
-              setSelectedFile(null)
+              setFeedback(null)
+              startTransition(async () => {
+                try {
+                  await onUpload(formData)
+                  formRef.current?.reset()
+                  setSelectedFile(null)
+                  setFeedback('Resume uploaded successfully.')
+                  router.refresh()
+                } catch (error) {
+                  setFeedback(error instanceof Error ? error.message : 'Failed to upload resume.')
+                }
+              })
             }}
             className="space-y-4"
           >
@@ -259,6 +270,12 @@ export default function ResumeClient({
                 </p>
               </div>
             )}
+
+            {feedback ? (
+              <div className="rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
+                {feedback}
+              </div>
+            ) : null}
 
             <Button 
               type="submit" 
