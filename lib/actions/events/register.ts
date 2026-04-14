@@ -8,6 +8,9 @@ import { requireUser } from '@/lib/auth'
 import type { EventRow, EventRegistrationRow, RegistrationStatus } from '@/lib/types'
 import { sendApplicationReceivedEmail } from '@/lib/emails/send-email'
 
+const EVENT_REGISTRATION_LOOKUP_SELECT =
+  'id, title, isPublished, startAt'
+
 function isActiveRegistrationStatus(status: RegistrationStatus | string | undefined): boolean {
   return status === 'registered' || status === 'attended'
 }
@@ -107,9 +110,9 @@ export async function registerForEvent(
 
     const { data: event, error: eventError } = await supabase
       .from('Event')
-      .select('*')
+      .select(EVENT_REGISTRATION_LOOKUP_SELECT)
       .eq('id', eventId)
-      .maybeSingle<EventRow>()
+      .maybeSingle<Pick<EventRow, 'id' | 'title' | 'isPublished' | 'startAt'>>()
 
     if (eventError) {
       return { error: 'Could not load this event.' }
