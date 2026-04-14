@@ -1,6 +1,8 @@
+import Image from 'next/image'
+import { Calendar, MapPin, Video, Users } from 'lucide-react'
 import { EventAccessModel, RegistrationStatus } from '@/lib/types'
 import { Badge } from '@/components/ui/badge'
-import { Calendar, MapPin, Video, Users } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 function formatDateTime(date: Date) {
   return date.toLocaleString(undefined, {
@@ -30,12 +32,10 @@ interface EventCardProps {
   onViewDetails?: () => void
 }
 
-export function EventCard({ 
-  id,
-  title, 
-  startAt, 
-  location, 
-  meetingUrl,
+export function EventCard({
+  title,
+  startAt,
+  location,
   eventType,
   accessModel,
   capacity,
@@ -45,104 +45,84 @@ export function EventCard({
   chapterName,
   coverImage,
   onRegister,
-  onViewDetails
+  onViewDetails,
 }: EventCardProps) {
-  
   const isOnline = eventType === 'online'
   const isHybrid = eventType === 'hybrid'
   const isApplicationRequired = accessModel === 'application'
-  
+
   const getButtonLabel = () => {
-    if (isRegistered) return 'Registered ✓'
+    if (isRegistered) return 'Registered'
     if (registrationStatus === 'pending_review') return 'Under Review'
     if (registrationStatus === 'rejected') return 'Not Selected'
     if (isApplicationRequired) return 'Apply'
     return 'Register'
   }
-  
-  const isButtonDisabled = () => {
-    if (isRegistered) return true
-    if (registrationStatus === 'pending_review') return true
-    if (registrationStatus === 'rejected') return true
-    return false
-  }
+
+  const isButtonDisabled =
+    isRegistered ||
+    registrationStatus === 'pending_review' ||
+    registrationStatus === 'rejected'
 
   return (
-    <div className="group relative rounded-lg border bg-card overflow-hidden hover:shadow-lg transition-shadow">
-      <div className="aspect-video bg-muted relative">
+    <div className="group relative overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-lg">
+      <div className="relative aspect-video bg-muted">
         {coverImage ? (
-          <img 
-            src={coverImage} 
-            alt={title}
-            className="w-full h-full object-cover"
-          />
+          <Image src={coverImage} alt={title} fill className="object-cover" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
             <span className="text-muted-foreground">No image</span>
           </div>
         )}
-        
-        {isApplicationRequired && (
-          <Badge variant="secondary" className="absolute top-2 right-2 bg-amber-500/90 text-white">
+
+        {isApplicationRequired ? (
+          <Badge variant="secondary" className="absolute right-2 top-2">
             Application Required
           </Badge>
-        )}
+        ) : null}
       </div>
-      
-      <div className="p-4 space-y-3">
-        {chapterName && (
-          <p className="text-sm text-muted-foreground">{chapterName}</p>
-        )}
-        
-        <h3 className="font-semibold text-lg line-clamp-2">{title}</h3>
-        
+
+      <div className="space-y-3 p-4">
+        {chapterName ? <p className="text-sm text-muted-foreground">{chapterName}</p> : null}
+
+        <h3 className="line-clamp-2 text-lg font-semibold">{title}</h3>
+
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Calendar className="w-4 h-4" />
+          <Calendar className="h-4 w-4" />
           <span>{formatDateTime(startAt)}</span>
         </div>
-        
+
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          {isOnline ? (
-            <Video className="w-4 h-4" />
-          ) : (
-            <MapPin className="w-4 h-4" />
-          )}
+          {isOnline ? <Video className="h-4 w-4" /> : <MapPin className="h-4 w-4" />}
           <span>
-            {isOnline ? 'Online Event' : location || 'Location TBD'}
-            {isHybrid && ' + Online'}
+            {isOnline ? 'Online event' : location || 'Location TBD'}
+            {isHybrid ? ' + Online' : ''}
           </span>
         </div>
-        
-        {capacity && (
+
+        {capacity ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Users className="w-4 h-4" />
-            <span>{registeredCount} / {capacity} registered</span>
+            <Users className="h-4 w-4" />
+            <span>
+              {registeredCount} / {capacity} registered
+            </span>
           </div>
-        )}
-        
+        ) : null}
+
         <div className="flex gap-2 pt-2">
-          <button
-            onClick={onViewDetails}
-            className="flex-1 px-3 py-2 text-sm font-medium rounded-md border hover:bg-accent transition-colors"
-          >
+          <Button type="button" variant="outline" className="flex-1" onClick={onViewDetails}>
             View Details
-          </button>
-          
-          <button
+          </Button>
+
+          <Button
+            type="button"
+            className="flex-1"
+            variant={isButtonDisabled ? 'secondary' : 'default'}
             onClick={onRegister}
-            disabled={isButtonDisabled()}
-            className={`
-              flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors
-              ${isButtonDisabled() 
-                ? 'bg-muted text-muted-foreground cursor-not-allowed' 
-                : isApplicationRequired 
-                  ? 'bg-amber-500 hover:bg-amber-600 text-white'
-                  : 'bg-primary hover:bg-primary/90 text-primary-foreground'
-              }
-            `}
+            disabled={isButtonDisabled}
           >
             {getButtonLabel()}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
