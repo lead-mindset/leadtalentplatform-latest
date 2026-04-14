@@ -108,14 +108,7 @@ export function ApplicationReviewCard({
                 </div>
               </div>
 
-              <Badge
-                variant={isPending ? 'default' : isApproved ? 'secondary' : 'destructive'}
-                className={`
-                  ${isPending ? 'bg-amber-500' : ''}
-                  ${isApproved ? 'bg-green-500' : ''}
-                  ${isRejected ? 'bg-neutral-500' : ''}
-                `}
-              >
+              <Badge variant={isPending ? 'outline' : isApproved ? 'secondary' : 'destructive'}>
                 {isPending && 'Pending Review'}
                 {isApproved && 'Approved'}
                 {isRejected && 'Rejected'}
@@ -154,20 +147,18 @@ export function ApplicationReviewCard({
             <div className="flex gap-2">
               <Button
                 size="sm"
-                variant="outline"
+                variant="default"
                 onClick={handleApprove}
                 disabled={isActionPending || isProcessing}
-                className="border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-950"
               >
                 <CheckCircle className="w-4 h-4 mr-1" />
                 Approve
               </Button>
               <Button
                 size="sm"
-                variant="outline"
+                variant="destructive"
                 onClick={() => setShowRejectDialog(true)}
                 disabled={isActionPending || isProcessing}
-                className="border-red-500 text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
               >
                 <XCircle className="w-4 h-4 mr-1" />
                 Reject
