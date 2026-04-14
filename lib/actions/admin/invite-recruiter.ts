@@ -1,9 +1,10 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { requireAdmin } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { randomUUID } from 'crypto'
 import nodemailer from 'nodemailer'
+import type { CompanyRow, RecruiterAccessRow } from '@/lib/types'
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -91,8 +92,23 @@ If you didn't expect this invitation, you can safely ignore this email.
   })
 }
 
-async function auditLog(action: string, details: any) {
+async function auditLog(action: string, details: Record<string, string | number | null | undefined>) {
   console.log(`[AUDIT] ${new Date().toISOString()} - ${action}`, details)
+}
+
+type RecruiterInviteWithCompany = Pick<
+  RecruiterAccessRow,
+  'id' | 'recruiterEmail' | 'companyId' | 'revokedAt' | 'acceptedAt'
+> & {
+  Company: Pick<CompanyRow, 'name'> | Pick<CompanyRow, 'name'>[] | null
+}
+
+type ActionResult =
+  | { success: true; inviteId?: string; message: string }
+  | { success: false; error: string }
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'Unknown error'
 }
 
 // ===== CREATE RECRUITER INVITE =====
@@ -100,21 +116,8 @@ export async function createRecruiterInvite(formData: {
   recruiterEmail: string
   companyId: string
   expiresInDays?: number
-}) {
-  const supabase = await createClient()
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser()
-  if (!authUser) return { success: false, error: 'Not authenticated' }
-
-  // Admin check
-  const { data: adminUser } = await supabase
-    .from('User')
-    .select('role')
-    .eq('id', authUser.id)
-    .single()
-  if (!adminUser || adminUser.role !== 'admin')
-    return { success: false, error: 'Unauthorized' }
+}): Promise<ActionResult> {
+  const { supabase, user } = await requireAdmin()
 
   // Validate company exists
   const { data: company } = await supabase
@@ -154,7 +157,7 @@ export async function createRecruiterInvite(formData: {
     .insert({
       recruiterEmail: formData.recruiterEmail,
       companyId: formData.companyId,
-      grantedById: authUser.id,
+      grantedById: user.id,
       grantedAt: new Date().toISOString(),
       inviteToken,
       inviteExpiresAt: expirationDate,
@@ -169,14 +172,14 @@ export async function createRecruiterInvite(formData: {
   // Send onboarding email
   try {
     await sendInviteEmail(formData.recruiterEmail, inviteToken, company.name)
-  } catch (e: any) {
+  } catch (error) {
     // Clean up if email fails
     await supabase.from('RecruiterAccess').delete().eq('id', invite.id)
-    return { success: false, error: `Failed to send email: ${e.message}` }
+    return { success: false, error: `Failed to send email: ${getErrorMessage(error)}` }
   }
 
   await auditLog('CREATE_INVITE', {
-    adminId: authUser.id,
+    adminId: user.id,
     recruiterEmail: formData.recruiterEmail,
     companyId: formData.companyId,
     inviteId: invite.id,
@@ -188,26 +191,14 @@ export async function createRecruiterInvite(formData: {
   return { success: true, inviteId: invite.id, message: 'Invite sent successfully' }
 }
 
-export async function resendInvite(inviteId: string) {
-  const supabase = await createClient()
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser()
-  if (!authUser) return { success: false, error: 'Not authenticated' }
-
-  const { data: adminUser } = await supabase
-    .from('User')
-    .select('role')
-    .eq('id', authUser.id)
-    .single()
-  if (!adminUser || adminUser.role !== 'admin')
-    return { success: false, error: 'Unauthorized' }
+export async function resendInvite(inviteId: string): Promise<ActionResult> {
+  const { supabase, user } = await requireAdmin()
 
   const { data: invite } = await supabase
     .from('RecruiterAccess')
-    .select('*, Company(name)')
+    .select('id, recruiterEmail, companyId, revokedAt, acceptedAt, Company(name)')
     .eq('id', inviteId)
-    .single()
+    .single<RecruiterInviteWithCompany>()
   if (!invite) return { success: false, error: 'Invite not found' }
   if (invite.revokedAt) return { success: false, error: 'Invite revoked' }
   if (invite.acceptedAt) return { success: false, error: 'Invite already accepted' }
@@ -227,14 +218,15 @@ export async function resendInvite(inviteId: string) {
 
   // Resend email
   try {
-    const companyName = (invite as any).Company?.name
+    const company = Array.isArray(invite.Company) ? invite.Company[0] : invite.Company
+    const companyName = company?.name
     await sendInviteEmail(invite.recruiterEmail, newToken, companyName)
-  } catch (e: any) {
-    return { success: false, error: `Failed to send email: ${e.message}` }
+  } catch (error) {
+    return { success: false, error: `Failed to send email: ${getErrorMessage(error)}` }
   }
 
   await auditLog('RESEND_INVITE', {
-    adminId: authUser.id,
+    adminId: user.id,
     inviteId,
     recruiterEmail: invite.recruiterEmail,
     companyId: invite.companyId,
@@ -245,26 +237,14 @@ export async function resendInvite(inviteId: string) {
   return { success: true, message: 'Invite resent successfully' }
 }
 
-export async function revokeInvite(inviteId: string) {
-  const supabase = await createClient()
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser()
-  if (!authUser) return { success: false, error: 'Not authenticated' }
-
-  const { data: adminUser } = await supabase
-    .from('User')
-    .select('role')
-    .eq('id', authUser.id)
-    .single()
-  if (!adminUser || adminUser.role !== 'admin')
-    return { success: false, error: 'Unauthorized' }
+export async function revokeInvite(inviteId: string): Promise<ActionResult> {
+  const { supabase, user } = await requireAdmin()
 
   const { data: invite } = await supabase
     .from('RecruiterAccess')
-    .select('*')
+    .select('id, recruiterEmail, companyId, revokedAt')
     .eq('id', inviteId)
-    .single()
+    .single<Pick<RecruiterAccessRow, 'id' | 'recruiterEmail' | 'companyId' | 'revokedAt'>>()
   if (!invite) return { success: false, error: 'Invite not found' }
   if (invite.revokedAt) return { success: false, error: 'Invite already revoked' }
 
@@ -272,7 +252,7 @@ export async function revokeInvite(inviteId: string) {
     .from('RecruiterAccess')
     .update({
       revokedAt: new Date().toISOString(),
-      revokedById: authUser.id,
+      revokedById: user.id,
       isActive: false,
     })
     .eq('id', inviteId)
@@ -280,7 +260,7 @@ export async function revokeInvite(inviteId: string) {
   if (error) return { success: false, error: 'Failed to revoke invite' }
 
   await auditLog('REVOKE_INVITE', {
-    adminId: authUser.id,
+    adminId: user.id,
     inviteId,
     recruiterEmail: invite.recruiterEmail,
     companyId: invite.companyId,
