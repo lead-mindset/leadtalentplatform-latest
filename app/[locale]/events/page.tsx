@@ -1,12 +1,19 @@
+import type { Metadata } from 'next'
 import { Suspense } from 'react'
+import Image from 'next/image'
+import { Calendar, MapPin, Users } from 'lucide-react'
 import { getPublishedEvents } from '@/lib/actions/events/get-data'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Link } from '@/i18n/routing'
-import { Calendar, MapPin, Users } from 'lucide-react'
-import Image from 'next/image'
 import { Navbar } from '../(public)/_components/navbar'
+
+export const metadata: Metadata = {
+  title: 'Events',
+  description: 'Browse upcoming LEAD events and register online.',
+}
+
 function formatDateTime(value: string) {
   const d = new Date(value)
   if (Number.isNaN(d.getTime())) return value
@@ -29,11 +36,11 @@ async function EventsContent() {
   const events = await getPublishedEvents()
 
   return (
-    <main className="min-h-screen ">
-      <div className="mx-auto max-w-6xl px-6 pt-28 pb-16 space-y-6">
+    <main className="min-h-screen">
+      <div className="mx-auto max-w-6xl space-y-6 px-6 pb-16 pt-28">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Events</h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="mt-1 text-muted-foreground">
             Browse upcoming events and register inside LEAD.
           </p>
         </div>
@@ -46,51 +53,52 @@ async function EventsContent() {
           </Card>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {events.map((e) => (
-              <Card key={e.id} className="overflow-hidden">
-                {e.coverImage && (
+            {events.map((event) => (
+              <Card key={event.id} className="overflow-hidden">
+                {event.coverImage ? (
                   <div className="relative h-40 w-full bg-muted">
-                    <Image
-                      src={e.coverImage}
-                      alt={e.title}
-                      fill
-                      className="object-cover"
-                    />
+                    <Image src={event.coverImage} alt={event.title} fill className="object-cover" />
                   </div>
-                )}
+                ) : null}
+
                 <CardHeader className="space-y-2">
                   <div className="flex items-center justify-between gap-3">
-                    <EventTypeBadge eventType={e.eventType} />
-                    {e.capacity !== null && (
+                    <EventTypeBadge eventType={event.eventType} />
+                    {event.capacity !== null ? (
                       <Badge variant="outline" className="tabular-nums">
-                        {e._count.registrations}/{e.capacity}
+                        {event._count.registrations}/{event.capacity}
                       </Badge>
-                    )}
+                    ) : null}
                   </div>
-                  <CardTitle className="line-clamp-2">{e.title}</CardTitle>
+                  <CardTitle className="line-clamp-2">{event.title}</CardTitle>
                 </CardHeader>
+
                 <CardContent className="space-y-3">
                   <div className="space-y-1 text-sm text-muted-foreground">
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
-                      <span>{formatDateTime(e.startAt)}</span>
+                      <span>{formatDateTime(event.startAt)}</span>
                     </div>
-                    {e.location && (
+
+                    {event.location ? (
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4" />
-                        <span className="line-clamp-1">{e.location}</span>
+                        <span className="line-clamp-1">{event.location}</span>
                       </div>
-                    )}
+                    ) : null}
+
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4" />
                       <span>
-                        {e.Chapter ? `${e.Chapter.name} · ${e.Chapter.university}` : 'Global'}
+                        {event.Chapter
+                          ? `${event.Chapter.name} / ${event.Chapter.university}`
+                          : 'Global'}
                       </span>
                     </div>
                   </div>
 
                   <Button asChild className="w-full">
-                    <Link href={`/events/${e.id}`}>View details</Link>
+                    <Link href={`/events/${event.id}`}>View details</Link>
                   </Button>
                 </CardContent>
               </Card>
@@ -112,4 +120,3 @@ export default function EventsPage() {
     </>
   )
 }
-
