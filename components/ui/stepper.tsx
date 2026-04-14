@@ -10,7 +10,7 @@ interface StepperProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
   initialStep?: number;
   onStepChange?: (step: number) => void;
-  onFinalStepCompleted?: (data: any) => void;
+  onFinalStepCompleted?: () => void | Promise<void>;
   stepCircleContainerClassName?: string;
   stepContainerClassName?: string;
   contentClassName?: string;
@@ -58,7 +58,7 @@ export default function Stepper({
   const updateStep = (newStep: number) => {
     setCurrentStep(newStep);
     if (newStep > totalSteps) {
-      onFinalStepCompleted({});
+      void onFinalStepCompleted();
     } else {
       onStepChange(newStep);
     }
@@ -435,7 +435,7 @@ export function FormStepper({
   const updateStep = (newStep: number) => {
     setCurrentStep(newStep);
     if (newStep > totalSteps) {
-      onFinalStepCompleted({});
+      void onFinalStepCompleted();
     } else {
       onStepChange(newStep);
     }
