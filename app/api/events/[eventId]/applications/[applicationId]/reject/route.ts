@@ -1,18 +1,22 @@
-import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { assertCanManageEvent } from '@/lib/actions/events/access'
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ eventId: string; applicationId: string }> }
 ) {
   const { eventId, applicationId } = await params
-  const supabase = await createClient()
-  const body = await request.json()
-  const { internalNote } = body
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const access = await assertCanManageEvent(eventId)
+  if ('error' in access) {
+    const status = access.error === 'Event not found' ? 404 : 403
+    return NextResponse.json({ error: access.error }, { status })
+  }
+  const { supabase } = access
+
+  try {
+    const body = await request.json()
+  } catch {
+    // Ignore optional JSON payload; the current implementation does not persist notes.
   }
 
   const { data: application } = await supabase
