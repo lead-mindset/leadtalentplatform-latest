@@ -5,6 +5,7 @@ import { createServiceClient } from '@/lib/supabase/server-service'
 export async function acceptInvite(formData: {
   inviteToken: string
   name: string
+  locale: string
 }) {
   const serviceSupabase = createServiceClient()
 
@@ -90,10 +91,11 @@ export async function acceptInvite(formData: {
   }
 
   // Send OTP magic link for login
+  const baseUrl = (process.env.NEXT_PUBLIC_FRONTEND_URL || process.env.FRONTEND_URL || 'http://localhost:3000').trim()
   const { error: otpError } = await serviceSupabase.auth.signInWithOtp({
     email: invite.recruiterEmail,
     options: {
-      emailRedirectTo: `${process.env.FRONTEND_URL}/auth/confirm?next=/company/dashboard`,
+      emailRedirectTo: `${baseUrl}/${formData.locale}/auth/confirm?next=/company/dashboard`,
     },
   })
 
