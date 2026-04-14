@@ -64,7 +64,7 @@ function EventRegistrationCard({
       <CardContent className="space-y-4">
         {showQr && registration.status === 'registered' && qrDataUrl ? (
           <div className="border-t pt-4">
-            <div className="flex items-center justify-center rounded-xl border bg-white p-4 dark:bg-white">
+            <div className="flex items-center justify-center rounded-xl border bg-background p-4">
               <Image
                 src={qrDataUrl}
                 alt="Event check-in QR code"
