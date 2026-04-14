@@ -2,7 +2,8 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { getStudentById } from '@/lib/actions/company/get-data'
+import { toggleSaveStudent } from '@/lib/actions/company/get-data'
+import type { ChapterRow, StudentProfileRow, UserRow } from '@/lib/types'
 
 export type TalentPoolFilters = {
   query?: string
@@ -27,7 +28,26 @@ export type TalentPoolStudent = {
   updatedAt: string
 }
 
-function mapTalentPoolRow(row: any): TalentPoolStudent | null {
+type TalentPoolProfileRow = Pick<
+  StudentProfileRow,
+  'graduationYear' | 'major' | 'skills' | 'updatedAt'
+> & {
+  Chapter: Pick<ChapterRow, 'name' | 'university'> | Pick<ChapterRow, 'name' | 'university'>[] | null
+}
+
+type TalentPoolRow = Pick<UserRow, 'id' | 'name' | 'email'> & {
+  StudentProfile: TalentPoolProfileRow | TalentPoolProfileRow[] | null
+}
+
+type SavedTalentPoolRow = {
+  Student: TalentPoolRow | TalentPoolRow[] | null
+}
+
+type TalentPoolFilterRow = Pick<StudentProfileRow, 'graduationYear'> & {
+  Chapter: { id: string; name: string } | { id: string; name: string }[] | null
+}
+
+function mapTalentPoolRow(row: TalentPoolRow): TalentPoolStudent | null {
   const profile = Array.isArray(row.StudentProfile) ? row.StudentProfile[0] : row.StudentProfile
   if (!profile) return null
 
@@ -110,7 +130,7 @@ export async function getTalentPool(filters: TalentPoolFilters, pagination?: Tal
     }
   }
 
-  const students = (data ?? [])
+  const students = ((data ?? []) as TalentPoolRow[])
     .map(mapTalentPoolRow)
     .filter((student): student is TalentPoolStudent => student !== null)
 
@@ -196,8 +216,8 @@ export async function getSavedStudents(filters: TalentPoolFilters, pagination?: 
     }
   }
 
-  const students = (data ?? [])
-    .map(row => {
+  const students = ((data ?? []) as SavedTalentPoolRow[])
+    .map((row) => {
       const user = Array.isArray(row.Student) ? row.Student[0] : row.Student
       return user ? mapTalentPoolRow(user) : null
     })
@@ -234,12 +254,13 @@ export async function getTalentPoolFilterOptions() {
     return { years: [] as number[], chapters: [] as Array<{ id: string; name: string }> }
   }
 
+  const filterRows = (data ?? []) as TalentPoolFilterRow[]
   const years = Array.from(
-    new Set((data ?? []).map(row => row.graduationYear).filter((year): year is number => !!year))
+    new Set(filterRows.map((row) => row.graduationYear).filter((year): year is number => !!year))
   ).sort((a, b) => a - b)
 
   const chaptersById = new Map<string, { id: string; name: string }>()
-  for (const row of data ?? []) {
+  for (const row of filterRows) {
     const chapter = Array.isArray(row.Chapter) ? row.Chapter[0] : row.Chapter
     if (chapter?.id && chapter?.name && !chaptersById.has(chapter.id)) {
       chaptersById.set(chapter.id, { id: chapter.id, name: chapter.name })
@@ -269,7 +290,7 @@ export async function getSavedStatus(studentIds: string[]) {
     return []
   }
 
-  return (data ?? []).map(row => row.studentId)
+  return (data ?? []).map((row: { studentId: string }) => row.studentId)
 }
 
 export async function saveStudent(studentId: string, notes?: string) {
@@ -280,21 +301,9 @@ export async function saveStudent(studentId: string, notes?: string) {
 
   if (!authUser) return { success: false, error: 'Not authenticated.' }
 
-  const student = await getStudentById(supabase, studentId)
-  if (!student) {
-    return { success: false, error: 'Student is not available to recruiters.' }
-  }
-
-  const { error } = await supabase.from('SavedStudent').insert({
-    recruiterId: authUser.id,
-    studentId,
-    savedAt: new Date().toISOString(),
-    notes: notes?.trim() || null,
-  })
-
-  if (error) {
-    console.error('[recruiter/talent-pool] saveStudent error:', error)
-    return { success: false, error: 'Failed to save student.' }
+  const result = await toggleSaveStudent(supabase, authUser.id, studentId)
+  if (!result.success || !result.isSaved) {
+    return { success: false, error: result.error ?? 'Failed to save student.' }
   }
 
   revalidatePath('/recruiter/browse')
@@ -310,20 +319,9 @@ export async function unsaveStudent(studentId: string) {
 
   if (!authUser) return { success: false, error: 'Not authenticated.' }
 
-  const student = await getStudentById(supabase, studentId)
-  if (!student) {
-    return { success: false, error: 'Student is not available to recruiters.' }
-  }
-
-  const { error } = await supabase
-    .from('SavedStudent')
-    .delete()
-    .eq('recruiterId', authUser.id)
-    .eq('studentId', studentId)
-
-  if (error) {
-    console.error('[recruiter/talent-pool] unsaveStudent error:', error)
-    return { success: false, error: 'Failed to remove saved student.' }
+  const result = await toggleSaveStudent(supabase, authUser.id, studentId)
+  if (!result.success || result.isSaved) {
+    return { success: false, error: result.error ?? 'Failed to remove saved student.' }
   }
 
   revalidatePath('/recruiter/browse')
