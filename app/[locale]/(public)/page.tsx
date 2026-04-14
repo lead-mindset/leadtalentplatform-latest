@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { Navbar } from "./_components/navbar";
 import { Hero } from "./_components/hero";
 import { ProofStrip } from "./_components/proofstrip";
@@ -7,6 +8,11 @@ import { HowItWorks } from "./_components/how-it-works";
 import { CompanyBand } from "./_components/company-band";
 import { Footer } from "./_components/footer";
 import { FinalCTA } from "./_components/final-cta";
+
+export const metadata: Metadata = {
+  title: 'LEAD Talent Platform',
+  description: 'Connect with LEAD events, student talent, and recruiter opportunities.',
+}
 
 export default function MarketingHomePage() {
   return (
