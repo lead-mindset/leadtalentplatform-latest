@@ -8,6 +8,21 @@ import { getTranslations } from 'next-intl/server'
 import { generateUniqueMemberId } from './generate-member-ids'
 import { sendWelcomeEmail } from '@/lib/emails/send-email'
 
+function parseSkills(rawValue: FormDataEntryValue | null): string[] {
+    if (typeof rawValue !== 'string' || !rawValue.trim()) {
+        return []
+    }
+
+    try {
+        const parsed = JSON.parse(rawValue)
+        return Array.isArray(parsed)
+            ? parsed.filter((skill): skill is string => typeof skill === 'string')
+            : []
+    } catch {
+        return []
+    }
+}
+
 export async function submitOnboarding(formData: FormData) {
     try {
         const supabase = await createClient()
@@ -29,7 +44,7 @@ export async function submitOnboarding(formData: FormData) {
             lead_chapter: formData.get('lead_chapter')?.toString() || '',
             gender: formData.get('gender')?.toString() || '',
             graduationYear: Number(formData.get('graduationYear')) || 0,
-            skills: JSON.parse(formData.get('skills')?.toString() || '[]'),
+            skills: parseSkills(formData.get('skills')),
             linkedin_url: formData.get('linkedin_url')?.toString() || '',
             consentRecruiterVisibility: formData.get('consentRecruiterVisibility') === 'true',
             emailNotificationsEnabled: formData.get('emailNotificationsEnabled') === 'true',
@@ -59,21 +74,29 @@ export async function submitOnboarding(formData: FormData) {
             return { error: userError.message }
         }
 
-        const { data: existingUser } = await supabase
+        const { data: existingUser, error: existingUserError } = await supabase
             .from('User')
             .select('id')
             .eq('id', user.id)
             .single()
 
+        if (existingUserError) {
+            return { error: existingUserError.message }
+        }
+
         if (!existingUser) {
             return { error: 'User row does not exist for StudentProfile insert' }
         }
 
-        const { data: existingProfile } = await supabase
+        const { data: existingProfile, error: existingProfileError } = await supabase
             .from('StudentProfile')
             .select('memberId')
             .eq('userId', user.id)
             .maybeSingle()
+
+        if (existingProfileError) {
+            return { error: existingProfileError.message }
+        }
 
         const memberId = existingProfile?.memberId ?? await generateUniqueMemberId(supabase)
 
@@ -145,11 +168,15 @@ export async function submitOnboarding(formData: FormData) {
             }
         }
 
-        const { data: chapterData } = await supabase
+        const { data: chapterData, error: chapterError } = await supabase
             .from('Chapter')
             .select('name')
             .eq('id', data.lead_chapter)
             .single()
+
+        if (chapterError) {
+            return { error: chapterError.message }
+        }
 
         if (chapterData?.name) {
             void sendWelcomeEmail(
