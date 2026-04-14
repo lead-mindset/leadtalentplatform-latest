@@ -10,7 +10,7 @@ import {
   ChevronRight,
   CheckCircle2,
 } from 'lucide-react'
-import { requireUser } from '@/lib/auth'
+import { requireChapterEditor } from '@/lib/auth'
 import type { MemberWithProfile, RecentActivityMember } from '@/lib/types'
 import { getChapterMembers, getMemberStats, getRecentChapterActivity } from '@/lib/actions/chapter/get-data'
 import { getChapterEvents } from '@/lib/actions/events/get-data'
@@ -234,15 +234,15 @@ function EventOpsList({
 }
 
 async function ChapterContent() {
-  const { supabase, user } = await requireUser()
+  const { supabase, user, chapterId } = await requireChapterEditor()
 
   const { data: profileData } = await supabase
     .from('StudentProfile')
-    .select(`chapterId, Chapter ( id, name, university )`)
+    .select(`Chapter ( id, name, university )`)
     .eq('userId', user.id)
     .maybeSingle()
 
-  if (!profileData?.chapterId || !profileData.Chapter) {
+  if (!profileData?.Chapter) {
     return (
       <Card className="max-w-md mx-auto mt-20">
         <CardHeader>
@@ -257,7 +257,6 @@ async function ChapterContent() {
     )
   }
 
-  const chapterId = profileData.chapterId
   const chapter = Array.isArray(profileData.Chapter)
     ? profileData.Chapter[0]
     : profileData.Chapter
@@ -283,7 +282,7 @@ async function ChapterContent() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Chapter Overview</h1>
         <p className="text-muted-foreground mt-1">
-          {chapter?.name} — {chapter?.university}
+          {chapter?.name} - {chapter?.university}
         </p>
       </div>
 
