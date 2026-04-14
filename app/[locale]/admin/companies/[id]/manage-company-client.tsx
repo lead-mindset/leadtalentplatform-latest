@@ -61,19 +61,22 @@ export function ManageCompanyClient({ company }: Props) {
           </div>
           <Button
             disabled={isPending || !email.trim()}
-            onClick={() =>
+            onClick={() => {
               startTransition(async () => {
                 const result = await generateInviteToken(
                   company.id,
                   email,
                   expiry === 'never' ? null : Number(expiry) as 7 | 30
                 )
-                if (!result.success || !result.inviteLink) return toast.error(result.error ?? 'Failed')
+                if (!result.success || !result.inviteLink) {
+                  toast.error(!result.success ? result.error ?? 'Failed' : 'Failed')
+                  return
+                }
                 await copy(result.inviteLink)
                 setEmail('')
                 router.refresh()
               })
-            }
+            }}
           >
             Generate + Copy Invite Link
           </Button>
@@ -101,7 +104,10 @@ export function ManageCompanyClient({ company }: Props) {
                   onClick={() =>
                     startTransition(async () => {
                       const result = await revokeAccess(row.id)
-                      if (!result.success) return toast.error(result.error)
+                      if (!result.success) {
+                        toast.error(result.error)
+                        return
+                      }
                       toast.success('Access revoked.')
                       router.refresh()
                     })
@@ -141,7 +147,10 @@ export function ManageCompanyClient({ company }: Props) {
                     onClick={() =>
                       startTransition(async () => {
                         const result = await resendInvite(row.id)
-                        if (!result.success || !result.inviteLink) return toast.error(result.error ?? 'Failed')
+                        if (!result.success || !result.inviteLink) {
+                          toast.error(!result.success ? result.error ?? 'Failed' : 'Failed')
+                          return
+                        }
                         await copy(result.inviteLink)
                         router.refresh()
                       })
@@ -156,7 +165,10 @@ export function ManageCompanyClient({ company }: Props) {
                     onClick={() =>
                       startTransition(async () => {
                         const result = await revokeAccess(row.id)
-                        if (!result.success) return toast.error(result.error)
+                        if (!result.success) {
+                          toast.error(result.error)
+                          return
+                        }
                         toast.success('Invite revoked.')
                         router.refresh()
                       })
