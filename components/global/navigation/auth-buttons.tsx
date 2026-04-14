@@ -4,13 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Link } from '@/i18n/routing';
 import { NavUser } from "./nav-user";
 import { useTranslations } from 'next-intl';
+import type { AuthenticatedNavUser } from '@/lib/types';
 
 interface AuthButtonsProps {
-  user: {
-    name: string;
-    email: string;
-    avatar: string;
-  } | null;
+  user: AuthenticatedNavUser | null;
   memberId?: string | null;
   className?: string;
   onClick?: () => void;
