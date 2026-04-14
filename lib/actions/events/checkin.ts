@@ -1,8 +1,11 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import type { EventRegistrationRow, RegistrationStatus } from '@/lib/types'
+import type { EventRegistrationRow, RegistrationStatus, UserRow } from '@/lib/types'
 import { assertCanManageEvent } from './access'
+
+const CHECKIN_REGISTRATION_SELECT =
+  'id, eventId, userId, registeredAt, status, qrToken, checkedInAt, checkedInById'
 
 type CheckInState = 'success' | 'already_checked_in' | 'not_registered'
 
@@ -50,6 +53,10 @@ export type CheckInSearchResult = {
   checkedInAt: string | null
 }
 
+type StatusOnlyRow = Pick<EventRegistrationRow, 'status'>
+type SearchUserRow = Pick<UserRow, 'id' | 'name' | 'email'>
+type SearchRegistrationRow = Pick<EventRegistrationRow, 'id' | 'userId' | 'status' | 'checkedInAt'>
+
 async function assertEventAccess(eventId: string) {
   const access = await assertCanManageEvent(eventId)
   if ('error' in access) {
@@ -71,8 +78,9 @@ export async function getCheckInCounter(eventId: string): Promise<CheckInCounter
 
   if (error || !data) return null
 
-  const checkedIn = data.filter((r) => r.status === 'attended').length
-  const total = data.filter((r) => r.status === 'registered' || r.status === 'attended').length
+  const rows = data as StatusOnlyRow[]
+  const checkedIn = rows.filter((registration) => registration.status === 'attended').length
+  const total = rows.filter((registration) => registration.status === 'registered' || registration.status === 'attended').length
 
   return { checkedIn, total }
 }
@@ -162,7 +170,8 @@ export async function searchAttendeesForCheckIn(formData: FormData): Promise<Che
 
   if (userError || !users?.length) return []
 
-  const userIds = users.map((u) => u.id)
+  const matchedUsers = users as SearchUserRow[]
+  const userIds = matchedUsers.map((matchedUser) => matchedUser.id)
 
   const { data, error } = await supabase
     .from('EventRegistration')
@@ -174,17 +183,17 @@ export async function searchAttendeesForCheckIn(formData: FormData): Promise<Che
 
   if (error || !data) return []
 
-  const userMap = new Map(users.map((u) => [u.id, u]))
+  const userMap = new Map(matchedUsers.map((matchedUser) => [matchedUser.id, matchedUser]))
 
-  return data.map((row) => {
-    const user = userMap.get(row.userId)
+  return (data as SearchRegistrationRow[]).map((registration) => {
+    const user = userMap.get(registration.userId)
     return {
-      registrationId: row.id,
-      userId: row.userId,
+      registrationId: registration.id,
+      userId: registration.userId,
       name: user?.name ?? 'Unknown attendee',
       email: user?.email ?? '',
-      status: row.status as RegistrationStatus,
-      checkedInAt: row.checkedInAt ?? null,
+      status: registration.status as RegistrationStatus,
+      checkedInAt: registration.checkedInAt ?? null,
     }
   })
 }
@@ -201,7 +210,7 @@ export async function checkInAttendee(formData: FormData): Promise<CheckInRespon
   // Filter by both id and eventId in the query — no post-fetch comparison needed
   const { data: reg, error: regError } = await supabase
     .from('EventRegistration')
-    .select('*')
+    .select(CHECKIN_REGISTRATION_SELECT)
     .eq('id', registrationId)
     .eq('eventId', eventId)  // ← moved here
     .maybeSingle()
