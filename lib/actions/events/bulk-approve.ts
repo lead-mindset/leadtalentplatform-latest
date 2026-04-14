@@ -1,20 +1,19 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { sendApplicationApprovedEmail } from '@/lib/emails/send-email'
 import { sendApplicationRejectedEmail } from '@/lib/emails/send-email'
+import { assertCanManageEvent } from './access'
 
 export async function bulkApproveApplications(eventId: string, applicationIds: string[]) {
-  const supabase = await createClient()
-  
-  const { data: user } = await supabase.auth.getUser()
-  if (!user.user) throw new Error('Unauthorized')
+  const access = await assertCanManageEvent(eventId)
+  if ('error' in access) throw new Error(access.error)
+  const { supabase, user } = access
 
   const { data, error } = await supabase.rpc('bulk_approve_applications', {
     p_event_id: eventId,
     p_application_ids: applicationIds,
-    p_approved_by: user.user.id,
+    p_approved_by: user.id,
   })
 
   if (error) {
@@ -64,8 +63,10 @@ export async function bulkApproveApplications(eventId: string, applicationIds: s
 }
 
 export async function bulkRejectApplications(eventId: string, applicationIds: string[]) {
-  const supabase = await createClient()
-  
+  const access = await assertCanManageEvent(eventId)
+  if ('error' in access) throw new Error(access.error)
+  const { supabase } = access
+
   const { error } = await supabase
     .from('EventRegistration')
     .update({ 
