@@ -14,9 +14,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useTranslations } from 'next-intl';
 import { getInitials } from "@/lib/utils";
+import type { AuthenticatedNavUser } from '@/lib/types';
 
 interface NavUserProps {
-  user: { name: string; email: string; avatar: string }
+  user: AuthenticatedNavUser
   memberId?: string | null
   onNavigate?: () => void
 }
@@ -29,7 +30,7 @@ export function NavUser({ user, memberId, onNavigate }: NavUserProps) {
       <DropdownMenuTrigger asChild>
         <button className="flex items-center gap-2 rounded-lg p-1 hover:bg-muted transition-colors">
           <Avatar className="h-8 w-8 rounded-lg">
-            <AvatarImage src={user.avatar} alt={user.name} />
+            <AvatarImage src={user.avatar ?? undefined} alt={user.name} />
             <AvatarFallback className="border border-border text-xs font-semibold">
               {getInitials(user.name)}
             </AvatarFallback>
