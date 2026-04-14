@@ -12,7 +12,9 @@ export async function getProfileData() {
 
   const { data: profileData, error: profileError } = await supabase
     .from("StudentProfile")
-    .select("*")
+    .select(
+      "userId, chapterId, major, graduationYear, skills, linkedinUrl, consentRecruiterVisibility, emailNotificationsEnabled, gender, memberId, approvalStatus"
+    )
     .eq("userId", user.id)
     .single()
 
@@ -36,14 +38,14 @@ export async function getProfileData() {
   }
 }
 
-export async function getResume(studentId: string) {
+export async function getCurrentUserResume() {
   try {
-    const supabase = createServiceClient()
+    const { supabase, user } = await requireUser()
 
     const { data, error } = await supabase
       .from("Resume")
-      .select("*")
-      .eq("studentId", studentId)
+      .select("id, studentId, fileUrl, fileName, fileSize, uploadedAt")
+      .eq("studentId", user.id)
       .order("uploadedAt", { ascending: false })
       .limit(1)
       .single()
