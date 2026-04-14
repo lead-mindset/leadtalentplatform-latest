@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { Link } from '@/i18n/routing'
 import { Button } from '@/components/ui/button'
 import { AlertCircle } from 'lucide-react'
 
@@ -26,7 +27,7 @@ export default function StudentError({
         <div className="flex gap-4 justify-center">
           <Button onClick={() => reset()}>Try again</Button>
           <Button variant="outline" asChild>
-            <a href="/student/profile">Go to Profile</a>
+            <Link href="/student/profile">Go to Profile</Link>
           </Button>
         </div>
       </div>
