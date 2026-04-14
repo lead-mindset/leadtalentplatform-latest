@@ -5,6 +5,8 @@ import { requireUser } from '@/lib/auth'
 import { getEditorChapterId } from './get-data'
 import type { EventRow } from '@/lib/types'
 
+const EVENT_LOOKUP_SELECT = 'id, chapterId'
+
 export type DeleteEventResponse =
   | { success: true }
   | { error: string }
@@ -14,9 +16,9 @@ export async function deleteEvent(eventId: string): Promise<DeleteEventResponse>
 
   const { data: existing } = await supabase
     .from('Event')
-    .select('*')
+    .select(EVENT_LOOKUP_SELECT)
     .eq('id', eventId)
-    .maybeSingle<EventRow>()
+    .maybeSingle<Pick<EventRow, 'id' | 'chapterId'>>()
 
   if (!existing) return { error: 'Event not found' }
 
