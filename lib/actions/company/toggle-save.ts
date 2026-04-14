@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { getStudentById } from './get-data'
 
 export async function toggleSaveStudentAction(
   studentId: string,
@@ -11,6 +12,11 @@ export async function toggleSaveStudentAction(
 
   const { data: { user: authUser } } = await supabase.auth.getUser()
   if (!authUser) return { success: false, isSaved: currentlySaved, error: 'Not authenticated' }
+
+  const student = await getStudentById(supabase, studentId)
+  if (!student) {
+    return { success: false, isSaved: currentlySaved, error: 'Student is not available to recruiters.' }
+  }
 
   if (currentlySaved) {
     const { error } = await supabase
