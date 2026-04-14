@@ -1,4 +1,3 @@
-import type { Metadata } from 'next'
 import { Navbar } from "./_components/navbar";
 import { Hero } from "./_components/hero";
 import { ProofStrip } from "./_components/proofstrip";
@@ -9,7 +8,7 @@ import { CompanyBand } from "./_components/company-band";
 import { Footer } from "./_components/footer";
 import { FinalCTA } from "./_components/final-cta";
 
-export const metadata: Metadata = {
+export const metadata = {
   title: 'LEAD Talent Platform',
   description: 'Connect with LEAD events, student talent, and recruiter opportunities.',
 }

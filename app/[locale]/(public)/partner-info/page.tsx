@@ -1,4 +1,3 @@
-import type { Metadata } from 'next'
 import { BriefcaseBusiness, Users, Zap } from 'lucide-react'
 import { Link } from '@/i18n/routing'
 import { Badge } from '@/components/ui/badge'
@@ -6,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Navbar } from '../_components/navbar'
 
-export const metadata: Metadata = {
+export const metadata = {
   title: 'Partner Info',
   description: 'Information for partners and company collaborators on LEAD.',
 }
