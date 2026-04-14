@@ -5,13 +5,13 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useState, useEffect } from 'react'
 import { X, Loader2, Save } from 'lucide-react'
+import { toast } from 'sonner'
 import { Checkbox } from "@/components/ui/checkbox"
 import { FormInput } from '@/components/ui/stepper'
 import { createProfileUpdateSchema, ProfileData } from '@/lib/memberschema'
 import { Button } from '@/components/ui/button'
 import CareerCommandSelect from '@/components/ui/career-combobox'
 import { useRouter } from 'next/navigation'
-import { getResume } from '@/lib/actions/student/profile'
 import { updateProfile } from '@/lib/actions/student/profile'
 import { useTranslations } from 'next-intl'
 import { useTranslatedSkills, useTranslatedChapters } from '@/lib/use-translated-options'
@@ -33,7 +33,9 @@ interface ProfileUpdateFormProps {
   initialData: ProfileData
 }
 
-export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProps) {
+export default function ProfileUpdateForm({
+  initialData,
+}: ProfileUpdateFormProps) {
   const t = useTranslations('profile')
   const tCommon = useTranslations('common')
   const tOnboarding = useTranslations('onboarding')
@@ -42,29 +44,11 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
   const translatedSkills = useTranslatedSkills()
   const translatedChapters = useTranslatedChapters()
 
-  const [fileName, setFileName] = useState('')
-  const [isUploading, setIsUploading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [resumeUrl, setResumeUrl] = useState<string | null>(null)
   const router = useRouter()
 
   const profileUpdateSchema = createProfileUpdateSchema(tValidation)
   type OnboardingValues = z.infer<typeof profileUpdateSchema>
-
-  useEffect(() => {
-    async function fetchResume() {
-      if (!initialData?.id) return
-
-      const data = await getResume(initialData.id)
-
-      if (data) {
-        setResumeUrl(data.fileUrl)
-        setFileName(data.fileName || '')
-      }
-    }
-
-    fetchResume()
-  }, [initialData?.id])
 
   const methods = useForm<OnboardingValues>({
     resolver: zodResolver(profileUpdateSchema),
@@ -88,8 +72,25 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors, isDirty },
   } = methods
+
+  useEffect(() => {
+    reset({
+      full_name: initialData?.full_name || '',
+      phone: initialData?.phone || '',
+      career: initialData?.career || '',
+      gender: initialData?.gender ?? undefined,
+      graduationYear: initialData?.graduationYear || 0,
+      skills: initialData?.skills || [],
+      lead_chapter: initialData?.lead_chapter || '',
+      linkedin_url: initialData?.linkedin_url || '',
+      resume_pdf: undefined,
+      consentRecruiterVisibility: initialData?.consentRecruiterVisibility || false,
+      emailNotificationsEnabled: initialData?.emailNotificationsEnabled ?? true,
+    })
+  }, [initialData, reset])
 
   const onSubmit: SubmitHandler<OnboardingValues> = async (data) => {
     setIsSaving(true)
@@ -118,11 +119,11 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
         throw new Error(result.error ?? t('updateFailed'))
       }
 
-      alert(t('updateSuccess'))
+      toast.success(t('updateSuccess'))
       router.refresh()
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err)
-      alert(t('updateError'))
+      toast.error(err instanceof Error ? err.message : t('updateError'))
     } finally {
       setIsSaving(false)
     }
