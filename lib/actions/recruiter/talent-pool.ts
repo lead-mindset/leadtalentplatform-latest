@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { getStudentById } from '@/lib/actions/company/get-data'
 
 export type TalentPoolFilters = {
   query?: string
@@ -279,6 +280,11 @@ export async function saveStudent(studentId: string, notes?: string) {
 
   if (!authUser) return { success: false, error: 'Not authenticated.' }
 
+  const student = await getStudentById(supabase, studentId)
+  if (!student) {
+    return { success: false, error: 'Student is not available to recruiters.' }
+  }
+
   const { error } = await supabase.from('SavedStudent').insert({
     recruiterId: authUser.id,
     studentId,
@@ -303,6 +309,11 @@ export async function unsaveStudent(studentId: string) {
   } = await supabase.auth.getUser()
 
   if (!authUser) return { success: false, error: 'Not authenticated.' }
+
+  const student = await getStudentById(supabase, studentId)
+  if (!student) {
+    return { success: false, error: 'Student is not available to recruiters.' }
+  }
 
   const { error } = await supabase
     .from('SavedStudent')
