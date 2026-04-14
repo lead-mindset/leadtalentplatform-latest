@@ -1,10 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { createClient } from '@/lib/supabase/server'
-import type { EventRow } from '@/lib/types'
 import { CheckinScanner } from '../../_components/checkin-scanner'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { getCheckInCounter } from '@/lib/actions/events/checkin'
+import { assertCanManageEvent } from '@/lib/actions/events/access'
 
 export default async function ChapterEventCheckinPage({
   params,
@@ -12,13 +11,8 @@ export default async function ChapterEventCheckinPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const supabase = await createClient()
-
-  const { data: event } = await supabase
-    .from('Event')
-    .select('*')
-    .eq('id', id)
-    .maybeSingle<EventRow>()
+  const access = await assertCanManageEvent(id)
+  const event = 'error' in access ? null : access.event
   const counter = event ? await getCheckInCounter(event.id) : null
 
   return (
