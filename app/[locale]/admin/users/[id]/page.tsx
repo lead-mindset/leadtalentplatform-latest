@@ -32,6 +32,7 @@ export default async function UserDetailPage({
   const user = await getUserById(id)
 
   if (!user) notFound()
+  const resolvedUser = user ?? notFound()
 
   const supabase = await createClient()
   const { data: { user: currentUser } } = await supabase.auth.getUser()
@@ -48,7 +49,7 @@ export default async function UserDetailPage({
     currentUserData &&
     (currentUserData.role === 'admin' || currentUserData.role === 'editor')
 
-  const profile = user.StudentProfile
+  const profile = resolvedUser.StudentProfile
   // approvalStatus is the single source of truth
   const approvalStatus = profile?.approvalStatus ?? 'pending'
 
@@ -115,28 +116,28 @@ export default async function UserDetailPage({
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
           <div className="space-y-3 flex-1">
             <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-4xl font-bold tracking-tight">{user.name}</h1>
-              <Badge className={getRoleColor(user.role)} variant="outline">
-                {user.role}
+              <h1 className="text-4xl font-bold tracking-tight">{resolvedUser.name}</h1>
+              <Badge className={getRoleColor(resolvedUser.role)} variant="outline">
+                {resolvedUser.role}
               </Badge>
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 text-muted-foreground">
               <a
-                href={`mailto:${user.email}`}
+                href={`mailto:${resolvedUser.email}`}
                 className="flex items-center gap-2 hover:text-foreground transition-colors"
               >
                 <Mail className="h-4 w-4" />
-                <span className="text-sm">{user.email}</span>
+                <span className="text-sm">{resolvedUser.email}</span>
               </a>
-              {user.phone && (
+              {resolvedUser.phone && (
                 <>
                   <span className="hidden sm:block">•</span>
                   <a
-                    href={`tel:${user.phone}`}
+                    href={`tel:${resolvedUser.phone}`}
                     className="flex items-center gap-2 hover:text-foreground transition-colors"
                   >
                     <Phone className="h-4 w-4" />
-                    <span className="text-sm">{user.phone}</span>
+                    <span className="text-sm">{resolvedUser.phone}</span>
                   </a>
                 </>
               )}
@@ -186,9 +187,9 @@ export default async function UserDetailPage({
             </CardHeader>
             <CardContent>
               <MemberActionButtons
-                userId={user.id}
+                userId={resolvedUser.id}
                 currentUserId={currentUser.id}
-                userName={user.name ?? user.email}
+                userName={resolvedUser.name ?? resolvedUser.email}
                 currentState={approvalStatus}
               />
             </CardContent>
@@ -235,7 +236,7 @@ export default async function UserDetailPage({
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-wrap gap-2">
-                      {profile.skills.map((skill, index) => (
+                      {profile.skills.map((skill: string, index: number) => (
                         <Badge key={index} variant="secondary" className="text-sm">
                           {skill}
                         </Badge>
@@ -317,7 +318,7 @@ export default async function UserDetailPage({
                   <div className="space-y-1">
                     <div className="text-xs text-muted-foreground">Member Since</div>
                     <div className="text-sm font-medium">
-                      {new Date(user.createdAt).toLocaleDateString('en-US', {
+                      {new Date(resolvedUser.createdAt).toLocaleDateString('en-US', {
                         year: 'numeric',
                         month: 'short',
                         day: 'numeric',
@@ -328,7 +329,7 @@ export default async function UserDetailPage({
                   <div className="space-y-1">
                     <div className="text-xs text-muted-foreground">Last Updated</div>
                     <div className="text-sm font-medium">
-                      {new Date(user.updatedAt).toLocaleDateString('en-US', {
+                      {new Date(resolvedUser.updatedAt).toLocaleDateString('en-US', {
                         year: 'numeric',
                         month: 'short',
                         day: 'numeric',
