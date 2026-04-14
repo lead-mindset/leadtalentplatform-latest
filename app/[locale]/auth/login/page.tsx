@@ -1,7 +1,6 @@
-import type { Metadata } from 'next'
 import { LoginForm } from "@/components/login-form";
 
-export const metadata: Metadata = {
+export const metadata = {
   title: 'Sign In',
   description: 'Sign in to your LEAD Talent Platform account.',
 }
