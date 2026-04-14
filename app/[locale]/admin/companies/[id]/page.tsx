@@ -14,6 +14,7 @@ export default async function CompanyManagePage({
   const { id } = await params
   const [company, stats] = await Promise.all([getCompanyById(id), getCompanyStats(id)])
   if (!company) notFound()
+  const resolvedCompany = company ?? notFound()
 
   return (
     <div className="space-y-6">
@@ -25,9 +26,9 @@ export default async function CompanyManagePage({
               Back to Companies
             </Link>
           </Button>
-          <h1 className="text-4xl font-bold tracking-tight">{company.name}</h1>
+          <h1 className="text-4xl font-bold tracking-tight">{resolvedCompany.name}</h1>
           <p className="text-muted-foreground mt-2">
-            Created {new Date(company.createdat).toLocaleDateString()} by {company.createdByName ?? 'Unknown'}
+            Created {new Date(resolvedCompany.createdat).toLocaleDateString()} by {resolvedCompany.createdByName ?? 'Unknown'}
           </p>
         </div>
       </div>
@@ -51,7 +52,7 @@ export default async function CompanyManagePage({
         </Card>
       </div>
 
-      <ManageCompanyClient company={company} />
+      <ManageCompanyClient company={resolvedCompany} />
     </div>
   )
 }
