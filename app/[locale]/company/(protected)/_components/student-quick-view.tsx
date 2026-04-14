@@ -61,10 +61,10 @@ export function StudentQuickView({ student }: StudentQuickViewProps) {
 
         {student.StudentProfile?.linkedinUrl && (
           <Button asChild variant="outline" size="sm" className="w-full gap-2">
-            <a href={student.StudentProfile.linkedinUrl} target="_blank" rel="noopener noreferrer">
+            <Link href={student.StudentProfile.linkedinUrl} target="_blank" rel="noopener noreferrer">
               <Linkedin className="h-4 w-4" />
               View LinkedIn
-            </a>
+            </Link>
           </Button>
         )}
 
