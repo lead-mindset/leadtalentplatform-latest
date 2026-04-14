@@ -2,12 +2,12 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { requireAdmin, requireUser } from '@/lib/auth'
+import { assertCanManageEvent } from './access'
 import type {
   EventRow,
   EventWithDetails,
   EventWithDetailsRaw,
   RegistrationWithUser,
-  RegistrationWithUserRaw,
   EventRegistrationRow,
   Role,
 } from '@/lib/types'
@@ -24,23 +24,20 @@ const EVENT_SELECT = `
   eventType,
   capacity,
   isPublished,
+  accessModel,
+  applicationFormUrl,
   chapterId,
   createdById,
   createdAt,
   updatedAt,
   Chapter:Chapter!Event_chapterId_fkey ( id, name, university ),
-  CreatedBy:User!Event_createdById_fkey ( id, name, email ),
-  EventRegistration:EventRegistration ( id, status )
+  CreatedBy:User!Event_createdById_fkey ( id, name, email )
 `
 
-function mapEvent(raw: any): EventWithDetails | null {
+function mapEvent(raw: any, registeredCount = 0): EventWithDetails | null {
   if (!raw) return null
   const chapter = Array.isArray(raw.Chapter) ? raw.Chapter[0] : raw.Chapter
   const createdBy = Array.isArray(raw.CreatedBy) ? raw.CreatedBy[0] : raw.CreatedBy
-  const registrations = Array.isArray(raw.EventRegistration)
-    ? raw.EventRegistration
-    : []
-  const registeredOnly = registrations.filter((r: { status: string }) => r.status === 'registered')
 
   return {
     id: raw.id,
@@ -54,13 +51,15 @@ function mapEvent(raw: any): EventWithDetails | null {
     eventType: raw.eventType,
     capacity: raw.capacity ?? null,
     isPublished: !!raw.isPublished,
+    accessModel: raw.accessModel,
+    applicationFormUrl: raw.applicationFormUrl ?? null,
     chapterId: raw.chapterId ?? null,
     createdById: raw.createdById,
     createdAt: raw.createdAt,
     updatedAt: raw.updatedAt,
     Chapter: chapter ?? null,
     CreatedBy: createdBy ?? null,
-    _count: { registrations: registeredOnly.length },
+    _count: { registrations: registeredCount },
   }
 }
 
@@ -78,8 +77,26 @@ export async function getPublishedEvents(): Promise<EventWithDetails[]> {
     return []
   }
 
-  return (data as EventWithDetailsRaw[])
-    .map(mapEvent)
+  const eventRows = data as EventWithDetailsRaw[]
+  const eventIds = eventRows.map((event) => event.id)
+
+  const { data: registrations, error: registrationsError } = await supabase
+    .from('EventRegistration')
+    .select('eventId, status')
+    .in('eventId', eventIds)
+    .eq('status', 'registered')
+
+  if (registrationsError) {
+    console.error('[getPublishedEvents] Registration count error:', registrationsError)
+  }
+
+  const countsByEventId = new Map<string, number>()
+  for (const row of registrations ?? []) {
+    countsByEventId.set(row.eventId, (countsByEventId.get(row.eventId) ?? 0) + 1)
+  }
+
+  return eventRows
+    .map((event) => mapEvent(event, countsByEventId.get(event.id) ?? 0))
     .filter((e): e is EventWithDetails => e !== null)
 }
 
@@ -97,7 +114,17 @@ export async function getEventById(id: string): Promise<EventWithDetails | null>
     return null
   }
 
-  return mapEvent(data)
+  const { count, error: countError } = await supabase
+    .from('EventRegistration')
+    .select('id', { count: 'exact', head: true })
+    .eq('eventId', id)
+    .eq('status', 'registered')
+
+  if (countError) {
+    console.error('[getEventById] Registration count error:', countError)
+  }
+
+  return mapEvent(data, count ?? 0)
 }
 
 export async function getMyRegistrations(): Promise<(EventRegistrationRow & { Event: EventRow | null })[]> {
@@ -188,6 +215,7 @@ export async function getAllEventsAdmin(): Promise<EventWithDetails[]> {
 function mapRegistration(raw: any): RegistrationWithUser | null {
   if (!raw) return null
   const u = Array.isArray(raw.User) ? raw.User[0] : raw.User
+  const profile = Array.isArray(u?.StudentProfile) ? u.StudentProfile[0] : u?.StudentProfile
   return {
     id: raw.id,
     eventId: raw.eventId,
@@ -198,13 +226,14 @@ function mapRegistration(raw: any): RegistrationWithUser | null {
     checkedInAt: raw.checkedInAt ?? null,
     checkedInById: raw.checkedInById ?? null,
     User: u ?? null,
+    StudentProfile: profile ?? null,
   }
 }
 
 export async function getEventRegistrations(eventId: string): Promise<RegistrationWithUser[]> {
-  const { supabase, user } = await requireUser()
-
-  if (user.role !== 'editor' && user.role !== 'admin') return []
+  const access = await assertCanManageEvent(eventId)
+  if ('error' in access) return []
+  const { supabase } = access
 
   const { data, error } = await supabase
     .from('EventRegistration')
@@ -217,7 +246,13 @@ export async function getEventRegistrations(eventId: string): Promise<Registrati
       qrToken,
       checkedInAt,
       checkedInById,
-      User:User!EventRegistration_userId_fkey ( id, name, email, phone )
+      User:User!EventRegistration_userId_fkey (
+        id,
+        name,
+        email,
+        phone,
+        StudentProfile!StudentProfile_userId_fkey ( major, graduationYear, linkedinUrl )
+      )
     `)
     .eq('eventId', eventId)
     .order('registeredAt', { ascending: true })
@@ -227,7 +262,7 @@ export async function getEventRegistrations(eventId: string): Promise<Registrati
     return []
   }
 
-  return (data as RegistrationWithUserRaw[])
+  return data
     .map(mapRegistration)
     .filter((r): r is RegistrationWithUser => r !== null)
 }
