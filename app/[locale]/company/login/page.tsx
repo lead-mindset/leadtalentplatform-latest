@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useRouter } from '@/i18n/routing'
+import { useLocale } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -24,6 +25,7 @@ export default function CompanyLoginPage() {
   const [otpSent, setOtpSent] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+  const locale = useLocale()
 
   async function handleSendOTP(e: React.FormEvent) {
     e.preventDefault()
@@ -33,7 +35,7 @@ export default function CompanyLoginPage() {
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: {
-        emailRedirectTo: `${window.location.origin}/company/dashboard`,
+        emailRedirectTo: `${window.location.origin}/${locale}/company/dashboard`,
       },
     })
 
