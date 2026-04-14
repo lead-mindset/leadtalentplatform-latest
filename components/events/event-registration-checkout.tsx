@@ -2,22 +2,23 @@
 
 import { useActionState } from 'react'
 import { useFormStatus } from 'react-dom'
+import { Check, Loader2 } from 'lucide-react'
 import { registerForEvent, type RegisterForEventState } from '@/lib/actions/events/register'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Link } from '@/i18n/routing'
-import { Check, Loader2 } from 'lucide-react'
 import { CancelRegistrationDialog } from '@/components/events/cancel-registration-dialog'
 import { cn } from '@/lib/utils'
 
 function SubmitButton({ disabled, label }: { disabled?: boolean; label: string }) {
   const { pending } = useFormStatus()
+
   return (
     <Button type="submit" className="w-full" disabled={disabled || pending}>
       {pending ? (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Registering…
+          Registering...
         </>
       ) : (
         label
@@ -33,7 +34,6 @@ type Props = {
   loginUrl: string
   registrationClosed: boolean
   isRegistered: boolean
-  /** True when a row exists with status cancelled (re-register is allowed). */
   hadCancelledRegistration?: boolean
   canCancel: boolean
   registrationId: string | null
@@ -56,11 +56,9 @@ export function EventRegistrationCheckout({
 }: Props) {
   const [state, formAction] = useActionState(registerForEvent, null as RegisterForEventState | null)
 
-  const spotsLeft =
-    capacity !== null ? Math.max(0, capacity - registeredCount) : null
+  const spotsLeft = capacity !== null ? Math.max(0, capacity - registeredCount) : null
   const isFull = capacity !== null && registeredCount >= capacity
-  const showLowSpots =
-    spotsLeft !== null && spotsLeft > 0 && spotsLeft <= 10 && !isRegistered
+  const showLowSpots = spotsLeft !== null && spotsLeft > 0 && spotsLeft <= 10 && !isRegistered
 
   const registerDisabled = registrationClosed || isFull || isRegistered || !isLoggedIn
   const qrHref = `/student/events?event=${eventId}`
@@ -70,14 +68,14 @@ export function EventRegistrationCheckout({
       <>
         {registrationClosed ? (
           <p className="text-sm text-muted-foreground">
-            Registration is closed — this event has already started.
+            Registration is closed because this event has already started.
           </p>
         ) : isFull ? (
           <p className="text-sm text-muted-foreground">
-            This event is full. Someone may cancel — check back later.
+            This event is full. Someone may cancel, so check back later.
           </p>
         ) : showLowSpots ? (
-          <p className="text-sm text-amber-600 dark:text-amber-500">
+          <p className="text-sm text-muted-foreground">
             {spotsLeft === 1 ? '1 spot left' : `${spotsLeft} spots left`}
           </p>
         ) : hadCancelledRegistration ? (
@@ -114,7 +112,7 @@ export function EventRegistrationCheckout({
           {canCancel && registrationId ? (
             <CancelRegistrationDialog registrationId={registrationId} eventTitle={eventTitle} />
           ) : (
-            <p className="text-sm text-muted-foreground">Cancellation isn’t available.</p>
+            <p className="text-sm text-muted-foreground">Cancellation is not available.</p>
           )}
           <Button asChild className="w-full">
             <Link href={qrHref}>View my QR code</Link>
@@ -125,7 +123,7 @@ export function EventRegistrationCheckout({
           <input type="hidden" name="eventId" value={eventId} />
           {statusMessages}
 
-          <div className="hidden md:block space-y-2">
+          <div className="hidden space-y-2 md:block">
             <SubmitButton disabled={registerDisabled} label="Register" />
             {state?.error ? (
               <p
@@ -142,29 +140,29 @@ export function EventRegistrationCheckout({
 
           <div
             className={cn(
-              'md:hidden fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur',
+              'fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur md:hidden',
               'supports-backdrop-filter:bg-background/80',
-              'pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 px-4',
               'shadow-[0_-4px_12px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_12px_rgba(0,0,0,0.35)]'
             )}
           >
             {registrationClosed ? (
-              <p className="text-center text-xs text-muted-foreground mb-2">Registration closed</p>
+              <p className="mb-2 text-center text-xs text-muted-foreground">Registration closed</p>
             ) : isFull ? (
-              <p className="text-center text-xs text-muted-foreground mb-2">Event is full</p>
+              <p className="mb-2 text-center text-xs text-muted-foreground">Event is full</p>
             ) : showLowSpots ? (
-              <p className="text-center text-xs text-amber-600 dark:text-amber-500 mb-2">
+              <p className="mb-2 text-center text-xs text-muted-foreground">
                 {spotsLeft === 1 ? '1 spot left' : `${spotsLeft} spots left`}
               </p>
             ) : hadCancelledRegistration ? (
-              <p className="text-center text-xs text-muted-foreground mb-2">
-                You cancelled earlier — tap Register to sign up again.
+              <p className="mb-2 text-center text-xs text-muted-foreground">
+                You cancelled earlier. Tap Register to sign up again.
               </p>
             ) : null}
+
             {state?.error ? (
               <p
                 className={cn(
-                  'text-xs text-center mb-2',
+                  'mb-2 text-center text-xs',
                   state.capacityExceeded ? 'text-muted-foreground' : 'text-destructive'
                 )}
                 role="alert"
@@ -172,6 +170,7 @@ export function EventRegistrationCheckout({
                 {state.error}
               </p>
             ) : null}
+
             <SubmitButton disabled={registerDisabled} label="Register" />
           </div>
         </form>
