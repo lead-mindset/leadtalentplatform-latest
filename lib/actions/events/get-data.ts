@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { requireAdmin, requireUser } from '@/lib/auth'
+import { requireAdmin, requireChapterEditor, requireUser } from '@/lib/auth'
 import { assertCanManageEvent } from './access'
 import type {
   EventRow,
@@ -10,6 +10,8 @@ import type {
   RegistrationWithUser,
   EventRegistrationRow,
   Role,
+  StudentProfileRow,
+  UserRow,
 } from '@/lib/types'
 
 const EVENT_SELECT = `
@@ -34,7 +36,30 @@ const EVENT_SELECT = `
   CreatedBy:User!Event_createdById_fkey ( id, name, email )
 `
 
-function mapEvent(raw: any, registeredCount = 0): EventWithDetails | null {
+type RegistrationEventRow = EventRegistrationRow & {
+  Event: EventRow | EventRow[] | null
+}
+
+type RegistrationUserRow = EventRegistrationRow & {
+  User:
+    | (Pick<UserRow, 'id' | 'name' | 'email' | 'phone'> & {
+        StudentProfile:
+          | Pick<StudentProfileRow, 'major' | 'graduationYear' | 'linkedinUrl'>
+          | Pick<StudentProfileRow, 'major' | 'graduationYear' | 'linkedinUrl'>[]
+          | null
+      })
+    | Array<
+        Pick<UserRow, 'id' | 'name' | 'email' | 'phone'> & {
+          StudentProfile:
+            | Pick<StudentProfileRow, 'major' | 'graduationYear' | 'linkedinUrl'>
+            | Pick<StudentProfileRow, 'major' | 'graduationYear' | 'linkedinUrl'>[]
+            | null
+        }
+      >
+    | null
+}
+
+function mapEvent(raw: EventWithDetailsRaw | null, registeredCount = 0): EventWithDetails | null {
   if (!raw) return null
   const chapter = Array.isArray(raw.Chapter) ? raw.Chapter[0] : raw.Chapter
   const createdBy = Array.isArray(raw.CreatedBy) ? raw.CreatedBy[0] : raw.CreatedBy
@@ -151,32 +176,19 @@ export async function getMyRegistrations(): Promise<(EventRegistrationRow & { Ev
     return []
   }
 
-  return data.map((row: any) => {
+  return (data as RegistrationEventRow[]).map((row) => {
     const event = Array.isArray(row.Event) ? row.Event[0] : row.Event
     return { ...row, Event: event ?? null }
   })
 }
 
 export async function getEditorChapterId(): Promise<string | null> {
-  const { supabase, user } = await requireUser()
-  if (user.role !== 'editor') return null
-
-  const { data, error } = await supabase
-    .from('StudentProfile')
-    .select('chapterId')
-    .eq('userId', user.id)
-    .maybeSingle()
-
-  if (error) return null
-  return data?.chapterId ?? null
+  const { chapterId } = await requireChapterEditor()
+  return chapterId
 }
 
 export async function getChapterEvents(): Promise<EventWithDetails[]> {
-  const { supabase, user } = await requireUser()
-  if (user.role !== 'editor') return []
-
-  const chapterId = await getEditorChapterId()
-  if (!chapterId) return []
+  const { supabase, chapterId } = await requireChapterEditor()
 
   const { data, error } = await supabase
     .from('Event')
@@ -212,7 +224,7 @@ export async function getAllEventsAdmin(): Promise<EventWithDetails[]> {
     .filter((e): e is EventWithDetails => e !== null)
 }
 
-function mapRegistration(raw: any): RegistrationWithUser | null {
+function mapRegistration(raw: RegistrationUserRow | null): RegistrationWithUser | null {
   if (!raw) return null
   const u = Array.isArray(raw.User) ? raw.User[0] : raw.User
   const profile = Array.isArray(u?.StudentProfile) ? u.StudentProfile[0] : u?.StudentProfile
