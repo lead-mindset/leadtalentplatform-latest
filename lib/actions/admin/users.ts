@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/auth'
-import type { Role } from '@/lib/types'
+import type { ChapterRow, Role, StudentProfileRow, UserRow } from '@/lib/types'
 
 export type ProfileStatusFilter = 'complete' | 'pending_approval' | 'incomplete' | 'no_profile'
 export type UserSortKey = 'name' | 'email' | 'role' | 'chapter' | 'createdAt' | 'profileStatus'
@@ -48,7 +48,18 @@ type BulkAction =
   | { type: 'deactivate' }
   | { type: 'reactivate' }
 
-function toProfileStatus(profile: { isFilled: boolean; approvalStatus: string } | null): ProfileStatusFilter {
+type AdminUsersProfileRow = Pick<StudentProfileRow, 'userId' | 'chapterId' | 'isFilled' | 'approvalStatus'> & {
+  Chapter: Pick<ChapterRow, 'name'> | Pick<ChapterRow, 'name'>[] | null
+}
+
+type AdminUsersProfileSummary = {
+  chapterId: string | null
+  chapterName: string | null
+  isFilled: boolean
+  approvalStatus: StudentProfileRow['approvalStatus']
+}
+
+function toProfileStatus(profile: { isFilled: boolean; approvalStatus: string | null} | null): ProfileStatusFilter {
   if (!profile) return 'no_profile'
   if (!profile.isFilled) return 'incomplete'
   if (profile.approvalStatus === 'pending') return 'pending_approval'
@@ -80,7 +91,8 @@ async function queryFilteredUsers(filters: UsersFilters): Promise<AdminUserListI
     return []
   }
 
-  const userIds = users.map((user) => user.id)
+  const typedUsers = users as Pick<UserRow, 'id' | 'name' | 'email' | 'role' | 'createdAt' | 'deactivatedAt'>[]
+  const userIds = typedUsers.map((user) => user.id)
   if (userIds.length === 0) return []
 
   const { data: profiles, error: profilesError } = await supabase
@@ -93,8 +105,9 @@ async function queryFilteredUsers(filters: UsersFilters): Promise<AdminUserListI
     return []
   }
 
-  const profileMap = new Map(
-    (profiles ?? []).map((profile) => [
+  const typedProfiles = (profiles ?? []) as AdminUsersProfileRow[]
+  const profileMap = new Map<string, AdminUsersProfileSummary>(
+    typedProfiles.map((profile) => [
       profile.userId,
       {
         chapterId: profile.chapterId,
@@ -105,7 +118,7 @@ async function queryFilteredUsers(filters: UsersFilters): Promise<AdminUserListI
     ])
   )
 
-  const rows = users.map<AdminUserListItem>((user) => {
+  const rows = typedUsers.map<AdminUserListItem>((user) => {
     const profile = profileMap.get(user.id) ?? null
     return {
       id: user.id,
@@ -116,7 +129,14 @@ async function queryFilteredUsers(filters: UsersFilters): Promise<AdminUserListI
       deactivatedAt: user.deactivatedAt ?? null,
       chapterId: profile?.chapterId ?? null,
       chapterName: profile?.chapterName ?? null,
-      profileStatus: toProfileStatus(profile ? { isFilled: profile.isFilled, approvalStatus: profile.approvalStatus } : null),
+      profileStatus: toProfileStatus(
+        profile
+          ? {
+              isFilled: profile.isFilled,
+              approvalStatus: profile.approvalStatus,
+            }
+          : null
+      ),
     }
   })
 
