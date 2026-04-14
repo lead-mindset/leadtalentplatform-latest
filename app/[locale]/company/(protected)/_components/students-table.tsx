@@ -9,6 +9,7 @@ import { Heart, Building2, GraduationCap, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { toggleSaveStudentAction } from '@/lib/actions/company/toggle-save'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 
 interface StudentsTableProps {
   students: StudentForRecruiter[]
@@ -55,7 +56,7 @@ function SaveButton({
       {isPending ? (
         <Loader2 className="h-3 w-3 animate-spin" />
       ) : (
-        <Heart className={`h-3 w-3 ${isSaved ? 'fill-current' : ''}`} />
+        <Heart className={cn('h-3 w-3', isSaved && 'fill-current')} />
       )}
     </Button>
   )
