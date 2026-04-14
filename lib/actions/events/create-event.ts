@@ -6,6 +6,9 @@ import { requireUser } from '@/lib/auth'
 import { getEditorChapterId } from './get-data'
 import type { EventRow, EventType } from '@/lib/types'
 
+const EVENT_MUTATION_SELECT =
+  'id, title, description, coverImage, startAt, endAt, location, meetingUrl, eventType, capacity, isPublished, chapterId, createdById, createdAt, updatedAt, accessModel, applicationFormUrl'
+
 function sanitizeRichTextHtml(input: string): string {
   return input
     .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
@@ -101,7 +104,7 @@ export async function createEvent(input: CreateEventInput): Promise<CreateEventR
         createdAt: now,
         updatedAt: now,
       })
-      .select()
+      .select(EVENT_MUTATION_SELECT)
       .single<EventRow>()
 
     if (error || !event) {
@@ -138,7 +141,7 @@ export async function createEvent(input: CreateEventInput): Promise<CreateEventR
       createdAt: now,
       updatedAt: now,
     })
-    .select()
+    .select(EVENT_MUTATION_SELECT)
     .single<EventRow>()
 
   if (error || !event) {
