@@ -1,4 +1,4 @@
-import { requireUserWithRole } from '@/lib/auth'
+import { requireChapterEditor } from '@/lib/auth'
 import {
   Card,
   CardContent,
@@ -38,12 +38,11 @@ export default async function ChapterMembersPage({
 }) {
   const { status } = await searchParams
 
-  const { supabase, user } = await requireUserWithRole('editor')
+  const { supabase, user, chapterId } = await requireChapterEditor()
 
   const { data: profile } = await supabase
     .from('StudentProfile')
     .select(`
-      chapterId,
       Chapter (
         id,
         name,
@@ -53,7 +52,7 @@ export default async function ChapterMembersPage({
     .eq('userId', user.id)
     .maybeSingle()
 
-  if (!profile?.chapterId || !profile.Chapter) {
+  if (!profile?.Chapter) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Card>
@@ -71,7 +70,6 @@ export default async function ChapterMembersPage({
     )
   }
 
-  const chapterId = profile.chapterId
   const allMembers = await getChapterMembers(chapterId)
   const stats = getMemberStats(allMembers)
   const validStatuses: MemberFilterStatus[] = ['pending', 'active', 'rejected']
