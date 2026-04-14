@@ -6,6 +6,9 @@ import { requireUser } from '@/lib/auth'
 import { getEditorChapterId } from './get-data'
 import type { EventRow, EventType } from '@/lib/types'
 
+const EVENT_MUTATION_SELECT =
+  'id, title, description, coverImage, startAt, endAt, location, meetingUrl, eventType, capacity, isPublished, chapterId, createdById, createdAt, updatedAt, accessModel, applicationFormUrl'
+
 function sanitizeRichTextHtml(input: string): string {
   return input
     .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
@@ -46,7 +49,7 @@ export async function updateEvent(input: UpdateEventInput): Promise<UpdateEventR
 
   const { data: existing, error: fetchError } = await supabase
     .from('Event')
-    .select('*')
+    .select(EVENT_MUTATION_SELECT)
     .eq('id', parsed.data.id)
     .maybeSingle<EventRow>()
 
@@ -93,7 +96,7 @@ export async function updateEvent(input: UpdateEventInput): Promise<UpdateEventR
     .from('Event')
     .update(patch)
     .eq('id', existing.id)
-    .select()
+    .select(EVENT_MUTATION_SELECT)
     .single<EventRow>()
 
   if (error || !event) {
