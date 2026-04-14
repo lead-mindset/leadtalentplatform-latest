@@ -15,7 +15,11 @@ export default async function AdminEventDetailPage({
   const supabase = await createClient()
 
   const [{ data: event }, chaptersRes] = await Promise.all([
-    supabase.from('Event').select('*').eq('id', id).maybeSingle<EventRow>(),
+    supabase
+      .from('Event')
+      .select('id, title, description, coverImage, startAt, endAt, location, meetingUrl, eventType, capacity, isPublished, chapterId, createdById, createdAt, updatedAt, accessModel, applicationFormUrl')
+      .eq('id', id)
+      .maybeSingle<EventRow>(),
     getChapters(),
   ])
 
