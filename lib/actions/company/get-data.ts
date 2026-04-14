@@ -56,6 +56,8 @@ export async function getVisibleStudents(
     .from('User')
     .select(STUDENT_SELECT)
     .eq('role', 'member')
+    .eq('StudentProfile.isRecruiterVisible', true)
+    .eq('StudentProfile.isFilled', true)
     .order('createdAt', { ascending: false })
 
   if (error) {
@@ -86,6 +88,8 @@ export async function getStudentById(
     .select(STUDENT_SELECT)
     .eq('id', studentId)
     .eq('role', 'member')
+    .eq('StudentProfile.isRecruiterVisible', true)
+    .eq('StudentProfile.isFilled', true)
     .single()
 
   if (error) {
@@ -247,6 +251,8 @@ export async function searchStudents(
     .from('User')
     .select(STUDENT_SELECT)
     .eq('role', 'member')
+    .eq('StudentProfile.isRecruiterVisible', true)
+    .eq('StudentProfile.isFilled', true)
     .order('createdAt', { ascending: false })
 
   // Name/email search pushed to DB
@@ -254,6 +260,18 @@ export async function searchStudents(
     query = query.or(
       `name.ilike.%${filters.query}%,email.ilike.%${filters.query}%`
     )
+  }
+
+  if (filters.major) {
+    query = query.ilike('StudentProfile.major', `%${filters.major.trim()}%`)
+  }
+
+  if (filters.graduationYear) {
+    query = query.eq('StudentProfile.graduationYear', filters.graduationYear)
+  }
+
+  if (filters.chapterId) {
+    query = query.eq('StudentProfile.chapterId', filters.chapterId)
   }
 
   const { data, error } = await query
@@ -265,34 +283,13 @@ export async function searchStudents(
 
   if (!data) return []
 
-  let results = data
+  return data
     .map(mapStudentRow)
     .filter((s): s is StudentForRecruiter =>
       s !== null &&
       s.StudentProfile?.isRecruiterVisible === true &&
       s.StudentProfile?.isFilled === true
     )
-
-  // Apply profile-level filters client-side (StudentProfile is a joined table)
-  if (filters.major) {
-    results = results.filter(s =>
-      s.StudentProfile?.major.toLowerCase().includes(filters.major!.toLowerCase())
-    )
-  }
-
-  if (filters.graduationYear) {
-    results = results.filter(s =>
-      s.StudentProfile?.graduationYear === filters.graduationYear
-    )
-  }
-
-  if (filters.chapterId) {
-    results = results.filter(s =>
-      s.StudentProfile?.chapterId === filters.chapterId
-    )
-  }
-
-  return results
 }
 
 export async function toggleSaveStudent(
