@@ -2,14 +2,16 @@ import { Suspense } from "react";
 import { requireUser } from "@/lib/auth";
 import ProfileUpdateForm from "./components/profile-update-form";
 import type { ProfileData } from "@/lib/memberschema";
-import type { UserRow, StudentProfileRow } from "@/lib/types";
+import type { StudentProfileRow } from "@/lib/types";
 
 async function ProfileData() {
   const { supabase, user } = await requireUser();
 
   const { data: profileData, error: profileError } = await supabase
     .from("StudentProfile")
-    .select("*")
+    .select(
+      "userId, chapterId, major, graduationYear, skills, linkedinUrl, consentRecruiterVisibility, emailNotificationsEnabled, memberId, approvalStatus"
+    )
     .eq("userId", user.id)
     .maybeSingle<StudentProfileRow>();
 
@@ -32,7 +34,9 @@ async function ProfileData() {
     approvalStatus: profileData?.approvalStatus || 'pending',
   };
 
-  return <ProfileUpdateForm initialData={combinedData} />;
+  return (
+    <ProfileUpdateForm initialData={combinedData} />
+  );
 }
 
 export default function ProfilePage() {
