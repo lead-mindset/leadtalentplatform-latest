@@ -1,5 +1,6 @@
 "use client";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 export const Hero = () => {
   const title = "Talent Platform";
@@ -7,7 +8,7 @@ export const Hero = () => {
   return (
     <div className="flex flex-col items-center justify-center  bg-background">
 
-      <img src="/lead_logo.svg" alt="Logo" className="max-w-md mb-10" />
+      <Image src="/lead_logo.svg" alt="Logo" width={320} height={96} className="mb-10 max-w-md" />
 
       <div className="mx-auto px-4 md:px-6 ">
         <motion.div
