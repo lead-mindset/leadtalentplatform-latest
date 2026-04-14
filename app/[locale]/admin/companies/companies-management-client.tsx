@@ -135,7 +135,7 @@ export function CompaniesManagementClient({
                   <TableRow key={company.id}>
                     <TableCell className="p-2 font-medium">{company.name}</TableCell>
                     <TableCell className="p-2">{new Date(company.createdat).toLocaleDateString()}</TableCell>
-                    <TableCell className="p-2">{company.createdByName ?? '—'}</TableCell>
+                    <TableCell className="p-2">{company.createdByName ?? '-'}</TableCell>
                     <TableCell className="p-2">{company.activeRecruiters}</TableCell>
                     <TableCell className="p-2">{company.pendingInvites}</TableCell>
                     <TableCell className="p-2">
@@ -176,7 +176,7 @@ export function CompaniesManagementClient({
 
           <div className="mt-4 flex justify-between items-center">
             <p className="text-sm text-muted-foreground">
-              {total} total • page {page} / {totalPages}
+              {total} total - page {page} / {totalPages}
             </p>
             <div className="flex items-center gap-2">
               <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => updateParam('page', String(page - 1))}>
@@ -217,7 +217,10 @@ export function CompaniesManagementClient({
               onClick={() =>
                 startTransition(async () => {
                   const result = await createCompany(nameInput)
-                  if (!result.success) return toast.error(result.error)
+                  if (!result.success) {
+                    toast.error(result.error)
+                    return
+                  }
                   toast.success('Company created.')
                   setCreateOpen(false)
                   router.refresh()
@@ -247,7 +250,10 @@ export function CompaniesManagementClient({
                 startTransition(async () => {
                   if (!editOpen) return
                   const result = await updateCompany(editOpen.id, nameInput)
-                  if (!result.success) return toast.error(result.error)
+                  if (!result.success) {
+                    toast.error(result.error)
+                    return
+                  }
                   toast.success('Company updated.')
                   setEditOpen(null)
                   router.refresh()
@@ -276,7 +282,10 @@ export function CompaniesManagementClient({
                 startTransition(async () => {
                   if (!deleteOpen) return
                   const result = await deleteCompany(deleteOpen.id)
-                  if (!result.success) return toast.error(result.error)
+                  if (!result.success) {
+                    toast.error(result.error)
+                    return
+                  }
                   toast.success('Company deleted.')
                   setDeleteOpen(null)
                   router.refresh()
