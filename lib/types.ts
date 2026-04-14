@@ -1,11 +1,21 @@
 export type Role = "admin" | "editor" | "member" | "recruiter";
 
 import type { LucideIcon } from 'lucide-react';
+import type {
+  Database,
+  Tables,
+  TablesInsert,
+  TablesUpdate,
+  Enums,
+  CompositeTypes,
+  Json,
+} from '@/lib/database.generated'
 
 export type EventType = 'in_person' | 'online' | 'hybrid'
 export type EventAccessModel = 'open' | 'application'
 export type RegistrationStatus = 'registered' | 'pending_review' | 'rejected' | 'cancelled' | 'attended'
 export type CapacityStatus = 'ok' | 'at_capacity' | 'over_capacity'
+export type Translator = (key: string, values?: Record<string, string | number>) => string
 
 export type NavLink = {
   label: string;
@@ -52,6 +62,12 @@ export interface User {
   role: string
 }
 
+export type AuthenticatedNavUser = {
+  name: string
+  email: string
+  avatar: string | null
+}
+
 export interface NavItem {
   nameKey: string
   href: string
@@ -72,124 +88,9 @@ export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES]
 // ============================================================================
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected'
 
-export type Database = {
-  public: {
-    Tables: {
-      User: {
-        Row: {
-          id: string;
-          email: string;
-          name: string;
-          role: Role;
-          createdAt: string;
-          updatedAt: string;
-          phone: string | null;
-          deactivatedAt: string | null;
-        };
-      };
-      Chapter: {
-        Row: {
-          id: string;
-          name: string;
-          university: string;
-          city: string | null;
-          region: string | null;
-          createdAt: string | null;
-          updatedAt: string;
-        };
-      };
-      StudentProfile: {
-        Row: {
-          userId: string;
-          major: string;
-          graduationYear: number;
-          linkedinUrl: string;
-          skills: string[] | null;
-          consentRecruiterVisibility: boolean;
-          consentDate: string | null;
-          createdAt: string;
-          updatedAt: string;
-          approvalStatus: ApprovalStatus;
-          isRecruiterVisible: boolean;
-          approvedById: string | null;
-          isFilled: boolean;
-          chapterId: string;
-          emailNotificationsEnabled: boolean;
-          gender: 'man' | 'woman' | 'non_binary' | 'prefer_not_to_say' | null;
-          memberId: string | null;
-        };
-      };
-      Company: {
-        Row: {
-          id: string;
-          name: string;
-          createdat: string;
-          createdbyid: string;
-        };
-      };
-      RecruiterAccess: {
-        Row: {
-          id: string;
-          recruiterEmail: string;
-          isActive: boolean;
-          grantedAt: string;
-          grantedById: string;
-          inviteToken: string;
-          inviteExpiresAt: string | null;
-          acceptedAt: string | null;
-          acceptedByUserId: string | null;
-          companyId: string;
-          revokedAt: string | null;
-          revokedById: string | null;
-        };
-      };
-      Resume: {
-        Row: {
-          id: string;
-          studentId: string;
-          fileUrl: string;
-          fileName: string;
-          fileSize: number;
-          uploadedAt: string;
-          parsedData: unknown | null;
-        };
-      };
-      Event: {
-        Row: {
-          id: string
-          title: string
-          description: string | null
-          coverImage: string | null
-          startAt: string
-          endAt: string
-          location: string | null
-          meetingUrl: string | null
-          eventType: EventType
-          capacity: number | null
-          isPublished: boolean
-          chapterId: string | null
-          createdById: string
-          createdAt: string
-          updatedAt: string
-          accessModel: EventAccessModel
-          applicationFormUrl: string | null
-        }
-      }
-      EventRegistration: {
-        Row: {
-          id: string
-          eventId: string
-          userId: string
-          registeredAt: string
-          status: RegistrationStatus
-          qrToken: string | null
-          checkedInAt: string | null
-          checkedInById: string | null
-        }
-      }
-    };
-  };
-};
+export type { Json, Database, Tables, TablesInsert, TablesUpdate, Enums, CompositeTypes } from '@/lib/database.generated'
+
+export { Constants } from '@/lib/database.generated'
 
 // ============================================================================
 // EXTRACTED ROW TYPES
@@ -201,8 +102,10 @@ export type StudentProfileRow = Database["public"]["Tables"]["StudentProfile"]["
 export type CompanyRow = Database["public"]["Tables"]["Company"]["Row"];
 export type RecruiterAccessRow = Database["public"]["Tables"]["RecruiterAccess"]["Row"];
 export type ResumeRow = Database["public"]["Tables"]["Resume"]["Row"];
+export type ResumeDownloadLogRow = Database["public"]["Tables"]["ResumeDownloadLog"]["Row"];
 export type EventRow = Database["public"]["Tables"]["Event"]["Row"]
 export type EventRegistrationRow = Database["public"]["Tables"]["EventRegistration"]["Row"]
+export type SavedStudentRow = Database["public"]["Tables"]["SavedStudent"]["Row"]
 
 // ============================================================================
 // COMPOSITE TYPES - Used in queries with joins
@@ -444,3 +347,4 @@ export const REGISTRATION_STATUS_OPTIONS = [
 export const CAPACITY_WARNING_MESSAGE = 'This event has reached capacity. You can still register, but you may be placed on a waitlist.'
 
 export const BULK_APPROVE_FAILURE_MESSAGE = 'Failed to approve some registrations. Please try again or contact support if the issue persists.'
+
