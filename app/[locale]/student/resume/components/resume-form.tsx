@@ -1,11 +1,13 @@
 'use client'
 import { useRef, useState, useTransition } from 'react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Upload, Download, FileText, CheckCircle2, AlertCircle, X, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
+import type { uploadResume } from '@/lib/actions/student/handle-resume'
 
 interface Resume {
   id: string
@@ -20,7 +22,7 @@ export default function ResumeClient({
   onUpload,
 }: {
   resume: Resume | null
-  onUpload: (formData: FormData) => Promise<void>
+  onUpload: typeof uploadResume
 }) {
   const t = useTranslations('resume')
   const router = useRouter()
@@ -109,7 +111,7 @@ export default function ResumeClient({
                   </p>
                   <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                     <span className="whitespace-nowrap font-medium">{formatFileSize(resume.fileSize)}</span>
-                    <span className="hidden sm:inline text-muted-foreground/50">•</span>
+                    <span className="hidden sm:inline text-muted-foreground/50">-</span>
                     <span className="whitespace-nowrap">{t('uploaded')} {formatDate(resume.uploadedAt)}</span>
                   </div>
                 </div>
@@ -119,7 +121,7 @@ export default function ResumeClient({
                     className="shrink-0 shadow-sm hover:shadow transition-shadow"
                   asChild
                 >
-                  <a 
+                  <Link
                     href={resume.fileUrl} 
                     target="_blank" 
                     rel="noopener noreferrer"
@@ -127,7 +129,7 @@ export default function ResumeClient({
                   >
                     <Download className="h-4 w-4" />
                     <span className="hidden sm:inline">{t('download')}</span>
-                  </a>
+                  </Link>
                 </Button>
               </div>
             </div>
@@ -163,7 +165,11 @@ export default function ResumeClient({
               setFeedback(null)
               startTransition(async () => {
                 try {
-                  await onUpload(formData)
+                  const result = await onUpload(formData)
+                  if (!result.success) {
+                    setFeedback(result.error)
+                    return
+                  }
                   formRef.current?.reset()
                   setSelectedFile(null)
                   setFeedback('Resume uploaded successfully.')
