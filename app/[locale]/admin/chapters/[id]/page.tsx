@@ -25,7 +25,8 @@ export default async function ChapterDetailPage({
   const chapter = await getChapterById(id)
 
   if (!chapter) notFound()
-  const members = await getChapterMembers(chapter.id)
+  const resolvedChapter = chapter ?? notFound()
+  const members = await getChapterMembers(resolvedChapter.id)
   const approvedMembers  = members.filter(m => m.StudentProfile?.approvalStatus === 'approved')
   const pendingMembers   = members.filter(m => m.StudentProfile?.isFilled && m.StudentProfile?.approvalStatus === 'pending')
   const rejectedMembers  = members.filter(m => m.StudentProfile?.approvalStatus === 'rejected')
@@ -44,8 +45,8 @@ export default async function ChapterDetailPage({
 
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{chapter.name}</h1>
-          <p className="text-muted-foreground mt-2">{chapter.university}</p>
+          <h1 className="text-3xl font-bold tracking-tight">{resolvedChapter.name}</h1>
+          <p className="text-muted-foreground mt-2">{resolvedChapter.university}</p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -60,22 +61,22 @@ export default async function ChapterDetailPage({
             </CardContent>
           </Card>
 
-          {(chapter.city || chapter.region) && (
+          {(resolvedChapter.city || resolvedChapter.region) && (
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Location</CardTitle>
                 <MapPin className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{chapter.city || chapter.region}</div>
+                <div className="text-2xl font-bold">{resolvedChapter.city || resolvedChapter.region}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {chapter.city && chapter.region ? chapter.region : 'Chapter location'}
+                  {resolvedChapter.city && resolvedChapter.region ? resolvedChapter.region : 'Chapter location'}
                 </p>
               </CardContent>
             </Card>
           )}
 
-          {chapter.createdAt && (
+          {resolvedChapter.createdAt && (
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Created</CardTitle>
@@ -83,7 +84,7 @@ export default async function ChapterDetailPage({
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {new Date(chapter.createdAt).toLocaleDateString('en-US', {
+                  {new Date(resolvedChapter.createdAt).toLocaleDateString('en-US', {
                     month: 'short',
                     year: 'numeric',
                   })}
@@ -103,12 +104,12 @@ export default async function ChapterDetailPage({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Chapter ID</p>
-                <p className="text-sm font-mono mt-1">{chapter.id}</p>
+                <p className="text-sm font-mono mt-1">{resolvedChapter.id}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Last Updated</p>
                 <p className="text-sm mt-1">
-                  {new Date(chapter.updatedAt).toLocaleDateString('en-US', {
+                  {new Date(resolvedChapter.updatedAt).toLocaleDateString('en-US', {
                     month: 'long',
                     day: 'numeric',
                     year: 'numeric',
