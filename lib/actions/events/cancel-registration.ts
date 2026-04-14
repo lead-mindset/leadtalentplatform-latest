@@ -4,6 +4,9 @@ import { revalidatePath } from 'next/cache'
 import { requireUser } from '@/lib/auth'
 import type { EventRow, EventRegistrationRow, RegistrationStatus } from '@/lib/types'
 
+const REGISTRATION_SELECT = 'id, eventId, userId, status, checkedInAt'
+const EVENT_DATE_SELECT = 'id, startAt'
+
 export async function cancelRegistration(formData: FormData): Promise<void> {
   const { supabase, user } = await requireUser()
 
@@ -12,9 +15,9 @@ export async function cancelRegistration(formData: FormData): Promise<void> {
 
   const { data: reg, error: regError } = await supabase
     .from('EventRegistration')
-    .select('*')
+    .select(REGISTRATION_SELECT)
     .eq('id', registrationId)
-    .maybeSingle<EventRegistrationRow>()
+    .maybeSingle<Pick<EventRegistrationRow, 'id' | 'eventId' | 'userId' | 'status' | 'checkedInAt'>>()
 
   if (regError || !reg) return
   if (reg.userId !== user.id) return
@@ -23,9 +26,9 @@ export async function cancelRegistration(formData: FormData): Promise<void> {
 
   const { data: event } = await supabase
     .from('Event')
-    .select('*')
+    .select(EVENT_DATE_SELECT)
     .eq('id', reg.eventId)
-    .maybeSingle<EventRow>()
+    .maybeSingle<Pick<EventRow, 'id' | 'startAt'>>()
 
   if (event) {
     const startsAt = new Date(event.startAt).getTime()
