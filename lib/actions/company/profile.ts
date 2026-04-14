@@ -1,31 +1,28 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { requireRecruiter } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
+
+const updateProfileSchema = z.object({
+  name: z.string().trim().min(1).max(120).optional(),
+  phone: z.string().trim().max(40).optional(),
+})
+
+type ProfileActionResult =
+  | { success: true; message?: string }
+  | { success: false; error: string }
 
 export async function updateProfile(formData: {
   name?: string
   phone?: string
-}) {
-  const supabase = await createClient()
-
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser()
-
-  if (!authUser) {
-    return { success: false, error: 'Not authenticated' }
+}): Promise<ProfileActionResult> {
+  const parsed = updateProfileSchema.safeParse(formData)
+  if (!parsed.success) {
+    return { success: false, error: 'Enter a valid name and phone number.' }
   }
 
-  const { data: user } = await supabase
-    .from('User')
-    .select('id, role')
-    .eq('id', authUser.id)
-    .single()
-
-  if (!user || user.role !== 'recruiter') {
-    return { success: false, error: 'Unauthorized - recruiters only' }
-  }
+  const { supabase, user } = await requireRecruiter()
 
   const userUpdates: {
     name?: string
@@ -35,8 +32,8 @@ export async function updateProfile(formData: {
     updatedAt: new Date().toISOString()
   }
 
-  if (formData.name) userUpdates.name = formData.name
-  if (formData.phone !== undefined) userUpdates.phone = formData.phone
+  if (parsed.data.name) userUpdates.name = parsed.data.name
+  if (parsed.data.phone !== undefined) userUpdates.phone = parsed.data.phone
 
   const { error: userError } = await supabase
     .from('User')
@@ -54,29 +51,7 @@ export async function updateProfile(formData: {
 }
 
 export async function getRecruiterProfile() {
-  const supabase = await createClient()
-
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser()
-
-  if (!authUser) {
-    return { success: false, error: 'Not authenticated' }
-  }
-
-  const { data: user, error: userError } = await supabase
-    .from('User')
-    .select('id, email, name, role, phone, createdAt, updatedAt, deactivatedAt')
-    .eq('id', authUser.id)
-    .single()
-
-  if (userError || !user) {
-    return { success: false, error: 'User not found' }
-  }
-
-  if (user.role !== 'recruiter') {
-    return { success: false, error: 'Unauthorized' }
-  }
+  const { supabase, user } = await requireRecruiter()
 
   type RecruiterAccessWithCompany = {
     id: string
@@ -86,7 +61,7 @@ export async function getRecruiterProfile() {
     Company: { id: string; name: string; createdat: string; createdbyid: string }[]
   }
 
-  const { data: recruiterAccess } = await supabase
+  const { data: recruiterAccess, error: accessError } = await supabase
     .from('RecruiterAccess')
     .select(`
       id,
@@ -99,6 +74,10 @@ export async function getRecruiterProfile() {
     .eq('isActive', true)
     .is('revokedAt', null)
     .maybeSingle<RecruiterAccessWithCompany>()
+
+  if (accessError) {
+    return { success: false, error: 'Failed to load recruiter access.' }
+  }
 
   const company = recruiterAccess?.Company?.[0] ?? null
 
@@ -116,25 +95,7 @@ export async function getRecruiterProfile() {
 }
 
 export async function getRecruiterCompanies() {
-  const supabase = await createClient()
-
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser()
-
-  if (!authUser) {
-    return { success: false, error: 'Not authenticated' }
-  }
-
-  const { data: user } = await supabase
-    .from('User')
-    .select('id, role')
-    .eq('id', authUser.id)
-    .single()
-
-  if (!user || user.role !== 'recruiter') {
-    return { success: false, error: 'Unauthorized' }
-  }
+  const { supabase, user } = await requireRecruiter()
 
   type AccessWithCompany = {
     id: string
