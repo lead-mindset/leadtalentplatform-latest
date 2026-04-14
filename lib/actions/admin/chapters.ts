@@ -2,6 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/auth'
+import { z } from 'zod'
+import type { ChapterRow, EventRow, StudentProfileRow, UserRow } from '@/lib/types'
 
 export type ChapterSortKey =
   | 'name'
@@ -53,6 +55,32 @@ export type ChapterFormInput = {
 
 type ActionResult = { success: true } | { success: false; error: string }
 
+type ChapterListRow = Pick<ChapterRow, 'id' | 'name' | 'university' | 'city' | 'region'>
+type ChapterProfileRow = Pick<StudentProfileRow, 'chapterId' | 'userId'> & {
+  User:
+    | Pick<UserRow, 'name' | 'email' | 'role'>
+    | Pick<UserRow, 'name' | 'email' | 'role'>[]
+    | null
+}
+type ChapterEventRow = Pick<EventRow, 'id' | 'chapterId'>
+type AvailableEditorRow = Pick<StudentProfileRow, 'userId'> & {
+  User:
+    | Pick<UserRow, 'id' | 'name' | 'email' | 'role'>
+    | Pick<UserRow, 'id' | 'name' | 'email' | 'role'>[]
+    | null
+}
+
+const chapterFormSchema = z.object({
+  id: z.string().trim().min(1).max(80),
+  name: z.string().trim().min(1).max(120),
+  university: z.string().trim().min(1).max(160),
+  city: z.string().trim().max(120).optional(),
+  region: z.string().trim().max(120).optional(),
+  editorIds: z.array(z.string().trim().min(1)).optional(),
+})
+
+const chapterUpdateSchema = chapterFormSchema.omit({ id: true })
+
 function normalizeSlug(value: string): string {
   return value.trim().toLowerCase().replace(/\s+/g, '-')
 }
@@ -100,7 +128,8 @@ export async function getChaptersList(
     return { items: [], total: 0, page: 1, pageSize: pagination.pageSize }
   }
 
-  const chapterIds = chapters.map((chapter) => chapter.id)
+  const chapterRows = chapters as ChapterListRow[]
+  const chapterIds = chapterRows.map((chapter: ChapterListRow) => chapter.id)
   if (chapterIds.length === 0) {
     return { items: [], total: 0, page: 1, pageSize: pagination.pageSize }
   }
@@ -119,27 +148,30 @@ export async function getChaptersList(
       .gt('endAt', now),
   ])
 
-  const profileByChapter = new Map<string, (typeof profiles)[number][]>()
-  ;(profiles ?? []).forEach((profile) => {
+  const profileRows = (profiles ?? []) as ChapterProfileRow[]
+  const eventRows = (events ?? []) as ChapterEventRow[]
+
+  const profileByChapter = new Map<string, ChapterProfileRow[]>()
+  profileRows.forEach((profile: ChapterProfileRow) => {
     const list = profileByChapter.get(profile.chapterId) ?? []
     list.push(profile)
     profileByChapter.set(profile.chapterId, list)
   })
 
   const eventCountByChapter = new Map<string, number>()
-  ;(events ?? []).forEach((event) => {
+  eventRows.forEach((event: ChapterEventRow) => {
     const current = eventCountByChapter.get(event.chapterId ?? '') ?? 0
     eventCountByChapter.set(event.chapterId ?? '', current + 1)
   })
 
-  const rows: ChapterListItem[] = chapters.map((chapter) => {
+  const rows: ChapterListItem[] = chapterRows.map((chapter: ChapterListRow) => {
     const chapterProfiles = profileByChapter.get(chapter.id) ?? []
     const editors = chapterProfiles
-      .filter((profile) => {
+      .filter((profile: ChapterProfileRow) => {
         const user = Array.isArray(profile.User) ? profile.User[0] : profile.User
         return user?.role === 'editor'
       })
-      .map((profile) => {
+      .map((profile: ChapterProfileRow) => {
         const user = Array.isArray(profile.User) ? profile.User[0] : profile.User
         return {
           id: profile.userId,
@@ -191,13 +223,24 @@ export async function getChapterById(id: string) {
 }
 
 export async function createChapter(input: ChapterFormInput): Promise<ActionResult> {
-  const { supabase } = await requireAdmin()
-  const id = normalizeSlug(input.id)
-  if (!id || !input.name.trim() || !input.university.trim()) {
-    return { success: false, error: 'Chapter ID, name, and university are required.' }
+  const parsed = chapterFormSchema.safeParse(input)
+  if (!parsed.success) {
+    return { success: false, error: 'Enter a valid chapter ID, name, and university.' }
   }
 
-  const { data: existing } = await supabase.from('Chapter').select('id').eq('id', id).maybeSingle()
+  const { supabase } = await requireAdmin()
+  const id = normalizeSlug(parsed.data.id)
+
+  const { data: existing, error: existingError } = await supabase
+    .from('Chapter')
+    .select('id')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (existingError) {
+    return { success: false, error: 'Failed to validate chapter ID.' }
+  }
+
   if (existing) {
     return { success: false, error: 'Chapter ID already exists.' }
   }
@@ -205,10 +248,10 @@ export async function createChapter(input: ChapterFormInput): Promise<ActionResu
   const now = new Date().toISOString()
   const { error } = await supabase.from('Chapter').insert({
     id,
-    name: input.name.trim(),
-    university: input.university.trim(),
-    city: input.city?.trim() || null,
-    region: input.region?.trim() || null,
+    name: parsed.data.name,
+    university: parsed.data.university,
+    city: parsed.data.city || null,
+    region: parsed.data.region || null,
     createdAt: now,
     updatedAt: now,
   })
@@ -218,8 +261,8 @@ export async function createChapter(input: ChapterFormInput): Promise<ActionResu
     return { success: false, error: 'Failed to create chapter.' }
   }
 
-  if (input.editorIds?.length) {
-    for (const userId of input.editorIds) {
+  if (parsed.data.editorIds?.length) {
+    for (const userId of parsed.data.editorIds) {
       const _ = await assignEditor(userId, id)
       void _
     }
@@ -233,14 +276,19 @@ export async function updateChapter(
   id: string,
   input: Omit<ChapterFormInput, 'id'>
 ): Promise<ActionResult> {
+  const parsed = chapterUpdateSchema.safeParse(input)
+  if (!parsed.success) {
+    return { success: false, error: 'Enter a valid chapter name and university.' }
+  }
+
   const { supabase } = await requireAdmin()
   const { error } = await supabase
     .from('Chapter')
     .update({
-      name: input.name.trim(),
-      university: input.university.trim(),
-      city: input.city?.trim() || null,
-      region: input.region?.trim() || null,
+      name: parsed.data.name,
+      university: parsed.data.university,
+      city: parsed.data.city || null,
+      region: parsed.data.region || null,
       updatedAt: new Date().toISOString(),
     })
     .eq('id', id)
@@ -260,11 +308,11 @@ export async function deleteChapter(id: string): Promise<ActionResult> {
   const [{ count: membersCount }, { count: eventsCount }] = await Promise.all([
     supabase
       .from('StudentProfile')
-      .select('*', { count: 'exact', head: true })
+      .select('userId', { count: 'exact', head: true })
       .eq('chapterId', id),
     supabase
       .from('Event')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
       .eq('chapterId', id),
   ])
 
@@ -294,8 +342,8 @@ export async function getAvailableEditors(chapterId: string) {
     return []
   }
 
-  return (data ?? [])
-    .map((row) => {
+  return ((data ?? []) as AvailableEditorRow[])
+    .map((row: AvailableEditorRow) => {
       const user = Array.isArray(row.User) ? row.User[0] : row.User
       if (!user) return null
       if (user.role !== 'member' && user.role !== 'editor') return null
@@ -359,17 +407,17 @@ export async function getChapterStats(id: string) {
   const [{ count: members }, { count: publishedActiveEvents }, { count: totalEvents }] = await Promise.all([
     supabase
       .from('StudentProfile')
-      .select('*', { count: 'exact', head: true })
+      .select('userId', { count: 'exact', head: true })
       .eq('chapterId', id),
     supabase
       .from('Event')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
       .eq('chapterId', id)
       .eq('isPublished', true)
       .gt('endAt', now),
     supabase
       .from('Event')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
       .eq('chapterId', id),
   ])
 
