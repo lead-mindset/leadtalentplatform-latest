@@ -243,10 +243,12 @@ export type EventWithDetails = EventRow & {
 
 export type RegistrationWithUserRaw = EventRegistrationRow & {
   User: Pick<UserRow, 'id' | 'name' | 'email' | 'phone'>[]
+  StudentProfile: Pick<StudentProfileRow, 'major' | 'graduationYear' | 'linkedinUrl'>[]
 }
 
 export type RegistrationWithUser = EventRegistrationRow & {
   User: Pick<UserRow, 'id' | 'name' | 'email' | 'phone'> | null
+  StudentProfile: Pick<StudentProfileRow, 'major' | 'graduationYear' | 'linkedinUrl'> | null
 }
 
 // ============================================================================
