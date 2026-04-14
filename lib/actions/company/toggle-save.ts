@@ -1,59 +1,26 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { getStudentById } from './get-data'
+import { requireRecruiter } from '@/lib/auth'
+import { toggleSaveStudent } from './get-data'
 
 export async function toggleSaveStudentAction(
   studentId: string,
   currentlySaved: boolean
 ): Promise<{ success: boolean; isSaved: boolean; error?: string }> {
-  const supabase = await createClient()
+  const { supabase, user } = await requireRecruiter()
 
-  const { data: { user: authUser } } = await supabase.auth.getUser()
-  if (!authUser) return { success: false, isSaved: currentlySaved, error: 'Not authenticated' }
-
-  const student = await getStudentById(supabase, studentId)
-  if (!student) {
-    return { success: false, isSaved: currentlySaved, error: 'Student is not available to recruiters.' }
+  const result = await toggleSaveStudent(supabase, user.id, studentId)
+  if (!result.success) {
+    return { success: false, isSaved: currentlySaved, error: result.error }
   }
 
-  if (currentlySaved) {
-    const { error } = await supabase
-      .from('SavedStudent')
-      .delete()
-      .eq('recruiterId', authUser.id)
-      .eq('studentId', studentId)
+  revalidatePath('/company')
+  revalidatePath('/company/browse')
+  revalidatePath('/company/saved')
+  revalidatePath(`/company/students/${studentId}`)
+  revalidatePath('/recruiter/browse')
+  revalidatePath('/recruiter/saved')
 
-    if (error) {
-      console.error('[toggleSaveStudentAction] Delete error:', error)
-      return { success: false, isSaved: true, error: 'Failed to unsave student' }
-    }
-
-    revalidatePath('/company')
-    revalidatePath('/company/browse')
-    revalidatePath('/company/saved')
-    revalidatePath(`/company/students/${studentId}`)
-    return { success: true, isSaved: false }
-  } else {
-    const { error } = await supabase
-      .from('SavedStudent')
-      .insert({
-        recruiterId: authUser.id,
-        studentId,
-        savedAt: new Date().toISOString(),
-        notes: null,
-      })
-
-    if (error) {
-      console.error('[toggleSaveStudentAction] Insert error:', error)
-      return { success: false, isSaved: false, error: 'Failed to save student' }
-    }
-
-    revalidatePath('/company')
-    revalidatePath('/company/browse')
-    revalidatePath('/company/saved')
-    revalidatePath(`/company/students/${studentId}`)
-    return { success: true, isSaved: true }
-  }
+  return result
 }
