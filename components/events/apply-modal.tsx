@@ -98,8 +98,8 @@ export function ApplyModal({
             </DialogHeader>
 
             <div className="py-4">
-              <div className="rounded-lg bg-green-500/10 border border-green-500/20 p-4 flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
+              <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4">
+                <CheckCircle className="mt-0.5 h-5 w-5 text-primary" />
                 <div>
                   <p className="text-sm font-medium">Form submitted?</p>
                   <p className="text-sm text-muted-foreground mt-1">
