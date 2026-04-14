@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Calendar, MapPin, Wifi } from "lucide-react";
 
 type EventType = "in_person" | "online" | "hybrid";
@@ -92,10 +93,11 @@ function EventCard({ event }: { event: ExampleEvent }) {
         aria-hidden="true"
       >
         {event.coverImage ? (
-          <img
+          <Image
             src={event.coverImage}
             alt=""
-            className="w-full h-full object-cover"
+            fill
+            className="object-cover"
           />
         ) : (
           <span className="text-xs font-semibold tracking-widest text-muted-foreground/40 uppercase select-none">
