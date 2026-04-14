@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { type EmailOtpType } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
-import { routing } from "@/i18n/routing";
+import { isValidLocale, routing } from "@/i18n/routing";
 
 const SITE_URL = process.env.NEXT_PUBLIC_FRONTEND_URL!
 
@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   const type = searchParams.get("type") as EmailOtpType | null;
 
   const localeFromPath = pathname.split("/")[1];
-  const locale = routing.locales.includes(localeFromPath as any)
+  const locale = isValidLocale(localeFromPath)
     ? localeFromPath
     : routing.defaultLocale;
 
