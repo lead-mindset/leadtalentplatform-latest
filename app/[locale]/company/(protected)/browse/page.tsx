@@ -1,4 +1,4 @@
-import { getVisibleStudents, getSavedStudentIds } from '@/lib/actions/company/get-data'
+import { getSavedStudentIds, searchStudents } from '@/lib/actions/company/get-data'
 import { requireRecruiter } from '@/lib/auth'
 import { StudentsTable } from '../_components/students-table'
 import { BrowseFilters } from '../_components/browse-filters'
@@ -18,38 +18,19 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
   const { supabase, user } = await requireRecruiter()
   const params = await searchParams
 
-  const [students, savedIds] = await Promise.all([
-    getVisibleStudents(supabase),
+  const studentFilters = {
+    query: params.q,
+    major: params.major && params.major !== 'all' ? params.major : undefined,
+    graduationYear: params.year && params.year !== 'all' ? Number(params.year) : undefined,
+    chapterId: params.chapter && params.chapter !== 'all' ? params.chapter : undefined,
+  }
+
+  const [filtered, savedIds] = await Promise.all([
+    searchStudents(supabase, studentFilters),
     getSavedStudentIds(supabase, user.id),
   ])
 
-  let filtered = students
-
-  if (params.q) {
-    const q = params.q.toLowerCase()
-    filtered = filtered.filter(
-      s =>
-        s.name.toLowerCase().includes(q) ||
-        s.email.toLowerCase().includes(q) ||
-        s.StudentProfile?.major?.toLowerCase().includes(q) ||
-        s.StudentProfile?.skills?.some(sk => sk.toLowerCase().includes(q))
-    )
-  }
-
-  if (params.major && params.major !== 'all') {
-    filtered = filtered.filter(s =>
-      s.StudentProfile?.major?.toLowerCase().includes(params.major!.toLowerCase())
-    )
-  }
-
-  if (params.year && params.year !== 'all') {
-    const year = parseInt(params.year)
-    filtered = filtered.filter(s => s.StudentProfile?.graduationYear === year)
-  }
-
-  if (params.chapter && params.chapter !== 'all') {
-    filtered = filtered.filter(s => s.StudentProfile?.chapterId === params.chapter)
-  }
+  const students = filtered
 
   const majors = [...new Set(
     students
@@ -75,7 +56,6 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
         <h1 className="text-3xl font-bold tracking-tight">Browse Students</h1>
         <p className="text-muted-foreground mt-1">
           {filtered.length} student{filtered.length !== 1 ? 's' : ''} available
-          {filtered.length !== students.length && ` (${students.length} total)`}
         </p>
       </div>
 
