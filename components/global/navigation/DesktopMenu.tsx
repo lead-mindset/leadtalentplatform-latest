@@ -3,9 +3,10 @@
 import { Link } from '@/i18n/routing';
 import AuthButtons from "./auth-buttons";
 import type { MenuItem } from './MobMenu';
+import type { AuthenticatedNavUser } from '@/lib/types';
 
 interface DesktopNavProps {
-  user: any | null;
+  user: AuthenticatedNavUser | null;
   items: MenuItem[]; 
 }
 
