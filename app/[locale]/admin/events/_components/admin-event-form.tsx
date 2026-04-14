@@ -8,8 +8,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { ChapterRow, EventRow, EventType } from '@/lib/types'
-import { createEvent } from '@/lib/actions/events/create-event'
-import { updateEvent } from '@/lib/actions/events/update-event'
+import { createEvent, type CreateEventInput } from '@/lib/actions/events/create-event'
+import { updateEvent, type UpdateEventInput } from '@/lib/actions/events/update-event'
 import { deleteEvent } from '@/lib/actions/events/delete-event'
 
 type Mode = 'create' | 'edit'
@@ -74,7 +74,7 @@ export function AdminEventForm({
   async function onSubmit() {
     setError(null)
     startTransition(async () => {
-      const payload = {
+      const payload: CreateEventInput = {
         title,
         description: description || undefined,
         coverImage: coverImage || undefined,
@@ -86,12 +86,14 @@ export function AdminEventForm({
         capacity: capacity === '' ? undefined : Number(capacity),
         isPublished,
         chapterId: chapterId === 'global' ? null : chapterId,
+        accessModel: initial?.accessModel ?? 'open',
+        applicationFormUrl: initial?.applicationFormUrl ?? null,
       }
 
       const res =
         mode === 'create'
-          ? await createEvent(payload as any)
-          : await updateEvent({ id: initial!.id, ...payload } as any)
+          ? await createEvent(payload)
+          : await updateEvent({ id: initial!.id, ...payload } satisfies UpdateEventInput)
 
       if ('error' in res) {
         setError(res.error)
