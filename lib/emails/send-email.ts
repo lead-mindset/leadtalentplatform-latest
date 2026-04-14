@@ -1,10 +1,10 @@
-import { renderToString } from 'react-dom/server'
 import { createTransporter, isEmailConfigured, logEmail, EMAIL_FROM } from './config'
 import WelcomeEmail from '../../emails/templates/WelcomeEmail'
 import MemberApprovalEmail from '../../emails/templates/MemberApprovalEmail'
 import ApplicationReceivedEmail from '../../emails/templates/ApplicationReceivedEmail'
 import ApplicationApprovedEmail from '../../emails/templates/ApplicationApprovedEmail'
 import ApplicationRejectedEmail from '../../emails/templates/ApplicationRejectedEmail'
+import { render as renderEmail } from '@react-email/render'
 
 interface SendEmailParams {
   to: string
@@ -49,7 +49,7 @@ export async function sendWelcomeEmail(
 ) {
   const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL}/student` 
   
-  const html = renderToString(
+  const html = await renderEmail(
     WelcomeEmail({ 
       name, 
       dashboardUrl, 
@@ -75,7 +75,7 @@ export async function sendMemberApprovalEmail(
 ) {
   const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL}/student` 
   
-  const html = renderToString(
+  const html = await renderEmail(
     MemberApprovalEmail({ 
       name, 
       memberId, 
@@ -102,7 +102,7 @@ export async function sendApplicationReceivedEmail(
 ) {
   const eventsUrl = `${process.env.NEXT_PUBLIC_APP_URL}/student/events` 
   
-  const html = renderToString(
+  const html = await renderEmail(
     ApplicationReceivedEmail({ 
       name, 
       eventTitle, 
@@ -134,7 +134,7 @@ export async function sendApplicationApprovedEmail(
   const qrUrl = `${process.env.NEXT_PUBLIC_APP_URL}/student/events` 
   const eventsUrl = `${process.env.NEXT_PUBLIC_APP_URL}/student/events` 
   
-  const html = renderToString(
+  const html = await renderEmail(
     ApplicationApprovedEmail({
       name,
       eventTitle,
@@ -165,7 +165,7 @@ export async function sendApplicationRejectedEmail(
 ) {
   const eventsUrl = `${process.env.NEXT_PUBLIC_APP_URL}/student/events` 
   
-  const html = renderToString(
+  const html = await renderEmail(
     ApplicationRejectedEmail({ 
       name, 
       eventTitle, 
