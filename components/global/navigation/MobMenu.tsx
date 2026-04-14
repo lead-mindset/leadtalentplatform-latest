@@ -1,10 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { Menu, X } from "lucide-react";
-import { Link } from '@/i18n/routing';
 import AuthButtons from "./auth-buttons";
+import type { AuthenticatedNavUser } from '@/lib/types';
 
 export interface MenuItem {
   name: string;
@@ -15,7 +13,7 @@ export interface MenuItem {
 
 interface MobileNavProps {
   menuItems: MenuItem[];
-  user: any | null;
+  user: AuthenticatedNavUser | null;
   memberId?: string | null;
 }
 
