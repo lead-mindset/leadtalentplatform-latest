@@ -1,8 +1,9 @@
 'use server'
 
-import { randomUUID } from 'crypto'
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/auth'
+import { z } from 'zod'
+import type { CompanyRow, RecruiterAccessRow, UserRow } from '@/lib/types'
 
 export type CompanySortKey = 'name' | 'createdat' | 'activeRecruiters' | 'pendingInvites'
 export type SortOrder = 'asc' | 'desc'
@@ -48,9 +49,23 @@ export type CompanyDetail = {
 type ActionResult = { success: true } | { success: false; error: string }
 type InviteResult = ActionResult & { inviteLink?: string }
 
+type CompanyListRow = Pick<CompanyRow, 'id' | 'name' | 'createdat' | 'createdbyid'> & {
+  CreatedBy: Pick<UserRow, 'name'> | Pick<UserRow, 'name'>[] | null
+}
+type CompanyAccessRow = Pick<
+  RecruiterAccessRow,
+  'id' | 'companyId' | 'isActive' | 'acceptedAt' | 'revokedAt' | 'inviteExpiresAt'
+>
+
+const companyNameSchema = z.string().trim().min(2).max(160)
+const inviteSchema = z.object({
+  companyId: z.string().trim().min(1),
+  recruiterEmail: z.string().trim().email(),
+  expiresInDays: z.union([z.literal(7), z.literal(30), z.null()]),
+})
+
 function generateInviteLink(token: string): string {
-  const base = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-  return `${base}/recruiter/access?token=${token}`
+  return `/recruiter/access?token=${token}`
 }
 
 function getExpiryDate(days: number | null): string | null {
@@ -99,17 +114,20 @@ export async function getCompaniesList(
     return { items: [], total: 0, page: 1, pageSize: pagination.pageSize }
   }
 
-  const ids = companies.map((company) => company.id)
+  const companyRows = companies as CompanyListRow[]
+  const ids = companyRows.map((company: CompanyListRow) => company.id)
   const { data: accessRows } = await supabase
     .from('RecruiterAccess')
     .select('id, companyId, isActive, acceptedAt, revokedAt, inviteExpiresAt')
     .in('companyId', ids)
 
-  const rows: CompanyListItem[] = companies.map((company) => {
-    const companyAccess = (accessRows ?? []).filter((row) => row.companyId === company.id)
-    const activeRecruiters = companyAccess.filter((row) => row.isActive && !row.revokedAt).length
+  const recruiterAccessRows = (accessRows ?? []) as CompanyAccessRow[]
+
+  const rows: CompanyListItem[] = companyRows.map((company: CompanyListRow) => {
+    const companyAccess = recruiterAccessRows.filter((row: CompanyAccessRow) => row.companyId === company.id)
+    const activeRecruiters = companyAccess.filter((row: CompanyAccessRow) => row.isActive && !row.revokedAt).length
     const pendingInvites = companyAccess.filter(
-      (row) =>
+      (row: CompanyAccessRow) =>
         !row.acceptedAt &&
         !row.revokedAt &&
         (row.inviteExpiresAt === null || row.inviteExpiresAt > now)
@@ -178,11 +196,14 @@ export async function getCompanyById(id: string): Promise<CompanyDetail | null> 
 export async function createCompany(name: string): Promise<ActionResult> {
   try {
     const { supabase, user } = await requireAdmin()
-    if (!name.trim()) return { success: false, error: 'Company name is required.' }
+    const parsedName = companyNameSchema.safeParse(name)
+    if (!parsedName.success) {
+      return { success: false, error: 'Company name must be at least 2 characters long.' }
+    }
 
     const { error } = await supabase
       .from('Company')
-      .insert({ name: name.trim(), createdbyid: user.id })
+      .insert({ name: parsedName.data, createdbyid: user.id })
 
     if (error) {
       if (error.code === '23505') return { success: false, error: 'Company name must be unique.' }
@@ -199,8 +220,13 @@ export async function createCompany(name: string): Promise<ActionResult> {
 }
 
 export async function updateCompany(id: string, name: string): Promise<ActionResult> {
+  const parsedName = companyNameSchema.safeParse(name)
+  if (!parsedName.success) {
+    return { success: false, error: 'Company name must be at least 2 characters long.' }
+  }
+
   const { supabase } = await requireAdmin()
-  const { error } = await supabase.from('Company').update({ name: name.trim() }).eq('id', id)
+  const { error } = await supabase.from('Company').update({ name: parsedName.data }).eq('id', id)
   if (error) {
     console.error('[admin/companies] updateCompany error:', error)
     return { success: false, error: 'Failed to update company.' }
@@ -216,7 +242,7 @@ export async function deleteCompany(id: string): Promise<ActionResult> {
 
   const { count } = await supabase
     .from('RecruiterAccess')
-    .select('*', { count: 'exact', head: true })
+    .select('id', { count: 'exact', head: true })
     .eq('companyId', id)
     .or(`isActive.eq.true,and(acceptedAt.is.null,revokedAt.is.null,inviteExpiresAt.is.null),and(acceptedAt.is.null,revokedAt.is.null,inviteExpiresAt.gt.${now})`)
 
@@ -238,16 +264,19 @@ export async function generateInviteToken(
   recruiterEmail: string,
   expiresInDays: 7 | 30 | null
 ): Promise<InviteResult> {
-  const { supabase, user } = await requireAdmin()
+  const parsedInvite = inviteSchema.safeParse({ companyId, recruiterEmail, expiresInDays })
+  if (!parsedInvite.success) {
+    return { success: false, error: 'Enter a valid recruiter email.' }
+  }
 
-  if (!recruiterEmail.trim()) return { success: false, error: 'Recruiter email is required.' }
-  const token = randomUUID()
+  const { supabase, user } = await requireAdmin()
+  const token = crypto.randomUUID()
   const { error } = await supabase.from('RecruiterAccess').insert({
-    companyId,
-    recruiterEmail: recruiterEmail.trim().toLowerCase(),
+    companyId: parsedInvite.data.companyId,
+    recruiterEmail: parsedInvite.data.recruiterEmail,
     grantedById: user.id,
     inviteToken: token,
-    inviteExpiresAt: getExpiryDate(expiresInDays),
+    inviteExpiresAt: getExpiryDate(parsedInvite.data.expiresInDays),
     isActive: false,
   })
 
@@ -257,7 +286,7 @@ export async function generateInviteToken(
   }
 
   revalidatePath('/admin/companies')
-  revalidatePath(`/admin/companies/${companyId}`)
+  revalidatePath(`/admin/companies/${parsedInvite.data.companyId}`)
   return { success: true, inviteLink: generateInviteLink(token) }
 }
 
@@ -293,7 +322,7 @@ export async function resendInvite(accessId: string): Promise<InviteResult> {
   if (access.acceptedAt) return { success: false, error: 'Invite already accepted.' }
   if (access.revokedAt) return { success: false, error: 'Invite already revoked.' }
 
-  const token = randomUUID()
+  const token = crypto.randomUUID()
   const { error } = await supabase
     .from('RecruiterAccess')
     .update({
@@ -318,13 +347,13 @@ export async function getCompanyStats(id: string) {
   const [{ count: activeRecruiters }, { count: pendingInvites }] = await Promise.all([
     supabase
       .from('RecruiterAccess')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
       .eq('companyId', id)
       .eq('isActive', true)
       .is('revokedAt', null),
     supabase
       .from('RecruiterAccess')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
       .eq('companyId', id)
       .is('acceptedAt', null)
       .is('revokedAt', null)
