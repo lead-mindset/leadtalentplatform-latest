@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { AlertCircle } from 'lucide-react'
+import { Link } from '@/i18n/routing'
 
 function OnboardLoading() {
   return (
@@ -58,9 +59,7 @@ async function OnboardLoader({
           </CardHeader>
           <CardContent>
             <Button asChild variant="default" className="w-full">
-              <a href="/auth/login">
-                Go to Login
-              </a>
+              <Link href="/auth/login">Go to Login</Link>
             </Button>
           </CardContent>
         </Card>
