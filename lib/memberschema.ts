@@ -1,9 +1,10 @@
 import { z } from 'zod'
 import { LEAD_CHAPTER_VALUES } from './options'
+import type { Translator } from './types'
 
 const MAX_YEAR = new Date().getFullYear() + 6
 
-export function createBaseProfileSchema(t: (key: string, values?: any) => string) {
+export function createBaseProfileSchema(t: Translator) {
   return z.object({
     full_name: z.string().min(1, t('validation.nameRequired')),
 
@@ -17,7 +18,7 @@ export function createBaseProfileSchema(t: (key: string, values?: any) => string
       .string({ message: t('validation.selectYourChapter') })
       .min(1, t('validation.selectYourChapter'))
       .refine(
-        (val) => LEAD_CHAPTER_VALUES.includes(val as any),
+        (val) => LEAD_CHAPTER_VALUES.some((chapter) => chapter === val),
         { message: t('validation.selectValidChapter') }
       ),
 
@@ -44,13 +45,13 @@ export function createBaseProfileSchema(t: (key: string, values?: any) => string
   })
 }
 
-const resumeSchema = (t: (key: string, values?: any) => string) =>
+const resumeSchema = (t: Translator) =>
   z
     .custom<File>((file) => file instanceof File, { message: t('validation.uploadPdfFile') })
     .refine((file) => file.type === 'application/pdf', t('validation.onlyPdfAllowed'))
     .refine((file) => file.size <= 10 * 1024 * 1024, t('validation.pdfMaxSize'))
 
-export function createFullMemberSchemaFrontend(t: (key: string, values?: any) => string) {
+export function createFullMemberSchemaFrontend(t: Translator) {
   return createBaseProfileSchema(t).extend({
     resume_pdf: resumeSchema(t),
     termsAccepted: z.literal(true, {
@@ -59,7 +60,7 @@ export function createFullMemberSchemaFrontend(t: (key: string, values?: any) =>
   })
 }
 
-export function createProfileUpdateSchema(t: (key: string, values?: any) => string) {
+export function createProfileUpdateSchema(t: Translator) {
   return createBaseProfileSchema(t).extend({
     resume_pdf: resumeSchema(t).optional(),
 
