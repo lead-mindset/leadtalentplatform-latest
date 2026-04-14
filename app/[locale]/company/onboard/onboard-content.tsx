@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { CheckCircle2, AlertCircle, Info, Lock } from 'lucide-react'
+import { useLocale } from 'next-intl'
+import { Link } from '@/i18n/routing'
 
 export default function OnboardContent({
   inviteToken,
@@ -20,6 +22,7 @@ export default function OnboardContent({
 }) {
   const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
+  const locale = useLocale()
   const [result, setResult] = useState<{
     success: boolean
     message?: string
@@ -34,6 +37,7 @@ export default function OnboardContent({
     const res = await acceptInvite({
       inviteToken,
       name: name.trim(),
+      locale,
     })
 
     setResult(res)
@@ -60,9 +64,7 @@ export default function OnboardContent({
               </p>
               {result.warning && (
                 <Button asChild className="mt-6">
-                  <a href="/company/login">
-                    Go to Login
-                  </a>
+                  <Link href="/company/login">Go to Login</Link>
                 </Button>
               )}
             </div>
