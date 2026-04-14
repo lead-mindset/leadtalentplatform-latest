@@ -4,6 +4,9 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { generateUniqueMemberId } from '@/lib/utils/member-id'
 import { sendMemberApprovalEmail } from '@/lib/emails/send-email'
+import type { StudentProfileRow } from '@/lib/types'
+
+type ApprovalCandidateRow = Pick<StudentProfileRow, 'userId' | 'chapterId' | 'isFilled'>
 
 export async function approveMember(userId: string, approverId: string) {
   try {
@@ -167,7 +170,7 @@ export async function approveMembersBulk(userIds: string[], approverId: string) 
       return { success: false, error: 'Failed to load selected members' }
     }
 
-    const validUserIds = candidates
+    const validUserIds = (candidates as ApprovalCandidateRow[])
       .filter((profile) => profile.isFilled)
       .filter((profile) => !chapterId || profile.chapterId === chapterId)
       .map((profile) => profile.userId)
