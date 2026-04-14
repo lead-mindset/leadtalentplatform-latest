@@ -69,19 +69,19 @@ export type Database = {
       }
       Company: {
         Row: {
-          createdat: string | null
+          createdat: string
           createdbyid: string
           id: string
           name: string
         }
         Insert: {
-          createdat?: string | null
+          createdat?: string
           createdbyid: string
           id?: string
           name: string
         }
         Update: {
-          createdat?: string | null
+          createdat?: string
           createdbyid?: string
           id?: string
           name?: string
