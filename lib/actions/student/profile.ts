@@ -191,11 +191,11 @@ export async function updateProfile(formData: FormData) {
       success: true,
       message: "Profile updated successfully",
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Profile update error:", error)
     return {
       success: false,
-      error: error.message || "Internal server error",
+      error: error instanceof Error ? error.message : "Internal server error",
     }
   }
 }
