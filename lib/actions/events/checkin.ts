@@ -1,9 +1,8 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { requireUser } from '@/lib/auth'
-import { getEditorChapterId } from './get-data'
-import type { EventRow, EventRegistrationRow, RegistrationStatus } from '@/lib/types'
+import type { EventRegistrationRow, RegistrationStatus } from '@/lib/types'
+import { assertCanManageEvent } from './access'
 
 type CheckInState = 'success' | 'already_checked_in' | 'not_registered'
 
@@ -52,25 +51,12 @@ export type CheckInSearchResult = {
 }
 
 async function assertEventAccess(eventId: string) {
-  const { supabase, user } = await requireUser()
-  if (user.role !== 'editor' && user.role !== 'admin')
-    return { supabase, user, error: 'Insufficient permissions' as const }
-
-  const { data: event, error: eventError } = await supabase
-    .from('Event')
-    .select('*')
-    .eq('id', eventId)
-    .maybeSingle<EventRow>()
-
-  if (eventError || !event) return { supabase, user, error: 'Event not found' as const }
-
-  if (user.role === 'editor') {
-    const chapterId = await getEditorChapterId()
-    if (!chapterId) return { supabase, user, error: 'No chapter assigned' as const }
-    if (event.chapterId !== chapterId) return { supabase, user, error: 'Insufficient permissions' as const }
+  const access = await assertCanManageEvent(eventId)
+  if ('error' in access) {
+    return { error: access.error }
   }
 
-  return { supabase, user, event }
+  return access
 }
 
 export async function getCheckInCounter(eventId: string): Promise<CheckInCounter | null> {
