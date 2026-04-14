@@ -1,4 +1,3 @@
-import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import Image from 'next/image'
 import { Calendar, MapPin, Users } from 'lucide-react'
@@ -9,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Link } from '@/i18n/routing'
 import { Navbar } from '../(public)/_components/navbar'
 
-export const metadata: Metadata = {
+export const metadata = {
   title: 'Events',
   description: 'Browse upcoming LEAD events and register online.',
 }

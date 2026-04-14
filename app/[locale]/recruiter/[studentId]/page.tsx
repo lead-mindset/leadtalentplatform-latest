@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getStudentProfileForRecruiter } from '@/lib/actions/recruiter/student-profile'
 import { DownloadResumeButton } from './download-resume-button'
+import NextLink from 'next/link'
 
 type RecruiterStudentProfilePageProps = {
   params: Promise<{ studentId: string }>
@@ -32,6 +33,7 @@ export default async function RecruiterStudentProfilePage({
   const student = await getStudentProfileForRecruiter(studentId)
 
   if (!student) notFound()
+  const resolvedStudent = student ?? notFound()
 
   const backHref = getBackHref(returnTo)
 
@@ -45,8 +47,8 @@ export default async function RecruiterStudentProfilePage({
       </Button>
 
       <div>
-        <h1 className="text-3xl font-bold">{student.name}</h1>
-        <p className="text-muted-foreground">{student.email}</p>
+        <h1 className="text-3xl font-bold">{resolvedStudent.name}</h1>
+        <p className="text-muted-foreground">{resolvedStudent.email}</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -58,19 +60,19 @@ export default async function RecruiterStudentProfilePage({
             <div className="flex items-start gap-2">
               <Building2 className="h-4 w-4 mt-0.5 text-muted-foreground" />
               <div className="text-sm">
-                <p className="font-medium">{student.chapter?.name ?? 'No chapter specified'}</p>
-                <p className="text-muted-foreground">{student.chapter?.university ?? 'No university specified'}</p>
+                <p className="font-medium">{resolvedStudent.chapter?.name ?? 'No chapter specified'}</p>
+                <p className="text-muted-foreground">{resolvedStudent.chapter?.university ?? 'No university specified'}</p>
               </div>
             </div>
 
             <div className="flex items-center gap-2 text-sm">
               <GraduationCap className="h-4 w-4 text-muted-foreground" />
-              {student.graduationYear ? `Class of ${student.graduationYear}` : 'Graduation year not specified'}
+              {resolvedStudent.graduationYear ? `Class of ${resolvedStudent.graduationYear}` : 'Graduation year not specified'}
             </div>
 
             <div className="flex items-center gap-2 text-sm">
               <UserRound className="h-4 w-4 text-muted-foreground" />
-              {student.major ?? 'Major not specified'}
+              {resolvedStudent.major ?? 'Major not specified'}
             </div>
           </CardContent>
         </Card>
@@ -80,27 +82,27 @@ export default async function RecruiterStudentProfilePage({
             <CardTitle>Links & Resume</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {student.linkedinUrl ? (
+            {resolvedStudent.linkedinUrl ? (
               <Button asChild variant="outline" className="w-full">
-                <a href={student.linkedinUrl} target="_blank" rel="noopener noreferrer">
+                <NextLink href={resolvedStudent.linkedinUrl} target="_blank" rel="noopener noreferrer">
                   <Linkedin className="mr-2 h-4 w-4" />
                   View LinkedIn
-                </a>
+                </NextLink>
               </Button>
             ) : (
               <p className="text-sm text-muted-foreground">No LinkedIn profile provided.</p>
             )}
 
-            {student.resume ? (
-              <DownloadResumeButton studentId={student.id} />
+            {resolvedStudent.resume ? (
+              <DownloadResumeButton studentId={resolvedStudent.id} />
             ) : (
               <p className="text-sm text-muted-foreground">No resume uploaded.</p>
             )}
 
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Mail className="h-4 w-4" />
-              <a href={`mailto:${student.email}`} className="hover:underline">
-                {student.email}
+              <a href={`mailto:${resolvedStudent.email}`} className="hover:underline">
+                {resolvedStudent.email}
               </a>
             </div>
           </CardContent>
@@ -112,9 +114,9 @@ export default async function RecruiterStudentProfilePage({
           <CardTitle>Skills</CardTitle>
         </CardHeader>
         <CardContent>
-          {student.skills.length > 0 ? (
+          {resolvedStudent.skills.length > 0 ? (
             <div className="flex flex-wrap gap-2">
-              {student.skills.map(skill => (
+              {resolvedStudent.skills.map((skill: string) => (
                 <Badge key={skill} variant="secondary">
                   {skill}
                 </Badge>
