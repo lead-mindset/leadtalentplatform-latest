@@ -1,6 +1,6 @@
 'use server'
 
-import { requireUser } from '@/lib/auth'
+import { requireChapterEditor, requireUser } from '@/lib/auth'
 import { getEditorChapterId } from './get-data'
 import type { EventRow, Role } from '@/lib/types'
 
@@ -22,10 +22,6 @@ type EventAccessFailure = {
 export async function assertCanManageEvent(eventId: string): Promise<EventAccessSuccess | EventAccessFailure> {
   const { supabase, user } = await requireUser()
 
-  if (user.role !== 'editor' && user.role !== 'admin') {
-    return { error: 'Insufficient permissions' }
-  }
-
   const { data: event, error } = await supabase
     .from('Event')
     .select('id, chapterId, capacity, title, accessModel')
@@ -36,9 +32,13 @@ export async function assertCanManageEvent(eventId: string): Promise<EventAccess
     return { error: 'Event not found' }
   }
 
+  if (user.role !== 'editor' && user.role !== 'admin') {
+    return { error: 'Insufficient permissions' }
+  }
+
   if (user.role === 'editor') {
-    const chapterId = await getEditorChapterId()
-    if (!chapterId || event.chapterId !== chapterId) {
+    const { chapterId } = await requireChapterEditor()
+    if (event.chapterId !== chapterId) {
       return { error: 'Insufficient permissions' }
     }
   }
