@@ -1,6 +1,7 @@
 'use server'
 
 import { createServiceClient } from '@/lib/supabase/server-service'
+import { getInviteCompany, getValidatedRecruiterInvite } from './invite-shared'
 
 export async function acceptInvite(formData: {
   inviteToken: string
@@ -9,25 +10,12 @@ export async function acceptInvite(formData: {
 }) {
   const serviceSupabase = createServiceClient()
 
-  const { data: invite, error: inviteError } = await serviceSupabase
-    .from('RecruiterAccess')
-    .select('*')
-    .eq('inviteToken', formData.inviteToken)
-    .maybeSingle()
-
-  if (!invite || inviteError) {
-    return { success: false, error: 'Invalid invite token' }
+  const inviteResult = await getValidatedRecruiterInvite(formData.inviteToken)
+  if (!inviteResult.success) {
+    return inviteResult
   }
 
-  if (invite.revokedAt) {
-    return { success: false, error: 'This invitation has been revoked' }
-  }
-  if (invite.acceptedAt) {
-    return { success: false, error: 'This invitation has already been accepted' }
-  }
-  if (invite.inviteExpiresAt && new Date(invite.inviteExpiresAt) < new Date()) {
-    return { success: false, error: 'This invitation has expired. Please contact your administrator for a new invite.' }
-  }
+  const { invite } = inviteResult
 
   const { data: existingUser } = await serviceSupabase
     .from('User')
@@ -116,40 +104,13 @@ export async function acceptInvite(formData: {
 }
 
 export async function validateInviteToken(inviteToken: string) {
-  const supabase = createServiceClient()
-
-  const { data: invite, error } = await supabase
-    .from('RecruiterAccess')
-    .select('*')
-    .match({ inviteToken })
-    .maybeSingle()
-
-  if (error) {
-    console.error('[validateInviteToken] Database error:', error)
-    return { success: false, error: 'Database error: ' + error.message }
+  const inviteResult = await getValidatedRecruiterInvite(inviteToken)
+  if (!inviteResult.success) {
+    return inviteResult
   }
+  const { invite } = inviteResult
 
-  if (!invite) {
-    return { success: false, error: 'Invalid invite token' }
-  }
-
-  if (invite.revokedAt) return { success: false, error: 'This invitation has been revoked' }
-  if (invite.acceptedAt) return { success: false, error: 'This invitation has already been accepted' }
-  if (invite.inviteExpiresAt && new Date(invite.inviteExpiresAt) < new Date()) {
-    return { success: false, error: 'This invitation has expired. Please contact your administrator.' }
-  }
-
-  let company = null
-  if (invite.companyId) {
-    const { data: companyData, error: companyError } = await supabase
-      .from('Company')
-      .select('id, name')
-      .eq('id', invite.companyId)
-      .maybeSingle()
-
-    if (companyError) console.error('[validateInviteToken] Company fetch error:', companyError)
-    company = companyData
-  }
+  const company = invite.companyId ? await getInviteCompany(invite.companyId) : null
 
   return {
     success: true,
