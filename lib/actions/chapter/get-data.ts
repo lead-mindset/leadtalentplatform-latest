@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import type { MemberWithProfile } from '@/lib/types'
+import type { ChapterRow, MemberWithProfile, StudentProfileRow, UserRow } from '@/lib/types'
 
 const PROFILE_SELECT = `
   userId,
@@ -18,6 +18,7 @@ const PROFILE_SELECT = `
   chapterId,
   emailNotificationsEnabled,
   gender,
+  memberId,
   User:User!StudentProfile_userId_fkey (
     id,
     email,
@@ -25,7 +26,8 @@ const PROFILE_SELECT = `
     phone,
     role,
     createdAt,
-    updatedAt
+    updatedAt,
+    deactivatedAt
   ),
   Chapter:Chapter!StudentProfile_chapterId_fkey (
     id,
@@ -38,7 +40,33 @@ const PROFILE_SELECT = `
   )
 `
 
-function mapProfile(profile: any): MemberWithProfile | null {
+type ChapterProfileRow = Pick<
+  StudentProfileRow,
+  | 'userId'
+  | 'major'
+  | 'graduationYear'
+  | 'linkedinUrl'
+  | 'skills'
+  | 'consentRecruiterVisibility'
+  | 'isRecruiterVisible'
+  | 'approvedById'
+  | 'approvalStatus'
+  | 'isFilled'
+  | 'updatedAt'
+  | 'createdAt'
+  | 'consentDate'
+  | 'chapterId'
+  | 'emailNotificationsEnabled'
+  | 'gender'
+  | 'memberId'
+> & {
+  User:
+    | Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'role' | 'createdAt' | 'updatedAt' | 'deactivatedAt'>
+    | Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'role' | 'createdAt' | 'updatedAt' | 'deactivatedAt'>[]
+  Chapter: ChapterRow | ChapterRow[] | null
+}
+
+function mapProfile(profile: ChapterProfileRow): MemberWithProfile | null {
   const user = Array.isArray(profile.User) ? profile.User[0] : profile.User
   const chapter = Array.isArray(profile.Chapter) ? profile.Chapter[0] : profile.Chapter
 
@@ -52,6 +80,7 @@ function mapProfile(profile: any): MemberWithProfile | null {
     role: user.role,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
+    deactivatedAt: user.deactivatedAt,
     StudentProfile: {
       userId: profile.userId,
       major: profile.major,
@@ -69,6 +98,7 @@ function mapProfile(profile: any): MemberWithProfile | null {
       chapterId: profile.chapterId,
       emailNotificationsEnabled: profile.emailNotificationsEnabled,
       gender: profile.gender,
+      memberId: profile.memberId,
     },
     Chapter: chapter ?? null,
   }
@@ -91,25 +121,25 @@ export async function getChapterMembers(
     return []
   }
 
-  if (!data) return []
+  const rows = (data ?? []) as ChapterProfileRow[]
 
-  return data
+  return rows
     .map(mapProfile)
     .filter((m): m is MemberWithProfile => m !== null)
-    .filter(m => m.role === 'member' || m.role === 'editor')
+    .filter((member: MemberWithProfile) => member.role === 'member' || member.role === 'editor')
 }
 
 
 export function getMemberStats(members: MemberWithProfile[]) {
-  const incomplete = members.filter(m => !m.StudentProfile?.isFilled)
+  const incomplete = members.filter((member: MemberWithProfile) => !member.StudentProfile?.isFilled)
   const pending = members.filter(
-    m => m.StudentProfile?.isFilled && m.StudentProfile?.approvalStatus === 'pending'
+    (member: MemberWithProfile) => member.StudentProfile?.isFilled && member.StudentProfile?.approvalStatus === 'pending'
   )
   const approved = members.filter(
-    m => m.StudentProfile?.approvalStatus === 'approved'
+    (member: MemberWithProfile) => member.StudentProfile?.approvalStatus === 'approved'
   )
   const rejected = members.filter(
-    m => m.StudentProfile?.approvalStatus === 'rejected'
+    (member: MemberWithProfile) => member.StudentProfile?.approvalStatus === 'rejected'
   )
 
   return {
@@ -121,8 +151,8 @@ export function getMemberStats(members: MemberWithProfile[]) {
     pendingMembers: pending,
     approvedMembers: approved,
     rejectedMembers: rejected,
-    completeProfiles: members.filter(m => m.StudentProfile?.isFilled).length,
-    visibleToRecruiters: members.filter(m => m.StudentProfile?.isRecruiterVisible).length,
+    completeProfiles: members.filter((member: MemberWithProfile) => member.StudentProfile?.isFilled).length,
+    visibleToRecruiters: members.filter((member: MemberWithProfile) => member.StudentProfile?.isRecruiterVisible).length,
   }
 }
 
@@ -146,7 +176,7 @@ export async function getRecentChapterActivity(
     return []
   }
 
-  return data
+  return (data as ChapterProfileRow[])
     .map(mapProfile)
     .filter((m): m is MemberWithProfile => m !== null)
 }
