@@ -1,3 +1,6 @@
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/lib/types'
+
 const RANDOM_MIN = 100001
 const RANDOM_MAX = 999999
 const MAX_RETRIES = 10
@@ -11,7 +14,7 @@ function formatMemberId(number: number): string {
 }
 
 async function isMemberIdUnique(
-  supabase: any,
+  supabase: SupabaseClient<Database>,
   memberId: string
 ): Promise<boolean> {
   const { data, error } = await supabase
@@ -36,7 +39,7 @@ async function isMemberIdUnique(
   return true
 }
 
-export async function generateUniqueMemberId(supabase: any): Promise<string> {
+export async function generateUniqueMemberId(supabase: SupabaseClient<Database>): Promise<string> {
   let attempts = 0
 
   while (attempts < MAX_RETRIES) {
