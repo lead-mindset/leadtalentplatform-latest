@@ -1,6 +1,7 @@
 "use client";
 
 import { Link } from '@/i18n/routing';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -21,7 +22,7 @@ export default function NavBar({ user, menuItems, memberId, signInLabel }: NavBa
   return (
     <nav className="flex items-center h-16 px-6 border-b bg-background relative z-50">
       <Link href="/" className="flex items-center font-bold gap-2 shrink-0">
-        <img src="/leadl2.svg" alt="LEAD" width={32} height={32} />
+        <Image src="/leadl2.svg" alt="LEAD" width={32} height={32} />
         <span className='max-sm:hidden'>LEAD Talent Platform</span>
       </Link>
 
