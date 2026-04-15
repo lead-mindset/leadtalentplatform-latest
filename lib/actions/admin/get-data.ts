@@ -863,6 +863,14 @@ export async function getUserById(id: string): Promise<UserWithFullProfile | nul
   const { data: user, error } = await supabase
     .from('User')
     .select(`
+      id,
+      email,
+      name,
+      phone,
+      role,
+      createdAt,
+      updatedAt,
+      deactivatedAt,
       StudentProfile!StudentProfile_userId_fkey (
         userId,
         major,
@@ -881,7 +889,7 @@ export async function getUserById(id: string): Promise<UserWithFullProfile | nul
         emailNotificationsEnabled,
         gender,
         memberId,
-        Chapter (id, name, university, city, region, createdAt, updatedAt)
+        Chapter!StudentProfile_chapterId_fkey (id, name, university, city, region, createdAt, updatedAt)
       )
     `)
     .eq('id', id)
@@ -892,19 +900,22 @@ export async function getUserById(id: string): Promise<UserWithFullProfile | nul
     return null
   }
 
-  const userRow = user as AdminUserByIdRow
+  const userRow = user as any
+  const studentProfile = Array.isArray(userRow.StudentProfile) ? userRow.StudentProfile[0] : userRow.StudentProfile
 
-  return {
+  const result = {
     ...userRow,
-    StudentProfile: userRow.StudentProfile
+    StudentProfile: studentProfile
       ? {
-          ...userRow.StudentProfile,
-          Chapter: Array.isArray(userRow.StudentProfile.Chapter)
-            ? (userRow.StudentProfile.Chapter[0] ?? null)
-            : (userRow.StudentProfile.Chapter ?? null),
+          ...studentProfile,
+          Chapter: Array.isArray(studentProfile.Chapter)
+            ? (studentProfile.Chapter[0] ?? null)
+            : (studentProfile.Chapter ?? null),
         }
       : null,
   }
+
+  return result as UserWithFullProfile
 }
 
 export async function getChapterById(id: string): Promise<ChapterRow | null> {

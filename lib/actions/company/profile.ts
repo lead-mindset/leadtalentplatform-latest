@@ -125,7 +125,7 @@ export async function getRecruiterCompanies() {
     return { success: false, error: 'Failed to fetch companies' }
   }
 
-  const companies = (allAccess as AccessWithCompany[]).map(access => ({
+  const companies = (allAccess as unknown as AccessWithCompany[]).map(access => ({
     accessId: access.id,
     companyId: access.companyId,
     companyName: access.Company[0]?.name ?? 'Unknown',

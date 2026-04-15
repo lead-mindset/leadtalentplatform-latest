@@ -33,7 +33,8 @@ const EVENT_SELECT = `
   createdAt,
   updatedAt,
   Chapter:Chapter!Event_chapterId_fkey ( id, name, university ),
-  CreatedBy:User!Event_createdById_fkey ( id, name, email )
+  CreatedBy:User!Event_createdById_fkey ( id, name, email ),
+  EventRegistration:EventRegistration!EventRegistration_eventId_fkey ( id, status )
 `
 
 type RegistrationEventRow = EventRegistrationRow & {
@@ -41,6 +42,26 @@ type RegistrationEventRow = EventRegistrationRow & {
 }
 
 type RegistrationUserRow = EventRegistrationRow & {
+  User:
+    | (Pick<UserRow, 'id' | 'name' | 'email' | 'phone'> & {
+        StudentProfile:
+          | Pick<StudentProfileRow, 'major' | 'graduationYear' | 'linkedinUrl'>
+          | Pick<StudentProfileRow, 'major' | 'graduationYear' | 'linkedinUrl'>[]
+          | null
+      })
+    | Array<
+        Pick<UserRow, 'id' | 'name' | 'email' | 'phone'> & {
+          StudentProfile:
+            | Pick<StudentProfileRow, 'major' | 'graduationYear' | 'linkedinUrl'>
+            | Pick<StudentProfileRow, 'major' | 'graduationYear' | 'linkedinUrl'>[]
+            | null
+        }
+      >
+    | null
+}
+
+type RegistrationWithEventRow = EventRegistrationRow & {
+  Event: EventRow | EventRow[] | null
   User:
     | (Pick<UserRow, 'id' | 'name' | 'email' | 'phone'> & {
         StudentProfile:
@@ -102,7 +123,7 @@ export async function getPublishedEvents(): Promise<EventWithDetails[]> {
     return []
   }
 
-  const eventRows = data as EventWithDetailsRaw[]
+  const eventRows = data as unknown as EventWithDetailsRaw[]
   const eventIds = eventRows.map((event) => event.id)
 
   const { data: registrations, error: registrationsError } = await supabase
@@ -176,7 +197,7 @@ export async function getMyRegistrations(): Promise<(EventRegistrationRow & { Ev
     return []
   }
 
-  return (data as RegistrationEventRow[]).map((row) => {
+  return (data as unknown as RegistrationWithEventRow[]).map((row) => {
     const event = Array.isArray(row.Event) ? row.Event[0] : row.Event
     return { ...row, Event: event ?? null }
   })
@@ -201,7 +222,7 @@ export async function getChapterEvents(): Promise<EventWithDetails[]> {
     return []
   }
 
-  return (data as EventWithDetailsRaw[])
+  return (data as unknown as EventWithDetailsRaw[])
     .map(mapEvent)
     .filter((e): e is EventWithDetails => e !== null)
 }
@@ -219,7 +240,7 @@ export async function getAllEventsAdmin(): Promise<EventWithDetails[]> {
     return []
   }
 
-  return (data as EventWithDetailsRaw[])
+  return (data as unknown as EventWithDetailsRaw[])
     .map(mapEvent)
     .filter((e): e is EventWithDetails => e !== null)
 }
@@ -274,7 +295,7 @@ export async function getEventRegistrations(eventId: string): Promise<Registrati
     return []
   }
 
-  return data
+  return (data as unknown as RegistrationUserRow[])
     .map(mapRegistration)
     .filter((r): r is RegistrationWithUser => r !== null)
 }
