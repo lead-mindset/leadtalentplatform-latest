@@ -141,9 +141,9 @@ export type RecruiterUser = UserRow & {
 };
 
 export type EventWithDetailsRaw = EventRow & {
-  ownerChapter: Pick<ChapterRow, 'id' | 'name' | 'university'> | null
+  ownerChapter: Pick<ChapterRow, 'id' | 'name' | 'university'>[]
   collaborators: (EventChapterRow & {
-    chapter: Pick<ChapterRow, 'id' | 'name' | 'university' | 'city' | 'region'>
+    chapter: Pick<ChapterRow, 'id' | 'name' | 'university' | 'city' | 'region'>[]
   })[] | null
   CreatedBy: Pick<UserRow, 'id' | 'name' | 'email'>[]
   EventRegistration: { id: string; status: RegistrationStatus }[]
