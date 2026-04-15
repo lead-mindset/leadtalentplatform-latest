@@ -29,7 +29,7 @@ export default async function ChapterLayout({ children }: ChapterLayoutProps) {
           userName={user.name}
           userEmail={user.email}
           userRole={user.role}
-          memberId={profile.memberId ?? undefined}
+          memberId={profile?.memberId ?? undefined}
         >
           <StudentNavigation
             userRole={user.role}
