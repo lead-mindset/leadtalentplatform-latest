@@ -104,7 +104,6 @@ export function CheckinScanner({
         if (!video || video.readyState < 2) return
         try {
           const bitmap = await createImageBitmap(video)
-          // @ts-expect-error detector type
           const codes = await detector.detect(bitmap)
           bitmap.close()
           if (codes?.length) {
@@ -260,7 +259,6 @@ export function CheckinScanner({
     async function requestWakeLock() {
       try {
         if (!('wakeLock' in navigator)) { setWakeLockNote('Keep your screen on during check-in.'); return }
-        // @ts-expect-error wake lock API
         wakeLockRef.current = await navigator.wakeLock.request('screen')
       } catch {
         setWakeLockNote('Keep your screen on during check-in.')
