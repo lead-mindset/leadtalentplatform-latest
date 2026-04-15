@@ -40,7 +40,9 @@ export async function bulkApproveApplications(eventId: string, applicationIds: s
   const result = data as { capacity_warning: boolean; capacity_status: string } | null
 
   const capacityWarning = result?.capacity_warning ?? false
-  const capacityStatus = result?.capacity_status ?? 'ok'
+  const capacityStatus = result?.capacity_status === 'at_capacity' || result?.capacity_status === 'over_capacity' 
+    ? result.capacity_status as 'at_capacity' | 'over_capacity'
+    : null
 
   const registrations = await supabase
     .from('EventRegistration')
