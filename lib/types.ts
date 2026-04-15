@@ -141,10 +141,10 @@ export type RecruiterUser = UserRow & {
 };
 
 export type EventWithDetailsRaw = EventRow & {
-  EventChapter: (EventChapterRow & {
-    Chapter: Pick<ChapterRow, 'id' | 'name' | 'university'>
-  })[]
-  Chapter: Pick<ChapterRow, 'id' | 'name' | 'university'> | null
+  ownerChapter: Pick<ChapterRow, 'id' | 'name' | 'university'> | null
+  collaborators: (EventChapterRow & {
+    chapter: Pick<ChapterRow, 'id' | 'name' | 'university' | 'city' | 'region'>
+  })[] | null
   CreatedBy: Pick<UserRow, 'id' | 'name' | 'email'>[]
   EventRegistration: { id: string; status: RegistrationStatus }[]
 }
@@ -160,6 +160,7 @@ export type EventWithDetails = EventRow & {
     pendingApplications?: number;
     chapters?: number;
   }
+  isOwnedByChapter?: boolean // For editor dashboard to distinguish owned vs collaborative events
 }
 
 export type RegistrationWithUserRaw = EventRegistrationRow & {
