@@ -115,7 +115,7 @@ export function LoginForm({
                   <Label htmlFor="password">{t('password')}</Label>
                   <Link
                     href="/auth/forgot-password"
-                    className="text-sm font-medium text-primary hover:text-primary/80 transition-colors underline-offset-4 hover:underline"
+                    className="text-sm font-medium text-primary underline hover:text-primary/80 transition-colors underline-offset-4"
                     tabIndex={-1}
                   >
                     {t('forgotPassword')}
@@ -185,7 +185,7 @@ export function LoginForm({
               {t('dontHaveAccount')}{" "}
               <Link
                 href="/auth/sign-up"
-                className="font-medium text-primary hover:text-primary/80 transition-colors underline-offset-4 hover:underline"
+                className="font-medium text-primary underline hover:text-primary/80 transition-colors underline-offset-4"
               >
                 {t('createAccount')}
               </Link>
@@ -197,14 +197,14 @@ export function LoginForm({
           {t('byContinuing')}{" "}
           <Link
             href="/terms"
-            className="underline underline-offset-4 hover:text-foreground transition-colors"
+            className="text-primary underline hover:text-foreground/80 transition-colors underline-offset-4"
           >
             {t('termsOfService')}
           </Link>{" "}
           {t('and')}{" "}
           <Link
             href="/privacy"
-            className="underline underline-offset-4 hover:text-foreground transition-colors"
+            className="text-primary underline hover:text-foreground/80 transition-colors underline-offset-4"
           >
             {t('privacyPolicy')}
           </Link>

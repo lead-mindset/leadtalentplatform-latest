@@ -91,7 +91,7 @@ export function ForgotPasswordForm({
                 {t('alreadyHaveAccount')}{" "}
                 <Link
                   href="/auth/login"
-                  className="underline underline-offset-4"
+                  className="text-primary underline hover:text-primary/80 transition-colors underline-offset-4"
                 >
                   {t('signIn')}
                 </Link>

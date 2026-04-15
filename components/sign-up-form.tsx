@@ -215,7 +215,7 @@ export function SignUpForm({
               {t('alreadyHaveAccount')}{" "}
               <Link
                 href="/auth/login"
-                className="font-medium text-primary hover:text-primary/80 transition-colors underline-offset-4 hover:underline"
+                className="font-medium text-primary underline hover:text-primary/80 transition-colors underline-offset-4"
               >
                 {t('signIn')}
               </Link>
@@ -227,14 +227,14 @@ export function SignUpForm({
           {t('byCreatingAccount')}{" "}
           <Link
             href="/terms"
-            className="underline underline-offset-4 hover:text-foreground transition-colors"
+            className="text-primary underline hover:text-foreground/80 transition-colors underline-offset-4"
           >
             {t('termsOfService')}
           </Link>{" "}
           {t('and')}{" "}
           <Link
             href="/privacy"
-            className="underline underline-offset-4 hover:text-foreground transition-colors"
+            className="text-primary underline hover:text-foreground/80 transition-colors underline-offset-4"
           >
             {t('privacyPolicy')}
           </Link>

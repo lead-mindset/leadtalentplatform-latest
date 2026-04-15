@@ -131,7 +131,7 @@ export function ApplicationReviewCard({
                 href={application.StudentProfile.linkedinUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                className="inline-flex items-center gap-1 text-sm text-primary underline hover:underline"
               >
                 LinkedIn Profile
                 <ExternalLink className="w-3 h-3" />

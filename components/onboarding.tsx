@@ -389,7 +389,7 @@ export default function Onboarding() {
                           <Link
                             href="/terms"
                             target="_blank"
-                            className="text-primary underline underline-offset-2 hover:opacity-80 transition-opacity"
+                            className="text-primary underline hover:opacity-80 transition-opacity underline-offset-2"
                           >
                             {t('termsLink')}
                           </Link>
@@ -397,7 +397,7 @@ export default function Onboarding() {
                           <Link
                             href="/privacy"
                             target="_blank"
-                            className="text-primary underline underline-offset-2 hover:opacity-80 transition-opacity"
+                            className="text-primary underline hover:opacity-80 transition-opacity underline-offset-2"
                           >
                             {t('privacyLink')}
                           </Link>

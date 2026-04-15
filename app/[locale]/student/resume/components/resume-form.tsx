@@ -253,7 +253,7 @@ export default function ResumeClient({
                         <button
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
-                          className="text-primary hover:underline font-semibold underline-offset-2 transition-colors"
+                          className="text-primary underline hover:underline font-semibold underline-offset-2 transition-colors"
                         >
                           {t('browse')}
                         </button>
