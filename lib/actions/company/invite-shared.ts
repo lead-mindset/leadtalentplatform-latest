@@ -6,7 +6,7 @@ type InviteValidationSuccess = {
   invite: RecruiterAccessRow
 }
 
-type InviteValidationFailure = {
+export type InviteValidationFailure = {
   success: false
   error: string
 }

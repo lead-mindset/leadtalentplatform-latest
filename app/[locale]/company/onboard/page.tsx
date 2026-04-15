@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import OnboardContent from './onboard-content'
 import { redirect } from 'next/navigation'
 import { validateInviteToken } from '@/lib/actions/company/handle-invite'
+import type { InviteValidationFailure } from '@/lib/actions/company/invite-shared'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -54,7 +55,7 @@ async function OnboardLoader({
               </CardTitle>
             </div>
             <CardDescription className="text-foreground">
-              {result.error}
+              {(result as InviteValidationFailure).error}
             </CardDescription>
           </CardHeader>
           <CardContent>
