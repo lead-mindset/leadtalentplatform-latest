@@ -23,7 +23,7 @@ export function StudentNavigation({
   return (
     <>
       <SidebarGroup>
-        <SidebarGroupLabel>My Profile</SidebarGroupLabel>
+        <SidebarGroupLabel className="text-sidebar-foreground font-medium">My Profile</SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
             {STUDENT_NAV.map((item) => (
@@ -38,7 +38,7 @@ export function StudentNavigation({
 
       {isEditor && (
         <SidebarGroup>
-          <SidebarGroupLabel>Chapter Management</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-sidebar-foreground font-medium">Chapter Management</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {CHAPTER_NAV.map((item) => (
