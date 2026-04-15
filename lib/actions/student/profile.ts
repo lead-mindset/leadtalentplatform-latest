@@ -57,6 +57,9 @@ export async function getCurrentUserResume() {
 
     return data
   } catch (error) {
+    if (error instanceof Error && error.message.includes('cookies')) {
+      return null
+    }
     console.error("Error fetching resume:", error)
     return null
   }
