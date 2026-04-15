@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import Image from 'next/image'
-import { Calendar, MapPin, Users, Clock, Search, Plus, Mail } from 'lucide-react'
+import { Calendar, MapPin, Users, Clock, Search, Plus, Mail, User } from 'lucide-react'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { getPublishedEvents } from '@/lib/actions/events/get-data'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -127,43 +128,63 @@ async function EventsContent() {
                           </div>
                           
                           <div className="flex-1">
-                            <div className="flex flex-col sm:flex-row gap-4 p-4 rounded-lg border-border border bg-card hover:bg-accent/50 transition-colors">
-                              <div className="flex-shrink-0">
-                                <div className="flex items-center gap-2 text-sm font-medium">
-                                  <Clock className="h-4 w-4 text-muted-foreground" />
+                            <div className="flex gap-4 p-4 rounded-lg border-border border bg-card hover:bg-accent/50 transition-colors">
+                              <div className="flex-1 space-y-3">
+                                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                                  <Clock className="h-4 w-4" />
                                   <span>{formatTime(event.startAt)}</span>
                                 </div>
-                              </div>
-                              
-                              <div className="flex-1 space-y-3">
-                                <div>
-                                  <h3 className="font-medium text-base leading-tight">
-                                    {event.title}
-                                  </h3>
-                                  <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-2 text-sm text-muted-foreground">
-                                    {event.CreatedBy?.name && (
-                                      <span>{event.CreatedBy.name}</span>
-                                    )}
-                                    {event.location && (
-                                      <div className="flex items-center gap-1">
-                                        <MapPin className="h-3 w-3" />
-                                        <span className="truncate max-w-32 sm:max-w-none">{event.location}</span>
+                                <h3 className="font-bold text-xl leading-tight mt-1">
+                                  {event.title}
+                                </h3>
+                                <div className="flex flex-col gap-2 mt-2 text-sm text-muted-foreground">
+                                  {event.CreatedBy?.name && (
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-5 h-5 rounded-full bg-purple-500/20 flex items-center justify-center">
+                                        <User className="h-3 w-3 text-purple-400" />
                                       </div>
-                                    )}
-                                    <div className="flex items-center gap-1">
-                                      <Users className="h-3 w-3" />
-                                      <span>{event._count.registrations} attending</span>
+                                      <span>By {event.CreatedBy.name}</span>
                                     </div>
-                                  </div>
+                                  )}
+                                  {event.location && (
+                                    <div className="flex items-center gap-2">
+                                      <MapPin className="h-4 w-4" />
+                                      <span className="truncate max-w-xs">{event.location}</span>
+                                    </div>
+                                  )}
                                 </div>
-                                
-                                <div className="flex items-center justify-between">
-                                  <EventTypeBadge eventType={event.eventType} />
-                                  <Button asChild variant="ghost" size="sm">
-                                    <Link href={`/events/${event.id}`} className="text-xs font-medium">
-                                      View details →
-                                    </Link>
-                                  </Button>
+                                {/* 
+                                <div className="flex items-center gap-2 mt-3">
+                                  <div className="flex items-center -space-x-2">
+                                    {[1, 2, 3, 4, 5].map((i) => (
+                                      <div key={i} className="w-7 h-7 rounded-full bg-muted border-2 border-background flex items-center justify-center">
+                                        <span className="text-xs font-medium text-muted-foreground">
+                                          {String.fromCharCode(65 + i)}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                  <span className="text-sm text-muted-foreground font-medium">
+                                    +{event._count.registrations - 5 > 0 ? event._count.registrations - 5 : 0}
+                                  </span>
+                                </div> 
+                                */}
+                              </div>
+
+                              <div className="flex-shrink-0 w-24 h-24 sm:w-32 sm:h-32">
+                                <div className="relative w-full h-full rounded-lg overflow-hidden bg-muted">
+                                  {event.coverImage ? (
+                                    <Image 
+                                      src={event.coverImage} 
+                                      alt={event.title} 
+                                      fill 
+                                      className="object-cover"
+                                    />
+                                  ) : (
+                                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
+                                      <Calendar className="h-8 w-8 text-muted-foreground" />
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </div>
