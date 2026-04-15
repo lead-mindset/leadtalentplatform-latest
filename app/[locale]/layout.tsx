@@ -7,21 +7,16 @@ import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { Suspense } from 'react';
-import { Lora, Montserrat, Geist_Mono } from "next/font/google";
+import { Open_Sans, Raleway } from "next/font/google";
 
-const montserrat = Montserrat({
+const openSans = Open_Sans({
   subsets: ["latin"],
-  variable: "--font-montserrat",
+  variable: "--font-open-sans",
 });
 
-const lora = Lora({
+const raleway = Raleway({
   subsets: ["latin"],
-  variable: "--font-lora",
-});
-
-const geistMono = Geist_Mono({
-  subsets: ["latin"],
-  variable: "--font-geist-mono",
+  variable: "--font-raleway",
 });
 
 const defaultUrl = process.env.FRONTEND_URL
@@ -73,7 +68,7 @@ export default function LocaleLayout({
   return (
     <html
       lang={routing.defaultLocale}
-      className={`${montserrat.variable} ${lora.variable} ${geistMono.variable}`}
+      className={`${openSans.variable} ${raleway.variable}`}
       suppressHydrationWarning
     >
       <body className="antialiased">
