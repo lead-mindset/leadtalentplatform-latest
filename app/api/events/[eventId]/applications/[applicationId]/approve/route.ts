@@ -24,12 +24,14 @@ export async function POST(
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
+  const result = data as { capacity_warning: boolean; capacity_status: string } | null
+
   const { data: registration } = await supabase
     .from('EventRegistration')
     .select(`
       id,
-      User:userId (email, name),
-      Event:eventId (title, startAt, location, meetingUrl, eventType)
+      User!eventregistration_userid_fkey (email, name),
+      Event!EventRegistration_eventId_fkey (title, startAt, location, meetingUrl, eventType)
     `)
     .eq('id', applicationId)
     .single()
@@ -37,13 +39,13 @@ export async function POST(
   if (registration && registration.User && registration.Event) {
     import('@/lib/emails/send-email').then(({ sendApplicationApprovedEmail }) => {
       sendApplicationApprovedEmail(
-        registration.User[0].email,
-        registration.User[0].name,
-        registration.Event[0].title,
-        new Date(registration.Event[0].startAt).toLocaleString(),
-        registration.Event[0].location,
-        registration.Event[0].meetingUrl,
-        registration.Event[0].eventType,
+        registration.User.email,
+        registration.User.name,
+        registration.Event.title,
+        new Date(registration.Event.startAt).toLocaleString(),
+        registration.Event.location,
+        registration.Event.meetingUrl,
+        registration.Event.eventType,
         registration.id
       ).catch(err => console.error('Email error:', err))
     })
@@ -51,7 +53,7 @@ export async function POST(
 
   return NextResponse.json({
     success: true,
-    capacityWarning: data?.capacity_warning,
-    capacityStatus: data?.capacity_status,
+    capacityWarning: result?.capacity_warning,
+    capacityStatus: result?.capacity_status,
   })
 }
