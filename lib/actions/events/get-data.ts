@@ -32,7 +32,10 @@ const EVENT_SELECT = `
   createdById,
   createdAt,
   updatedAt,
-  Chapter:Chapter!Event_chapterId_fkey ( id, name, university ),
+  ownerChapter:Chapter!Event_chapterId_fkey ( id, name, university ),
+  collaborators:EventChapter (
+    chapter:Chapter ( id, name, university, city, region )
+  ),
   CreatedBy:User!Event_createdById_fkey ( id, name, email ),
   EventRegistration:EventRegistration!EventRegistration_eventId_fkey ( id, status )
 `
@@ -80,10 +83,22 @@ type RegistrationWithEventRow = EventRegistrationRow & {
     | null
 }
 
-function mapEvent(raw: EventWithDetailsRaw | null, registeredCount = 0): EventWithDetails | null {
+function mapEvent(raw: any, registeredCount = 0): EventWithDetails | null {
   if (!raw) return null
-  const chapter = Array.isArray(raw.Chapter) ? raw.Chapter[0] : raw.Chapter
-  const createdBy = Array.isArray(raw.CreatedBy) ? raw.CreatedBy[0] : raw.CreatedBy
+  
+  const ownerChapter = Array.isArray(raw.ownerChapter) && raw.ownerChapter.length > 0 ? raw.ownerChapter[0] : null
+  const createdBy = Array.isArray(raw.CreatedBy) && raw.CreatedBy.length > 0 ? raw.CreatedBy[0] : null
+  
+  const collaborators = (raw.collaborators || [])
+    .map((c: any) => ({
+      id: c.id,
+      eventId: c.eventId,
+      chapterId: c.chapterId,
+      addedAt: c.addedAt,
+      addedById: c.addedById,
+      Chapter: Array.isArray(c.chapter) && c.chapter.length > 0 ? c.chapter[0] : null
+    }))
+    .filter((c: any) => c.Chapter) // Only keep collaborators with valid chapters
 
   return {
     id: raw.id,
@@ -103,9 +118,13 @@ function mapEvent(raw: EventWithDetailsRaw | null, registeredCount = 0): EventWi
     createdById: raw.createdById,
     createdAt: raw.createdAt,
     updatedAt: raw.updatedAt,
-    Chapter: chapter ?? null,
-    CreatedBy: createdBy ?? null,
-    _count: { registrations: registeredCount },
+    Chapter: ownerChapter,
+    EventChapter: collaborators,
+    CreatedBy: createdBy,
+    _count: { 
+      registrations: registeredCount,
+      chapters: collaborators.length
+    },
   }
 }
 
@@ -123,7 +142,7 @@ export async function getPublishedEvents(): Promise<EventWithDetails[]> {
     return []
   }
 
-  const eventRows = data as unknown as EventWithDetailsRaw[]
+  const eventRows = data as any[]
   const eventIds = eventRows.map((event) => event.id)
 
   const { data: registrations, error: registrationsError } = await supabase
@@ -214,7 +233,6 @@ export async function getChapterEvents(): Promise<EventWithDetails[]> {
   const { data, error } = await supabase
     .from('Event')
     .select(EVENT_SELECT)
-    .eq('chapterId', chapterId)
     .order('startAt', { ascending: false })
 
   if (error || !data) {
@@ -222,9 +240,14 @@ export async function getChapterEvents(): Promise<EventWithDetails[]> {
     return []
   }
 
-  return (data as unknown as EventWithDetailsRaw[])
-    .map(mapEvent)
+  const events = (data as any[])
+    .map(event => mapEvent(event, 0))
     .filter((e): e is EventWithDetails => e !== null)
+  
+  return events.map(event => ({
+    ...event,
+    isOwnedByChapter: event.chapterId === chapterId
+  }))
 }
 
 export async function getAllEventsAdmin(): Promise<EventWithDetails[]> {
@@ -240,8 +263,8 @@ export async function getAllEventsAdmin(): Promise<EventWithDetails[]> {
     return []
   }
 
-  return (data as unknown as EventWithDetailsRaw[])
-    .map(mapEvent)
+  return (data as any[])
+    .map(event => mapEvent(event, 0))
     .filter((e): e is EventWithDetails => e !== null)
 }
 
