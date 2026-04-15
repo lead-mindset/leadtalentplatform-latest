@@ -2,15 +2,15 @@
 
 import { useState } from 'react'
 import {
+  Button,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { ExternalLink, CheckCircle } from 'lucide-react'
+} from '@/components/ui'
+import { ExternalLink, CheckCircle, FileText, Clock, Mail } from 'lucide-react'
 
 interface ApplyModalProps {
   open: boolean
@@ -30,11 +30,9 @@ export function ApplyModal({
   isSubmitting = false,
 }: ApplyModalProps) {
   const [step, setStep] = useState<'form' | 'confirmation'>('form')
-  const [hasOpenedForm, setHasOpenedForm] = useState(false)
 
   const handleOpenForm = () => {
     window.open(applicationFormUrl, '_blank')
-    setHasOpenedForm(true)
     setStep('confirmation')
   }
 
@@ -43,7 +41,6 @@ export function ApplyModal({
     onOpenChange(false)
     setTimeout(() => {
       setStep('form')
-      setHasOpenedForm(false)
     }, 300)
   }
 
@@ -51,77 +48,179 @@ export function ApplyModal({
     onOpenChange(false)
     setTimeout(() => {
       setStep('form')
-      setHasOpenedForm(false)
     }, 300)
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         {step === 'form' ? (
           <>
-            <DialogHeader>
-              <DialogTitle>Application Required</DialogTitle>
-              <DialogDescription>
+            <DialogHeader className="text-center pb-4">
+              <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                <FileText className="w-6 h-6 text-primary" />
+              </div>
+              <DialogTitle className="text-xl font-semibold">Application Required</DialogTitle>
+              <DialogDescription className="text-base mt-2">
                 This event requires you to complete an application form before registering.
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4 py-4">
-              <div className="rounded-lg bg-muted p-4">
-                <p className="text-sm font-medium mb-2">Event:</p>
-                <p className="text-sm text-muted-foreground">{eventTitle}</p>
+            <div className="space-y-6 py-2">
+              <div className="rounded-lg border bg-card p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-primary"></div>
+                  <p className="text-sm font-semibold">Event Details</p>
+                </div>
+                <p className="text-sm font-medium">{eventTitle}</p>
               </div>
 
-              <p className="text-sm">
-                Click the button below to open the application form. Complete and submit it, then return here to confirm.
-              </p>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-primary font-semibold text-sm">1</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">Open Application Form</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Click the button below to open the external application form in a new tab
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-primary font-semibold text-sm">2</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">Complete & Submit</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Fill out all required fields and submit the application
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-primary font-semibold text-sm">3</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">Return & Confirm</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Come back to this page and confirm you've submitted the form
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-warning bg-warning/10 p-3">
+                <div className="flex items-start gap-2">
+                  <Clock className="w-4 h-4 text-warning mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium">Keep this tab open</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      You'll need to return here to confirm your submission
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <DialogFooter className="gap-2 sm:gap-0">
-              <Button variant="outline" onClick={handleCancel}>
+            <DialogFooter className="gap-3 sm:gap-0 pt-4">
+              <Button 
+                variant="outline" 
+                onClick={handleCancel}
+                className="flex-1 sm:flex-none"
+              >
                 Cancel
               </Button>
-              <Button onClick={handleOpenForm}>
+              <Button 
+                onClick={handleOpenForm}
+                className="flex-1 sm:flex-none h-12"
+              >
+                <ExternalLink className="mr-2 w-4 h-4" />
                 Open Application Form
-                <ExternalLink className="ml-2 w-4 h-4" />
               </Button>
             </DialogFooter>
           </>
         ) : (
           <>
-            <DialogHeader>
-              <DialogTitle>Confirm Submission</DialogTitle>
-              <DialogDescription>
+            <DialogHeader className="text-center pb-4">
+              <div className="mx-auto w-12 h-12 rounded-full bg-success/10 flex items-center justify-center mb-4">
+                <CheckCircle className="w-6 h-6 text-success" />
+              </div>
+              <DialogTitle className="text-xl font-semibold">Confirm Your Application</DialogTitle>
+              <DialogDescription className="text-base mt-2">
                 Did you complete and submit the application form?
               </DialogDescription>
             </DialogHeader>
 
-            <div className="py-4">
-              <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4">
-                <CheckCircle className="mt-0.5 h-5 w-5 text-primary" />
-                <div>
-                  <p className="text-sm font-medium">Form submitted?</p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    If you've completed the form, confirm below. You'll receive an email confirmation and we'll notify you when a decision is made.
-                  </p>
+            <div className="space-y-4 py-2">
+              <div className="rounded-lg border border-success/20 bg-success/5 p-4">
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-success mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium">Ready to confirm?</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      If you've successfully submitted the application form, click confirm below to complete your registration request.
+                    </p>
+                  </div>
                 </div>
+              </div>
+
+              <div className="rounded-lg border border-muted bg-muted/50 p-4">
+                <div className="flex items-start gap-3">
+                  <Mail className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium">What happens next?</p>
+                    <ul className="text-sm text-muted-foreground mt-2 space-y-1">
+                      <li>· You'll receive an email confirmation</li>
+                      <li>· We'll review your application</li>
+                      <li>· You'll be notified of the decision</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground">
+                  Haven't submitted yet?
+                </p>
+                <Button 
+                  variant="link" 
+                  onClick={() => setStep('form')}
+                  className="h-auto p-0 text-sm"
+                >
+                  Go back to application form
+                </Button>
               </div>
             </div>
 
-            <DialogFooter className="gap-2 sm:gap-0">
+            <DialogFooter className="gap-3 sm:gap-0 pt-4">
               <Button 
                 variant="outline" 
-                onClick={() => setStep('form')}
+                onClick={handleCancel}
                 disabled={isSubmitting}
+                className="flex-1 sm:flex-none"
               >
-                Back
+                Cancel
               </Button>
               <Button 
                 onClick={handleConfirm} 
                 disabled={isSubmitting}
+                className="flex-1 sm:flex-none h-12"
               >
-                {isSubmitting ? 'Submitting...' : "Yes, I submitted it"}
+                {isSubmitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-border border-t-transparent rounded-full animate-spin mr-2" />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="mr-2 w-4 h-4" />
+                    Yes, I submitted it
+                  </>
+                )}
               </Button>
             </DialogFooter>
           </>
