@@ -8,6 +8,7 @@ import { getMyRegistrations } from '@/lib/actions/events/get-data'
 import { CancelRegistrationDialog } from '@/components/events/cancel-registration-dialog'
 import { ScrollToHighlightedEvent } from '@/components/events/scroll-to-highlighted-event'
 import { RegistrationStatusBadge } from '@/components/events/registration-status-badge'
+import type { RegistrationStatus } from '@/lib/types'
 import { Link } from '@/i18n/routing'
 import { Calendar, Clock, MapPin } from 'lucide-react'
 
@@ -57,7 +58,7 @@ function EventRegistrationCard({
               </div>
             ) : null}
           </div>
-          <RegistrationStatusBadge status={registration.status} />
+          <RegistrationStatusBadge status={registration.status as RegistrationStatus} />
         </div>
       </CardHeader>
 
