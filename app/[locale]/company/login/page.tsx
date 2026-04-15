@@ -52,7 +52,7 @@ export default function CompanyLoginPage() {
     <div className="inline-flex h-10 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground w-full">
       <button
         onClick={() => router.push('/auth/login')}
-        className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-all hover:bg-accent hover:text-accent-foreground gap-2 flex-1"
+        className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-all hover:bg-accent hover:text-accent-foreground gap-2 flex-1"
       >
         <Users className="h-4 w-4" />
         Member Login

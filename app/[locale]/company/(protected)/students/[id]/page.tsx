@@ -163,14 +163,14 @@ export default async function StudentProfilePage({
         <CardContent className="space-y-3">
           <div className="flex items-center gap-2">
             <Mail className="h-4 w-4 text-muted-foreground" />
-            <a href={`mailto:${resolvedStudent.email}`} className="text-sm hover:underline">
+            <a href={`mailto:${resolvedStudent.email}`} className="text-sm text-primary hover:underline">
               {resolvedStudent.email}
             </a>
           </div>
           {resolvedStudent.phone && (
             <div className="flex items-center gap-2">
               <Phone className="h-4 w-4 text-muted-foreground" />
-              <a href={`tel:${resolvedStudent.phone}`} className="text-sm hover:underline">
+              <a href={`tel:${resolvedStudent.phone}`} className="text-sm text-primary hover:underline">
                 {resolvedStudent.phone}
               </a>
             </div>
