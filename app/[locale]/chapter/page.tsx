@@ -32,18 +32,18 @@ function StatCard({
 }) {
   const iconClass =
     variant === 'warning'
-      ? 'text-[var(--chart-1)]'
+      ? 'text-warning'
       : variant === 'success'
-      ? 'text-[var(--chart-2)]'
+      ? 'text-success'
       : variant === 'info'
-      ? 'text-[var(--chart-3)]'
+      ? 'text-info'
       : 'text-muted-foreground'
 
   const valueClass =
     variant === 'warning'
-      ? 'text-[var(--chart-1)]'
+      ? 'text-warning'
       : variant === 'success'
-      ? 'text-[var(--chart-2)]'
+      ? 'text-success'
       : 'text-foreground'
 
   return (
@@ -75,8 +75,8 @@ function PendingInbox({
     return (
       <Card>
         <CardContent className="py-10 text-center">
-          <div className="mx-auto h-10 w-10 rounded-full bg-(--chart-2)/10 flex items-center justify-center mb-3">
-            <CheckCircle2 className="h-5 w-5 text-chart-2" />
+          <div className="mx-auto h-10 w-10 rounded-full bg-success/10 flex items-center justify-center mb-3">
+            <CheckCircle2 className="h-5 w-5 text-success" />
           </div>
           <p className="font-medium text-foreground">All caught up</p>
           <p className="text-sm text-muted-foreground mt-1">
