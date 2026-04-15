@@ -37,39 +37,39 @@ async function sendInviteEmail(email: string, inviteToken: string, companyName?:
     subject: `You're invited to join ${companyName || 'the team'}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2563eb;">Welcome to ${companyName || 'the Team'}!</h2>
+        <h2 style="color: hsl(var(--primary));">Welcome to ${companyName || 'the Team'}!</h2>
         
         <p>You've been invited to join the recruiter portal. Click the button below to get started:</p>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${url}" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-weight: 500;">
+          <a href="${url}" style="display: inline-block; padding: 12px 24px; background-color: hsl(var(--primary)); color: hsl(var(--primary-foreground)); text-decoration: none; border-radius: 6px; font-weight: 500;">
             Accept Invitation
           </a>
         </div>
         
-        <p style="color: #666; font-size: 14px;">
+        <p style="color: hsl(var(--muted-foreground)); font-size: 14px;">
           <strong>What happens next:</strong>
         </p>
-        <ol style="color: #666; font-size: 14px; line-height: 1.6;">
+        <ol style="color: hsl(var(--muted-foreground)); font-size: 14px; line-height: 1.6;">
           <li>Click the button above to accept your invitation</li>
           <li>Complete your profile</li>
           <li>You'll receive a login link via email (no password needed!)</li>
           <li>Start accessing candidate profiles</li>
         </ol>
         
-        <div style="background-color: #eff6ff; border-left: 4px solid #2563eb; padding: 12px; margin: 20px 0;">
-          <p style="margin: 0; color: #1e40af; font-size: 14px;">
+        <div style="background-color: hsl(var(--primary)/10); border-left: 4px solid hsl(var(--primary)); padding: 12px; margin: 20px 0;">
+          <p style="margin: 0; color: hsl(var(--primary)); font-size: 14px;">
             🔒 <strong>Passwordless Access:</strong> We use secure email links for login. No passwords to remember!
           </p>
         </div>
         
-        <p style="color: #999; font-size: 12px; margin-top: 30px;">
+        <p style="color: hsl(var(--muted-foreground)); font-size: 12px; margin-top: 30px;">
           This invitation link will expire in 7 days.
         </p>
         
-        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+        <hr style="border: none; border-top: 1px solid hsl(var(--border)); margin: 30px 0;">
         
-        <p style="color: #666; font-size: 12px;">
+        <p style="color: hsl(var(--muted-foreground)); font-size: 12px;">
           If you didn't expect this invitation, you can safely ignore this email.
         </p>
       </div>
