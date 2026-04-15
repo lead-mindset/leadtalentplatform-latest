@@ -107,6 +107,17 @@ export type EventRow = Database["public"]["Tables"]["Event"]["Row"]
 export type EventRegistrationRow = Database["public"]["Tables"]["EventRegistration"]["Row"]
 export type SavedStudentRow = Database["public"]["Tables"]["SavedStudent"]["Row"]
 
+export type EventChapterRow = {
+  id: string // uuid
+  eventId: string // uuid
+  chapterId: string // text
+  addedAt: string // timestamptz
+  addedById: string // uuid
+}
+
+export type EventChapterInsert = Omit<EventChapterRow, 'id' | 'addedAt'>
+export type EventChapterUpdate = Partial<EventChapterInsert>
+
 // ============================================================================
 // COMPOSITE TYPES - Used in queries with joins
 // ============================================================================
@@ -130,17 +141,24 @@ export type RecruiterUser = UserRow & {
 };
 
 export type EventWithDetailsRaw = EventRow & {
-  Chapter: Pick<ChapterRow, 'id' | 'name' | 'university'>[]
+  EventChapter: (EventChapterRow & {
+    Chapter: Pick<ChapterRow, 'id' | 'name' | 'university'>
+  })[]
+  Chapter: Pick<ChapterRow, 'id' | 'name' | 'university'> | null
   CreatedBy: Pick<UserRow, 'id' | 'name' | 'email'>[]
   EventRegistration: { id: string; status: RegistrationStatus }[]
 }
 
 export type EventWithDetails = EventRow & {
+  EventChapter: (EventChapterRow & {
+    Chapter: Pick<ChapterRow, 'id' | 'name' | 'university'>
+  })[]
   Chapter: Pick<ChapterRow, 'id' | 'name' | 'university'> | null
   CreatedBy: Pick<UserRow, 'id' | 'name' | 'email'> | null
   _count: { 
     registrations: number; 
-    pendingApplications?: number; 
+    pendingApplications?: number;
+    chapters?: number;
   }
 }
 
@@ -250,6 +268,21 @@ export type UserWithFullProfile = UserRow & {
   StudentProfile: (StudentProfileRow & {
     Chapter: ChapterRow | null
   }) | null
+}
+
+export type EventChapterWithChapter = EventChapterRow & {
+  Chapter: Pick<ChapterRow, 'id' | 'name' | 'university' | 'city' | 'region'>
+  AddedBy: Pick<UserRow, 'id' | 'name' | 'email'>
+}
+
+export type EventWithAllChapters = EventRow & {
+  EventChapter: EventChapterWithChapter[]
+  CreatedBy: Pick<UserRow, 'id' | 'name' | 'email'> | null
+  _count: {
+    registrations: number
+    chapters: number
+    pendingApplications?: number
+  }
 }
 
 export type ChapterStats = {
