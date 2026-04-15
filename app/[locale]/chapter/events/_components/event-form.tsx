@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/tooltip'
 import { toast } from 'sonner'
 import { validateEventForm, type EventFormData } from '@/lib/validations/event'
+import { CollaboratorManager } from './collaborator-manager'
 
 type Mode = 'create' | 'edit'
 
@@ -91,7 +92,6 @@ export function EventForm({
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   async function handleCoverFile(file: File | null) {
-    setCoverError(null)
     if (!file) return
     if (!file.type.startsWith('image/')) {
       setCoverError('Only image files are allowed')
@@ -140,7 +140,25 @@ export function EventForm({
         errors[field] = issue.message
       })
       setFieldErrors(errors)
-      setError('Please fix the validation errors below')
+      
+      const errorCount = validation.error.issues.length
+      toast.error(`Please fix ${errorCount} validation error${errorCount > 1 ? 's' : ''}`, {
+        description: 'Check the highlighted fields in the form',
+        action: {
+          label: 'Fix errors',
+          onClick: () => {
+            const firstErrorField = validation.error.issues[0]?.path[0] as string
+            if (firstErrorField) {
+              const element = document.getElementById(firstErrorField)
+              if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                element.focus()
+              }
+            }
+          }
+        }
+      })
+      
       return
     }
 
@@ -460,6 +478,14 @@ export function EventForm({
               </p>
             </div>
           )}
+        </div>
+
+        <div className="space-y-6 border-t pt-6">
+          <CollaboratorManager 
+            eventId={mode === 'create' ? 'new' : initial?.id || ''} 
+            ownerChapter={null} 
+            mode={mode} 
+          />
         </div>
 
         <div className="flex items-center gap-3 pt-1">
