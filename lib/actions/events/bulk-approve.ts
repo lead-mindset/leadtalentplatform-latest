@@ -4,6 +4,27 @@ import { revalidatePath } from 'next/cache'
 import { sendApplicationApprovedEmail } from '@/lib/emails/send-email'
 import { sendApplicationRejectedEmail } from '@/lib/emails/send-email'
 import { assertCanManageEvent } from './access'
+import type { EventRow, EventRegistrationRow, UserRow } from '@/lib/types'
+
+type ApprovedRegistrationRow = Pick<EventRegistrationRow, 'id'> & {
+  Applicant: Pick<UserRow, 'email' | 'name'> | null
+  CheckedInBy: Pick<UserRow, 'email' | 'name'> | null
+  Event: Pick<EventRow, 'title' | 'startAt' | 'location' | 'meetingUrl' | 'eventType'> | null
+}
+
+type RejectedRegistrationRow = Pick<EventRegistrationRow, 'id'> & {
+  User: Pick<UserRow, 'email' | 'name'> | Pick<UserRow, 'email' | 'name'>[] | null
+  Event:
+  | (Pick<EventRow, 'title'> & {
+    Chapter: { name: string } | { name: string }[] | null
+  })
+  | Array<
+    Pick<EventRow, 'title'> & {
+      Chapter: { name: string } | { name: string }[] | null
+    }
+  >
+  | null
+}
 
 export async function bulkApproveApplications(eventId: string, applicationIds: string[]) {
   const access = await assertCanManageEvent(eventId)
@@ -16,35 +37,50 @@ export async function bulkApproveApplications(eventId: string, applicationIds: s
     p_approved_by: user.id,
   })
 
-  if (error) {
-    console.error('Bulk approve error:', error)
-    throw new Error('Failed to approve applications')
-  }
+  const result = data as { capacity_warning: boolean; capacity_status: string } | null
 
-  const capacityWarning = data?.capacity_warning || false
-  const capacityStatus = data?.capacity_status || 'ok'
+  const capacityWarning = result?.capacity_warning ?? false
+  const capacityStatus = result?.capacity_status ?? 'ok'
 
-  const { data: registrations } = await supabase
+  const registrations = await supabase
     .from('EventRegistration')
     .select(`
-      id,
-      User:userId (email, name),
-      Event:eventId (title, startAt, location, meetingUrl, eventType)
-    `)
+    id,
+    Applicant:userId!eventregistration_userid_fkey (
+      email,
+      name
+    ),
+    CheckedInBy:checkedInById!eventregistration_checkedinbyid_fkey (
+      email,
+      name
+    ),
+    Event:eventId!EventRegistration_eventId_fkey (
+      title,
+      startAt,
+      location,
+      meetingUrl,
+      eventType
+    )
+  `)
     .in('id', applicationIds)
     .eq('status', 'registered')
 
-  if (registrations) {
-    registrations.forEach((registration: any) => {
-      if (registration.User?.email && registration.Event?.title) {
+  if (registrations.data) {
+    (registrations.data as unknown as ApprovedRegistrationRow[]).forEach((registration) => {
+
+
+      const user = Array.isArray(registration.Applicant) ? registration.Applicant[0] : registration.Applicant
+      const event = Array.isArray(registration.Event) ? registration.Event[0] : registration.Event
+
+      if (user?.email && event?.title) {
         void sendApplicationApprovedEmail(
-          registration.User.email,
-          registration.User.name,
-          registration.Event.title,
-          new Date(registration.Event.startAt).toLocaleString(),
-          registration.Event.location,
-          registration.Event.meetingUrl,
-          registration.Event.eventType,
+          user.email,
+          user.name,
+          event.title,
+          new Date(event.startAt).toLocaleString(),
+          event.location,
+          event.meetingUrl,
+          event.eventType,
           registration.id
         ).catch(err => console.error('Failed to send approval email:', err))
       }
@@ -69,9 +105,9 @@ export async function bulkRejectApplications(eventId: string, applicationIds: st
 
   const { error } = await supabase
     .from('EventRegistration')
-    .update({ 
+    .update({
       status: 'rejected',
-      qrToken: null
+      qrToken: undefined
     })
     .in('id', applicationIds)
     .eq('eventId', eventId)
@@ -86,20 +122,24 @@ export async function bulkRejectApplications(eventId: string, applicationIds: st
     .from('EventRegistration')
     .select(`
       id,
-      User:userId (email, name),
+      User:userId!eventregistration_userid_fkey (email, name),
       Event:eventId (title, Chapter!inner(name))
     `)
     .in('id', applicationIds)
     .eq('status', 'rejected')
 
   if (registrations) {
-    registrations.forEach((registration: any) => {
-      if (registration.User?.email && registration.Event?.title) {
-        const chapterName = registration.Event?.Chapter?.[0]?.name || 'LEAD Chapter'
+    (registrations as unknown as RejectedRegistrationRow[]).forEach((registration) => {
+      const user = Array.isArray(registration.User) ? registration.User[0] : registration.User
+      const event = Array.isArray(registration.Event) ? registration.Event[0] : registration.Event
+      const chapter = event ? (Array.isArray(event.Chapter) ? event.Chapter[0] : event.Chapter) : null
+
+      if (user?.email && event?.title) {
+        const chapterName = chapter?.name || 'LEAD Chapter'
         void sendApplicationRejectedEmail(
-          registration.User.email,
-          registration.User.name,
-          registration.Event.title,
+          user.email,
+          user.name,
+          event.title,
           chapterName
         ).catch(err => console.error('Failed to send rejection email:', err))
       }
