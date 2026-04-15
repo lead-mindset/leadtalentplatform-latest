@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+ import { NextRequest, NextResponse } from 'next/server'
 import { assertCanManageEvent } from '@/lib/actions/events/access'
 
 export async function POST(
@@ -23,8 +23,8 @@ export async function POST(
     .from('EventRegistration')
     .select(`
       id,
-      User:userId (email, name),
-      Event:eventId (title, Chapter (name))
+      User!eventregistration_userid_fkey (email, name),
+      Event!EventRegistration_eventId_fkey (title, Chapter!inner(name))
     `)
     .eq('id', applicationId)
     .single()
@@ -33,7 +33,7 @@ export async function POST(
     .from('EventRegistration')
     .update({
       status: 'rejected',
-      qrToken: null,
+      qrToken: undefined,
     })
     .eq('id', applicationId)
     .eq('eventId', eventId)
@@ -46,10 +46,10 @@ export async function POST(
   if (application && application.User && application.Event) {
     import('@/lib/emails/send-email').then(({ sendApplicationRejectedEmail }) => {
       sendApplicationRejectedEmail(
-        application.User[0].email,
-        application.User[0].name,
-        application.Event[0].title,
-        application.Event[0].Chapter?.[0]?.name || 'LEAD Chapter'
+        application.User.email,
+        application.User.name,
+        application.Event.title,
+        application.Event.Chapter?.name || 'LEAD Chapter'
       ).catch(err => console.error('Email error:', err))
     })
   }
