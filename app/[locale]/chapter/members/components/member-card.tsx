@@ -126,7 +126,7 @@ export default function MemberCard({
                   href={profile.linkedinUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-info hover:underline text-sm"
+                  className="text-info underline hover:underline text-sm"
                 >
                   LinkedIn Profile
                 </a>
