@@ -74,7 +74,7 @@ export async function applyForEvent(eventId: string): Promise<{ success: true; r
       .eq('id', eventId)
       .single()
 
-    const chapterName = eventData?.Chapter?.[0]?.name || 'LEAD Chapter'
+    const chapterName = Array.isArray(eventData?.Chapter) ? eventData.Chapter[0]?.name : eventData?.Chapter?.name || 'LEAD Chapter'
 
     if (eventData?.title) {
       void sendApplicationReceivedEmail(
@@ -234,6 +234,8 @@ export async function registerForEvent(
     revalidateEventRegistrationPaths(eventId)
 
     redirectToStudentEventQr(eventId)
+    
+    return { error: 'Something went wrong. Please try again.' }
   } catch (err) {
     if (isRedirectError(err)) throw err
     console.error('[registerForEvent]', err)
