@@ -119,7 +119,7 @@ export function CompaniesManagementClient({
                         label
                       ) : (
                         <button
-                          className="rounded-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          className="rounded-sm hover:underline"
                           onClick={() => toggleSort(key)}
                         >
                           {label}
