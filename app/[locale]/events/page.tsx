@@ -128,7 +128,11 @@ async function EventsContent() {
                           </div>
                           
                           <div className="flex-1">
-                            <div className="flex gap-4 p-4 rounded-lg border-border border bg-card hover:bg-accent/50 transition-colors">
+                            <Link 
+                              href={`/events/${event.id}`}
+                              className="block group"
+                            >
+                              <div className="flex gap-4 p-4 rounded-lg border-border border bg-card hover:bg-accent/50 transition-colors cursor-pointer">
                               <div className="flex-1 space-y-3">
                                 <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                                   <Clock className="h-4 w-4" />
@@ -187,7 +191,8 @@ async function EventsContent() {
                                   )}
                                 </div>
                               </div>
-                            </div>
+                              </div>
+                            </Link>
                           </div>
                         </div>
                       ))}
