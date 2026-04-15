@@ -21,6 +21,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { toast } from 'sonner'
+import { validateEventForm, type EventFormData } from '@/lib/validations/event'
 
 type Mode = 'create' | 'edit'
 
@@ -49,6 +51,7 @@ export function EventForm({
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   const defaults = useMemo(() => {
     const e = initial
@@ -112,20 +115,36 @@ export function EventForm({
 
   async function submitEvent(targetPublished: boolean) {
     setError(null)
-    startTransition(async () => {
-      if ((eventType === 'online' || eventType === 'hybrid') && !meetingUrl.trim()) {
-        setError('Meeting URL is required for online and hybrid events')
-        return
-      }
-      if ((eventType === 'in_person' || eventType === 'hybrid') && !location.trim()) {
-        setError('Location is required for in-person and hybrid events')
-        return
-      }
-      if (accessModel === 'application' && !applicationFormUrl.trim()) {
-        setError('Application form URL is required for application-gated events')
-        return
-      }
+    setFieldErrors({})
+    
+    const formData: EventFormData = {
+      title,
+      description: description.trim() || '',
+      coverImage: coverImage || '',
+      startAt: fromDateTimeLocal(startAt),
+      endAt: fromDateTimeLocal(endAt),
+      location: location || '',
+      meetingUrl: meetingUrl || '',
+      eventType,
+      capacity: capacity || '',
+      isPublished: targetPublished,
+      accessModel,
+      applicationFormUrl: applicationFormUrl || '',
+    }
 
+    const validation = validateEventForm(formData)
+    if (!validation.success) {
+      const errors: Record<string, string> = {}
+      validation.error.issues.forEach((issue) => {
+        const field = issue.path[0] as string
+        errors[field] = issue.message
+      })
+      setFieldErrors(errors)
+      setError('Please fix the validation errors below')
+      return
+    }
+
+    startTransition(async () => {
       const payload = {
         title,
         description: description.trim() || undefined,
@@ -141,22 +160,28 @@ export function EventForm({
         applicationFormUrl: accessModel === 'application' ? applicationFormUrl : undefined,
       }
 
-      const res =
-        mode === 'create'
-          ? await createEvent(payload as CreateEventInput)
-          : await updateEvent({ id: initial!.id, ...payload } as UpdateEventInput)
+      try {
+        const res =
+          mode === 'create'
+            ? await createEvent(payload as CreateEventInput)
+            : await updateEvent({ id: initial!.id, ...payload } as UpdateEventInput)
 
-      if ('error' in res) {
-        setError(res.error)
-        return
-      }
-      setLastSavedAt(new Date().toLocaleTimeString())
-      setIsPublished(res.event.isPublished)
+        if ('error' in res) {
+          toast.error(res.error)
+          return
+        }
+        
+        toast.success(mode === 'create' ? 'Event created successfully!' : 'Event updated successfully!')
+        setLastSavedAt(new Date().toLocaleTimeString())
+        setIsPublished(res.event.isPublished)
 
-      if (mode === 'create') {
-        router.push(`/chapter/events/${res.event.id}`)
-      } else {
-        router.refresh()
+        if (mode === 'create') {
+          router.push(`/chapter/events/${res.event.id}`)
+        } else {
+          router.refresh()
+        }
+      } catch (error) {
+        toast.error('An unexpected error occurred. Please try again.')
       }
     })
   }
@@ -215,7 +240,22 @@ export function EventForm({
       <div className="grid gap-4">
         <div className="space-y-2">
           <Label htmlFor="title">Title</Label>
-          <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} />
+          <Input 
+            id="title" 
+            value={title} 
+            onChange={(e) => {
+              setTitle(e.target.value)
+              setFieldErrors(prev => {
+                const newErrors = { ...prev }
+                delete newErrors.title
+                return newErrors
+              })
+            }} 
+            className={fieldErrors.title ? 'border-destructive' : ''}
+          />
+          {fieldErrors.title && (
+            <p className="text-sm text-destructive">{fieldErrors.title}</p>
+          )}
         </div>
 
         <div className="space-y-2">
