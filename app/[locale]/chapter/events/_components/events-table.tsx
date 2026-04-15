@@ -10,7 +10,7 @@ import { deleteEvent } from '@/lib/actions/events/delete-event'
 import type { EventWithDetails } from '@/lib/types'
 import { useRouter } from 'next/navigation'
 import LocalDate from './local_date'
-import { Users } from 'lucide-react'
+import { Users, Crown, Handshake } from 'lucide-react'
 
 function statusForEvent(event: EventWithDetails): 'Draft' | 'Published' | 'Past' {
   const isPast = new Date(event.endAt) < new Date()
@@ -62,18 +62,38 @@ export function EventsTable({ events }: { events: EventWithDetails[] }) {
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="font-semibold truncate">{event.title}</p>
+                <div className="flex items-center gap-2">
+                  {event.isOwnedByChapter !== undefined && (
+                    <div className="flex items-center gap-1" title={event.isOwnedByChapter ? "Your chapter owns this event" : "Your chapter is collaborating on this event"}>
+                      {event.isOwnedByChapter ? (
+                        <div title="Your chapter owns this event">
+                          <Crown className="h-4 w-4 text-primary" />
+                        </div>
+                      ) : (
+                        <div title="Your chapter is collaborating on this event">
+                          <Handshake className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <p className="font-semibold truncate">{event.title}</p>
+                </div>
                 <LocalDate isoString={event.startAt} />
               </div>
               <Badge variant={status === 'Published' ? 'secondary' : 'outline'}>{status}</Badge>
             </div>
 
             <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">
-                {event.capacity === null
-                  ? `${registrations} registrations`
-                  : `${registrations}/${event.capacity} registrations`}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-muted-foreground">
+                  {event.capacity === null
+                    ? `${registrations} registrations`
+                    : `${registrations}/${event.capacity} registrations`}
+                </p>
+                {event.isOwnedByChapter !== undefined && !event.isOwnedByChapter && (
+                  <Badge variant="outline" className="text-xs">Collaborating</Badge>
+                )}
+              </div>
               {fillRate !== null && (
                 <div className="h-2 rounded-full bg-muted overflow-hidden">
                   <div className="h-full bg-primary" style={{ width: `${fillRate}%` }} />

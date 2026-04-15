@@ -125,9 +125,10 @@ export function EventContent({
 
   const registeredCount = event._count.registrations
   const capHint = capacityHint(event.capacity, registeredCount, registrationClosed)
-  const chapterLabel = event.Chapter
+  const ownerChapterLabel = event.Chapter
     ? `${event.Chapter.name} / ${event.Chapter.university}`
     : 'Global'
+  const collaborators = event.EventChapter?.map(ec => ec.Chapter).filter(Boolean) || []
 
   return (
     <main className="min-h-screen bg-background">
@@ -289,6 +290,32 @@ export function EventContent({
                 )}
               </CardContent>
             </Card>
+
+            {/* Chapter Information */}
+            <div className="space-y-4">
+              <h2 className="font-semibold">Chapters</h2>
+              <div className="space-y-3">
+                {/* Owning Chapter */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-primary">Hosted by:</span>
+                  <span className="text-sm">{ownerChapterLabel}</span>
+                </div>
+                
+                {/* Collaborating Chapters */}
+                {collaborators.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-sm font-medium text-primary">In collaboration with:</span>
+                    <div className="space-y-1">
+                      {collaborators.map((chapter) => (
+                        <div key={chapter.id} className="text-sm text-muted-foreground">
+                          {chapter.name} / {chapter.university}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
 
             {/* About Event - Subtle */}
             <div className="space-y-4">
