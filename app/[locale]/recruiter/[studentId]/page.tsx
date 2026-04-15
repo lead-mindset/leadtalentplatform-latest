@@ -101,7 +101,7 @@ export default async function RecruiterStudentProfilePage({
 
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Mail className="h-4 w-4" />
-              <a href={`mailto:${resolvedStudent.email}`} className="hover:underline">
+              <a href={`mailto:${resolvedStudent.email}`} className="text-primary hover:underline">
                 {resolvedStudent.email}
               </a>
             </div>
