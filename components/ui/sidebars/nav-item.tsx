@@ -35,6 +35,20 @@ export function SidebarNavItem({
       ? pathname === item.href
       : pathname.startsWith(item.href)
 
+  // Handle internationalized paths - remove locale prefix for comparison
+  const pathnameWithoutLocale = pathname.replace(/^\/[a-z]{2}/, '') || '/'
+  const adjustedIsActive = exact
+    ? pathnameWithoutLocale === item.href
+    : item.href === '/' || 
+      item.href === '/chapter' || 
+      item.href === '/admin' || 
+      item.href === '/company' || 
+      item.href === '/student'
+      ? pathnameWithoutLocale === item.href
+      : pathnameWithoutLocale.startsWith(item.href)
+
+  
+  
   const handleClick = () => {
     onClick?.()
     
@@ -45,7 +59,7 @@ export function SidebarNavItem({
 
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton asChild isActive={isActive}>
+      <SidebarMenuButton asChild isActive={adjustedIsActive}>
         <Link 
           href={item.href} 
           className="relative"
