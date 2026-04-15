@@ -24,14 +24,11 @@ type MyRegistration = {
 function formatDateTime(value: string) {
   const d = new Date(value)
   if (Number.isNaN(d.getTime())) return value
-  return d.toLocaleString(undefined, {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    timeZoneName: 'short',
-  })
+  
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  
+  return `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()}, ${d.getHours() % 12 || 12}:${d.getMinutes().toString().padStart(2, '0')} ${d.getHours() >= 12 ? 'PM' : 'AM'}`
 }
 
 function EventTypeBadge({ eventType }: { eventType: string }) {
@@ -139,22 +136,27 @@ export function EventContent({
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-6">
             {/* Event Banner/Image */}
-            <Card>
-              <CardContent className="p-0">
-                <div className="aspect-video bg-muted flex items-center justify-center">
-                  {event.coverImage ? (
-                    <div className="relative w-full h-full">
-                      <Image src={event.coverImage} alt={event.title} fill className="object-cover" />
-                    </div>
-                  ) : (
+            <Card className="overflow-hidden">
+              <div className="relative w-full h-64 sm:h-80 lg:h-96 bg-muted">
+                {event.coverImage ? (
+                  <Image 
+                    src={event.coverImage} 
+                    alt={event.title} 
+                    fill 
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    priority
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center space-y-4">
-                      <div className="w-24 h-24 mx-auto bg-muted rounded-lg flex items-center justify-center">
+                      <div className="w-24 h-24 mx-auto bg-muted/50 rounded-lg flex items-center justify-center">
                         <Calendar className="h-12 w-12 text-muted-foreground" />
                       </div>
                     </div>
-                  )}
-                </div>
-              </CardContent>
+                  </div>
+                )}
+              </div>
             </Card>
 
             {/* Location Section */}
@@ -264,13 +266,23 @@ export function EventContent({
                           You&apos;re registered for this event. Check your email for QR code details.
                         </p>
                       </div>
+                    ) : isPending ? (
+                      <div className="rounded-lg border border-muted bg-muted/50 p-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+                          <p className="text-sm font-medium">Application Submitted</p>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Your application is under review. You&apos;ll receive an email when a decision is made.
+                        </p>
+                      </div>
                     ) : (
                       <Button
                         onClick={handlePrimaryAction}
                         disabled={isSubmitting || registrationClosed}
                         className="w-full"
                       >
-                        {isSubmitting ? 'Processing...' : 'Register'}
+                        {isSubmitting ? 'Processing...' : 'Apply'}
                       </Button>
                     )}
                   </div>
