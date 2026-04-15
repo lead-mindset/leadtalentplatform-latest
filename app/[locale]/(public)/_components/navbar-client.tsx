@@ -58,10 +58,10 @@ export function NavbarClient({ visibleLinks, user, dashboardHref }: Props) {
             ) : (
               <>
                 <Button asChild variant="outline" size="sm" className="font-medium">
-                  <Link href="/login">Iniciar sesión</Link>
+                  <Link href="/auth/login">Iniciar sesión</Link>
                 </Button>
                 <Button asChild size="sm" className="font-medium">
-                  <Link href="/sign-up">Unirse</Link>
+                  <Link href="/auth/sign-up">Unirse</Link>
                 </Button>
                 <Link
                   href="/company/login"
@@ -112,10 +112,10 @@ export function NavbarClient({ visibleLinks, user, dashboardHref }: Props) {
             ) : (
               <>
                 <Button asChild className="w-full font-medium">
-                  <Link href="/sign-up" onClick={() => setMobileOpen(false)}>Unirse</Link>
+                  <Link href="/auth/sign-up" onClick={() => setMobileOpen(false)}>Unirse</Link>
                 </Button>
                 <Button asChild variant="outline" className="w-full font-medium">
-                  <Link href="/login" onClick={() => setMobileOpen(false)}>Iniciar sesión</Link>
+                  <Link href="/auth/login" onClick={() => setMobileOpen(false)}>Iniciar sesión</Link>
                 </Button>
                 <Link
                   href="/company/login"
