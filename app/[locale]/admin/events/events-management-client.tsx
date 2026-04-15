@@ -147,7 +147,7 @@ export function EventsManagementClient({
                   ].map(([key, label]) => (
                     <TableHead key={key} className="text-left p-2">
                       <button
-                        className="rounded-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        className="rounded-sm hover:underline"
                         onClick={() => toggleSort(key)}
                       >
                         {label}
