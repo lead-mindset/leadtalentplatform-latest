@@ -187,7 +187,7 @@ export type Database = {
           checkedInById?: string | null
           eventId: string
           id?: string
-          qrToken: string
+          qrToken?: string | null
           registeredAt?: string
           status?: string
           userId: string
