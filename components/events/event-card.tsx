@@ -1,8 +1,8 @@
 import Image from 'next/image'
-import { Calendar, MapPin, Video, Users } from 'lucide-react'
 import { EventAccessModel, RegistrationStatus } from '@/lib/types'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Icons } from '@/components/ui/icons'
 
 function formatDateTime(date: Date) {
   return date.toLocaleString(undefined, {
@@ -88,12 +88,12 @@ export function EventCard({
         <h3 className="line-clamp-2 text-lg font-semibold">{title}</h3>
 
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Calendar className="h-4 w-4" />
+          <Icons.Calendar />
           <span>{formatDateTime(startAt)}</span>
         </div>
 
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          {isOnline ? <Video className="h-4 w-4" /> : <MapPin className="h-4 w-4" />}
+          {isOnline ? <Icons.Video /> : <Icons.MapPin />}
           <span>
             {isOnline ? 'Online event' : location || 'Location TBD'}
             {isHybrid ? ' + Online' : ''}
@@ -102,7 +102,7 @@ export function EventCard({
 
         {capacity ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Users className="h-4 w-4" />
+            <Icons.Users />
             <span>
               {registeredCount} / {capacity} registered
             </span>

@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { Link } from '@/i18n/routing'
 import { Button } from '@/components/ui/button'
-import { AlertCircle } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 
 export default function StudentError({
   error,
@@ -17,16 +17,22 @@ export default function StudentError({
   }, [error])
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-8">
-      <div className="text-center space-y-4">
-        <AlertCircle className="h-16 w-16 text-destructive mx-auto" />
-        <h2 className="text-2xl font-bold">Something went wrong!</h2>
-        <p className="text-muted-foreground max-w-md">
-          We encountered an error while loading this page. Please try again.
-        </p>
-        <div className="flex gap-4 justify-center">
-          <Button onClick={() => reset()}>Try again</Button>
-          <Button variant="outline" asChild>
+    <div className="container max-w-3xl mx-auto px-4 sm:px-6 py-8 min-h-screen">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6">
+        <div className="mx-auto w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
+          <Icons.AlertCircle className="h-8 w-8 text-destructive" />
+        </div>
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">Something went wrong</h1>
+          <p className="text-muted-foreground text-lg max-w-md">
+            We encountered an error while loading this page. Please try again.
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button onClick={() => reset()} size="lg">
+            Try again
+          </Button>
+          <Button variant="outline" size="lg" asChild>
             <Link href="/student/profile">Go to Profile</Link>
           </Button>
         </div>

@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useRouter } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
-import { LogOut } from 'lucide-react';
+import { Icons } from '@/components/ui/icons';
 
 interface LogoutButtonProps {
   className?: string;
@@ -23,7 +23,7 @@ export function LogoutButton({ className, onClick }: LogoutButtonProps) {
 
   return (
     <Button onClick={logout} variant="outline" className={className}>
-      <LogOut className="h-4 w-4 mr-2" />
+      <Icons.LogOut className="mr-2 h-4 w-4" />
       {t('logout')}
     </Button>
   );

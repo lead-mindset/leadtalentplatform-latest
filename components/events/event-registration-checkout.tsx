@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react'
 import { useFormStatus } from 'react-dom'
-import { Check, Loader2 } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 import { registerForEvent, type RegisterForEventState } from '@/lib/actions/events/register'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -17,7 +17,7 @@ function SubmitButton({ disabled, label }: { disabled?: boolean; label: string }
     <Button type="submit" className="w-full" disabled={disabled || pending}>
       {pending ? (
         <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <Icons.Loader2 className="mr-2 h-4 w-4 animate-spin" />
           Registering...
         </>
       ) : (
@@ -106,7 +106,7 @@ export function EventRegistrationCheckout({
       ) : isRegistered ? (
         <div className="space-y-3">
           <Badge variant="secondary" className="w-fit gap-1.5 pl-2">
-            <Check className="h-3.5 w-3.5" aria-hidden />
+            <Icons.CheckCircle2 className="h-4 w-4" />
             Registered
           </Badge>
           {canCancel && registrationId ? (

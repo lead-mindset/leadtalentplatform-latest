@@ -1,4 +1,4 @@
-import { AlertTriangle, Users } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { cn } from '@/lib/utils'
 
@@ -15,7 +15,7 @@ export function CapacityAdvisory({ status, className }: CapacityAdvisoryProps) {
       "border-amber-500/50 bg-amber-500/10",
       className
     )}>
-      <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+      <Icons.AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
       <AlertTitle className="text-amber-700 dark:text-amber-400">
         {isOverCapacity ? 'Over Capacity' : 'At Capacity'}
       </AlertTitle>

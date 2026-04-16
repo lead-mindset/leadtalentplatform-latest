@@ -1,4 +1,4 @@
-import { Ban, CalendarCheck, CheckCircle, Clock, XCircle } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { RegistrationStatus } from '@/lib/types'
@@ -13,34 +13,34 @@ const statusConfig: Record<
   RegistrationStatus,
   {
     label: string
-    variant: 'secondary' | 'outline' | 'destructive'
-    icon: typeof Clock
+    variant: 'secondary' | 'outline' | 'destructive' | 'success'
+    icon: typeof Icons.Clock
   }
 > = {
-  registered: {
-    label: 'Registered',
-    variant: 'secondary',
-    icon: CheckCircle,
-  },
   pending_review: {
+    icon: Icons.Clock,
     label: 'Under Review',
-    variant: 'outline',
-    icon: Clock,
+    variant: 'secondary' as const,
+  },
+  approved: {
+    icon: Icons.CheckCircle2,
+    label: 'Approved',
+    variant: 'success' as const,
   },
   rejected: {
-    label: 'Not Selected',
-    variant: 'destructive',
-    icon: XCircle,
+    icon: Icons.XCircle,
+    label: 'Rejected',
+    variant: 'destructive' as const,
   },
   cancelled: {
+    icon: Icons.X,
     label: 'Cancelled',
-    variant: 'outline',
-    icon: Ban,
+    variant: 'destructive' as const,
   },
-  attended: {
-    label: 'Attended',
-    variant: 'secondary',
-    icon: CalendarCheck,
+  confirmed: {
+    icon: Icons.CheckCircle2,
+    label: 'Confirmed',
+    variant: 'success' as const,
   },
 }
 

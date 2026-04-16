@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Heart, Users } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { requireRecruiter } from '@/lib/auth'
@@ -35,14 +35,14 @@ export default async function RecruiterSavedPage({ searchParams }: RecruiterSave
       {saved.students.length === 0 ? (
         <Card>
           <CardContent className="py-16 text-center">
-            <Heart className="mx-auto h-12 w-12 opacity-50 mb-3" />
+            <Icons.Heart className="mx-auto h-12 w-12 opacity-50 mb-3" />
             <p className="font-medium">You haven&apos;t saved any students yet.</p>
             <p className="text-sm text-muted-foreground mt-1 mb-4">
               Browse the talent pool to find candidates.
             </p>
             <Button asChild>
               <Link href="/recruiter/browse">
-                <Users className="mr-2 h-4 w-4" />
+                <Icons.Users className="h-4 w-4" />
                 Browse talent pool
               </Link>
             </Button>

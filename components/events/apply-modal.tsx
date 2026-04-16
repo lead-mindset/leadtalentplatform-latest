@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui'
-import { ExternalLink, CheckCircle, FileText, Clock, Mail } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 
 interface ApplyModalProps {
   open: boolean
@@ -58,7 +58,7 @@ export function ApplyModal({
           <>
             <DialogHeader className="text-center pb-4">
               <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                <FileText className="w-6 h-6 text-primary" />
+                <Icons.FileText className="h-4 w-4 text-primary" />
               </div>
               <DialogTitle className="text-xl font-semibold">Application Required</DialogTitle>
               <DialogDescription className="text-base mt-2">
@@ -115,7 +115,7 @@ export function ApplyModal({
 
               <div className="rounded-lg border border-warning bg-warning/10 p-3">
                 <div className="flex items-start gap-2">
-                  <Clock className="w-4 h-4 text-warning mt-0.5 flex-shrink-0" />
+                  <Icons.Clock className="h-4 w-4 text-warning mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="text-sm font-medium">Keep this tab open</p>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -138,7 +138,7 @@ export function ApplyModal({
                 onClick={handleOpenForm}
                 className="flex-1 sm:flex-none h-12"
               >
-                <ExternalLink className="mr-2 w-4 h-4" />
+                <Icons.ExternalLink className="mr-2 w-4 h-4" />
                 Open Application Form
               </Button>
             </DialogFooter>
@@ -147,7 +147,7 @@ export function ApplyModal({
           <>
             <DialogHeader className="text-center pb-4">
               <div className="mx-auto w-12 h-12 rounded-full bg-success/10 flex items-center justify-center mb-4">
-                <CheckCircle className="w-6 h-6 text-success" />
+                <Icons.CheckCircle2 className="h-4 w-4 text-success" />
               </div>
               <DialogTitle className="text-xl font-semibold">Confirm Your Application</DialogTitle>
               <DialogDescription className="text-base mt-2">
@@ -158,7 +158,7 @@ export function ApplyModal({
             <div className="space-y-4 py-2">
               <div className="rounded-lg border border-success/20 bg-success/5 p-4">
                 <div className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-success mt-0.5 flex-shrink-0" />
+                  <Icons.CheckCircle2 className="w-5 h-5 text-success mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="text-sm font-medium">Ready to confirm?</p>
                     <p className="text-sm text-muted-foreground mt-1">
@@ -170,7 +170,7 @@ export function ApplyModal({
 
               <div className="rounded-lg border border-muted bg-muted/50 p-4">
                 <div className="flex items-start gap-3">
-                  <Mail className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                  <Icons.Mail className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="text-sm font-medium">What happens next?</p>
                     <ul className="text-sm text-muted-foreground mt-2 space-y-1">
@@ -217,7 +217,7 @@ export function ApplyModal({
                   </>
                 ) : (
                   <>
-                    <CheckCircle className="mr-2 w-4 h-4" />
+                    <Icons.CheckCircle2 className="mr-2 w-4 h-4" />
                     Yes, I submitted it
                   </>
                 )}

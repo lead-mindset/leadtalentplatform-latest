@@ -4,7 +4,7 @@ import { useForm, FormProvider, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useState, useEffect } from 'react'
-import { X, Loader2, Save } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 import { toast } from 'sonner'
 import { Checkbox } from "@/components/ui/checkbox"
 import { FormInput } from '@/components/ui/stepper'
@@ -134,8 +134,16 @@ export default function ProfileUpdateForm({
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-12">
         {initialData.approvalStatus === 'approved' && initialData.memberId ? (
           <div className="rounded-lg bg-primary/5 border border-primary/10 p-4">
-            <p className="text-sm text-muted-foreground mb-1">Member ID</p>
-            <p className="font-mono text-lg font-semibold">{initialData.memberId}</p>
+            <div className="flex items-center gap-2 mb-2">
+              <Icons.IdCard className="h-4 w-4 text-primary" />
+              <p className="text-sm text-muted-foreground">Your Member ID</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <code className="px-3 py-1.5 bg-background rounded-md border border-border text-lg font-mono font-semibold text-primary">
+                {initialData.memberId}
+              </code>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">This is your unique identifier as a LEAD member</p>
           </div>
         ) : initialData.approvalStatus === 'pending' && (
           <div className="rounded-lg bg-muted p-4">
@@ -435,12 +443,12 @@ export default function ProfileUpdateForm({
           >
             {isSaving ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Icons.Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {tCommon('loading')}
               </>
             ) : (
               <>
-                <Save className="mr-2 h-4 w-4" />
+                <Icons.Save className="mr-2 h-4 w-4" />
                 {tCommon('save')}
               </>
             )}

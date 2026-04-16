@@ -10,7 +10,7 @@ import { ScrollToHighlightedEvent } from '@/components/events/scroll-to-highligh
 import { RegistrationStatusBadge } from '@/components/events/registration-status-badge'
 import type { RegistrationStatus } from '@/lib/types'
 import { Link } from '@/i18n/routing'
-import { Calendar, Clock, MapPin } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 
 type RegistrationWithEvent = Awaited<ReturnType<typeof getMyRegistrations>>[number]
 
@@ -53,7 +53,7 @@ function EventRegistrationCard({
             </p>
             {event?.location ? (
               <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-                <MapPin className="h-4 w-4" />
+                <Icons.MapPin className="h-4 w-4" />
                 <span>{event.location}</span>
               </div>
             ) : null}
@@ -157,19 +157,44 @@ export default async function StudentEventsPage({
   )
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 p-4">
+    <div className="container max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8">
       <ScrollToHighlightedEvent eventId={highlightEventId} />
 
-      <div className="flex items-start justify-between gap-4">
-        <div>
+      {/* Page Header with Clear Hierarchy */}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">My Events</h1>
-          <p className="mt-1 text-muted-foreground">
-            Your registrations and QR codes for check-in.
-          </p>
+          <p className="text-muted-foreground text-lg">Your registrations and QR codes for check-in</p>
         </div>
         <Button asChild variant="outline">
           <Link href="/events">Browse events</Link>
         </Button>
+      </div>
+
+      {/* Quick Stats Bar */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="bg-card rounded-lg p-4 border border-border/60">
+          <div className="text-2xl font-bold text-foreground">{registrations.length}</div>
+          <div className="text-sm text-muted-foreground">Total Events</div>
+        </div>
+        <div className="bg-card rounded-lg p-4 border border-border/60">
+          <div className="text-2xl font-bold text-success">
+            {upcomingRegistrations.length}
+          </div>
+          <div className="text-sm text-muted-foreground">Upcoming</div>
+        </div>
+        <div className="bg-card rounded-lg p-4 border border-border/60">
+          <div className="text-2xl font-bold text-warning">
+            {pendingRegistrations.length}
+          </div>
+          <div className="text-sm text-muted-foreground">Pending</div>
+        </div>
+        <div className="bg-card rounded-lg p-4 border border-border/60">
+          <div className="text-2xl font-bold text-muted-foreground">
+            {pastRegistrations.length}
+          </div>
+          <div className="text-sm text-muted-foreground">Past Events</div>
+        </div>
       </div>
 
       <Tabs defaultValue="upcoming" className="space-y-6">
@@ -186,7 +211,7 @@ export default async function StudentEventsPage({
           {upcomingRegistrations.length === 0 ? (
             <Card>
               <CardContent className="py-10 text-center text-muted-foreground">
-                <Calendar className="mx-auto mb-4 h-12 w-12 opacity-50" />
+                <Icons.Calendar className="mx-auto mb-4 h-12 w-12 opacity-50" />
                 <p>No upcoming events</p>
                 <p className="mt-2 text-sm">You haven't registered for any upcoming events yet.</p>
                 <Button asChild className="mt-4">
@@ -217,7 +242,7 @@ export default async function StudentEventsPage({
           {pendingRegistrations.length === 0 ? (
             <Card>
               <CardContent className="py-10 text-center text-muted-foreground">
-                <Clock className="mx-auto mb-4 h-12 w-12 opacity-50" />
+                <Icons.Clock className="mx-auto mb-4 h-12 w-12 opacity-50" />
                 <p>No applications under review</p>
                 <p className="mt-2 text-sm">
                   Your applications will appear here while editors review them.
@@ -242,7 +267,7 @@ export default async function StudentEventsPage({
           {pastRegistrations.length === 0 ? (
             <Card>
               <CardContent className="py-10 text-center text-muted-foreground">
-                <Calendar className="mx-auto mb-4 h-12 w-12 opacity-50" />
+                <Icons.Calendar className="mx-auto mb-4 h-12 w-12 opacity-50" />
                 <p>No past events</p>
                 <p className="mt-2 text-sm">Events you've attended will appear here.</p>
               </CardContent>

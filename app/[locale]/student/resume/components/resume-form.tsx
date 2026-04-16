@@ -3,7 +3,7 @@ import { useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Upload, Download, FileText, CheckCircle2, AlertCircle, X, Sparkles } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
@@ -89,7 +89,7 @@ export default function ResumeClient({
           <CardHeader className="pb-4 space-y-2">
             <div className="flex items-center gap-2.5">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
-                <CheckCircle2 className="h-4.5 w-4.5 text-primary" />
+                <Icons.CheckCircle2 className="h-4 w-4 text-primary" />
               </div>
               <CardTitle className="text-lg font-semibold tracking-tight">
                 {t('currentResume')}
@@ -103,7 +103,7 @@ export default function ResumeClient({
             <div className="group relative overflow-hidden rounded-lg border border-border/60 bg-gradient-to-br from-muted/40 to-muted/20 p-4 transition-all duration-200 hover:border-border hover:shadow-sm">
               <div className="flex items-start gap-4">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 transition-transform duration-200 group-hover:scale-105">
-                  <FileText className="h-6 w-6 text-primary" />
+                  <Icons.FileText className="h-5 w-5 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0 space-y-1.5">
                   <p className="font-medium text-foreground truncate text-sm sm:text-base">
@@ -127,7 +127,7 @@ export default function ResumeClient({
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2"
                   >
-                    <Download className="h-4 w-4" />
+                    <Icons.Download className="h-4 w-4" />
                     <span className="hidden sm:inline">{t('download')}</span>
                   </Link>
                 </Button>
@@ -141,7 +141,7 @@ export default function ResumeClient({
         <CardHeader className="pb-4 space-y-2">
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
-              <Upload className="h-4.5 w-4.5 text-primary" />
+              <Icons.Upload className="h-4 w-4 text-primary" />
             </div>
             <CardTitle className="text-lg font-semibold tracking-tight">
               {resume ? t('updateResume') : t('uploadResume')}
@@ -209,11 +209,11 @@ export default function ResumeClient({
                   <div className="space-y-4">
                     <div className="relative mx-auto">
                       <div className="flex h-14 w-14 mx-auto items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 to-primary/5">
-                        <FileText className="h-7 w-7 text-primary" />
+                        <Icons.FileText className="h-6 w-6 text-primary" />
                       </div>
                       <div className="absolute -top-1 -right-1">
                         <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary shadow-sm">
-                          <Sparkles className="h-3.5 w-3.5 text-primary-foreground" />
+                          <Icons.Star className="h-3 w-3 text-primary-foreground" />
                         </div>
                       </div>
                     </div>
@@ -235,14 +235,14 @@ export default function ResumeClient({
                       }}
                       className="mt-2 hover:bg-destructive/10 hover:text-destructive"
                     >
-                      <X className="h-4 w-4 mr-2" />
+                      <Icons.X className="h-4 w-4 mr-2" />
                       {t('remove')}
                     </Button>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     <div className="flex h-14 w-14 mx-auto items-center justify-center rounded-xl bg-gradient-to-br from-muted/60 to-muted/30 transition-transform duration-200 hover:scale-105">
-                      <Upload className="h-7 w-7 text-muted-foreground" />
+                      <Icons.Upload className="h-6 w-6 text-muted-foreground" />
                     </div>
                     <div className="space-y-2">
                       <p className="text-sm font-medium text-foreground">
@@ -260,7 +260,7 @@ export default function ResumeClient({
                       </p>
                     </div>
                     <div className="inline-flex items-center gap-1.5 rounded-full bg-muted/50 px-3 py-1 text-xs text-muted-foreground">
-                      <FileText className="h-3 w-3" />
+                      <Icons.FileText className="h-3 w-3" />
                       {t('pdfOnly')}
                     </div>
                   </div>
@@ -270,7 +270,7 @@ export default function ResumeClient({
 
             {selectedFile && selectedFile.size > 10 * 1024 * 1024 && (
               <div className="flex items-start gap-2.5 p-3.5 rounded-lg bg-destructive/10 border border-destructive/20">
-                <AlertCircle className="h-4.5 w-4.5 text-destructive shrink-0 mt-0.5" />
+                <Icons.AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
                 <p className="text-sm text-destructive font-medium">
                   {t('fileTooLarge')}
                 </p>
@@ -296,7 +296,7 @@ export default function ResumeClient({
                 </>
               ) : (
                 <>
-                  <Upload className="h-4 w-4 mr-2" />
+                  <Icons.Upload className="h-4 w-4 mr-2" />
                   {resume ? t('updateResume') : t('uploadResume')}
                 </>
               )}

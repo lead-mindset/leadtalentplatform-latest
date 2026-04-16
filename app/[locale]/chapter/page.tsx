@@ -2,14 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { Suspense } from 'react'
-import {
-  Users,
-  UserCheck,
-  Clock,
-  TrendingUp,
-  ChevronRight,
-  CheckCircle2,
-} from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 import { requireChapterEditor } from '@/lib/auth'
 import type { MemberWithProfile, RecentActivityMember } from '@/lib/types'
 import { getChapterMembers, getMemberStats, getRecentChapterActivity } from '@/lib/actions/chapter/get-data'
@@ -76,7 +69,7 @@ function PendingInbox({
       <Card>
         <CardContent className="py-10 text-center">
           <div className="mx-auto h-10 w-10 rounded-full bg-success/10 flex items-center justify-center mb-3">
-            <CheckCircle2 className="h-5 w-5 text-success" />
+            <Icons.CheckCircle2 className="h-4 w-4 text-success" />
           </div>
           <p className="font-medium text-foreground">All caught up</p>
           <p className="text-sm text-muted-foreground mt-1">
@@ -103,7 +96,7 @@ function PendingInbox({
         <Button asChild variant="outline" className="w-full">
           <Link href="/chapter/members?status=pending">
             View {remaining} more pending member{remaining > 1 ? 's' : ''}
-            <ChevronRight className="ml-2 h-4 w-4" />
+            <Icons.ChevronRight className="ml-2 h-4 w-4" />
           </Link>
         </Button>
       )}
@@ -165,7 +158,7 @@ function QuickLinks({
           className="flex items-center justify-between rounded-md px-2 py-2 text-sm hover:bg-accent transition-colors group"
         >
           <span className="text-muted-foreground group-hover:text-foreground transition-colors">{link.label}</span>
-          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+          <Icons.ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
         </Link>
       ))}
     </div>
@@ -277,11 +270,12 @@ async function ChapterContent() {
   const upcomingEventsCount = chapterEvents.filter((event) => new Date(event.endAt) >= new Date()).length
 
   return (
-    <div className="space-y-8">
+    <div className="container max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8">
 
-      <div>
+      {/* Page Header with Clear Hierarchy */}
+      <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Chapter Overview</h1>
-        <p className="text-muted-foreground mt-1">
+        <p className="text-muted-foreground text-lg">
           {chapter?.name} - {chapter?.university}
         </p>
       </div>
@@ -305,27 +299,27 @@ async function ChapterContent() {
           label="Total Members"
           value={stats.total}
           sub="In your chapter"
-          icon={Users}
+          icon={Icons.Users}
         />
         <StatCard
           label="Pending Approval"
           value={stats.pending}
           sub="Need your review"
-          icon={Clock}
+          icon={Icons.Clock}
           variant="warning"
         />
         <StatCard
           label="Upcoming Events"
           value={upcomingEventsCount}
           sub="Open for chapter operations"
-          icon={UserCheck}
+          icon={Icons.UserCheck}
           variant="success"
         />
         <StatCard
           label="Approval Rate"
           value={approvalRate}
           sub="Approved members percentage"
-          icon={TrendingUp}
+          icon={Icons.TrendingUp}
           variant="info"
         />
       </div>
@@ -346,7 +340,7 @@ async function ChapterContent() {
                   <Button asChild variant="outline" size="sm">
                     <Link href="/chapter/members?status=pending">
                       View all
-                      <ChevronRight className="ml-1 h-4 w-4" />
+                      <Icons.ChevronRight className="ml-1 h-4 w-4" />
                     </Link>
                   </Button>
                 )}

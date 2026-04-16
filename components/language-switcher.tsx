@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Languages } from 'lucide-react';
+import { Icons } from '@/components/ui/icons';
 
 const LOCALE_CONFIG: Record<string, { native: string; english: string; flag: string }> = {
   en: { native: 'English', english: 'English', flag: '🇺🇸' },
@@ -34,7 +34,7 @@ export function LanguageSwitcher() {
         className="gap-2"
         aria-label="Select language"
       >
-        <Languages className="h-4 w-4 shrink-0 opacity-70" />
+        <Icons.Globe className="mr-2 h-4 w-4" />
         <SelectValue>
           <span className="text-base">{currentLocale?.flag}</span>
         </SelectValue>

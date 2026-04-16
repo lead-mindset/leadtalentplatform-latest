@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { User, Mail, GraduationCap, Calendar, CheckCircle, XCircle, ExternalLink } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -95,7 +95,7 @@ export function ApplicationReviewCard({
           )}
 
           <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <User className="w-5 h-5 text-primary" />
+            <Icons.User className="h-4 w-4 text-primary" />
           </div>
 
           <div className="flex-1 space-y-2">
@@ -103,7 +103,7 @@ export function ApplicationReviewCard({
               <div>
                 <h3 className="font-semibold">{application.User.name}</h3>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mt-0.5">
-                  <Mail className="w-3.5 h-3.5" />
+                  <Icons.Mail className="h-4 w-4" />
                   <span>{application.User.email}</span>
                 </div>
               </div>
@@ -117,11 +117,11 @@ export function ApplicationReviewCard({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
               <div className="flex items-center gap-2 text-muted-foreground">
-                <GraduationCap className="w-3.5 h-3.5" />
+                <Icons.GraduationCap className="h-4 w-4" />
                 <span>Major: {application.StudentProfile.major}</span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
-                <Calendar className="w-3.5 h-3.5" />
+                <Icons.Calendar className="h-4 w-4" />
                 <span>Graduation: {application.StudentProfile.graduationYear}</span>
               </div>
             </div>
@@ -134,7 +134,7 @@ export function ApplicationReviewCard({
                 className="inline-flex items-center gap-1 text-sm text-primary underline hover:underline"
               >
                 LinkedIn Profile
-                <ExternalLink className="w-3 h-3" />
+                <Icons.ExternalLink className="h-4 w-4" />
               </a>
             )}
 
@@ -151,7 +151,7 @@ export function ApplicationReviewCard({
                 onClick={handleApprove}
                 disabled={isActionPending || isProcessing}
               >
-                <CheckCircle className="w-4 h-4 mr-1" />
+                <Icons.CheckCircle2 className="h-4 w-4 text-success" />
                 Approve
               </Button>
               <Button
@@ -160,7 +160,7 @@ export function ApplicationReviewCard({
                 onClick={() => setShowRejectDialog(true)}
                 disabled={isActionPending || isProcessing}
               >
-                <XCircle className="w-4 h-4 mr-1" />
+                <Icons.XCircle className="h-4 w-4 text-destructive" />
                 Reject
               </Button>
             </div>

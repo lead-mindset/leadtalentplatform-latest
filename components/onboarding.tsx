@@ -3,7 +3,7 @@
 import { useForm, FormProvider, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
-import { Upload, X, FileText, Loader2 } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 import { Checkbox } from '@/components/ui/checkbox'
 import { FormStepper, FormInput } from './ui/stepper'
 import { createFullMemberSchemaFrontend } from '@/lib/memberschema'
@@ -116,7 +116,7 @@ export default function Onboarding() {
   const FieldError = ({ message }: { message?: string }) =>
     message ? (
       <p className="flex items-center gap-1 text-sm text-destructive mt-1">
-        <X className="h-3 w-3 shrink-0" />
+        <Icons.X className="h-3 w-3 shrink-0" />
         {message}
       </p>
     ) : null
@@ -293,8 +293,8 @@ export default function Onboarding() {
                         />
                         <div className="flex flex-col items-center gap-2">
                           {isUploading
-                            ? <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                            : <Upload className="h-8 w-8 text-muted-foreground" />
+                            ? <Icons.Loader2 className="h-8 w-8 animate-spin text-primary" />
+                            : <Icons.Upload className="h-4 w-4 mr-2" />
                           }
                           <p className="text-sm font-medium text-foreground">
                             {isUploading ? t('uploading') : t('clickToUpload')}
@@ -306,7 +306,7 @@ export default function Onboarding() {
                   ) : (
                     <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/40 p-3">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                        <FileText className="h-5 w-5 text-primary" />
+                        <Icons.FileText className="h-4 w-4 mr-2" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">{fileName}</p>
@@ -319,7 +319,7 @@ export default function Onboarding() {
                         aria-label="Remove file"
                         onClick={() => removeFile(field.onChange)}
                       >
-                        <X className="h-4 w-4" />
+                        <Icons.X className="h-4 w-4 mr-2" />
                       </Button>
                     </div>
                   )}

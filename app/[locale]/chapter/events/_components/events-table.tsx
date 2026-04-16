@@ -10,7 +10,7 @@ import { deleteEvent } from '@/lib/actions/events/delete-event'
 import type { EventWithDetails } from '@/lib/types'
 import { useRouter } from 'next/navigation'
 import LocalDate from './local_date'
-import { Users, Crown, Handshake } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 
 function statusForEvent(event: EventWithDetails): 'Draft' | 'Published' | 'Past' {
   const isPast = new Date(event.endAt) < new Date()
@@ -67,11 +67,11 @@ export function EventsTable({ events }: { events: EventWithDetails[] }) {
                     <div className="flex items-center gap-1" title={event.isOwnedByChapter ? "Your chapter owns this event" : "Your chapter is collaborating on this event"}>
                       {event.isOwnedByChapter ? (
                         <div title="Your chapter owns this event">
-                          <Crown className="h-4 w-4 text-primary" />
+                          <Icons.Crown className="h-4 w-4 text-primary" />
                         </div>
                       ) : (
                         <div title="Your chapter is collaborating on this event">
-                          <Handshake className="h-4 w-4 text-muted-foreground" />
+                          <Icons.Handshake className="h-4 w-4 text-muted-foreground" />
                         </div>
                       )}
                     </div>
@@ -112,7 +112,7 @@ export function EventsTable({ events }: { events: EventWithDetails[] }) {
                   asChild
                 >
                   <Link href={`/chapter/events/${event.id}/applications`}>
-                    <Users className="w-4 h-4 mr-1" />
+                    <Icons.Users className="w-4 h-4 mr-1" />
                     Applications ({event._count?.pendingApplications || 0})
                   </Link>
                 </Button>
