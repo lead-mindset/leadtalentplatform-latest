@@ -79,8 +79,8 @@ function EventRegistrationCard({
         ) : null}
 
         {isPending ? (
-          <div className="rounded-lg border bg-warning-muted/40 p-3">
-            <p className="text-sm text-warning-foreground">
+          <div className="rounded-lg border  p-3">
+            <p className="text-sm">
               Your application is under review. You'll receive an email when a decision is made.
             </p>
           </div>
