@@ -74,12 +74,12 @@ export function NavbarClient({ visibleLinks, user, dashboardHref }: Props) {
           </div>
 
           <button
-            className="md:hidden p-2 -mr-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/8 transition-all"
+            className="md:hidden p-3 -mr-3 rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/8 transition-all"
             onClick={() => setMobileOpen((o) => !o)}
             aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
             aria-expanded={mobileOpen}
           >
-            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+            {mobileOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
       </div>
@@ -95,7 +95,7 @@ export function NavbarClient({ visibleLinks, user, dashboardHref }: Props) {
               key={link.href}
               href={link.href}
               onClick={() => setMobileOpen(false)}
-              className="text-sm text-muted-foreground py-2 hover:text-foreground transition-colors"
+              className="text-sm text-muted-foreground  hover:text-foreground transition-colors"
             >
               {link.label}
             </Link>
@@ -120,7 +120,7 @@ export function NavbarClient({ visibleLinks, user, dashboardHref }: Props) {
                 <Link
                   href="/company/login"
                   onClick={() => setMobileOpen(false)}
-                  className="text-sm text-center text-muted-foreground py-2 hover:text-foreground transition-colors"
+                  className="text-sm text-center text-muted-foreground py-4 hover:text-foreground transition-colors"
                 >
                   Soy empresa&nbsp;→
                 </Link>
