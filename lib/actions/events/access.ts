@@ -38,7 +38,24 @@ export async function assertCanManageEvent(eventId: string): Promise<EventAccess
 
   if (user.role === 'editor') {
     const { chapterId } = await requireChapterEditor()
-    if (event.chapterId !== chapterId) {
+    
+    // Check if user's chapter is the owner
+    const isOwner = event.chapterId === chapterId
+    
+    // Check if user's chapter is a collaborator using two-step approach
+    let isCollaborator = false
+    if (!isOwner) {
+      const { data: collaboration, error: collabError } = await (supabase as any)
+        .from('EventChapter')
+        .select('id')
+        .eq('eventId', eventId)
+        .eq('chapterId', chapterId)
+        .maybeSingle()
+      
+      isCollaborator = !collabError && collaboration !== null
+    }
+    
+    if (!isOwner && !isCollaborator) {
       return { error: 'Insufficient permissions' }
     }
   }
