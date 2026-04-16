@@ -78,11 +78,11 @@ export default async function ChapterMembersPage({
   const displayMembers = filterMembers(allMembers, safeStatus)
 
   return (
-    <div className="space-y-6">
-      <div>
+    <div className="container max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+      <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Chapter Members</h1>
-        <p className="text-muted-foreground mt-2">
-          Review pending approvals and manage your member roster.
+        <p className="text-muted-foreground text-lg">
+          Review pending approvals and manage your member roster
         </p>
       </div>
 

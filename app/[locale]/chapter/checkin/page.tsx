@@ -33,11 +33,11 @@ export default async function ChapterCheckinPage({
   const counter = selectedEvent ? await getCheckInCounter(selectedEvent.id) : null
 
   return (
-    <div className="space-y-6 p-4 max-w-5xl mx-auto">
-      <div className="space-y-1">
+    <div className="container max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+      <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Check-in</h1>
-        <p className="text-muted-foreground">
-          Scan attendee QR codes or use manual fallback search.
+        <p className="text-muted-foreground text-lg">
+          Scan attendee QR codes or use manual fallback search
         </p>
       </div>
 

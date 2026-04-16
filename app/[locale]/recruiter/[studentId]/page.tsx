@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Building2, GraduationCap, Linkedin, Mail, UserRound } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -41,7 +41,7 @@ export default async function RecruiterStudentProfilePage({
     <div className="space-y-6 max-w-4xl">
       <Button asChild variant="ghost" size="sm" className="w-fit">
         <Link href={backHref}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <Icons.ArrowLeft className="mr-2 h-4 w-4" />
           Back to talent pool
         </Link>
       </Button>
@@ -58,7 +58,7 @@ export default async function RecruiterStudentProfilePage({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-start gap-2">
-              <Building2 className="h-4 w-4 mt-0.5 text-muted-foreground" />
+              <Icons.Building2 className="h-4 w-4 mt-0.5 text-muted-foreground" />
               <div className="text-sm">
                 <p className="font-medium">{resolvedStudent.chapter?.name ?? 'No chapter specified'}</p>
                 <p className="text-muted-foreground">{resolvedStudent.chapter?.university ?? 'No university specified'}</p>
@@ -66,12 +66,12 @@ export default async function RecruiterStudentProfilePage({
             </div>
 
             <div className="flex items-center gap-2 text-sm">
-              <GraduationCap className="h-4 w-4 text-muted-foreground" />
+              <Icons.GraduationCap className="h-4 w-4 text-muted-foreground" />
               {resolvedStudent.graduationYear ? `Class of ${resolvedStudent.graduationYear}` : 'Graduation year not specified'}
             </div>
 
             <div className="flex items-center gap-2 text-sm">
-              <UserRound className="h-4 w-4 text-muted-foreground" />
+              <Icons.User className="h-4 w-4 text-muted-foreground" />
               {resolvedStudent.major ?? 'Major not specified'}
             </div>
           </CardContent>
@@ -85,7 +85,7 @@ export default async function RecruiterStudentProfilePage({
             {resolvedStudent.linkedinUrl ? (
               <Button asChild variant="outline" className="w-full">
                 <NextLink href={resolvedStudent.linkedinUrl} target="_blank" rel="noopener noreferrer">
-                  <Linkedin className="mr-2 h-4 w-4" />
+                  <Icons.Linkedin className="h-4 w-4" />
                   View LinkedIn
                 </NextLink>
               </Button>
@@ -100,7 +100,7 @@ export default async function RecruiterStudentProfilePage({
             )}
 
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Mail className="h-4 w-4" />
+              <Icons.Mail className="h-4 w-4" />
               <a href={`mailto:${resolvedStudent.email}`} className="text-primary hover:underline">
                 {resolvedStudent.email}
               </a>

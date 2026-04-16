@@ -63,6 +63,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui';
+import { Icons } from '@/components/ui/icons';
 
 
 export default function DesignAudit() {
@@ -469,6 +470,150 @@ export default function DesignAudit() {
               <DropdownMenuItem>Log out</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+        </div>
+      </section>
+
+      {/* Icons Section */}
+      <section className="space-y-6">
+        <h2 className="text-3xl ">Icon System</h2>
+        <div className="space-y-6">
+          <div className="p-6 border rounded-lg">
+            <h3 className="text-lg font-semibold mb-4">Event Icons</h3>
+            <div className="flex flex-wrap gap-4">
+              <div className="flex items-center gap-2">
+                <Icons.Calendar />
+                <span className="text-sm">Calendar</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Icons.MapPin />
+                <span className="text-sm">Location</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Icons.Video />
+                <span className="text-sm">Video</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Icons.Users />
+                <span className="text-sm">Users</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Icons.Clock />
+                <span className="text-sm">Clock</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 border rounded-lg">
+            <h3 className="text-lg font-semibold mb-4">Action Icons</h3>
+            <div className="flex flex-wrap gap-4">
+              <div className="flex items-center gap-2">
+                <Icons.Plus />
+                <span className="text-sm">Add</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Icons.Edit />
+                <span className="text-sm">Edit</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Icons.Trash2 />
+                <span className="text-sm">Delete</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Icons.Search />
+                <span className="text-sm">Search</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Icons.Menu />
+                <span className="text-sm">Menu</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 border rounded-lg">
+            <h3 className="text-lg font-semibold mb-4">Status Icons</h3>
+            <div className="flex flex-wrap gap-4">
+              <div className="flex items-center gap-2">
+                <Icons.CheckCircle2 className="text-success" />
+                <span className="text-sm">Success</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Icons.AlertCircle className="text-warning" />
+                <span className="text-sm">Warning</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Icons.Info className="text-info" />
+                <span className="text-sm">Info</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Icons.XCircle className="text-destructive" />
+                <span className="text-sm">Error</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Spacing Audit Section */}
+      <section className="space-y-6">
+        <h2 className="text-3xl ">Spacing Audit Results</h2>
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Icons.CheckCircle2 className="text-success" />
+                Consistent Spacing Found
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-center gap-2">
+                  <Icons.CheckCircle2 />
+                  Hero section: px-4 sm:px-6 lg:px-8
+                </li>
+                <li className="flex items-center gap-2">
+                  <Icons.CheckCircle2 />
+                  Value cards: px-4 sm:px-6 lg:px-8
+                </li>
+                <li className="flex items-center gap-2">
+                  <Icons.CheckCircle2 />
+                  How it works: px-4 sm:px-6 lg:px-8
+                </li>
+                <li className="flex items-center gap-2">
+                  <Icons.CheckCircle2 />
+                  Events page: px-4 sm:px-6
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Icons.AlertCircle className="text-warning" />
+                Inconsistent Spacing Found
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-center gap-2">
+                  <Icons.AlertCircle />
+                  Event details: px-6 (should be responsive)
+                </li>
+                <li className="flex items-center gap-2">
+                  <Icons.AlertCircle />
+                  Student profile: py-8 (no horizontal padding)
+                </li>
+                <li className="flex items-center gap-2">
+                  <Icons.AlertCircle />
+                  Admin pages: mixed container widths
+                </li>
+                <li className="flex items-center gap-2">
+                  <Icons.AlertCircle />
+                  Forms: inconsistent py values
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
         </div>
       </section>
 

@@ -23,11 +23,12 @@ export default async function NewChapterEventPage() {
     }
   }
   return (
-    <div className="p-4 max-w-3xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+    <div className="container max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+      {/* Page Header with Clear Hierarchy */}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">New Event</h1>
-          <p className="text-muted-foreground mt-1">Create a draft event for your chapter.</p>
+          <p className="text-muted-foreground text-lg">Create a draft event for your chapter</p>
         </div>
         <Button asChild variant="outline">
           <Link href="/chapter/events">Back</Link>
