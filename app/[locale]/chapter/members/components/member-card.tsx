@@ -13,6 +13,7 @@ import {
   GraduationCap,
   Calendar,
 } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 import { MemberActionButtons } from "./member-actions"
 
 export default function MemberCard({
@@ -163,8 +164,9 @@ export default function MemberCard({
               </div>
               {profile.memberId && (
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="font-medium">Member ID:</span>{' '}
-                  <code className="px-1.5 py-0.5 bg-muted rounded text-sm font-mono">
+                  <Icons.IdCard className="h-4 w-4 text-primary" />
+                  <span className="font-medium text-muted-foreground">Member ID:</span>{' '}
+                  <code className="px-2 py-1 bg-primary/5 border border-primary/10 rounded text-sm font-mono text-primary">
                     {profile.memberId}
                   </code>
                 </div>
