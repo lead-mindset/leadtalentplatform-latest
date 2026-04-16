@@ -46,6 +46,11 @@ export async function updateEvent(input: UpdateEventInput): Promise<UpdateEventR
   if (!parsed.success) return { error: 'Validation failed' }
 
   const { supabase, user } = await requireUser()
+  const chapterId = await getEditorChapterId()
+
+  if (!chapterId) {
+    return { error: 'No chapter assigned' }
+  }
 
   const { data: existing, error: fetchError } = await supabase
     .from('Event')
@@ -57,58 +62,44 @@ export async function updateEvent(input: UpdateEventInput): Promise<UpdateEventR
     return { error: 'Event not found' }
   }
 
-  if (user.role === 'editor') {
-    const chapterId = await getEditorChapterId()
-    if (!chapterId) return { error: 'No chapter assigned' }
-    if (existing.chapterId !== chapterId) return { error: 'Insufficient permissions' }
+  const isOwner = existing.chapterId === chapterId
 
-    if ('chapterId' in parsed.data && parsed.data.chapterId !== undefined) {
-      return { error: 'Editors cannot change chapter' }
-    }
-  } else if (user.role !== 'admin') {
+  let isCollaborator = false
+  if (!isOwner) {
+    const { data: collaboration, error: collabError } = await (supabase as any)
+      .from('EventChapter')
+      .select('id')
+      .eq('eventId', existing.id)
+      .eq('chapterId', chapterId)
+      .maybeSingle()
+    
+    isCollaborator = !collabError && collaboration !== null
+  }
+
+  if (!isOwner && !isCollaborator) {
     return { error: 'Insufficient permissions' }
   }
 
-  const updatedAt = new Date().toISOString()
-
-  const patch: Partial<EventRow> = {
-    updatedAt,
+  if (user.role === 'editor' && parsed.data.chapterId !== undefined && parsed.data.chapterId !== existing.chapterId) {
+    return { error: 'Editors cannot change chapter' }
   }
-
-  const d = parsed.data
-  if (d.title !== undefined) patch.title = d.title
-  if (d.description !== undefined) {
-    patch.description = d.description === null ? null : sanitizeRichTextHtml(d.description)
-  }
-  if (d.coverImage !== undefined) patch.coverImage = d.coverImage
-  if (d.startAt !== undefined) patch.startAt = d.startAt
-  if (d.endAt !== undefined) patch.endAt = d.endAt
-  if (d.location !== undefined) patch.location = d.location
-  if (d.meetingUrl !== undefined) patch.meetingUrl = d.meetingUrl
-  if (d.eventType !== undefined) patch.eventType = d.eventType as EventType
-  if (d.capacity !== undefined) patch.capacity = d.capacity
-  if (d.isPublished !== undefined) patch.isPublished = d.isPublished
-  if (d.accessModel !== undefined) patch.accessModel = d.accessModel
-  if (d.applicationFormUrl !== undefined) patch.applicationFormUrl = d.applicationFormUrl
-  if (user.role === 'admin' && d.chapterId !== undefined) patch.chapterId = d.chapterId
 
   const { data: event, error } = await supabase
     .from('Event')
-    .update(patch)
+    .update({
+      ...parsed.data,
+      updatedAt: new Date().toISOString(),
+    })
     .eq('id', existing.id)
     .select(EVENT_MUTATION_SELECT)
-    .single<EventRow>()
+    .single()
 
   if (error || !event) {
-    console.error('[updateEvent] Error:', error)
     return { error: 'Failed to update event' }
   }
 
-  revalidatePath('/events')
-  revalidatePath(`/events/${event.id}`)
-  revalidatePath('/student/events')
   revalidatePath('/chapter/events')
-  revalidatePath('/admin/events')
+  revalidatePath(`/chapter/events/${event.id}`)
 
   return { success: true, event }
 }
