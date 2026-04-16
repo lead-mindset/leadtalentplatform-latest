@@ -141,7 +141,7 @@ export function EventsManagementClient({
                   {[
                     ['title', 'Title'],
                     ['startAt', 'Start Date'],
-                    ['chapter', 'Chapter'],
+                    ['chapters', 'Chapters'],
                     ['status', 'Status'],
                     ['registrations', 'Registrations'],
                   ].map(([key, label]) => (
@@ -164,7 +164,27 @@ export function EventsManagementClient({
                     <TableRow key={event.id}>
                       <TableCell className="p-2 font-medium">{event.title}</TableCell>
                       <TableCell className="p-2">{new Date(event.startAt).toLocaleString()}</TableCell>
-                      <TableCell className="p-2">{event.chapterName ?? 'Global'}</TableCell>
+                      <TableCell className="p-2">
+                        <div className="flex flex-wrap gap-1">
+                          {event.Chapter && (
+                            <Badge 
+                              variant="outline" 
+                              className="text-xs px-2 py-1 border-primary/20 text-primary"
+                            >
+                              {event.Chapter.name}
+                            </Badge>
+                          )}
+                          {event.EventChapter?.map((collaborator) => (
+                            <Badge 
+                              key={collaborator.id} 
+                              variant="secondary" 
+                              className="text-xs px-2 py-1"
+                            >
+                              {collaborator.Chapter?.name || 'Unknown Chapter'}
+                            </Badge>
+                          ))}
+                        </div>
+                      </TableCell>
                       <TableCell className="p-2">
                         <Badge variant={status === 'published' ? 'secondary' : 'outline'}>{status}</Badge>
                       </TableCell>
