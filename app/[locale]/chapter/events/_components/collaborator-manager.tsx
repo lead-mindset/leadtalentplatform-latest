@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/tooltip'
 import type { ChapterRow } from '@/lib/types'
 import { getAllChapters } from '@/lib/actions/chapters'
+import { addEventCollaborator, removeEventCollaborator, getEventCollaborators } from '@/lib/actions/events/event-chapter'
 
 type Collaborator = {
   id: string
@@ -55,16 +56,16 @@ export function CollaboratorManager({
         setAvailableChapters(filtered)
         
         if (mode === 'create') {
-          // In create mode, start with empty collaborators
           setCollaborators([])
         } else {
-          // Edit mode - load existing collaborators
-          // For now, we'll show empty collaborators (mock)
-          // This would be replaced with actual EventChapter queries once the table is migrated
-          const mockCollaborators: Collaborator[] = [
-            // This would come from getEventCollaborators(eventId)
-          ]
-          setCollaborators(mockCollaborators)
+          const result = await getEventCollaborators(eventId, ownerChapterId || undefined)
+          
+          if (result.error) {
+            console.error('Failed to load event collaborators:', result.error)
+            setCollaborators([])
+          } else {
+            setCollaborators(result.data || [])
+          }
         }
       } catch (error) {
         console.error('Failed to load chapter data:', error)
@@ -80,22 +81,22 @@ export function CollaboratorManager({
     if (!selectedChapterId) return
 
     startTransition(async () => {
-      // This would call addEventCollaborator(eventId, selectedChapterId)
-      // For now, simulate the addition
-      const selectedChapter = availableChapters.find(c => c.id === selectedChapterId)
-      if (selectedChapter) {
-        const newCollaborator: Collaborator = {
-          id: `temp-${Date.now()}`,
-          chapterId: selectedChapter.id,
-          chapter: selectedChapter,
-          addedAt: new Date().toISOString(),
-          addedBy: {
-            id: 'current-user',
-            name: 'Current User',
-            email: 'user@example.com',
-          },
+      try {
+        const selectedChapter = availableChapters.find(c => c.id === selectedChapterId)
+        if (!selectedChapter) return
+        if (selectedChapterId === ownerChapterId) {
+          toast.error('Cannot add the owner chapter as a collaborator')
+          return
         }
-        const updatedCollaborators = [...collaborators, newCollaborator]
+        const result = await addEventCollaborator(eventId, selectedChapterId)
+
+        if (result.error) {
+          console.error('Failed to add collaborator:', result.error)
+          toast.error(result.error)
+          return
+        }
+
+        const updatedCollaborators = [...collaborators, result.data]
         setCollaborators(updatedCollaborators)
         setAvailableChapters(availableChapters.filter(c => c.id !== selectedChapterId))
         setSelectedChapterId('')
@@ -104,19 +105,36 @@ export function CollaboratorManager({
         onCollaboratorsChange?.(updatedCollaborators.map(c => c.chapterId))
         
         toast.success(`${selectedChapter.name} added as collaborator`)
+      } catch (error) {
+        console.error('Error adding collaborator:', error)
+        toast.error('Failed to add collaborator')
       }
     })
   }
 
   const handleRemoveCollaborator = (collaborator: Collaborator) => {
     startTransition(async () => {
-      const updatedCollaborators = collaborators.filter(c => c.id !== collaborator.id)
-      setCollaborators(updatedCollaborators)
-      setAvailableChapters([...availableChapters, collaborator.chapter])
-      
-      onCollaboratorsChange?.(updatedCollaborators.map(c => c.chapterId))
-      
-      toast.success(`${collaborator.chapter.name} removed as collaborator`)
+      try {
+        // Remove collaborator using server action
+        const result = await removeEventCollaborator(collaborator.id)
+
+        if (result.error) {
+          console.error('Failed to remove collaborator:', result.error)
+          toast.error(result.error)
+          return
+        }
+
+        const updatedCollaborators = collaborators.filter(c => c.id !== collaborator.id)
+        setCollaborators(updatedCollaborators)
+        setAvailableChapters([...availableChapters, collaborator.chapter])
+        
+        onCollaboratorsChange?.(updatedCollaborators.map(c => c.chapterId))
+        
+        toast.success(`${collaborator.chapter.name} removed as collaborator`)
+      } catch (error) {
+        console.error('Error removing collaborator:', error)
+        toast.error('Failed to remove collaborator')
+      }
     })
   }
 
