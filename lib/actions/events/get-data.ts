@@ -123,9 +123,9 @@ function mapEvent(raw: any, registeredCount = 0): EventWithDetails | null {
     createdAt: raw.createdAt,
     updatedAt: raw.updatedAt,
     Chapter: ownerChapter,
-    ownerChapter: ownerChapter, // add this so the UI field works too
+    ownerChapter: ownerChapter,
     EventChapter: collaborators,
-    collaborators,              // add this so the UI field works too
+    collaborators,
     CreatedBy: createdBy,
     _count: {
       registrations: registeredCount,
@@ -233,26 +233,74 @@ export async function getEditorChapterId(): Promise<string | null> {
 }
 
 export async function getChapterEvents(): Promise<EventWithDetails[]> {
-  const { supabase, chapterId } = await requireChapterEditor()
+  const { supabase } = await requireUser()
+  const chapterId = await getEditorChapterId()
 
-  const { data, error } = await supabase
-    .from('Event')
-    .select(EVENT_SELECT)
-    .order('startAt', { ascending: false })
-
-  if (error || !data) {
-    console.error('[getChapterEvents] Error:', error)
+  if (!chapterId) {
+    console.error('[getChapterEvents] No chapter assigned')
     return []
   }
 
-  const events = (data as any[])
-    .map(event => mapEvent(event, 0))
-    .filter((e): e is EventWithDetails => e !== null)
-  
-  return events.map(event => ({
-    ...event,
-    isOwnedByChapter: event.chapterId === chapterId
-  }))
+  try {
+    const { data: ownedEvents, error: ownedError } = await supabase
+      .from('Event')
+      .select(EVENT_SELECT)
+      .eq('chapterId', chapterId)
+      .order('startAt', { ascending: false })
+
+    if (ownedError) {
+      console.error('[getChapterEvents] Owned events error:', ownedError)
+    }
+
+    const { data: eventChapterRecords, error: ecError } = await (supabase as any)
+      .from('EventChapter')
+      .select('eventId')
+      .eq('chapterId', chapterId)
+
+    if (ecError) {
+      console.error('[getChapterEvents] EventChapter lookup error:', ecError)
+    }
+
+    let collaboratedEvents: any[] = []
+
+    if (eventChapterRecords && eventChapterRecords.length > 0) {
+      const eventIds = eventChapterRecords.map((r: any) => r.eventId)
+
+      const { data: collabData, error: collabError } = await supabase
+        .from('Event')
+        .select(EVENT_SELECT)
+        .in('id', eventIds)
+        .order('startAt', { ascending: false })
+
+      if (collabError) {
+        console.error('[getChapterEvents] Collaborated events error:', collabError)
+      }
+
+      collaboratedEvents = collabData || []
+    }
+
+    const allEvents = [...(ownedEvents || []), ...collaboratedEvents]
+    const uniqueEvents = allEvents.reduce((acc: any[], event: any) => {
+      if (!acc.find((e) => e.id === event.id)) acc.push(event)
+      return acc
+    }, [])
+
+    return uniqueEvents
+      .map((event) => {
+        const mappedEvent = mapEvent(event, 0)
+        if (!mappedEvent) return null
+        
+        return {
+          ...mappedEvent,
+          isOwnedByChapter: event.chapterId === chapterId,
+        }
+      })
+      .filter((e): e is EventWithDetails & { isOwnedByChapter: boolean } => e !== null)
+
+  } catch (error) {
+    console.error('[getChapterEvents] Unexpected error:', error)
+    return []
+  }
 }
 
 export async function getAllEventsAdmin(): Promise<EventWithDetails[]> {
