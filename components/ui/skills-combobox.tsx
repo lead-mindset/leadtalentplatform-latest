@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { Check, ChevronsUpDown, X } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import {
   Command,
   CommandEmpty,
@@ -51,12 +52,14 @@ export function SkillsCombobox({
 }: SkillsComboboxProps) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
+  const [selectedValue, setSelectedValue] = useState('')
+  const [showCreate, setShowCreate] = useState(false)
 
   const filteredOptions = options.filter((opt) =>
     opt.label.toLowerCase().includes(search.toLowerCase())
   )
 
-  const showCreate =
+  const showCreateCondition = 
     !!search.trim() &&
     !options.some((opt) => opt.label.toLowerCase() === search.trim().toLowerCase()) &&
     !value.includes(search.trim())
@@ -106,7 +109,7 @@ export function SkillsCombobox({
             className="w-full justify-between font-normal text-muted-foreground"
           >
             {placeholder}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            <Icons.ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
 
@@ -123,35 +126,41 @@ export function SkillsCombobox({
                   {noResultsLabel}
                 </p>
               )}
-
-              {filteredOptions.length > 0 && (
-                <CommandGroup>
-                  {filteredOptions.map((option) => {
-                    const selected = value.includes(option.value)
-                    return (
-                      <CommandItem
-                        key={option.value}
-                        value={option.value}
-                        onSelect={() => {
-                          toggle(option.value)
-                          setSearch('')
-                        }}
-                      >
-                        <Check className={`mr-2 h-4 w-4 ${selected ? 'opacity-100' : 'opacity-0'}`} />
-                        {option.label}
-                      </CommandItem>
-                    )
-                  })}
-                </CommandGroup>
-              )}
-
-              {showCreate && (
-                <CommandGroup>
-                  <CommandItem onSelect={createCustom}>
-                    <span>{createLabel(search)}</span>
+              <CommandGroup>
+                {filteredOptions.map((option) => (
+                  <CommandItem
+                    key={option.value}
+                    value={option.value}
+                    onSelect={(currentValue) => {
+                      setSelectedValue(currentValue)
+                      setShowCreate(false)
+                    }}
+                  >
+                    <Icons.CheckCircle2
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        value.includes(option.value) ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {option.label}
                   </CommandItem>
-                </CommandGroup>
-              )}
+                ))}
+                {showCreate && (
+                  <CommandItem
+                    value={selectedValue}
+                    onSelect={() => {
+                      if (selectedValue && !value.includes(selectedValue)) {
+                        onChange([...value, selectedValue])
+                      }
+                      setShowCreate(false)
+                      setSelectedValue("")
+                    }}
+                  >
+                    <Icons.Plus className="mr-2 h-4 w-4" />
+                    Create "{selectedValue}"
+                  </CommandItem>
+                )}
+              </CommandGroup>
             </CommandList>
           </Command>
         </PopoverContent>
@@ -168,7 +177,7 @@ export function SkillsCombobox({
                 className="ml-0.5 rounded-full p-0.5 hover:bg-secondary-foreground/10 transition-colors"
                 aria-label={`Remove ${getLabel(skill)}`}
               >
-                <X className="h-3 w-3" />
+                <Icons.X className="h-3 w-3" />
               </button>
             </Badge>
           ))}
@@ -177,7 +186,7 @@ export function SkillsCombobox({
 
       {error && (
         <p className="flex items-center gap-1 text-sm text-destructive">
-          <X className="h-3 w-3" />
+          <Icons.X className="h-3 w-3" />
           {error}
         </p>
       )}
