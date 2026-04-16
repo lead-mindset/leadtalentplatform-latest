@@ -34,7 +34,7 @@ const EVENT_SELECT = `
   updatedAt,
   ownerChapter:Chapter!Event_chapterId_fkey ( id, name, university ),
   collaborators:EventChapter (
-    chapter:Chapter ( id, name, university, city, region )
+    chapter:Chapter!EventChapter_chapterId_fkey ( id, name, university, city, region )
   ),
   CreatedBy:User!Event_createdById_fkey ( id, name, email ),
   EventRegistration:EventRegistration!EventRegistration_eventId_fkey ( id, status )
@@ -85,20 +85,24 @@ type RegistrationWithEventRow = EventRegistrationRow & {
 
 function mapEvent(raw: any, registeredCount = 0): EventWithDetails | null {
   if (!raw) return null
-  
-  const ownerChapter = Array.isArray(raw.ownerChapter) && raw.ownerChapter.length > 0 ? raw.ownerChapter[0] : null
-  const createdBy = Array.isArray(raw.CreatedBy) && raw.CreatedBy.length > 0 ? raw.CreatedBy[0] : null
-  
-  const collaborators = (raw.collaborators || [])
-    .map((c: any) => ({
-      id: c.id,
-      eventId: c.eventId,
-      chapterId: c.chapterId,
-      addedAt: c.addedAt,
-      addedById: c.addedById,
-      Chapter: Array.isArray(c.chapter) && c.chapter.length > 0 ? c.chapter[0] : null
-    }))
-    .filter((c: any) => c.Chapter) // Only keep collaborators with valid chapters
+
+  const ownerChapter = raw.ownerChapter ?? null
+  const createdBy = raw.CreatedBy ?? null
+
+  const collaborators = (raw.collaborators ?? [])
+    .map((c: any) => {
+      const chapter = c.chapter ?? null
+      return {
+        id: c.id,
+        eventId: c.eventId,
+        chapterId: c.chapterId,
+        addedAt: c.addedAt,
+        addedById: c.addedById,
+        Chapter: chapter,
+        name: chapter?.name ?? 'Unknown Chapter',
+      }
+    })
+    .filter((c: any) => c.Chapter)
 
   return {
     id: raw.id,
@@ -119,11 +123,13 @@ function mapEvent(raw: any, registeredCount = 0): EventWithDetails | null {
     createdAt: raw.createdAt,
     updatedAt: raw.updatedAt,
     Chapter: ownerChapter,
+    ownerChapter: ownerChapter, // add this so the UI field works too
     EventChapter: collaborators,
+    collaborators,              // add this so the UI field works too
     CreatedBy: createdBy,
-    _count: { 
+    _count: {
       registrations: registeredCount,
-      chapters: collaborators.length
+      chapters: collaborators.length,
     },
   }
 }
@@ -159,7 +165,6 @@ export async function getPublishedEvents(): Promise<EventWithDetails[]> {
   for (const row of registrations ?? []) {
     countsByEventId.set(row.eventId, (countsByEventId.get(row.eventId) ?? 0) + 1)
   }
-
   return eventRows
     .map((event) => mapEvent(event, countsByEventId.get(event.id) ?? 0))
     .filter((e): e is EventWithDetails => e !== null)
