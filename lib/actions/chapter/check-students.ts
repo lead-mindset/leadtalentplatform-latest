@@ -64,7 +64,6 @@ export async function approveMember(userId: string, approverId: string) {
     try {
       memberId = await generateUniqueMemberId(supabase)
     } catch (error) {
-      console.error('Member ID generation failed:', error)
       return {
         success: false,
         error: 'Could not generate a member ID - please try again.',
@@ -83,7 +82,6 @@ export async function approveMember(userId: string, approverId: string) {
       .eq('userId', userId)
 
     if (updateError) {
-      console.error('[approveMember] Error:', updateError)
       return { success: false, error: 'Failed to approve member' }
     }
 
@@ -111,12 +109,11 @@ export async function approveMember(userId: string, approverId: string) {
         userData.name || userData.email.split('@')[0],
         memberId,
         chapterData.name
-      ).catch(err => console.error('Failed to send member approval email:', err))
+      ).catch(() => {}) // Silently fail email sending
     }
     
     return { success: true, memberId: memberId }
   } catch (error) {
-    console.error('[approveMember] Unexpected error:', error)
     return { success: false, error: 'An unexpected error occurred' }
   }
 }
@@ -188,7 +185,6 @@ export async function approveMembersBulk(userIds: string[], approverId: string) 
         try {
           memberId = await generateUniqueMemberId(supabase)
         } catch (error) {
-          console.error('Member ID generation failed for user:', userId, error)
           errors.push({ userId, error: 'Could not generate member ID' })
           continue
         }
@@ -205,7 +201,6 @@ export async function approveMembersBulk(userIds: string[], approverId: string) 
           .eq('userId', userId)
 
         if (updateError) {
-          console.error('Failed to approve member:', userId, updateError)
           errors.push({ userId, error: 'Failed to approve member' })
         } else {
           results.push({ userId, memberId, success: true })
@@ -230,7 +225,6 @@ export async function approveMembersBulk(userIds: string[], approverId: string) 
       errors: errors.length > 0 ? errors : undefined,
     }
   } catch (error) {
-    console.error('[approveMembersBulk] Unexpected error:', error)
     return { success: false, error: 'An unexpected error occurred' }
   }
 }
@@ -281,13 +275,13 @@ export async function rejectMember(userId: string, rejecterId: string, _reason?:
       .from('StudentProfile')
       .update({ 
         approvalStatus: 'rejected',
+        memberId: null,
         isRecruiterVisible: false,
         updatedAt: new Date().toISOString()
       })
       .eq('userId', userId)
 
     if (updateError) {
-      console.error('[rejectMember] Error:', updateError)
       return { success: false, error: 'Failed to reject member' }
     }
 
@@ -299,7 +293,6 @@ export async function rejectMember(userId: string, rejecterId: string, _reason?:
     
     return { success: true }
   } catch (error) {
-    console.error('[rejectMember] Unexpected error:', error)
     return { success: false, error: 'An unexpected error occurred' }
   }
 }
@@ -350,13 +343,13 @@ export async function revokeApproval(userId: string, revokerId: string) {
       .update({ 
         approvedById: null,
         approvalStatus: 'pending',
+        memberId: null,
         isRecruiterVisible: false,
         updatedAt: new Date().toISOString()
       })
       .eq('userId', userId)
 
     if (updateError) {
-      console.error('[revokeApproval] Error:', updateError)
       return { success: false, error: 'Failed to revoke approval' }
     }
 
@@ -368,7 +361,6 @@ export async function revokeApproval(userId: string, revokerId: string) {
     
     return { success: true }
   } catch (error) {
-    console.error('[revokeApproval] Unexpected error:', error)
     return { success: false, error: 'An unexpected error occurred' }
   }
 }
