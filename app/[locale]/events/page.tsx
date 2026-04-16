@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import Image from 'next/image'
-import { Calendar, MapPin, Users, Clock, Search, Plus, Mail, User } from 'lucide-react'
+import { Calendar, MapPin, Users, Clock, Search, Plus, Mail, User, Building2 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { getPublishedEvents } from '@/lib/actions/events/get-data'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator'
 import { Input } from '@/components/ui/input'
 import { Link } from '@/i18n/routing'
 import { Navbar } from '../(public)/_components/navbar'
+import type { EventWithDetails } from '@/lib/types'
 
 export const metadata = {
   title: 'Events',
@@ -47,8 +48,8 @@ function formatDate(value: string) {
   })
 }
 
-function groupEventsByDate(events: any[]) {
-  const grouped: { [date: string]: any[] } = {}
+function groupEventsByDate(events: EventWithDetails[]) {
+  const grouped: { [date: string]: EventWithDetails[] } = {}
   
   events.forEach(event => {
     const date = new Date(event.startAt).toDateString()
@@ -68,7 +69,9 @@ function EventTypeBadge({ eventType }: { eventType: string }) {
 }
 
 async function EventsContent() {
-  const events = await getPublishedEvents()
+  const events: EventWithDetails[] = await getPublishedEvents()
+  
+  console.log(events)
   const groupedEvents = groupEventsByDate(events)
 
   return (
@@ -141,6 +144,30 @@ async function EventsContent() {
                                 <h3 className="font-bold text-xl leading-tight mt-1">
                                   {event.title}
                                 </h3>
+                                
+                                <div className="flex items-center gap-2 mt-2">
+                                    <Building2 className="h-4 w-4 text-muted-foreground" />
+                                    <div className="flex flex-wrap gap-1">
+                                      {event.ownerChapter && (
+                                        <Badge 
+                                          variant="secondary" 
+                                          className="text-xs px-2 py-1 border-primary/20 font-bold"
+                                        >
+                                          {event.ownerChapter.name}
+                                        </Badge>
+                                      )}
+                                      {event.collaborators?.map((collaborator, index) => (
+                                        <Badge 
+                                          key={collaborator.id || `collaborator-${index}`} 
+                                          variant="secondary" 
+                                          className="text-xs px-2 py-1"
+                                        >
+                                          {collaborator.name || 'Unknown Chapter'}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  </div>
+                                
                                 <div className="flex flex-col gap-2 mt-2 text-sm text-muted-foreground">
                                   {event.CreatedBy?.name && (
                                     <div className="flex items-center gap-2">

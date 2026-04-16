@@ -1,9 +1,27 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { createClient } from '@/lib/supabase/server'
 import { EventForm } from '../_components/event-form'
+import type { ChapterRow } from '@/lib/types'
 
-export default function NewChapterEventPage() {
+export default async function NewChapterEventPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  let editorChapter: ChapterRow | null = null
+  if (user) {
+    const { data: profile } = await supabase
+      .from('StudentProfile')
+      .select('chapterId, chapter:Chapter(id, name, university, city, region, createdAt, updatedAt)')
+      .eq('userId', user.id)
+      .single()
+    
+    if (profile?.chapter) {
+      // Type assertion to handle Supabase query result
+      editorChapter = profile.chapter as unknown as ChapterRow
+    }
+  }
   return (
     <div className="p-4 max-w-3xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
@@ -21,7 +39,7 @@ export default function NewChapterEventPage() {
           <CardTitle>Event details</CardTitle>
         </CardHeader>
         <CardContent>
-          <EventForm mode="create" />
+          <EventForm mode="create" editorChapter={editorChapter} />
         </CardContent>
       </Card>
     </div>
