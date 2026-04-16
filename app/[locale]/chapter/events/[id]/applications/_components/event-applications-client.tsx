@@ -105,7 +105,7 @@ export function EventApplicationsClient({
   }
 
   return (
-    <div className="container max-w-5xl py-8">
+    <div className="container max-w-4xl mx-auto px-4 sm:px-6 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">{event.title}</h1>
         <div className="mt-2 flex items-center gap-3">
