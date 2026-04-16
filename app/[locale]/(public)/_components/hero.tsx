@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2 } from "lucide-react";
+import { Icons } from "@/components/ui/icons";
 import Image from "next/image";
 
 const TRUST_ITEMS = [
@@ -71,8 +71,7 @@ export function Hero() {
               key={item}
               className="flex items-center gap-1.5 text-sm text-muted-foreground"
             >
-              <CheckCircle2
-                size={14}
+              <Icons.CheckCircle2
                 className="text-success shrink-0"
                 aria-hidden="true"
               />
