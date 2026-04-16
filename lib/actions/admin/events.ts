@@ -29,6 +29,11 @@ export type AdminEventListItem = {
   chapterName: string | null
   registrations: number
   capacity: number | null
+  Chapter?: { id: string; name: string; university: string } | null
+  EventChapter?: Array<{
+    id: string
+    Chapter: { id: string; name: string; university: string }
+  }>
 }
 
 export type AdminEventsListResponse = {
@@ -74,7 +79,7 @@ export async function getAdminEventsList(
 
   let query = supabase
     .from('Event')
-    .select('id, title, startAt, endAt, isPublished, chapterId, capacity, Chapter(name), EventRegistration(id, status)')
+    .select('id, title, startAt, endAt, isPublished, chapterId, capacity, Chapter(name, university), EventChapter(id, Chapter(name, university)), EventRegistration(id, status)')
 
   const search = filters.search?.trim()
   if (search) {
@@ -107,6 +112,8 @@ export async function getAdminEventsList(
       chapterName: chapter?.name ?? null,
       registrations,
       capacity: row.capacity,
+      Chapter: chapter,
+      EventChapter: Array.isArray(row.EventChapter) ? row.EventChapter : [],
     }
   })
 
