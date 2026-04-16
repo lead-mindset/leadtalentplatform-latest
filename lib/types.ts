@@ -154,6 +154,11 @@ export type EventWithDetails = EventRow & {
     Chapter: Pick<ChapterRow, 'id' | 'name' | 'university'>
   })[]
   Chapter: Pick<ChapterRow, 'id' | 'name' | 'university'> | null
+  ownerChapter: Pick<ChapterRow, 'id' | 'name' | 'university'> | null
+  collaborators: (EventChapterRow & {
+    Chapter: Pick<ChapterRow, 'id' | 'name' | 'university'>
+    name: string
+  })[]
   CreatedBy: Pick<UserRow, 'id' | 'name' | 'email'> | null
   _count: { 
     registrations: number; 
