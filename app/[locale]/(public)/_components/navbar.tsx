@@ -1,5 +1,7 @@
+import { Suspense } from 'react';
 import { createClient } from "@/lib/supabase/server";
 import { NavbarClient } from "./navbar-client";
+import { NavbarSkeleton } from "./navbar-skeleton";
 import { getVisibleLinks } from "./nav-links";
 import type { Role } from "@/lib/types";
 
@@ -18,6 +20,14 @@ function getDashboardHref(role: Role | null): string {
 }
 
 export async function Navbar() {
+  return (
+    <Suspense fallback={<NavbarSkeleton />}>
+      <NavbarContent />
+    </Suspense>
+  );
+}
+
+async function NavbarContent() {
   const supabase = await createClient();
   const { data: { user: authUser } } = await supabase.auth.getUser();
 
