@@ -86,7 +86,7 @@ export function EventContent({
   if (!event) {
     return (
       <main className="min-h-screen bg-background">
-        <div className="mx-auto max-w-3xl px-6 pb-16 pt-28">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 pb-16 pt-28">
           <Card>
             <CardContent className="py-10 text-center text-muted-foreground">
               Event not found.
@@ -132,7 +132,7 @@ export function EventContent({
 
   return (
     <main className="min-h-screen bg-background">
-      <div className="mx-auto max-w-5xl px-6 pb-16 pt-28">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 pb-16 pt-28">
         <div className="grid gap-8 lg:grid-cols-5">
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-6">
