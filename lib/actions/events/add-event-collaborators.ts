@@ -8,7 +8,7 @@ export async function addEventCollaborators(
   eventId: string,
   chapterIds: string[]
 ) {
-  if (!eventId || !chapterIds.length) {
+  if (!eventId || eventId === 'new' || !chapterIds.length) {
     return { error: 'Event ID and at least one chapter ID are required' }
   }
 
