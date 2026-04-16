@@ -4,7 +4,7 @@ import { useForm, FormProvider, useFormContext } from 'react-hook-form';
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { X } from 'lucide-react';
+import { Icons } from '@/components/ui/icons';
 
 interface StepperProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
@@ -72,7 +72,6 @@ export default function Stepper({
   };
 
   const handleNext = async () => {
-    // Validate before proceeding
     if (validateStep) {
       const isValid = await validateStep(currentStep);
       if (!isValid) return;
@@ -90,7 +89,6 @@ export default function Stepper({
   };
 
   const handleComplete = async () => {
-    // Validate final step before completing
     if (validateStep) {
       const isValid = await validateStep(currentStep);
       if (!isValid) return;
@@ -103,7 +101,6 @@ export default function Stepper({
   const handleStepClick = async (clicked: number) => {
     if (clicked === currentStep) return;
 
-    // If moving forward, validate all steps between current and target
     if (clicked > currentStep) {
       for (let step = currentStep; step < clicked; step++) {
         if (validateStep) {
@@ -129,7 +126,6 @@ export default function Stepper({
     >
       <div
         className={`mx-auto w-full max-w-md rounded-4xl shadow-xl ${stepCircleContainerClassName}`}
-        style={{ border: '0px solid #222' }}
       >
         <div className={`${stepContainerClassName} flex w-full items-center p-8`}>
           {stepsArray.map((_, index) => {
@@ -606,7 +602,7 @@ export function FormInput({
 
       {error && (
         <p className="flex items-center gap-1 text-sm text-destructive">
-          <X className="h-3 w-3" />
+          <Icons.X className="h-3 w-3" />
           {error}
         </p>
       )}
