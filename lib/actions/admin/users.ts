@@ -87,7 +87,6 @@ async function queryFilteredUsers(filters: UsersFilters): Promise<AdminUserListI
 
   const { data: users, error: usersError } = await userQuery.order('createdAt', { ascending: false })
   if (usersError || !users) {
-    console.error('[admin/users] Failed to fetch users:', usersError)
     return []
   }
 
@@ -101,7 +100,6 @@ async function queryFilteredUsers(filters: UsersFilters): Promise<AdminUserListI
     .in('userId', userIds)
 
   if (profilesError) {
-    console.error('[admin/users] Failed to fetch profiles:', profilesError)
     return []
   }
 
@@ -206,15 +204,11 @@ export async function updateUserRole(userId: string, newRole: Role): Promise<Act
     const { supabase, user: adminUser } = await requireAdmin()
     const { error } = await supabase.from('User').update({ role: newRole }).eq('id', userId)
     if (error) {
-      console.error('[admin/users] updateUserRole failed:', error)
       return { success: false, error: 'Failed to update user role.' }
     }
-
-    console.log('[AUDIT] admin.updateUserRole', { adminId: adminUser.id, userId, newRole })
     revalidatePath('/admin/users')
     return { success: true }
   } catch (error) {
-    console.error('[admin/users] updateUserRole error:', error)
     return { success: false, error: 'Unexpected error while updating role.' }
   }
 }
@@ -227,15 +221,11 @@ export async function deactivateUser(userId: string): Promise<ActionResult> {
       .update({ deactivatedAt: new Date().toISOString() })
       .eq('id', userId)
     if (error) {
-      console.error('[admin/users] deactivateUser failed:', error)
       return { success: false, error: 'Failed to deactivate user.' }
     }
-
-    console.log('[AUDIT] admin.deactivateUser', { adminId: adminUser.id, userId })
     revalidatePath('/admin/users')
     return { success: true }
   } catch (error) {
-    console.error('[admin/users] deactivateUser error:', error)
     return { success: false, error: 'Unexpected error while deactivating user.' }
   }
 }
@@ -245,15 +235,11 @@ export async function reactivateUser(userId: string): Promise<ActionResult> {
     const { supabase, user: adminUser } = await requireAdmin()
     const { error } = await supabase.from('User').update({ deactivatedAt: null }).eq('id', userId)
     if (error) {
-      console.error('[admin/users] reactivateUser failed:', error)
       return { success: false, error: 'Failed to reactivate user.' }
     }
-
-    console.log('[AUDIT] admin.reactivateUser', { adminId: adminUser.id, userId })
     revalidatePath('/admin/users')
     return { success: true }
   } catch (error) {
-    console.error('[admin/users] reactivateUser error:', error)
     return { success: false, error: 'Unexpected error while reactivating user.' }
   }
 }
@@ -269,33 +255,26 @@ export async function bulkUpdateUsers(userIds: string[], action: BulkAction): Pr
     if (action.type === 'change_role') {
       const { error } = await supabase.from('User').update({ role: action.role }).in('id', userIds)
       if (error) {
-        console.error('[admin/users] bulk role update failed:', error)
         return { success: false, error: 'Failed to update roles.' }
       }
-      console.log('[AUDIT] admin.bulkRoleUpdate', { adminId: adminUser.id, userIds, role: action.role })
     } else if (action.type === 'deactivate') {
       const { error } = await supabase
         .from('User')
         .update({ deactivatedAt: new Date().toISOString() })
         .in('id', userIds)
       if (error) {
-        console.error('[admin/users] bulk deactivate failed:', error)
         return { success: false, error: 'Failed to deactivate users.' }
       }
-      console.log('[AUDIT] admin.bulkDeactivate', { adminId: adminUser.id, userIds })
     } else {
       const { error } = await supabase.from('User').update({ deactivatedAt: null }).in('id', userIds)
       if (error) {
-        console.error('[admin/users] bulk reactivate failed:', error)
         return { success: false, error: 'Failed to reactivate users.' }
       }
-      console.log('[AUDIT] admin.bulkReactivate', { adminId: adminUser.id, userIds })
     }
 
     revalidatePath('/admin/users')
     return { success: true }
   } catch (error) {
-    console.error('[admin/users] bulkUpdateUsers error:', error)
     return { success: false, error: 'Unexpected error while updating users.' }
   }
 }
