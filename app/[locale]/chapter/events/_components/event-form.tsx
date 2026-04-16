@@ -193,20 +193,18 @@ export function EventForm({
           return
         }
         
-        // In create mode, add collaborators if any were selected
-        if (mode === 'create' && pendingCollaboratorIds.length > 0) {
+        if (mode === 'edit' && pendingCollaboratorIds.length > 0) {
           const collaboratorResult = await addEventCollaborators(res.event.id, pendingCollaboratorIds)
           if ('error' in collaboratorResult) {
-            toast.error(`Event created but failed to add collaborators: ${collaboratorResult.error}`)
+            toast.error(`Event updated but failed to add collaborators: ${collaboratorResult.error}`)
           }
         }
-        
         toast.success(mode === 'create' ? 'Event created successfully!' : 'Event updated successfully!')
         setLastSavedAt(new Date().toLocaleTimeString())
         setIsPublished(res.event.isPublished)
 
         if (mode === 'create') {
-          router.push(`/chapter/events/${res.event.id}`)
+          router.push(`/chapter/events/${res.event.id}/edit`)
         } else {
           router.refresh()
         }
@@ -492,14 +490,16 @@ export function EventForm({
           )}
         </div>
 
-        <div className="space-y-6 border-t pt-6">
-          <CollaboratorManager 
-            eventId={mode === 'create' ? 'new' : initial?.id || ''} 
-            ownerChapterId={editorChapter?.id || null} 
-            mode={mode} 
-            onCollaboratorsChange={setPendingCollaboratorIds}
-          />
-        </div>
+        {mode === 'edit' && initial?.id && (
+          <div className="space-y-6 border-t pt-6">
+            <CollaboratorManager 
+              eventId={initial.id} 
+              ownerChapterId={editorChapter?.id || null} 
+              mode={mode} 
+              onCollaboratorsChange={setPendingCollaboratorIds}
+            />
+          </div>
+        )}
 
         <div className="flex items-center gap-3 pt-1">
           <input
