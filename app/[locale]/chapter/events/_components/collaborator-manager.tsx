@@ -28,7 +28,17 @@ type Collaborator = {
   }
 }
 
-export function CollaboratorManager({ eventId, ownerChapter, mode }: { eventId: string; ownerChapter: ChapterRow | null; mode: 'create' | 'edit' }) {
+export function CollaboratorManager({ 
+  eventId, 
+  ownerChapterId, 
+  mode,
+  onCollaboratorsChange 
+}: { 
+  eventId: string
+  ownerChapterId: string | null
+  mode: 'create' | 'edit'
+  onCollaboratorsChange?: (chapterIds: string[]) => void
+}) {
   const [collaborators, setCollaborators] = useState<Collaborator[]>([])
   const [availableChapters, setAvailableChapters] = useState<ChapterRow[]>([])
   const [selectedChapterId, setSelectedChapterId] = useState<string>('')
@@ -36,27 +46,25 @@ export function CollaboratorManager({ eventId, ownerChapter, mode }: { eventId: 
   const [isLoading, setIsLoading] = useState(true)
   const [isExpanded, setIsExpanded] = useState(false)
 
-  // Load real data from the Chapters table
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Fetch all chapters from the database
         const allChapters = await getAllChapters()
         
+        const filtered = allChapters.filter(c => c.id !== ownerChapterId)
+        setAvailableChapters(filtered)
+        
         if (mode === 'create') {
-          // In create mode, show all chapters as potential collaborators
-          setAvailableChapters(allChapters)
+          // In create mode, start with empty collaborators
+          setCollaborators([])
         } else {
-          // Edit mode - load existing collaborators and available chapters
-          // For now, we'll show all chapters except the owner (mock collaborators)
+          // Edit mode - load existing collaborators
+          // For now, we'll show empty collaborators (mock)
           // This would be replaced with actual EventChapter queries once the table is migrated
           const mockCollaborators: Collaborator[] = [
             // This would come from getEventCollaborators(eventId)
           ]
           setCollaborators(mockCollaborators)
-
-          // For now, show all chapters as available (would exclude owner and existing collaborators)
-          setAvailableChapters(allChapters)
         }
       } catch (error) {
         console.error('Failed to load chapter data:', error)
@@ -66,7 +74,7 @@ export function CollaboratorManager({ eventId, ownerChapter, mode }: { eventId: 
     }
 
     loadData()
-  }, [eventId, mode])
+  }, [eventId, mode, ownerChapterId])
 
   const handleAddCollaborator = () => {
     if (!selectedChapterId) return
@@ -87,9 +95,14 @@ export function CollaboratorManager({ eventId, ownerChapter, mode }: { eventId: 
             email: 'user@example.com',
           },
         }
-        setCollaborators([...collaborators, newCollaborator])
+        const updatedCollaborators = [...collaborators, newCollaborator]
+        setCollaborators(updatedCollaborators)
         setAvailableChapters(availableChapters.filter(c => c.id !== selectedChapterId))
         setSelectedChapterId('')
+        
+        // Notify parent component about collaborator changes
+        onCollaboratorsChange?.(updatedCollaborators.map(c => c.chapterId))
+        
         toast.success(`${selectedChapter.name} added as collaborator`)
       }
     })
@@ -97,10 +110,12 @@ export function CollaboratorManager({ eventId, ownerChapter, mode }: { eventId: 
 
   const handleRemoveCollaborator = (collaborator: Collaborator) => {
     startTransition(async () => {
-      // This would call removeEventCollaborator(eventId, collaborator.chapterId)
-      // For now, simulate the removal
-      setCollaborators(collaborators.filter(c => c.id !== collaborator.id))
+      const updatedCollaborators = collaborators.filter(c => c.id !== collaborator.id)
+      setCollaborators(updatedCollaborators)
       setAvailableChapters([...availableChapters, collaborator.chapter])
+      
+      onCollaboratorsChange?.(updatedCollaborators.map(c => c.chapterId))
+      
       toast.success(`${collaborator.chapter.name} removed as collaborator`)
     })
   }
@@ -165,16 +180,15 @@ export function CollaboratorManager({ eventId, ownerChapter, mode }: { eventId: 
       
       {isExpanded && (
         <CardContent className="space-y-4 border-t pt-4">
-        {/* Owner Chapter */}
-        {mode === 'edit' && ownerChapter ? (
+        {mode === 'edit' && ownerChapterId ? (
           <div className="space-y-2">
             <div className="text-sm font-medium text-muted-foreground">Owner Chapter</div>
             <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
               <Crown className="h-4 w-4 text-primary" />
               <div>
-                <div className="font-medium">{ownerChapter.name}</div>
+                <div className="font-medium">Owner Chapter ID: {ownerChapterId}</div>
                 <div className="text-sm text-muted-foreground">
-                  {ownerChapter.university}
+                  This chapter owns the event
                 </div>
               </div>
             </div>
@@ -194,7 +208,6 @@ export function CollaboratorManager({ eventId, ownerChapter, mode }: { eventId: 
           </div>
         )}
 
-        {/* Collaborating Chapters */}
         {collaborators.length > 0 && (
           <div className="space-y-2">
             <div className="text-sm font-medium text-muted-foreground">Collaborating Chapters</div>
