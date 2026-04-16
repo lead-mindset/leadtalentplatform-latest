@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { createEvent, type CreateEventInput } from '@/lib/actions/events/create-event'
 import { updateEvent, type UpdateEventInput } from '@/lib/actions/events/update-event'
 import { deleteEvent } from '@/lib/actions/events/delete-event'
-import type { EventRow, EventType, EventAccessModel } from '@/lib/types'
+import { addEventCollaborators } from '@/lib/actions/events/add-event-collaborators'
+import type { EventRow, EventType, EventAccessModel, ChapterRow } from '@/lib/types'
 import { EVENT_ACCESS_MODEL_OPTIONS, EVENT_TYPE_OPTIONS } from '@/lib/constants'
 import { useRouter } from 'next/navigation'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
@@ -45,9 +46,11 @@ function fromDateTimeLocal(value: string) {
 export function EventForm({
   mode,
   initial,
+  editorChapter,
 }: {
   mode: Mode
   initial?: EventRow | null
+  editorChapter?: ChapterRow | null
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -90,6 +93,7 @@ export function EventForm({
   const [isDraggingCover, setIsDraggingCover] = useState(false)
   const [coverError, setCoverError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [pendingCollaboratorIds, setPendingCollaboratorIds] = useState<string[]>([])
 
   async function handleCoverFile(file: File | null) {
     if (!file) return
@@ -187,6 +191,14 @@ export function EventForm({
         if ('error' in res) {
           toast.error(res.error)
           return
+        }
+        
+        // In create mode, add collaborators if any were selected
+        if (mode === 'create' && pendingCollaboratorIds.length > 0) {
+          const collaboratorResult = await addEventCollaborators(res.event.id, pendingCollaboratorIds)
+          if ('error' in collaboratorResult) {
+            toast.error(`Event created but failed to add collaborators: ${collaboratorResult.error}`)
+          }
         }
         
         toast.success(mode === 'create' ? 'Event created successfully!' : 'Event updated successfully!')
@@ -483,8 +495,9 @@ export function EventForm({
         <div className="space-y-6 border-t pt-6">
           <CollaboratorManager 
             eventId={mode === 'create' ? 'new' : initial?.id || ''} 
-            ownerChapter={null} 
+            ownerChapterId={editorChapter?.id || null} 
             mode={mode} 
+            onCollaboratorsChange={setPendingCollaboratorIds}
           />
         </div>
 
