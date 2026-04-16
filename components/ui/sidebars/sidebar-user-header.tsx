@@ -1,4 +1,3 @@
-import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { getInitials } from '@/lib/utils'
 import type { Role } from '@/lib/types'
@@ -45,10 +44,10 @@ export function SidebarUserHeader({ name, email, role, memberId }: SidebarUserHe
       </div>
 
       {memberId && (
-        <div className="flex items-center gap-2 rounded-md bg-sidebar-accent px-3 py-2">
-          <span className="text-xs text-sidebar-foreground/50 shrink-0">Lead ID</span>
-          <span className="text-xs font-mono font-semibold text-sidebar-foreground ml-auto tracking-wide">
-            #{memberId}
+        <div className="flex items-center gap-2 rounded-md bg-primary/5 border border-primary/10 px-3 py-2">
+          <span className="text-xs text-muted-foreground shrink-0">Member ID</span>
+          <span className="text-xs font-mono font-semibold text-primary ml-auto tracking-wide">
+            {memberId}
           </span>
         </div>
       )}
