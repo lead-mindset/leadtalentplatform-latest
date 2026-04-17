@@ -26,6 +26,22 @@ export const eventSchema = z.object({
     .max(200, 'Location must be less than 200 characters')
     .optional(),
   
+  locationName: z.string()
+    .max(200, 'Location name must be less than 200 characters')
+    .optional(),
+  
+  locationAddress: z.string()
+    .max(500, 'Location address must be less than 500 characters')
+    .optional(),
+  
+  locationCity: z.string()
+    .max(100, 'City must be less than 100 characters')
+    .optional(),
+  
+  locationRegion: z.string()
+    .max(100, 'Region must be less than 100 characters')
+    .optional(),
+  
   meetingUrl: z.string()
     .url('Invalid meeting URL')
     .optional()
@@ -72,6 +88,11 @@ export const eventSchema = z.object({
   }
   
   if (data.eventType === 'hybrid' && (!data.location?.trim() || !data.meetingUrl?.trim())) {
+    return false
+  }
+  
+  // Validate location fields for in-person and hybrid events
+  if ((data.eventType === 'in_person' || data.eventType === 'hybrid') && data.locationName?.trim() && !data.locationAddress?.trim()) {
     return false
   }
   
