@@ -75,25 +75,40 @@ export const eventSchema = z.object({
   const end = new Date(data.endAt)
   
   if (start >= end) {
-    return false
+    return {
+      message: "End date must be after start date",
+      path: ["endAt"]
+    }
   }
   
   // Validate event type requirements
   if (data.eventType === 'in_person' && !data.location?.trim()) {
-    return false
+    return {
+      message: "Location is required for in-person events",
+      path: ["location"]
+    }
   }
   
   if (data.eventType === 'online' && !data.meetingUrl?.trim()) {
-    return false
+    return {
+      message: "Meeting URL is required for online events",
+      path: ["meetingUrl"]
+    }
   }
   
   if (data.eventType === 'hybrid' && (!data.location?.trim() || !data.meetingUrl?.trim())) {
-    return false
+    return {
+      message: "Both location and meeting URL are required for hybrid events",
+      path: ["location", "meetingUrl"]
+    }
   }
   
   // Validate location fields for in-person and hybrid events
   if ((data.eventType === 'in_person' || data.eventType === 'hybrid') && data.locationName?.trim() && !data.locationAddress?.trim()) {
-    return false
+    return {
+      message: "Location address is required when location name is provided",
+      path: ["locationAddress"]
+    }
   }
   
   // Validate application model requirements
