@@ -54,7 +54,7 @@ export function FinalCTA() {
             px-10
           "
         >
-          <Link href="/login?intent=signup">Crear mi perfil&nbsp;→</Link>
+          <Link href="/auth/sign-up">Crear mi perfil&nbsp;{`->`}</Link>
         </Button>
 
       

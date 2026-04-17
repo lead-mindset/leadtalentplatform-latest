@@ -98,8 +98,8 @@ export function Hero() {
               px-8
             "
           >
-            <Link href="/sign-up">
-              Crear mi perfil&nbsp;→
+            <Link href="/auth/sign-up">
+              Crear mi perfil&nbsp;{`→`}
             </Link>
           </Button>
 
@@ -113,7 +113,7 @@ export function Hero() {
               px-8
             "
           >
-            <Link href="/login">Iniciar sesión</Link>
+            <Link href="/auth/login">Iniciar sesión</Link>
           </Button>
         </div>
 
