@@ -1,7 +1,7 @@
 import { SidebarLayout } from '@/components/ui/sidebars/sidebar-layout'
 import { BaseSidebar } from '@/components/ui/sidebars/base-sidebar'
 import { StudentNavigation } from '@/components/ui/sidebars/student-sidebar'
-import { requireChapterEditor, getSidebarStatsForEditor } from '@/lib/auth'
+import { requireChapterMember, getSidebarStatsForEditor } from '@/lib/auth'
 import type { ReactNode } from 'react'
 
 interface ChapterLayoutProps {
@@ -9,7 +9,7 @@ interface ChapterLayoutProps {
 }
 
 export default async function ChapterLayout({ children }: ChapterLayoutProps) {
-  const { supabase, user, chapterId } = await requireChapterEditor()
+  const { supabase, user, chapterId } = await requireChapterMember()
 
   const { data: profile } = await supabase
     .from('student_profile')
@@ -26,7 +26,7 @@ export default async function ChapterLayout({ children }: ChapterLayoutProps) {
     <SidebarLayout
       sidebar={
         <BaseSidebar
-          userName={user.name}
+          userName={user.name ?? ''}
           userEmail={user.email}
           userRole={user.role}
           memberId={profile?.member_id ?? undefined}
