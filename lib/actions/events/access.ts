@@ -1,7 +1,6 @@
 'use server'
 
-import { requireChapterEditor, requireUser } from '@/lib/auth'
-import { getEditorChapterId } from './get-data'
+import { canUserAccessChapter, requireUser } from '@/lib/auth'
 import type { EventRow, Role } from '@/lib/types'
 
 type EventManager = {
@@ -23,7 +22,7 @@ export async function assertCanManageEvent(eventId: string): Promise<EventAccess
   const { supabase, user } = await requireUser()
 
   const { data: event, error } = await supabase
-    .from('Event')
+    .from('event')
     .select('id, chapterId, capacity, title, accessModel')
     .eq('id', eventId)
     .maybeSingle<Pick<EventRow, 'id' | 'chapterId' | 'capacity' | 'title' | 'accessModel'>>()
@@ -36,28 +35,10 @@ export async function assertCanManageEvent(eventId: string): Promise<EventAccess
     return { error: 'Insufficient permissions' }
   }
 
-  if (user.role === 'editor') {
-    const { chapterId } = await requireChapterEditor()
-    
-    // Check if user's chapter is the owner
-    const isOwner = event.chapterId === chapterId
-    
-    // Check if user's chapter is a collaborator using two-step approach
-    let isCollaborator = false
-    if (!isOwner) {
-      const { data: collaboration, error: collabError } = await (supabase as any)
-        .from('EventChapter')
-        .select('id')
-        .eq('eventId', eventId)
-        .eq('chapterId', chapterId)
-        .maybeSingle()
-      
-      isCollaborator = !collabError && collaboration !== null
-    }
-    
-    if (!isOwner && !isCollaborator) {
-      return { error: 'Insufficient permissions' }
-    }
+  // Check if user can access this event (owner or collaborator)
+  const canAccess = await canUserAccessChapter(supabase, user, event.chapterId, eventId)
+  if (!canAccess) {
+    return { error: 'Insufficient permissions' }
   }
 
   return {
