@@ -21,7 +21,7 @@ export async function addEventCollaborator(eventId: string, chapterId: string) {
 
     // Verify the caller owns this event before allowing collaborator addition
     const { data: event, error: eventError } = await supabase
-      .from('Event')
+      .from('event')
       .select('id, chapterId')
       .eq('id', eventId)
       .maybeSingle()
@@ -37,22 +37,21 @@ export async function addEventCollaborator(eventId: string, chapterId: string) {
 
     // Prevent duplicates
     const { data: existing } = await supabase
-      .from('EventChapter')
+      .from('event_chapter')
       .select('id')
-      .eq('eventId', eventId)
-      .eq('chapterId', chapterId)
-      .maybeSingle()
+.eq('event_id', eventId)
+      .eq('chapter_id', chapterId)
 
     if (existing) {
       return { error: 'This chapter is already a collaborator' }
     }
 
     const { data: newEventChapter, error } = await supabase
-      .from('EventChapter')
+      .from('event_chapter')
       .insert({
-        eventId,
-        chapterId,
-        addedById: user.id,
+        event_id: eventId,
+        chapter_id: chapterId,
+        added_by_id: user.id,
       })
       .select(`
         id,
@@ -86,8 +85,8 @@ export async function removeEventCollaborator(collaboratorId: string) {
 
     // Fetch the record first to confirm caller owns the parent event
     const { data: record, error: fetchError } = await supabase
-      .from('EventChapter')
-      .select('id, eventId, event:Event!EventChapter_eventId_fkey(chapterId)')
+      .from('event_chapter')
+      .select('id, event_id, chapter_id')
       .eq('id', collaboratorId)
       .maybeSingle()
 
@@ -96,7 +95,7 @@ export async function removeEventCollaborator(collaboratorId: string) {
     }
 
     const { error } = await supabase
-      .from('EventChapter')
+      .from('event_chapter')
       .delete()
       .eq('id', collaboratorId)
 
@@ -116,16 +115,14 @@ export async function getEventCollaborators(eventId: string, ownerChapterId?: st
     const supabase = createAdminClient()
 
     const { data: eventChapters, error } = await supabase
-      .from('EventChapter')
+      .from('event_chapter')
       .select(`
         id,
-        chapterId,
-        addedAt,
-        addedById,
-        chapter:Chapter!EventChapter_chapterId_fkey (id, name, university),
-        addedBy:User!EventChapter_addedById_fkey (id, name, email)
+        chapter_id,
+        added_at,
+        added_by_id
       `)
-      .eq('eventId', eventId)
+      .eq('event_id', eventId)
 
     if (error) {
       return { error: error.message || 'Failed to load collaborators', data: [] }
