@@ -11,9 +11,9 @@ import type {
   UserRow,
 } from './types'
 
-const USER_SELECT = 'id, email, name, role, phone, createdAt, updatedAt, deactivatedAt'
+const USER_SELECT = 'id, email, name, role, phone, created_at, updated_at, deactivated_at'
 const RECRUITER_ACCESS_SELECT =
-  'id, companyId, isActive, grantedById, acceptedByUserId, grantedAt, acceptedAt, revokedAt, inviteExpiresAt, recruiterEmail, inviteToken, revokedById'
+  'id, company_id, is_active, granted_by_id, accepted_by_user_id, granted_at, accepted_at, revoked_at, invite_expires_at, recruiter_email, invite_token, revoked_by_id'
 
 export async function assertAdmin(
   supabase: SupabaseClient<Database>
@@ -25,7 +25,7 @@ export async function assertAdmin(
   }
 
   const { data: dbUser, error: dbError } = await supabase
-    .from('User')
+    .from('user')
     .select(USER_SELECT)
     .eq('id', auth.user.id)
     .single<UserRow>()
@@ -67,7 +67,7 @@ export async function requireUser(): Promise<{
   }
 
   const { data: userData, error } = await supabase
-    .from('User')
+    .from('user')
     .select(USER_SELECT)
     .eq('id', authUser.id)
     .single<UserRow>()
@@ -92,40 +92,89 @@ export async function requireUserWithRole(role: string): Promise<{
   return { supabase, user }
 }
 
-export async function requireChapterEditor(): Promise<{
+export async function requireChapterMember(): Promise<{
   supabase: SupabaseClient<Database>
   user: UserRow
   chapterId: string
 }> {
-  const { supabase, user } = await requireUserWithRole('editor')
+  const { supabase, user } = await requireUser()
+ 
+  // Allow admin, editor, and member roles to access chapter resources
+  if (!['admin', 'editor', 'member'].includes(user.role)) {
+    redirect('/student')
+  }
 
   const { data: profile, error } = await supabase
-    .from('StudentProfile')
-    .select('chapterId')
-    .eq('userId', user.id)
+    .from('student_profile')
+    .select('chapter_id')
+    .eq('user_id', user.id)
     .maybeSingle()
 
-  if (error || !profile?.chapterId) {
+  if (error || !profile?.chapter_id) {
     redirect('/chapter')
   }
 
   return {
     supabase,
     user,
-    chapterId: profile.chapterId,
+    chapterId: profile.chapter_id,
   }
 }
+
+export async function canUserAccessChapter(
+  supabase: SupabaseClient<Database>,
+  user: UserRow,
+  targetChapterId: string,
+  eventId?: string
+): Promise<boolean> {
+  // Admin can access any chapter
+  if (user.role === 'admin') {
+    return true
+  }
+
+  // Get user's own chapter
+  const { data: profile } = await supabase
+    .from('student_profile')
+    .select('chapter_id')
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  const userChapterId = profile?.chapter_id
+  if (!userChapterId) {
+    return false
+  }
+
+  // Check if user's chapter is the target chapter
+  if (userChapterId === targetChapterId) {
+    return true
+  }
+
+  // Check if user's chapter is a collaborator on event (editors only)
+  if (eventId && user.role === 'editor') {
+    const { data: collaboration } = await supabase
+      .from('event_chapter')
+      .select('id')
+      .eq('event_id', eventId)
+      .eq('chapter_id', userChapterId)
+      .maybeSingle()
+    
+    return collaboration !== null
+  }
+
+  return false
+}
+
 
 export async function getSidebarStatsForEditor(
   supabase: SupabaseClient<Database>,
   chapterId: string
 ): Promise<EditorSidebarStats> {
-  const { count, error: countError } = await supabase
-    .from('StudentProfile')
-    .select('userId', { count: 'exact', head: true })
-    .eq('chapterId', chapterId)
-    .eq('approvalStatus', 'pending')
-    .eq('isFilled', true)
+const { count, error: countError } = await supabase
+    .from('student_profile')
+    .select('user_id', { count: 'exact', head: true })
+    .eq('chapter_id', chapterId)
+    .eq('approval_status', 'pending')
+    .eq('is_filled', true)
     .limit(1)
 
   if (countError) {
@@ -148,24 +197,24 @@ export async function getSidebarStatsForAdmin(
     { count: totalChapters, error: e4 },
     { count: totalCompanies, error: e5 }
   ] = await Promise.all([
-    supabase.from('RecruiterAccess')
+supabase.from('recruiter_access')
       .select('id', { count: 'exact', head: true })
-      .is('acceptedAt', null)
-      .is('revokedAt', null)
-      .gt('inviteExpiresAt', now),
+      .is('accepted_at', null)
+      .is('revoked_at', null)
+      .gt('invite_expires_at', now),
 
-    supabase.from('StudentProfile')
-      .select('userId', { count: 'exact', head: true })
-      .eq('approvalStatus', 'pending')
-      .eq('isFilled', true),
+    supabase.from('student_profile')
+      .select('user_id', { count: 'exact', head: true })
+      .eq('approval_status', 'pending')
+      .eq('is_filled', true),
 
-    supabase.from('User')
+    supabase.from('user')
       .select('id', { count: 'exact', head: true }),
       
-    supabase.from('Chapter')
+    supabase.from('chapter')
       .select('id', { count: 'exact', head: true }),
       
-    supabase.from('Company')
+    supabase.from('company')
       .select('id', { count: 'exact', head: true })
   ])
 
@@ -195,7 +244,7 @@ export async function requireRecruiter(): Promise<{
   }
 
   const { data: userData, error } = await supabase
-    .from('User')
+    .from('user')
     .select(USER_SELECT)
     .eq('id', authUser.id)
     .eq('role', 'recruiter')
@@ -210,14 +259,14 @@ export async function requireRecruiter(): Promise<{
   }
 
   const { data: activeAccess, error: accessError } = await supabase
-    .from('RecruiterAccess')
+    .from('recruiter_access')
     .select(`
       ${RECRUITER_ACCESS_SELECT},
       Company!inner (id, name, createdat, createdbyid)
     `)
-    .eq('acceptedByUserId', authUser.id)
-    .eq('isActive', true)
-    .is('revokedAt', null)
+    .eq('accepted_by_user_id', authUser.id)
+    .eq('is_active', true)
+    .is('revoked_at', null)
     .maybeSingle<ActiveAccessRaw>()
 
   if (accessError || !activeAccess) {
@@ -225,9 +274,9 @@ export async function requireRecruiter(): Promise<{
   }
 
   const { data: allAccess } = await supabase
-    .from('RecruiterAccess')
+    .from('recruiter_access')
     .select(RECRUITER_ACCESS_SELECT)
-    .eq('acceptedByUserId', authUser.id)
+    .eq('accepted_by_user_id', authUser.id)
 
   const company = activeAccess.Company?.[0] ?? null
   
