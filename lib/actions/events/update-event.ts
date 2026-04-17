@@ -7,7 +7,7 @@ import { requireChapterMember } from '@/lib/auth'
 import type { EventRow, EventType } from '@/lib/types'
 
 const EVENT_MUTATION_SELECT =
-  'id, title, description, cover_image, start_at, end_at, location, meeting_url, event_type, capacity, is_published, chapter_id, created_by_id, created_at, updated_at, access_model, application_form_url'
+  'id, title, description, cover_image, start_at, end_at, location, meeting_url, event_type, capacity, is_published, chapter_id, created_by_id, created_at, updated_at, access_model, application_form_url, location_name, location_address, location_city, location_region, location_latitude, location_longitude'
 
 function sanitizeRichTextHtml(input: string): string {
   return input
@@ -33,6 +33,12 @@ const UpdateEventSchema = z.object({
   chapterId: z.string().nullable().optional(),
   accessModel: z.enum(['open', 'application']).optional(),
   applicationFormUrl: z.string().url().nullable().optional(),
+  locationName: z.string().nullable().optional(),
+  locationAddress: z.string().nullable().optional(),
+  locationCity: z.string().nullable().optional(),
+  locationRegion: z.string().nullable().optional(),
+  locationLatitude: z.number().nullable().optional(),
+  locationLongitude: z.number().nullable().optional(),
 })
 
 export type UpdateEventInput = z.infer<typeof UpdateEventSchema>
@@ -88,6 +94,12 @@ export async function updateEvent(input: UpdateEventInput): Promise<UpdateEventR
     .from('event')
     .update({
       ...parsed.data,
+      location_name: parsed.data.locationName ?? null,
+      location_address: parsed.data.locationAddress ?? null,
+      location_city: parsed.data.locationCity ?? null,
+      location_region: parsed.data.locationRegion ?? null,
+      location_latitude: parsed.data.locationLatitude ?? null,
+      location_longitude: parsed.data.locationLongitude ?? null,
       updated_at: new Date().toISOString(),
     })
     .eq('id', existing.id)
