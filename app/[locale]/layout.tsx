@@ -8,6 +8,7 @@ import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { Suspense } from 'react';
 import { Open_Sans, Raleway } from "next/font/google";
+import { GoogleMapsProvider } from "@/components/global/google-maps-provider";
 
 const openSans = Open_Sans({
   subsets: ["latin"],
@@ -78,12 +79,13 @@ export default function LocaleLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Suspense fallback={null}>
-            <LocaleContent params={params}>
-
-              {children}
-            </LocaleContent>
-          </Suspense>
+          <GoogleMapsProvider>
+            <Suspense fallback={null}>
+              <LocaleContent params={params}>
+                {children}
+              </LocaleContent>
+            </Suspense>
+          </GoogleMapsProvider>
         </ThemeProvider>
       </body>
     </html>
