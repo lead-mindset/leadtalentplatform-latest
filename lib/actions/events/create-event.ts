@@ -7,7 +7,7 @@ import { requireChapterMember } from '@/lib/auth'
 import type { EventRow, EventType } from '@/lib/types'
 
 const EVENT_MUTATION_SELECT =
-  'id, title, description, cover_image, start_at, end_at, location, meeting_url, event_type, capacity, is_published, chapter_id, created_by_id, created_at, updated_at, access_model, application_form_url'
+  'id, title, description, cover_image, start_at, end_at, location, meeting_url, event_type, capacity, is_published, chapter_id, created_by_id, created_at, updated_at, access_model, application_form_url, location_name, location_address, location_city, location_region, location_latitude, location_longitude'
 
 function sanitizeRichTextHtml(input: string): string {
   return input
@@ -32,6 +32,12 @@ const EventInputSchema = z.object({
   isPublished: z.coerce.boolean().optional(),
   accessModel: z.enum(['open', 'application']).default('open'),
   applicationFormUrl: z.string().url().nullable().optional(),
+  locationName: z.string().optional(),
+  locationAddress: z.string().optional(),
+  locationCity: z.string().optional(),
+  locationRegion: z.string().optional(),
+  locationLatitude: z.number().optional().nullable(),
+  locationLongitude: z.number().optional().nullable(),
 }).refine(
   (data) => {
     if (data.accessModel === 'application') {
@@ -97,6 +103,12 @@ export async function createEvent(input: CreateEventInput): Promise<CreateEventR
         chapter_id: data.chapterId ?? null,
         access_model: data.accessModel,
         application_form_url: data.accessModel === 'application' ? data.applicationFormUrl : null,
+        location_name: data.locationName ?? null,
+        location_address: data.locationAddress ?? null,
+        location_city: data.locationCity ?? null,
+        location_region: data.locationRegion ?? null,
+        location_latitude: data.locationLatitude ?? null,
+        location_longitude: data.locationLongitude ?? null,
         created_by_id: user.id,
         created_at: now,
         updated_at: now,
@@ -134,6 +146,12 @@ export async function createEvent(input: CreateEventInput): Promise<CreateEventR
       chapter_id: chapterId,
       access_model: data.accessModel,
       application_form_url: data.accessModel === 'application' ? data.applicationFormUrl : null,
+      location_name: data.locationName ?? null,
+      location_address: data.locationAddress ?? null,
+      location_city: data.locationCity ?? null,
+      location_region: data.locationRegion ?? null,
+      location_latitude: data.locationLatitude ?? null,
+      location_longitude: data.locationLongitude ?? null,
       created_by_id: user.id,
       created_at: now,
       updated_at: now,
