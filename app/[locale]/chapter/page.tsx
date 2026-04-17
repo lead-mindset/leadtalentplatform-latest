@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { Suspense } from 'react'
 import { Icons } from '@/components/ui/icons'
-import { requireChapterEditor } from '@/lib/auth'
+import { requireChapterMember } from '@/lib/auth'
 import type { MemberWithProfile, RecentActivityMember } from '@/lib/types'
 import { getChapterMembers, getMemberStats, getRecentChapterActivity } from '@/lib/actions/chapter/get-data'
 import { getChapterEvents } from '@/lib/actions/events/get-data'
@@ -227,11 +227,14 @@ function EventOpsList({
 }
 
 async function ChapterContent() {
-  const { supabase, user, chapterId } = await requireChapterEditor()
+  const { supabase, user, chapterId } = await requireChapterMember()
 
   const { data: profileData } = await supabase
     .from('student_profile')
-    .select(`Chapter ( id, name, university )`)
+    .select(`
+      chapter_id,
+      Chapter:chapter_id ( id, name, university )
+    `)
     .eq('user_id', user.id)
     .maybeSingle()
 
