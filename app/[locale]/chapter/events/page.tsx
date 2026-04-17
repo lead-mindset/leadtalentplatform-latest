@@ -39,13 +39,13 @@ export default async function ChapterEventsPage() {
           </div>
           <div className="bg-card rounded-lg p-4 border border-border/60">
             <div className="text-2xl font-bold text-warning">
-              {events.filter(e => !e.isPublished && new Date(e.endAt) >= new Date()).length}
+              {events.filter(e => !e.isPublished && new Date(e.end_at) >= new Date()).length}
             </div>
             <div className="text-sm text-muted-foreground">Drafts</div>
           </div>
           <div className="bg-card rounded-lg p-4 border border-border/60">
             <div className="text-2xl font-bold text-muted-foreground">
-              {events.filter(e => new Date(e.endAt) < new Date()).length}
+              {events.filter(e => new Date(e.end_at) < new Date()).length}
             </div>
             <div className="text-sm text-muted-foreground">Past Events</div>
           </div>

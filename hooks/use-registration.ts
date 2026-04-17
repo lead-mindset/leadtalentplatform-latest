@@ -34,8 +34,8 @@ export function useRegistration(eventId: string) {
           const { data: regData, error: regError } = await client
             .from('EventRegistration')
             .select('*')
-            .eq('eventId', eventId)
-            .eq('userId', user.id)
+            .eq('event_id', eventId)
+            .eq('user_id', user.id)
             .maybeSingle<EventRegistrationRow>()
 
           if (regError && regError.code !== 'PGRST116') {

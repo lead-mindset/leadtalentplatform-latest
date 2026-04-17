@@ -12,15 +12,15 @@ export type InviteValidationFailure = {
 }
 
 const INVITE_SELECT =
-  'id, recruiterEmail, isActive, grantedAt, grantedById, inviteToken, inviteExpiresAt, acceptedAt, acceptedByUserId, companyId, revokedAt, revokedById'
+  'id, recruiter_email, is_active, granted_at, granted_by_id, invite_token, invite_expires_at, accepted_at, accepted_by_user_id, company_id, revoked_at, revoked_by_id'
 
 export async function getValidatedRecruiterInvite(inviteToken: string): Promise<InviteValidationSuccess | InviteValidationFailure> {
   const supabase = createServiceClient()
 
   const { data: invite, error } = await supabase
-    .from('RecruiterAccess')
+    .from('recruiter_access')
     .select(INVITE_SELECT)
-    .eq('inviteToken', inviteToken)
+    .eq('invite_token', inviteToken)
     .maybeSingle<RecruiterAccessRow>()
 
   if (error) {
@@ -32,15 +32,15 @@ export async function getValidatedRecruiterInvite(inviteToken: string): Promise<
     return { success: false, error: 'Invalid invite token' }
   }
 
-  if (invite.revokedAt) {
+  if (invite.revoked_at) {
     return { success: false, error: 'This invitation has been revoked' }
   }
 
-  if (invite.acceptedAt) {
+  if (invite.accepted_at) {
     return { success: false, error: 'This invitation has already been accepted' }
   }
 
-  if (invite.inviteExpiresAt && new Date(invite.inviteExpiresAt) < new Date()) {
+  if (invite.invite_expires_at && new Date(invite.invite_expires_at) < new Date()) {
     return { success: false, error: 'This invitation has expired. Please contact your administrator.' }
   }
 
@@ -51,7 +51,7 @@ export async function getInviteCompany(companyId: string): Promise<Pick<CompanyR
   const supabase = createServiceClient()
 
   const { data: company, error } = await supabase
-    .from('Company')
+    .from('company')
     .select('id, name')
     .eq('id', companyId)
     .maybeSingle<Pick<CompanyRow, 'id' | 'name'>>()

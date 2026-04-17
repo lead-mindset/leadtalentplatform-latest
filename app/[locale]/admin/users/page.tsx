@@ -48,7 +48,7 @@ export default async function AdminUsersPage({
         chapterIds: chapterFilters,
         approvalStatuses: approvalFilters,
       },
-      { page, pageSize, sortBy: 'createdAt', sortOrder: 'desc' }
+      { page, pageSize, sortBy: 'created_at', sortOrder: 'desc' }
     ),
     getChapters(),
   ])

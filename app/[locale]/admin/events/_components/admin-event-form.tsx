@@ -47,34 +47,34 @@ export function AdminEventForm({
     return {
       title: e?.title ?? '',
       description: e?.description ?? '',
-      coverImage: e?.coverImage ?? '',
-      startAt: toDateTimeLocal(e?.startAt),
-      endAt: toDateTimeLocal(e?.endAt),
+      cover_image: e?.cover_image ?? '',
+      start_at: toDateTimeLocal(e?.start_at),
+      end_at: toDateTimeLocal(e?.end_at),
       location: e?.location ?? '',
-      meetingUrl: e?.meetingUrl ?? '',
-      eventType: (e?.eventType ?? 'in_person') as EventType,
+      meeting_url: e?.meeting_url ?? '',
+      event_type: (e?.event_type ?? 'in_person') as EventType,
       capacity: e?.capacity?.toString?.() ?? '',
-      isPublished: e?.isPublished ?? false,
-      chapterId: e?.chapterId ?? 'global',
+      is_published: e?.is_published ?? false,
+      chapter_id: e?.chapter_id ?? 'global',
     }
   }, [initial])
 
   const [title, setTitle] = useState(defaults.title)
   const [description, setDescription] = useState(defaults.description)
-  const [coverImage, setCoverImage] = useState(defaults.coverImage)
-  const [startAt, setStartAt] = useState(defaults.startAt)
-  const [endAt, setEndAt] = useState(defaults.endAt)
+  const [coverImage, setCoverImage] = useState(defaults.cover_image)
+  const [startAt, setStartAt] = useState(defaults.start_at)
+  const [endAt, setEndAt] = useState(defaults.end_at)
   const [location, setLocation] = useState(defaults.location)
-  const [meetingUrl, setMeetingUrl] = useState(defaults.meetingUrl)
-  const [eventType, setEventType] = useState<EventType>(defaults.eventType)
+  const [meetingUrl, setMeetingUrl] = useState(defaults.meeting_url)
+  const [eventType, setEventType] = useState<EventType>(defaults.event_type)
   const [capacity, setCapacity] = useState(defaults.capacity)
-  const [isPublished, setIsPublished] = useState(defaults.isPublished)
-  const [chapterId, setChapterId] = useState(defaults.chapterId)
+  const [isPublished, setIsPublished] = useState(defaults.is_published)
+  const [chapterId, setChapterId] = useState(defaults.chapter_id)
 
   async function onSubmit() {
     setError(null)
     startTransition(async () => {
-      const payload: CreateEventInput = {
+const payload: CreateEventInput = {
         title,
         description: description || undefined,
         coverImage: coverImage || undefined,
@@ -82,12 +82,12 @@ export function AdminEventForm({
         endAt: fromDateTimeLocal(endAt),
         location: location || undefined,
         meetingUrl: meetingUrl || undefined,
-        eventType,
+        eventType: eventType,
         capacity: capacity === '' ? undefined : Number(capacity),
-        isPublished,
+        isPublished: isPublished,
         chapterId: chapterId === 'global' ? null : chapterId,
-        accessModel: initial?.accessModel ?? 'open',
-        applicationFormUrl: initial?.applicationFormUrl ?? null,
+        accessModel: initial?.access_model ?? 'open',
+        applicationFormUrl: initial?.application_form_url ?? null,
       }
 
       const res =

@@ -25,7 +25,7 @@ export default async function ChapterCheckinPage({
   const { eventId } = await searchParams
   const now = new Date()
   const events = await getChapterEvents()
-  const upcomingOrLive = events.filter((event) => new Date(event.endAt) >= now)
+  const upcomingOrLive = events.filter((event) => new Date(event.end_at) >= now)
   const selectedEvent =
     upcomingOrLive.find((event) => event.id === eventId) ??
     upcomingOrLive[0] ??
@@ -84,15 +84,15 @@ export default async function ChapterCheckinPage({
                     <div className="min-w-0">
                       <p className="font-medium truncate">{event.title}</p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {formatDate(event.startAt)}
+                        {formatDate(event.start_at)}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {event._count.registrations} registered
                       </p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                      <Badge variant={event.isPublished ? 'secondary' : 'outline'}>
-                        {event.isPublished ? 'Published' : 'Draft'}
+                      <Badge variant={event.is_published ? 'secondary' : 'outline'}>
+                        {event.is_published ? 'Published' : 'Draft'}
                       </Badge>
                       <Button asChild size="sm" variant="outline">
                         <Link href={`/chapter/checkin?eventId=${event.id}`}>Use here</Link>

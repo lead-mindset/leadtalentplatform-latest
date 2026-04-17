@@ -18,10 +18,10 @@ export default async function EventDetailPage({
   let myRegistration = null
   if (auth.user && event) {
     const { data } = await supabase
-      .from('EventRegistration')
-      .select('id, status, checkedInAt')
-      .eq('eventId', event.id)
-      .eq('userId', auth.user.id)
+      .from('event_registration')
+      .select('id, status, checked_in_at')
+      .eq('event_id', event.id)
+      .eq('user_id', auth.user.id)
       .maybeSingle()
     myRegistration = data ?? null
   }

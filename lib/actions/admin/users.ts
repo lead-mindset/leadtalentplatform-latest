@@ -5,7 +5,7 @@ import { requireAdmin } from '@/lib/auth'
 import type { ChapterRow, Role, StudentProfileRow, UserRow } from '@/lib/types'
 
 export type ProfileStatusFilter = 'complete' | 'pending_approval' | 'incomplete' | 'no_profile'
-export type UserSortKey = 'name' | 'email' | 'role' | 'chapter' | 'createdAt' | 'profileStatus'
+export type UserSortKey = 'name' | 'email' | 'role' | 'chapter' | 'created_at' | 'profileStatus'
 export type SortOrder = 'asc' | 'desc'
 
 export type UsersFilters = {
@@ -27,9 +27,9 @@ export type AdminUserListItem = {
   name: string
   email: string
   role: Role
-  createdAt: string
-  deactivatedAt: string | null
-  chapterId: string | null
+  created_at: string
+  deactivated_at: string | null
+  chapter_id: string | null
   chapterName: string | null
   profileStatus: ProfileStatusFilter
 }
@@ -48,21 +48,21 @@ type BulkAction =
   | { type: 'deactivate' }
   | { type: 'reactivate' }
 
-type AdminUsersProfileRow = Pick<StudentProfileRow, 'userId' | 'chapterId' | 'isFilled' | 'approvalStatus'> & {
+type AdminUsersProfileRow = Pick<StudentProfileRow, 'user_id' | 'chapter_id' | 'is_filled' | 'approval_status'> & {
   Chapter: Pick<ChapterRow, 'name'> | Pick<ChapterRow, 'name'>[] | null
 }
 
 type AdminUsersProfileSummary = {
-  chapterId: string | null
+  chapter_id: string | null
   chapterName: string | null
-  isFilled: boolean
-  approvalStatus: StudentProfileRow['approvalStatus']
+  is_filled: boolean
+  approval_status: StudentProfileRow['approval_status']
 }
 
-function toProfileStatus(profile: { isFilled: boolean; approvalStatus: string | null} | null): ProfileStatusFilter {
+function toProfileStatus(profile: { is_filled: boolean; approval_status: string | null} | null): ProfileStatusFilter {
   if (!profile) return 'no_profile'
-  if (!profile.isFilled) return 'incomplete'
-  if (profile.approvalStatus === 'pending') return 'pending_approval'
+  if (!profile.is_filled) return 'incomplete'
+  if (profile.approval_status === 'pending') return 'pending_approval'
   return 'complete'
 }
 
@@ -73,7 +73,7 @@ function csvCell(value: string | null | undefined): string {
 
 async function queryFilteredUsers(filters: UsersFilters): Promise<AdminUserListItem[]> {
   const { supabase } = await requireAdmin()
-  let userQuery = supabase.from('User').select('id, name, email, role, createdAt, deactivatedAt')
+  let userQuery = supabase.from('user').select('id, name, email, role, created_at, deactivated_at')
 
   const search = filters.search?.trim()
   if (search) {
@@ -85,19 +85,19 @@ async function queryFilteredUsers(filters: UsersFilters): Promise<AdminUserListI
     userQuery = userQuery.in('role', filters.roles)
   }
 
-  const { data: users, error: usersError } = await userQuery.order('createdAt', { ascending: false })
+  const { data: users, error: usersError } = await userQuery.order('created_at', { ascending: false })
   if (usersError || !users) {
     return []
   }
 
-  const typedUsers = users as Pick<UserRow, 'id' | 'name' | 'email' | 'role' | 'createdAt' | 'deactivatedAt'>[]
+  const typedUsers = users as Pick<UserRow, 'id' | 'name' | 'email' | 'role' | 'created_at' | 'deactivated_at'>[]
   const userIds = typedUsers.map((user) => user.id)
   if (userIds.length === 0) return []
 
   const { data: profiles, error: profilesError } = await supabase
-    .from('StudentProfile')
-    .select('userId, chapterId, isFilled, approvalStatus, Chapter(name)')
-    .in('userId', userIds)
+    .from('student_profile')
+    .select('user_id, chapter_id, is_filled, approval_status, Chapter(name)')
+    .in('user_id', userIds)
 
   if (profilesError) {
     return []
@@ -106,12 +106,12 @@ async function queryFilteredUsers(filters: UsersFilters): Promise<AdminUserListI
   const typedProfiles = (profiles ?? []) as AdminUsersProfileRow[]
   const profileMap = new Map<string, AdminUsersProfileSummary>(
     typedProfiles.map((profile) => [
-      profile.userId,
+      profile.user_id,
       {
-        chapterId: profile.chapterId,
+        chapterId: profile.chapter_id,
         chapterName: Array.isArray(profile.Chapter) ? profile.Chapter[0]?.name ?? null : profile.Chapter?.name ?? null,
-        isFilled: profile.isFilled,
-        approvalStatus: profile.approvalStatus,
+        isFilled: profile.is_filled,
+        approvalStatus: profile.approval_status,
       },
     ])
   )
@@ -123,15 +123,15 @@ async function queryFilteredUsers(filters: UsersFilters): Promise<AdminUserListI
       name: user.name,
       email: user.email,
       role: user.role as Role,
-      createdAt: user.createdAt,
-      deactivatedAt: user.deactivatedAt ?? null,
-      chapterId: profile?.chapterId ?? null,
+      created_at: user.created_at,
+      deactivated_at: user.deactivated_at ?? null,
+      chapter_id: profile?.chapter_id ?? null,
       chapterName: profile?.chapterName ?? null,
       profileStatus: toProfileStatus(
         profile
           ? {
-              isFilled: profile.isFilled,
-              approvalStatus: profile.approvalStatus,
+              is_filled: profile.is_filled,
+              approval_status: profile.approval_status,
             }
           : null
       ),
@@ -140,7 +140,7 @@ async function queryFilteredUsers(filters: UsersFilters): Promise<AdminUserListI
 
   return rows.filter((row) => {
     if (filters.chapterIds && filters.chapterIds.length > 0) {
-      if (!row.chapterId || !filters.chapterIds.includes(row.chapterId)) return false
+      if (!row.chapter_id || !filters.chapterIds.includes(row.chapter_id)) return false
     }
 
     if (filters.approvalStatuses && filters.approvalStatuses.length > 0) {
@@ -170,9 +170,9 @@ function sortRows(items: AdminUserListItem[], sortBy: UserSortKey, sortOrder: So
         return byString(a.chapterName ?? '', b.chapterName ?? '')
       case 'profileStatus':
         return byString(a.profileStatus, b.profileStatus)
-      case 'createdAt':
+      case 'created_at':
       default:
-        return byDate(a.createdAt, b.createdAt)
+        return byDate(a.created_at, b.created_at)
     }
   })
   return sorted
@@ -183,7 +183,7 @@ export async function getUsersList(
   pagination: UsersPagination
 ): Promise<UsersListResponse> {
   const rows = await queryFilteredUsers(filters)
-  const sortBy = pagination.sortBy ?? 'createdAt'
+  const sortBy = pagination.sortBy ?? 'created_at'
   const sortOrder = pagination.sortOrder ?? 'desc'
   const sorted = sortRows(rows, sortBy, sortOrder)
 
@@ -202,7 +202,7 @@ export async function getUsersList(
 export async function updateUserRole(userId: string, newRole: Role): Promise<ActionResult> {
   try {
     const { supabase, user: adminUser } = await requireAdmin()
-    const { error } = await supabase.from('User').update({ role: newRole }).eq('id', userId)
+    const { error } = await supabase.from('user').update({ role: newRole }).eq('id', userId)
     if (error) {
       return { success: false, error: 'Failed to update user role.' }
     }
@@ -217,8 +217,8 @@ export async function deactivateUser(userId: string): Promise<ActionResult> {
   try {
     const { supabase, user: adminUser } = await requireAdmin()
     const { error } = await supabase
-      .from('User')
-      .update({ deactivatedAt: new Date().toISOString() })
+      .from('user')
+      .update({ deactivated_at: new Date().toISOString() })
       .eq('id', userId)
     if (error) {
       return { success: false, error: 'Failed to deactivate user.' }
@@ -233,7 +233,7 @@ export async function deactivateUser(userId: string): Promise<ActionResult> {
 export async function reactivateUser(userId: string): Promise<ActionResult> {
   try {
     const { supabase, user: adminUser } = await requireAdmin()
-    const { error } = await supabase.from('User').update({ deactivatedAt: null }).eq('id', userId)
+    const { error } = await supabase.from('user').update({ deactivated_at: null }).eq('id', userId)
     if (error) {
       return { success: false, error: 'Failed to reactivate user.' }
     }
@@ -253,20 +253,20 @@ export async function bulkUpdateUsers(userIds: string[], action: BulkAction): Pr
     const { supabase, user: adminUser } = await requireAdmin()
 
     if (action.type === 'change_role') {
-      const { error } = await supabase.from('User').update({ role: action.role }).in('id', userIds)
+      const { error } = await supabase.from('user').update({ role: action.role }).in('id', userIds)
       if (error) {
         return { success: false, error: 'Failed to update roles.' }
       }
     } else if (action.type === 'deactivate') {
       const { error } = await supabase
-        .from('User')
-        .update({ deactivatedAt: new Date().toISOString() })
+        .from('user')
+        .update({ deactivated_at: new Date().toISOString() })
         .in('id', userIds)
       if (error) {
         return { success: false, error: 'Failed to deactivate users.' }
       }
     } else {
-      const { error } = await supabase.from('User').update({ deactivatedAt: null }).in('id', userIds)
+      const { error } = await supabase.from('user').update({ deactivated_at: null }).in('id', userIds)
       if (error) {
         return { success: false, error: 'Failed to reactivate users.' }
       }
@@ -297,9 +297,9 @@ export async function exportUsersCSV(filters: UsersFilters): Promise<string> {
       csvCell(row.email),
       csvCell(row.role),
       csvCell(row.chapterName),
-      csvCell(new Date(row.createdAt).toISOString()),
+      csvCell(new Date(row.created_at).toISOString()),
       csvCell(row.profileStatus),
-      csvCell(row.deactivatedAt),
+      csvCell(row.deactivated_at),
     ].join(',')
   )
 

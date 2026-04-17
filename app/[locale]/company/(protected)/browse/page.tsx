@@ -18,11 +18,11 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
   const { supabase, user } = await requireRecruiter()
   const params = await searchParams
 
-  const studentFilters = {
+const studentFilters = {
     query: params.q,
     major: params.major && params.major !== 'all' ? params.major : undefined,
-    graduationYear: params.year && params.year !== 'all' ? Number(params.year) : undefined,
-    chapterId: params.chapter && params.chapter !== 'all' ? params.chapter : undefined,
+    graduation_year: params.year && params.year !== 'all' ? Number(params.year) : undefined,
+    chapter_id: params.chapter && params.chapter !== 'all' ? params.chapter : undefined,
   }
 
   const [filtered, savedIds] = await Promise.all([
@@ -40,14 +40,14 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
 
   const years = [...new Set(
     students
-      .map(s => s.StudentProfile?.graduationYear)
+      .map(s => s.StudentProfile?.graduation_year)
       .filter((y): y is number => Boolean(y))
   )].sort()
 
   const chapters = [...new Map(
     students
-      .filter(s => s.StudentProfile?.chapterId && s.Chapter)
-      .map(s => [s.StudentProfile!.chapterId, s.Chapter!.name])
+      .filter(s => s.StudentProfile?.chapter_id && s.Chapter)
+      .map(s => [s.StudentProfile!.chapter_id, s.Chapter!.name])
   ).entries()]
 
   return (

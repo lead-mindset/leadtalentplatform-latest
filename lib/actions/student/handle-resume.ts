@@ -52,15 +52,15 @@ export async function uploadResume(formData: FormData): Promise<UploadResumeResu
   const now = new Date().toISOString()
 
   const { error: upsertError } = await supabase
-    .from('Resume')
-    .upsert({
-      studentId: user.id,
-      fileUrl: publicUrl,
-      fileName: file.name,
-      fileSize: file.size,
-      uploadedAt: now,
+    .from('resume')
+.upsert({
+      student_id: user.id,
+      file_url: publicUrl,
+      file_name: file.name,
+      file_size: file.size,
+      uploaded_at: now,
     }, {
-      onConflict: 'studentId',
+      onConflict: 'student_id',
     })
 
   if (upsertError) {

@@ -25,10 +25,10 @@ export async function createCompany(
     }
 
     const { data, error } = await supabase
-      .from('Company')
+      .from('company')
       .insert({
         name: input.name.trim(),
-        createdbyid: user.id,
+        created_by_id: user.id,
       })
       .select('id')
       .single()

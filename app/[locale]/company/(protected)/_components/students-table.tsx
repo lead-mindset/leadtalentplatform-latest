@@ -95,8 +95,8 @@ export function StudentsTable({ students, savedStudentIds = [] }: StudentsTableP
               </TableCell>
               <TableCell className="p-3">
                 <span className="text-sm">
-                  {student.StudentProfile?.graduationYear
-                    ? `Class of ${student.StudentProfile.graduationYear}`
+                  {student.StudentProfile?.graduation_year
+                    ? `Class of ${student.StudentProfile.graduation_year}`
                     : 'N/A'}
                 </span>
               </TableCell>
@@ -115,7 +115,7 @@ export function StudentsTable({ students, savedStudentIds = [] }: StudentsTableP
               </TableCell>
               <TableCell className="p-3">
                 <div className="flex flex-wrap gap-1">
-                  {student.StudentProfile?.skills?.slice(0, 3).map((skill, i) => (
+                  {student.StudentProfile?.skills?.slice(0, 3).map((skill: string, i: number) => (
                     <Badge key={i} variant="secondary" className="text-xs">
                       {skill}
                     </Badge>

@@ -31,10 +31,10 @@ export default function MemberCard({
 }) {
   const profile = member.StudentProfile
 
-  const approvalStatus = profile?.approvalStatus
-  const isPending  = profile?.isFilled === true && approvalStatus === 'pending'
-  const isApproved = approvalStatus === 'approved'
-  const isRejected = approvalStatus === 'rejected'
+  const approval_status = profile?.approval_status
+  const isPending  = profile?.is_filled === true && approval_status === 'pending'
+  const isApproved = approval_status === 'approved'
+  const isRejected = approval_status === 'rejected'
 
   return (
     <Card>
@@ -87,7 +87,7 @@ export default function MemberCard({
                 Rejected
               </Badge>
             )}
-            {!profile?.isFilled && (
+            {!profile?.is_filled && (
               <Badge variant="outline" className="text-muted-foreground">
                 Incomplete
               </Badge>
@@ -96,7 +96,7 @@ export default function MemberCard({
         </div>
       </CardHeader>
 
-      {profile?.isFilled ? (
+      {profile?.is_filled ? (
         <CardContent className="space-y-4">
           <div className="grid gap-3 text-sm">
             {member.phone && (
@@ -113,18 +113,18 @@ export default function MemberCard({
               </div>
             )}
 
-            {profile.graduationYear && (
+            {profile.graduation_year && (
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Calendar className="h-4 w-4" />
-                Class of {profile.graduationYear}
+                Class of {profile.graduation_year}
               </div>
             )}
 
-            {profile.linkedinUrl && (
+            {profile.linkedin_url && (
               <div className="flex items-center gap-2">
                 <Linkedin className="h-4 w-4 text-info" />
                 <a
-                  href={profile.linkedinUrl}
+                  href={profile.linkedin_url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-info underline hover:underline text-sm"
@@ -136,7 +136,7 @@ export default function MemberCard({
 
             {profile.skills && profile.skills.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
-                {profile.skills.map(skill => (
+                {profile.skills.map((skill: string) => (
                   <Badge key={skill} variant="secondary" className="text-xs">
                     {skill}
                   </Badge>
@@ -160,14 +160,14 @@ export default function MemberCard({
             <div className="pt-4 border-t space-y-3">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <UserCheck className="h-4 w-4 text-success" />
-                Approved on {new Date(profile.updatedAt).toLocaleDateString()}
+                Approved on {new Date(profile.updated_at).toLocaleDateString()}
               </div>
-              {profile.memberId && (
+              {profile.member_id && (
                 <div className="flex items-center gap-2 text-sm">
                   <Icons.IdCard className="h-4 w-4 text-primary" />
                   <span className="font-medium text-muted-foreground">Member ID:</span>{' '}
                   <code className="px-2 py-1 bg-primary/5 border border-primary/10 rounded text-sm font-mono text-primary">
-                    {profile.memberId}
+                    {profile.member_id}
                   </code>
                 </div>
               )}
@@ -184,7 +184,7 @@ export default function MemberCard({
             <div className="pt-4 border-t space-y-3">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <XCircle className="h-4 w-4 text-destructive" />
-                Rejected on {new Date(profile.updatedAt).toLocaleDateString()}
+                Rejected on {new Date(profile.updated_at).toLocaleDateString()}
               </div>
               <MemberActionButtons
                 userId={member.id}

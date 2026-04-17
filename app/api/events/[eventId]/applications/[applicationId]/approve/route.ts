@@ -27,11 +27,11 @@ export async function POST(
   const result = data as { capacity_warning: boolean; capacity_status: string } | null
 
   const { data: registration } = await supabase
-    .from('EventRegistration')
+    .from('event_registration')
     .select(`
       id,
       User!eventregistration_userid_fkey (email, name),
-      Event!EventRegistration_eventId_fkey (title, startAt, location, meetingUrl, eventType)
+      Event!EventRegistration_eventId_fkey (title, start_at, location, meeting_url, event_type)
     `)
     .eq('id', applicationId)
     .single()
@@ -42,10 +42,10 @@ export async function POST(
         registration.User.email,
         registration.User.name,
         registration.Event.title,
-        new Date(registration.Event.startAt).toLocaleString(),
+        new Date(registration.Event.start_at).toLocaleString(),
         registration.Event.location,
-        registration.Event.meetingUrl,
-        registration.Event.eventType,
+        registration.Event.meeting_url,
+        registration.Event.event_type,
         registration.id
       ).catch(err => console.error('Email error:', err))
     })

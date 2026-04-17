@@ -36,7 +36,7 @@ export type RecentJoinItem = {
   name: string
   email: string
   role: string
-  createdAt: string
+  created_at: string
   chapterName: string | null
 }
 
@@ -44,24 +44,24 @@ export type PendingRecruiterRequestItem = {
   id: string
   recruiterEmail: string
   companyName: string | null
-  grantedAt: string
-  inviteExpiresAt: string | null
+  granted_at: string
+  invite_expires_at: string | null
 }
 
 type ChapterIdRow = {
-  chapterId: string | null
+  chapter_id: string | null
 }
 
 type AdminChapterSummary = Pick<ChapterRow, 'id' | 'name' | 'university'>
 
-type RecentJoinUserRow = Pick<UserRow, 'id' | 'name' | 'email' | 'role' | 'createdAt'>
-type RecentJoinProfileRow = Pick<StudentProfileRow, 'userId' | 'chapterId'> & {
+type RecentJoinUserRow = Pick<UserRow, 'id' | 'name' | 'email' | 'role' | 'created_at'>
+type RecentJoinProfileRow = Pick<StudentProfileRow, 'user_id' | 'chapter_id'> & {
   Chapter: Pick<ChapterRow, 'name'> | Pick<ChapterRow, 'name'>[] | null
 }
 
 type PendingRecruiterAccessRow = Pick<
   RecruiterAccessRow,
-  'id' | 'recruiterEmail' | 'grantedAt' | 'inviteExpiresAt'
+  'id' | 'recruiter_email' | 'granted_at' | 'invite_expires_at'
 > & {
   Company: { name: string } | { name: string }[] | null
 }
@@ -70,43 +70,43 @@ type AdminChapterCountRow = ChapterRow
 
 type AdminProfileSummaryRow = Pick<
   StudentProfileRow,
-  | 'userId'
+  | 'user_id'
   | 'major'
-  | 'graduationYear'
-  | 'linkedinUrl'
+  | 'graduation_year'
+  | 'linkedin_url'
   | 'skills'
-  | 'consentRecruiterVisibility'
-  | 'isRecruiterVisible'
-  | 'approvedById'
-  | 'approvalStatus'
-  | 'isFilled'
-  | 'updatedAt'
-  | 'createdAt'
-  | 'consentDate'
-  | 'chapterId'
-  | 'emailNotificationsEnabled'
+  | 'consent_recruiter_visibility'
+  | 'is_recruiter_visible'
+  | 'approved_by_id'
+  | 'approval_status'
+  | 'is_filled'
+  | 'updated_at'
+  | 'created_at'
+  | 'consent_date'
+  | 'chapter_id'
+  | 'email_notifications_enabled'
   | 'gender'
 > & {
   User:
-    | Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'role' | 'createdAt' | 'updatedAt' | 'deactivatedAt'>
-    | Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'role' | 'createdAt' | 'updatedAt' | 'deactivatedAt'>[]
+    | Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'role' | 'created_at' | 'updated_at' | 'deactivated_at'>
+    | Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'role' | 'created_at' | 'updated_at' | 'deactivated_at'>[]
     | null
   Chapter:
-    | Pick<ChapterRow, 'id' | 'name' | 'university' | 'city' | 'region' | 'createdAt' | 'updatedAt'>
-    | Pick<ChapterRow, 'id' | 'name' | 'university' | 'city' | 'region' | 'createdAt' | 'updatedAt'>[]
+    | Pick<ChapterRow, 'id' | 'name' | 'university' | 'city' | 'region' | 'created_at' | 'updated_at'>
+    | Pick<ChapterRow, 'id' | 'name' | 'university' | 'city' | 'region' | 'created_at' | 'updated_at'>[]
     | null
 }
 
 type UserProfileSummaryRow = Pick<
   StudentProfileRow,
-  'userId' | 'isFilled' | 'approvedById' | 'isRecruiterVisible' | 'approvalStatus' | 'chapterId'
+  'user_id' | 'is_filled' | 'approved_by_id' | 'is_recruiter_visible' | 'approval_status' | 'chapter_id'
 > & {
   Chapter: Pick<ChapterRow, 'name' | 'university'> | Pick<ChapterRow, 'name' | 'university'>[] | null
 }
 
 type ActivityApprovalRow = {
-  userId: string
-  updatedAt: string
+  user_id: string
+  updated_at: string
   Student: { name: string | null; email: string } | { name: string | null; email: string }[] | null
   Chapter: { name: string } | { name: string }[] | null
   ApprovedBy: { name: string | null; email: string } | { name: string | null; email: string }[] | null
@@ -114,9 +114,9 @@ type ActivityApprovalRow = {
 
 type ActivityInviteRow = {
   id: string
-  grantedAt: string
-  acceptedAt: string | null
-  revokedAt: string | null
+  granted_at: string
+  accepted_at: string | null
+  revoked_at: string | null
   recruiterEmail: string
   Company: { name: string } | { name: string }[] | null
   GrantedBy: { name: string | null; email: string } | { name: string | null; email: string }[] | null
@@ -140,30 +140,30 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString()
 
   const [studentsResult, chapterMembersResult, monthlyEventsResult, approvedProfilesResult, visibleApprovedProfilesResult] = await Promise.all([
-    supabase.from('User').select('id', { count: 'exact', head: true }).eq('role', 'member'),
-    supabase.from('StudentProfile').select('chapterId'),
-    supabase.from('Event').select('id', { count: 'exact', head: true }).gte('startAt', monthStart).lt('startAt', monthEnd),
+    supabase.from('user').select('id', { count: 'exact', head: true }).eq('role', 'member'),
+    supabase.from('student_profile').select('chapter_id'),
+    supabase.from('event').select('id', { count: 'exact', head: true }).gte('start_at', monthStart).lt('start_at', monthEnd),
     supabase
-      .from('StudentProfile')
-      .select('userId', { count: 'exact', head: true })
-      .eq('approvalStatus', 'approved'),
+      .from('student_profile')
+      .select('user_id', { count: 'exact', head: true })
+      .eq('approval_status', 'approved'),
     supabase
-      .from('StudentProfile')
-      .select('userId', { count: 'exact', head: true })
-      .eq('approvalStatus', 'approved')
-      .eq('isRecruiterVisible', true),
+      .from('student_profile')
+      .select('user_id', { count: 'exact', head: true })
+      .eq('approval_status', 'approved')
+      .eq('is_recruiter_visible', true),
   ])
 
-  const chapterIdRows = (chapterMembersResult.data ?? []) as ChapterIdRow[]
-  const chapterIds = new Set(
-    chapterIdRows.map((row: ChapterIdRow) => row.chapterId).filter((value): value is string => Boolean(value))
+  const chapter_idRows = (chapterMembersResult.data ?? []) as ChapterIdRow[]
+  const chapter_ids = new Set(
+    chapter_idRows.map((row: ChapterIdRow) => row.chapter_id).filter((value): value is string => Boolean(value))
   )
   const approvedCount = approvedProfilesResult.count ?? 0
   const visibleApprovedCount = visibleApprovedProfilesResult.count ?? 0
 
   return {
     totalStudents: studentsResult.count ?? 0,
-    activeChapters: chapterIds.size,
+    activeChapters: chapter_ids.size,
     eventsThisMonth: monthlyEventsResult.count ?? 0,
     recruiterOptInRate: approvedCount > 0 ? Math.round((visibleApprovedCount / approvedCount) * 100) : 0,
   }
@@ -172,7 +172,7 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
 export async function getChapterActivityList(): Promise<ChapterActivityItem[]> {
   const supabase = await createClient()
   const { data: chapters, error } = await supabase
-    .from('Chapter')
+    .from('chapter')
     .select('id, name, university')
     .order('name', { ascending: true })
 
@@ -184,18 +184,18 @@ export async function getChapterActivityList(): Promise<ChapterActivityItem[]> {
   const items = await Promise.all(
     (chapters as AdminChapterSummary[]).map(async (chapter: AdminChapterSummary) => {
       const [memberCountResult, pendingApprovalsResult, lastEventResult] = await Promise.all([
-        supabase.from('StudentProfile').select('userId', { count: 'exact', head: true }).eq('chapterId', chapter.id),
+        supabase.from('student_profile').select('user_id', { count: 'exact', head: true }).eq('chapter_id', chapter.id),
         supabase
-          .from('StudentProfile')
-          .select('userId', { count: 'exact', head: true })
-          .eq('chapterId', chapter.id)
-          .eq('approvalStatus', 'pending')
-          .eq('isFilled', true),
+          .from('student_profile')
+          .select('user_id', { count: 'exact', head: true })
+          .eq('chapter_id', chapter.id)
+          .eq('approval_status', 'pending')
+          .eq('is_filled', true),
         supabase
-          .from('Event')
-          .select('startAt')
-          .eq('chapterId', chapter.id)
-          .order('startAt', { ascending: false })
+          .from('event')
+          .select('start_at')
+          .eq('chapter_id', chapter.id)
+          .order('start_at', { ascending: false })
           .limit(1)
           .maybeSingle(),
       ])
@@ -206,7 +206,7 @@ export async function getChapterActivityList(): Promise<ChapterActivityItem[]> {
         university: chapter.university,
         memberCount: memberCountResult.count ?? 0,
         pendingApprovals: pendingApprovalsResult.count ?? 0,
-        lastEventAt: lastEventResult.data?.startAt ?? null,
+        lastEventAt: lastEventResult.data?.start_at ?? null,
       }
     })
   )
@@ -217,9 +217,9 @@ export async function getChapterActivityList(): Promise<ChapterActivityItem[]> {
 export async function getRecentJoins(limit = 10): Promise<RecentJoinItem[]> {
   const supabase = await createClient()
   const { data: users, error } = await supabase
-    .from('User')
-    .select('id, name, email, role, createdAt')
-    .order('createdAt', { ascending: false })
+    .from('user')
+    .select('id, name, email, role, created_at')
+    .order('created_at', { ascending: false })
     .limit(limit)
 
   if (error || !users) {
@@ -228,15 +228,15 @@ export async function getRecentJoins(limit = 10): Promise<RecentJoinItem[]> {
   }
 
   const { data: profiles } = await supabase
-    .from('StudentProfile')
-    .select('userId, chapterId, Chapter(name)')
-    .in('userId', users.map((user) => user.id))
+    .from('student_profile')
+    .select('user_id, chapter_id, Chapter(name)')
+    .in('user_id', users.map((user) => user.id))
 
   const userRows = users as RecentJoinUserRow[]
   const profileRows = (profiles ?? []) as RecentJoinProfileRow[]
 
   return userRows.map((user: RecentJoinUserRow) => {
-    const profile = profileRows.find((item: RecentJoinProfileRow) => item.userId === user.id)
+    const profile = profileRows.find((item: RecentJoinProfileRow) => item.user_id === user.id)
     const chapter = profile?.Chapter
     const chapterName = Array.isArray(chapter) ? (chapter[0]?.name ?? null) : (chapter?.name ?? null)
     return {
@@ -244,7 +244,7 @@ export async function getRecentJoins(limit = 10): Promise<RecentJoinItem[]> {
       name: user.name,
       email: user.email,
       role: user.role,
-      createdAt: user.createdAt,
+      created_at: user.created_at,
       chapterName,
     }
   })
@@ -254,7 +254,7 @@ export async function getPendingRecruiterRequests(): Promise<PendingRecruiterReq
   const supabase = await createClient()
   const now = new Date().toISOString()
   const { data, error } = await supabase
-    .from('RecruiterAccess')
+    .from('recruiter_access')
     .select(`
       id,
       recruiterEmail,
@@ -299,24 +299,24 @@ export async function getSystemStats() {
     activeRecruitersResult,
     pendingInvitesResult,
   ] = await Promise.all([
-    supabase.from('User').select('id', { count: 'exact', head: true }),
-    supabase.from('Chapter').select('id', { count: 'exact', head: true }),
-    supabase.from('Company').select('id', { count: 'exact', head: true }),
-    supabase.from('StudentProfile').select('userId', { count: 'exact', head: true }),
-    supabase.from('StudentProfile').select('userId', { count: 'exact', head: true }).eq('isFilled', true),
+    supabase.from('user').select('id', { count: 'exact', head: true }),
+    supabase.from('chapter').select('id', { count: 'exact', head: true }),
+    supabase.from('company').select('id', { count: 'exact', head: true }),
+    supabase.from('student_profile').select('user_id', { count: 'exact', head: true }),
+    supabase.from('student_profile').select('user_id', { count: 'exact', head: true }).eq('is_filled', true),
     supabase
-      .from('StudentProfile')
-      .select('userId', { count: 'exact', head: true })
-      .eq('isFilled', true)
-      .eq('approvalStatus', 'pending'),
-    supabase.from('StudentProfile').select('userId', { count: 'exact', head: true }).eq('isRecruiterVisible', true),
+      .from('student_profile')
+      .select('user_id', { count: 'exact', head: true })
+      .eq('is_filled', true)
+      .eq('approval_status', 'pending'),
+    supabase.from('student_profile').select('user_id', { count: 'exact', head: true }).eq('is_recruiter_visible', true),
     supabase
-      .from('RecruiterAccess')
+      .from('recruiter_access')
       .select('id', { count: 'exact', head: true })
       .eq('isActive', true)
       .is('revokedAt', null),
     supabase
-      .from('RecruiterAccess')
+      .from('recruiter_access')
       .select('id', { count: 'exact', head: true })
       .is('acceptedAt', null)
       .is('revokedAt', null)
@@ -353,8 +353,8 @@ export async function getSystemStats() {
 }
 
 type RecentApprovalRaw = {
-  userId: string
-  updatedAt: string
+  user_id: string
+  updated_at: string
   User: { name: string | null; email: string } | { name: string | null; email: string }[] | null
   ApprovedBy: { name: string | null } | { name: string | null }[] | null
 }
@@ -371,24 +371,24 @@ export async function getRecentActivity() {
   const supabase = await createClient()
 
   const { data: recentApprovals } = await supabase
-    .from('StudentProfile')
+    .from('student_profile')
     .select(`
-      userId,
-      updatedAt,
-      User!StudentProfile_userId_fkey (
+      user_id,
+      updated_at,
+      User!StudentProfile_user_id_fkey (
         name,
         email
       ),
-      ApprovedBy:User!StudentProfile_approvedById_fkey (
+      ApprovedBy:User!StudentProfile_approved_by_id_fkey (
         name
       )
     `)
-    .not('approvedById', 'is', null)
-    .order('updatedAt', { ascending: false })
+    .not('approved_by_id', 'is', null)
+    .order('updated_at', { ascending: false })
     .limit(5)
 
   const { data: recentInvites } = await supabase
-    .from('RecruiterAccess')
+    .from('recruiter_access')
     .select(`
       id,
       acceptedAt,
@@ -412,13 +412,13 @@ type ChapterWithCount = ChapterRow & {
   _count: { users: number }
 }
 
-const CHAPTER_SELECT = 'id, name, university, city, region, createdAt, updatedAt'
+const CHAPTER_SELECT = 'id, name, university, city, region, created_at, updated_at'
 
 export async function getChapters(): Promise<ChapterWithCount[]> {
   const supabase = await createClient()
 
   const { data: chapters, error } = await supabase
-    .from('Chapter')
+    .from('chapter')
     .select(CHAPTER_SELECT)
     .order('name', { ascending: true })
 
@@ -430,9 +430,9 @@ export async function getChapters(): Promise<ChapterWithCount[]> {
   const chaptersWithCounts = await Promise.all(
     (chapters as AdminChapterCountRow[]).map(async (chapter: AdminChapterCountRow) => {
       const { count } = await supabase
-        .from('StudentProfile')
-        .select('userId', { count: 'exact', head: true })
-        .eq('chapterId', chapter.id)
+        .from('student_profile')
+        .select('user_id', { count: 'exact', head: true })
+        .eq('chapter_id', chapter.id)
 
       return {
         ...chapter,
@@ -445,39 +445,39 @@ export async function getChapters(): Promise<ChapterWithCount[]> {
 }
 
 const ADMIN_PROFILE_SELECT = `
-  userId,
+  user_id,
   major,
   graduationYear,
   linkedinUrl,
   skills,
   consentRecruiterVisibility,
-  isRecruiterVisible,
-  approvedById,
-  approvalStatus,
-  isFilled,
-  updatedAt,
-  createdAt,
+  is_recruiter_visible,
+  approved_by_id,
+  approval_status,
+  is_filled,
+  updated_at,
+  created_at,
   consentDate,
-  chapterId,
+  chapter_id,
   emailNotificationsEnabled,
   gender,
-  User:User!StudentProfile_userId_fkey (
+  User:User!StudentProfile_user_id_fkey (
     id,
     email,
     name,
     phone,
     role,
-    createdAt,
-    updatedAt
+    created_at,
+    updated_at
   ),
-  Chapter:Chapter!StudentProfile_chapterId_fkey (
+  Chapter:Chapter!StudentProfile_chapter_id_fkey (
     id,
     name,
     university,
     city,
     region,
-    createdAt,
-    updatedAt
+    created_at,
+    updated_at
   )
 `
 
@@ -497,24 +497,24 @@ function mapAdminProfile(profile: AdminProfileSummaryRow): MemberWithProfile | n
     name: user.name,
     phone: user.phone ?? null,
     role: user.role as MemberWithProfile['role'],
-    createdAt: user.createdAt,
-    updatedAt: user.updatedAt,
+    created_at: user.created_at,
+    updated_at: user.updated_at,
     deactivatedAt: user.deactivatedAt ?? null,
     StudentProfile: {
-      userId: profile.userId,
+      user_id: profile.user_id,
       major: profile.major,
       graduationYear: profile.graduationYear,
       linkedinUrl: profile.linkedinUrl,
       skills,
       consentRecruiterVisibility: profile.consentRecruiterVisibility,
-      isRecruiterVisible: profile.isRecruiterVisible,
-      approvedById: profile.approvedById,
-      approvalStatus: profile.approvalStatus,
-      isFilled: profile.isFilled,
-      updatedAt: profile.updatedAt,
-      createdAt: profile.createdAt,
+      is_recruiter_visible: profile.is_recruiter_visible,
+      approved_by_id: profile.approved_by_id,
+      approval_status: profile.approval_status,
+      is_filled: profile.is_filled,
+      updated_at: profile.updated_at,
+      created_at: profile.created_at,
       consentDate: profile.consentDate,
-      chapterId: profile.chapterId,
+      chapter_id: profile.chapter_id,
       emailNotificationsEnabled: profile.emailNotificationsEnabled,
       gender: profile.gender,
       memberId: null,
@@ -523,14 +523,14 @@ function mapAdminProfile(profile: AdminProfileSummaryRow): MemberWithProfile | n
   }
 }
 
-export async function getChapterMembers(chapterId: string): Promise<MemberWithProfile[]> {
+export async function getChapterMembers(chapter_id: string): Promise<MemberWithProfile[]> {
   const supabase = await createClient()
 
   const { data, error } = await supabase
-    .from('StudentProfile')
+    .from('student_profile')
     .select(ADMIN_PROFILE_SELECT)
-    .eq('chapterId', chapterId)
-    .order('createdAt', { ascending: false })
+    .eq('chapter_id', chapter_id)
+    .order('created_at', { ascending: false })
 
   if (error || !data) {
     console.error('[admin/getChapterMembers] Error:', error)
@@ -542,13 +542,13 @@ export async function getChapterMembers(chapterId: string): Promise<MemberWithPr
     .filter((m): m is MemberWithProfile => m !== null)
 }
 
-export async function getChapterMemberCount(chapterId: string): Promise<number> {
+export async function getChapterMemberCount(chapter_id: string): Promise<number> {
   const supabase = await createClient()
 
   const { count } = await supabase
-    .from('StudentProfile')
-    .select('userId', { count: 'exact', head: true })
-    .eq('chapterId', chapterId)
+    .from('student_profile')
+    .select('user_id', { count: 'exact', head: true })
+    .eq('chapter_id', chapter_id)
 
   return count ?? 0
 }
@@ -566,16 +566,16 @@ export function normalizeUserWithDetails(
       name: user.name,
       role: user.role,
       phone: user.phone,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
+      created_at: user.created_at,
+      updated_at: user.updated_at,
       deactivatedAt: user.deactivatedAt,
       Chapter: chapter,
       StudentProfile: studentProfile
         ? {
-            isFilled: studentProfile.isFilled,
-            approvedById: studentProfile.approvedById,
-            isRecruiterVisible: studentProfile.isRecruiterVisible,
-            approvalStatus: studentProfile.approvalStatus,
+            is_filled: studentProfile.is_filled,
+            approved_by_id: studentProfile.approved_by_id,
+            is_recruiter_visible: studentProfile.is_recruiter_visible,
+            approval_status: studentProfile.approval_status,
           }
         : null,
     }
@@ -586,9 +586,9 @@ export async function getUsers(): Promise<UserWithDetails[]> {
   const supabase = await createClient()
 
   const { data: users, error: usersError } = await supabase
-    .from('User')
-    .select('id, email, name, role, phone, createdAt, updatedAt, deactivatedAt')
-    .order('createdAt', { ascending: false })
+    .from('user')
+    .select('id, email, name, role, phone, created_at, updated_at, deactivatedAt')
+    .order('created_at', { ascending: false })
 
   if (usersError || !users) {
     console.error('Failed to fetch users:', usersError)
@@ -596,14 +596,14 @@ export async function getUsers(): Promise<UserWithDetails[]> {
   }
 
   const { data: profiles, error: profilesError } = await supabase
-    .from('StudentProfile')
+    .from('student_profile')
     .select(`
-      userId,
-      isFilled,
-      approvedById,
-      isRecruiterVisible,
-      approvalStatus,
-      chapterId,
+      user_id,
+      is_filled,
+      approved_by_id,
+      is_recruiter_visible,
+      approval_status,
+      chapter_id,
       Chapter (name, university)
     `)
 
@@ -614,7 +614,7 @@ export async function getUsers(): Promise<UserWithDetails[]> {
 
   const profileRows = (profiles ?? []) as UserProfileSummaryRow[]
   const rawUsers: UserWithDetailsRaw[] = users.map((user) => {
-    const profile = profileRows.find((p: UserProfileSummaryRow) => p.userId === user.id) ?? null
+    const profile = profileRows.find((p: UserProfileSummaryRow) => p.user_id === user.id) ?? null
 
     const chapter = profile?.Chapter
       ? Array.isArray(profile.Chapter)
@@ -626,11 +626,11 @@ export async function getUsers(): Promise<UserWithDetails[]> {
       ...user,
       StudentProfile: profile
         ? {
-            isFilled: profile.isFilled,
-            approvedById: profile.approvedById,
-            isRecruiterVisible: profile.isRecruiterVisible,
-            approvalStatus: profile.approvalStatus,
-            chapterId: profile.chapterId,
+            is_filled: profile.is_filled,
+            approved_by_id: profile.approved_by_id,
+            is_recruiter_visible: profile.is_recruiter_visible,
+            approval_status: profile.approval_status,
+            chapter_id: profile.chapter_id,
             Chapter: chapter,
           }
         : null,
@@ -644,23 +644,23 @@ export async function getActivityLog(): Promise<ActivityItem[]> {
   const supabase = await createClient()
 
   const { data: approvals, error: approvalsError } = await supabase
-    .from('StudentProfile')
+    .from('student_profile')
     .select(`
-      userId,
-      updatedAt,
-      chapterId,
-      Student:User!StudentProfile_userId_fkey (
+      user_id,
+      updated_at,
+      chapter_id,
+      Student:User!StudentProfile_user_id_fkey (
         name,
         email
       ),
       Chapter (name),
-      ApprovedBy:User!StudentProfile_approvedById_fkey (
+      ApprovedBy:User!StudentProfile_approved_by_id_fkey (
         name,
         email
       )
     `)
-    .not('approvedById', 'is', null)
-    .order('updatedAt', { ascending: false })
+    .not('approved_by_id', 'is', null)
+    .order('updated_at', { ascending: false })
     .limit(20)
 
   if (approvalsError) {
@@ -668,7 +668,7 @@ export async function getActivityLog(): Promise<ActivityItem[]> {
   }
 
   const { data: invites, error: invitesError } = await supabase
-    .from('RecruiterAccess')
+    .from('recruiter_access')
     .select(`
       id,
       grantedAt,
@@ -705,9 +705,9 @@ export async function getActivityLog(): Promise<ActivityItem[]> {
       const chapter = Array.isArray(approval.Chapter) ? approval.Chapter[0] : approval.Chapter
 
       activities.push({
-        id: `approval-${approval.userId}`,
+        id: `approval-${approval.user_id}`,
         type: 'approval',
-        timestamp: approval.updatedAt,
+        timestamp: approval.updated_at,
         actor: approver ?? null,
         target: student ?? null,
         chapter: chapter ?? null,
@@ -773,7 +773,7 @@ export async function getCompanies(): Promise<Company[]> {
   const supabase = await createClient()
 
   const { data: companies, error } = await supabase
-    .from('Company')
+    .from('company')
     .select(`
       id,
       name,
@@ -794,13 +794,13 @@ export async function getCompanies(): Promise<Company[]> {
   const companiesWithCounts = await Promise.all(
     (companies as CompanyRaw[]).map(async (company: CompanyRaw) => {
       const { count: activeCount } = await supabase
-        .from('RecruiterAccess')
+        .from('recruiter_access')
         .select('id', { count: 'exact', head: true })
         .eq('companyId', company.id)
         .eq('isActive', true)
 
       const { count: pendingCount } = await supabase
-        .from('RecruiterAccess')
+        .from('recruiter_access')
         .select('id', { count: 'exact', head: true })
         .eq('companyId', company.id)
         .is('acceptedAt', null)
@@ -825,7 +825,7 @@ export async function getInvites(): Promise<RecruiterInvite[]> {
   const supabase = await createClient()
 
   const { data: invites, error } = await supabase
-    .from('RecruiterAccess')
+    .from('recruiter_access')
     .select(`
       id,
       recruiterEmail,
@@ -861,35 +861,35 @@ export async function getUserById(id: string): Promise<UserWithFullProfile | nul
   const supabase = await createClient()
 
   const { data: user, error } = await supabase
-    .from('User')
+    .from('user')
     .select(`
       id,
       email,
       name,
       phone,
       role,
-      createdAt,
-      updatedAt,
+      created_at,
+      updated_at,
       deactivatedAt,
-      StudentProfile!StudentProfile_userId_fkey (
-        userId,
+      StudentProfile!StudentProfile_user_id_fkey (
+        user_id,
         major,
         graduationYear,
         linkedinUrl,
         skills,
         consentRecruiterVisibility,
         consentDate,
-        createdAt,
-        updatedAt,
-        approvalStatus,
-        isRecruiterVisible,
-        approvedById,
-        isFilled,
-        chapterId,
+        created_at,
+        updated_at,
+        approval_status,
+        is_recruiter_visible,
+        approved_by_id,
+        is_filled,
+        chapter_id,
         emailNotificationsEnabled,
         gender,
         memberId,
-        Chapter!StudentProfile_chapterId_fkey (id, name, university, city, region, createdAt, updatedAt)
+        Chapter!StudentProfile_chapter_id_fkey (id, name, university, city, region, created_at, updated_at)
       )
     `)
     .eq('id', id)
@@ -922,7 +922,7 @@ export async function getChapterById(id: string): Promise<ChapterRow | null> {
   const supabase = await createClient()
 
   const { data: chapter, error } = await supabase
-    .from('Chapter')
+    .from('chapter')
     .select(CHAPTER_SELECT)
     .eq('id', id)
     .single()

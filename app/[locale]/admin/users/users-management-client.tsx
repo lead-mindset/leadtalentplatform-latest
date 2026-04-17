@@ -387,14 +387,14 @@ export function UsersManagementClient({
                     <TableCell className="p-2">{user.email}</TableCell>
                     <TableCell className="p-2">
                       <Badge className={getRoleColor(user.role)}>{user.role}</Badge>
-                      {user.deactivatedAt && (
+                      {user.deactivated_at && (
                         <Badge variant="outline" className="ml-2">
                           Deactivated
                         </Badge>
                       )}
                     </TableCell>
                     <TableCell className="p-2">{user.chapterName ?? '—'}</TableCell>
-                    <TableCell className="p-2">{new Date(user.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell className="p-2">{new Date(user.created_at).toLocaleDateString()}</TableCell>
                     <TableCell className="p-2">{formatProfileStatus(user.profileStatus)}</TableCell>
                     <TableCell className="p-2">
                       <div className="flex flex-wrap gap-2">
@@ -425,7 +425,7 @@ export function UsersManagementClient({
                           </DropdownMenuContent>
                         </DropdownMenu>
 
-                        {user.deactivatedAt ? (
+                        {user.deactivated_at ? (
                           <Button
                             variant="outline"
                             size="sm"

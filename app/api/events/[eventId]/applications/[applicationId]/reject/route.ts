@@ -20,7 +20,7 @@ export async function POST(
   }
 
   const { data: application } = await supabase
-    .from('EventRegistration')
+    .from('event_registration')
     .select(`
       id,
       User!eventregistration_userid_fkey (email, name),
@@ -30,7 +30,7 @@ export async function POST(
     .single()
 
   const { error } = await supabase
-    .from('EventRegistration')
+    .from('event_registration')
     .update({
       status: 'rejected',
       qrToken: undefined,

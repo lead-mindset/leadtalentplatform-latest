@@ -3,23 +3,23 @@ import { NextResponse } from 'next/server'
 import type { ApprovalStatus } from '@/lib/types'
 
 type ChapterMembersProfileRow = {
-  userId: string
+  user_id: string
   major: string
-  graduationYear: number
-  approvalStatus: ApprovalStatus
-  memberId: string | null
-  createdAt: string
-  chapterId: string
+  graduation_year: number
+  approval_status: ApprovalStatus
+  member_id: string | null
+  created_at: string
+  chapter_id: string
   User: {
     id: string
     name: string
     email: string
-    createdAt: string
+    created_at: string
   } | {
     id: string
     name: string
     email: string
-    createdAt: string
+    created_at: string
   }[]
 }
 
@@ -32,9 +32,9 @@ export async function GET() {
   }
 
   const { data: profile } = await supabase
-    .from('StudentProfile')
-    .select('chapterId')
-    .eq('userId', user.id)
+    .from('student_profile')
+    .select('chapter_id')
+    .eq('user_id', user.id)
     .single()
 
   if (!profile) {
@@ -42,24 +42,24 @@ export async function GET() {
   }
 
   const { data: members, error } = await supabase
-    .from('StudentProfile')
+    .from('student_profile')
     .select(`
-      userId,
+      user_id,
       major,
-      graduationYear,
-      approvalStatus,
-      memberId,
-      createdAt,
-      chapterId,
-      User:userId (
+      graduation_year,
+      approval_status,
+      member_id,
+      created_at,
+      chapter_id,
+      User:user_id (
         id,
         name,
         email,
-        createdAt
+        created_at
       )
     `)
-    .eq('chapterId', profile.chapterId)
-    .order('createdAt', { ascending: false })
+    .eq('chapter_id', profile.chapter_id)
+    .order('created_at', { ascending: false })
 
   if (error) {
     console.error('Failed to fetch members:', error)
@@ -69,17 +69,17 @@ export async function GET() {
   const transformedMembers = (members ?? []).map((member: ChapterMembersProfileRow) => {
     const linkedUser = Array.isArray(member.User) ? member.User[0] : member.User
 
-    return {
-    id: member.userId,
-    userId: member.userId,
-    name: linkedUser?.name ?? '',
-    email: linkedUser?.email ?? '',
-    major: member.major,
-    graduationYear: member.graduationYear,
-    approvalStatus: member.approvalStatus,
-    memberId: member.memberId,
-    createdAt: member.createdAt,
-    chapterId: member.chapterId,
+return {
+      id: member.user_id,
+      user_id: member.user_id,
+      name: linkedUser?.name ?? '',
+      email: linkedUser?.email ?? '',
+      major: member.major,
+      graduation_year: member.graduation_year,
+      approval_status: member.approval_status,
+      member_id: member.member_id,
+      created_at: member.created_at,
+      chapter_id: member.chapter_id,
     }
   })
 

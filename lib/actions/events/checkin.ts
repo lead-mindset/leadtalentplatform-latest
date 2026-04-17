@@ -5,7 +5,7 @@ import type { EventRegistrationRow, RegistrationStatus, UserRow } from '@/lib/ty
 import { assertCanManageEvent } from './access'
 
 const CHECKIN_REGISTRATION_SELECT =
-  'id, eventId, userId, registeredAt, status, qrToken, checkedInAt, checkedInById'
+  'id, event_id, user_id, registered_at, status, qr_token, checked_in_at, checked_in_by_id'
 
 type CheckInState = 'success' | 'already_checked_in' | 'not_registered'
 
@@ -55,7 +55,7 @@ export type CheckInSearchResult = {
 
 type StatusOnlyRow = Pick<EventRegistrationRow, 'status'>
 type SearchUserRow = Pick<UserRow, 'id' | 'name' | 'email'>
-type SearchRegistrationRow = Pick<EventRegistrationRow, 'id' | 'userId' | 'status' | 'checkedInAt'>
+type SearchRegistrationRow = Pick<EventRegistrationRow, 'id' | 'user_id' | 'status' | 'checked_in_at'>
 
 async function assertEventAccess(eventId: string) {
   const access = await assertCanManageEvent(eventId)
@@ -72,9 +72,9 @@ export async function getCheckInCounter(eventId: string): Promise<CheckInCounter
   const { supabase } = access
 
   const { data, error } = await supabase
-    .from('EventRegistration')
+    .from('event_registration')
     .select('status')
-    .eq('eventId', eventId)
+    .eq('event_id', eventId)
 
   if (error || !data) return null
 
@@ -97,34 +97,34 @@ export async function resolveCheckInCandidate(formData: FormData): Promise<Check
 
   // Filter by both qrToken and eventId in the query to avoid post-fetch mismatch
   const { data: registration, error } = await supabase
-    .from('EventRegistration')
-    .select('id, eventId, userId, checkedInAt, checkedInById, status')
-    .eq('qrToken', token)
-    .eq('eventId', eventId)  // ← moved here
+    .from('event_registration')
+    .select('id, event_id, user_id, checked_in_at, checked_in_by_id, status')
+    .eq('qr_token', token)
+    .eq('event_id', eventId)  // ← moved here
     .maybeSingle()
 
   if (error || !registration) return { ok: false, error: 'Not registered for this event' }
 
   // Fetch attendee separately to avoid FK hint issues
   const { data: attendeeData } = await supabase
-    .from('User')
+    .from('user')
     .select('id, name, email')
-    .eq('id', registration.userId)
+    .eq('id', registration.user_id)
     .maybeSingle()
 
   const attendeePayload = {
-    id: attendeeData?.id ?? registration.userId,
+    id: attendeeData?.id ?? registration.user_id,
     name: attendeeData?.name ?? 'Unknown attendee',
     email: attendeeData?.email ?? 'unknown@email',
   }
 
-  if (registration.checkedInAt || registration.status === 'attended') {
+  if (registration.checked_in_at || registration.status === 'attended') {
     let checkedInByName: string | null = null
-    if (registration.checkedInById) {
+    if (registration.checked_in_by_id) {
       const { data: checker } = await supabase
-        .from('User')
+        .from('user')
         .select('name')
-        .eq('id', registration.checkedInById)
+        .eq('id', registration.checked_in_by_id)
         .maybeSingle()
       checkedInByName = checker?.name ?? null
     }
@@ -163,7 +163,7 @@ export async function searchAttendeesForCheckIn(formData: FormData): Promise<Che
   const { supabase } = access
 
   const { data: users, error: userError } = await supabase
-    .from('User')
+    .from('user')
     .select('id, name, email')
     .or(`name.ilike.%${query}%,email.ilike.%${query}%`)
     .limit(20)
@@ -174,26 +174,26 @@ export async function searchAttendeesForCheckIn(formData: FormData): Promise<Che
   const userIds = matchedUsers.map((matchedUser) => matchedUser.id)
 
   const { data, error } = await supabase
-    .from('EventRegistration')
-    .select('id, userId, status, checkedInAt')
-    .eq('eventId', eventId)
+    .from('event_registration')
+    .select('id, user_id, status, checked_in_at')
+    .eq('event_id', eventId)
     .in('status', ['registered', 'attended'])
-    .in('userId', userIds)
+    .in('user_id', userIds)
     .limit(8)
 
   if (error || !data) return []
 
   const userMap = new Map(matchedUsers.map((matchedUser) => [matchedUser.id, matchedUser]))
 
-  return (data as SearchRegistrationRow[]).map((registration) => {
-    const user = userMap.get(registration.userId)
+return (data as SearchRegistrationRow[]).map((registration) => {
+    const user = userMap.get(registration.user_id)
     return {
       registrationId: registration.id,
-      userId: registration.userId,
+      userId: registration.user_id,
       name: user?.name ?? 'Unknown attendee',
       email: user?.email ?? '',
       status: registration.status as RegistrationStatus,
-      checkedInAt: registration.checkedInAt ?? null,
+      checkedInAt: registration.checked_in_at ?? null,
     }
   })
 }
@@ -209,28 +209,28 @@ export async function checkInAttendee(formData: FormData): Promise<CheckInRespon
 
   // Filter by both id and eventId in the query — no post-fetch comparison needed
   const { data: reg, error: regError } = await supabase
-    .from('EventRegistration')
+    .from('event_registration')
     .select(CHECKIN_REGISTRATION_SELECT)
     .eq('id', registrationId)
-    .eq('eventId', eventId)  // ← moved here
+    .eq('event_id', eventId)  // ← moved here
     .maybeSingle()
 
   if (regError || !reg) return { error: 'Registration not found for this event' }
 
   // Fetch attendee separately
   const { data: attendeeData } = await supabase
-    .from('User')
+    .from('user')
     .select('id, name, email')
     .eq('id', reg.userId)
     .maybeSingle()
 
   const attendeePayload = {
-    id: attendeeData?.id ?? reg.userId,
+    id: attendeeData?.id ?? reg.user_id,
     name: attendeeData?.name ?? 'Unknown attendee',
     email: attendeeData?.email ?? '',
   }
 
-  if (reg.checkedInAt || reg.status === 'attended') {
+  if (reg.checked_in_at || reg.status === 'attended') {
     const counter = await getCheckInCounter(eventId)
     return {
       success: true,
@@ -247,11 +247,11 @@ export async function checkInAttendee(formData: FormData): Promise<CheckInRespon
   const now = new Date().toISOString()
 
   const { data: updated, error: updateError } = await supabase
-    .from('EventRegistration')
+    .from('event_registration')
     .update({
       status: 'attended' as RegistrationStatus,
-      checkedInAt: now,
-      checkedInById: user.id,
+      checked_in_at: now,
+      checked_in_by_id: user.id,
     })
     .eq('id', reg.id)
     .select()

@@ -186,8 +186,8 @@ export function EventApplicationsClient({
                 key={application.id}
                 application={{
                   id: application.id,
-                  userId: application.userId,
-                  registeredAt: application.registeredAt,
+                  userId: application.user_id,
+                  registeredAt: application.registered_at,
                   status: application.status as 'pending_review' | 'registered' | 'rejected',
                   User: {
                     name: application.User?.name ?? 'Unknown attendee',
@@ -195,8 +195,8 @@ export function EventApplicationsClient({
                   },
                   StudentProfile: {
                     major: application.StudentProfile?.major ?? 'Unknown major',
-                    graduationYear: application.StudentProfile?.graduationYear ?? 0,
-                    linkedinUrl: application.StudentProfile?.linkedinUrl ?? null,
+                    graduationYear: application.StudentProfile?.graduation_year ?? 0,
+                    linkedinUrl: application.StudentProfile?.linkedin_url ?? null,
                   },
                 }}
                 isSelected={selectedApplications.has(application.id)}
@@ -228,8 +228,8 @@ export function EventApplicationsClient({
                 key={application.id}
                 application={{
                   id: application.id,
-                  userId: application.userId,
-                  registeredAt: application.registeredAt,
+                  userId: application.user_id,
+                  registeredAt: application.registered_at,
                   status: application.status as 'pending_review' | 'registered' | 'rejected',
                   User: {
                     name: application.User?.name ?? 'Unknown attendee',
@@ -237,8 +237,8 @@ export function EventApplicationsClient({
                   },
                   StudentProfile: {
                     major: application.StudentProfile?.major ?? 'Unknown major',
-                    graduationYear: application.StudentProfile?.graduationYear ?? 0,
-                    linkedinUrl: application.StudentProfile?.linkedinUrl ?? null,
+                    graduationYear: application.StudentProfile?.graduation_year ?? 0,
+                    linkedinUrl: application.StudentProfile?.linkedin_url ?? null,
                   },
                 }}
                 onApprove={handleApprove}
@@ -262,8 +262,8 @@ export function EventApplicationsClient({
                 key={application.id}
                 application={{
                   id: application.id,
-                  userId: application.userId,
-                  registeredAt: application.registeredAt,
+                  userId: application.user_id,
+                  registeredAt: application.registered_at,
                   status: application.status as 'pending_review' | 'registered' | 'rejected',
                   User: {
                     name: application.User?.name ?? 'Unknown attendee',
@@ -271,8 +271,8 @@ export function EventApplicationsClient({
                   },
                   StudentProfile: {
                     major: application.StudentProfile?.major ?? 'Unknown major',
-                    graduationYear: application.StudentProfile?.graduationYear ?? 0,
-                    linkedinUrl: application.StudentProfile?.linkedinUrl ?? null,
+                    graduationYear: application.StudentProfile?.graduation_year ?? 0,
+                    linkedinUrl: application.StudentProfile?.linkedin_url ?? null,
                   },
                 }}
                 onApprove={handleApprove}

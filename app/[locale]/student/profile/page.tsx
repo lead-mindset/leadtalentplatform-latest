@@ -9,11 +9,11 @@ async function ProfileData() {
   const { supabase, user } = await requireUser();
 
   const { data: profileData, error: profileError } = await supabase
-    .from("StudentProfile")
+    .from("student_profile")
     .select(
-      "userId, chapterId, major, graduationYear, skills, linkedinUrl, consentRecruiterVisibility, emailNotificationsEnabled, memberId, approvalStatus"
+      "user_id, chapter_id, major, graduation_year, skills, linkedin_url, consent_recruiter_visibility, email_notifications_enabled, member_id, approval_status"
     )
-    .eq("userId", user.id)
+    .eq("user_id", user.id)
     .maybeSingle<StudentProfileRow>();
 
   if (profileError) {
@@ -24,15 +24,15 @@ async function ProfileData() {
     id: user.id,
     full_name: user.name || '',
     phone: user.phone || '',
-    lead_chapter: profileData?.chapterId || '',
+    lead_chapter: profileData?.chapter_id || '',
     career: profileData?.major || '',
-    graduationYear: profileData?.graduationYear || 0,
+    graduation_year: profileData?.graduation_year || 0,
     skills: profileData?.skills || [],
-    linkedin_url: profileData?.linkedinUrl || '',
-    consentRecruiterVisibility: profileData?.consentRecruiterVisibility || false,
-    emailNotificationsEnabled: profileData?.emailNotificationsEnabled ?? true,
-    memberId: profileData?.memberId || null,
-    approvalStatus: profileData?.approvalStatus || 'pending',
+    linkedin_url: profileData?.linkedin_url || '',
+    consent_recruiter_visibility: profileData?.consent_recruiter_visibility || false,
+    email_notifications_enabled: profileData?.email_notifications_enabled ?? true,
+    member_id: profileData?.member_id || null,
+    approval_status: profileData?.approval_status || 'pending',
   };
 
   return (

@@ -25,8 +25,8 @@ export function ManageCompanyClient({ company }: Props) {
   const [email, setEmail] = useState('')
   const [expiry, setExpiry] = useState<'7' | '30' | 'never'>('7')
 
-  const active = company.recruiters.filter((r) => r.isActive && !r.revokedAt)
-  const pending = company.recruiters.filter((r) => !r.acceptedAt && !r.revokedAt)
+  const active = company.recruiters.filter((r) => r.is_active && !r.revoked_at)
+  const pending = company.recruiters.filter((r) => !r.accepted_at && !r.revoked_at)
 
   const copy = async (text: string) => {
     await navigator.clipboard.writeText(text)
@@ -94,8 +94,8 @@ export function ManageCompanyClient({ company }: Props) {
             active.map((row) => (
               <div key={row.id} className="flex items-center justify-between border rounded p-2">
                 <div>
-                  <p className="font-medium">{row.recruiterEmail}</p>
-                  <p className="text-xs text-muted-foreground">Accepted {row.acceptedAt ? new Date(row.acceptedAt).toLocaleDateString() : '—'}</p>
+                  <p className="font-medium">{row.recruiter_email}</p>
+                  <p className="text-xs text-muted-foreground">Accepted {row.accepted_at ? new Date(row.accepted_at).toLocaleDateString() : '—'}</p>
                 </div>
                 <Button
                   size="sm"
@@ -132,10 +132,10 @@ export function ManageCompanyClient({ company }: Props) {
             pending.map((row) => (
               <div key={row.id} className="flex items-center justify-between border rounded p-2">
                 <div>
-                  <p className="font-medium">{row.recruiterEmail}</p>
+                  <p className="font-medium">{row.recruiter_email}</p>
                   <div className="flex gap-2 mt-1">
                     <Badge variant="outline">
-                      {row.inviteExpiresAt ? `Expires ${new Date(row.inviteExpiresAt).toLocaleDateString()}` : 'No expiry'}
+                      {row.invite_expires_at ? `Expires ${new Date(row.invite_expires_at).toLocaleDateString()}` : 'No expiry'}
                     </Badge>
                   </div>
                 </div>

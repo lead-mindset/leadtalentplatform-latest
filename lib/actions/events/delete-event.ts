@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireUser } from '@/lib/auth'
-import { getEditorChapterId } from './get-data'
+import { requireChapterMember } from '@/lib/auth'
 import type { EventRow } from '@/lib/types'
 
 const EVENT_LOOKUP_SELECT = 'id, chapterId'
@@ -15,7 +15,7 @@ export async function deleteEvent(eventId: string): Promise<DeleteEventResponse>
   const { supabase, user } = await requireUser()
 
   const { data: existing } = await supabase
-    .from('Event')
+    .from('event')
     .select(EVENT_LOOKUP_SELECT)
     .eq('id', eventId)
     .maybeSingle<Pick<EventRow, 'id' | 'chapterId'>>()
@@ -23,14 +23,14 @@ export async function deleteEvent(eventId: string): Promise<DeleteEventResponse>
   if (!existing) return { error: 'Event not found' }
 
   if (user.role === 'editor') {
-    const chapterId = await getEditorChapterId()
+    const { chapterId } = await requireChapterMember()
     if (!chapterId) return { error: 'No chapter assigned' }
     if (existing.chapterId !== chapterId) return { error: 'Insufficient permissions' }
-  } else if (user.role !== 'admin') {
+  } else if (user.role !== 'admin' && user.role !== 'editor') {
     return { error: 'Insufficient permissions' }
   }
 
-  const { error } = await supabase.from('Event').delete().eq('id', eventId)
+  const { error } = await supabase.from('event').delete().eq('id', eventId)
   if (error) {
     console.error('[deleteEvent] Error:', error)
     return { error: 'Failed to delete event' }

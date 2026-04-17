@@ -2,67 +2,67 @@ import { createClient } from '@/lib/supabase/server'
 import type { ChapterRow, MemberWithProfile, StudentProfileRow, UserRow } from '@/lib/types'
 
 const PROFILE_SELECT = `
-  userId,
+  user_id,
   major,
-  graduationYear,
-  linkedinUrl,
+  graduation_year,
+  linkedin_url,
   skills,
-  consentRecruiterVisibility,
-  isRecruiterVisible,
-  approvedById,
-  approvalStatus,
-  isFilled,
-  updatedAt,
-  createdAt,
-  consentDate,
-  chapterId,
-  emailNotificationsEnabled,
+  consent_recruiter_visibility,
+  is_recruiter_visible,
+  approved_by_id,
+  approval_status,
+  is_filled,
+  updated_at,
+  created_at,
+  consent_date,
+  chapter_id,
+  email_notifications_enabled,
   gender,
-  memberId,
-  User:User!StudentProfile_userId_fkey (
+  member_id,
+  User:User!StudentProfile_user_id_fkey (
     id,
     email,
     name,
     phone,
     role,
-    createdAt,
-    updatedAt,
-    deactivatedAt
+    created_at,
+    updated_at,
+    deactivated_at
   ),
-  Chapter:Chapter!StudentProfile_chapterId_fkey (
+  Chapter:Chapter!StudentProfile_chapter_id_fkey (
     id,
     name,
     university,
     city,
     region,
-    createdAt,
-    updatedAt
+    created_at,
+    updated_at
   )
 `
 
 type ChapterProfileRow = Pick<
-  StudentProfileRow,
-  | 'userId'
+StudentProfileRow,
+  | 'user_id'
   | 'major'
-  | 'graduationYear'
-  | 'linkedinUrl'
+  | 'graduation_year'
+  | 'linkedin_url'
   | 'skills'
-  | 'consentRecruiterVisibility'
-  | 'isRecruiterVisible'
-  | 'approvedById'
-  | 'approvalStatus'
-  | 'isFilled'
-  | 'updatedAt'
-  | 'createdAt'
-  | 'consentDate'
-  | 'chapterId'
-  | 'emailNotificationsEnabled'
+  | 'consent_recruiter_visibility'
+  | 'is_recruiter_visible'
+  | 'approved_by_id'
+  | 'approval_status'
+  | 'is_filled'
+  | 'updated_at'
+  | 'created_at'
+  | 'consent_date'
+  | 'chapter_id'
+  | 'email_notifications_enabled'
   | 'gender'
-  | 'memberId'
+  | 'member_id'
 > & {
-  User:
-    | Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'role' | 'createdAt' | 'updatedAt' | 'deactivatedAt'>
-    | Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'role' | 'createdAt' | 'updatedAt' | 'deactivatedAt'>[]
+User:
+    | Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'role' | 'created_at' | 'updated_at' | 'deactivated_at'>
+    | Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'role' | 'created_at' | 'updated_at' | 'deactivated_at'>[]
   Chapter: ChapterRow | ChapterRow[] | null
 }
 
@@ -78,27 +78,27 @@ function mapProfile(profile: ChapterProfileRow): MemberWithProfile | null {
     name: user.name,
     phone: user.phone ?? null,
     role: user.role,
-    createdAt: user.createdAt,
-    updatedAt: user.updatedAt,
-    deactivatedAt: user.deactivatedAt,
-    StudentProfile: {
-      userId: profile.userId,
+created_at: user.created_at,
+    updated_at: user.updated_at,
+    deactivated_at: user.deactivated_at,
+StudentProfile: {
+      user_id: profile.user_id,
       major: profile.major,
-      graduationYear: profile.graduationYear,
-      linkedinUrl: profile.linkedinUrl,
+      graduation_year: profile.graduation_year,
+      linkedin_url: profile.linkedin_url,
       skills: profile.skills,
-      consentRecruiterVisibility: profile.consentRecruiterVisibility,
-      isRecruiterVisible: profile.isRecruiterVisible,
-      approvedById: profile.approvedById,
-      approvalStatus: profile.approvalStatus,
-      isFilled: profile.isFilled,
-      updatedAt: profile.updatedAt,
-      createdAt: profile.createdAt,
-      consentDate: profile.consentDate,
-      chapterId: profile.chapterId,
-      emailNotificationsEnabled: profile.emailNotificationsEnabled,
+      consent_recruiter_visibility: profile.consent_recruiter_visibility,
+      is_recruiter_visible: profile.is_recruiter_visible,
+      approved_by_id: profile.approved_by_id,
+      approval_status: profile.approval_status,
+      is_filled: profile.is_filled,
+      updated_at: profile.updated_at,
+      created_at: profile.created_at,
+      consent_date: profile.consent_date,
+      chapter_id: profile.chapter_id,
+      email_notifications_enabled: profile.email_notifications_enabled,
       gender: profile.gender,
-      memberId: profile.memberId,
+      member_id: profile.member_id,
     },
     Chapter: chapter ?? null,
   }
@@ -111,10 +111,10 @@ export async function getChapterMembers(
   const supabase = await createClient()
 
   const { data, error } = await supabase
-    .from('StudentProfile')
+    .from('student_profile')
     .select(PROFILE_SELECT)
-    .eq('chapterId', chapterId)
-    .order('createdAt', { ascending: false })
+    .eq('chapter_id', chapterId)
+    .order('created_at', { ascending: false })
 
   if (error) {
     console.error('[getChapterMembers] Error:', error)
@@ -131,15 +131,15 @@ export async function getChapterMembers(
 
 
 export function getMemberStats(members: MemberWithProfile[]) {
-  const incomplete = members.filter((member: MemberWithProfile) => !member.StudentProfile?.isFilled)
+  const incomplete = members.filter((member: MemberWithProfile) => !member.StudentProfile?.is_filled)
   const pending = members.filter(
-    (member: MemberWithProfile) => member.StudentProfile?.isFilled && member.StudentProfile?.approvalStatus === 'pending'
+    (member: MemberWithProfile) => member.StudentProfile?.is_filled && member.StudentProfile?.approval_status === 'pending'
   )
   const approved = members.filter(
-    (member: MemberWithProfile) => member.StudentProfile?.approvalStatus === 'approved'
+    (member: MemberWithProfile) => member.StudentProfile?.approval_status === 'approved'
   )
   const rejected = members.filter(
-    (member: MemberWithProfile) => member.StudentProfile?.approvalStatus === 'rejected'
+    (member: MemberWithProfile) => member.StudentProfile?.approval_status === 'rejected'
   )
 
   return {
@@ -151,8 +151,8 @@ export function getMemberStats(members: MemberWithProfile[]) {
     pendingMembers: pending,
     approvedMembers: approved,
     rejectedMembers: rejected,
-    completeProfiles: members.filter((member: MemberWithProfile) => member.StudentProfile?.isFilled).length,
-    visibleToRecruiters: members.filter((member: MemberWithProfile) => member.StudentProfile?.isRecruiterVisible).length,
+    completeProfiles: members.filter((member: MemberWithProfile) => member.StudentProfile?.is_filled).length,
+    visibleToRecruiters: members.filter((member: MemberWithProfile) => member.StudentProfile?.is_recruiter_visible).length,
   }
 }
 
@@ -164,11 +164,11 @@ export async function getRecentChapterActivity(
   const supabase = await createClient()
 
   const { data, error } = await supabase
-    .from('StudentProfile')
+    .from('student_profile')
     .select(PROFILE_SELECT)
-    .eq('chapterId', chapterId)
-    .eq('approvalStatus', 'approved')
-    .order('updatedAt', { ascending: false })
+    .eq('chapter_id', chapterId)
+    .eq('approval_status', 'approved')
+    .order('updated_at', { ascending: false })
     .limit(limit)
 
   if (error || !data) {

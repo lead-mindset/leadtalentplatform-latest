@@ -13,7 +13,7 @@ import LocalDate from './local_date'
 import { Icons } from '@/components/ui/icons'
 
 function statusForEvent(event: EventWithDetails): 'Draft' | 'Published' | 'Past' {
-  const isPast = new Date(event.endAt) < new Date()
+  const isPast = new Date(event.end_at) < new Date()
   if (isPast) return 'Past'
   return event.isPublished ? 'Published' : 'Draft'
 }
@@ -78,7 +78,7 @@ export function EventsTable({ events }: { events: EventWithDetails[] }) {
                   )}
                   <p className="font-semibold truncate">{event.title}</p>
                 </div>
-                <LocalDate isoString={event.startAt} />
+                <LocalDate isoString={event.start_at} />
               </div>
               <Badge variant={status === 'Published' ? 'secondary' : 'outline'}>{status}</Badge>
             </div>

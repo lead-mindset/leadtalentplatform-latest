@@ -67,7 +67,7 @@ export default async function RecruiterStudentProfilePage({
 
             <div className="flex items-center gap-2 text-sm">
               <Icons.GraduationCap className="h-4 w-4 text-muted-foreground" />
-              {resolvedStudent.graduationYear ? `Class of ${resolvedStudent.graduationYear}` : 'Graduation year not specified'}
+              {resolvedStudent.graduation_year ? `Class of ${resolvedStudent.graduation_year}` : 'Graduation year not specified'}
             </div>
 
             <div className="flex items-center gap-2 text-sm">
@@ -82,9 +82,9 @@ export default async function RecruiterStudentProfilePage({
             <CardTitle>Links & Resume</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {resolvedStudent.linkedinUrl ? (
+            {resolvedStudent.linkedin_url ? (
               <Button asChild variant="outline" className="w-full">
-                <NextLink href={resolvedStudent.linkedinUrl} target="_blank" rel="noopener noreferrer">
+                <NextLink href={resolvedStudent.linkedin_url} target="_blank" rel="noopener noreferrer">
                   <Icons.Linkedin className="h-4 w-4" />
                   View LinkedIn
                 </NextLink>

@@ -22,7 +22,7 @@ export async function addEventCollaborators(
 
   // Validate that the event exists and user has permission
   const { data: event, error: eventError } = await supabase
-    .from('Event')
+    .from('event')
     .select('id')
     .eq('id', eventId)
     .single()
@@ -40,7 +40,7 @@ export async function addEventCollaborators(
 
   // Insert collaborators
   const { error: insertError } = await supabase
-    .from('EventChapter')
+    .from('event_chapter')
     .insert(inserts)
 
   if (insertError) {

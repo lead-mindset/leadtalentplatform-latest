@@ -12,9 +12,9 @@ export default async function NewChapterEventPage() {
   let editorChapter: ChapterRow | null = null
   if (user) {
     const { data: profile } = await supabase
-      .from('StudentProfile')
-      .select('chapterId, chapter:Chapter(id, name, university, city, region, createdAt, updatedAt)')
-      .eq('userId', user.id)
+      .from('student_profile')
+      .select('chapter_id, chapter:Chapter(id, name, university, city, region, created_at, updated_at)')
+      .eq('user_id', user.id)
       .single()
     
     if (profile?.chapter) {

@@ -56,14 +56,14 @@ export type ChapterFormInput = {
 type ActionResult = { success: true } | { success: false; error: string }
 
 type ChapterListRow = Pick<ChapterRow, 'id' | 'name' | 'university' | 'city' | 'region'>
-type ChapterProfileRow = Pick<StudentProfileRow, 'chapterId' | 'userId'> & {
+type ChapterProfileRow = Pick<StudentProfileRow, 'chapter_id' | 'user_id'> & {
   User:
     | Pick<UserRow, 'name' | 'email' | 'role'>
     | Pick<UserRow, 'name' | 'email' | 'role'>[]
     | null
 }
-type ChapterEventRow = Pick<EventRow, 'id' | 'chapterId'>
-type AvailableEditorRow = Pick<StudentProfileRow, 'userId'> & {
+type ChapterEventRow = Pick<EventRow, 'id' | 'chapter_id'>
+type AvailableEditorRow = Pick<StudentProfileRow, 'user_id'> & {
   User:
     | Pick<UserRow, 'id' | 'name' | 'email' | 'role'>
     | Pick<UserRow, 'id' | 'name' | 'email' | 'role'>[]
@@ -114,8 +114,8 @@ export async function getChaptersList(
   const { supabase } = await requireAdmin()
 
   let query = supabase
-    .from('Chapter')
-    .select('id, name, university, city, region, createdAt, updatedAt')
+    .from('chapter')
+    .select('id, name, university, city, region, created_at, updated_at')
 
   const search = filters.search?.trim()
   if (search) {
@@ -137,31 +137,31 @@ export async function getChaptersList(
   const now = new Date().toISOString()
   const [{ data: profiles }, { data: events }] = await Promise.all([
     supabase
-      .from('StudentProfile')
-      .select('chapterId, userId, User!StudentProfile_userId_fkey(name, email, role)')
-      .in('chapterId', chapterIds),
+      .from('student_profile')
+      .select('chapter_id, user_id, User!StudentProfile_userId_fkey(name, email, role)')
+      .in('chapter_id', chapterIds),
     supabase
-      .from('Event')
-      .select('id, chapterId')
-      .in('chapterId', chapterIds)
-      .eq('isPublished', true)
-      .gt('endAt', now),
+      .from('event')
+      .select('id, chapter_id')
+      .in('chapter_id', chapterIds)
+      .eq('is_published', true)
+      .gt('end_at', now),
   ])
 
   const profileRows = (profiles ?? []) as ChapterProfileRow[]
   const eventRows = (events ?? []) as ChapterEventRow[]
 
-  const profileByChapter = new Map<string, ChapterProfileRow[]>()
+const profileByChapter = new Map<string, ChapterProfileRow[]>()
   profileRows.forEach((profile: ChapterProfileRow) => {
-    const list = profileByChapter.get(profile.chapterId) ?? []
+    const list = profileByChapter.get(profile.chapter_id) ?? []
     list.push(profile)
-    profileByChapter.set(profile.chapterId, list)
+    profileByChapter.set(profile.chapter_id, list)
   })
 
   const eventCountByChapter = new Map<string, number>()
   eventRows.forEach((event: ChapterEventRow) => {
-    const current = eventCountByChapter.get(event.chapterId ?? '') ?? 0
-    eventCountByChapter.set(event.chapterId ?? '', current + 1)
+    const current = eventCountByChapter.get(event.chapter_id ?? '') ?? 0
+    eventCountByChapter.set(event.chapter_id ?? '', current + 1)
   })
 
   const rows: ChapterListItem[] = chapterRows.map((chapter: ChapterListRow) => {
@@ -171,10 +171,10 @@ export async function getChaptersList(
         const user = Array.isArray(profile.User) ? profile.User[0] : profile.User
         return user?.role === 'editor'
       })
-      .map((profile: ChapterProfileRow) => {
+.map((profile: ChapterProfileRow) => {
         const user = Array.isArray(profile.User) ? profile.User[0] : profile.User
         return {
-          id: profile.userId,
+          id: profile.user_id,
           name: user?.name ?? 'Unknown',
           email: user?.email ?? 'unknown@example.com',
         }
@@ -210,8 +210,8 @@ export async function getChaptersList(
 export async function getChapterById(id: string) {
   const { supabase } = await requireAdmin()
   const { data, error } = await supabase
-    .from('Chapter')
-    .select('id, name, university, city, region, createdAt, updatedAt')
+    .from('chapter')
+    .select('id, name, university, city, region, created_at, updated_at')
     .eq('id', id)
     .maybeSingle()
 
@@ -232,7 +232,7 @@ export async function createChapter(input: ChapterFormInput): Promise<ActionResu
   const id = normalizeSlug(parsed.data.id)
 
   const { data: existing, error: existingError } = await supabase
-    .from('Chapter')
+    .from('chapter')
     .select('id')
     .eq('id', id)
     .maybeSingle()
@@ -246,14 +246,14 @@ export async function createChapter(input: ChapterFormInput): Promise<ActionResu
   }
 
   const now = new Date().toISOString()
-  const { error } = await supabase.from('Chapter').insert({
+  const { error } = await supabase.from('chapter').insert({
     id,
     name: parsed.data.name,
     university: parsed.data.university,
     city: parsed.data.city || null,
     region: parsed.data.region || null,
-    createdAt: now,
-    updatedAt: now,
+created_at: now,
+      updated_at: now,
   })
 
   if (error) {
@@ -283,13 +283,13 @@ export async function updateChapter(
 
   const { supabase } = await requireAdmin()
   const { error } = await supabase
-    .from('Chapter')
-    .update({
+    .from('chapter')
+.update({
       name: parsed.data.name,
       university: parsed.data.university,
       city: parsed.data.city || null,
       region: parsed.data.region || null,
-      updatedAt: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     })
     .eq('id', id)
 
@@ -305,22 +305,22 @@ export async function updateChapter(
 export async function deleteChapter(id: string): Promise<ActionResult> {
   const { supabase } = await requireAdmin()
 
-  const [{ count: membersCount }, { count: eventsCount }] = await Promise.all([
+const [{ count: membersCount }, { count: eventsCount }] = await Promise.all([
     supabase
-      .from('StudentProfile')
-      .select('userId', { count: 'exact', head: true })
-      .eq('chapterId', id),
+      .from('student_profile')
+      .select('user_id', { count: 'exact', head: true })
+      .eq('chapter_id', id),
     supabase
-      .from('Event')
+      .from('event')
       .select('id', { count: 'exact', head: true })
-      .eq('chapterId', id),
+      .eq('chapter_id', id),
   ])
 
   if ((membersCount ?? 0) > 0 || (eventsCount ?? 0) > 0) {
     return { success: false, error: 'Chapter cannot be deleted while it has members or events.' }
   }
 
-  const { error } = await supabase.from('Chapter').delete().eq('id', id)
+  const { error } = await supabase.from('chapter').delete().eq('id', id)
   if (error) {
     console.error('[admin/chapters] deleteChapter error:', error)
     return { success: false, error: 'Failed to delete chapter.' }
@@ -333,9 +333,9 @@ export async function deleteChapter(id: string): Promise<ActionResult> {
 export async function getAvailableEditors(chapterId: string) {
   const { supabase } = await requireAdmin()
   const { data, error } = await supabase
-    .from('StudentProfile')
-    .select('userId, User!StudentProfile_userId_fkey(id, name, email, role)')
-    .eq('chapterId', chapterId)
+    .from('student_profile')
+    .select('user_id, User!StudentProfile_userId_fkey(id, name, email, role)')
+    .eq('chapter_id', chapterId)
 
   if (error) {
     console.error('[admin/chapters] getAvailableEditors error:', error)
@@ -360,16 +360,16 @@ export async function getAvailableEditors(chapterId: string) {
 export async function assignEditor(userId: string, chapterId: string): Promise<ActionResult> {
   const { supabase } = await requireAdmin()
   const { data: profile } = await supabase
-    .from('StudentProfile')
-    .select('userId, chapterId')
-    .eq('userId', userId)
+    .from('student_profile')
+    .select('user_id, chapter_id')
+    .eq('user_id', userId)
     .maybeSingle()
 
-  if (!profile || profile.chapterId !== chapterId) {
+  if (!profile || profile.chapter_id !== chapterId) {
     return { success: false, error: 'User must be a member of this chapter.' }
   }
 
-  const { error } = await supabase.from('User').update({ role: 'editor' }).eq('id', userId)
+  const { error } = await supabase.from('user').update({ role: 'editor' }).eq('id', userId)
   if (error) {
     console.error('[admin/chapters] assignEditor error:', error)
     return { success: false, error: 'Failed to assign editor.' }
@@ -382,16 +382,16 @@ export async function assignEditor(userId: string, chapterId: string): Promise<A
 export async function removeEditor(userId: string, chapterId: string): Promise<ActionResult> {
   const { supabase } = await requireAdmin()
   const { data: profile } = await supabase
-    .from('StudentProfile')
-    .select('userId, chapterId')
-    .eq('userId', userId)
+    .from('student_profile')
+    .select('user_id, chapter_id')
+    .eq('user_id', userId)
     .maybeSingle()
 
-  if (!profile || profile.chapterId !== chapterId) {
+  if (!profile || profile.chapter_id !== chapterId) {
     return { success: false, error: 'User does not belong to this chapter.' }
   }
 
-  const { error } = await supabase.from('User').update({ role: 'member' }).eq('id', userId)
+  const { error } = await supabase.from('user').update({ role: 'member' }).eq('id', userId)
   if (error) {
     console.error('[admin/chapters] removeEditor error:', error)
     return { success: false, error: 'Failed to remove editor.' }
@@ -404,21 +404,21 @@ export async function removeEditor(userId: string, chapterId: string): Promise<A
 export async function getChapterStats(id: string) {
   const { supabase } = await requireAdmin()
   const now = new Date().toISOString()
-  const [{ count: members }, { count: publishedActiveEvents }, { count: totalEvents }] = await Promise.all([
+const [{ count: members }, { count: publishedActiveEvents }, { count: totalEvents }] = await Promise.all([
     supabase
-      .from('StudentProfile')
-      .select('userId', { count: 'exact', head: true })
-      .eq('chapterId', id),
+      .from('student_profile')
+      .select('user_id', { count: 'exact', head: true })
+      .eq('chapter_id', id),
     supabase
-      .from('Event')
+      .from('event')
       .select('id', { count: 'exact', head: true })
-      .eq('chapterId', id)
-      .eq('isPublished', true)
-      .gt('endAt', now),
+      .eq('chapter_id', id)
+      .eq('is_published', true)
+      .gt('end_at', now),
     supabase
-      .from('Event')
+      .from('event')
       .select('id', { count: 'exact', head: true })
-      .eq('chapterId', id),
+      .eq('chapter_id', id),
   ])
 
   return {

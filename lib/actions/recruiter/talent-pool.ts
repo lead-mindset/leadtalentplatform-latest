@@ -25,12 +25,12 @@ export type TalentPoolStudent = {
   graduationYear: number | null
   major: string | null
   skills: string[]
-  updatedAt: string
+  updated_at: string
 }
 
 type TalentPoolProfileRow = Pick<
   StudentProfileRow,
-  'graduationYear' | 'major' | 'skills' | 'updatedAt'
+  'graduation_year' | 'major' | 'skills' | 'updated_at'
 > & {
   Chapter: Pick<ChapterRow, 'name' | 'university'> | Pick<ChapterRow, 'name' | 'university'>[] | null
 }
@@ -63,10 +63,10 @@ function mapTalentPoolRow(row: TalentPoolRow): TalentPoolStudent | null {
           university: chapter.university,
         }
       : null,
-    graduationYear: profile.graduationYear ?? null,
+    graduation_year: profile.graduation_year ?? null,
     major: profile.major ?? null,
     skills: Array.isArray(profile.skills) ? profile.skills : [],
-    updatedAt: profile.updatedAt,
+    updated_at: profile.updated_at,
   }
 }
 
@@ -84,21 +84,21 @@ export async function getTalentPool(filters: TalentPoolFilters, pagination?: Tal
   const { page, pageSize, from, to } = parsePagination(pagination)
 
   let query = supabase
-    .from('User')
+    .from('user')
     .select(
       `
       id, name, email,
       StudentProfile!inner (
-        graduationYear, major, skills, updatedAt, chapterId, isRecruiterVisible, approvalStatus,
-        Chapter:Chapter!StudentProfile_chapterId_fkey (name, university)
-      )
-      `,
+graduation_year, major, skills, updated_at, chapter_id, is_recruiter_visible, approval_status,
+         Chapter:Chapter!StudentProfile_chapter_id_fkey (name, university)
+       )
+       `,
       { count: 'exact' }
     )
     .eq('role', 'member')
-    .eq('StudentProfile.isRecruiterVisible', true)
-    .eq('StudentProfile.approvalStatus', 'approved')
-    .order('updatedAt', { ascending: false, referencedTable: 'StudentProfile' })
+    .eq('StudentProfile.is_recruiter_visible', true)
+    .eq('StudentProfile.approval_status', 'approved')
+    .order('updated_at', { ascending: false, referencedTable: 'StudentProfile' })
     .range(from, to)
 
   if (filters.query?.trim()) {
@@ -106,11 +106,11 @@ export async function getTalentPool(filters: TalentPoolFilters, pagination?: Tal
   }
 
   if (filters.graduationYear) {
-    query = query.eq('StudentProfile.graduationYear', filters.graduationYear)
+    query = query.eq('StudentProfile.graduation_year', filters.graduationYear)
   }
 
   if (filters.chapterId) {
-    query = query.eq('StudentProfile.chapterId', filters.chapterId)
+    query = query.eq('StudentProfile.chapter_id', filters.chapterId)
   }
 
   if (filters.skills && filters.skills.length > 0) {
@@ -167,24 +167,24 @@ export async function getSavedStudents(filters: TalentPoolFilters, pagination?: 
   const { page, pageSize, from, to } = parsePagination(pagination)
 
   let query = supabase
-    .from('SavedStudent')
+    .from('saved_student')
     .select(
       `
-      studentId,
-      Student:User!SavedStudent_studentId_fkey (
+      student_id,
+      Student:User!SavedStudent_student_id_fkey (
         id, name, email,
         StudentProfile!inner (
-          graduationYear, major, skills, updatedAt, chapterId, isRecruiterVisible, approvalStatus,
-          Chapter:Chapter!StudentProfile_chapterId_fkey (name, university)
+          graduation_year, major, skills, updated_at, chapter_id, is_recruiter_visible, approval_status,
+          Chapter:Chapter!StudentProfile_chapter_id_fkey (name, university)
         )
       )
       `,
       { count: 'exact' }
     )
-    .eq('recruiterId', authUser.id)
-    .eq('Student.StudentProfile.isRecruiterVisible', true)
-    .eq('Student.StudentProfile.approvalStatus', 'approved')
-    .order('savedAt', { ascending: false })
+    .eq('recruiter_id', authUser.id)
+    .eq('Student.StudentProfile.is_recruiter_visible', true)
+    .eq('Student.StudentProfile.approval_status', 'approved')
+    .order('saved_at', { ascending: false })
     .range(from, to)
 
   if (filters.query?.trim()) {
@@ -192,11 +192,11 @@ export async function getSavedStudents(filters: TalentPoolFilters, pagination?: 
   }
 
   if (filters.graduationYear) {
-    query = query.eq('Student.StudentProfile.graduationYear', filters.graduationYear)
+    query = query.eq('Student.StudentProfile.graduation_year', filters.graduationYear)
   }
 
   if (filters.chapterId) {
-    query = query.eq('Student.StudentProfile.chapterId', filters.chapterId)
+    query = query.eq('Student.StudentProfile.chapter_id', filters.chapterId)
   }
 
   if (filters.skills && filters.skills.length > 0) {
@@ -239,15 +239,15 @@ export async function getSavedStudents(filters: TalentPoolFilters, pagination?: 
 export async function getTalentPoolFilterOptions() {
   const supabase = await createClient()
   const { data, error } = await supabase
-    .from('StudentProfile')
+    .from('student_profile')
     .select(
       `
-      graduationYear, chapterId,
-      Chapter:Chapter!StudentProfile_chapterId_fkey (id, name)
+      graduation_year, chapter_id,
+      Chapter:Chapter!StudentProfile_chapter_id_fkey (id, name)
       `
     )
-    .eq('isRecruiterVisible', true)
-    .eq('approvalStatus', 'approved')
+    .eq('is_recruiter_visible', true)
+    .eq('approval_status', 'approved')
 
   if (error) {
     console.error('[recruiter/talent-pool] getTalentPoolFilterOptions error:', error)
@@ -256,7 +256,7 @@ export async function getTalentPoolFilterOptions() {
 
   const filterRows = (data ?? []) as TalentPoolFilterRow[]
   const years = Array.from(
-    new Set(filterRows.map((row) => row.graduationYear).filter((year): year is number => !!year))
+    new Set(filterRows.map((row) => row.graduation_year).filter((year): year is number => !!year))
   ).sort((a, b) => a - b)
 
   const chaptersById = new Map<string, { id: string; name: string }>()
@@ -280,17 +280,17 @@ export async function getSavedStatus(studentIds: string[]) {
   if (!authUser || studentIds.length === 0) return []
 
   const { data, error } = await supabase
-    .from('SavedStudent')
-    .select('studentId')
-    .eq('recruiterId', authUser.id)
-    .in('studentId', studentIds)
+    .from('saved_student')
+    .select('student_id')
+    .eq('recruiter_id', authUser.id)
+    .in('student_id', studentIds)
 
   if (error) {
     console.error('[recruiter/talent-pool] getSavedStatus error:', error)
     return []
   }
 
-  return (data ?? []).map((row: { studentId: string }) => row.studentId)
+  return (data ?? []).map((row: { student_id: string }) => row.student_id)
 }
 
 export async function saveStudent(studentId: string, notes?: string) {

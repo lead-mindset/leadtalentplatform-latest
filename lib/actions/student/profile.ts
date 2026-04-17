@@ -11,11 +11,11 @@ export async function getProfileData() {
   const supabase = createServiceClient()
 
   const { data: profileData, error: profileError } = await supabase
-    .from("StudentProfile")
+    .from("student_profile")
     .select(
-      "userId, chapterId, major, graduationYear, skills, linkedinUrl, consentRecruiterVisibility, emailNotificationsEnabled, gender, memberId, approvalStatus"
+      "user_id, chapter_id, major, graduation_year, skills, linkedin_url, consent_recruiter_visibility, email_notifications_enabled, gender, member_id, approval_status"
     )
-    .eq("userId", user.id)
+    .eq("user_id", user.id)
     .single()
 
   if (profileError) {
@@ -27,13 +27,13 @@ export async function getProfileData() {
     full_name: user.name,
     phone: user.phone || '',
     gender: profileData.gender ?? undefined,
-    lead_chapter: profileData.chapterId || '',
+    lead_chapter: profileData.chapter_id || '',
     career: profileData.major || '',
-    graduationYear: profileData.graduationYear || 0,
+    graduation_year: profileData.graduation_year || 0,
     skills: profileData.skills || [],
-    linkedin_url: profileData.linkedinUrl || '',
-    consentRecruiterVisibility: profileData.consentRecruiterVisibility || false,
-    emailNotificationsEnabled: profileData.emailNotificationsEnabled ?? true,
+    linkedin_url: profileData.linkedin_url || '',
+    consent_recruiter_visibility: profileData.consent_recruiter_visibility || false,
+    email_notifications_enabled: profileData.email_notifications_enabled ?? true,
 
   }
 }
@@ -43,10 +43,10 @@ export async function getCurrentUserResume() {
     const { supabase, user } = await requireUser()
 
     const { data, error } = await supabase
-      .from("Resume")
-      .select("id, studentId, fileUrl, fileName, fileSize, uploadedAt")
-      .eq("studentId", user.id)
-      .order("uploadedAt", { ascending: false })
+      .from("resume")
+      .select("id, student_id, file_url, file_name, file_size, uploaded_at")
+      .eq("student_id", user.id)
+      .order("uploaded_at", { ascending: false })
       .limit(1)
       .single()
 
@@ -81,11 +81,11 @@ export async function updateProfile(formData: FormData) {
       gender: formData.get("gender")?.toString() || undefined,
       lead_chapter: formData.get("lead_chapter")?.toString() || "",
       career: formData.get("career")?.toString() || "",
-      graduationYear: Number(formData.get("graduationYear") ?? 0),
+      graduation_year: Number(formData.get("graduation_year") ?? 0),
       skills: JSON.parse(formData.get("skills")?.toString() || "[]"),
       linkedin_url: formData.get("linkedin_url")?.toString() || "",
-      consentRecruiterVisibility: formData.get("consentRecruiterVisibility") === "true",
-      emailNotificationsEnabled: formData.get("emailNotificationsEnabled") === "true",
+      consent_recruiter_visibility: formData.get("consent_recruiter_visibility") === "true",
+      email_notifications_enabled: formData.get("email_notifications_enabled") === "true",
 
       resume_pdf: resume || undefined,
     }
@@ -105,11 +105,11 @@ export async function updateProfile(formData: FormData) {
     const now = new Date().toISOString()
 
     const { error: userUpdateError } = await supabase
-      .from("User")
+      .from("user")
       .update({
         name: data.full_name,
         phone: data.phone,
-        updatedAt: now,
+        updated_at: now,
       })
       .eq("id", user.id)
 
@@ -119,22 +119,22 @@ export async function updateProfile(formData: FormData) {
     }
 
     const { error: profileError } = await supabase
-      .from("StudentProfile")
+      .from("student_profile")
       .upsert(
         {
-          userId: user.id,
+          user_id: user.id,
           major: data.career,
           gender: data.gender,
-          graduationYear: data.graduationYear,
+          graduation_year: data.graduation_year,
           skills: data.skills,
-          linkedinUrl: data.linkedin_url,
-          consentRecruiterVisibility: data.consentRecruiterVisibility,
-          consentDate: data.consentRecruiterVisibility ? now : null,
-          emailNotificationsEnabled: data.emailNotificationsEnabled,
-          updatedAt: now,
-          chapterId: data.lead_chapter,
+          linkedin_url: data.linkedin_url,
+          consent_recruiter_visibility: data.consent_recruiter_visibility,
+          consent_date: data.consent_recruiter_visibility ? now : null,
+          email_notifications_enabled: data.email_notifications_enabled,
+          updated_at: now,
+          chapter_id: data.lead_chapter,
         },
-        { onConflict: "userId" }
+        { onConflict: "user_id" }
       )
 
     if (profileError) {
@@ -170,16 +170,16 @@ export async function updateProfile(formData: FormData) {
         .getPublicUrl(filePath)
 
       const { error: resumeInsertError } = await supabase
-        .from("Resume")
+        .from("resume")
         .upsert(
           {
-            studentId: user.id,
-            fileUrl: publicUrl,
-            fileName: data.resume_pdf.name,
-            fileSize: data.resume_pdf.size,
-            uploadedAt: now,
+            student_id: user.id,
+            file_url: publicUrl,
+            file_name: data.resume_pdf.name,
+            file_size: data.resume_pdf.size,
+            uploaded_at: now,
           },
-          { onConflict: 'studentId' }
+          { onConflict: 'student_id' }
         )
 
       if (resumeInsertError) {

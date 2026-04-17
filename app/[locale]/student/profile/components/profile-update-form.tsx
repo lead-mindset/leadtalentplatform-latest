@@ -4,6 +4,7 @@ import { useForm, FormProvider, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useState, useEffect } from 'react'
+import { X } from 'lucide-react'
 import { Icons } from '@/components/ui/icons'
 import { toast } from 'sonner'
 import { Checkbox } from "@/components/ui/checkbox"
@@ -58,13 +59,13 @@ export default function ProfileUpdateForm({
       phone: initialData?.phone || '',
       career: initialData?.career || '',
       gender: initialData?.gender ?? undefined,
-      graduationYear: initialData?.graduationYear || 0,
+      graduation_year: initialData?.graduation_year || 0,
       skills: initialData?.skills || [],
       lead_chapter: initialData?.lead_chapter || '',
       linkedin_url: initialData?.linkedin_url || '',
       resume_pdf: undefined,
-      consentRecruiterVisibility: initialData?.consentRecruiterVisibility || false,
-      emailNotificationsEnabled: initialData?.emailNotificationsEnabled ?? true,
+      consent_recruiter_visibility: initialData?.consent_recruiter_visibility || false,
+      email_notifications_enabled: initialData?.email_notifications_enabled ?? true,
 
     },
   })
@@ -82,13 +83,13 @@ export default function ProfileUpdateForm({
       phone: initialData?.phone || '',
       career: initialData?.career || '',
       gender: initialData?.gender ?? undefined,
-      graduationYear: initialData?.graduationYear || 0,
+      graduation_year: initialData?.graduation_year || 0,
       skills: initialData?.skills || [],
       lead_chapter: initialData?.lead_chapter || '',
       linkedin_url: initialData?.linkedin_url || '',
       resume_pdf: undefined,
-      consentRecruiterVisibility: initialData?.consentRecruiterVisibility || false,
-      emailNotificationsEnabled: initialData?.emailNotificationsEnabled ?? true,
+      consent_recruiter_visibility: initialData?.consent_recruiter_visibility || false,
+      email_notifications_enabled: initialData?.email_notifications_enabled ?? true,
     })
   }, [initialData, reset])
 
@@ -132,7 +133,7 @@ export default function ProfileUpdateForm({
   return (
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-12">
-        {initialData.approvalStatus === 'approved' && initialData.memberId ? (
+        {initialData.approval_status === 'approved' && initialData.member_id ? (
           <div className="rounded-lg bg-primary/5 border border-primary/10 p-4">
             <div className="flex items-center gap-2 mb-2">
               <Icons.IdCard className="h-4 w-4 text-primary" />
@@ -140,12 +141,12 @@ export default function ProfileUpdateForm({
             </div>
             <div className="flex items-center gap-2">
               <code className="px-3 py-1.5 bg-background rounded-md border border-border text-lg font-mono font-semibold text-primary">
-                {initialData.memberId}
+                {initialData.member_id}
               </code>
             </div>
             <p className="text-xs text-muted-foreground mt-2">This is your unique identifier as a LEAD member</p>
           </div>
-        ) : initialData.approvalStatus === 'pending' && (
+        ) : initialData.approval_status === 'pending' && (
           <div className="rounded-lg bg-muted p-4">
             <p className="text-sm text-muted-foreground">
               Member ID assigned after your application is reviewed.

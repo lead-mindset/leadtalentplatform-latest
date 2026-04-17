@@ -36,7 +36,7 @@ async function NavbarContent() {
 
   if (authUser) {
     const { data: dbUser } = await supabase
-      .from("User")
+      .from("user")
       .select("role, name")
       .eq("id", authUser.id)
       .single();

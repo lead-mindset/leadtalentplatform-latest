@@ -49,7 +49,7 @@ function EventRegistrationCard({
           <div className="flex-1">
             <CardTitle className="text-base">{event?.title ?? 'Event'}</CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">
-              {event?.startAt ? formatDateTime(event.startAt) : ''}
+              {event?.start_at ? formatDateTime(event.start_at) : ''}
             </p>
             {event?.location ? (
               <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
@@ -94,9 +94,9 @@ function EventRegistrationCard({
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <Button asChild variant="outline" className="w-full sm:flex-1">
-            <Link href={`/events/${registration.eventId}`}>Event details</Link>
+            <Link href={`/events/${registration.event_id}`}>Event details</Link>
           </Button>
-          {registration.status === 'registered' && !registration.checkedInAt ? (
+          {registration.status === 'registered' && !registration.checked_in_at ? (
             <CancelRegistrationDialog
               registrationId={registration.id}
               eventTitle={event?.title ?? 'this event'}
@@ -119,11 +119,11 @@ export default async function StudentEventsPage({
 
   const qrEntries = await Promise.all(
     registrations.map(async (registration) => {
-      if (registration.status !== 'registered' || !registration.qrToken) {
+      if (registration.status !== 'registered' || !registration.qr_token) {
         return [registration.id, null] as const
       }
 
-      const qrDataUrl = await QRCode.toDataURL(registration.qrToken, {
+      const qrDataUrl = await QRCode.toDataURL(registration.qr_token, {
         margin: 1,
         width: 240,
       })
@@ -137,8 +137,8 @@ export default async function StudentEventsPage({
   const upcomingRegistrations = registrations.filter(
     (registration) =>
       (registration.status === 'registered' || registration.status === 'attended') &&
-      registration.Event?.startAt &&
-      new Date(registration.Event.startAt) > new Date()
+      registration.Event?.start_at &&
+      new Date(registration.Event.start_at) > new Date()
   )
 
   const pendingRegistrations = registrations.filter(
@@ -148,8 +148,8 @@ export default async function StudentEventsPage({
   const pastRegistrations = registrations.filter(
     (registration) =>
       (registration.status === 'attended' || registration.status === 'rejected') &&
-      registration.Event?.startAt &&
-      new Date(registration.Event.startAt) < new Date()
+      registration.Event?.start_at &&
+      new Date(registration.Event.start_at) < new Date()
   )
 
   const cancelledRegistrations = registrations.filter(
@@ -224,7 +224,7 @@ export default async function StudentEventsPage({
               {upcomingRegistrations.map((registration) => (
                 <div
                   key={registration.id}
-                  id={`event-reg-${registration.eventId}`}
+                  id={`event-reg-${registration.event_id}`}
                   className="scroll-mt-24"
                 >
                   <EventRegistrationCard

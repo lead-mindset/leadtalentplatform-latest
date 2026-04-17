@@ -45,23 +45,23 @@ export async function bulkApproveApplications(eventId: string, applicationIds: s
     : null
 
   const registrations = await supabase
-    .from('EventRegistration')
+    .from('event_registration')
     .select(`
     id,
-    Applicant:userId!eventregistration_userid_fkey (
+    Applicant:user_id!eventregistration_userid_fkey (
       email,
       name
     ),
-    CheckedInBy:checkedInById!eventregistration_checkedinbyid_fkey (
+    CheckedInBy:checked_in_by_id!eventregistration_checkedinbyid_fkey (
       email,
       name
     ),
-    Event:eventId!EventRegistration_eventId_fkey (
+    Event:event_id!event_registration_event_id_fkey (
       title,
-      startAt,
+      start_at,
       location,
-      meetingUrl,
-      eventType
+      meeting_url,
+      event_type
     )
   `)
     .in('id', applicationIds)
@@ -106,13 +106,13 @@ export async function bulkRejectApplications(eventId: string, applicationIds: st
   const { supabase } = access
 
   const { error } = await supabase
-    .from('EventRegistration')
+    .from('event_registration')
     .update({
       status: 'rejected',
-      qrToken: undefined
+      qr_token: undefined
     })
     .in('id', applicationIds)
-    .eq('eventId', eventId)
+    .eq('event_id', eventId)
     .eq('status', 'pending_review')
 
   if (error) {
@@ -121,7 +121,7 @@ export async function bulkRejectApplications(eventId: string, applicationIds: st
   }
 
   const { data: registrations } = await supabase
-    .from('EventRegistration')
+    .from('event_registration')
     .select(`
       id,
       User:userId!eventregistration_userid_fkey (email, name),

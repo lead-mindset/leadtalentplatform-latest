@@ -23,7 +23,7 @@ function getInitials(name: string) {
 }
 
 export function StudentCard({ student, isSaved, profileHref, onSavedChange }: StudentCardProps) {
-  const updatedLabel = new Date(student.updatedAt).toLocaleDateString()
+  const updatedLabel = new Date(student.updated_at).toLocaleDateString()
 
   return (
     <Card>

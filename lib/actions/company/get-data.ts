@@ -13,24 +13,24 @@ import type {
 
 // Shared select string — keeps both query functions consistent
 const STUDENT_SELECT = `
-  id, email, name, phone, createdAt,
-  StudentProfile!StudentProfile_userId_fkey (
-    major, graduationYear, linkedinUrl, skills,
-    isRecruiterVisible, isFilled, updatedAt, chapterId,
-    Chapter:Chapter!StudentProfile_chapterId_fkey (
+  id, email, name, phone, created_at,
+  StudentProfile!StudentProfile_user_id_fkey (
+    major, graduation_year, linkedin_url, skills,
+    is_recruiter_visible, is_filled, updated_at, chapter_id,
+    Chapter:Chapter!StudentProfile_chapter_id_fkey (
       name, university, city, region
     )
   )
 `
 
 type StudentProfileRecruiterRow = Pick<
-  StudentProfileRow,
-  'major' | 'graduationYear' | 'linkedinUrl' | 'skills' | 'isRecruiterVisible' | 'isFilled' | 'updatedAt' | 'chapterId'
+StudentProfileRow,
+  'major' | 'graduation_year' | 'linkedin_url' | 'skills' | 'is_recruiter_visible' | 'is_filled' | 'updated_at' | 'chapter_id'
 > & {
   Chapter: Pick<ChapterRow, 'name' | 'university' | 'city' | 'region'> | Pick<ChapterRow, 'name' | 'university' | 'city' | 'region'>[] | null
 }
 
-type RecruiterStudentRow = Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'createdAt'> & {
+type RecruiterStudentRow = Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'created_at'> & {
   StudentProfile: StudentProfileRecruiterRow | StudentProfileRecruiterRow[] | null
 }
 
@@ -54,17 +54,17 @@ function mapStudentRow(user: RecruiterStudentRow): StudentForRecruiter | null {
     email: user.email,
     name: user.name,
     phone: user.phone,
-    createdAt: user.createdAt,
+    created_at: user.created_at,
     Chapter: chapter ?? null,
     StudentProfile: {
       major: profile.major,
-      graduationYear: profile.graduationYear,
-      linkedinUrl: profile.linkedinUrl,
+      graduation_year: profile.graduation_year,
+      linkedin_url: profile.linkedin_url,
       skills: profile.skills,
-      isRecruiterVisible: profile.isRecruiterVisible,
-      isFilled: profile.isFilled,
-      updatedAt: profile.updatedAt,
-      chapterId: profile.chapterId,
+      is_recruiter_visible: profile.is_recruiter_visible,
+      is_filled: profile.is_filled,
+      updated_at: profile.updated_at,
+      chapter_id: profile.chapter_id,
     },
   }
 }
@@ -77,12 +77,12 @@ export async function getVisibleStudents(
   supabase: SupabaseClient<Database>
 ): Promise<StudentForRecruiter[]> {
   const { data, error } = await supabase
-    .from('User')
+    .from('user')
     .select(STUDENT_SELECT)
     .eq('role', 'member')
-    .eq('StudentProfile.isRecruiterVisible', true)
-    .eq('StudentProfile.isFilled', true)
-    .order('createdAt', { ascending: false })
+    .eq('StudentProfile.is_recruiter_visible', true)
+    .eq('StudentProfile.is_filled', true)
+.order('created_at', { ascending: false })
 
   if (error) {
     console.error('[getVisibleStudents] Error:', error)
@@ -95,8 +95,8 @@ export async function getVisibleStudents(
     .map(mapStudentRow)
     .filter((s): s is StudentForRecruiter =>
       s !== null &&
-      s.StudentProfile?.isRecruiterVisible === true &&
-      s.StudentProfile?.isFilled === true
+      s.StudentProfile?.is_recruiter_visible === true &&
+      s.StudentProfile?.is_filled === true
     )
 }
 
@@ -108,12 +108,12 @@ export async function getStudentById(
   studentId: string
 ): Promise<StudentForRecruiter | null> {
   const { data, error } = await supabase
-    .from('User')
-    .select(STUDENT_SELECT)
+    .from('user')
+.select(STUDENT_SELECT)
     .eq('id', studentId)
     .eq('role', 'member')
-    .eq('StudentProfile.isRecruiterVisible', true)
-    .eq('StudentProfile.isFilled', true)
+    .eq('StudentProfile.is_recruiter_visible', true)
+    .eq('StudentProfile.is_filled', true)
     .single()
 
   if (error) {
@@ -127,8 +127,8 @@ export async function getStudentById(
 
   if (
     !student ||
-    student.StudentProfile?.isRecruiterVisible !== true ||
-    student.StudentProfile?.isFilled !== true
+    student.StudentProfile?.is_recruiter_visible !== true ||
+    student.StudentProfile?.is_filled !== true
   ) {
     return null
   }
@@ -144,22 +144,22 @@ export async function getSavedStudents(
   userId: string
 ): Promise<SavedStudent[]> {
   const { data, error } = await supabase
-    .from('SavedStudent')
+    .from('saved_student')
     .select(`
-      id, recruiterId, studentId, savedAt, notes,
-      Student:User!SavedStudent_studentId_fkey (
-        id, email, name, phone, createdAt,
-        StudentProfile!StudentProfile_userId_fkey (
-          major, graduationYear, linkedinUrl, skills,
-          isRecruiterVisible, isFilled, updatedAt, chapterId,
-          Chapter:Chapter!StudentProfile_chapterId_fkey (
+      id, recruiter_id, student_id, saved_at, notes,
+      Student:User!SavedStudent_student_id_fkey (
+        id, email, name, phone, created_at,
+        StudentProfile!StudentProfile_user_id_fkey (
+          major, graduation_year, linkedin_url, skills,
+          is_recruiter_visible, is_filled, updated_at, chapter_id,
+          Chapter:Chapter!StudentProfile_chapter_id_fkey (
             name, university, city, region
           )
         )
       )
     `)
-    .eq('recruiterId', userId)
-    .order('savedAt', { ascending: false })
+    .eq('recruiter_id', userId)
+    .order('saved_at', { ascending: false })
 
   if (error) {
     console.error('[getSavedStudents] Error:', error)
@@ -192,27 +192,27 @@ export async function getSavedStudents(
 
     return {
       id: saved.id,
-      recruiterId: saved.recruiterId,
-      studentId: saved.studentId,
-      savedAt: saved.savedAt,
+recruiter_id: saved.recruiter_id,
+      student_id: saved.student_id,
+      saved_at: saved.saved_at,
       notes: saved.notes,
       Student: {
         id: studentData.id,
         email: studentData.email,
         name: studentData.name,
         phone: studentData.phone,
-        createdAt: studentData.createdAt,
+        created_at: studentData.created_at,
         Chapter: chapter ?? null,
         StudentProfile: profile
           ? {
               major: profile.major,
-              graduationYear: profile.graduationYear,
-              linkedinUrl: profile.linkedinUrl,
+              graduation_year: profile.graduation_year,
+              linkedin_url: profile.linkedin_url,
               skills: profile.skills,
-              isRecruiterVisible: profile.isRecruiterVisible,
-              isFilled: profile.isFilled,
-              updatedAt: profile.updatedAt,
-              chapterId: profile.chapterId,
+              is_recruiter_visible: profile.is_recruiter_visible,
+              is_filled: profile.is_filled,
+              updated_at: profile.updated_at,
+              chapter_id: profile.chapter_id,
             }
           : null,
       },
@@ -229,16 +229,16 @@ export async function getSavedStudentIds(
   userId: string
 ): Promise<string[]> {
   const { data, error } = await supabase
-    .from('SavedStudent')
-    .select('studentId')
-    .eq('recruiterId', userId)
+    .from('saved_student')
+    .select('student_id')
+    .eq('recruiter_id', userId)
 
   if (error) {
     console.error('[getSavedStudentIds] Error:', error)
     return []
   }
 
-  return (data ?? []).map((row: Pick<SavedStudentRow, 'studentId'>) => row.studentId)
+  return (data ?? []).map((row: Pick<SavedStudentRow, 'student_id'>) => row.student_id)
 }
 
 /**
@@ -250,10 +250,10 @@ export async function getCompanyStats(
 ): Promise<CompanyStats> {
   const [{ count: totalStudents }, savedStudents] = await Promise.all([
     supabase
-      .from('StudentProfile')
-      .select('userId', { count: 'exact', head: true })
-      .eq('isRecruiterVisible', true)
-      .eq('isFilled', true),
+.from('student_profile')
+      .select('user_id', { count: 'exact', head: true })
+      .eq('is_recruiter_visible', true)
+      .eq('is_filled', true),
     getSavedStudents(supabase, userId),
   ])
 
@@ -278,12 +278,12 @@ export async function searchStudents(
   }
 ): Promise<StudentForRecruiter[]> {
   let query = supabase
-    .from('User')
+    .from('user')
     .select(STUDENT_SELECT)
     .eq('role', 'member')
-    .eq('StudentProfile.isRecruiterVisible', true)
-    .eq('StudentProfile.isFilled', true)
-    .order('createdAt', { ascending: false })
+    .eq('StudentProfile.is_recruiter_visible', true)
+    .eq('StudentProfile.is_filled', true)
+.order('created_at', { ascending: false })
 
   // Name/email search pushed to DB
   if (filters.query) {
@@ -296,12 +296,12 @@ export async function searchStudents(
     query = query.ilike('StudentProfile.major', `%${filters.major.trim()}%`)
   }
 
-  if (filters.graduationYear) {
-    query = query.eq('StudentProfile.graduationYear', filters.graduationYear)
+if (filters.graduationYear) {
+    query = query.eq('StudentProfile.graduation_year', filters.graduationYear)
   }
 
   if (filters.chapterId) {
-    query = query.eq('StudentProfile.chapterId', filters.chapterId)
+    query = query.eq('StudentProfile.chapter_id', filters.chapterId)
   }
 
   const { data, error } = await query
@@ -317,8 +317,8 @@ export async function searchStudents(
     .map(mapStudentRow)
     .filter((s): s is StudentForRecruiter =>
       s !== null &&
-      s.StudentProfile?.isRecruiterVisible === true &&
-      s.StudentProfile?.isFilled === true
+s.StudentProfile?.is_recruiter_visible === true &&
+      s.StudentProfile?.is_filled === true
     )
 }
 
@@ -333,10 +333,10 @@ export async function toggleSaveStudent(
   }
 
   const { data: existing, error: checkError } = await supabase
-    .from('SavedStudent')
+    .from('saved_student')
     .select('id')
-    .eq('recruiterId', userId)
-    .eq('studentId', studentId)
+    .eq('recruiter_id', userId)
+    .eq('student_id', studentId)
     .maybeSingle()
 
   if (checkError) {
@@ -346,7 +346,7 @@ export async function toggleSaveStudent(
 
   if (existing) {
     const { error: deleteError } = await supabase
-      .from('SavedStudent')
+      .from('saved_student')
       .delete()
       .eq('id', existing.id)
 
@@ -357,11 +357,11 @@ export async function toggleSaveStudent(
     return { success: true, isSaved: false }
   } else {
     const { error: insertError } = await supabase
-      .from('SavedStudent')
+      .from('saved_student')
       .insert({
-        recruiterId: userId,
-        studentId,
-        savedAt: new Date().toISOString(),
+        recruiter_id: userId,
+        student_id,
+        saved_at: new Date().toISOString(),
         notes: null,
       })
 
@@ -379,10 +379,10 @@ export async function isStudentSaved(
   studentId: string
 ): Promise<boolean> {
   const { data, error } = await supabase
-    .from('SavedStudent')
+    .from('saved_student')
     .select('id')
-    .eq('recruiterId', userId)
-    .eq('studentId', studentId)
+    .eq('recruiter_id', userId)
+    .eq('student_id', studentId)
     .maybeSingle()
 
   if (error) {

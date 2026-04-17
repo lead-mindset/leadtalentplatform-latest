@@ -3,11 +3,11 @@
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
 import { requireUser } from '@/lib/auth'
-import { getEditorChapterId } from './get-data'
+import { requireChapterMember } from '@/lib/auth'
 import type { EventRow, EventType } from '@/lib/types'
 
 const EVENT_MUTATION_SELECT =
-  'id, title, description, coverImage, startAt, endAt, location, meetingUrl, eventType, capacity, isPublished, chapterId, createdById, createdAt, updatedAt, accessModel, applicationFormUrl'
+  'id, title, description, cover_image, start_at, end_at, location, meeting_url, event_type, capacity, is_published, chapter_id, created_by_id, created_at, updated_at, access_model, application_form_url'
 
 function sanitizeRichTextHtml(input: string): string {
   return input
@@ -46,14 +46,14 @@ export async function updateEvent(input: UpdateEventInput): Promise<UpdateEventR
   if (!parsed.success) return { error: 'Validation failed' }
 
   const { supabase, user } = await requireUser()
-  const chapterId = await getEditorChapterId()
+  const { chapterId } = await requireChapterMember()
 
   if (!chapterId) {
     return { error: 'No chapter assigned' }
   }
 
   const { data: existing, error: fetchError } = await supabase
-    .from('Event')
+    .from('event')
     .select(EVENT_MUTATION_SELECT)
     .eq('id', parsed.data.id)
     .maybeSingle<EventRow>()
@@ -62,15 +62,15 @@ export async function updateEvent(input: UpdateEventInput): Promise<UpdateEventR
     return { error: 'Event not found' }
   }
 
-  const isOwner = existing.chapterId === chapterId
+  const isOwner = existing.chapter_id === chapterId
 
   let isCollaborator = false
   if (!isOwner) {
     const { data: collaboration, error: collabError } = await (supabase as any)
-      .from('EventChapter')
+      .from('event_chapter')
       .select('id')
-      .eq('eventId', existing.id)
-      .eq('chapterId', chapterId)
+      .eq('event_id', existing.id)
+      .eq('chapter_id', chapterId)
       .maybeSingle()
     
     isCollaborator = !collabError && collaboration !== null
@@ -80,15 +80,15 @@ export async function updateEvent(input: UpdateEventInput): Promise<UpdateEventR
     return { error: 'Insufficient permissions' }
   }
 
-  if (user.role === 'editor' && parsed.data.chapterId !== undefined && parsed.data.chapterId !== existing.chapterId) {
+  if (user.role === 'editor' && parsed.data.chapterId !== undefined && parsed.data.chapterId !== existing.chapter_id) {
     return { error: 'Editors cannot change chapter' }
   }
 
   const { data: event, error } = await supabase
-    .from('Event')
+    .from('event')
     .update({
       ...parsed.data,
-      updatedAt: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     })
     .eq('id', existing.id)
     .select(EVENT_MUTATION_SELECT)

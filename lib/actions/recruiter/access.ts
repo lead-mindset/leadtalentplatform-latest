@@ -40,9 +40,9 @@ export async function validateInviteToken(token: string): Promise<TokenValidatio
 
   const supabase = await createClient()
   const { data, error } = await supabase
-    .from('RecruiterAccess')
-    .select('id, recruiterEmail, acceptedAt, acceptedByUserId, inviteExpiresAt, revokedAt, companyId')
-    .eq('inviteToken', normalized)
+    .from('recruiter_access')
+    .select('id, recruiter_email, accepted_at, accepted_by_user_id, invite_expires_at, revoked_at, company_id')
+    .eq('invite_token', normalized)
     .maybeSingle()
 
   if (error || !data) {
@@ -74,12 +74,12 @@ export async function validateInviteToken(token: string): Promise<TokenValidatio
     valid: true,
     access: {
       id: data.id,
-      recruiterEmail: data.recruiterEmail,
-      acceptedAt: data.acceptedAt,
-      acceptedByUserId: data.acceptedByUserId,
-      inviteExpiresAt: data.inviteExpiresAt,
-      revokedAt: data.revokedAt,
-      companyId: data.companyId,
+      recruiter_email: data.recruiter_email,
+      accepted_at: data.accepted_at,
+      accepted_by_user_id: data.accepted_by_user_id,
+      invite_expires_at: data.invite_expires_at,
+      revoked_at: data.revoked_at,
+      company_id: data.company_id,
     },
   }
 }
@@ -100,26 +100,26 @@ export async function acceptInvite(token: string, userId: string): Promise<Accep
   }
 
   const authEmail = auth.user.email?.toLowerCase() ?? ''
-  const invitedEmail = validation.access.recruiterEmail.toLowerCase()
+  const invitedEmail = validation.access.recruiter_email.toLowerCase()
   if (authEmail !== invitedEmail) {
     return {
       success: false,
-      error: `This invite was sent to ${validation.access.recruiterEmail}. Please sign in with that email address.`,
+      error: `This invite was sent to ${validation.access.recruiter_email}. Please sign in with that email address.`,
     }
   }
 
-  if (validation.access.acceptedAt) {
+  if (validation.access.accepted_at) {
     return { success: true }
   }
 
   const now = new Date().toISOString()
 
   const { error: updateInviteError } = await supabase
-    .from('RecruiterAccess')
-    .update({
-      acceptedAt: now,
-      acceptedByUserId: parsed.data.userId,
-      isActive: true,
+    .from('recruiter_access')
+.update({
+      accepted_at: now,
+      accepted_by_user_id: parsed.data.user_id,
+      is_active: true,
     })
     .eq('id', validation.access.id)
 
@@ -129,7 +129,7 @@ export async function acceptInvite(token: string, userId: string): Promise<Accep
   }
 
   const { data: existingUser, error: existingUserError } = await supabase
-    .from('User')
+    .from('user')
     .select('id')
     .eq('id', parsed.data.userId)
     .maybeSingle()
@@ -141,8 +141,8 @@ export async function acceptInvite(token: string, userId: string): Promise<Accep
 
   if (existingUser) {
     const { error: roleError } = await supabase
-      .from('User')
-      .update({ role: 'recruiter', updatedAt: now })
+      .from('user')
+      .update({ role: 'recruiter', updated_at: now })
       .eq('id', parsed.data.userId)
 
     if (roleError) {
@@ -150,15 +150,15 @@ export async function acceptInvite(token: string, userId: string): Promise<Accep
       return { success: false, error: 'Failed to accept invite.' }
     }
   } else {
-    const { error: createUserError } = await supabase.from('User').insert({
+    const { error: createUserError } = await supabase.from('user').insert({
       id: parsed.data.userId,
       email: auth.user.email ?? validation.access.recruiterEmail,
       name: auth.user.user_metadata?.full_name ?? auth.user.user_metadata?.name ?? '',
       role: 'recruiter',
       phone: null,
-      createdAt: now,
-      updatedAt: now,
-      deactivatedAt: null,
+      created_at: now,
+      updated_at: now,
+      deactivated_at: null,
     })
     if (createUserError) {
       console.error('[recruiter/access] user insert error:', createUserError)

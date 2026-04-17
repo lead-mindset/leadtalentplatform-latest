@@ -28,7 +28,7 @@ export default async function CompanyManagePage({
           </Button>
           <h1 className="text-4xl font-bold tracking-tight">{resolvedCompany.name}</h1>
           <p className="text-muted-foreground mt-2">
-            Created {new Date(resolvedCompany.createdat).toLocaleDateString()} by {resolvedCompany.createdByName ?? 'Unknown'}
+            Created {new Date(resolvedCompany.created_at).toLocaleDateString()} by {resolvedCompany.createdByName ?? 'Unknown'}
           </p>
         </div>
       </div>

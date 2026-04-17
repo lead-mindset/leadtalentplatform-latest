@@ -104,7 +104,7 @@ export default async function CompanyDashboardPage() {
                       </p>
                     </div>
                     <Button asChild size="sm" variant="ghost">
-                      <Link href={`/company/students/${saved.studentId}`}>View</Link>
+                      <Link href={`/company/students/${saved.student_id}`}>View</Link>
                     </Button>
                   </div>
                 ))}

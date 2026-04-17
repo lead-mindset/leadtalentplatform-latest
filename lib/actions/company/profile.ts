@@ -27,16 +27,16 @@ export async function updateProfile(formData: {
   const userUpdates: {
     name?: string
     phone?: string
-    updatedAt: string
+    updated_at: string
   } = {
-    updatedAt: new Date().toISOString()
+    updated_at: new Date().toISOString()
   }
 
   if (parsed.data.name) userUpdates.name = parsed.data.name
   if (parsed.data.phone !== undefined) userUpdates.phone = parsed.data.phone
 
   const { error: userError } = await supabase
-    .from('User')
+    .from('user')
     .update(userUpdates)
     .eq('id', user.id)
 
@@ -55,24 +55,24 @@ export async function getRecruiterProfile() {
 
   type RecruiterAccessWithCompany = {
     id: string
-    companyId: string
-    isActive: boolean
-    acceptedAt: string | null
-    Company: { id: string; name: string; createdat: string; createdbyid: string }[]
+    company_id: string
+    is_active: boolean
+    accepted_at: string | null
+    Company: { id: string; name: string; created_at: string; created_by_id: string }[]
   }
 
   const { data: recruiterAccess, error: accessError } = await supabase
-    .from('RecruiterAccess')
+    .from('recruiter_access')
     .select(`
       id,
-      companyId,
-      isActive,
-      acceptedAt,
-      Company!inner (id, name, createdat, createdbyid)
+      company_id,
+      is_active,
+      accepted_at,
+      Company!inner (id, name, created_at, created_by_id)
     `)
-    .eq('acceptedByUserId', user.id)
-    .eq('isActive', true)
-    .is('revokedAt', null)
+    .eq('accepted_by_user_id', user.id)
+    .eq('is_active', true)
+    .is('revoked_at', null)
     .maybeSingle<RecruiterAccessWithCompany>()
 
   if (accessError) {
@@ -86,10 +86,10 @@ export async function getRecruiterProfile() {
     data: {
       user,
       company,
-      accessInfo: recruiterAccess ? {
-        accessId: recruiterAccess.id,
-        acceptedAt: recruiterAccess.acceptedAt,
-      } : null
+accessInfo: recruiterAccess ? {
+         access_id: recruiterAccess.id,
+         accepted_at: recruiterAccess.accepted_at,
+       } : null
     },
   }
 }
@@ -99,27 +99,27 @@ export async function getRecruiterCompanies() {
 
   type AccessWithCompany = {
     id: string
-    companyId: string
-    isActive: boolean
-    acceptedAt: string | null
-    grantedAt: string
-    revokedAt: string | null
-    Company: { id: string; name: string; createdat: string; createdbyid: string }[]
+    company_id: string
+    is_active: boolean
+    accepted_at: string | null
+    granted_at: string
+    revoked_at: string | null
+    Company: { id: string; name: string; created_at: string; created_by_id: string }[]
   }
 
   const { data: allAccess, error } = await supabase
-    .from('RecruiterAccess')
+    .from('recruiter_access')
     .select(`
       id,
-      companyId,
-      isActive,
-      acceptedAt,
-      grantedAt,
-      revokedAt,
-      Company!inner (id, name, createdat, createdbyid)
+      company_id,
+      is_active,
+      accepted_at,
+      granted_at,
+      revoked_at,
+      Company!inner (id, name, created_at, created_by_id)
     `)
-    .eq('acceptedByUserId', user.id)
-    .order('acceptedAt', { ascending: false })
+    .eq('accepted_by_user_id', user.id)
+    .order('accepted_at', { ascending: false })
 
   if (error) {
     return { success: false, error: 'Failed to fetch companies' }
@@ -127,19 +127,19 @@ export async function getRecruiterCompanies() {
 
   const companies = (allAccess as unknown as AccessWithCompany[]).map(access => ({
     accessId: access.id,
-    companyId: access.companyId,
+    companyId: access.company_id,
     companyName: access.Company[0]?.name ?? 'Unknown',
-    isActive: access.isActive,
-    acceptedAt: access.acceptedAt,
-    grantedAt: access.grantedAt,
-    revokedAt: access.revokedAt,
+    isActive: access.is_active,
+    accepted_at: access.accepted_at,
+    granted_at: access.granted_at,
+    revoked_at: access.revoked_at,
     company: access.Company[0] ?? null
   }))
 
   return {
     success: true,
     data: {
-      activeCompany: companies.find(c => c.isActive && !c.revokedAt) ?? null,
+      activeCompany: companies.find(c => c.isActive && !c.revoked_at) ?? null,
       allCompanies: companies
     }
   }

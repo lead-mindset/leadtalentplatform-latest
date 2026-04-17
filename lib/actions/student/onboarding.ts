@@ -43,11 +43,11 @@ export async function submitOnboarding(formData: FormData) {
             career: formData.get('career')?.toString() || '',
             lead_chapter: formData.get('lead_chapter')?.toString() || '',
             gender: formData.get('gender')?.toString() || '',
-            graduationYear: Number(formData.get('graduationYear')) || 0,
+            graduation_year: Number(formData.get('graduationYear')) || 0,
             skills: parseSkills(formData.get('skills')),
             linkedin_url: formData.get('linkedin_url')?.toString() || '',
-            consentRecruiterVisibility: formData.get('consentRecruiterVisibility') === 'true',
-            emailNotificationsEnabled: formData.get('emailNotificationsEnabled') === 'true',
+            consent_recruiter_visibility: formData.get('consentRecruiterVisibility') === 'true',
+            email_notifications_enabled: formData.get('emailNotificationsEnabled') === 'true',
         }
 
         const parsed = baseProfileSchema.safeParse(profileData)
@@ -60,13 +60,13 @@ export async function submitOnboarding(formData: FormData) {
 
         // Update User table
         const { error: userError } = await supabase
-            .from('User')
+            .from('user')
             .upsert({
                 id: user.id,
                 email: user.email,
                 name: data.full_name,
                 phone: data.phone,
-                updatedAt: now,
+                updated_at: now,
             })
             .eq('id', user.id)
 
@@ -75,7 +75,7 @@ export async function submitOnboarding(formData: FormData) {
         }
 
         const { data: existingUser, error: existingUserError } = await supabase
-            .from('User')
+            .from('user')
             .select('id')
             .eq('id', user.id)
             .single()
@@ -89,9 +89,9 @@ export async function submitOnboarding(formData: FormData) {
         }
 
         const { data: existingProfile, error: existingProfileError } = await supabase
-            .from('StudentProfile')
-            .select('memberId')
-            .eq('userId', user.id)
+            .from('student_profile')
+.select('member_id')
+    .eq('user_id', user.id)
             .maybeSingle()
 
         if (existingProfileError) {
@@ -101,21 +101,21 @@ export async function submitOnboarding(formData: FormData) {
         const memberId = existingProfile?.memberId ?? await generateUniqueMemberId(supabase)
 
         const { error: profileError } = await supabase
-            .from('StudentProfile')
+            .from('student_profile')
             .upsert({
-                userId: user.id,
+                user_id: user.id,
                 major: data.career,
                 gender: data.gender,
-                graduationYear: data.graduationYear,
-                linkedinUrl: data.linkedin_url,
+                graduation_year: data.graduationYear,
+                linkedin_url: data.linkedin_url,
                 skills: data.skills,
-                consentRecruiterVisibility: data.consentRecruiterVisibility,
-                consentDate: data.consentRecruiterVisibility ? now : null,
-                emailNotificationsEnabled: data.emailNotificationsEnabled,
-                updatedAt: now,
-                isFilled: true,
-                chapterId: data.lead_chapter,
-                memberId,
+                consent_recruiter_visibility: data.consent_recruiter_visibility,
+                consent_date: data.consent_recruiter_visibility ? now : null,
+                email_notifications_enabled: data.email_notifications_enabled,
+                updated_at: now,
+                is_filled: true,
+                chapter_id: data.lead_chapter,
+                member_id,
             })
 
         if (profileError) {
@@ -151,7 +151,7 @@ export async function submitOnboarding(formData: FormData) {
             const fileUrl = publicUrlData.publicUrl
 
             const { error: resumeDbError } = await supabase
-                .from("Resume")
+                .from("resume")
                 .upsert(
                     {
                         studentId: user.id,
@@ -169,7 +169,7 @@ export async function submitOnboarding(formData: FormData) {
         }
 
         const { data: chapterData, error: chapterError } = await supabase
-            .from('Chapter')
+            .from('chapter')
             .select('name')
             .eq('id', data.lead_chapter)
             .single()

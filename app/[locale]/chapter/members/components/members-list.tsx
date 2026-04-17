@@ -24,7 +24,7 @@ export function MembersList({
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const selectableMembers = useMemo(
-    () => members.filter((member) => member.StudentProfile?.approvalStatus === 'pending' && member.StudentProfile?.isFilled),
+    () => members.filter((member) => member.StudentProfile?.approval_status === 'pending' && member.StudentProfile?.is_filled),
     [members]
   )
 
@@ -95,7 +95,7 @@ export function MembersList({
             key={member.id}
             member={member}
             currentUserId={currentUserId}
-            showSelector={status === 'pending' && member.StudentProfile?.approvalStatus === 'pending' && member.StudentProfile?.isFilled}
+            showSelector={status === 'pending' && member.StudentProfile?.approval_status === 'pending' && member.StudentProfile?.is_filled}
             selected={selectedUserIds.includes(member.id)}
             onSelectChange={(checked) => onToggle(member.id, checked)}
           />

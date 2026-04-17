@@ -49,10 +49,10 @@ function capacityHint(
   return null
 }
 
-function getEventStatus(startAt: string, endAt: string): { status: string; message: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' } {
+function getEventStatus(start_at: string, end_at: string): { status: string; message: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' } {
   const now = Date.now()
-  const start = new Date(startAt).getTime()
-  const end = new Date(endAt).getTime()
+  const start = new Date(start_at).getTime()
+  const end = new Date(end_at).getTime()
   
   if (now < start) {
     return { status: 'Upcoming', message: 'Registration is open for this upcoming event.', variant: 'default' }
@@ -97,10 +97,10 @@ export function EventContent({
     )
   }
 
-  const eventStatus = getEventStatus(event.startAt, event.endAt)
+  const eventStatus = getEventStatus(event.start_at, event.end_at)
   const registrationClosed = eventStatus.status !== 'Upcoming'
 
-  const isApplicationRequired = event.accessModel === 'application'
+  const isApplicationRequired = event.access_model === 'application'
   const isPending = myRegistration?.status === 'pending_review'
   const isRejected = myRegistration?.status === 'rejected'
   const isRegistered = myRegistration?.status === 'registered'
@@ -128,7 +128,7 @@ export function EventContent({
   const ownerChapterLabel = event.Chapter
     ? `${event.Chapter.name} / ${event.Chapter.university}`
     : 'Global'
-  const collaborators = event.EventChapter?.map(ec => ec.Chapter).filter(Boolean) || []
+  const collaborators = event.EventChapter?.map((ec: any) => ec.Chapter).filter(Boolean) || []
 
   return (
     <main className="min-h-screen bg-background">
@@ -139,9 +139,9 @@ export function EventContent({
             {/* Event Banner/Image */}
             <Card className="overflow-hidden">
               <div className="relative w-full h-64 sm:h-80 lg:h-96 bg-muted">
-                {event.coverImage ? (
+                {event.cover_image ? (
                   <Image 
-                    src={event.coverImage} 
+                    src={event.cover_image} 
                     alt={event.title} 
                     fill 
                     className="object-cover"
@@ -187,13 +187,13 @@ export function EventContent({
               {/* Date and Time */}
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-lg bg-muted flex flex-col items-center justify-center p-1">
-                  <div className="text-xs font-medium uppercase text-muted-foreground">{new Date(event.startAt).toLocaleString('en-US', { month: 'short' })}</div>
-                  <div className="text-2xl font-bold">{new Date(event.startAt).getDate()}</div>
+                  <div className="text-xs font-medium uppercase text-muted-foreground">{new Date(event.start_at).toLocaleString('en-US', { month: 'short' })}</div>
+                  <div className="text-2xl font-bold">{new Date(event.start_at).getDate()}</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="font-semibold text-lg">{new Date(event.startAt).toLocaleString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+                  <div className="font-semibold text-lg">{new Date(event.start_at).toLocaleString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
                   <div className="text-sm text-muted-foreground">
-                    {formatDateTime(event.startAt)} - {formatDateTime(event.endAt)}
+                    {formatDateTime(event.start_at)} - {formatDateTime(event.end_at)}
                   </div>
                 </div>
               </div>
@@ -306,7 +306,7 @@ export function EventContent({
                   <div className="space-y-2">
                     <span className="text-sm font-medium text-primary">In collaboration with:</span>
                     <div className="space-y-1">
-                      {collaborators.map((chapter) => (
+                      {collaborators.map((chapter: any) => (
                         <div key={chapter.id} className="text-sm text-muted-foreground">
                           {chapter.name} / {chapter.university}
                         </div>
@@ -338,7 +338,7 @@ export function EventContent({
           open={showApplyModal}
           onOpenChange={setShowApplyModal}
           eventTitle={event.title}
-          applicationFormUrl={event.applicationFormUrl || ''}
+          applicationFormUrl={event.application_form_url || ''}
           onConfirm={handleApplyConfirm}
           isSubmitting={isSubmitting}
         />

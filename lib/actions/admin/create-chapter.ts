@@ -13,7 +13,7 @@ const ChapterSchema = z.object({
   region: z.string().optional(),
 })
 
-const CHAPTER_SELECT = 'id, name, university, city, region, createdAt, updatedAt'
+const CHAPTER_SELECT = 'id, name, university, city, region, created_at, updated_at'
 
 type CreateChapterInput = z.infer<typeof ChapterSchema>
 
@@ -35,7 +35,7 @@ export async function createChapter(formData: CreateChapterInput): Promise<Creat
   const { id, name, university, city, region } = parsed.data
 
   const { data: existing } = await supabase
-    .from('Chapter')
+    .from('chapter')
     .select('id')
     .eq('id', id)
     .maybeSingle()
@@ -47,15 +47,15 @@ export async function createChapter(formData: CreateChapterInput): Promise<Creat
   const now = new Date().toISOString()
 
   const { data: chapter, error: insertError } = await supabase
-    .from('Chapter')
+    .from('chapter')
     .insert({
       id,
       name,
       university,
       city: city || null,
       region: region || null,
-      createdAt: now,
-      updatedAt: now,
+      created_at: now,
+      updated_at: now,
     })
     .select(CHAPTER_SELECT)
     .single<ChapterRow>()
@@ -81,7 +81,7 @@ export async function getChapters(): Promise<GetChaptersResponse> {
   const { supabase } = await requireUser()
 
   const { data: chapters, error } = await supabase
-    .from('Chapter')
+    .from('chapter')
     .select(CHAPTER_SELECT)
     .order('name', { ascending: true })
 

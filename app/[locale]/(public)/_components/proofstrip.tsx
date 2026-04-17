@@ -27,7 +27,7 @@ export function ProofStrip() {
       className="bg-muted border border-border/60"
       aria-label="Cifras de la red LEAD"
     >
-      <div className="absolute inset-0 opacity-20" style={{ background: "var(--gradient-card)" }} />
+      <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ background: "var(--gradient-card)" }} />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         <div className="flex items-stretch justify-center">

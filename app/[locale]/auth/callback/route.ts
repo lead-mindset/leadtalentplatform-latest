@@ -50,7 +50,7 @@ export async function GET(
   }
 
   const { data: userData } = await supabase
-    .from('User')
+    .from('user')
     .select('role')
     .eq('id', user.id)
     .maybeSingle()
@@ -62,13 +62,13 @@ export async function GET(
   const role = userData.role ?? 'member'
 
   if (role === 'member' || role === 'editor') {
-    const { data: profile } = await supabase
-      .from('StudentProfile')
-      .select('isFilled')
-      .eq('userId', user.id)
-      .maybeSingle()
+const { data: profile } = await supabase
+      .from('student_profile')
+      .select('is_filled')
+      .eq('user_id', user.id)
+      .single()
 
-    if (!profile?.isFilled) {
+    if (!profile?.is_filled) {
       return NextResponse.redirect(`${SITE_URL}/${locale}/onboarding`)
     }
     return NextResponse.redirect(`${SITE_URL}/${locale}/student/profile`)

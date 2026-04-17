@@ -122,7 +122,7 @@ async function AdminInsights() {
                     <p className="text-xs text-muted-foreground truncate">{join.email}</p>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {new Date(join.createdAt).toLocaleDateString()}
+                    {new Date(join.created_at).toLocaleDateString()}
                   </p>
                 </div>
               ))}

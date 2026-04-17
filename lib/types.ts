@@ -109,13 +109,13 @@ export type SavedStudentRow = Database["public"]["Tables"]["SavedStudent"]["Row"
 
 export type EventChapterRow = {
   id: string // uuid
-  eventId: string // uuid
-  chapterId: string // text
-  addedAt: string // timestamptz
-  addedById: string // uuid
+  event_id: string // uuid
+  chapter_id: string // text
+  added_at: string // timestamptz
+  added_by_id: string // uuid
 }
 
-export type EventChapterInsert = Omit<EventChapterRow, 'id' | 'addedAt'>
+export type EventChapterInsert = Omit<EventChapterRow, 'id' | 'added_at'>
 export type EventChapterUpdate = Partial<EventChapterInsert>
 
 // ============================================================================
@@ -170,36 +170,36 @@ export type EventWithDetails = EventRow & {
 
 export type RegistrationWithUserRaw = EventRegistrationRow & {
   User: Pick<UserRow, 'id' | 'name' | 'email' | 'phone'>[]
-  StudentProfile: Pick<StudentProfileRow, 'major' | 'graduationYear' | 'linkedinUrl'>[]
+  StudentProfile: Pick<StudentProfileRow, 'major' | 'graduation_year' | 'linkedin_url'>[]
 }
 
 export type RegistrationWithUser = EventRegistrationRow & {
   User: Pick<UserRow, 'id' | 'name' | 'email' | 'phone'> | null
-  StudentProfile: Pick<StudentProfileRow, 'major' | 'graduationYear' | 'linkedinUrl'> | null
+  StudentProfile: Pick<StudentProfileRow, 'major' | 'graduation_year' | 'linkedin_url'> | null
 }
 
 // ============================================================================
 // QUERY RESULT TYPES - Raw types from Supabase queries
 // ============================================================================
 export type UserWithDetailsRaw = UserRow & {
-  StudentProfile: (Pick<StudentProfileRow, "isFilled" | "approvedById" | "isRecruiterVisible" | "approvalStatus" | "chapterId"> & {
+  StudentProfile: (Pick<StudentProfileRow, "is_filled" | "approved_by_id" | "is_recruiter_visible" | "approval_status" | "chapter_id"> & {
     Chapter: Pick<ChapterRow, "name" | "university"> | null;
   }) | null;
 };
 
 export type UserWithDetails = UserRow & {
   Chapter: Pick<ChapterRow, "name" | "university"> | null;
-  StudentProfile: Pick<StudentProfileRow, "isFilled" | "approvedById" | "isRecruiterVisible" | 'approvalStatus'> | null;
+  StudentProfile: Pick<StudentProfileRow, "is_filled" | "approved_by_id" | "is_recruiter_visible" | 'approval_status'> | null;
 };
 
 export type RecruiterInviteRaw = {
   id: string;
   recruiterEmail: string;
   isActive: boolean;
-  grantedAt: string;
-  inviteExpiresAt: string | null;
-  acceptedAt: string | null;
-  revokedAt: string | null;
+  granted_at: string;
+  invite_expires_at: string | null;
+  accepted_at: string | null;
+  revoked_at: string | null;
   companyId: string;
   Company: { name: string }[];
   GrantedBy: { name: string; email: string }[];
@@ -210,10 +210,10 @@ export type RecruiterInvite = {
   id: string;
   recruiterEmail: string;
   isActive: boolean;
-  grantedAt: string;
-  inviteExpiresAt: string | null;
-  acceptedAt: string | null;
-  revokedAt: string | null;
+  granted_at: string;
+  invite_expires_at: string | null;
+  accepted_at: string | null;
+  revoked_at: string | null;
   companyId: string;
   Company: { name: string } | null;
   GrantedBy: { name: string; email: string } | null;
@@ -242,9 +242,9 @@ export type StudentForRecruiterRaw = {
   email: string;
   name: string;
   phone: string | null;
-  createdAt: string;
+  created_at: string;
   Chapter: Pick<ChapterRow, "name" | "university" | "city" | "region">[];
-  StudentProfile: Pick<StudentProfileRow, "major" | "graduationYear" | "linkedinUrl" | "skills" | "isRecruiterVisible" | "isFilled" | "updatedAt" | "chapterId">[];
+  StudentProfile: Pick<StudentProfileRow, "major" | "graduation_year" | "linkedin_url" | "skills" | "is_recruiter_visible" | "is_filled" | "updated_at" | "chapter_id">[];
 };
 
 export type StudentForRecruiter = {
@@ -252,16 +252,16 @@ export type StudentForRecruiter = {
   email: string;
   name: string;
   phone: string | null;
-  createdAt: string;
+  created_at: string;
   Chapter: Pick<ChapterRow, "name" | "university" | "city" | "region"> | null;
-  StudentProfile: Pick<StudentProfileRow, "major" | "graduationYear" | "linkedinUrl" | "skills" | "isRecruiterVisible" | "isFilled" | "updatedAt" | "chapterId"> | null;
+  StudentProfile: Pick<StudentProfileRow, "major" | "graduation_year" | "linkedin_url" | "skills" | "is_recruiter_visible" | "is_filled" | "updated_at" | "chapter_id"> | null;
 };
 
 export type SavedStudent = {
   id: string;
-  recruiterId: string;
-  studentId: string;
-  savedAt: string;
+  recruiter_id: string;
+  student_id: string;
+  saved_at: string;
   notes: string | null;
   Student: StudentForRecruiter;
 };
@@ -362,7 +362,7 @@ export type SidebarLayoutProps = {
 }
 
 export type ChapterMember = UserRow & {
-  StudentProfile: Pick<StudentProfileRow, 'userId' | 'isFilled' | 'approvedById' | 'isRecruiterVisible' | 'chapterId' | 'updatedAt'> | null
+  StudentProfile: Pick<StudentProfileRow, 'user_id' | 'is_filled' | 'approved_by_id' | 'is_recruiter_visible' | 'chapter_id' | 'updated_at'> | null
   Chapter: Pick<ChapterRow, 'name' | 'university'> | null
 }
 

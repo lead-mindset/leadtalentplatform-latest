@@ -78,7 +78,7 @@ export async function getAdminEventsList(
   const { supabase } = await requireAdmin()
 
   let query = supabase
-    .from('Event')
+    .from('event')
     .select('id, title, startAt, endAt, isPublished, chapterId, capacity, Chapter(name, university), EventChapter(id, Chapter(name, university)), EventRegistration(id, status)')
 
   const search = filters.search?.trim()

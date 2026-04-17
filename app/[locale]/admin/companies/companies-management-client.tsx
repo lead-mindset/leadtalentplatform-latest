@@ -134,7 +134,7 @@ export function CompaniesManagementClient({
                 {items.map((company) => (
                   <TableRow key={company.id}>
                     <TableCell className="p-2 font-medium">{company.name}</TableCell>
-                    <TableCell className="p-2">{new Date(company.createdat).toLocaleDateString()}</TableCell>
+                    <TableCell className="p-2">{new Date(company.created_at).toLocaleDateString()}</TableCell>
                     <TableCell className="p-2">{company.createdByName ?? '-'}</TableCell>
                     <TableCell className="p-2">{company.activeRecruiters}</TableCell>
                     <TableCell className="p-2">{company.pendingInvites}</TableCell>

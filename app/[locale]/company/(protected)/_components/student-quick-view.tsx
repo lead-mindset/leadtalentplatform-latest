@@ -30,8 +30,8 @@ export function StudentQuickView({ student }: StudentQuickViewProps) {
           <div className="flex items-center gap-2">
             <GraduationCap className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-medium">{student.StudentProfile.major}</span>
-            {student.StudentProfile.graduationYear && (
-              <Badge variant="secondary">Class of {student.StudentProfile.graduationYear}</Badge>
+            {student.StudentProfile.graduation_year && (
+              <Badge variant="secondary">Class of {student.StudentProfile.graduation_year}</Badge>
             )}
           </div>
         )}
@@ -50,7 +50,7 @@ export function StudentQuickView({ student }: StudentQuickViewProps) {
           <div>
             <p className="text-sm font-medium mb-2">Skills</p>
             <div className="flex flex-wrap gap-1">
-              {student.StudentProfile.skills.map((skill, i) => (
+              {student.StudentProfile.skills.map((skill: string, i: number) => (
                 <Badge key={i} variant="outline">
                   {skill}
                 </Badge>
@@ -59,9 +59,9 @@ export function StudentQuickView({ student }: StudentQuickViewProps) {
           </div>
         )}
 
-        {student.StudentProfile?.linkedinUrl && (
+{student.StudentProfile?.linkedin_url && (
           <Button asChild variant="outline" size="sm" className="w-full gap-2">
-            <Link href={student.StudentProfile.linkedinUrl} target="_blank" rel="noopener noreferrer">
+            <Link href={student.StudentProfile.linkedin_url} target="_blank" rel="noopener noreferrer">
               <Linkedin className="h-4 w-4" />
               View LinkedIn
             </Link>

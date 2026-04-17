@@ -115,22 +115,24 @@ export default function ResumeClient({
                     <span className="whitespace-nowrap">{t('uploaded')} {formatDate(resume.uploadedAt)}</span>
                   </div>
                 </div>
+                  {resume.fileUrl && (
                   <Button
                     variant="outline" 
                     size="sm" 
                     className="shrink-0 shadow-sm hover:shadow transition-shadow"
-                  asChild
-                >
-                  <Link
-                    href={resume.fileUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2"
+                    asChild
                   >
-                    <Icons.Download className="h-4 w-4" />
-                    <span className="hidden sm:inline">{t('download')}</span>
-                  </Link>
-                </Button>
+                    <Link
+                      href={resume.fileUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2"
+                    >
+                      <Icons.Download className="h-4 w-4" />
+                      <span className="hidden sm:inline">{t('download')}</span>
+                    </Link>
+                  </Button>
+                )}
               </div>
             </div>
           </CardContent>

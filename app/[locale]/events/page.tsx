@@ -52,7 +52,7 @@ function groupEventsByDate(events: EventWithDetails[]) {
   const grouped: { [date: string]: EventWithDetails[] } = {}
   
   events.forEach(event => {
-    const date = new Date(event.startAt).toDateString()
+    const date = new Date(event.start_at).toDateString()
     if (!grouped[date]) {
       grouped[date] = []
     }
@@ -139,7 +139,7 @@ async function EventsContent() {
                               <div className="flex-1 space-y-3">
                                 <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                                   <Clock className="h-4 w-4" />
-                                  <span>{formatTime(event.startAt)}</span>
+                                  <span>{formatTime(event.start_at)}</span>
                                 </div>
                                 <h3 className="font-bold text-xl leading-tight mt-1">
                                   {event.title}
@@ -156,7 +156,7 @@ async function EventsContent() {
                                           {event.ownerChapter.name}
                                         </Badge>
                                       )}
-                                      {event.collaborators?.map((collaborator, index) => (
+                                      {event.collaborators?.map((collaborator: any, index: number) => (
                                         <Badge 
                                           key={collaborator.id || `collaborator-${index}`} 
                                           variant="secondary" 
@@ -204,9 +204,9 @@ async function EventsContent() {
 
                               <div className="flex-shrink-0 w-24 h-24 sm:w-32 sm:h-32">
                                 <div className="relative w-full h-full rounded-lg overflow-hidden bg-muted">
-                                  {event.coverImage ? (
+                                  {event.cover_image ? (
                                     <Image 
-                                      src={event.coverImage} 
+                                      src={event.cover_image} 
                                       alt={event.title} 
                                       fill 
                                       className="object-cover"

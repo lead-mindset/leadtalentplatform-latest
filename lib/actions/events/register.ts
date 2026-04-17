@@ -50,7 +50,7 @@ export async function applyForEvent(eventId: string): Promise<{ success: true; r
     const now = new Date().toISOString()
 
     const { data: registration, error } = await supabase
-      .from('EventRegistration')
+      .from('event_registration')
       .insert({
         eventId,
         userId: user.id,
@@ -69,7 +69,7 @@ export async function applyForEvent(eventId: string): Promise<{ success: true; r
     }
 
     const { data: eventData } = await supabase
-      .from('Event')
+      .from('event')
       .select('title, chapterId, Chapter!inner(name)')
       .eq('id', eventId)
       .single()
@@ -109,7 +109,7 @@ export async function registerForEvent(
     }
 
     const { data: event, error: eventError } = await supabase
-      .from('Event')
+      .from('event')
       .select(EVENT_REGISTRATION_LOOKUP_SELECT)
       .eq('id', eventId)
       .maybeSingle<Pick<EventRow, 'id' | 'title' | 'isPublished' | 'startAt'>>()
@@ -136,10 +136,10 @@ export async function registerForEvent(
     const now = new Date().toISOString()
 
     const { data: existing, error: existingError } = await supabase
-      .from('EventRegistration')
+      .from('event_registration')
       .select('id, status')
-      .eq('eventId', eventId)
-      .eq('userId', user.id)
+      .eq('event_id', eventId)
+      .eq('user_id', user.id)
       .maybeSingle<{ id: string; status: RegistrationStatus }>()
 
     if (existingError) {
@@ -153,13 +153,13 @@ export async function registerForEvent(
       }
       if (existing.status === 'cancelled') {
         const { data: revived, error: reviveError } = await supabase
-          .from('EventRegistration')
+          .from('event_registration')
           .update({
             status: 'registered' as RegistrationStatus,
-            registeredAt: now,
-            qrToken: randomUUID(),
-            checkedInAt: null,
-            checkedInById: null,
+            registered_at: now,
+            qr_token: randomUUID(),
+            checked_in_at: null,
+            checked_in_by_id: null,
           })
           .eq('id', existing.id)
           .select()
@@ -175,7 +175,7 @@ export async function registerForEvent(
     }
 
     const { data: registration, error } = await supabase
-      .from('EventRegistration')
+      .from('event_registration')
       .insert({
         eventId,
         userId: user.id,
@@ -196,10 +196,10 @@ export async function registerForEvent(
       const msg = (error as { message?: string })?.message?.toLowerCase?.() ?? ''
       if (msg.includes('duplicate') || msg.includes('unique')) {
         const { data: row } = await supabase
-          .from('EventRegistration')
+          .from('event_registration')
           .select('id, status')
-          .eq('eventId', eventId)
-          .eq('userId', user.id)
+          .eq('event_id', eventId)
+          .eq('user_id', user.id)
           .maybeSingle<{ id: string; status: RegistrationStatus }>()
 
         if (row && isActiveRegistrationStatus(row.status)) {
@@ -208,7 +208,7 @@ export async function registerForEvent(
         }
         if (row?.status === 'cancelled') {
           const { data: revived, error: reviveError } = await supabase
-            .from('EventRegistration')
+            .from('event_registration')
             .update({
               status: 'registered' as RegistrationStatus,
               registeredAt: now,

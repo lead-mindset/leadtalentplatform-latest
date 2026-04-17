@@ -3,11 +3,11 @@
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
 import { requireUser } from '@/lib/auth'
-import { getEditorChapterId } from './get-data'
+import { requireChapterMember } from '@/lib/auth'
 import type { EventRow, EventType } from '@/lib/types'
 
 const EVENT_MUTATION_SELECT =
-  'id, title, description, coverImage, startAt, endAt, location, meetingUrl, eventType, capacity, isPublished, chapterId, createdById, createdAt, updatedAt, accessModel, applicationFormUrl'
+  'id, title, description, cover_image, start_at, end_at, location, meeting_url, event_type, capacity, is_published, chapter_id, created_by_id, created_at, updated_at, access_model, application_form_url'
 
 function sanitizeRichTextHtml(input: string): string {
   return input
@@ -34,7 +34,6 @@ const EventInputSchema = z.object({
   applicationFormUrl: z.string().url().nullable().optional(),
 }).refine(
   (data) => {
-    // If accessModel is 'application', applicationFormUrl is required
     if (data.accessModel === 'application') {
       return data.applicationFormUrl && data.applicationFormUrl.trim().length > 0
     }
@@ -46,7 +45,6 @@ const EventInputSchema = z.object({
   }
 ).refine(
   (data) => {
-    // For online/hybrid events, meetingUrl is required
     if (data.eventType !== 'in_person') {
       return data.meetingUrl && data.meetingUrl.trim().length > 0
     }
@@ -58,7 +56,6 @@ const EventInputSchema = z.object({
   }
 ).refine(
   (data) => {
-    // End time must be after start time
     return new Date(data.endAt) > new Date(data.startAt)
   },
   {
@@ -85,24 +82,24 @@ export async function createEvent(input: CreateEventInput): Promise<CreateEventR
 
   if (user.role === 'admin') {
     const { data: event, error } = await supabase
-      .from('Event')
+      .from('event')
       .insert({
         title: data.title,
         description: data.description ? sanitizeRichTextHtml(data.description) : null,
-        coverImage: data.coverImage || null,
-        startAt: data.startAt,
-        endAt: data.endAt,
+        cover_image: data.coverImage || null,
+        start_at: data.startAt,
+        end_at: data.endAt,
         location: data.location ?? null,
-        meetingUrl: data.meetingUrl || null,
-        eventType: data.eventType as EventType,
+        meeting_url: data.meetingUrl || null,
+        event_type: data.eventType as EventType,
         capacity: data.capacity ?? null,
-        isPublished: data.isPublished ?? false,
-        chapterId: data.chapterId ?? null,
-        accessModel: data.accessModel,
-        applicationFormUrl: data.accessModel === 'application' ? data.applicationFormUrl : null,
-        createdById: user.id,
-        createdAt: now,
-        updatedAt: now,
+        is_published: data.isPublished ?? false,
+        chapter_id: data.chapterId ?? null,
+        access_model: data.accessModel,
+        application_form_url: data.accessModel === 'application' ? data.applicationFormUrl : null,
+        created_by_id: user.id,
+        created_at: now,
+        updated_at: now,
       })
       .select(EVENT_MUTATION_SELECT)
       .single<EventRow>()
@@ -118,28 +115,28 @@ export async function createEvent(input: CreateEventInput): Promise<CreateEventR
 
   if (user.role !== 'editor') return { error: 'Insufficient permissions' }
 
-  const chapterId = await getEditorChapterId()
+  const { chapterId } = await requireChapterMember()
   if (!chapterId) return { error: 'No chapter assigned' }
 
   const { data: event, error } = await supabase
-    .from('Event')
+    .from('event')
     .insert({
       title: data.title,
       description: data.description ? sanitizeRichTextHtml(data.description) : null,
-      coverImage: data.coverImage || null,
-      startAt: data.startAt,
-      endAt: data.endAt,
+      cover_image: data.coverImage || null,
+      start_at: data.startAt,
+      end_at: data.endAt,
       location: data.location ?? null,
-      meetingUrl: data.meetingUrl || null,
-      eventType: data.eventType as EventType,
+      meeting_url: data.meetingUrl || null,
+      event_type: data.eventType as EventType,
       capacity: data.capacity ?? null,
-      isPublished: data.isPublished ?? false,
-      chapterId,
-      accessModel: data.accessModel,
-      applicationFormUrl: data.accessModel === 'application' ? data.applicationFormUrl : null,
-      createdById: user.id,
-      createdAt: now,
-      updatedAt: now,
+      is_published: data.isPublished ?? false,
+      chapter_id: chapterId,
+      access_model: data.accessModel,
+      application_form_url: data.accessModel === 'application' ? data.applicationFormUrl : null,
+      created_by_id: user.id,
+      created_at: now,
+      updated_at: now,
     })
     .select(EVENT_MUTATION_SELECT)
     .single<EventRow>()
@@ -152,4 +149,3 @@ export async function createEvent(input: CreateEventInput): Promise<CreateEventR
   revalidatePath('/chapter/events')
   return { success: true, event }
 }
-

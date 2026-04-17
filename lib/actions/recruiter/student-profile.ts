@@ -8,14 +8,14 @@ type RecruiterStudentProfile = {
   name: string
   email: string
   chapter: { name: string; university: string } | null
-  graduationYear: number | null
+  graduation_year: number | null
   major: string | null
   skills: string[]
-  linkedinUrl: string | null
+  linkedin_url: string | null
   resume: {
-    fileName: string
-    fileUrl: string
-    uploadedAt: string
+    file_name: string
+    file_url: string
+    uploaded_at: string
   } | null
 }
 
@@ -32,23 +32,23 @@ async function getStudentProfile(
   studentId: string
 ): Promise<RecruiterStudentProfile | null> {
   const { data, error } = await supabase
-    .from('User')
+    .from('user')
     .select(
       `
       id, name, email,
       StudentProfile!inner (
-        major, graduationYear, skills, linkedinUrl, isRecruiterVisible, approvalStatus, chapterId,
-        Chapter:Chapter!StudentProfile_chapterId_fkey (name, university)
+        major, graduation_year, skills, linkedin_url, is_recruiter_visible, approval_status, chapter_id,
+        Chapter:Chapter!StudentProfile_chapter_id_fkey (name, university)
       ),
       Resume!left (
-        fileName, fileUrl, uploadedAt
+        file_name, file_url, uploaded_at
       )
       `
     )
     .eq('id', studentId)
     .eq('role', 'member')
-    .eq('StudentProfile.isRecruiterVisible', true)
-    .eq('StudentProfile.approvalStatus', 'approved')
+    .eq('StudentProfile.is_recruiter_visible', true)
+    .eq('StudentProfile.approval_status', 'approved')
     .maybeSingle()
 
   if (error || !data) {
@@ -66,15 +66,15 @@ async function getStudentProfile(
     name: data.name,
     email: data.email,
     chapter: chapter ? { name: chapter.name, university: chapter.university } : null,
-    graduationYear: profile.graduationYear ?? null,
+    graduation_year: profile.graduation_year ?? null,
     major: profile.major ?? null,
     skills: Array.isArray(profile.skills) ? profile.skills : [],
-    linkedinUrl: profile.linkedinUrl ?? null,
+    linkedin_url: profile.linkedin_url ?? null,
     resume: resume
       ? {
-          fileName: resume.fileName,
-          fileUrl: resume.fileUrl,
-          uploadedAt: resume.uploadedAt,
+          file_name: resume.file_name,
+          file_url: resume.file_url,
+          uploaded_at: resume.uploaded_at,
         }
       : null,
   }
@@ -89,11 +89,11 @@ export async function downloadResume(studentId: string) {
   const { supabase, user } = await requireRecruiter()
   const student = await getStudentProfile(supabase, studentId)
 
-  if (!student?.resume?.fileUrl) {
+  if (!student?.resume?.file_url) {
     return { success: false, error: 'Resume not available.' }
   }
 
-  const storagePath = extractResumeStoragePath(student.resume.fileUrl)
+  const storagePath = extractResumeStoragePath(student.resume.file_url)
   if (!storagePath) {
     return { success: false, error: 'Invalid resume file path.' }
   }
@@ -107,10 +107,10 @@ export async function downloadResume(studentId: string) {
     return { success: false, error: 'Failed to generate download URL.' }
   }
 
-  const { error: logError } = await supabase.from('ResumeDownloadLog').insert({
-    recruiterId: user.id,
-    studentId,
-    downloadedAt: new Date().toISOString(),
+  const { error: logError } = await supabase.from('resume_download_log').insert({
+    recruiter_id: user.id,
+    student_id,
+    downloaded_at: new Date().toISOString(),
   })
 
   if (logError) {

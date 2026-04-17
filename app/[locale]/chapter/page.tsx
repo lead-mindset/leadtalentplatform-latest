@@ -127,7 +127,7 @@ function RecentApprovals({ members }: { members: RecentActivityMember[] }) {
             </p>
           </div>
           <p className="text-xs text-muted-foreground ml-3 shrink-0">
-            {new Date(member.StudentProfile.updatedAt).toLocaleDateString(undefined, {
+            {new Date(member.StudentProfile.updated_at).toLocaleDateString(undefined, {
               month: 'short',
               day: 'numeric',
             })}
@@ -196,7 +196,7 @@ function EventOpsList({
                 <div className="min-w-0">
                   <p className="font-medium truncate">{event.title}</p>
                   <p className="text-xs text-muted-foreground">
-                    {new Date(event.startAt).toLocaleString(undefined, {
+                    {new Date(event.start_at).toLocaleString(undefined, {
                       month: 'short',
                       day: 'numeric',
                       hour: 'numeric',
@@ -230,9 +230,9 @@ async function ChapterContent() {
   const { supabase, user, chapterId } = await requireChapterEditor()
 
   const { data: profileData } = await supabase
-    .from('StudentProfile')
+    .from('student_profile')
     .select(`Chapter ( id, name, university )`)
-    .eq('userId', user.id)
+    .eq('user_id', user.id)
     .maybeSingle()
 
   if (!profileData?.Chapter) {
@@ -265,9 +265,9 @@ async function ChapterContent() {
     stats.total > 0 ? Math.round((stats.approved / stats.total) * 100) : 0
 
   const pendingMembers = allMembers.filter(
-    m => m.StudentProfile?.isFilled && m.StudentProfile?.approvalStatus === 'pending'
+    m => m.StudentProfile?.is_filled && m.StudentProfile?.approval_status === 'pending'
   )
-  const upcomingEventsCount = chapterEvents.filter((event) => new Date(event.endAt) >= new Date()).length
+  const upcomingEventsCount = chapterEvents.filter((event) => new Date(event.end_at) >= new Date()).length
 
   return (
     <div className="container max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8">
@@ -358,7 +358,7 @@ async function ChapterContent() {
             <h2 className="text-base font-semibold">Upcoming Events</h2>
             <p className="text-sm text-muted-foreground">Track registration volume ahead of event day.</p>
           </div>
-          <EventOpsList events={chapterEvents.filter((event) => new Date(event.endAt) >= new Date())} />
+          <EventOpsList events={chapterEvents.filter((event) => new Date(event.end_at) >= new Date())} />
         </div>
 
         <div className="space-y-4">

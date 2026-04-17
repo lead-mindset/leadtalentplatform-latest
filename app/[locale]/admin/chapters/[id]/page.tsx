@@ -27,10 +27,10 @@ export default async function ChapterDetailPage({
   if (!chapter) notFound()
   const resolvedChapter = chapter ?? notFound()
   const members = await getChapterMembers(resolvedChapter.id)
-  const approvedMembers  = members.filter(m => m.StudentProfile?.approvalStatus === 'approved')
-  const pendingMembers   = members.filter(m => m.StudentProfile?.isFilled && m.StudentProfile?.approvalStatus === 'pending')
-  const rejectedMembers  = members.filter(m => m.StudentProfile?.approvalStatus === 'rejected')
-  const incompleteMembers = members.filter(m => !m.StudentProfile?.isFilled)
+  const approvedMembers  = members.filter(m => m.StudentProfile?.approval_status === 'approved')
+  const pendingMembers   = members.filter(m => m.StudentProfile?.is_filled && m.StudentProfile?.approval_status === 'pending')
+  const rejectedMembers  = members.filter(m => m.StudentProfile?.approval_status === 'rejected')
+  const incompleteMembers = members.filter(m => !m.StudentProfile?.is_filled)
 
   return (
     <div className="space-y-8">
@@ -76,7 +76,7 @@ export default async function ChapterDetailPage({
             </Card>
           )}
 
-          {resolvedChapter.createdAt && (
+          {resolvedChapter.created_at && (
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Created</CardTitle>
@@ -84,7 +84,7 @@ export default async function ChapterDetailPage({
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {new Date(resolvedChapter.createdAt).toLocaleDateString('en-US', {
+                  {new Date(resolvedChapter.created_at).toLocaleDateString('en-US', {
                     month: 'short',
                     year: 'numeric',
                   })}
@@ -109,7 +109,7 @@ export default async function ChapterDetailPage({
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Last Updated</p>
                 <p className="text-sm mt-1">
-                  {new Date(resolvedChapter.updatedAt).toLocaleDateString('en-US', {
+                  {new Date(resolvedChapter.updated_at).toLocaleDateString('en-US', {
                     month: 'long',
                     day: 'numeric',
                     year: 'numeric',
@@ -196,7 +196,7 @@ export default async function ChapterDetailPage({
                           >
                             Approved
                           </Badge>
-                          {member.StudentProfile?.isRecruiterVisible && (
+                          {member.StudentProfile?.is_recruiter_visible && (
                             <Badge variant="secondary">Visible to Recruiters</Badge>
                           )}
                         </div>

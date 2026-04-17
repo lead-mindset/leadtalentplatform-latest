@@ -83,12 +83,12 @@ export default async function StudentProfilePage({
               </div>
             )}
 
-            {resolvedStudent.StudentProfile?.graduationYear && (
+            {resolvedStudent.StudentProfile?.graduation_year && (
               <div className="flex items-start gap-3">
                 <Calendar className="h-5 w-5 mt-0.5 text-muted-foreground" />
                 <div>
                   <p className="font-medium">
-                    Class of {resolvedStudent.StudentProfile.graduationYear}
+                    Class of {resolvedStudent.StudentProfile.graduation_year}
                   </p>
                   <p className="text-sm text-muted-foreground">Expected Graduation</p>
                 </div>
@@ -135,7 +135,7 @@ export default async function StudentProfilePage({
         </Card>
       </div>
 
-      {resolvedStudent.StudentProfile?.linkedinUrl && (
+      {resolvedStudent.StudentProfile?.linkedin_url && (
         <Card>
           <CardHeader>
             <CardTitle>Professional Links</CardTitle>
@@ -143,7 +143,7 @@ export default async function StudentProfilePage({
           <CardContent>
             <Button asChild variant="outline" className="gap-2">
               <NextLink
-                href={resolvedStudent.StudentProfile.linkedinUrl}
+                href={resolvedStudent.StudentProfile.linkedin_url}
                 target="_blank"
                 rel="noopener noreferrer"
               >

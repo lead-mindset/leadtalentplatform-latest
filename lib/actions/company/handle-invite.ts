@@ -18,7 +18,7 @@ export async function acceptInvite(formData: {
   const { invite } = inviteResult
 
   const { data: existingUser } = await serviceSupabase
-    .from('User')
+    .from('user')
     .select('id')
     .eq('email', invite.recruiterEmail)
     .maybeSingle()
@@ -29,10 +29,10 @@ export async function acceptInvite(formData: {
     userId = existingUser.id
 
     await serviceSupabase
-      .from('User')
+      .from('user')
       .update({
         name: formData.name,
-        updatedAt: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       })
       .eq('id', userId)
   } else {
@@ -49,7 +49,7 @@ export async function acceptInvite(formData: {
     userId = authData.user.id
 
     const { error: profileError } = await serviceSupabase
-      .from('User')
+      .from('user')
       .insert({
         id: userId,
         email: invite.recruiterEmail,
@@ -65,11 +65,11 @@ export async function acceptInvite(formData: {
 
   // Activate the invite
   const { error: updateError } = await serviceSupabase
-    .from('RecruiterAccess')
+    .from('recruiter_access')
     .update({
-      acceptedAt: new Date().toISOString(),
-      acceptedByUserId: userId,
-      isActive: true,
+      accepted_at: new Date().toISOString(),
+      accepted_by_user_id: userId,
+      is_active: true,
     })
     .eq('id', invite.id)
 

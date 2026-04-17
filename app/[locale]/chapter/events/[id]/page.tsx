@@ -18,9 +18,9 @@ export default async function ChapterEventDetailPage({
   let editorChapter: ChapterRow | null = null
   if (user) {
     const { data: profile } = await supabase
-      .from('StudentProfile')
-      .select('chapterId, chapter:Chapter(id, name, university, city, region, createdAt, updatedAt)')
-      .eq('userId', user.id)
+      .from('student_profile')
+      .select('chapter_id, chapter:Chapter(id, name, university, city, region, created_at, updated_at)')
+      .eq('user_id', user.id)
       .single()
     
     if (profile?.chapter) {
@@ -30,8 +30,8 @@ export default async function ChapterEventDetailPage({
   }
 
   const { data: event } = await supabase
-    .from('Event')
-    .select('id, title, description, coverImage, startAt, endAt, location, meetingUrl, eventType, capacity, isPublished, chapterId, createdById, createdAt, updatedAt, accessModel, applicationFormUrl')
+    .from('event')
+    .select('id, title, description, cover_image, start_at, end_at, location, meeting_url, event_type, capacity, is_published, chapter_id, created_by_id, created_at, updated_at, access_model, application_form_url')
     .eq('id', id)
     .maybeSingle<EventRow>()
 

@@ -7,8 +7,8 @@ export async function getAllChapters(): Promise<ChapterRow[]> {
   const supabase = await createClient()
 
   const { data, error } = await supabase
-    .from('Chapter')
-    .select('id, name, university, city, region, createdAt, updatedAt')
+    .from('chapter')
+    .select('id, name, university, city, region, created_at, updated_at')
     .order('name', { ascending: true })
 
   if (error) {
@@ -23,8 +23,8 @@ export async function getChapterById(id: string): Promise<ChapterRow | null> {
   const supabase = await createClient()
 
   const { data, error } = await supabase
-    .from('Chapter')
-    .select('id, name, university, city, region, createdAt, updatedAt')
+    .from('chapter')
+    .select('id, name, university, city, region, created_at, updated_at')
     .eq('id', id)
     .maybeSingle()
 

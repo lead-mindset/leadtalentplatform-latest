@@ -6,9 +6,9 @@ import { generateUniqueMemberId } from '@/lib/utils/member-id'
 import { sendMemberApprovalEmail } from '@/lib/emails/send-email'
 import type { StudentProfileRow } from '@/lib/types'
 
-type ApprovalCandidateRow = Pick<StudentProfileRow, 'userId' | 'chapterId' | 'isFilled'>
+type ApprovalCandidateRow = Pick<StudentProfileRow, 'user_id' | 'chapter_id' | 'is_filled'>
 
-export async function approveMember(userId: string, approverId: string) {
+export async function approveMember(user_id: string, approverId: string) {
   try {
     const supabase = await createClient()
     
@@ -18,7 +18,7 @@ export async function approveMember(userId: string, approverId: string) {
     }
 
     const { data: approver, error: approverError } = await supabase
-      .from('User')
+      .from('user')
       .select('id, role')
       .eq('id', approverId)
       .single()
@@ -33,36 +33,36 @@ export async function approveMember(userId: string, approverId: string) {
 
     if (approver.role === 'editor') {
       const { data: approverProfile } = await supabase
-        .from('StudentProfile')
-        .select('chapterId')
-        .eq('userId', approverId)
+        .from('student_profile')
+        .select('chapter_id')
+        .eq('user_id', approverId)
         .single()
 
       const { data: memberProfile } = await supabase
-        .from('StudentProfile')
-        .select('chapterId')
-        .eq('userId', userId)
+        .from('student_profile')
+        .select('chapter_id')
+        .eq('user_id', user_id)
         .single()
 
-      if (!approverProfile || !memberProfile || memberProfile.chapterId !== approverProfile.chapterId) {
+      if (!approverProfile || !memberProfile || memberProfile.chapter_id !== approverProfile.chapter_id) {
         return { success: false, error: 'Member not in your chapter' }
       }
     }
 
     const { data: profile } = await supabase
-      .from('StudentProfile')
-      .select('isFilled, chapterId')
-      .eq('userId', userId)
+      .from('student_profile')
+      .select('is_filled, chapter_id')
+      .eq('user_id', user_id)
       .single()
 
-    if (!profile?.isFilled) {
+    if (!profile?.is_filled) {
       return { success: false, error: 'Cannot approve incomplete profile' }
     }
 
     // Generate unique member ID with retry logic
-    let memberId: string
+    let member_id: string
     try {
-      memberId = await generateUniqueMemberId(supabase)
+      member_id = await generateUniqueMemberId(supabase)
     } catch (error) {
       return {
         success: false,
@@ -71,15 +71,15 @@ export async function approveMember(userId: string, approverId: string) {
     }
 
     const { error: updateError } = await supabase
-      .from('StudentProfile')
+      .from('student_profile')
       .update({ 
-        approvedById: approverId,
-        approvalStatus: 'approved',
-        memberId: memberId,
-        isRecruiterVisible: true,
-        updatedAt: new Date().toISOString()
+        approved_by_id: approverId,
+        approval_status: 'approved',
+        member_id: member_id,
+        is_recruiter_visible: true,
+        updated_at: new Date().toISOString()
       })
-      .eq('userId', userId)
+      .eq('user_id', user_id)
 
     if (updateError) {
       return { success: false, error: 'Failed to approve member' }
@@ -88,43 +88,43 @@ export async function approveMember(userId: string, approverId: string) {
     revalidatePath('/chapter/members')
     revalidatePath('/chapter')
     revalidatePath('/admin/users')
-    revalidatePath(`/admin/users/${userId}`)
+    revalidatePath(`/admin/users/${user_id}`)
     revalidatePath('/admin/chapters')
     
     const { data: userData } = await supabase
-      .from('User')
+      .from('user')
       .select('email, name')
-      .eq('id', userId)
+      .eq('id', user_id)
       .single()
     
     const { data: chapterData } = await supabase
-      .from('Chapter')
+      .from('chapter')
       .select('name')
-      .eq('id', profile?.chapterId || '')
+      .eq('id', profile?.chapter_id || '')
       .single()
     
     if (userData?.email && chapterData?.name) {
       sendMemberApprovalEmail(
         userData.email,
         userData.name || userData.email.split('@')[0],
-        memberId,
+        member_id,
         chapterData.name
       ).catch(() => {}) // Silently fail email sending
     }
     
-    return { success: true, memberId: memberId }
+    return { success: true, member_id: member_id }
   } catch (error) {
     return { success: false, error: 'An unexpected error occurred' }
   }
 }
 
-export async function approveMembersBulk(userIds: string[], approverId: string) {
+export async function approveMembersBulk(user_ids: string[], approverId: string) {
   try {
-    if (!Array.isArray(userIds) || userIds.length === 0) {
+    if (!Array.isArray(user_ids) || user_ids.length === 0) {
       return { success: false, error: 'No members selected' }
     }
 
-    const uniqueUserIds = [...new Set(userIds)]
+    const uniqueUserIds = [...new Set(user_ids)]
     const supabase = await createClient()
 
     const { data: { user } } = await supabase.auth.getUser()
@@ -133,7 +133,7 @@ export async function approveMembersBulk(userIds: string[], approverId: string) 
     }
 
     const { data: approver, error: approverError } = await supabase
-      .from('User')
+      .from('user')
       .select('id, role')
       .eq('id', approverId)
       .single()
@@ -146,31 +146,31 @@ export async function approveMembersBulk(userIds: string[], approverId: string) 
       return { success: false, error: 'Only admins and editors can approve members' }
     }
 
-    let chapterId: string | null = null
+    let chapter_id: string | null = null
     if (approver.role === 'editor') {
       const { data: approverProfile } = await supabase
-        .from('StudentProfile')
-        .select('chapterId')
-        .eq('userId', approverId)
+        .from('student_profile')
+        .select('chapter_id')
+        .eq('user_id', approverId)
         .single()
 
-      chapterId = approverProfile?.chapterId ?? null
-      if (!chapterId) return { success: false, error: 'No chapter assigned' }
+      chapter_id = approverProfile?.chapter_id ?? null
+      if (!chapter_id) return { success: false, error: 'No chapter assigned' }
     }
 
     const { data: candidates, error: candidatesError } = await supabase
-      .from('StudentProfile')
-      .select('userId, chapterId, isFilled')
-      .in('userId', uniqueUserIds)
+      .from('student_profile')
+      .select('user_id, chapter_id, is_filled')
+      .in('user_id', uniqueUserIds)
 
     if (candidatesError || !candidates) {
       return { success: false, error: 'Failed to load selected members' }
     }
 
     const validUserIds = (candidates as ApprovalCandidateRow[])
-      .filter((profile) => profile.isFilled)
-      .filter((profile) => !chapterId || profile.chapterId === chapterId)
-      .map((profile) => profile.userId)
+      .filter((profile) => profile.is_filled)
+      .filter((profile) => !chapter_id || profile.chapter_id === chapter_id)
+      .map((profile) => profile.user_id)
 
     if (validUserIds.length === 0) {
       return { success: false, error: 'No eligible members selected' }
@@ -179,34 +179,34 @@ export async function approveMembersBulk(userIds: string[], approverId: string) 
     const results = []
     const errors = []
 
-    for (const userId of validUserIds) {
+    for (const user_id of validUserIds) {
       try {
-        let memberId: string
+        let member_id: string
         try {
-          memberId = await generateUniqueMemberId(supabase)
+          member_id = await generateUniqueMemberId(supabase)
         } catch (error) {
-          errors.push({ userId, error: 'Could not generate member ID' })
+          errors.push({ user_id, error: 'Could not generate member ID' })
           continue
         }
 
         const { error: updateError } = await supabase
-          .from('StudentProfile')
+          .from('student_profile')
           .update({
-            approvedById: approverId,
-            approvalStatus: 'approved',
-            memberId: memberId,
-            isRecruiterVisible: true,
+            approved_by_id: approverId,
+            approval_status: 'approved',
+            member_id: member_id,
+            is_recruiter_visible: true,
             updatedAt: new Date().toISOString(),
           })
-          .eq('userId', userId)
+          .eq('user_id', user_id)
 
         if (updateError) {
-          errors.push({ userId, error: 'Failed to approve member' })
+          errors.push({ user_id, error: 'Failed to approve member' })
         } else {
-          results.push({ userId, memberId, success: true })
+          results.push({ user_id, member_id, success: true })
         }
       } catch (error) {
-        errors.push({ userId, error: 'Failed to process' })
+        errors.push({ user_id, error: 'Failed to process' })
       }
     }
 
@@ -229,7 +229,7 @@ export async function approveMembersBulk(userIds: string[], approverId: string) 
   }
 }
 
-export async function rejectMember(userId: string, rejecterId: string, _reason?: string) {
+export async function rejectMember(user_id: string, rejecterId: string, _reason?: string) {
   try {
     void _reason
     const supabase = await createClient()
@@ -240,7 +240,7 @@ export async function rejectMember(userId: string, rejecterId: string, _reason?:
     }
 
     const { data: rejecter, error: rejecterError } = await supabase
-      .from('User')
+      .from('user')
       .select('id, role')
       .eq('id', rejecterId)
       .single()
@@ -255,31 +255,31 @@ export async function rejectMember(userId: string, rejecterId: string, _reason?:
 
     if (rejecter.role === 'editor') {
       const { data: rejecterProfile } = await supabase
-        .from('StudentProfile')
-        .select('chapterId')
-        .eq('userId', rejecterId)
+        .from('student_profile')
+        .select('chapter_id')
+        .eq('user_id', rejecterId)
         .single()
 
       const { data: memberProfile } = await supabase
-        .from('StudentProfile')
-        .select('chapterId')
-        .eq('userId', userId)
+        .from('student_profile')
+        .select('chapter_id')
+        .eq('user_id', user_id)
         .single()
 
-      if (!rejecterProfile || !memberProfile || memberProfile.chapterId !== rejecterProfile.chapterId) {
+      if (!rejecterProfile || !memberProfile || memberProfile.chapter_id !== rejecterProfile.chapter_id) {
         return { success: false, error: 'Member not in your chapter' }
       }
     }
 
     const { error: updateError } = await supabase
-      .from('StudentProfile')
+      .from('student_profile')
       .update({ 
-        approvalStatus: 'rejected',
-        memberId: null,
-        isRecruiterVisible: false,
+        approval_status: 'rejected',
+        member_id: null,
+        is_recruiter_visible: false,
         updatedAt: new Date().toISOString()
       })
-      .eq('userId', userId)
+      .eq('user_id', user_id)
 
     if (updateError) {
       return { success: false, error: 'Failed to reject member' }
@@ -288,7 +288,7 @@ export async function rejectMember(userId: string, rejecterId: string, _reason?:
     revalidatePath('/chapter/members')
     revalidatePath('/chapter')
     revalidatePath('/admin/users')
-    revalidatePath(`/admin/users/${userId}`)
+    revalidatePath(`/admin/users/${user_id}`)
     revalidatePath('/admin/chapters')
     
     return { success: true }
@@ -297,7 +297,7 @@ export async function rejectMember(userId: string, rejecterId: string, _reason?:
   }
 }
 
-export async function revokeApproval(userId: string, revokerId: string) {
+export async function revokeApproval(user_id: string, revokerId: string) {
   try {
     const supabase = await createClient()
     
@@ -307,7 +307,7 @@ export async function revokeApproval(userId: string, revokerId: string) {
     }
 
     const { data: revoker, error: revokerError } = await supabase
-      .from('User')
+      .from('user')
       .select('id, role')
       .eq('id', revokerId)
       .single()
@@ -322,32 +322,32 @@ export async function revokeApproval(userId: string, revokerId: string) {
 
     if (revoker.role === 'editor') {
       const { data: revokerProfile } = await supabase
-        .from('StudentProfile')
-        .select('chapterId')
-        .eq('userId', revokerId)
+        .from('student_profile')
+        .select('chapter_id')
+        .eq('user_id', revokerId)
         .single()
 
       const { data: memberProfile } = await supabase
-        .from('StudentProfile')
-        .select('chapterId')
-        .eq('userId', userId)
+        .from('student_profile')
+        .select('chapter_id')
+        .eq('user_id', user_id)
         .single()
 
-      if (!revokerProfile || !memberProfile || memberProfile.chapterId !== revokerProfile.chapterId) {
+      if (!revokerProfile || !memberProfile || memberProfile.chapter_id !== revokerProfile.chapter_id) {
         return { success: false, error: 'Member not in your chapter' }
       }
     }
 
     const { error: updateError } = await supabase
-      .from('StudentProfile')
+      .from('student_profile')
       .update({ 
-        approvedById: null,
-        approvalStatus: 'pending',
-        memberId: null,
-        isRecruiterVisible: false,
+        approved_by_id: null,
+        approval_status: 'pending',
+        member_id: null,
+        is_recruiter_visible: false,
         updatedAt: new Date().toISOString()
       })
-      .eq('userId', userId)
+      .eq('user_id', user_id)
 
     if (updateError) {
       return { success: false, error: 'Failed to revoke approval' }
@@ -356,7 +356,7 @@ export async function revokeApproval(userId: string, revokerId: string) {
     revalidatePath('/chapter/members')
     revalidatePath('/chapter')
     revalidatePath('/admin/users')
-    revalidatePath(`/admin/users/${userId}`)
+    revalidatePath(`/admin/users/${user_id}`)
     revalidatePath('/admin/chapters')
     
     return { success: true }
