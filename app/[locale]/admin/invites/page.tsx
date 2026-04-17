@@ -8,9 +8,9 @@ import { InviteActions } from './components/invite-actions'
 import { getInvites, getCompanies } from '@/lib/actions/admin/get-data'
 
 function getInviteStatus(invite: RecruiterInvite): 'pending' | 'accepted' | 'expired' | 'revoked' {
-  if (invite.revokedAt) return 'revoked'
-  if (invite.acceptedAt) return 'accepted'
-  if (invite.inviteExpiresAt && new Date(invite.inviteExpiresAt) < new Date()) return 'expired'
+  if (invite.revoked_at) return 'revoked'
+  if (invite.accepted_at) return 'accepted'
+  if (invite.invite_expires_at && new Date(invite.invite_expires_at) < new Date()) return 'expired'
   return 'pending'
 }
 
@@ -198,13 +198,13 @@ async function InvitesList() {
                         </td>
                         <td className="p-3">
                           <span className="text-sm text-muted-foreground">
-                            {new Date(invite.grantedAt).toLocaleDateString()}
+                            {new Date(invite.granted_at).toLocaleDateString()}
                           </span>
                         </td>
                         <td className="p-3">
                           <span className="text-sm text-muted-foreground">
-                            {invite.inviteExpiresAt
-                              ? new Date(invite.inviteExpiresAt).toLocaleDateString()
+                            {invite.invite_expires_at
+                              ? new Date(invite.invite_expires_at).toLocaleDateString()
                               : 'Never'}
                           </span>
                         </td>

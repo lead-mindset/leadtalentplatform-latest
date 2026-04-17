@@ -5,7 +5,7 @@ import { requireAdmin } from '@/lib/auth'
 import { z } from 'zod'
 import type { CompanyRow, RecruiterAccessRow, UserRow } from '@/lib/types'
 
-export type CompanySortKey = 'name' | 'createdat' | 'activeRecruiters' | 'pendingInvites'
+export type CompanySortKey = 'name' | 'created_at' | 'activeRecruiters' | 'pendingInvites'
 export type SortOrder = 'asc' | 'desc'
 
 export type CompaniesFilters = {
@@ -22,7 +22,7 @@ export type CompaniesPagination = {
 export type CompanyListItem = {
   id: string
   name: string
-  createdat: string
+  created_at: string
   createdByName: string | null
   activeRecruiters: number
   pendingInvites: number
@@ -31,30 +31,30 @@ export type CompanyListItem = {
 export type CompanyDetail = {
   id: string
   name: string
-  createdat: string
+  created_at: string
   createdByName: string | null
   recruiters: {
     id: string
-    recruiterEmail: string
-    isActive: boolean
-    inviteToken: string
-    inviteExpiresAt: string | null
-    acceptedAt: string | null
-    acceptedByUserId: string | null
-    revokedAt: string | null
-    grantedAt: string
+    recruiter_email: string
+    is_active: boolean
+    invite_token: string
+    invite_expires_at: string | null
+    accepted_at: string | null
+    accepted_by_user_id: string | null
+    revoked_at: string | null
+    granted_at: string
   }[]
 }
 
 type ActionResult = { success: true } | { success: false; error: string }
 type InviteResult = ActionResult & { inviteLink?: string }
 
-type CompanyListRow = Pick<CompanyRow, 'id' | 'name' | 'createdat' | 'createdbyid'> & {
+type CompanyListRow = Pick<CompanyRow, 'id' | 'name' | 'created_at' | 'created_by_id'> & {
   CreatedBy: Pick<UserRow, 'name'> | Pick<UserRow, 'name'>[] | null
 }
 type CompanyAccessRow = Pick<
   RecruiterAccessRow,
-  'id' | 'companyId' | 'isActive' | 'acceptedAt' | 'revokedAt' | 'inviteExpiresAt'
+  'id' | 'company_id' | 'is_active' | 'accepted_at' | 'revoked_at' | 'invite_expires_at'
 >
 
 const companyNameSchema = z.string().trim().min(2).max(160)
@@ -85,9 +85,9 @@ function sortRows(rows: CompanyListItem[], sortBy: CompanySortKey, sortOrder: So
         return (a.activeRecruiters - b.activeRecruiters) * direction
       case 'pendingInvites':
         return (a.pendingInvites - b.pendingInvites) * direction
-      case 'createdat':
+      case 'created_at':
       default:
-        return (new Date(a.createdat).getTime() - new Date(b.createdat).getTime()) * direction
+        return (new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) * direction
     }
   })
 }
@@ -100,8 +100,8 @@ export async function getCompaniesList(
   const now = new Date().toISOString()
 
   let query = supabase
-    .from('Company')
-    .select('id, name, createdat, createdbyid, CreatedBy:User!Company_createdbyid_fkey(name)')
+    .from('company')
+    .select('id, name, created_at, created_by_id, CreatedBy:user!company_created_by_id_fkey(name)')
 
   const search = filters.search?.trim()
   if (search) {
@@ -117,7 +117,7 @@ export async function getCompaniesList(
   const companyRows = companies as CompanyListRow[]
   const ids = companyRows.map((company: CompanyListRow) => company.id)
   const { data: accessRows } = await supabase
-    .from('RecruiterAccess')
+    .from('recruiter_access')
     .select('id, companyId, isActive, acceptedAt, revokedAt, inviteExpiresAt')
     .in('companyId', ids)
 
@@ -137,14 +137,14 @@ export async function getCompaniesList(
     return {
       id: company.id,
       name: company.name,
-      createdat: company.createdat,
+      created_at: company.created_at,
       createdByName: createdBy?.name ?? null,
       activeRecruiters,
       pendingInvites,
     }
   })
 
-  const sortBy = pagination.sortBy ?? 'createdat'
+  const sortBy = pagination.sortBy ?? 'created_at'
   const sortOrder = pagination.sortOrder ?? 'desc'
   const sorted = sortRows(rows, sortBy, sortOrder)
   const page = Math.max(1, pagination.page)
@@ -163,8 +163,8 @@ export async function getCompanyById(id: string): Promise<CompanyDetail | null> 
   const { supabase } = await requireAdmin()
 
   const { data: company, error } = await supabase
-    .from('Company')
-    .select('id, name, createdat, createdbyid, CreatedBy:User!Company_createdbyid_fkey(name)')
+    .from('company')
+    .select('id, name, created_at, created_by_id, CreatedBy:user!company_created_by_id_fkey(name)')
     .eq('id', id)
     .maybeSingle()
 
@@ -174,10 +174,10 @@ export async function getCompanyById(id: string): Promise<CompanyDetail | null> 
   }
 
   const { data: recruiters, error: recruitersError } = await supabase
-    .from('RecruiterAccess')
-    .select('id, recruiterEmail, isActive, inviteToken, inviteExpiresAt, acceptedAt, acceptedByUserId, revokedAt, grantedAt')
-    .eq('companyId', id)
-    .order('grantedAt', { ascending: false })
+    .from('recruiter_access')
+    .select('id, recruiter_email, is_active, invite_token, invite_expires_at, accepted_at, accepted_by_user_id, revoked_at, granted_at')
+    .eq('company_id', id)
+    .order('granted_at', { ascending: false })
 
   if (recruitersError) {
     console.error('[admin/companies] getCompanyById recruiters error:', recruitersError)
@@ -187,7 +187,7 @@ export async function getCompanyById(id: string): Promise<CompanyDetail | null> 
   return {
     id: company.id,
     name: company.name,
-    createdat: company.createdat,
+    created_at: company.created_at,
     createdByName: createdBy?.name ?? null,
     recruiters: recruiters ?? [],
   }
@@ -202,7 +202,7 @@ export async function createCompany(name: string): Promise<ActionResult> {
     }
 
     const { error } = await supabase
-      .from('Company')
+      .from('company')
       .insert({ name: parsedName.data, createdbyid: user.id })
 
     if (error) {
@@ -226,7 +226,7 @@ export async function updateCompany(id: string, name: string): Promise<ActionRes
   }
 
   const { supabase } = await requireAdmin()
-  const { error } = await supabase.from('Company').update({ name: parsedName.data }).eq('id', id)
+  const { error } = await supabase.from('company').update({ name: parsedName.data }).eq('id', id)
   if (error) {
     console.error('[admin/companies] updateCompany error:', error)
     return { success: false, error: 'Failed to update company.' }
@@ -241,7 +241,7 @@ export async function deleteCompany(id: string): Promise<ActionResult> {
   const now = new Date().toISOString()
 
   const { count } = await supabase
-    .from('RecruiterAccess')
+    .from('recruiter_access')
     .select('id', { count: 'exact', head: true })
     .eq('companyId', id)
     .or(`isActive.eq.true,and(acceptedAt.is.null,revokedAt.is.null,inviteExpiresAt.is.null),and(acceptedAt.is.null,revokedAt.is.null,inviteExpiresAt.gt.${now})`)
@@ -250,7 +250,7 @@ export async function deleteCompany(id: string): Promise<ActionResult> {
     return { success: false, error: 'Cannot delete company with active recruiters or pending invites.' }
   }
 
-  const { error } = await supabase.from('Company').delete().eq('id', id)
+  const { error } = await supabase.from('company').delete().eq('id', id)
   if (error) {
     console.error('[admin/companies] deleteCompany error:', error)
     return { success: false, error: 'Failed to delete company.' }
@@ -271,7 +271,7 @@ export async function generateInviteToken(
 
   const { supabase, user } = await requireAdmin()
   const token = crypto.randomUUID()
-  const { error } = await supabase.from('RecruiterAccess').insert({
+  const { error } = await supabase.from('recruiter_access').insert({
     companyId: parsedInvite.data.companyId,
     recruiterEmail: parsedInvite.data.recruiterEmail,
     grantedById: user.id,
@@ -293,7 +293,7 @@ export async function generateInviteToken(
 export async function revokeAccess(accessId: string): Promise<ActionResult> {
   const { supabase, user } = await requireAdmin()
   const { error } = await supabase
-    .from('RecruiterAccess')
+    .from('recruiter_access')
     .update({
       revokedAt: new Date().toISOString(),
       revokedById: user.id,
@@ -313,7 +313,7 @@ export async function resendInvite(accessId: string): Promise<InviteResult> {
   const { supabase } = await requireAdmin()
 
   const { data: access } = await supabase
-    .from('RecruiterAccess')
+    .from('recruiter_access')
     .select('id, companyId, inviteToken, acceptedAt, revokedAt')
     .eq('id', accessId)
     .maybeSingle()
@@ -324,7 +324,7 @@ export async function resendInvite(accessId: string): Promise<InviteResult> {
 
   const token = crypto.randomUUID()
   const { error } = await supabase
-    .from('RecruiterAccess')
+    .from('recruiter_access')
     .update({
       inviteToken: token,
       inviteExpiresAt: getExpiryDate(7),
@@ -346,13 +346,13 @@ export async function getCompanyStats(id: string) {
   const now = new Date().toISOString()
   const [{ count: activeRecruiters }, { count: pendingInvites }] = await Promise.all([
     supabase
-      .from('RecruiterAccess')
+      .from('recruiter_access')
       .select('id', { count: 'exact', head: true })
       .eq('companyId', id)
       .eq('isActive', true)
       .is('revokedAt', null),
     supabase
-      .from('RecruiterAccess')
+      .from('recruiter_access')
       .select('id', { count: 'exact', head: true })
       .eq('companyId', id)
       .is('acceptedAt', null)
