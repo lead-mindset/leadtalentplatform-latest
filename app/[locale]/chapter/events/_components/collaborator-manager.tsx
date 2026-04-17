@@ -20,7 +20,11 @@ import { addEventCollaborator, removeEventCollaborator, getEventCollaborators } 
 type Collaborator = {
   id: string
   chapterId: string
-  chapter: ChapterRow
+  chapter: {
+    id: string
+    name: string
+    university: string
+  }
   addedAt: string
   addedBy: {
     id: string
@@ -64,7 +68,32 @@ export function CollaboratorManager({
             console.error('Failed to load event collaborators:', result.error)
             setCollaborators([])
           } else {
-            setCollaborators(result.data || [])
+            // Handle case where Supabase returns chapter as array or object
+            const normalizedData = (result.data || [])
+              .map((collab: any): Collaborator => {
+                const chapter = Array.isArray(collab.chapter) ? collab.chapter[0] : collab.chapter
+const addedBy = Array.isArray(collab.addedBy) ? collab.addedBy[0] : collab.addedBy
+
+                if (!chapter || !addedBy) return null as any
+
+                return {
+                  id: collab.id,
+                  chapterId: collab.chapterId,
+                  chapter: {
+                    id: chapter.id,
+                    name: chapter.name,
+                    university: chapter.university
+                  },
+                  addedAt: collab.addedAt,
+                  addedBy: {
+                    id: addedBy.id,
+                    name: addedBy.name,
+                    email: addedBy.email
+                  },
+                }
+              })
+              .filter((collab): collab is Collaborator => collab != null)
+            setCollaborators(normalizedData)
           }
         }
       } catch (error) {
@@ -96,13 +125,35 @@ export function CollaboratorManager({
           return
         }
 
-        const updatedCollaborators = [...collaborators, result.data]
-        setCollaborators(updatedCollaborators)
-        setAvailableChapters(availableChapters.filter(c => c.id !== selectedChapterId))
-        setSelectedChapterId('')
-        
-        // Notify parent component about collaborator changes
-        onCollaboratorsChange?.(updatedCollaborators.map(c => c.chapterId))
+        // Handle case where Supabase returns chapter as array or object
+        const chapter = Array.isArray(result.data?.chapter) ? result.data.chapter[0] : result.data?.chapter
+        const addedBy = Array.isArray(result.data?.addedBy) ? result.data.addedBy[0] : result.data?.addedBy
+
+          if (!chapter || !addedBy || !result.data) {
+            return
+          }
+
+          const newCollaborator: Collaborator = {
+            id: result.data.id,
+            chapterId: result.data.chapterId,
+            chapter: {
+              id: chapter.id,
+              name: chapter.name,
+              university: chapter.university
+            },
+            addedAt: result.data.addedAt,
+            addedBy: {
+              id: addedBy.id,
+              name: addedBy.name,
+              email: addedBy.email
+            },
+          }
+
+          setCollaborators(prev => {
+            const updated = [...prev, newCollaborator]
+            onCollaboratorsChange?.(updated.map(c => c.chapterId))
+            return updated
+          })
         
         toast.success(`${selectedChapter.name} added as collaborator`)
       } catch (error) {
@@ -126,7 +177,11 @@ export function CollaboratorManager({
 
         const updatedCollaborators = collaborators.filter(c => c.id !== collaborator.id)
         setCollaborators(updatedCollaborators)
-        setAvailableChapters([...availableChapters, collaborator.chapter])
+        // Find the full chapter object from all chapters to add back to available chapters
+        const fullChapter = availableChapters.find(c => c.id === collaborator.chapterId)
+        if (fullChapter) {
+          setAvailableChapters([...availableChapters, fullChapter])
+        }
         
         onCollaboratorsChange?.(updatedCollaborators.map(c => c.chapterId))
         
