@@ -3,6 +3,7 @@ import { EventAccessModel, RegistrationStatus } from '@/lib/types'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Icons } from '@/components/ui/icons'
+import { LocationDisplay } from './location-display'
 
 function formatDateTime(date: Date) {
   return date.toLocaleString(undefined, {
@@ -30,6 +31,12 @@ interface EventCardProps {
   coverImage?: string | null
   onRegister?: () => void
   onViewDetails?: () => void
+  locationName?: string | null
+  locationAddress?: string | null
+  locationCity?: string | null
+  locationRegion?: string | null
+  locationLatitude?: number | null
+  locationLongitude?: number | null
 }
 
 export function EventCard({
@@ -46,6 +53,12 @@ export function EventCard({
   coverImage,
   onRegister,
   onViewDetails,
+  locationName,
+  locationAddress,
+  locationCity,
+  locationRegion,
+  locationLatitude,
+  locationLongitude,
 }: EventCardProps) {
   const isOnline = eventType === 'online'
   const isHybrid = eventType === 'hybrid'
@@ -92,13 +105,19 @@ export function EventCard({
           <span>{formatDateTime(startAt)}</span>
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          {isOnline ? <Icons.Video /> : <Icons.MapPin />}
-          <span>
-            {isOnline ? 'Online event' : location || 'Location TBD'}
-            {isHybrid ? ' + Online' : ''}
-          </span>
-        </div>
+        <LocationDisplay 
+          event={{
+            event_type: eventType,
+            location_name: locationName,
+            location_address: locationAddress,
+            location_city: locationCity,
+            location_region: locationRegion,
+            meeting_url: meetingUrl,
+            location_latitude: locationLatitude,
+            location_longitude: locationLongitude,
+          }}
+          className="text-sm text-muted-foreground"
+        />
 
         {capacity ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
