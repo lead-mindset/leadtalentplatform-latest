@@ -1,0 +1,29 @@
+import type { EventRow, ChapterRow, UserRow } from '@/lib/types'
+
+
+export function canEditLocation(
+  event: EventRow | null,
+  user: UserRow | null,
+  userChapter: ChapterRow | null
+): boolean {
+  if (!event || !user) return false
+
+  if (event.created_by_id === user.id) {
+    return true
+  }
+
+  // Chapter admins can edit location for events in their chapter
+  if (userChapter?.id === event.chapter_id && (userChapter as any).role === 'admin') {
+    return true
+  }
+
+  return false
+}
+
+export function isLocationDisabled(
+  event: EventRow | null,
+  user: UserRow | null,
+  userChapter: ChapterRow | null
+): boolean {
+  return !canEditLocation(event, user, userChapter)
+}
