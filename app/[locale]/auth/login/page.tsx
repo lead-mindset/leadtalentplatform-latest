@@ -1,16 +1,16 @@
 import { LoginForm } from "@/components/login-form";
 
 export const metadata = {
-  title: 'Sign In',
+  title: 'Sign In - LEAD Talent Platform',
   description: 'Sign in to your LEAD Talent Platform account.',
 }
 
 export default function Page() {
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
+    <main className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
       <div className="w-full max-w-sm">
         <LoginForm />
       </div>
-    </div>
+    </main>
   );
 }
