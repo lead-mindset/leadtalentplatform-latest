@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { getChapterEvents } from '@/lib/actions/events/get-data'
 import { getCheckInCounter } from '@/lib/actions/events/checkin'
 import { CheckinScanner } from '../events/_components/checkin-scanner'
+import { Breadcrumb } from '@/components/ui/breadcrumb'
 
 function formatDate(value: string) {
   const d = new Date(value)
@@ -34,6 +35,10 @@ export default async function ChapterCheckinPage({
 
   return (
     <div className="container max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+      <Breadcrumb items={[
+        { label: 'Dashboard', href: '/chapter' },
+        { label: 'Check-in' }
+      ]} />
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Check-in</h1>
         <p className="text-muted-foreground text-lg">

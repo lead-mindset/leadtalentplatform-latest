@@ -11,6 +11,7 @@ import { MembersTabs } from './components/member-tabs'
 import type { MemberWithProfile } from '@/lib/types'
 import { getChapterMembers, getMemberStats } from '@/lib/actions/chapter/get-data'
 import { MembersList } from './components/members-list'
+import { Breadcrumb } from '@/components/ui/breadcrumb'
 
 export type MemberFilterStatus = 'pending' | 'active' | 'rejected'
 
@@ -79,6 +80,10 @@ export default async function ChapterMembersPage({
 
   return (
     <div className="container max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+      <Breadcrumb items={[
+        { label: 'Dashboard', href: '/chapter' },
+        { label: 'Members' }
+      ]} />
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Chapter Members</h1>
         <p className="text-muted-foreground text-lg">

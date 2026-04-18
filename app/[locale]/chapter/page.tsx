@@ -8,6 +8,7 @@ import type { MemberWithProfile, RecentActivityMember } from '@/lib/types'
 import { getChapterMembers, getMemberStats, getRecentChapterActivity } from '@/lib/actions/chapter/get-data'
 import { getChapterEvents } from '@/lib/actions/events/get-data'
 import MemberCard from './members/components/member-card'
+import { Breadcrumb } from '@/components/ui/breadcrumb'
 
 
 function StatCard({
@@ -274,6 +275,9 @@ async function ChapterContent() {
 
   return (
     <div className="container max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb items={[{ label: 'Dashboard', href: '/chapter' }]} />
 
       {/* Page Header with Clear Hierarchy */}
       <div className="space-y-2">

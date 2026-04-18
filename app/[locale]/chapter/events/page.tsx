@@ -4,12 +4,18 @@ import Link from 'next/link'
 import { getChapterEvents } from '@/lib/actions/events/get-data'
 import { EventsTable } from './_components/events-table'
 import { Icons } from '@/components/ui/icons'
+import { Breadcrumb } from '@/components/ui/breadcrumb'
 
 export default async function ChapterEventsPage() {
   const events = await getChapterEvents()
 
   return (
     <div className="container max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+      <Breadcrumb items={[
+        { label: 'Dashboard', href: '/chapter' },
+        { label: 'Events' }
+      ]} />
+
       {/* Page Header with Clear Hierarchy */}
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
