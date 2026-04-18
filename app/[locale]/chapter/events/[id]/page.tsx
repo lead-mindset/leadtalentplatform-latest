@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { useLocale } from 'next-intl'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import type { EventRow, ChapterRow } from '@/lib/types'
@@ -8,9 +9,9 @@ import { EventForm } from '../_components/event-form'
 export default async function ChapterEventDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string, locale: string }>
 }) {
-  const { id } = await params
+  const { id, locale } = await params
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -44,11 +45,11 @@ export default async function ChapterEventDetailPage({
         </div>
         <div className="flex items-center gap-2">
           <Button asChild variant="outline">
-            <Link href="/chapter/events">Back</Link>
+            <Link href={`/${locale}/chapter/events`}>Back</Link>
           </Button>
           {event?.id && (
             <Button asChild variant="outline">
-              <Link href={`/chapter/events/${event.id}/checkin`}>Check-in</Link>
+              <Link href={`/${locale}/chapter/events/${event.id}/checkin`}>Check-in</Link>
             </Button>
           )}
         </div>

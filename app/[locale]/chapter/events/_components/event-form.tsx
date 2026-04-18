@@ -13,6 +13,7 @@ import { addEventCollaborators } from '@/lib/actions/events/add-event-collaborat
 import type { EventRow, EventType, EventAccessModel, ChapterRow } from '@/lib/types'
 import { EVENT_ACCESS_MODEL_OPTIONS, EVENT_TYPE_OPTIONS } from '@/lib/constants'
 import { useRouter } from 'next/navigation'
+import { useLocale } from 'next-intl'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { uploadEventCover } from '@/lib/actions/events/upload-cover'
 import { ImagePlus, HelpCircle } from 'lucide-react'
@@ -53,6 +54,7 @@ export function EventForm({
   editorChapter?: ChapterRow | null
 }) {
   const router = useRouter()
+  const locale = useLocale()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
@@ -204,7 +206,7 @@ export function EventForm({
         setIsPublished(res.event.isPublished)
 
         if (mode === 'create') {
-          router.push(`/chapter/events/${res.event.id}/edit`)
+          router.push(`/${locale}/chapter/events/${res.event.id}/edit`)
         } else {
           router.refresh()
         }
@@ -253,7 +255,7 @@ export function EventForm({
         setError(res.error)
         return
       }
-      router.push('/chapter/events')
+      router.push(`/${locale}/chapter/events`)
     })
   }
 
