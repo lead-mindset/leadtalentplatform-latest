@@ -14,7 +14,7 @@ import type {
 // Shared select string — keeps both query functions consistent
 const STUDENT_SELECT = `
   id, email, name, phone, created_at,
-  StudentProfile!StudentProfile_user_id_fkey (
+  StudentProfile!inner (
     major, graduation_year, linkedin_url, skills,
     is_recruiter_visible, is_filled, updated_at, chapter_id,
     Chapter:Chapter!StudentProfile_chapter_id_fkey (
@@ -71,7 +71,7 @@ function mapStudentRow(user: RecruiterStudentRow): StudentForRecruiter | null {
 
 /**
  * Returns all students visible to recruiters.
- * Filters by role=member AND isRecruiterVisible=true at the DB level.
+ * Filters by role in ['member', 'editor'] AND isRecruiterVisible=true at the DB level.
  */
 export async function getVisibleStudents(
   supabase: SupabaseClient<Database>
@@ -79,7 +79,7 @@ export async function getVisibleStudents(
   const { data, error } = await supabase
     .from('user')
     .select(STUDENT_SELECT)
-    .eq('role', 'member')
+    .in('role', ['member', 'editor'])
     .eq('StudentProfile.is_recruiter_visible', true)
     .eq('StudentProfile.is_filled', true)
 .order('created_at', { ascending: false })
@@ -111,7 +111,7 @@ export async function getStudentById(
     .from('user')
 .select(STUDENT_SELECT)
     .eq('id', studentId)
-    .eq('role', 'member')
+    .in('role', ['member', 'editor'])
     .eq('StudentProfile.is_recruiter_visible', true)
     .eq('StudentProfile.is_filled', true)
     .single()
@@ -149,7 +149,7 @@ export async function getSavedStudents(
       id, recruiter_id, student_id, saved_at, notes,
       Student:User!SavedStudent_student_id_fkey (
         id, email, name, phone, created_at,
-        StudentProfile!StudentProfile_user_id_fkey (
+        StudentProfile!inner (
           major, graduation_year, linkedin_url, skills,
           is_recruiter_visible, is_filled, updated_at, chapter_id,
           Chapter:Chapter!StudentProfile_chapter_id_fkey (
@@ -360,7 +360,7 @@ export async function toggleSaveStudent(
       .from('saved_student')
       .insert({
         recruiter_id: userId,
-        student_id,
+        student_id: studentId,
         saved_at: new Date().toISOString(),
         notes: null,
       })

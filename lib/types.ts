@@ -9,7 +9,7 @@ import type {
   Enums,
   CompositeTypes,
   Json,
-} from '@/lib/database.generated'
+} from '@/lib/supabase.ts'
 
 export type EventType = 'in_person' | 'online' | 'hybrid'
 export type EventAccessModel = 'open' | 'application'
@@ -88,35 +88,37 @@ export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES]
 // ============================================================================
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected'
 
-export type { Json, Database, Tables, TablesInsert, TablesUpdate, Enums, CompositeTypes } from '@/lib/database.generated'
+export type { Json, Database, Tables, TablesInsert, TablesUpdate, Enums, CompositeTypes } from '@/lib/supabase'
 
-export { Constants } from '@/lib/database.generated'
+export { Constants } from '@/lib/supabase'
 
 // ============================================================================
 // EXTRACTED ROW TYPES
 // ============================================================================
 
-export type UserRow = Database["public"]["Tables"]["User"]["Row"];
-export type ChapterRow = Database["public"]["Tables"]["Chapter"]["Row"];
-export type StudentProfileRow = Database["public"]["Tables"]["StudentProfile"]["Row"];
-export type CompanyRow = Database["public"]["Tables"]["Company"]["Row"];
-export type RecruiterAccessRow = Database["public"]["Tables"]["RecruiterAccess"]["Row"];
-export type ResumeRow = Database["public"]["Tables"]["Resume"]["Row"];
-export type ResumeDownloadLogRow = Database["public"]["Tables"]["ResumeDownloadLog"]["Row"];
-export type EventRow = Database["public"]["Tables"]["Event"]["Row"]
-export type EventRegistrationRow = Database["public"]["Tables"]["EventRegistration"]["Row"]
-export type SavedStudentRow = Database["public"]["Tables"]["SavedStudent"]["Row"]
+export type UserRow = Database["public"]["Tables"]["user"]["Row"];
+export type ChapterRow = Database["public"]["Tables"]["chapter"]["Row"];
+export type StudentProfileRow = Database["public"]["Tables"]["student_profile"]["Row"];
 
-export type EventChapterRow = {
-  id: string // uuid
-  event_id: string // uuid
-  chapter_id: string // text
-  added_at: string // timestamptz
-  added_by_id: string // uuid
-}
+export type CompanyRow = Database["public"]["Tables"]["company"]["Row"];
 
-export type EventChapterInsert = Omit<EventChapterRow, 'id' | 'added_at'>
-export type EventChapterUpdate = Partial<EventChapterInsert>
+export type RecruiterAccessRow = Database["public"]["Tables"]["recruiter_access"]["Row"];
+
+export type ResumeRow = Database["public"]["Tables"]["resume"]["Row"];
+
+export type ResumeDownloadLogRow = Database["public"]["Tables"]["resume_download_log"]["Row"];
+
+export type EventRegistrationRow = Database["public"]["Tables"]["event_registration"]["Row"];
+
+export type SavedStudentRow = Database["public"]["Tables"]["saved_student"]["Row"];
+
+export type EventRow = Database["public"]["Tables"]["event"]["Row"];
+
+export type EventChapterRow = Database["public"]["Tables"]["event_chapter"]["Row"];
+
+export type EventChapterInsert = Omit<EventChapterRow, 'id' | 'added_at'>;
+
+export type EventChapterUpdate = Partial<EventChapterInsert>;
 
 // ============================================================================
 // COMPOSITE TYPES - Used in queries with joins
@@ -147,6 +149,27 @@ export type EventWithDetailsRaw = EventRow & {
   })[] | null
   CreatedBy: Pick<UserRow, 'id' | 'name' | 'email'>[]
   EventRegistration: { id: string; status: RegistrationStatus }[]
+}
+
+export type UserWithDetailsRaw = UserRow & {
+  StudentProfile: {
+    is_filled: boolean
+    approved_by_id: string | null
+    is_recruiter_visible: boolean
+    approval_status: 'pending' | 'approved' | 'rejected'
+    chapter_id: string | null
+    Chapter: Pick<ChapterRow, 'name' | 'university'> | Pick<ChapterRow, 'name' | 'university'>[] | null
+  } | null
+}
+
+export type UserWithDetails = UserRow & {
+  Chapter: Pick<ChapterRow, 'name' | 'university'> | null
+  StudentProfile: {
+    is_filled: boolean
+    approved_by_id: string | null
+    is_recruiter_visible: boolean
+    approval_status: 'pending' | 'approved' | 'rejected'
+  } | null
 }
 
 export type EventWithDetails = EventRow & {
@@ -181,16 +204,6 @@ export type RegistrationWithUser = EventRegistrationRow & {
 // ============================================================================
 // QUERY RESULT TYPES - Raw types from Supabase queries
 // ============================================================================
-export type UserWithDetailsRaw = UserRow & {
-  StudentProfile: (Pick<StudentProfileRow, "is_filled" | "approved_by_id" | "is_recruiter_visible" | "approval_status" | "chapter_id"> & {
-    Chapter: Pick<ChapterRow, "name" | "university"> | null;
-  }) | null;
-};
-
-export type UserWithDetails = UserRow & {
-  Chapter: Pick<ChapterRow, "name" | "university"> | null;
-  StudentProfile: Pick<StudentProfileRow, "is_filled" | "approved_by_id" | "is_recruiter_visible" | 'approval_status'> | null;
-};
 
 export type RecruiterInviteRaw = {
   id: string;

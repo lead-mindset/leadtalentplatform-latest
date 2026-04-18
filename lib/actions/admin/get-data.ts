@@ -44,8 +44,8 @@ export type PendingRecruiterRequestItem = {
   id: string
   recruiterEmail: string
   companyName: string | null
-  granted_at: string
-  invite_expires_at: string | null
+  grantedAt: string
+  inviteExpiresAt: string | null
 }
 
 type ChapterIdRow = {
@@ -257,15 +257,15 @@ export async function getPendingRecruiterRequests(): Promise<PendingRecruiterReq
     .from('recruiter_access')
     .select(`
       id,
-      recruiterEmail,
-      grantedAt,
-      inviteExpiresAt,
+      recruiter_email,
+      granted_at,
+      invite_expires_at,
       Company(name)
     `)
-    .is('acceptedAt', null)
-    .is('revokedAt', null)
-    .or(`inviteExpiresAt.is.null,inviteExpiresAt.gt.${now}`)
-    .order('grantedAt', { ascending: false })
+    .is('accepted_at', null)
+    .is('revoked_at', null)
+    .or(`invite_expires_at.is.null,invite_expires_at.gt.${now}`)
+    .order('granted_at', { ascending: false })
     .limit(10)
 
   if (error || !data) {
@@ -277,10 +277,10 @@ export async function getPendingRecruiterRequests(): Promise<PendingRecruiterReq
     const company = Array.isArray(item.Company) ? item.Company[0] : item.Company
     return {
       id: item.id,
-      recruiterEmail: item.recruiterEmail,
+      recruiterEmail: item.recruiter_email,
       companyName: company?.name ?? null,
-      grantedAt: item.grantedAt,
-      inviteExpiresAt: item.inviteExpiresAt ?? null,
+      grantedAt: item.granted_at,
+      inviteExpiresAt: item.invite_expires_at ?? null,
     }
   })
 }
@@ -375,7 +375,7 @@ export async function getRecentActivity() {
     .select(`
       user_id,
       updated_at,
-      User!StudentProfile_user_id_fkey (
+      User!inner (
         name,
         email
       ),
@@ -447,21 +447,21 @@ export async function getChapters(): Promise<ChapterWithCount[]> {
 const ADMIN_PROFILE_SELECT = `
   user_id,
   major,
-  graduationYear,
-  linkedinUrl,
+  graduation_year,
+  linkedin_url,
   skills,
-  consentRecruiterVisibility,
+  consent_recruiter_visibility,
   is_recruiter_visible,
   approved_by_id,
   approval_status,
   is_filled,
   updated_at,
   created_at,
-  consentDate,
+  consent_date,
   chapter_id,
-  emailNotificationsEnabled,
+  email_notifications_enabled,
   gender,
-  User:User!StudentProfile_user_id_fkey (
+  User:User!inner (
     id,
     email,
     name,
@@ -499,23 +499,23 @@ function mapAdminProfile(profile: AdminProfileSummaryRow): MemberWithProfile | n
     role: user.role as MemberWithProfile['role'],
     created_at: user.created_at,
     updated_at: user.updated_at,
-    deactivatedAt: user.deactivatedAt ?? null,
+    deactivatedAt: user.deactivated_at ?? null,
     StudentProfile: {
       user_id: profile.user_id,
       major: profile.major,
-      graduationYear: profile.graduationYear,
-      linkedinUrl: profile.linkedinUrl,
+      graduationYear: profile.graduation_year,
+      linkedinUrl: profile.linkedin_url,
       skills,
-      consentRecruiterVisibility: profile.consentRecruiterVisibility,
+      consentRecruiterVisibility: profile.consent_recruiter_visibility,
       is_recruiter_visible: profile.is_recruiter_visible,
       approved_by_id: profile.approved_by_id,
       approval_status: profile.approval_status,
       is_filled: profile.is_filled,
       updated_at: profile.updated_at,
       created_at: profile.created_at,
-      consentDate: profile.consentDate,
+      consentDate: profile.consent_date,
       chapter_id: profile.chapter_id,
-      emailNotificationsEnabled: profile.emailNotificationsEnabled,
+      emailNotificationsEnabled: profile.email_notifications_enabled,
       gender: profile.gender,
       memberId: null,
     },
@@ -649,7 +649,7 @@ export async function getActivityLog(): Promise<ActivityItem[]> {
       user_id,
       updated_at,
       chapter_id,
-      Student:User!StudentProfile_user_id_fkey (
+      Student:User!inner (
         name,
         email
       ),
@@ -671,9 +671,9 @@ export async function getActivityLog(): Promise<ActivityItem[]> {
     .from('recruiter_access')
     .select(`
       id,
-      grantedAt,
-      acceptedAt,
-      revokedAt,
+      granted_at,
+      accepted_at,
+      revoked_at,
       recruiterEmail,
       Company (name),
       GrantedBy:User!RecruiterAccess_grantedById_fkey (
@@ -725,28 +725,28 @@ export async function getActivityLog(): Promise<ActivityItem[]> {
       activities.push({
         id: `invite-sent-${invite.id}`,
         type: 'invite_sent',
-        timestamp: invite.grantedAt,
+        timestamp: invite.granted_at,
         actor: grantedBy ?? null,
         target: { name: null, email: invite.recruiterEmail },
         company: company ?? null,
       })
 
-      if (invite.acceptedAt) {
+      if (invite.accepted_at) {
         activities.push({
           id: `invite-accepted-${invite.id}`,
           type: 'invite_accepted',
-          timestamp: invite.acceptedAt,
+          timestamp: invite.accepted_at,
           actor: acceptedBy ?? null,
           target: { name: null, email: invite.recruiterEmail },
           company: company ?? null,
         })
       }
 
-      if (invite.revokedAt) {
+      if (invite.revoked_at) {
         activities.push({
           id: `invite-revoked-${invite.id}`,
           type: 'invite_revoked',
-          timestamp: invite.revokedAt,
+          timestamp: invite.revoked_at,
           actor: revokedBy ?? null,
           target: { name: null, email: invite.recruiterEmail },
           company: company ?? null,
@@ -871,14 +871,14 @@ export async function getUserById(id: string): Promise<UserWithFullProfile | nul
       created_at,
       updated_at,
       deactivatedAt,
-      StudentProfile!StudentProfile_user_id_fkey (
+      StudentProfile!inner (
         user_id,
         major,
-        graduationYear,
-        linkedinUrl,
+        graduation_year,
+        linkedin_url,
         skills,
-        consentRecruiterVisibility,
-        consentDate,
+        consent_recruiter_visibility,
+        consent_date,
         created_at,
         updated_at,
         approval_status,
@@ -886,7 +886,7 @@ export async function getUserById(id: string): Promise<UserWithFullProfile | nul
         approved_by_id,
         is_filled,
         chapter_id,
-        emailNotificationsEnabled,
+        email_notifications_enabled,
         gender,
         memberId,
         Chapter!StudentProfile_chapter_id_fkey (id, name, university, city, region, created_at, updated_at)
