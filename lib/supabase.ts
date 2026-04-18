@@ -44,6 +44,10 @@ export type Database = {
           city: string | null
           created_at: string | null
           id: string
+          instagram_url: string | null
+          latitude: number | null
+          location_point: unknown
+          longitude: number | null
           name: string
           region: string | null
           university: string
@@ -53,6 +57,10 @@ export type Database = {
           city?: string | null
           created_at?: string | null
           id: string
+          instagram_url?: string | null
+          latitude?: number | null
+          location_point?: unknown
+          longitude?: number | null
           name: string
           region?: string | null
           university: string
@@ -62,6 +70,10 @@ export type Database = {
           city?: string | null
           created_at?: string | null
           id?: string
+          instagram_url?: string | null
+          latitude?: number | null
+          location_point?: unknown
+          longitude?: number | null
           name?: string
           region?: string | null
           university?: string
