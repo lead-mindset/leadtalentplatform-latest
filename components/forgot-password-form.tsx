@@ -51,7 +51,9 @@ export function ForgotPasswordForm({
       {success ? (
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">{t('checkYourEmail')}</CardTitle>
+            <CardTitle asChild>
+              <h1 className="text-2xl">{t('checkYourEmail')}</h1>
+            </CardTitle>
             <CardDescription>{t('passwordResetSent')}</CardDescription>
           </CardHeader>
           <CardContent>
@@ -63,7 +65,9 @@ export function ForgotPasswordForm({
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">{t('resetYourPassword')}</CardTitle>
+            <CardTitle asChild>
+              <h1 className="text-2xl">{t('resetYourPassword')}</h1>
+            </CardTitle>
             <CardDescription>
               {t('resetPasswordDescription')}
             </CardDescription>

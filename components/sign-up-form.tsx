@@ -79,8 +79,10 @@ export function SignUpForm({
       <div className={cn("w-full max-w-md space-y-6", className)} {...props}>
         <Card>
           <CardHeader className="space-y-2">
-            <CardTitle className="text-2xl font-semibold tracking-tight">
-              {t('createAccount')}
+            <CardTitle asChild>
+              <h1 className="text-2xl font-semibold tracking-tight">
+                {t('createAccount')}
+              </h1>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">

@@ -72,8 +72,10 @@ export function LoginForm({
 
         <Card>
           <CardHeader className="space-y-2">
-            <CardTitle className="text-2xl font-semibold tracking-tight">
-              {t('welcomeBack')}
+            <CardTitle asChild>
+              <h1 className="text-2xl font-semibold tracking-tight">
+                {t('welcomeBack')}
+              </h1>
             </CardTitle>
             <CardDescription className="text-base">
               {t('signInToAccount')}
