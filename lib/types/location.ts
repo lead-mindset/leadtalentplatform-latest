@@ -1,5 +1,6 @@
 export interface LocationData {
   address: string;
+  venueName?: string;
   city?: string;
   region?: string;
   lat: number;
