@@ -1,4 +1,4 @@
-import { requireChapterEditor } from '@/lib/auth'
+import { requireChapterMember } from '@/lib/auth'
 import {
   Card,
   CardContent,
@@ -38,7 +38,7 @@ export default async function ChapterMembersPage({
 }) {
   const { status } = await searchParams
 
-  const { supabase, user, chapterId } = await requireChapterEditor()
+  const { supabase, user, chapterId } = await requireChapterMember()
 
   const { data: profile } = await supabase
     .from('student_profile')
