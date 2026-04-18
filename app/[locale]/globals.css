@@ -70,8 +70,8 @@
   --popover:            oklch(0.17 0.12 266);    /* +3L above bg */
   --popover-foreground: oklch(0.97 0.012 265);
 
-  --primary:            oklch(0.60 0.22 2);
-  --primary-foreground: oklch(0.97 0.012 265);
+  --primary:            oklch(0.55 0.22 2);
+  --primary-foreground: oklch(1.0 0 0);
 
   --secondary:          oklch(0.46 0.24 320);
   --secondary-foreground: oklch(0.97 0.012 265);
@@ -139,8 +139,8 @@
   --popover:            oklch(0.17 0.12 266);
   --popover-foreground: oklch(0.97 0.012 265);
 
-  --primary:            oklch(0.60 0.22 2);
-  --primary-foreground: oklch(0.97 0.012 265);
+  --primary:            oklch(0.55 0.22 2);
+  --primary-foreground: oklch(1.0 0 0);
 
   --secondary:            oklch(0.46 0.24 320);
   --secondary-foreground: oklch(0.97 0.012 265);
