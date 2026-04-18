@@ -609,7 +609,7 @@ export async function getEventRegistrations(eventId: string): Promise<Registrati
         name,
         email,
         phone,
-        StudentProfile!StudentProfile_user_id_fkey ( major, graduation_year, linkedin_url )
+        StudentProfile!inner ( major, graduation_year, linkedin_url )
       )
     `)
     .eq('event_id', eventId)
