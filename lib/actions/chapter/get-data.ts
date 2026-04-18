@@ -19,17 +19,7 @@ const PROFILE_SELECT = `
   email_notifications_enabled,
   gender,
   member_id,
-  User:User!StudentProfile_user_id_fkey (
-    id,
-    email,
-    name,
-    phone,
-    role,
-    created_at,
-    updated_at,
-    deactivated_at
-  ),
-  Chapter:Chapter!StudentProfile_chapter_id_fkey (
+  Chapter:chapter_id (
     id,
     name,
     university,
