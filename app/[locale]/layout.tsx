@@ -7,17 +7,17 @@ import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { Suspense } from 'react';
-import { Open_Sans, Raleway } from "next/font/google";
+import { Raleway, Montserrat } from "next/font/google";
 import { GoogleMapsProvider } from "@/components/global/google-maps-provider";
-
-const openSans = Open_Sans({
-  subsets: ["latin"],
-  variable: "--font-open-sans",
-});
 
 const raleway = Raleway({
   subsets: ["latin"],
   variable: "--font-raleway",
+});
+
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  variable: "--font-montserrat",
 });
 
 const defaultUrl = process.env.FRONTEND_URL
@@ -69,7 +69,7 @@ export default function LocaleLayout({
   return (
     <html
       lang={routing.defaultLocale}
-      className={`${openSans.variable} ${raleway.variable}`}
+      className={` ${raleway.variable} ${montserrat.variable}`}
       suppressHydrationWarning
     >
       <body className="antialiased">
