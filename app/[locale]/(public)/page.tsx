@@ -2,11 +2,12 @@ import { Navbar } from "./_components/navbar";
 import { Hero } from "./_components/hero";
 import { ProofStrip } from "./_components/proofstrip";
 import { ValueCards } from "./_components/value-cards";
-import { EventsStrip } from "./_components/events-strip";
-import { HowItWorks } from "./_components/how-it-works";
 import { CompanyBand } from "./_components/company-band";
-import { Footer } from "./_components/footer";
 import { FinalCTA } from "./_components/final-cta";
+import { ChaptersMap } from "./_components/chapters-map";
+import { Leadership } from "./_components/leadership";
+import { Gallery } from "./_components/gallery";
+import { Footer } from "./_components/footer";
 
 export const metadata = {
   title: 'LEAD Talent Platform',
@@ -15,8 +16,7 @@ export const metadata = {
 
 export default function MarketingHomePage() {
   return (
-    <div className="min-h-screen flex flex-col text-foreground antialiased relative overflow-hidden">
-
+    <div className="min-h-screen flex flex-col text-foreground antialiased relative overflow-hidden bg-background">
       <div className="relative z-10">
         <Navbar />
         <main className="flex-1">
@@ -25,6 +25,9 @@ export default function MarketingHomePage() {
           <ValueCards />
           <CompanyBand />
           <FinalCTA />
+          <ChaptersMap />
+          <Leadership />
+          <Gallery />
         </main>
         <Footer />
       </div>
