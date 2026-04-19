@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { LogOut, Bell, User } from "lucide-react";
-import { LogoutButton } from "@/components/logout-button";
+import { LogoutButton } from "@/components/auth/logout-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,

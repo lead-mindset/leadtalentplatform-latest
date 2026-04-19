@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { LogoutButton } from '@/components/logout-button'
+import { LogoutButton } from '@/components/auth/logout-button'
 import { Icons } from '@/components/ui/icons'
 import { getInitials } from '@/lib/utils'
 

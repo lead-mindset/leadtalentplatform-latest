@@ -6,7 +6,7 @@ import {
   SidebarContent, 
   SidebarFooter 
 } from '@/components/ui/sidebar'
-import { LogoutButton } from '@/components/logout-button'
+import { LogoutButton } from '@/components/auth/logout-button'
 import { SidebarUserHeader } from './sidebar-user-header'
 import type { ReactNode } from 'react'
 import type { Role } from '@/lib/types'
