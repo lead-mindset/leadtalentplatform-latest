@@ -25,9 +25,6 @@ export default function MarketingHomePage() {
           <ValueCards />
           <CompanyBand />
           <FinalCTA />
-          <ChaptersMap />
-          <Leadership />
-          <Gallery />
         </main>
         <Footer />
       </div>
