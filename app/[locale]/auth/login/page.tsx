@@ -1,4 +1,4 @@
-import { LoginForm } from "@/components/login-form";
+import { LoginForm } from "@/components/auth/login";
 
 export const metadata = {
   title: 'Sign In - LEAD Talent Platform',

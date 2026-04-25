@@ -1,45 +1,324 @@
 @import "tailwindcss";
+
+/* Fluid Typography System - Single Source of Truth */
+/* All clamp values scaled for 5xl container (1024px) */
+
+:root {
+  /* Display/Hero Text */
+  --fluid-display: clamp(2rem, 6.4vw, 3.6rem);
+  --fluid-hero: clamp(1.8rem, 4.8vw, 3.6rem);
+  
+  /* Heading Levels */
+  --fluid-h1: clamp(1.8rem, 4vw, 2.4rem);
+  --fluid-h2: clamp(1.5rem, 3.2vw, 2.1rem);
+  --fluid-h3: clamp(1.25rem, 2.5vw, 1.75rem);
+  --fluid-h4: clamp(1.1rem, 2vw, 1.5rem);
+  
+  /* Body Text */
+  --fluid-body: clamp(0.875rem, 1.2vw, 1rem);
+  --fluid-body-lg: clamp(1rem, 1.5vw, 1.125rem);
+  --fluid-caption: clamp(0.75rem, 1vw, 0.875rem);
+}
+
+/* Typography Classes */
+.fluid-display {
+  font-size: var(--fluid-display);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1;
+}
+
+.fluid-hero {
+  font-size: var(--fluid-hero);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.fluid-h1 {
+  font-size: var(--fluid-h1);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+.fluid-h2 {
+  font-size: var(--fluid-h2);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.fluid-h3 {
+  font-size: var(--fluid-h3);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  line-height: 1.4;
+}
+
+.fluid-h4 {
+  font-size: var(--fluid-h4);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.fluid-body {
+  font-size: var(--fluid-body);
+  line-height: 1.7;
+  font-family: var(--font-montserrat), sans-serif;
+}
+
+.fluid-body-lg {
+  font-size: var(--fluid-body-lg);
+  line-height: 1.6;
+  font-family: var(--font-montserrat), sans-serif;
+}
+
+.fluid-caption {
+  font-size: var(--fluid-caption);
+  line-height: 1.5;
+}
+
+/* Automatic Fluid Typography Based on Semantic HTML Tags */
+/* Apply fluid typography automatically to semantic tags */
+h1 { font-size: var(--fluid-h1); font-weight: 700; letter-spacing: -0.015em; line-height: 1.2; font-family: var(--font-raleway), sans-serif; }
+h2 { font-size: var(--fluid-h2); font-weight: 700; letter-spacing: -0.01em; line-height: 1.3; font-family: var(--font-raleway), sans-serif; }
+h3 { font-size: var(--fluid-h3); font-weight: 600; letter-spacing: -0.005em; line-height: 1.4; font-family: var(--font-raleway), sans-serif; }
+h4 { font-size: var(--fluid-h4); font-weight: 600; line-height: 1.5; font-family: var(--font-raleway), sans-serif; }
+p { font-size: var(--fluid-body); line-height: 1.7; font-family: var(--font-montserrat), sans-serif; }
+
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
 
+/* Font utility classes */
+.font-montserrat {
+  font-family: var(--font-montserrat), sans-serif;
+}
+
+.font-raleway {
+  font-family: var(--font-raleway), sans-serif;
+}
+
+/* LEAD Frontier - Brand Colors with Material Design 3 */
+:root {
+  /* Brand Colors - Dark Mode First */
+  --brand-background: #080D3B; /* Deep Midnight Blue */
+  --brand-foreground: #FFFFFF; /* Clean White */
+  --brand-accent: #7A57D1; /* Medium Lavender / Periwinkle */
+  --brand-header-warm-red: #D84C4C;
+  --brand-header-muted-coral: #BA4E5E;
+  --brand-header-deep-magenta: #9B2E8B;
+  --brand-header-vibrant-purple: #7E56E2;
+  --brand-header-dark-navy: #0E1442;
+  --brand-logo-red-orange: #E53E3E;
+  --brand-logo-magenta: #9F258C;
+  
+  /* M3 Color Roles - Dark Theme (Your Brand) */
+  --md-sys-color-primary: #7A57D1; /* Your accent color */
+  --md-sys-color-on-primary: #FFFFFF; /* White text on primary */
+  --md-sys-color-primary-container: #5D41B0; /* Darker variant for containers */
+  --md-sys-color-on-primary-container: #E6DEFF; /* Light text on primary container */
+  --md-sys-color-secondary: #BA4E5E; /* Muted Coral from header */
+  --md-sys-color-on-secondary: #FFFFFF;
+  --md-sys-color-secondary-container: #9B2E8B; /* Deep Magenta */
+  --md-sys-color-on-secondary-container: #FFDAD6;
+  --md-sys-color-tertiary: #7E56E2; /* Vibrant Purple from header */
+  --md-sys-color-on-tertiary: #FFFFFF;
+  --md-sys-color-tertiary-container: #623DB0; /* Darker variant */
+  --md-sys-color-on-tertiary-container: #E8DDFF;
+  
+  /* Surface & UI Tokens - Dark Theme */
+  --md-sys-color-surface: #080D3B; /* Your brand background */
+  --md-sys-color-on-surface: #FFFFFF; /* Your brand foreground */
+  --md-sys-color-surface-variant: #1A1F4B; /* Slightly lighter than background */
+  --md-sys-color-on-surface-variant: #E0E0FF; /* Light text for variants */
+  --md-sys-color-outline: #7A57D1; /* Your accent color for outlines */
+  --md-sys-color-outline-variant: #5D41B0; /* Darker variant */
+  --md-sys-color-shadow: #000000;
+  --md-sys-color-scrim: #000000;
+  --md-sys-color-inverse-surface: #FFFFFF; /* Inverse of your background */
+  --md-sys-color-inverse-on-surface: #080D3B; /* Inverse of your foreground */
+  --md-sys-color-inverse-primary: #5D41B0; /* Inverse of your primary */
+  
+  /* Surface Containers - Dark Theme Hierarchy */
+  --md-sys-color-surface-dim: #060A2E; /* Darkest surface */
+  --md-sys-color-surface-bright: #1A1F4B; /* Brighter than base */
+  --md-sys-color-surface-container-lowest: #03061F; /* Lowest elevation */
+  --md-sys-color-surface-container-low: #060A2E; /* Low elevation */
+  --md-sys-color-surface-container: #0A0E35; /* Base container */
+  --md-sys-color-surface-container-high: #1A1F4B; /* High elevation */
+  --md-sys-color-surface-container-highest: #2A2F5B; /* Highest elevation */
+  
+  /* Global UI (Shadcn Mapped to Your Brand) */
+  --background: #080D3B; /* Your brand background */
+  --foreground: #FFFFFF; /* Your brand foreground */
+  --card: #0A0E35; /* Surface container */
+  --card-foreground: #FFFFFF;
+  --popover: #1A1F4B; /* Surface variant */
+  --popover-foreground: #FFFFFF;
+  --primary: #7A57D1; /* Your accent color */
+  --primary-foreground: #FFFFFF;
+  --secondary: #BA4E5E; /* Muted Coral */
+  --secondary-foreground: #FFFFFF;
+  --muted: #1A1F4B; /* Surface variant */
+  --muted-foreground: #E0E0FF; /* On surface variant */
+  --accent: #7E56E2; /* Vibrant Purple */
+  --accent-foreground: #FFFFFF;
+  --destructive: #D84C4C; /* Warm Red from header */
+  --destructive-foreground: #FFFFFF;
+  --border: #2A2F5B; /* Much subtler border color */
+  --input: #1A1F4B; /* Surface variant */
+  --ring: #7A57D1; /* Your accent color */
+  --radius: 1.5rem; /* MD3 large corner radius */
+  
+  /* Elevation Scale (Mapped to Tailwind shadows with MD3 tinting) */
+  --md-sys-elevation-0: none;
+  --md-sys-elevation-1: 0 1px 2px rgba(122, 87, 209, 0.1), 0 1px 3px rgba(122, 87, 209, 0.05);
+  --md-sys-elevation-2: 0 4px 6px rgba(122, 87, 209, 0.15), 0 2px 4px rgba(122, 87, 209, 0.1);
+  --md-sys-elevation-3: 0 10px 15px rgba(122, 87, 209, 0.2), 0 4px 6px rgba(122, 87, 209, 0.15);
+  --md-sys-elevation-4: 0 20px 25px rgba(122, 87, 209, 0.25), 0 10px 10px rgba(122, 87, 209, 0.15);
+  --md-sys-elevation-5: 0 25px 50px rgba(122, 87, 209, 0.3), 0 15px 15px rgba(122, 87, 209, 0.2);
+  
+  /* Shape Scale */
+  --md-sys-shape-corner-none: 0px;
+  --md-sys-shape-corner-extra-small: 4px;
+  --md-sys-shape-corner-small: 8px;
+  --md-sys-shape-corner-medium: 12px;
+  --md-sys-shape-corner-large: 16px;
+  --md-sys-shape-corner-extra-large: 28px; /* MD3 extra large */
+  --md-sys-shape-corner-full: 9999px;
+  
+  /* Typography Scale - Display (Raleway) */
+  --md-sys-typescale-display-large-font-family: 'Raleway', sans-serif;
+  --md-sys-typescale-display-large-font-size: 57px;
+  --md-sys-typescale-display-large-line-height: 64px;
+  --md-sys-typescale-display-large-font-weight: 800;
+  --md-sys-typescale-display-large-letter-spacing: -0.04em;
+  
+  --md-sys-typescale-display-medium-font-family: 'Raleway', sans-serif;
+  --md-sys-typescale-display-medium-font-size: 45px;
+  --md-sys-typescale-display-medium-line-height: 52px;
+  --md-sys-typescale-display-medium-font-weight: 800;
+  --md-sys-typescale-display-medium-letter-spacing: -0.04em;
+  
+  --md-sys-typescale-display-small-font-family: 'Raleway', sans-serif;
+  --md-sys-typescale-display-small-font-size: 36px;
+  --md-sys-typescale-display-small-line-height: 44px;
+  --md-sys-typescale-display-small-font-weight: 700;
+  --md-sys-typescale-display-small-letter-spacing: -0.02em;
+  
+  /* Typography Scale - Headline (Raleway) */
+  --md-sys-typescale-headline-large-font-family: 'Raleway', sans-serif;
+  --md-sys-typescale-headline-large-font-size: 32px;
+  --md-sys-typescale-headline-large-line-height: 40px;
+  --md-sys-typescale-headline-large-font-weight: 700;
+  --md-sys-typescale-headline-large-letter-spacing: 0px;
+  
+  --md-sys-typescale-headline-medium-font-family: 'Raleway', sans-serif;
+  --md-sys-typescale-headline-medium-font-size: 28px;
+  --md-sys-typescale-headline-medium-line-height: 36px;
+  --md-sys-typescale-headline-medium-font-weight: 700;
+  --md-sys-typescale-headline-medium-letter-spacing: 0px;
+  
+  --md-sys-typescale-headline-small-font-family: 'Raleway', sans-serif;
+  --md-sys-typescale-headline-small-font-size: 24px;
+  --md-sys-typescale-headline-small-line-height: 32px;
+  --md-sys-typescale-headline-small-font-weight: 600;
+  --md-sys-typescale-headline-small-letter-spacing: 0px;
+  
+  /* Typography Scale - Title (Raleway/Montserrat) */
+  --md-sys-typescale-title-large-font-family: 'Raleway', sans-serif;
+  --md-sys-typescale-title-large-font-size: 22px;
+  --md-sys-typescale-title-large-line-height: 28px;
+  --md-sys-typescale-title-large-font-weight: 600;
+  --md-sys-typescale-title-large-letter-spacing: 0px;
+  
+  --md-sys-typescale-title-medium-font-family: var(--font-montserrat), sans-serif;
+  --md-sys-typescale-title-medium-font-size: 16px;
+  --md-sys-typescale-title-medium-line-height: 24px;
+  --md-sys-typescale-title-medium-font-weight: 600;
+  --md-sys-typescale-title-medium-letter-spacing: 0.15px;
+  
+  --md-sys-typescale-title-small-font-family: var(--font-montserrat), sans-serif;
+  --md-sys-typescale-title-small-font-size: 14px;
+  --md-sys-typescale-title-small-line-height: 20px;
+  --md-sys-typescale-title-small-font-weight: 600;
+  --md-sys-typescale-title-small-letter-spacing: 0.1px;
+  
+  /* Typography Scale - Body (Montserrat) */
+  --md-sys-typescale-body-large-font-family: var(--font-montserrat), sans-serif;
+  --md-sys-typescale-body-large-font-size: 16px;
+  --md-sys-typescale-body-large-line-height: 24px;
+  --md-sys-typescale-body-large-font-weight: 400;
+  --md-sys-typescale-body-large-letter-spacing: 0.5px;
+  
+  --md-sys-typescale-body-medium-font-family: var(--font-montserrat), sans-serif;
+  --md-sys-typescale-body-medium-font-size: 14px;
+  --md-sys-typescale-body-medium-line-height: 20px;
+  --md-sys-typescale-body-medium-font-weight: 400;
+  --md-sys-typescale-body-medium-letter-spacing: 0.25px;
+  
+  --md-sys-typescale-body-small-font-family: var(--font-montserrat), sans-serif;
+  --md-sys-typescale-body-small-font-size: 12px;
+  --md-sys-typescale-body-small-line-height: 16px;
+  --md-sys-typescale-body-small-font-weight: 400;
+  --md-sys-typescale-body-small-letter-spacing: 0.4px;
+  
+  /* Typography Scale - Label (Montserrat) */
+  --md-sys-typescale-label-large-font-family: var(--font-montserrat), sans-serif;
+  --md-sys-typescale-label-large-font-size: 14px;
+  --md-sys-typescale-label-large-line-height: 20px;
+  --md-sys-typescale-label-large-font-weight: 700;
+  --md-sys-typescale-label-large-letter-spacing: 0px;
+  
+  --md-sys-typescale-label-medium-font-family: var(--font-montserrat), sans-serif;
+  --md-sys-typescale-label-medium-font-size: 12px;
+  --md-sys-typescale-label-medium-line-height: 16px;
+  --md-sys-typescale-label-medium-font-weight: 700;
+  --md-sys-typescale-label-medium-letter-spacing: 0px;
+  
+  --md-sys-typescale-label-small-font-family: var(--font-montserrat), sans-serif;
+  --md-sys-typescale-label-small-font-size: 11px;
+  --md-sys-typescale-label-small-line-height: 16px;
+  --md-sys-typescale-label-small-font-weight: 700;
+  --md-sys-typescale-label-small-letter-spacing: 0px;
+  
+  /* Spacing Scale (8pt grid) */
+  --md-sys-spacing-1: 4px;
+  --md-sys-spacing-2: 8px;
+  --md-sys-spacing-3: 12px;
+  --md-sys-spacing-4: 16px;
+  --md-sys-spacing-5: 20px;
+  --md-sys-spacing-6: 24px;
+  --md-sys-spacing-7: 32px;
+  --md-sys-spacing-8: 40px;
+  --md-sys-spacing-9: 48px;
+  --md-sys-spacing-10: 64px;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-open-sans);
-  --font-serif: var(--font-lora);
-  --font-mono: var(--font-geist-mono);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius: var(--radius);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -47,158 +326,132 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
-  --color-success: var(--success);
-  --color-success-foreground: var(--success-foreground);
-  --color-success-muted: var(--success-muted);
-  --color-warning: var(--warning);
-  --color-warning-foreground: var(--warning-foreground);
-  --color-warning-muted: var(--warning-muted);
-  --color-info: var(--info);
-  --color-info-foreground: var(--info-foreground);
-  --color-info-muted: var(--info-muted);
-
-  --grain-url: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23g)'/%3E%3C/svg%3E");
+  
+  /* Gradient color stops */
+  --color-gradient-from: var(--primary);
+  --color-gradient-to: var(--accent);
 }
 
-:root {
-  --background:         oklch(0.14 0.14 265);   /* page base */
-  --foreground:         oklch(0.97 0.012 265);   /* near-white with brand cast, not pure #fff */
-
-  --card:               oklch(0.16 0.12 265);    /* +2L above bg */
-  --card-foreground:    oklch(0.97 0.012 265);
-
-  --popover:            oklch(0.17 0.12 266);    /* +3L above bg */
-  --popover-foreground: oklch(0.97 0.012 265);
-
-  --primary:            oklch(0.55 0.22 2);
-  --primary-foreground: oklch(1.0 0 0);
-
-  --secondary:          oklch(0.46 0.24 320);
-  --secondary-foreground: oklch(0.97 0.012 265);
-
-  --muted:              oklch(0.19 0.10 265);
-  --muted-foreground:   oklch(0.83 0.07 265);   /* periwinkle-light secondary text */
-
-  --accent:             oklch(0.24 0.12 270);
-  --accent-foreground:  oklch(0.97 0.012 265);
-
-  --destructive:            oklch(0.54 0.26 22);
-  --destructive-foreground: oklch(0.97 0.012 265);
-
-  --border: color-mix(in oklab, oklch(1 0 265) 14%, oklch(0.08 0.14 265));
-  --input:  oklch(0.20 0.11 265);
-  --ring:   oklch(0.60 0.22 2 / 0.45);
-
-  --chart-1: oklch(0.60 0.22 2);
-  --chart-2: oklch(0.52 0.24 322);
-  --chart-3: oklch(0.55 0.20 285);
-  --chart-4: oklch(0.68 0.18 202);
-  --chart-5: oklch(0.62 0.16 168);
-
-  --radius: 1.5rem;
-
-  --sidebar:                    oklch(0.13 0.14 265);   /* slightly darker than bg */
-  --sidebar-foreground:         oklch(0.97 0.012 265);
-  --sidebar-primary:            oklch(0.60 0.22 2);
-  --sidebar-primary-foreground: oklch(0.97 0.012 265);
-  --sidebar-accent:             oklch(0.22 0.12 270);
-  --sidebar-accent-foreground:  oklch(0.97 0.012 265);
-  --sidebar-border:             color-mix(in oklab, oklch(1 0 265) 12%, oklch(0.08 0.14 265));
-  --sidebar-ring:               oklch(0.60 0.22 2 / 0.45);
-
-  --success:            oklch(0.68 0.18 158);
-  --success-foreground: oklch(0.14 0.04 158);
-  --success-muted:      oklch(0.24 0.09 158);
-
-  --warning:            oklch(0.78 0.18 68);
-  --warning-foreground: oklch(0.14 0.05 68);
-  --warning-muted:      oklch(0.26 0.08 68);
-
-  --info:            oklch(0.72 0.18 202);
-  --info-foreground: oklch(0.14 0.04 202);
-  --info-muted:      oklch(0.24 0.09 202);
-
-  --gradient-body:          var(--background);
-  --gradient-card:          var(--card);
-  --gradient-popover:       var(--popover);
-  --gradient-sidebar:       var(--sidebar);
-  --gradient-input:         var(--input);
-  --gradient-muted:         var(--muted);
-  --gradient-success-muted: color-mix(in oklab, var(--success) 20%, var(--card));
-  --gradient-warning-muted: color-mix(in oklab, var(--warning) 20%, var(--card));
-  --gradient-info-muted:    color-mix(in oklab, var(--info) 20%, var(--card));
-}
-
+/* Dark Theme Overrides - Luminescent Flow */
 .dark {
-  --background:         oklch(0.18 0.12 265);
-  --foreground:         oklch(0.97 0.012 265);
-
-  --card:               oklch(0.16 0.14 270);
-  --card-foreground:    oklch(0.97 0.012 265);
-
-  --popover:            oklch(0.17 0.12 266);
-  --popover-foreground: oklch(0.97 0.012 265);
-
-  --primary:            oklch(0.55 0.22 2);
-  --primary-foreground: oklch(1.0 0 0);
-
-  --secondary:            oklch(0.46 0.24 320);
-  --secondary-foreground: oklch(0.97 0.012 265);
-
-  --muted:              oklch(0.23 0.11 265);
-  --muted-foreground:   oklch(0.83 0.07 265);
-
-  --accent:             oklch(0.30 0.13 275);
-  --accent-foreground:  oklch(0.97 0.012 265);
-
-  --destructive:            oklch(0.54 0.26 22);
+  /* For dark theme, we'll adjust the colors while maintaining the same hue angles */
+  --md-sys-color-primary: oklch(0.75 0.18 2);
+  --md-sys-color-on-primary: oklch(0.15 0.10 2);
+  --md-sys-color-primary-container: oklch(0.45 0.18 2);
+  --md-sys-color-on-primary-container: oklch(0.95 0.05 2);
+  --md-sys-color-secondary: oklch(0.70 0.20 322);
+  --md-sys-color-on-secondary: oklch(0.15 0.10 322);
+  --md-sys-color-secondary-container: oklch(0.40 0.18 322);
+  --md-sys-color-on-secondary-container: oklch(0.95 0.05 322);
+  --md-sys-color-tertiary: oklch(0.72 0.18 285);
+  --md-sys-color-on-tertiary: oklch(0.15 0.10 285);
+  --md-sys-color-tertiary-container: oklch(0.42 0.15 285);
+  --md-sys-color-on-tertiary-container: oklch(0.92 0.05 285);
+  --md-sys-color-surface: oklch(0.12 0.10 265);
+  --md-sys-color-on-surface: oklch(0.95 0.012 265);
+  --md-sys-color-surface-variant: oklch(0.20 0.08 265);
+  --md-sys-color-on-surface-variant: oklch(0.80 0.05 265);
+  --md-sys-color-outline: oklch(0.50 0.05 265);
+  --md-sys-color-outline-variant: oklch(0.35 0.05 265);
+  --md-sys-color-inverse-surface: oklch(0.95 0.012 265);
+  --md-sys-color-inverse-on-surface: oklch(0.12 0.10 265);
+  --md-sys-color-inverse-primary: oklch(0.60 0.22 2);
+  
+  /* Surface Containers for Dark Theme */
+  --md-sys-color-surface-dim: oklch(0.10 0.08 265);
+  --md-sys-color-surface-bright: oklch(0.18 0.12 265);
+  --md-sys-color-surface-container-lowest: oklch(0.08 0.06 265);
+  --md-sys-color-surface-container-low: oklch(0.12 0.10 265);
+  --md-sys-color-surface-container: oklch(0.14 0.12 265);
+  --md-sys-color-surface-container-high: oklch(0.18 0.14 265);
+  --md-sys-color-surface-container-highest: oklch(0.22 0.16 265);
+  
+  /* Global UI for Dark Theme */
+  --background: var(--md-sys-color-surface);
+  --foreground: var(--md-sys-color-on-surface);
+  --card: var(--md-sys-color-surface-container);
+  --card-foreground: var(--md-sys-color-on-surface);
+  --popover: var(--md-sys-color-surface-container-high);
+  --popover-foreground: var(--md-sys-color-on-surface);
+  --primary: var(--md-sys-color-primary);
+  --primary-foreground: var(--md-sys-color-on-primary);
+  --secondary: var(--md-sys-color-secondary);
+  --secondary-foreground: var(--md-sys-color-on-secondary);
+  --muted: var(--md-sys-color-surface-variant);
+  --muted-foreground: var(--md-sys-color-on-surface-variant);
+  --accent: var(--md-sys-color-tertiary);
+  --accent-foreground: var(--md-sys-color-on-tertiary);
+  --destructive: oklch(0.65 0.25 22);
   --destructive-foreground: oklch(0.97 0.012 265);
+  --border: color-mix(in oklab, var(--md-sys-color-outline) 30%, transparent);
+  --input: var(--md-sys-color-surface-container-high);
+  --ring: oklch(0.75 0.18 2 / 0.45);
+}
 
-  --border: color-mix(in oklab, oklch(1 0 265) 14%, oklch(0.08 0.14 265));
-  --input:  oklch(0.22 0.11 265);
-  --ring:   oklch(0.60 0.22 2 / 0.45);
-
-  --chart-1: oklch(0.62 0.21 2);    /* rose-red */
-  --chart-2: oklch(0.54 0.22 322);  /* fuchsia */
-  --chart-3: oklch(0.57 0.20 285);  /* violet */
-  --chart-4: oklch(0.68 0.18 202);  /* sky-blue */
-  --chart-5: oklch(0.62 0.16 168);  /* teal */
-
-  --sidebar:                    oklch(0.22 0.115 266);
-  --sidebar-foreground:         oklch(0.97 0.012 265);
-  --sidebar-primary:            oklch(0.62 0.21 2);
-  --sidebar-primary-foreground: oklch(0.97 0.012 265);
-  --sidebar-accent:             oklch(0.27 0.134 271);
-  --sidebar-accent-foreground:  oklch(0.97 0.012 265);
-  --sidebar-border:             color-mix(in oklab, oklch(1 0 265) 12%, oklch(0.08 0.14 265));
-  --sidebar-ring:               oklch(0.60 0.22 2 / 0.45);
-
-  --success:            oklch(0.62 0.17 158);
-  --success-foreground: oklch(0.97 0.012 158);
-  --success-muted:      oklch(0.28 0.08 158);
-
-  --warning:            oklch(0.72 0.18 62);
-  --warning-foreground: oklch(0.12 0.04 62);
-  --warning-muted:      oklch(0.33 0.05 62);
-
-  --info:            oklch(0.68 0.18 202);
-  --info-foreground: oklch(0.97 0.012 202);
-  --info-muted:      oklch(0.28 0.09 202);
-
-  --gradient-body:          var(--background);
-  --gradient-card:          var(--card);
-  --gradient-popover:       var(--popover);
-  --gradient-sidebar:       var(--sidebar);
-  --gradient-input:         var(--input);
-  --gradient-muted:         var(--muted);
-  --gradient-success-muted: color-mix(in oklab, var(--success) 22%, var(--card));
-  --gradient-warning-muted: color-mix(in oklab, var(--warning) 22%, var(--card));
-  --gradient-info-muted:    color-mix(in oklab, var(--info) 22%, var(--card));
+/* Dark Theme Overrides - Your Brand Colors */
+.dark {
+  /* M3 Color Roles - Dark Theme (Your Brand) */
+  --md-sys-color-primary: #7A57D1; /* Your accent color */
+  --md-sys-color-on-primary: #FFFFFF; /* White text on primary */
+  --md-sys-color-primary-container: #5D41B0; /* Darker variant for containers */
+  --md-sys-color-on-primary-container: #E6DEFF; /* Light text on primary container */
+  --md-sys-color-secondary: #BA4E5E; /* Muted Coral from header */
+  --md-sys-color-on-secondary: #FFFFFF;
+  --md-sys-color-secondary-container: #9B2E8B; /* Deep Magenta */
+  --md-sys-color-on-secondary-container: #FFDAD6;
+  --md-sys-color-tertiary: #7E56E2; /* Vibrant Purple from header */
+  --md-sys-color-on-tertiary: #FFFFFF;
+  --md-sys-color-tertiary-container: #623DB0; /* Darker variant */
+  --md-sys-color-on-tertiary-container: #E8DDFF;
+  
+  /* Surface & UI Tokens - Dark Theme */
+  --md-sys-color-surface: #080D3B; /* Your brand background */
+  --md-sys-color-on-surface: #FFFFFF; /* Your brand foreground */
+  --md-sys-color-surface-variant: #1A1F4B; /* Slightly lighter than background */
+  --md-sys-color-on-surface-variant: #E0E0FF; /* Light text for variants */
+  --md-sys-color-outline: #7A57D1; /* Your accent color for outlines */
+  --md-sys-color-outline-variant: #5D41B0; /* Darker variant */
+  --md-sys-color-inverse-surface: #FFFFFF; /* Inverse of your background */
+  --md-sys-color-inverse-on-surface: #080D3B; /* Inverse of your foreground */
+  --md-sys-color-inverse-primary: #5D41B0; /* Inverse of your primary */
+  
+  /* Surface Containers - Dark Theme Hierarchy */
+  --md-sys-color-surface-dim: #060A2E; /* Darkest surface */
+  --md-sys-color-surface-bright: #1A1F4B; /* Brighter than base */
+  --md-sys-color-surface-container-lowest: #03061F; /* Lowest elevation */
+  --md-sys-color-surface-container-low: #060A2E; /* Low elevation */
+  --md-sys-color-surface-container: #0A0E35; /* Base container */
+  --md-sys-color-surface-container-high: #1A1F4B; /* High elevation */
+  --md-sys-color-surface-container-highest: #2A2F5B; /* Highest elevation */
+  
+  /* Global UI for Dark Theme (Your Brand) */
+  --background: #080D3B; /* Your brand background */
+  --foreground: #FFFFFF; /* Your brand foreground */
+  --card: #0A0E35; /* Surface container */
+  --card-foreground: #FFFFFF;
+  --popover: #1A1F4B; /* Surface variant */
+  --popover-foreground: #FFFFFF;
+  --primary: #7A57D1; /* Your accent color */
+  --primary-foreground: #FFFFFF;
+  --secondary: #BA4E5E; /* Muted Coral */
+  --secondary-foreground: #FFFFFF;
+  --muted: #1A1F4B; /* Surface variant */
+  --muted-foreground: #E0E0FF; /* On surface variant */
+  --accent: #7E56E2; /* Vibrant Purple */
+  --accent-foreground: #FFFFFF;
+  --destructive: #D84C4C; /* Warm Red from header */
+  --destructive-foreground: #FFFFFF;
+  --border: #2A2F5B; /* Much subtler border color */
+  --input: #1A1F4B; /* Surface variant */
+  --ring: #7A57D1; /* Your accent color */
+  --radius: 1.5rem; /* MD3 large corner radius */
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    border-color: var(--border);
+    outline-color: var(--ring);
+    outline-width: 1px;
   }
 
   html {
@@ -206,56 +459,791 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
-    font-family: var(--font-open-sans), sans-serif;
+    background-color: var(--background);
+    color: var(--foreground);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family: var(--md-sys-typescale-body-large-font-family);
+    font-size: clamp(1rem, 2.5vw, 1.125rem);
+    line-height: 1.6;
+    font-weight: var(--md-sys-typescale-body-large-font-weight);
+    letter-spacing: var(--md-sys-typescale-body-large-letter-spacing);
     min-height: 100vh;
     position: relative;
   }
 
+  /* Fluid Typography for Headings */
+  h1 {
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    line-height: 1.1;
+  }
+  
+  h2 {
+    font-size: clamp(2rem, 4vw, 3rem);
+    line-height: 1.2;
+  }
+  
+  h3 {
+    font-size: clamp(1.75rem, 3.5vw, 2.25rem);
+    line-height: 1.25;
+  }
+  
+  h4 {
+    font-size: clamp(1.5rem, 3vw, 1.875rem);
+    line-height: 1.3;
+  }
+  
+  h5 {
+    font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+    line-height: 1.35;
+  }
+  
+  h6 {
+    font-size: clamp(1.125rem, 2vw, 1.25rem);
+    line-height: 1.4;
+  }
+
+
+
+  /* Material Design 3 Typography Classes */
+  .md-display-large {
+    font-family: var(--md-sys-typescale-display-large-font-family);
+    font-size: var(--md-sys-typescale-display-large-font-size);
+    line-height: var(--md-sys-typescale-display-large-line-height);
+    font-weight: var(--md-sys-typescale-display-large-font-weight);
+    letter-spacing: var(--md-sys-typescale-display-large-letter-spacing);
+  }
+  
+  .md-display-medium {
+    font-family: var(--md-sys-typescale-display-medium-font-family);
+    font-size: var(--md-sys-typescale-display-medium-font-size);
+    line-height: var(--md-sys-typescale-display-medium-line-height);
+    font-weight: var(--md-sys-typescale-display-medium-font-weight);
+    letter-spacing: var(--md-sys-typescale-display-medium-letter-spacing);
+  }
+  
+  .md-display-small {
+    font-family: var(--md-sys-typescale-display-small-font-family);
+    font-size: var(--md-sys-typescale-display-small-font-size);
+    line-height: var(--md-sys-typescale-display-small-line-height);
+    font-weight: var(--md-sys-typescale-display-small-font-weight);
+    letter-spacing: var(--md-sys-typescale-display-small-letter-spacing);
+  }
+  
+  .md-headline-large {
+    font-family: var(--md-sys-typescale-headline-large-font-family);
+    font-size: var(--md-sys-typescale-headline-large-font-size);
+    line-height: var(--md-sys-typescale-headline-large-line-height);
+    font-weight: var(--md-sys-typescale-headline-large-font-weight);
+    letter-spacing: var(--md-sys-typescale-headline-large-letter-spacing);
+  }
+  
+  .md-headline-medium {
+    font-family: var(--md-sys-typescale-headline-medium-font-family);
+    font-size: var(--md-sys-typescale-headline-medium-font-size);
+    line-height: var(--md-sys-typescale-headline-medium-line-height);
+    font-weight: var(--md-sys-typescale-headline-medium-font-weight);
+    letter-spacing: var(--md-sys-typescale-headline-medium-letter-spacing);
+  }
+  
+  .md-headline-small {
+    font-family: var(--md-sys-typescale-headline-small-font-family);
+    font-size: var(--md-sys-typescale-headline-small-font-size);
+    line-height: var(--md-sys-typescale-headline-small-line-height);
+    font-weight: var(--md-sys-typescale-headline-small-font-weight);
+    letter-spacing: var(--md-sys-typescale-headline-small-letter-spacing);
+  }
+  
+  .md-title-large {
+    font-family: var(--md-sys-typescale-title-large-font-family);
+    font-size: var(--md-sys-typescale-title-large-font-size);
+    line-height: var(--md-sys-typescale-title-large-line-height);
+    font-weight: var(--md-sys-typescale-title-large-font-weight);
+    letter-spacing: var(--md-sys-typescale-title-large-letter-spacing);
+  }
+  
+  .md-title-medium {
+    font-family: var(--md-sys-typescale-title-medium-font-family);
+    font-size: var(--md-sys-typescale-title-medium-font-size);
+    line-height: var(--md-sys-typescale-title-medium-line-height);
+    font-weight: var(--md-sys-typescale-title-medium-font-weight);
+    letter-spacing: var(--md-sys-typescale-title-medium-letter-spacing);
+  }
+  
+  .md-title-small {
+    font-family: var(--md-sys-typescale-title-small-font-family);
+    font-size: var(--md-sys-typescale-title-small-font-size);
+    line-height: var(--md-sys-typescale-title-small-line-height);
+    font-weight: var(--md-sys-typescale-title-small-font-weight);
+    letter-spacing: var(--md-sys-typescale-title-small-letter-spacing);
+  }
+  
+  .md-body-large {
+    font-family: var(--md-sys-typescale-body-large-font-family);
+    font-size: var(--md-sys-typescale-body-large-font-size);
+    line-height: var(--md-sys-typescale-body-large-line-height);
+    font-weight: var(--md-sys-typescale-body-large-font-weight);
+    letter-spacing: var(--md-sys-typescale-body-large-letter-spacing);
+  }
+  
+  .md-body-medium {
+    font-family: var(--md-sys-typescale-body-medium-font-family);
+    font-size: var(--md-sys-typescale-body-medium-font-size);
+    line-height: var(--md-sys-typescale-body-medium-line-height);
+    font-weight: var(--md-sys-typescale-body-medium-font-weight);
+    letter-spacing: var(--md-sys-typescale-body-medium-letter-spacing);
+  }
+  
+  .md-body-small {
+    font-family: var(--md-sys-typescale-body-small-font-family);
+    font-size: var(--md-sys-typescale-body-small-font-size);
+    line-height: var(--md-sys-typescale-body-small-line-height);
+    font-weight: var(--md-sys-typescale-body-small-font-weight);
+    letter-spacing: var(--md-sys-typescale-body-small-letter-spacing);
+  }
+  
+  .md-label-large {
+    font-family: var(--md-sys-typescale-label-large-font-family);
+    font-size: var(--md-sys-typescale-label-large-font-size);
+    line-height: var(--md-sys-typescale-label-large-line-height);
+    font-weight: var(--md-sys-typescale-label-large-font-weight);
+    letter-spacing: var(--md-sys-typescale-label-large-letter-spacing);
+  }
+  
+  .md-label-medium {
+    font-family: var(--md-sys-typescale-label-medium-font-family);
+    font-size: var(--md-sys-typescale-label-medium-font-size);
+    line-height: var(--md-sys-typescale-label-medium-line-height);
+    font-weight: var(--md-sys-typescale-label-medium-font-weight);
+    letter-spacing: var(--md-sys-typescale-label-medium-letter-spacing);
+  }
+  
+  .md-label-small {
+    font-family: var(--md-sys-typescale-label-small-font-family);
+    font-size: var(--md-sys-typescale-label-small-font-size);
+    line-height: var(--md-sys-typescale-label-small-line-height);
+    font-weight: var(--md-sys-typescale-label-small-font-weight);
+    letter-spacing: var(--md-sys-typescale-label-small-letter-spacing);
+  }
+
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-raleway), sans-serif;
-    color: var(--foreground);
+    color: var(--md-sys-color-on-surface);
     text-wrap: balance;
   }
 
-  h1 { font-size: 3rem !important;     font-weight: 800; letter-spacing: -0.025em; line-height: 1.05; }
-  h2 { font-size: 2.25rem !important;  font-weight: 700; letter-spacing: -0.02em;  line-height: 1.1;  }
-  h3 { font-size: 1.75rem !important;  font-weight: 600; letter-spacing: -0.015em; line-height: 1.15; }
-  h4 { font-size: 1.375rem !important; font-weight: 500; letter-spacing: -0.01em;  line-height: 1.2;  }
-  h5 { font-size: 1.125rem !important; font-weight: 400; letter-spacing: -0.005em; line-height: 1.25; }
-  h6 { font-size: 0.875rem !important; font-weight: 400; letter-spacing: 0em;      line-height: 1.3;  }
+  h1 { 
+    font-family: var(--md-sys-typescale-display-large-font-family);
+    font-size: var(--md-sys-typescale-display-large-font-size);
+    line-height: var(--md-sys-typescale-display-large-line-height);
+    font-weight: var(--md-sys-typescale-display-large-font-weight);
+    letter-spacing: var(--md-sys-typescale-display-large-letter-spacing);
+  }
+  
+  h2 { 
+    font-family: var(--md-sys-typescale-display-medium-font-family);
+    font-size: var(--md-sys-typescale-display-medium-font-size);
+    line-height: var(--md-sys-typescale-display-medium-line-height);
+    font-weight: var(--md-sys-typescale-display-medium-font-weight);
+    letter-spacing: var(--md-sys-typescale-display-medium-letter-spacing);
+  }
+  
+  h3 { 
+    font-family: var(--md-sys-typescale-display-small-font-family);
+    font-size: var(--md-sys-typescale-display-small-font-size);
+    line-height: var(--md-sys-typescale-display-small-line-height);
+    font-weight: var(--md-sys-typescale-display-small-font-weight);
+    letter-spacing: var(--md-sys-typescale-display-small-letter-spacing);
+  }
+  
+  h4 { 
+    font-family: var(--md-sys-typescale-headline-large-font-family);
+    font-size: var(--md-sys-typescale-headline-large-font-size);
+    line-height: var(--md-sys-typescale-headline-large-line-height);
+    font-weight: var(--md-sys-typescale-headline-large-font-weight);
+    letter-spacing: var(--md-sys-typescale-headline-large-letter-spacing);
+  }
+  
+  h5 { 
+    font-family: var(--md-sys-typescale-headline-medium-font-family);
+    font-size: var(--md-sys-typescale-headline-medium-font-size);
+    line-height: var(--md-sys-typescale-headline-medium-line-height);
+    font-weight: var(--md-sys-typescale-headline-medium-font-weight);
+    letter-spacing: var(--md-sys-typescale-headline-medium-letter-spacing);
+  }
+  
+  h6 { 
+    font-family: var(--md-sys-typescale-headline-small-font-family);
+    font-size: var(--md-sys-typescale-headline-small-font-size);
+    line-height: var(--md-sys-typescale-headline-small-line-height);
+    font-weight: var(--md-sys-typescale-headline-small-font-weight);
+    letter-spacing: var(--md-sys-typescale-headline-small-letter-spacing);
+  }
+
+  p {
+    font-family: var(--md-sys-typescale-body-large-font-family);
+    font-size: var(--md-sys-typescale-body-large-font-size);
+    line-height: 1.6;
+    font-weight: var(--md-sys-typescale-body-large-font-weight);
+    letter-spacing: var(--md-sys-typescale-body-large-letter-spacing);
+  }
+  
+  li {
+    font-family: var(--md-sys-typescale-body-large-font-family);
+    font-size: var(--md-sys-typescale-body-large-font-size);
+    line-height: 1.6;
+    font-weight: var(--md-sys-typescale-body-large-font-weight);
+    letter-spacing: var(--md-sys-typescale-body-large-letter-spacing);
+  }
+  
+  small, .text-small {
+    font-family: var(--md-sys-typescale-body-small-font-family);
+    font-size: var(--md-sys-typescale-body-small-font-size);
+    line-height: var(--md-sys-typescale-body-small-line-height);
+    font-weight: var(--md-sys-typescale-body-small-font-weight);
+    letter-spacing: var(--md-sys-typescale-body-small-letter-spacing);
+  }
+  
+  .text-lead {
+    font-family: var(--md-sys-typescale-body-large-font-family);
+    font-size: var(--md-sys-typescale-body-large-font-size);
+    line-height: var(--md-sys-typescale-body-large-line-height);
+    font-weight: var(--md-sys-typescale-body-large-font-weight);
+    letter-spacing: var(--md-sys-typescale-body-large-letter-spacing);
+  }
+  
+  .text-xs {
+    font-family: var(--md-sys-typescale-label-small-font-family);
+    font-size: var(--md-sys-typescale-label-small-font-size);
+    line-height: var(--md-sys-typescale-label-small-line-height);
+    font-weight: var(--md-sys-typescale-label-small-font-weight);
+    letter-spacing: var(--md-sys-typescale-label-small-letter-spacing);
+  }
 
   ::selection {
-    background: color-mix(in oklab, var(--primary) 38%, transparent);
-    color: var(--foreground);
+    background: color-mix(in oklab, var(--md-sys-color-primary) 38%, transparent);
+    color: var(--md-sys-color-on-primary);
   }
 
   button {
     cursor: pointer;
+    border-radius: var(--md-sys-shape-corner-full);
+    transition: all 0.2s ease;
+    font-family: var(--font-montserrat), sans-serif;
+    font-weight: 700;
+  }
+
+  /* Custom gradient button using CSS variables */
+  button.button-gradient-primary,
+  .button-gradient-primary {
+    background: linear-gradient(135deg, #b03e9f 0%, #B03E6E 20%, #9B2E8B 40%, #8756e2 70%, #6b4cba 100%) !important;
+    box-shadow: 0 0 30px rgba(186, 78, 94, 0.2) !important;
+  }
+
+  button.button-gradient-primary:hover,
+  .button-gradient-primary:hover {
+    box-shadow: 0 0 40px rgba(186, 78, 94, 0.3) !important;
+  }
+
+  /* Material Design 3 Button Variants */
+  .md-button-filled {
+    background-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+    border: none;
+    box-shadow: var(--md-sys-elevation-1);
+    padding: var(--md-sys-spacing-3) var(--md-sys-spacing-6);
+    font-family: var(--font-montserrat), sans-serif;
+    font-size: var(--md-sys-typescale-label-large-font-size);
+    font-weight: 700;
+    letter-spacing: var(--md-sys-typescale-label-large-letter-spacing);
+    line-height: var(--md-sys-typescale-label-large-line-height);
+    border-radius: var(--md-sys-shape-corner-full);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--md-sys-spacing-2);
+    min-height: 40px;
+    min-width: 64px;
+    transition: all 0.2s ease;
+  }
+  
+  .md-button-filled:hover {
+    box-shadow: var(--md-sys-elevation-2);
+    background-color: color-mix(in oklab, var(--md-sys-color-primary) 90%, black);
+  }
+  
+  .md-button-filled:active {
+    box-shadow: var(--md-sys-elevation-1);
+    background-color: color-mix(in oklab, var(--md-sys-color-primary) 80%, black);
+  }
+  
+  .md-button-tonal {
+    background-color: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+    border: none;
+    box-shadow: var(--md-sys-elevation-1);
+    padding: var(--md-sys-spacing-3) var(--md-sys-spacing-6);
+    font-family: var(--font-montserrat), sans-serif;
+    font-size: var(--md-sys-typescale-label-large-font-size);
+    font-weight: 700;
+    letter-spacing: var(--md-sys-typescale-label-large-letter-spacing);
+    line-height: var(--md-sys-typescale-label-large-line-height);
+    border-radius: var(--md-sys-shape-corner-full);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--md-sys-spacing-2);
+    min-height: 40px;
+    min-width: 64px;
+    transition: all 0.2s ease;
+  }
+  
+  .md-button-tonal:hover {
+    box-shadow: var(--md-sys-elevation-2);
+    background-color: color-mix(in oklab, var(--md-sys-color-secondary-container) 90%, black);
+  }
+  
+  .md-button-tonal:active {
+    box-shadow: var(--md-sys-elevation-1);
+    background-color: color-mix(in oklab, var(--md-sys-color-secondary-container) 80%, black);
+  }
+  
+  .md-button-outlined {
+    background-color: transparent;
+    color: var(--md-sys-color-primary);
+    border: 1px solid var(--md-sys-color-outline);
+    padding: var(--md-sys-spacing-3) var(--md-sys-spacing-6);
+    font-family: var(--font-montserrat), sans-serif;
+    font-size: var(--md-sys-typescale-label-large-font-size);
+    font-weight: 700;
+    letter-spacing: var(--md-sys-typescale-label-large-letter-spacing);
+    line-height: var(--md-sys-typescale-label-large-line-height);
+    border-radius: var(--md-sys-shape-corner-full);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--md-sys-spacing-2);
+    min-height: 40px;
+    min-width: 64px;
+    transition: all 0.2s ease;
+  }
+  
+  .md-button-outlined:hover {
+    background-color: color-mix(in oklab, var(--md-sys-color-primary) 8%, transparent);
+    border-color: var(--md-sys-color-primary);
+  }
+  
+  .md-button-outlined:active {
+    background-color: color-mix(in oklab, var(--md-sys-color-primary) 12%, transparent);
+    border-color: var(--md-sys-color-primary);
+  }
+  
+  .md-button-text {
+    background-color: transparent;
+    color: var(--md-sys-color-primary);
+    border: none;
+    padding: var(--md-sys-spacing-3) var(--md-sys-spacing-6);
+    font-family: var(--font-montserrat), sans-serif;
+    font-size: var(--md-sys-typescale-label-large-font-size);
+    font-weight: 700;
+    letter-spacing: var(--md-sys-typescale-label-large-letter-spacing);
+    line-height: var(--md-sys-typescale-label-large-line-height);
+    border-radius: var(--md-sys-shape-corner-full);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--md-sys-spacing-2);
+    min-height: 40px;
+    min-width: 64px;
+    transition: all 0.2s ease;
+  }
+  
+  .md-button-text:hover {
+    background-color: color-mix(in oklab, var(--md-sys-color-primary) 8%, transparent);
+  }
+  
+  .md-button-text:active {
+    background-color: color-mix(in oklab, var(--md-sys-color-primary) 12%, transparent);
   }
 
   textarea:focus {
-    outline: 2px solid var(--ring) !important;
-    outline-offset: 2px !important;
+    outline: 2px solid var(--md-sys-color-primary);
+    outline-offset: 2px;
   }
 
+  /* Material Design 3 Card */
+  .md-card {
+    background-color: var(--md-sys-color-surface-container);
+    border-radius: var(--md-sys-shape-corner-large);
+    box-shadow: var(--md-sys-elevation-1);
+    transition: box-shadow 0.2s ease;
+    overflow: hidden;
+  }
+  
+  .md-card:hover {
+    box-shadow: var(--md-sys-elevation-2);
+  }
+  
+  .md-card-elevated {
+    background-color: var(--md-sys-color-surface-container-high);
+    border-radius: var(--md-sys-shape-corner-large);
+    box-shadow: var(--md-sys-elevation-2);
+    transition: box-shadow 0.2s ease;
+    overflow: hidden;
+  }
+  
+  .md-card-elevated:hover {
+    box-shadow: var(--md-sys-elevation-3);
+  }
+
+  /* Material Design 3 Dialog */
+  .md-dialog {
+    background-color: var(--md-sys-color-surface-container-high);
+    border-radius: var(--md-sys-shape-corner-extra-large);
+    box-shadow: var(--md-sys-elevation-4);
+  }
+
+  /* Material Design 3 Input */
+  .md-input {
+    background-color: var(--md-sys-color-surface-container-high);
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: var(--md-sys-shape-corner-small);
+    padding: var(--md-sys-spacing-3);
+    font-family: var(--md-sys-typescale-body-large-font-family);
+    font-size: var(--md-sys-typescale-body-large-font-size);
+    color: var(--md-sys-color-on-surface);
+    transition: all 0.2s ease;
+  }
+  
+  .md-input:focus {
+    outline: none;
+    border-color: var(--md-sys-color-primary);
+    box-shadow: 0 0 0 1px var(--md-sys-color-primary);
+  }
+  
+  .md-input-filled {
+    background-color: var(--md-sys-color-surface-container-high);
+    border: none;
+    border-radius: var(--md-sys-shape-corner-small);
+    padding: var(--md-sys-spacing-3);
+    font-family: var(--md-sys-typescale-body-large-font-family);
+    font-size: var(--md-sys-typescale-body-large-font-size);
+    color: var(--md-sys-color-on-surface);
+    transition: all 0.2s ease;
+  }
+  
+  .md-input-filled:focus {
+    outline: none;
+    background-color: color-mix(in oklab, var(--md-sys-color-surface-container-highest) 95%, var(--md-sys-color-primary));
+  }
+
+  /* Scrollbar */
   * {
     scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
+    scrollbar-color: var(--md-sys-color-outline-variant) transparent;
   }
 
-  *::-webkit-scrollbar        { width: 8px; height: 8px; }
-  *::-webkit-scrollbar-track  { background: transparent; }
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  *::-webkit-scrollbar-track {
+    background: var(--md-sys-color-surface-container-lowest);
+  }
+  
+  *::-webkit-scrollbar-thumb {
+    background: var(--md-sys-color-outline-variant);
+    border-radius: 4px;
+    border: 2px solid var(--md-sys-color-surface-container-lowest);
+  }
+  
+  *::-webkit-scrollbar-thumb:hover {
+    background: var(--md-sys-color-outline);
+  }
 }
 
-@layer utilities {
-  .bg-gradient-body         { background: var(--gradient-body); }
-  .bg-gradient-card         { background: var(--gradient-card); }
-  .bg-gradient-popover      { background: var(--gradient-popover); }
-  .bg-gradient-sidebar      { background: var(--gradient-sidebar); }
-  .bg-gradient-input        { background: var(--gradient-input); }
-  .bg-gradient-muted        { background: var(--gradient-muted); }
-  .bg-gradient-success-muted { background: var(--gradient-success-muted); }
-  .bg-gradient-warning-muted { background: var(--gradient-warning-muted); }
-  .bg-gradient-info-muted   { background: var(--gradient-info-muted); }
+/* Container System */
+.main-container {
+  max-width: 1280px;
+  margin-inline: auto;
+  padding-inline: var(--md-sys-spacing-4);
 }
+
+@media (min-width: 768px) {
+  .main-container {
+    padding-inline: var(--md-sys-spacing-6);
+  }
+}
+
+@media (min-width: 1024px) {
+  .main-container {
+    padding-inline: var(--md-sys-spacing-8);
+  }
+}
+
+/* Responsive Utility Classes */
+.md-padding-1 { padding: var(--md-sys-spacing-1); }
+.md-padding-2 { padding: var(--md-sys-spacing-2); }
+.md-padding-3 { padding: var(--md-sys-spacing-3); }
+.md-padding-4 { padding: var(--md-sys-spacing-4); }
+.md-padding-5 { padding: var(--md-sys-spacing-5); }
+.md-padding-6 { padding: var(--md-sys-spacing-6); }
+.md-padding-7 { padding: var(--md-sys-spacing-7); }
+.md-padding-8 { padding: var(--md-sys-spacing-8); }
+.md-padding-9 { padding: var(--md-sys-spacing-9); }
+.md-padding-10 { padding: var(--md-sys-spacing-10); }
+
+.md-margin-1 { margin: var(--md-sys-spacing-1); }
+.md-margin-2 { margin: var(--md-sys-spacing-2); }
+.md-margin-3 { margin: var(--md-sys-spacing-3); }
+.md-margin-4 { margin: var(--md-sys-spacing-4); }
+.md-margin-5 { margin: var(--md-sys-spacing-5); }
+.md-margin-6 { margin: var(--md-sys-spacing-6); }
+.md-margin-7 { margin: var(--md-sys-spacing-7); }
+.md-margin-8 { margin: var(--md-sys-spacing-8); }
+.md-margin-9 { margin: var(--md-sys-spacing-9); }
+.md-margin-10 { margin: var(--md-sys-spacing-10); }
+
+/* Material Design 3 Button Variants */
+.md-button-filled {
+  background-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  border: none;
+  box-shadow: var(--md-sys-elevation-1);
+  padding: var(--md-sys-spacing-3) var(--md-sys-spacing-6);
+  font-family: var(--font-montserrat), sans-serif;
+  font-size: var(--md-sys-typescale-label-large-font-size);
+  font-weight: 700;
+  letter-spacing: var(--md-sys-typescale-label-large-letter-spacing);
+  line-height: var(--md-sys-typescale-label-large-line-height);
+  border-radius: var(--md-sys-shape-corner-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--md-sys-spacing-2);
+  min-height: 40px;
+  min-width: 64px;
+  transition: all 0.2s ease;
+}
+
+.md-button-filled:hover {
+  box-shadow: var(--md-sys-elevation-2);
+  background-color: #6a47c1; /* Slightly darker #7A57D1 */
+}
+
+.md-button-filled:active {
+  box-shadow: var(--md-sys-elevation-1);
+  background-color: #5a37b1; /* Even darker #7A57D1 */
+}
+
+.md-button-tonal {
+  background-color: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+  border: none;
+  box-shadow: var(--md-sys-elevation-1);
+  padding: var(--md-sys-spacing-3) var(--md-sys-spacing-6);
+  font-family: var(--font-montserrat), sans-serif;
+  font-size: var(--md-sys-typescale-label-large-font-size);
+  font-weight: 700;
+  letter-spacing: var(--md-sys-typescale-label-large-letter-spacing);
+  line-height: var(--md-sys-typescale-label-large-line-height);
+  border-radius: var(--md-sys-shape-corner-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--md-sys-spacing-2);
+  min-height: 40px;
+  min-width: 64px;
+  transition: all 0.2s ease;
+}
+
+.md-button-tonal:hover {
+  box-shadow: var(--md-sys-elevation-2);
+  background-color: #8b1e7b; /* Slightly darker #9B2E8B */
+}
+
+.md-button-tonal:active {
+  box-shadow: var(--md-sys-elevation-1);
+  background-color: #7b0e6b; /* Even darker #9B2E8B */
+}
+
+.md-button-outlined {
+  background-color: transparent;
+  color: var(--md-sys-color-primary);
+  border: 1px solid var(--md-sys-color-outline);
+  padding: var(--md-sys-spacing-3) var(--md-sys-spacing-6);
+  font-family: var(--font-montserrat), sans-serif;
+  font-size: var(--md-sys-typescale-label-large-font-size);
+  font-weight: 700;
+  letter-spacing: var(--md-sys-typescale-label-large-letter-spacing);
+  line-height: var(--md-sys-typescale-label-large-line-height);
+  border-radius: var(--md-sys-shape-corner-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--md-sys-spacing-2);
+  min-height: 40px;
+  min-width: 64px;
+  transition: all 0.2s ease;
+}
+
+.md-button-outlined:hover {
+  background-color: rgba(122, 87, 209, 0.08); /* 8% of #7A57D1 */
+  border-color: var(--md-sys-color-primary);
+}
+
+.md-button-outlined:active {
+  background-color: rgba(122, 87, 209, 0.12); /* 12% of #7A57D1 */
+  border-color: var(--md-sys-color-primary);
+}
+
+.md-button-text {
+  background-color: transparent;
+  color: var(--md-sys-color-primary);
+  border: none;
+  padding: var(--md-sys-spacing-3) var(--md-sys-spacing-6);
+  font-family: var(--font-montserrat), sans-serif;
+  font-size: var(--md-sys-typescale-label-large-font-size);
+  font-weight: 700;
+  letter-spacing: var(--md-sys-typescale-label-large-letter-spacing);
+  line-height: var(--md-sys-typescale-label-large-line-height);
+  border-radius: var(--md-sys-shape-corner-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--md-sys-spacing-2);
+  min-height: 40px;
+  min-width: 64px;
+  transition: all 0.2s ease;
+}
+
+.md-button-text:hover {
+  background-color: rgba(122, 87, 209, 0.08); /* 8% of #7A57D1 */
+}
+
+.md-button-text:active {
+  background-color: rgba(122, 87, 209, 0.12); /* 12% of #7A57D1 */
+}
+
+/* Material Design 3 Card */
+.md-card {
+  background-color: var(--md-sys-color-surface-container);
+  border-radius: var(--md-sys-shape-corner-large);
+  box-shadow: var(--md-sys-elevation-1);
+  transition: box-shadow 0.2s ease;
+  overflow: hidden;
+}
+
+.md-card:hover {
+  box-shadow: var(--md-sys-elevation-2);
+}
+
+.md-card-elevated {
+  background-color: var(--md-sys-color-surface-container-high);
+  border-radius: var(--md-sys-shape-corner-large);
+  box-shadow: var(--md-sys-elevation-2);
+  transition: box-shadow 0.2s ease;
+  overflow: hidden;
+}
+
+.md-card-elevated:hover {
+  box-shadow: var(--md-sys-elevation-3);
+}
+
+/* Material Design 3 Input */
+.md-input {
+  background-color: var(--md-sys-color-surface-container-high);
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-small);
+  padding: var(--md-sys-spacing-3);
+  font-family: var(--md-sys-typescale-body-large-font-family);
+  font-size: var(--md-sys-typescale-body-large-font-size);
+  color: var(--md-sys-color-on-surface);
+  transition: all 0.2s ease;
+}
+
+.md-input:focus {
+  outline: none;
+  border-color: var(--md-sys-color-primary);
+  box-shadow: 0 0 0 1px var(--md-sys-color-primary);
+}
+
+.md-input-filled {
+  background-color: var(--md-sys-color-surface-container-high);
+  border: none;
+  border-radius: var(--md-sys-shape-corner-small);
+  padding: var(--md-sys-spacing-3);
+  font-family: var(--md-sys-typescale-body-large-font-family);
+  font-size: var(--md-sys-typescale-body-large-font-size);
+  color: var(--md-sys-color-on-surface);
+  transition: all 0.2s ease;
+}
+
+.md-input-filled:focus {
+  outline: none;
+  background-color: color-mix(in srgb, var(--md-sys-color-surface-container-highest) 95%, var(--md-sys-color-primary));
+}
+
+/* Material Design 3 Dialog */
+.md-dialog {
+  background-color: var(--md-sys-color-surface-container-high);
+  border-radius: var(--md-sys-shape-corner-extra-large);
+  box-shadow: var(--md-sys-elevation-4);
+}
+
+/* Elevation Classes */
+.md-elevation-0 { box-shadow: var(--md-sys-elevation-0); }
+.md-elevation-1 { box-shadow: var(--md-sys-elevation-1); }
+.md-elevation-2 { box-shadow: var(--md-sys-elevation-2); }
+.md-elevation-3 { box-shadow: var(--md-sys-elevation-3); }
+.md-elevation-4 { box-shadow: var(--md-sys-elevation-4); }
+.md-elevation-5 { box-shadow: var(--md-sys-elevation-5); }
+
+/* Shape Classes */
+.md-shape-none { border-radius: var(--md-sys-shape-corner-none); }
+.md-shape-extra-small { border-radius: var(--md-sys-shape-corner-extra-small); }
+.md-shape-small { border-radius: var(--md-sys-shape-corner-small); }
+.md-shape-medium { border-radius: var(--md-sys-shape-corner-medium); }
+.md-shape-large { border-radius: var(--md-sys-shape-corner-large); }
+.md-shape-extra-large { border-radius: var(--md-sys-shape-corner-extra-large); }
+.md-shape-full { border-radius: var(--md-sys-shape-corner-full); }
+
+/* Color Utility Classes */
+.md-primary { color: var(--md-sys-color-primary); }
+.md-on-primary { color: var(--md-sys-color-on-primary); }
+.md-primary-container { color: var(--md-sys-color-primary-container); }
+.md-on-primary-container { color: var(--md-sys-color-on-primary-container); }
+.md-secondary { color: var(--md-sys-color-secondary); }
+.md-on-secondary { color: var(--md-sys-color-on-secondary); }
+.md-secondary-container { color: var(--md-sys-color-secondary-container); }
+.md-on-secondary-container { color: var(--md-sys-color-on-secondary-container); }
+.md-tertiary { color: var(--md-sys-color-tertiary); }
+.md-on-tertiary { color: var(--md-sys-color-on-tertiary); }
+.md-tertiary-container { color: var(--md-sys-color-tertiary-container); }
+.md-on-tertiary-container { color: var(--md-sys-color-on-tertiary-container); }
+.md-surface { color: var(--md-sys-color-surface); }
+.md-on-surface { color: var(--md-sys-color-on-surface); }
+.md-surface-variant { color: var(--md-sys-color-surface-variant); }
+.md-on-surface-variant { color: var(--md-sys-color-on-surface-variant); }
+.md-outline { color: var(--md-sys-color-outline); }
+.md-outline-variant { color: var(--md-sys-color-outline-variant); }
+
+.md-bg-primary { background-color: var(--md-sys-color-primary); }
+.md-bg-on-primary { background-color: var(--md-sys-color-on-primary); }
+.md-bg-primary-container { background-color: var(--md-sys-color-primary-container); }
+.md-bg-on-primary-container { background-color: var(--md-sys-color-on-primary-container); }
+.md-bg-secondary { background-color: var(--md-sys-color-secondary); }
+.md-bg-on-secondary { background-color: var(--md-sys-color-on-secondary); }
+.md-bg-secondary-container { background-color: var(--md-sys-color-secondary-container); }
+.md-bg-on-secondary-container { background-color: var(--md-sys-color-on-secondary-container); }
+.md-bg-tertiary { background-color: var(--md-sys-color-tertiary); }
+.md-bg-on-tertiary { background-color: var(--md-sys-color-on-tertiary); }
+.md-bg-tertiary-container { background-color: var(--md-sys-color-tertiary-container); }
+.md-bg-on-tertiary-container { background-color: var(--md-sys-color-on-tertiary-container); }
+.md-bg-surface { background-color: var(--md-sys-color-surface); }
+.md-bg-on-surface { background-color: var(--md-sys-color-on-surface); }
+.md-bg-surface-variant { background-color: var(--md-sys-color-surface-variant); }
+.md-bg-on-surface-variant { background-color: var(--md-sys-color-on-surface-variant); }
+.md-bg-surface-container { background-color: var(--md-sys-color-surface-container); }
+.md-bg-surface-container-high { background-color: var(--md-sys-color-surface-container-high); }
+.md-bg-surface-container-highest { background-color: var(--md-sys-color-surface-container-highest); }

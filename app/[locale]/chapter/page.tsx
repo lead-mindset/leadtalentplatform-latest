@@ -9,7 +9,7 @@ import { getChapterMembers, getMemberStats, getRecentChapterActivity } from '@/l
 import { getChapterEvents } from '@/lib/actions/events/get-data'
 import MemberCard from './members/components/member-card'
 import { Breadcrumb } from '@/components/ui/breadcrumb'
-
+import { MainContainer } from '@/components/global/main-container'
 
 function StatCard({
   label,
@@ -274,8 +274,7 @@ async function ChapterContent() {
   const upcomingEventsCount = chapterEvents.filter((event) => new Date(event.end_at) >= new Date()).length
 
   return (
-    <div className="container max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8">
-
+    <MainContainer className="py-8 space-y-8">
       {/* Breadcrumb Navigation */}
       <Breadcrumb items={[{ label: 'Dashboard', href: '/chapter' }]} />
 
@@ -332,7 +331,6 @@ async function ChapterContent() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-
         <div className="lg:col-span-2 space-y-4">
           {stats.pending > 0 && (
             <>
@@ -346,8 +344,10 @@ async function ChapterContent() {
                 {stats.pending > 3 && (
                   <Button asChild variant="outline" size="sm">
                     <Link href="/chapter/members?status=pending">
-                      View all
-                      <Icons.ChevronRight className="ml-1 h-4 w-4" />
+                      <span className="flex items-center">
+                        View all
+                        <Icons.ChevronRight className="ml-1 h-4 w-4" />
+                      </span>
                     </Link>
                   </Button>
                 )}
@@ -369,7 +369,6 @@ async function ChapterContent() {
         </div>
 
         <div className="space-y-4">
-
           <Card>
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
@@ -392,13 +391,11 @@ async function ChapterContent() {
               <QuickLinks pendingCount={stats.pending} />
             </CardContent>
           </Card>
-
         </div>
       </div>
-    </div>
+    </MainContainer>
   )
 }
-
 
 function Loading() {
   return (
@@ -448,7 +445,6 @@ function Loading() {
     </div>
   )
 }
-
 
 export default function ChapterOverviewPage() {
   return (

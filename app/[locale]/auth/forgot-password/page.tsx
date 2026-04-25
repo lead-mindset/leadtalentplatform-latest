@@ -1,4 +1,4 @@
-import { ForgotPasswordForm } from "@/components/forgot-password-form";
+import { ForgotPasswordForm } from "@/components/auth/forgot-password";
 
 export const metadata = {
   title: 'Forgot Password - LEAD Talent Platform',

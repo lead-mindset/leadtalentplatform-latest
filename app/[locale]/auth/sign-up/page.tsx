@@ -1,4 +1,4 @@
-import { SignUpForm } from "@/components/sign-up-form";
+import { SignUpForm } from "@/components/auth/sign-up";
 
 export const metadata = {
   title: 'Sign Up - LEAD Talent Platform',
