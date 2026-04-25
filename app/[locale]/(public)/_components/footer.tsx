@@ -1,121 +1,76 @@
 import Link from "next/link";
-
-const RECRUITER_LOGIN_URL = "/company/login";
-const CONTACT_URL = "mailto:admin@leadmindset.org";
-
-function FooterLink({
-  href,
-  children,
-  external = false,
-}: {
-  href: string;
-  children: React.ReactNode;
-  external?: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      target={external ? "_blank" : undefined}
-      rel={external ? "noopener noreferrer" : undefined}
-      className="
-        block text-sm text-muted-foreground
-        hover:text-foreground
-        transition-colors duration-150
-        py-0.5
-      "
-    >
-      {children}
-    </Link>
-  );
-}
-
+import Image from "next/image";
+import { Share2, Globe } from "lucide-react";
+import { MainContainer } from "@/components/global/main-container";
 
 export function Footer() {
   return (
-    <footer
-      className="border-t border-border/60 bg-card/80"
-      aria-label="Pie de página"
-    >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-14">
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 sm:gap-12">
-
-          <nav aria-label="LEAD">
-            <p className="text-xs font-semibold uppercase tracking-widest text-foreground mb-4">
-              LEAD
+    <footer className="bg-card border-t border-border/20 pt-20 pb-10">
+      <MainContainer>
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-8 mb-16">
+          <div className="col-span-2">
+            <Image
+              src="/leadl2.svg"
+              alt="LEAD"
+              width={100}
+              height={32}
+              className="h-8 w-auto mb-6 brightness-0 invert opacity-80 object-contain"
+            />
+            <p className="text-muted-foreground mb-6 pr-4">
+              Empowering Latin American tech talent through community, mentorship, and opportunity.
             </p>
-            <div className="flex flex-col gap-0.5">
-              <FooterLink href="/about">¿Qué es LEAD?</FooterLink>
-              <FooterLink href="/events">Capítulos y eventos</FooterLink>
-              <FooterLink href={CONTACT_URL}>Contacto</FooterLink>
-            </div>
-          </nav>
-
-          <nav aria-label="Estudiantes">
-            <p className="text-xs font-semibold uppercase tracking-widest text-foreground mb-4">
-              Estudiantes
-            </p>
-            <div className="flex flex-col gap-0.5">
-              <FooterLink href="/events">Explorar eventos</FooterLink>
-              <FooterLink href="/faq">Preguntas frecuentes</FooterLink>
-
-              <div
-                className="my-2 h-px bg-border/60"
-                aria-hidden="true"
-              />
-
-              <FooterLink href="/login?intent=signup">Crear perfil</FooterLink>
-              <FooterLink href="/login">Iniciar sesión</FooterLink>
-            </div>
-          </nav>
-
-          <nav aria-label="Empresas">
-            <p className="text-xs font-semibold uppercase tracking-widest text-foreground mb-4">
-              Empresas
-            </p>
-            <div className="flex flex-col gap-0.5">
-              <FooterLink href={CONTACT_URL}>Contactar al equipo</FooterLink>
-              <FooterLink href="/about#empresas">¿Cómo funciona?</FooterLink>
-
-              <div
-                className="my-2 h-px bg-border/60"
-                aria-hidden="true"
-              />
-
-              <FooterLink href={RECRUITER_LOGIN_URL}>
-                Iniciar sesión como reclutador
-              </FooterLink>
-            </div>
-          </nav>
-
+          </div>
+          <div>
+            <h4 className="font-bold mb-4 text-foreground">Community</h4>
+            <ul className="space-y-3 text-muted-foreground">
+              <li><Link className="hover:text-primary transition-colors" href="/chapters">Chapters</Link></li>
+              <li><Link className="hover:text-primary transition-colors" href="/mentorship">Mentorship</Link></li>
+              <li><Link className="hover:text-primary transition-colors" href="/events">Events</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-bold mb-4 text-foreground">Companies</h4>
+            <ul className="space-y-3 text-muted-foreground">
+              <li><Link className="hover:text-primary transition-colors" href="/company/login">Talent Search</Link></li>
+              <li><Link className="hover:text-primary transition-colors" href="/sponsor">Sponsorship</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-bold mb-4 text-foreground">Resources</h4>
+            <ul className="space-y-3 text-muted-foreground">
+              <li><Link className="hover:text-primary transition-colors" href="/blog">Blog</Link></li>
+              <li><Link className="hover:text-primary transition-colors" href="/guidelines">Guidelines</Link></li>
+              <li><Link className="hover:text-primary transition-colors" href="/faq">FAQ</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-bold mb-4 text-foreground">Legal</h4>
+            <ul className="space-y-3 text-muted-foreground">
+              <li><Link className="hover:text-primary transition-colors" href="/privacy">Privacy</Link></li>
+              <li><Link className="hover:text-primary transition-colors" href="/terms">Terms</Link></li>
+            </ul>
+          </div>
         </div>
-
-        <div
-          className="
-            mt-10 pt-6 border-t border-border/60
-            flex flex-col sm:flex-row
-            items-center justify-between
-            gap-3 text-xs text-muted-foreground
-          "
-        >
-          <span>© 2026 LEAD AMERICAS</span>
+        <div className="border-t border-border/20 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-muted-foreground text-sm">© 2026 LEAD Americas. All rights reserved.</p>
           <div className="flex gap-4">
-            <Link
-              href="/privacy"
-              className="hover:text-foreground transition-colors"
+            <Link 
+              className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-primary transition-colors group" 
+              href="#"
+              aria-label="Share on social media"
             >
-              Privacidad
+              <Share2 className="w-4 h-4 text-muted-foreground group-hover:text-primary-foreground" />
             </Link>
-            <Link
-              href="/terms"
-              className="hover:text-foreground transition-colors"
+            <Link 
+              className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-primary transition-colors group" 
+              href="#"
+              aria-label="Visit website"
             >
-              Términos
+              <Globe className="w-4 h-4 text-muted-foreground group-hover:text-primary-foreground" />
             </Link>
           </div>
         </div>
-
-      </div>
+      </MainContainer>
     </footer>
   );
 }
