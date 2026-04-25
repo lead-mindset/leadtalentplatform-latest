@@ -35,9 +35,9 @@ export function Allies() {
   }, { scope: rowRef });
 
   return (
-    <section className="py-16 bg-muted/30 border-y border-border/10">
+    <section className="pt-12 pb-8 bg-foreground border-y border-border/10">
       <div className="container mx-auto px-4">
-        <SectionLabel variant="muted" size="sm" className="text-center mb-10">Organizations that support us</SectionLabel>
+        <SectionLabel size="sm" className="text-center mb-2">Organizations that support us</SectionLabel>
         <div className="relative overflow-hidden">
           <div
             ref={rowRef}
