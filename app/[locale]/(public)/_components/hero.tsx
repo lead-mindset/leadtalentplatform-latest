@@ -1,123 +1,62 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Icons } from "@/components/ui/icons";
-import Image from "next/image";
+"use client";
 
-const TRUST_ITEMS = [
-  "Privado por defecto",
-  "Tú controlas tu visibilidad",
-  "Gratis",
-] as const;
+import Link from "next/link";
+import { PlayCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { MainContainer } from "@/components/global/main-container";
+import { Icon } from "@/components/ui/icon";
+import GradientText from "@/components/ui/gradient-text";
+import Aurora from "@/components/ui/aurora";
 
 export function Hero() {
   return (
-    <section
-      className="
-        relative overflow-hidden
-       text-card-foreground bg-background
-        border-b border-border/60
-      "
-      aria-labelledby="hero-heading"
-    >
-      <div
-        aria-hidden="true"
-        className="
-          pointer-events-none absolute inset-0
-          bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,oklch(0.59_0.22_1/0.12),transparent)]
-        "
-      />
-
-      <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20  text-center">
-
-
-        <div className="relative mb-6 mx-auto flex h-[68px] w-[68px] items-center justify-center
-    rounded-[18px] border border-border/50
-    overflow-hidden shadow-xl shadow-black/8">
-          <div className="absolute inset-0" style={{ background: "var(--gradient-card)" }} />
-          <Image
-            src="/leadl2.svg"
-            alt="logo"
-            width={44}
-            height={44}
-            className="relative z-10 object-contain"
-            priority
-          />
-        </div>
-
-        <h1
-          id="hero-heading"
-          className="
-            text-4xl sm:text-5xl lg:text-6xl
-            font-semibold leading-[1.1] tracking-tight
-            text-foreground
-            mb-5
-          "
+    <section className="relative h-screen flex flex-col items-center justify-center text-center overflow-hidden bg-background">
+      <div className="absolute inset-0 z-0">
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="w-full h-full object-cover"
         >
-          Conecta con oportunidades exclusivas de {" "}
-          <span className="text-primary"> LEAD</span>
-        </h1>
-
-
-        <ul
-          className="
-            flex flex-wrap items-center justify-center
-            gap-x-5 gap-y-2
-            mb-8
-          "
-          aria-label="Garantías de la plataforma"
-        >
-          {TRUST_ITEMS.map((item) => (
-            <li
-              key={item}
-              className="flex items-center gap-1.5 text-sm text-muted-foreground"
-            >
-              <Icons.CheckCircle2
-                className="text-success shrink-0"
-                aria-hidden="true"
-              />
-              {item}
-            </li>
-          ))}
-        </ul>
-
-        <div
-          className="
-            flex flex-col sm:flex-row
-            items-center justify-center
-            gap-3
-          "
-        >
-          <Button
-            asChild
-            size="lg"
-            className="
-              w-full sm:w-auto
-              font-semibold text-base
-              bg-primary text-primary-foreground
-              hover:bg-primary/90
-              px-8
-            "
-          >
-            <Link href="/auth/sign-up">
-              Crear mi perfil&nbsp;{`→`}
-            </Link>
-          </Button>
-
-          <Button
-            asChild
-            variant="outline"
-            size="lg"
-            className="
-              w-full sm:w-auto
-              font-medium text-base
-              px-8
-            "
-          >
-            <Link href="/auth/login">Iniciar sesión</Link>
-          </Button>
-        </div>
-
+          <source src="https://sboibxszratyaswwursb.supabase.co/storage/v1/object/sign/video/video3.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV81MzNiYjliNy03NjlkLTRhZjMtOTQ3MC0yMGM2NmJjYTI3OWIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ2aWRlby92aWRlbzMubXA0IiwiaWF0IjoxNzc2NjMxNzEzLCJleHAiOjIwOTE5OTE3MTN9.SQ0yf7HaD3Uc2Df5JXECvsqXDgMm2WnzuGHAhBJZylo" type="video/mp4" />
+        </video>
       </div>
+      <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/30 to-background z-10"></div>
+      <div className="absolute inset-0 z-10 w-full h-full pointer-events-none">
+        <Aurora
+          colorStops={["#e2315f","#8037c4","#5227FF"]}
+          blend={0.5}
+          amplitude={1.0}
+          speed={0.5}
+        />
+      </div>
+      <div className="absolute w-full h-full inset-0 bg-background opacity-60 z-15 pointer-events-none"></div>
+
+      <MainContainer className="relative z-20 flex flex-col items-center justify-center py-16">
+        <h1 className="fluid-hero text-foreground mb-6">
+          Leading the Next <br/><GradientText 
+            colors={["#d84cc5", "#c53c73", "#a92da7"]}
+            animationSpeed={3}
+            showBorder={false}
+            className="inline font-extrabold"
+          >
+            Tech Frontier.
+          </GradientText>
+        </h1>
+        <p className="fluid-body-lg text-muted-foreground max-w-3xl mx-auto mb-10 font-medium">
+          We're a community of dreamers and builders bridging Latin America to the global stage through elite mentorship and tech opportunities.
+        </p>
+        
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
+          <Button size="lg" className="px-8 py-4 sm:px-10 sm:py-5 text-base sm:text-lg font-bold rounded-full" asChild>
+            <Link href="/auth/sign-up">Join the Mission</Link>
+          </Button>
+          <Button variant="outline" size="lg" className="px-8 py-4 sm:px-10 sm:py-5 text-base sm:text-lg font-bold rounded-full" asChild>
+            <Link href="/about">Learn More</Link>
+          </Button>
+        </div>
+      </MainContainer>
     </section>
   );
 }
