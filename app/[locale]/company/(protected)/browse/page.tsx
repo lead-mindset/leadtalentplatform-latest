@@ -4,6 +4,7 @@ import { StudentsTable } from '../_components/students-table'
 import { BrowseFilters } from '../_components/browse-filters'
 import { Card, CardContent } from '@/components/ui/card'
 import { Users } from 'lucide-react'
+import { MainContainer } from '@/components/global/main-container'
 
 interface BrowsePageProps {
   searchParams: Promise<{
@@ -51,7 +52,7 @@ const studentFilters = {
   ).entries()]
 
   return (
-    <div className="space-y-6">
+    <MainContainer className="space-y-6 py-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Browse Students</h1>
         <p className="text-muted-foreground mt-1">
@@ -84,6 +85,6 @@ const studentFilters = {
       ) : (
         <StudentsTable students={filtered} savedStudentIds={savedIds} />
       )}
-    </div>
+    </MainContainer>
   )
 }
