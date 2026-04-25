@@ -83,7 +83,7 @@ export default function Onboarding() {
       if (key === 'resume_pdf' && value instanceof File) {
         formData.append('resume', value)
       } else if (key === 'termsAccepted') {
-        // frontend-only, not sent to server
+
       } else if (Array.isArray(value) || typeof value === 'object') {
         formData.append(key, JSON.stringify(value))
       } else {
@@ -154,7 +154,7 @@ export default function Onboarding() {
     <FormProvider {...methods}>
       <FormStepper validateStep={validateCurrentStep} onFinalStepCompleted={handleComplete}>
 
-        {/* ── Step 1: Personal info ─────────────────────────────────────────── */}
+        {}
         <div className="space-y-6">
           <StepHeader title={t('step1Title')} subtitle={t('step1Subtitle')} />
 
@@ -217,7 +217,7 @@ export default function Onboarding() {
           </div>
         </div>
 
-        {/* ── Step 2: Academic ──────────────────────────────────────────────── */}
+        {}
         <div className="space-y-6">
           <StepHeader title={t('step2Title')} subtitle={t('step2Subtitle')} />
 
@@ -263,7 +263,7 @@ export default function Onboarding() {
           </div>
         </div>
 
-        {/* ── Step 3: Professional ──────────────────────────────────────────── */}
+        {}
         <div className="space-y-6">
           <StepHeader title={t('step3Title')} subtitle={t('step3Subtitle')} />
 
@@ -331,12 +331,12 @@ export default function Onboarding() {
           </div>
         </div>
 
-        {/* ── Step 4: Preferences + Terms ───────────────────────────────────── */}
+        {}
         <div className="space-y-6">
           <StepHeader title={t('step4Title')} subtitle={t('step4Subtitle')} />
 
           <div className="space-y-3">
-            {/* Recruiter visibility */}
+            {}
             <Controller
               control={control}
               name="consentRecruiterVisibility"

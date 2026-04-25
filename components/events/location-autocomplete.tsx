@@ -66,7 +66,6 @@ export function LocationAutocomplete({
         longitude: place.geometry.location.lng()
       }
 
-      // Extract address components
       const addressComponents = place.address_components || []
       const cityComponent = addressComponents.find((comp: any) => 
         comp.types.includes('locality')
@@ -88,7 +87,6 @@ export function LocationAutocomplete({
       setShowSuggestions(false)
     })
 
-    // Handle input changes for manual fallback
     inputRef.current.addEventListener('input', debounce((e: any) => {
       const value = e.target.value
       if (value.length <= 2) {
@@ -96,8 +94,7 @@ export function LocationAutocomplete({
         setShowSuggestions(false)
         return
       }
-      
-      // Manual geocoding fallback (using Nominatim as backup)
+
       setIsLoading(true)
       geocodeAddress(value)
         .then(results => {
@@ -136,7 +133,7 @@ export function LocationAutocomplete({
         lat: parseFloat(item.lat),
         lon: parseFloat(item.lon),
         address: item.display_name,
-        // Try to extract city and region from display name
+
         city: item.address?.city || item.display_name.split(',')[0]?.trim(),
         region: item.address?.state || item.display_name.split(',')[1]?.trim()
       }))
@@ -174,7 +171,7 @@ export function LocationAutocomplete({
   }
 
   useEffect(() => {
-    // Wait for Google Maps API to load
+
     const checkGoogleLoaded = () => {
       if (window.google && window.google.maps && window.google.maps.places) {
         initializeAutocomplete()

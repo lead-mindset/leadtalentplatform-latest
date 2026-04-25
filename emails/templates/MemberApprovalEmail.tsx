@@ -76,7 +76,7 @@ export default function MemberApprovalEmail({
         {t.intro}
       </p>
 
-      {/* Member ID Display */}
+      {}
       <div style={{
         backgroundColor: C.primaryLight,
         border: `2px solid ${C.primaryBorder}`,
@@ -119,7 +119,7 @@ export default function MemberApprovalEmail({
         </p>
       </div>
 
-      {/* Features */}
+      {}
       <div style={featureBoxStyle}>
         <p style={{ margin: '0 0 12px 0', fontWeight: 700, fontSize: 13, color: C.primary, textTransform: 'uppercase', letterSpacing: '1px' }}>
           {t.featuresTitle}
@@ -132,14 +132,14 @@ export default function MemberApprovalEmail({
         ))}
       </div>
 
-      {/* CTA Button */}
+      {}
       {dashboardUrl && (
         <div style={{ textAlign: 'center', margin: '32px 0' }}>
           <a href={dashboardUrl} style={buttonStyle}>{t.button}</a>
         </div>
       )}
 
-      {/* Closing */}
+      {}
       <p style={{ marginTop: 28, marginBottom: 4 }}>{t.closing}</p>
       <p style={{ margin: 0, fontWeight: 600, color: C.foreground }}>&mdash; {t.signature}</p>
 

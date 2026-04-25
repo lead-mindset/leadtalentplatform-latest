@@ -10,7 +10,6 @@ export const metadata: Metadata = {
 export default function FAQPage() {
   return (
     <div className="container max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8">
-      {/* Header */}
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold tracking-tight">Frequently Asked Questions</h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
@@ -18,9 +17,7 @@ export default function FAQPage() {
         </p>
       </div>
 
-      {/* FAQ Categories */}
       <div className="space-y-8">
-        {/* General Questions */}
         <div className="space-y-4">
           <h2 className="text-2xl font-bold tracking-tight">General</h2>
           <div className="space-y-4">
@@ -76,7 +73,6 @@ export default function FAQPage() {
           </div>
         </div>
 
-        {/* Membership Questions */}
         <div className="space-y-4">
           <h2 className="text-2xl font-bold tracking-tight">Membership</h2>
           <div className="space-y-4">
@@ -125,7 +121,6 @@ export default function FAQPage() {
           </div>
         </div>
 
-        {/* Events Questions */}
         <div className="space-y-4">
           <h2 className="text-2xl font-bold tracking-tight">Events</h2>
           <div className="space-y-4">
@@ -174,7 +169,6 @@ export default function FAQPage() {
           </div>
         </div>
 
-        {/* Career Questions */}
         <div className="space-y-4">
           <h2 className="text-2xl font-bold tracking-tight">Career & Opportunities</h2>
           <div className="space-y-4">
@@ -222,7 +216,6 @@ export default function FAQPage() {
           </div>
         </div>
 
-        {/* Technical Questions */}
         <div className="space-y-4">
           <h2 className="text-2xl font-bold tracking-tight">Technical Support</h2>
           <div className="space-y-4">
@@ -265,7 +258,6 @@ export default function FAQPage() {
         </div>
       </div>
 
-      {/* Still Have Questions */}
       <Card className="bg-primary/5 border-primary/20">
         <CardContent className="py-8 text-center">
           <h3 className="text-2xl font-bold mb-4">Still Have Questions?</h3>

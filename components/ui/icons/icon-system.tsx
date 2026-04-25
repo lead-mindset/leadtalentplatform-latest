@@ -65,12 +65,15 @@ import {
   Handshake,
   Map,
   Instagram,
-  IdCard
+  IdCard,
+  Ticket,
+  Compass,
+  Lightbulb,
+  BookOpen
 } from "lucide-react"
 
 import { IconWrapper } from "./icon-wrapper"
 
-// Re-export all Lucide icons for convenience
 export {
   Calendar,
   MapPin,
@@ -137,12 +140,15 @@ export {
   Handshake,
   Map,
   Instagram,
-  IdCard
+  IdCard,
+  Ticket,
+  Compass,
+  Lightbulb,
+  BookOpen
 }
 
-// Standardized icon components with consistent sizing
 export const Icons = {
-  // Navigation & Actions
+
   ChevronRight: (props: Omit<React.ComponentProps<typeof ChevronRight>, 'size'>) => (
     <IconWrapper size="sm" aria-hidden={true}>
       <ChevronRight {...props} />
@@ -163,8 +169,7 @@ export const Icons = {
       <ChevronUp {...props} />
     </IconWrapper>
   ),
-  
-  // Actions
+
   Plus: (props: Omit<React.ComponentProps<typeof Plus>, 'size'>) => (
     <IconWrapper size="md" aria-label="Add">
       <Plus {...props} />
@@ -190,8 +195,7 @@ export const Icons = {
       <Trash2 {...props} />
     </IconWrapper>
   ),
-  
-  // Interface Elements
+
   Menu: (props: Omit<React.ComponentProps<typeof Menu>, 'size'>) => (
     <IconWrapper size="md" aria-label="Menu">
       <Menu {...props} />
@@ -212,8 +216,7 @@ export const Icons = {
       <Settings {...props} />
     </IconWrapper>
   ),
-  
-  // User & Account
+
   User: (props: Omit<React.ComponentProps<typeof User>, 'size'>) => (
     <IconWrapper size="md" aria-label="User">
       <User {...props} />
@@ -229,8 +232,7 @@ export const Icons = {
       <LogOut {...props} />
     </IconWrapper>
   ),
-  
-  // Event Specific
+
   Calendar: (props: Omit<React.ComponentProps<typeof Calendar>, 'size'>) => (
     <IconWrapper size="sm" aria-label="Calendar">
       <Calendar {...props} />
@@ -256,8 +258,7 @@ export const Icons = {
       <Clock {...props} />
     </IconWrapper>
   ),
-  
-  // Status & Feedback
+
   CheckCircle2: (props: Omit<React.ComponentProps<typeof CheckCircle2>, 'size'>) => (
     <IconWrapper size="sm" aria-label="Success">
       <CheckCircle2 {...props} />
@@ -273,8 +274,7 @@ export const Icons = {
       <Info {...props} />
     </IconWrapper>
   ),
-  
-  // Communication
+
   Mail: (props: Omit<React.ComponentProps<typeof Mail>, 'size'>) => (
     <IconWrapper size="md" aria-label="Email">
       <Mail {...props} />
@@ -290,8 +290,7 @@ export const Icons = {
       <Globe {...props} />
     </IconWrapper>
   ),
-  
-  // Content
+
   FileText: (props: Omit<React.ComponentProps<typeof FileText>, 'size'>) => (
     <IconWrapper size="md" aria-label="Document">
       <FileText {...props} />
@@ -312,8 +311,7 @@ export const Icons = {
       <ExternalLink {...props} />
     </IconWrapper>
   ),
-  
-  // Actions Extended
+
   Share2: (props: Omit<React.ComponentProps<typeof Share2>, 'size'>) => (
     <IconWrapper size="md" aria-label="Share">
       <Share2 {...props} />
@@ -334,8 +332,7 @@ export const Icons = {
       <Copy {...props} />
     </IconWrapper>
   ),
-  
-  // Navigation Extended
+
   Home: (props: Omit<React.ComponentProps<typeof Home>, 'size'>) => (
     <IconWrapper size="md" aria-label="Home">
       <Home {...props} />
@@ -361,8 +358,7 @@ export const Icons = {
       <ArrowDown {...props} />
     </IconWrapper>
   ),
-  
-  // More options
+
   MoreVertical: (props: Omit<React.ComponentProps<typeof MoreVertical>, 'size'>) => (
     <IconWrapper size="md" aria-label="More options">
       <MoreVertical {...props} />
@@ -373,8 +369,7 @@ export const Icons = {
       <MoreHorizontal {...props} />
     </IconWrapper>
   ),
-  
-  // Security
+
   Lock: (props: Omit<React.ComponentProps<typeof Lock>, 'size'>) => (
     <IconWrapper size="md" aria-label="Locked">
       <Lock {...props} />
@@ -385,8 +380,7 @@ export const Icons = {
       <Unlock {...props} />
     </IconWrapper>
   ),
-  
-  // Visibility
+
   Eye: (props: Omit<React.ComponentProps<typeof Eye>, 'size'>) => (
     <IconWrapper size="md" aria-label="Show">
       <Eye {...props} />
@@ -397,8 +391,7 @@ export const Icons = {
       <EyeOff {...props} />
     </IconWrapper>
   ),
-  
-  // Status Circles
+
   CheckCircle: (props: Omit<React.ComponentProps<typeof CheckCircle>, 'size'>) => (
     <IconWrapper size="md" aria-label="Completed">
       <CheckCircle {...props} />
@@ -409,8 +402,7 @@ export const Icons = {
       <XCircle {...props} />
     </IconWrapper>
   ),
-  
-  // Engagement
+
   Star: (props: Omit<React.ComponentProps<typeof Star>, 'size'>) => (
     <IconWrapper size="md" aria-label="Star">
       <Star {...props} />
@@ -421,116 +413,124 @@ export const Icons = {
       <Heart {...props} />
     </IconWrapper>
   ),
-  
-  // Help
+
   HelpCircle: (props: Omit<React.ComponentProps<typeof HelpCircle>, 'size'>) => (
     <IconWrapper size="md" aria-label="Help">
       <HelpCircle {...props} />
     </IconWrapper>
   ),
-  
-  // Actions
+
   Save: (props: Omit<React.ComponentProps<typeof Save>, 'size'>) => (
     <IconWrapper size="md" aria-label="Save">
       <Save {...props} />
     </IconWrapper>
   ),
-  
-  // Loading
+
   Loader2: (props: Omit<React.ComponentProps<typeof Loader2>, 'size'>) => (
     <IconWrapper size="md" aria-hidden={true}>
       <Loader2 {...props} />
     </IconWrapper>
   ),
-  
-  // Business
+
   Building2: (props: Omit<React.ComponentProps<typeof Building2>, 'size'>) => (
     <IconWrapper size="md" aria-label="Building">
       <Building2 {...props} />
     </IconWrapper>
   ),
-  
-  // Education
+
   GraduationCap: (props: Omit<React.ComponentProps<typeof GraduationCap>, 'size'>) => (
     <IconWrapper size="md" aria-label="Graduation">
       <GraduationCap {...props} />
     </IconWrapper>
   ),
-  
-  // Social
+
   Linkedin: (props: Omit<React.ComponentProps<typeof Linkedin>, 'size'>) => (
     <IconWrapper size="md" aria-label="LinkedIn">
       <Linkedin {...props} />
     </IconWrapper>
   ),
-  
-  // User
+
   UserRound: (props: Omit<React.ComponentProps<typeof UserRound>, 'size'>) => (
     <IconWrapper size="md" aria-label="User">
       <UserRound {...props} />
     </IconWrapper>
   ),
-  
-  // Status
+
   UserCheck: (props: Omit<React.ComponentProps<typeof UserCheck>, 'size'>) => (
     <IconWrapper size="md" aria-label="Verified User">
       <UserCheck {...props} />
     </IconWrapper>
   ),
-  
-  // Analytics
+
   TrendingUp: (props: Omit<React.ComponentProps<typeof TrendingUp>, 'size'>) => (
     <IconWrapper size="md" aria-label="Trending Up">
       <TrendingUp {...props} />
     </IconWrapper>
   ),
-  
-  // Media
+
   ImagePlus: (props: Omit<React.ComponentProps<typeof ImagePlus>, 'size'>) => (
     <IconWrapper size="md" aria-label="Add Image">
       <ImagePlus {...props} />
     </IconWrapper>
   ),
-  
-  // Actions
+
   RotateCcw: (props: Omit<React.ComponentProps<typeof RotateCcw>, 'size'>) => (
     <IconWrapper size="md" aria-label="Rotate">
       <RotateCcw {...props} />
     </IconWrapper>
   ),
-  
-  // Status
+
   Crown: (props: Omit<React.ComponentProps<typeof Crown>, 'size'>) => (
     <IconWrapper size="md" aria-label="Premium">
       <Crown {...props} />
     </IconWrapper>
   ),
-  
-  // Business
+
   Handshake: (props: Omit<React.ComponentProps<typeof Handshake>, 'size'>) => (
     <IconWrapper size="md" aria-label="Partnership">
       <Handshake {...props} />
     </IconWrapper>
   ),
-  
-  // Location
+
   Map: (props: Omit<React.ComponentProps<typeof Map>, 'size'>) => (
     <IconWrapper size="md" aria-label="Map">
       <Map {...props} />
     </IconWrapper>
   ),
-  
-  // Social
+
   Instagram: (props: Omit<React.ComponentProps<typeof Instagram>, 'size'>) => (
     <IconWrapper size="md" aria-label="Instagram">
       <Instagram {...props} />
     </IconWrapper>
   ),
-  
-  // Identity
+
   IdCard: (props: Omit<React.ComponentProps<typeof IdCard>, 'size'>) => (
     <IconWrapper size="md" aria-label="ID Card">
       <IdCard {...props} />
+    </IconWrapper>
+  ),
+
+  Ticket: (props: Omit<React.ComponentProps<typeof Ticket>, 'size'>) => (
+    <IconWrapper size="md" aria-label="Ticket">
+      <Ticket {...props} />
+    </IconWrapper>
+  ),
+
+  Compass: (props: Omit<React.ComponentProps<typeof Compass>, 'size'>) => (
+    <IconWrapper size="md" aria-label="Compass">
+      <Compass {...props} />
+    </IconWrapper>
+  ),
+
+  Lightbulb: (props: Omit<React.ComponentProps<typeof Lightbulb>, 'size'>) => (
+    <IconWrapper size="md" aria-label="Tips">
+      <Lightbulb {...props} />
+    </IconWrapper>
+  ),
+
+  BookOpen: (props: Omit<React.ComponentProps<typeof BookOpen>, 'size'>) => (
+    <IconWrapper size="md" aria-label="Resources">
+      <BookOpen {...props} />
     </IconWrapper>
   ),
 }

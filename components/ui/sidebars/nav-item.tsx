@@ -35,7 +35,6 @@ export function SidebarNavItem({
       ? pathname === item.href
       : pathname.startsWith(item.href)
 
-  // Handle internationalized paths - remove locale prefix for comparison
   const pathnameWithoutLocale = pathname.replace(/^\/[a-z]{2}/, '') || '/'
   const adjustedIsActive = exact
     ? pathnameWithoutLocale === item.href

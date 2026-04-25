@@ -204,7 +204,6 @@ interface StepContentWrapperProps {
   className?: string;
 }
 
-
 function StepContentWrapper({
   isCompleted,
   currentStep,
@@ -355,7 +354,6 @@ function StepIndicator({
     </motion.div>
   );
 }
-
 
 interface StepConnectorProps {
   isComplete: boolean;
@@ -567,7 +565,6 @@ export function FormStepper({
     </div>
   );
 }
-
 
 interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;

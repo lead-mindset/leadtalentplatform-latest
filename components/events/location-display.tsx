@@ -32,12 +32,10 @@ export function LocationDisplay({ event, className = "" }: LocationDisplayProps)
   const hasLocation = location_name || location_address || location_city || location_region
   const hasCoordinates = location_latitude && location_longitude
 
-  // Generate static map URL
   const mapUrl = hasCoordinates 
     ? `https://maps.googleapis.com/maps/api/staticmap?center=${location_latitude},${location_longitude}&zoom=15&size=400x200&maptype=roadmap&markers=color:red%7C${encodeURIComponent(location_name || 'Event Location')}%7C${location_latitude},${location_longitude}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'YOUR_API_KEY_HERE'}`
     : null
 
-  // Generate directions URL
   const directionsUrl = hasCoordinates && location_address
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location_address)}`
     : null
@@ -66,7 +64,7 @@ export function LocationDisplay({ event, className = "" }: LocationDisplayProps)
   if (event_type === 'hybrid') {
     return (
       <div className={`space-y-3 ${className}`}>
-        {/* Online portion */}
+        {}
         <div className="flex items-center gap-2 text-sm">
           <ExternalLink className="h-4 w-4 text-muted-foreground" />
           <div>
@@ -84,7 +82,7 @@ export function LocationDisplay({ event, className = "" }: LocationDisplayProps)
           </div>
         </div>
 
-        {/* In-person portion */}
+        {}
         {hasLocation && (
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm">
@@ -114,7 +112,7 @@ export function LocationDisplay({ event, className = "" }: LocationDisplayProps)
               </div>
             </div>
 
-            {/* Map thumbnail */}
+            {}
             {mapUrl && (
               <div className="rounded-md overflow-hidden border">
                 <Image
@@ -132,7 +130,6 @@ export function LocationDisplay({ event, className = "" }: LocationDisplayProps)
     )
   }
 
-  // In-person event
   if (hasLocation) {
     return (
       <div className={`space-y-3 ${className}`}>
@@ -163,7 +160,7 @@ export function LocationDisplay({ event, className = "" }: LocationDisplayProps)
           </div>
         </div>
 
-        {/* Map thumbnail */}
+        {}
         {mapUrl && (
           <div className="rounded-md overflow-hidden border">
             <Image
@@ -179,7 +176,6 @@ export function LocationDisplay({ event, className = "" }: LocationDisplayProps)
     )
   }
 
-  // No location set
   return (
     <div className={`flex items-center gap-2 text-sm text-muted-foreground ${className}`}>
       <MapPin className="h-4 w-4" />

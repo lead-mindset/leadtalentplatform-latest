@@ -20,8 +20,7 @@ export function PlacesAutocomplete({
   const inputRef = useRef<HTMLInputElement>(null);
   const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // Initialize autocomplete when places library is loaded
+
   useEffect(() => {
     if (!placesLibrary || !inputRef.current) {
       setIsLoading(!placesLibrary);
@@ -44,7 +43,7 @@ export function PlacesAutocomplete({
     setIsLoading(false);
 
     return () => {
-      // Clean up listener
+
       google?.maps?.event?.clearInstanceListeners(autocompleteInstance);
     };
   }, [placesLibrary, onPlaceSelect]);
@@ -66,8 +65,6 @@ export function PlacesAutocomplete({
   );
 }
 
-// Hook for using Places service without UI
-// Note: This requires a map instance or HTML element to be passed in
 export function usePlacesService(mapOrElement?: HTMLDivElement | google.maps.Map) {
   const placesLibrary = useMapsLibrary('places');
   
@@ -80,7 +77,6 @@ export function usePlacesService(mapOrElement?: HTMLDivElement | google.maps.Map
   return placesService;
 }
 
-// Hook for using Geocoder
 export function useGeocoder() {
   const geocodingLibrary = useMapsLibrary('geocoding');
   

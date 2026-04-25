@@ -36,7 +36,6 @@ type MapProps = (UncontrolledMapProps | ControlledMapProps) & {
   fullscreenControl?: boolean;
 };
 
-// Uncontrolled Map component (default behavior)
 export function Map({ 
   defaultCenter = { lat: -34.397, lng: 150.644 }, 
   defaultZoom = 10,
@@ -63,7 +62,6 @@ export function Map({
   );
 }
 
-// Controlled Map component
 export function ControlledMap({ 
   center = { lat: -34.397, lng: 150.644 }, 
   zoom = 10,
@@ -92,12 +90,10 @@ export function ControlledMap({
   );
 }
 
-// Hook for accessing map instance within child components
 export function useMapInstance() {
   return useMap();
 }
 
-// Enhanced Map with state management example
 export function EnhancedMap({ 
   defaultCenter = { lat: -34.397, lng: 150.644 }, 
   defaultZoom = 10,

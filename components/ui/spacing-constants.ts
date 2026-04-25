@@ -1,5 +1,5 @@
 export const SPACING = {
-  // Padding scale
+
   px: {
     xs: 'px-2',
     sm: 'px-4', 
@@ -29,8 +29,7 @@ export const SPACING = {
     xl: 'max-w-6xl',
     full: 'max-w-7xl'
   },
-  
-  // Gap spacing
+
   gap: {
     xs: 'gap-2',
     sm: 'gap-4',

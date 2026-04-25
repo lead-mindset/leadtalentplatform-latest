@@ -16,10 +16,10 @@ function SubmitButton({ disabled, label }: { disabled?: boolean; label: string }
   return (
     <Button type="submit" className="w-full" disabled={disabled || pending}>
       {pending ? (
-        <>
+        <span className="flex items-center">
           <Icons.Loader2 className="mr-2 h-4 w-4 animate-spin" />
           Registering...
-        </>
+        </span>
       ) : (
         label
       )}

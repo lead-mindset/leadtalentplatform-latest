@@ -49,7 +49,6 @@ export function NavUser({ user, memberId, onNavigate }: NavUserProps) {
       
 <DropdownMenuContent align="end" className="rounded-xl p-1.5">
 
-
   <DropdownMenuItem asChild>
     <Link href="/student/profile" onClick={onNavigate}>
       <div className="flex h-7 w-7 items-center justify-center rounded-md bg-muted shrink-0">

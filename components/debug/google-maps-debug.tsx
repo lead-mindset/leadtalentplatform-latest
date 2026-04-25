@@ -12,11 +12,10 @@ export function GoogleMapsDebug() {
   const placesLib = useMapsLibrary('places');
 
   useEffect(() => {
-    // Check environment variable
+
     const key = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     setApiKey(key || 'NOT SET');
 
-    // Check if Google is loaded
     if (typeof window !== 'undefined' && window.google) {
       setGoogleLoaded(true);
     } else {
@@ -29,7 +28,6 @@ export function GoogleMapsDebug() {
       setTimeout(() => clearInterval(checkGoogle), 5000);
     }
 
-    // Check places library
     setPlacesLibrary(placesLib);
   }, [placesLib]);
 
