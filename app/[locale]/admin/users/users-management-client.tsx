@@ -157,8 +157,8 @@ export function UsersManagementClient({
       const csv = await exportUsersCSV({
         search,
         roles: roleFilters,
-        chapterIds: chapterFilters,
-        approvalStatuses: approvalFilters,
+        chapter_ids: chapterFilters,
+        approval_statuses: approvalFilters,
       })
       downloadCsv(csv)
       toast.success('CSV exported.')
@@ -393,9 +393,9 @@ export function UsersManagementClient({
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell className="p-2">{user.chapterName ?? '—'}</TableCell>
+                    <TableCell className="p-2">{user.chapter_name ?? '—'}</TableCell>
                     <TableCell className="p-2">{new Date(user.created_at).toLocaleDateString()}</TableCell>
-                    <TableCell className="p-2">{formatProfileStatus(user.profileStatus)}</TableCell>
+                    <TableCell className="p-2">{formatProfileStatus(user.profile_status)}</TableCell>
                     <TableCell className="p-2">
                       <div className="flex flex-wrap gap-2">
                         <DropdownMenu>

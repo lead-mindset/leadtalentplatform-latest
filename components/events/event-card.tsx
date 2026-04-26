@@ -27,7 +27,7 @@ interface EventCardProps {
   registeredCount?: number
   isRegistered?: boolean
   registrationStatus?: RegistrationStatus
-  chapterName?: string
+  chapter_name?: string
   coverImage?: string | null
   onRegister?: () => void
   onViewDetails?: () => void
@@ -43,13 +43,14 @@ export function EventCard({
   title,
   startAt,
   location,
+  meetingUrl,
   eventType,
   accessModel,
   capacity,
   registeredCount = 0,
   isRegistered = false,
   registrationStatus,
-  chapterName,
+  chapter_name,
   coverImage,
   onRegister,
   onViewDetails,
@@ -96,7 +97,7 @@ export function EventCard({
       </div>
 
       <div className="space-y-3 p-4">
-        {chapterName ? <p className="text-sm text-muted-foreground">{chapterName}</p> : null}
+        {chapter_name ? <p className="text-sm text-muted-foreground">{chapter_name}</p> : null}
 
         <h3 className="line-clamp-2 text-lg font-semibold">{title}</h3>
 

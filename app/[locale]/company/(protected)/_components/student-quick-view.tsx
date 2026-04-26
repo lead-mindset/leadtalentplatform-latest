@@ -26,31 +26,31 @@ export function StudentQuickView({ student }: StudentQuickViewProps) {
         )}
       </CardHeader>
       <CardContent className="space-y-4">
-        {student.StudentProfile?.major && (
+        {student.student_profile?.major && (
           <div className="flex items-center gap-2">
             <GraduationCap className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">{student.StudentProfile.major}</span>
-            {student.StudentProfile.graduation_year && (
-              <Badge variant="secondary">Class of {student.StudentProfile.graduation_year}</Badge>
+            <span className="text-sm font-medium">{student.student_profile.major}</span>
+            {student.student_profile.graduation_year && (
+              <Badge variant="secondary">Class of {student.student_profile.graduation_year}</Badge>
             )}
           </div>
         )}
 
-        {student.Chapter && (
+        {student.chapter && (
           <div className="flex items-start gap-2">
             <Building2 className="h-4 w-4 mt-0.5 text-muted-foreground" />
             <div className="text-sm">
-              <p className="font-medium">{student.Chapter.name}</p>
-              <p className="text-muted-foreground">{student.Chapter.university}</p>
+              <p className="font-medium">{student.chapter.name}</p>
+              <p className="text-muted-foreground">{student.chapter.university}</p>
             </div>
           </div>
         )}
 
-        {student.StudentProfile?.skills && student.StudentProfile.skills.length > 0 && (
+        {student.student_profile?.skills && student.student_profile.skills.length > 0 && (
           <div>
             <p className="text-sm font-medium mb-2">Skills</p>
             <div className="flex flex-wrap gap-1">
-              {student.StudentProfile.skills.map((skill: string, i: number) => (
+              {student.student_profile.skills.map((skill: string, i: number) => (
                 <Badge key={i} variant="outline">
                   {skill}
                 </Badge>
@@ -59,9 +59,9 @@ export function StudentQuickView({ student }: StudentQuickViewProps) {
           </div>
         )}
 
-{student.StudentProfile?.linkedin_url && (
+{student.student_profile?.linkedin_url && (
           <Button asChild variant="outline" size="sm" className="w-full gap-2">
-            <Link href={student.StudentProfile.linkedin_url} target="_blank" rel="noopener noreferrer">
+            <Link href={student.student_profile.linkedin_url} target="_blank" rel="noopener noreferrer">
               <Linkedin className="h-4 w-4" />
               View LinkedIn
             </Link>

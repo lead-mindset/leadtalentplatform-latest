@@ -14,7 +14,7 @@ type PageSearchParams = {
 }
 
 const PAGE_SIZES = new Set(['25', '50', '100'])
-const SORT_COLUMNS = new Set(['name', 'createdat', 'activeRecruiters', 'pendingInvites'])
+const SORT_COLUMNS = new Set(['name', 'createdat', 'active_recruiters', 'pending_invites'])
 
 export default async function AdminCompaniesPage({
   searchParams,

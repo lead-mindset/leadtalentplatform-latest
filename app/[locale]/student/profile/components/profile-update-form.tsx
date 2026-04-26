@@ -59,13 +59,13 @@ export default function ProfileUpdateForm({
       phone: initialData?.phone || '',
       career: initialData?.career || '',
       gender: initialData?.gender ?? undefined,
-      graduationYear: initialData?.graduationYear || 0,
+      graduation_year: initialData?.graduation_year || 0,
       skills: initialData?.skills || [],
       lead_chapter: initialData?.lead_chapter || '',
       linkedin_url: initialData?.linkedin_url || '',
       resume_pdf: undefined,
-      consentRecruiterVisibility: initialData?.consentRecruiterVisibility || false,
-      emailNotificationsEnabled: initialData?.emailNotificationsEnabled ?? true,
+      consentRecruiterVisibility: initialData?.consent_recruiter_visibility || false,
+      emailNotificationsEnabled: initialData?.email_notifications_enabled ?? true,
 
     },
   })
@@ -83,13 +83,13 @@ export default function ProfileUpdateForm({
       phone: initialData?.phone || '',
       career: initialData?.career || '',
       gender: initialData?.gender ?? undefined,
-      graduationYear: initialData?.graduationYear || 0,
+      graduation_year: initialData?.graduation_year || 0,
       skills: initialData?.skills || [],
       lead_chapter: initialData?.lead_chapter || '',
       linkedin_url: initialData?.linkedin_url || '',
       resume_pdf: undefined,
-      consentRecruiterVisibility: initialData?.consentRecruiterVisibility || false,
-      emailNotificationsEnabled: initialData?.emailNotificationsEnabled ?? true,
+      consentRecruiterVisibility: initialData?.consent_recruiter_visibility || false,
+      emailNotificationsEnabled: initialData?.email_notifications_enabled ?? true,
     })
   }, [initialData, reset])
 
@@ -103,11 +103,11 @@ export default function ProfileUpdateForm({
       formData.append("phone", data.phone)
       formData.append("lead_chapter", data.lead_chapter || "")
       formData.append("career", data.career)
-      formData.append("graduationYear", String(data.graduationYear || 0))
+      formData.append("graduation_year", String(data.graduation_year || 0))
       formData.append("skills", JSON.stringify(data.skills))
       formData.append("linkedin_url", data.linkedin_url || "")
-      formData.append("consentRecruiterVisibility", String(data.consentRecruiterVisibility))
-      formData.append("emailNotificationsEnabled", String(data.emailNotificationsEnabled))
+      formData.append("consentRecruiterVisibility", String(data.consent_recruiter_visibility))
+      formData.append("emailNotificationsEnabled", String(data.email_notifications_enabled))
       formData.append("gender", data.gender)
 
       if (data.resume_pdf) {
@@ -133,7 +133,7 @@ export default function ProfileUpdateForm({
   return (
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-12">
-        {initialData.approvalStatus === 'approved' && initialData.memberId ? (
+        {initialData.approval_status === 'approved' && initialData.member_id ? (
           <div className="rounded-lg bg-primary/5 border border-primary/10 p-4">
             <div className="flex items-center gap-2 mb-2">
               <Icons.IdCard className="h-4 w-4 text-primary" />
@@ -141,7 +141,7 @@ export default function ProfileUpdateForm({
             </div>
             <div className="flex items-center gap-2">
               <code className="px-3 py-1.5 bg-background rounded-md border border-border text-lg font-mono font-semibold text-primary">
-                {initialData.memberId}
+                {initialData.member_id}
               </code>
             </div>
             <p className="text-xs text-muted-foreground mt-2">This is your unique identifier as a LEAD member</p>
@@ -287,11 +287,11 @@ export default function ProfileUpdateForm({
             />
 
             <FormInput
-              label={t('academic.graduationYear')}
-              name="graduationYear"
+              label={t('academic.graduation_year')}
+              name="graduation_year"
               type="number"
               validation={{ valueAsNumber: true }}
-              error={errors.graduationYear?.message}
+              error={errors.graduation_year?.message}
             />
 
             <Controller
@@ -394,10 +394,10 @@ export default function ProfileUpdateForm({
                     </label>
                   </div>
 
-                  {errors.consentRecruiterVisibility && (
+                  {errors.consent_recruiter_visibility && (
                     <p className="flex items-center gap-1.5 text-sm text-destructive">
                       <X className="h-3.5 w-3.5" />
-                      {errors.consentRecruiterVisibility.message}
+                      {errors.consent_recruiter_visibility.message}
                     </p>
                   )}
                 </div>

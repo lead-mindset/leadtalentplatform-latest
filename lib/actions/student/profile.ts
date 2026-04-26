@@ -81,12 +81,12 @@ export async function updateProfile(formData: FormData) {
       phone: data.phone,
       career: data.career,
       gender: data.gender,
-      graduationYear: data.graduation_year,
+      graduation_year: data.graduation_year,
       skills: data.skills,
       linkedinUrl: data.linkedin_url,
       consentRecruiterVisibility: data.consent_recruiter_visibility,
       emailNotificationsEnabled: data.email_notifications_enabled,
-      chapterId: data.lead_chapter,
+      chapter_id: data.lead_chapter,
       resumePdf: data.resume_pdf,
     });
 

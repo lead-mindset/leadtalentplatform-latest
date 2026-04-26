@@ -67,7 +67,7 @@ export async function GET() {
   }
 
   const transformedMembers = (members ?? []).map((member: ChapterMembersProfileRow) => {
-    const linkedUser = Array.isArray(member.User) ? member.User[0] : member.User
+    const linkedUser = Array.isArray(member.user) ? member.user[0] : member.user
 
 return {
       id: member.user_id,

@@ -43,7 +43,7 @@ export async function submitOnboarding(formData: FormData) {
             career: formData.get('career')?.toString() || '',
             lead_chapter: formData.get('lead_chapter')?.toString() || '',
             gender: formData.get('gender')?.toString() || '',
-            graduation_year: Number(formData.get('graduationYear')) || 0,
+            graduation_year: Number(formData.get('graduation_year')) || 0,
             skills: parseSkills(formData.get('skills')),
             linkedin_url: formData.get('linkedin_url')?.toString() || '',
             consent_recruiter_visibility: formData.get('consentRecruiterVisibility') === 'true',
@@ -98,7 +98,7 @@ export async function submitOnboarding(formData: FormData) {
             return { error: existingProfileError.message }
         }
 
-        const memberId = existingProfile?.memberId ?? await generateUniqueMemberId(supabase)
+        const memberId = existingProfile?.member_id ?? await generateUniqueMemberId(supabase)
 
         const { error: profileError } = await supabase
             .from('student_profile')
@@ -106,7 +106,7 @@ export async function submitOnboarding(formData: FormData) {
                 user_id: user.id,
                 major: data.career,
                 gender: data.gender,
-                graduation_year: data.graduationYear,
+                graduation_year: data.graduation_year,
                 linkedin_url: data.linkedin_url,
                 skills: data.skills,
                 consent_recruiter_visibility: data.consent_recruiter_visibility,

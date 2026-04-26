@@ -7,20 +7,20 @@ import { assertCanManageEvent } from './access'
 import type { EventRow, EventRegistrationRow, UserRow } from '@/lib/types'
 
 type ApprovedRegistrationRow = Pick<EventRegistrationRow, 'id'> & {
-  Applicant: Pick<UserRow, 'email' | 'name'> | null
-  CheckedInBy: Pick<UserRow, 'email' | 'name'> | null
-  Event: Pick<EventRow, 'title' | 'startAt' | 'location' | 'meetingUrl' | 'eventType'> | null
+  applicant: Pick<UserRow, 'email' | 'name'> | null
+  checked_in_by: Pick<UserRow, 'email' | 'name'> | null
+  event: Pick<EventRow, 'title' | 'start_at' | 'location' | 'meeting_url' | 'event_type'> | null
 }
 
 type RejectedRegistrationRow = Pick<EventRegistrationRow, 'id'> & {
-  User: Pick<UserRow, 'email' | 'name'> | Pick<UserRow, 'email' | 'name'>[] | null
-  Event:
+  user: Pick<UserRow, 'email' | 'name'> | Pick<UserRow, 'email' | 'name'>[] | null
+  event:
   | (Pick<EventRow, 'title'> & {
-    Chapter: { name: string } | { name: string }[] | null
+    chapter: { name: string } | { name: string }[] | null
   })
   | Array<
     Pick<EventRow, 'title'> & {
-      Chapter: { name: string } | { name: string }[] | null
+      chapter: { name: string } | { name: string }[] | null
     }
   >
   | null
@@ -48,15 +48,15 @@ export async function bulkApproveApplications(eventId: string, applicationIds: s
     .from('event_registration')
     .select(`
     id,
-    Applicant:user_id!eventregistration_userid_fkey (
+    applicant:user!event_registration_user_id_fkey (
       email,
       name
     ),
-    CheckedInBy:checked_in_by_id!eventregistration_checkedinbyid_fkey (
+    checked_in_by:user!event_registration_checked_in_by_id_fkey (
       email,
       name
     ),
-    Event:event_id!event_registration_event_id_fkey (
+    event:event!event_registration_event_id_fkey (
       title,
       start_at,
       location,
@@ -71,18 +71,18 @@ export async function bulkApproveApplications(eventId: string, applicationIds: s
     (registrations.data as unknown as ApprovedRegistrationRow[]).forEach((registration) => {
 
 
-      const user = Array.isArray(registration.Applicant) ? registration.Applicant[0] : registration.Applicant
-      const event = Array.isArray(registration.Event) ? registration.Event[0] : registration.Event
+      const user = Array.isArray(registration.applicant) ? registration.applicant[0] : registration.applicant
+      const event = Array.isArray(registration.event) ? registration.event[0] : registration.event
 
       if (user?.email && event?.title) {
         void sendApplicationApprovedEmail(
           user.email,
           user.name,
           event.title,
-          new Date(event.startAt).toLocaleString(),
+          new Date(event.start_at).toLocaleString(),
           event.location,
-          event.meetingUrl,
-          event.eventType,
+          event.meeting_url,
+          event.event_type,
           registration.id
         ).catch(err => console.error('Failed to send approval email:', err))
       }
@@ -124,25 +124,25 @@ export async function bulkRejectApplications(eventId: string, applicationIds: st
     .from('event_registration')
     .select(`
       id,
-      User:userId!eventregistration_userid_fkey (email, name),
-      Event:eventId (title, Chapter!inner(name))
+      user:user!event_registration_user_id_fkey (email, name),
+      event:event!event_registration_event_id_fkey (title, chapter!inner(name))
     `)
     .in('id', applicationIds)
     .eq('status', 'rejected')
 
   if (registrations) {
     (registrations as unknown as RejectedRegistrationRow[]).forEach((registration) => {
-      const user = Array.isArray(registration.User) ? registration.User[0] : registration.User
-      const event = Array.isArray(registration.Event) ? registration.Event[0] : registration.Event
-      const chapter = event ? (Array.isArray(event.Chapter) ? event.Chapter[0] : event.Chapter) : null
+      const user = Array.isArray(registration.user) ? registration.user[0] : registration.user
+      const event = Array.isArray(registration.event) ? registration.event[0] : registration.event
+      const chapter = event ? (Array.isArray(event.chapter) ? event.chapter[0] : event.chapter) : null
 
       if (user?.email && event?.title) {
-        const chapterName = chapter?.name || 'LEAD Chapter'
+        const chapter_name = chapter?.name || 'LEAD Chapter'
         void sendApplicationRejectedEmail(
           user.email,
           user.name,
           event.title,
-          chapterName
+          chapter_name
         ).catch(err => console.error('Failed to send rejection email:', err))
       }
     })

@@ -53,7 +53,7 @@ export async function validateInviteToken(token: string): Promise<TokenValidatio
     }
   }
 
-  if (data.revokedAt) {
+  if (data.revoked_at) {
     return {
       valid: false,
       code: 'revoked',
@@ -61,7 +61,7 @@ export async function validateInviteToken(token: string): Promise<TokenValidatio
     }
   }
 
-  if (data.inviteExpiresAt && new Date(data.inviteExpiresAt).getTime() <= Date.now()) {
+  if (data.invite_expires_at && new Date(data.invite_expires_at).getTime() <= Date.now()) {
     return {
       valid: false,
       code: 'expired',
@@ -95,7 +95,7 @@ export async function acceptInvite(token: string, userId: string): Promise<Accep
 
   const supabase = await createClient()
   const { data: auth } = await supabase.auth.getUser()
-  if (!auth.user || auth.user.id !== parsed.data.userId) {
+  if (!auth.user || auth.user.id !== parsed.data.user_id) {
     return { success: false, error: 'Authentication required.' }
   }
 
@@ -131,7 +131,7 @@ export async function acceptInvite(token: string, userId: string): Promise<Accep
   const { data: existingUser, error: existingUserError } = await supabase
     .from('user')
     .select('id')
-    .eq('id', parsed.data.userId)
+    .eq('id', parsed.data.user_id)
     .maybeSingle()
 
   if (existingUserError) {
@@ -143,7 +143,7 @@ export async function acceptInvite(token: string, userId: string): Promise<Accep
     const { error: roleError } = await supabase
       .from('user')
       .update({ role: 'recruiter', updated_at: now })
-      .eq('id', parsed.data.userId)
+      .eq('id', parsed.data.user_id)
 
     if (roleError) {
       console.error('[recruiter/access] role update error:', roleError)
@@ -151,8 +151,8 @@ export async function acceptInvite(token: string, userId: string): Promise<Accep
     }
   } else {
     const { error: createUserError } = await supabase.from('user').insert({
-      id: parsed.data.userId,
-      email: auth.user.email ?? validation.access.recruiterEmail,
+      id: parsed.data.user_id,
+      email: auth.user.email ?? validation.access.recruiter_email,
       name: auth.user.user_metadata?.full_name ?? auth.user.user_metadata?.name ?? '',
       role: 'recruiter',
       phone: null,

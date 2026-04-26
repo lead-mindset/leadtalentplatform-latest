@@ -19,15 +19,15 @@ export function filterMembers(members: MemberWithProfile[], status: MemberFilter
   switch (status) {
     case 'pending':
       return members.filter(
-        m => m.StudentProfile?.is_filled && m.StudentProfile?.approval_status === 'pending'
+        m => m.student_profile?.is_filled && m.student_profile?.approval_status === 'pending'
       )
     case 'active':
       return members.filter(
-        m => m.StudentProfile?.approval_status === 'approved'
+        m => m.student_profile?.approval_status === 'approved'
       )
     case 'rejected':
       return members.filter(
-        m => m.StudentProfile?.approval_status === 'rejected'
+        m => m.student_profile?.approval_status === 'rejected'
       )
   }
 }
@@ -39,7 +39,7 @@ export default async function ChapterMembersPage({
 }) {
   const { status } = await searchParams
 
-  const { supabase, user, chapterId } = await requireChapterMember()
+  const { supabase, user, chapter_id } = await requireChapterMember()
 
   const { data: profile } = await supabase
     .from('student_profile')
@@ -53,7 +53,7 @@ export default async function ChapterMembersPage({
     .eq('user_id', user.id)
     .maybeSingle()
 
-  if (!profile?.Chapter) {
+  if (!profile?.chapter) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Card>
@@ -71,7 +71,7 @@ export default async function ChapterMembersPage({
     )
   }
 
-  const allMembers = await getChapterMembers(chapterId)
+  const allMembers = await getChapterMembers(chapter_id)
   const stats = getMemberStats(allMembers)
   const validStatuses: MemberFilterStatus[] = ['pending', 'active', 'rejected']
   const defaultStatus: MemberFilterStatus = stats.pending > 0 ? 'pending' : 'active'

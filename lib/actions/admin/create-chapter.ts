@@ -13,7 +13,7 @@ const ChapterSchema = z.object({
   region: z.string().optional(),
 })
 
-const CHAPTER_SELECT = 'id, name, university, city, region, created_at, updated_at'
+const CHAPTER_SELECT = 'id, name, university, city, region, created_at, updated_at, instagram_url, latitude, longitude, location_point'
 
 type CreateChapterInput = z.infer<typeof ChapterSchema>
 

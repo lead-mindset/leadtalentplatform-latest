@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import DesktopNav from "./DesktopMenu";
 import MobileNav from "./MobMenu";
 import type { MenuItem } from "./MobMenu";
-import { LanguageSwitcher } from '@/components/language-switcher';
+import { LanguageSwitcher } from '@/components/navigation/language-switcher';
 import { getInitials } from '@/lib/utils';
 
 interface NavBarProps {

@@ -24,10 +24,10 @@ export default async function StudentLayout({
     .eq('user_id', user.id)
     .single()
 
-  let hasPendingApprovals = false
+  let has_pending_approvals = false
   if (user.role === 'editor' && profile?.chapter_id) {
     const stats = await getSidebarStatsForEditor(supabase, profile.chapter_id)
-    hasPendingApprovals = stats.hasPendingApprovals
+    has_pending_approvals = stats.has_pending_approvals
   }
 
   return (
@@ -47,7 +47,7 @@ export default async function StudentLayout({
         >
           <StudentNavigation
             userRole={user.role}
-            hasPendingApprovals={hasPendingApprovals}
+            has_pending_approvals={has_pending_approvals}
           />
         </BaseSidebar>
       }

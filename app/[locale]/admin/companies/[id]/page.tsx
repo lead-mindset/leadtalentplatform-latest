@@ -28,7 +28,7 @@ export default async function CompanyManagePage({
           </Button>
           <h1 className="text-4xl font-bold tracking-tight">{resolvedCompany.name}</h1>
           <p className="text-muted-foreground mt-2">
-            Created {new Date(resolvedCompany.created_at).toLocaleDateString()} by {resolvedCompany.createdByName ?? 'Unknown'}
+            Created {new Date(resolvedCompany.created_at).toLocaleDateString()} by {resolvedCompany.created_by_name ?? 'Unknown'}
           </p>
         </div>
       </div>
@@ -36,11 +36,11 @@ export default async function CompanyManagePage({
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader><CardTitle className="text-sm">Active Recruiters</CardTitle></CardHeader>
-          <CardContent className="text-2xl font-bold">{stats.activeRecruiters}</CardContent>
+          <CardContent className="text-2xl font-bold">{stats.active_recruiters}</CardContent>
         </Card>
         <Card>
           <CardHeader><CardTitle className="text-sm">Pending Invites</CardTitle></CardHeader>
-          <CardContent className="text-2xl font-bold">{stats.pendingInvites}</CardContent>
+          <CardContent className="text-2xl font-bold">{stats.pending_invites}</CardContent>
         </Card>
         <Card>
           <CardHeader><CardTitle className="text-sm">Resume Views</CardTitle></CardHeader>

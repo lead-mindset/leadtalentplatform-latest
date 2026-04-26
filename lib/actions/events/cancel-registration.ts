@@ -31,7 +31,7 @@ export async function cancelRegistration(formData: FormData): Promise<void> {
     .maybeSingle<Pick<EventRow, 'id' | 'startAt'>>()
 
   if (event) {
-    const startsAt = new Date(event.startAt).getTime()
+    const startsAt = new Date(event.start_at).getTime()
     if (Number.isFinite(startsAt) && Date.now() >= startsAt) {
       return
     }
@@ -53,6 +53,6 @@ export async function cancelRegistration(formData: FormData): Promise<void> {
 
   revalidatePath('/student/events')
   revalidatePath('/events')
-  revalidatePath(`/events/${reg.eventId}`)
+  revalidatePath(`/events/${reg.event_id}`)
 }
 

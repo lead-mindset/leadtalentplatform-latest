@@ -36,19 +36,19 @@ async function getStudentProfile(
     .select(
       `
       id, name, email,
-      StudentProfile!inner (
+      student_profile!user_id!inner (
         major, graduation_year, skills, linkedin_url, is_recruiter_visible, approval_status, chapter_id,
-        Chapter:Chapter!StudentProfile_chapter_id_fkey (name, university)
+        chapter:chapter!student_profile_chapter_id_fkey (name, university)
       ),
-      Resume!left (
+      resume!left (
         file_name, file_url, uploaded_at
       )
       `
     )
     .eq('id', studentId)
     .eq('role', 'member')
-    .eq('StudentProfile.is_recruiter_visible', true)
-    .eq('StudentProfile.approval_status', 'approved')
+    .eq('student_profile.is_recruiter_visible', true)
+    .eq('student_profile.approval_status', 'approved')
     .maybeSingle()
 
   if (error || !data) {
@@ -56,10 +56,10 @@ async function getStudentProfile(
     return null
   }
 
-  const profile = Array.isArray(data.StudentProfile) ? data.StudentProfile[0] : data.StudentProfile
+  const profile = Array.isArray(data.student_profile) ? data.student_profile[0] : data.student_profile
   if (!profile) return null
-  const chapter = Array.isArray(profile.Chapter) ? profile.Chapter[0] : profile.Chapter
-  const resume = Array.isArray(data.Resume) ? data.Resume[0] : data.Resume
+  const chapter = Array.isArray(profile.chapter) ? profile.chapter[0] : profile.chapter
+  const resume = Array.isArray(data.resume) ? data.resume[0] : data.resume
 
   return {
     id: data.id,

@@ -116,6 +116,7 @@ interface AuroraProps {
   amplitude?: number;
   blend?: number;
   speed?: number;
+  time?: number;
 }
 
 export default function Aurora({ 
@@ -124,8 +125,8 @@ export default function Aurora({
   blend = 0.5, 
   speed = 1.0 
 }: AuroraProps) {
-  const propsRef = useRef({ colorStops, amplitude, blend, speed });
-  propsRef.current = { colorStops, amplitude, blend, speed };
+  const propsRef = useRef({ colorStops, amplitude, blend, speed, time: undefined as number | undefined });
+  propsRef.current = { colorStops, amplitude, blend, speed, time: undefined };
 
   const ctnDom = useRef<HTMLDivElement>(null);
 
@@ -144,7 +145,7 @@ export default function Aurora({
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     gl.canvas.style.backgroundColor = 'transparent';
 
-    let program;
+    let program: any;
 
     function resize() {
       if (!ctn) return;

@@ -72,7 +72,7 @@ export interface NavItem {
   nameKey: string
   href: string
   icon: LucideIcon
-  showPingOn?: 'hasPendingApprovals'
+  showPingOn?: 'has_pending_approvals'
   badge?: number
 }
 
@@ -125,80 +125,80 @@ export type EventChapterUpdate = Partial<EventChapterInsert>;
 // ============================================================================
 
 export type UserWithChapter = UserRow & {
-  Chapter: ChapterRow | null
+  chapter: ChapterRow | null
 };
 
 export type MemberWithProfile = UserRow & {
-  StudentProfile: StudentProfileRow | null;
-  Chapter: ChapterRow | null;
+  student_profile: StudentProfileRow | null;
+  chapter: ChapterRow | null;
 };
 
-export type RecentActivityMember = Omit<MemberWithProfile, "StudentProfile"> & {
-  StudentProfile: StudentProfileRow // Non-nullable for recent activity
+export type RecentActivityMember = Omit<MemberWithProfile, "student_profile"> & {
+  student_profile: StudentProfileRow // Non-nullable for recent activity
 };
 
 export type RecruiterUser = UserRow & {
-  RecruiterAccess: RecruiterAccessRow[];
-  Company: CompanyRow | null;
+  recruiter_access: RecruiterAccessRow[];
+  company: CompanyRow | null;
 };
 
 export type EventWithDetailsRaw = EventRow & {
-  ownerChapter: Pick<ChapterRow, 'id' | 'name' | 'university'>[]
+  owner_chapter: Pick<ChapterRow, 'id' | 'name' | 'university'>[]
   collaborators: (EventChapterRow & {
     chapter: Pick<ChapterRow, 'id' | 'name' | 'university' | 'city' | 'region'>[]
   })[] | null
-  CreatedBy: Pick<UserRow, 'id' | 'name' | 'email'>[]
-  EventRegistration: { id: string; status: RegistrationStatus }[]
+  created_by: Pick<UserRow, 'id' | 'name' | 'email'>[]
+  event_registration: { id: string; status: RegistrationStatus }[]
 }
 
 export type UserWithDetailsRaw = UserRow & {
-  StudentProfile: {
+  student_profile: {
     is_filled: boolean
     approved_by_id: string | null
     is_recruiter_visible: boolean
-    approval_status: 'pending' | 'approved' | 'rejected'
-    chapter_id: string | null
-    Chapter: Pick<ChapterRow, 'name' | 'university'> | Pick<ChapterRow, 'name' | 'university'>[] | null
+    approval_status: 'pending' | 'approved' | 'rejected' | null
+    chapter_id: string
+    chapter: Pick<ChapterRow, 'name' | 'university'> | Pick<ChapterRow, 'name' | 'university'>[] | null
   } | null
 }
 
 export type UserWithDetails = UserRow & {
-  Chapter: Pick<ChapterRow, 'name' | 'university'> | null
-  StudentProfile: {
+  chapter: Pick<ChapterRow, 'name' | 'university'> | null
+  student_profile: {
     is_filled: boolean
     approved_by_id: string | null
     is_recruiter_visible: boolean
-    approval_status: 'pending' | 'approved' | 'rejected'
+    approval_status: 'pending' | 'approved' | 'rejected' | null
   } | null
 }
 
 export type EventWithDetails = EventRow & {
-  EventChapter: (EventChapterRow & {
-    Chapter: Pick<ChapterRow, 'id' | 'name' | 'university'>
+  event_chapter: (EventChapterRow & {
+    chapter: Pick<ChapterRow, 'id' | 'name' | 'university'>
   })[]
-  Chapter: Pick<ChapterRow, 'id' | 'name' | 'university'> | null
-  ownerChapter: Pick<ChapterRow, 'id' | 'name' | 'university'> | null
+  chapter: Pick<ChapterRow, 'id' | 'name' | 'university'> | null
+  owner_chapter: Pick<ChapterRow, 'id' | 'name' | 'university'> | null
   collaborators: (EventChapterRow & {
-    Chapter: Pick<ChapterRow, 'id' | 'name' | 'university'>
+    chapter: Pick<ChapterRow, 'id' | 'name' | 'university'>
     name: string
   })[]
-  CreatedBy: Pick<UserRow, 'id' | 'name' | 'email'> | null
+  created_by: Pick<UserRow, 'id' | 'name' | 'email'> | null
   _count: { 
     registrations: number; 
-    pendingApplications?: number;
+    pending_applications?: number;
     chapters?: number;
   }
-  isOwnedByChapter?: boolean // For editor dashboard to distinguish owned vs collaborative events
+  is_owned_by_chapter?: boolean // For editor dashboard to distinguish owned vs collaborative events
 }
 
 export type RegistrationWithUserRaw = EventRegistrationRow & {
-  User: Pick<UserRow, 'id' | 'name' | 'email' | 'phone'>[]
-  StudentProfile: Pick<StudentProfileRow, 'major' | 'graduation_year' | 'linkedin_url'>[]
+  user: Pick<UserRow, 'id' | 'name' | 'email' | 'phone'>[]
+  student_profile: Pick<StudentProfileRow, 'major' | 'graduation_year' | 'linkedin_url'>[]
 }
 
 export type RegistrationWithUser = EventRegistrationRow & {
-  User: Pick<UserRow, 'id' | 'name' | 'email' | 'phone'> | null
-  StudentProfile: Pick<StudentProfileRow, 'major' | 'graduation_year' | 'linkedin_url'> | null
+  user: Pick<UserRow, 'id' | 'name' | 'email' | 'phone'> | null
+  student_profile: Pick<StudentProfileRow, 'major' | 'graduation_year' | 'linkedin_url'> | null
 }
 
 // ============================================================================
@@ -207,57 +207,57 @@ export type RegistrationWithUser = EventRegistrationRow & {
 
 export type RecruiterInviteRaw = {
   id: string;
-  recruiterEmail: string;
-  isActive: boolean;
+  recruiter_email: string;
+  is_active: boolean;
   granted_at: string;
   invite_expires_at: string | null;
   accepted_at: string | null;
   revoked_at: string | null;
-  companyId: string;
-  Company: { name: string }[];
-  GrantedBy: { name: string; email: string }[];
-  AcceptedBy: { name: string; email: string }[];
+  company_id: string;
+  company: { name: string }[];
+  granted_by: { name: string; email: string }[];
+  accepted_by: { name: string; email: string }[];
 };
 
 export type RecruiterInvite = {
   id: string;
-  recruiterEmail: string;
-  isActive: boolean;
+  recruiter_email: string;
+  is_active: boolean;
   granted_at: string;
   invite_expires_at: string | null;
   accepted_at: string | null;
   revoked_at: string | null;
-  companyId: string;
-  Company: { name: string } | null;
-  GrantedBy: { name: string; email: string } | null;
-  AcceptedBy: { name: string; email: string } | null;
+  company_id: string;
+  company: { name: string } | null;
+  granted_by: { name: string; email: string } | null;
+  accepted_by: { name: string; email: string } | null;
 };
 
 export type CompanyRaw = {
   id: string;
   name: string;
-  createdat: string;
-  createdbyid: string;
-  CreatedBy: { name: string | null; email: string }[];
+  created_at: string;
+  created_by_id: string;
+  created_by: { name: string | null; email: string }[];
 };
 
 export type Company = {
   id: string;
   name: string;
-  createdat: string;
-  createdbyid: string;
-  CreatedBy: { name: string | null; email: string } | null;
-  _count?: { activeRecruiters: number; pendingInvites: number };
+  created_at: string;
+  created_by_id: string;
+  created_by: { name: string | null; email: string } | null;
+  _count?: { active_recruiters: number; pending_invites: number };
 };
 
 export type StudentForRecruiterRaw = {
   id: string;
   email: string;
-  name: string;
+  name: string | null;
   phone: string | null;
   created_at: string;
-  Chapter: Pick<ChapterRow, "name" | "university" | "city" | "region">[];
-  StudentProfile: Pick<StudentProfileRow, "major" | "graduation_year" | "linkedin_url" | "skills" | "is_recruiter_visible" | "is_filled" | "updated_at" | "chapter_id">[];
+  chapter: Pick<ChapterRow, "name" | "university" | "city" | "region">[];
+  student_profile: Pick<StudentProfileRow, "major" | "graduation_year" | "linkedin_url" | "skills" | "is_recruiter_visible" | "is_filled" | "updated_at" | "chapter_id">[];
 };
 
 export type StudentForRecruiter = {
@@ -266,8 +266,8 @@ export type StudentForRecruiter = {
   name: string;
   phone: string | null;
   created_at: string;
-  Chapter: Pick<ChapterRow, "name" | "university" | "city" | "region"> | null;
-  StudentProfile: Pick<StudentProfileRow, "major" | "graduation_year" | "linkedin_url" | "skills" | "is_recruiter_visible" | "is_filled" | "updated_at" | "chapter_id"> | null;
+  chapter: Pick<ChapterRow, "name" | "university" | "city" | "region"> | null;
+  student_profile: Pick<StudentProfileRow, "major" | "graduation_year" | "linkedin_url" | "skills" | "is_recruiter_visible" | "is_filled" | "updated_at" | "chapter_id"> | null;
 };
 
 export type SavedStudent = {
@@ -276,7 +276,7 @@ export type SavedStudent = {
   student_id: string;
   saved_at: string;
   notes: string | null;
-  Student: StudentForRecruiter;
+  student: StudentForRecruiter;
 };
 
 // ============================================================================
@@ -284,23 +284,23 @@ export type SavedStudent = {
 // ============================================================================
 
 export type UserWithFullProfile = UserRow & {
-  StudentProfile: (StudentProfileRow & {
-    Chapter: ChapterRow | null
+  student_profile: (StudentProfileRow & {
+    chapter: ChapterRow | null
   }) | null
 }
 
 export type EventChapterWithChapter = EventChapterRow & {
-  Chapter: Pick<ChapterRow, 'id' | 'name' | 'university' | 'city' | 'region'>
-  AddedBy: Pick<UserRow, 'id' | 'name' | 'email'>
+  chapter: Pick<ChapterRow, 'id' | 'name' | 'university' | 'city' | 'region'>
+  added_by: Pick<UserRow, 'id' | 'name' | 'email'>
 }
 
 export type EventWithAllChapters = EventRow & {
-  EventChapter: EventChapterWithChapter[]
-  CreatedBy: Pick<UserRow, 'id' | 'name' | 'email'> | null
+  event_chapter: EventChapterWithChapter[]
+  created_by: Pick<UserRow, 'id' | 'name' | 'email'> | null
   _count: {
     registrations: number
     chapters: number
-    pendingApplications?: number
+    pending_applications?: number
   }
 }
 
@@ -310,30 +310,30 @@ export type ChapterStats = {
   pending: number;
   approved: number;
   rejected: number;
-  pendingMembers: MemberWithProfile[];
-  approvedMembers: MemberWithProfile[];
-  rejectedMembers: MemberWithProfile[];
-  completeProfiles: number;
-  visibleToRecruiters: number;
+  pending_members: MemberWithProfile[];
+  approved_members: MemberWithProfile[];
+  rejected_members: MemberWithProfile[];
+  complete_profiles: number;
+  visible_to_recruiters: number;
 };
 
 export type ChapterData = {
-  chapterName: string;
+  chapter_name: string;
   university: string;
   stats: ChapterStats;
   recentActivity: RecentActivityMember[];
 };
 
 export type EditorSidebarStats = {
-  hasPendingApprovals: boolean
+  has_pending_approvals: boolean
 };
 
 export interface AdminStats {
-  pendingInvites: number;
-  pendingApprovals: number;
-  totalUsers: number;
-  totalChapters: number;
-  totalCompanies: number;
+  pending_invites: number;
+  pending_approvals: number;
+  total_users: number;
+  total_chapters: number;
+  total_companies: number;
 }
 
 export interface AdminSidebarProps {
@@ -342,9 +342,9 @@ export interface AdminSidebarProps {
 }
 
 export type CompanyStats = {
-  totalStudents: number;
-  savedStudents: number;
-  recentViews: number;
+  total_students: number;
+  saved_students: number;
+  recent_views: number;
 };
 
 export type ActivityItem = {
@@ -375,8 +375,8 @@ export type SidebarLayoutProps = {
 }
 
 export type ChapterMember = UserRow & {
-  StudentProfile: Pick<StudentProfileRow, 'user_id' | 'is_filled' | 'approved_by_id' | 'is_recruiter_visible' | 'chapter_id' | 'updated_at'> | null
-  Chapter: Pick<ChapterRow, 'name' | 'university'> | null
+  student_profile: Pick<StudentProfileRow, 'user_id' | 'is_filled' | 'approved_by_id' | 'is_recruiter_visible' | 'chapter_id' | 'updated_at'> | null
+  chapter: Pick<ChapterRow, 'name' | 'university'> | null
 }
 
 // ============================================================================

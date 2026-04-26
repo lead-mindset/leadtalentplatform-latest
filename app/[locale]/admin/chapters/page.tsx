@@ -15,7 +15,7 @@ type PageSearchParams = {
 }
 
 const PAGE_SIZES = new Set(['25', '50', '100'])
-const SORT_COLUMNS = new Set(['name', 'university', 'city', 'region', 'memberCount', 'activeEventsCount'])
+const SORT_COLUMNS = new Set(['name', 'university', 'city', 'region', 'member_count', 'active_events_count'])
 
 export default async function AdminChaptersPage({
   searchParams,

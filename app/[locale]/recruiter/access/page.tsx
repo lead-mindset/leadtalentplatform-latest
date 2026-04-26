@@ -43,7 +43,7 @@ export default async function RecruiterAccessPage({
           <CardHeader>
             <CardTitle>Recruiter Access</CardTitle>
             <CardDescription>
-              This invite was sent to <span className="font-medium">{validation.access.recruiterEmail}</span>.
+              This invite was sent to <span className="font-medium">{validation.access.recruiter_email}</span>.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -55,7 +55,7 @@ export default async function RecruiterAccessPage({
   }
 
   const signedInEmail = user.email?.toLowerCase() ?? ''
-  const invitedEmail = validation.access.recruiterEmail.toLowerCase()
+  const invitedEmail = validation.access.recruiter_email.toLowerCase()
 
   if (signedInEmail !== invitedEmail) {
     return (
@@ -67,7 +67,7 @@ export default async function RecruiterAccessPage({
           <CardContent>
             <Alert variant="destructive">
               <AlertDescription>
-                {`This invite was sent to ${validation.access.recruiterEmail}. Please sign in with that email address.`}
+                {`This invite was sent to ${validation.access.recruiter_email}. Please sign in with that email address.`}
               </AlertDescription>
             </Alert>
           </CardContent>

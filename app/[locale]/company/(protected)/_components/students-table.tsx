@@ -89,24 +89,24 @@ export function StudentsTable({ students, savedStudentIds = [] }: StudentsTableP
                 <div className="flex items-center gap-2">
                   <GraduationCap className="h-4 w-4 text-muted-foreground shrink-0" />
                   <span className="text-sm">
-                    {student.StudentProfile?.major || 'Not specified'}
+                    {student.student_profile?.major || 'Not specified'}
                   </span>
                 </div>
               </TableCell>
               <TableCell className="p-3">
                 <span className="text-sm">
-                  {student.StudentProfile?.graduation_year
-                    ? `Class of ${student.StudentProfile.graduation_year}`
+                  {student.student_profile?.graduation_year
+                    ? `Class of ${student.student_profile.graduation_year}`
                     : 'N/A'}
                 </span>
               </TableCell>
               <TableCell className="p-3">
-                {student.Chapter ? (
+                {student.chapter ? (
                   <div className="flex items-start gap-2">
                     <Building2 className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
                     <div className="text-sm">
-                      <p className="font-medium">{student.Chapter.name}</p>
-                      <p className="text-muted-foreground text-xs">{student.Chapter.university}</p>
+                      <p className="font-medium">{student.chapter.name}</p>
+                      <p className="text-muted-foreground text-xs">{student.chapter.university}</p>
                     </div>
                   </div>
                 ) : (
@@ -115,14 +115,14 @@ export function StudentsTable({ students, savedStudentIds = [] }: StudentsTableP
               </TableCell>
               <TableCell className="p-3">
                 <div className="flex flex-wrap gap-1">
-                  {student.StudentProfile?.skills?.slice(0, 3).map((skill: string, i: number) => (
+                  {student.student_profile?.skills?.slice(0, 3).map((skill: string, i: number) => (
                     <Badge key={i} variant="secondary" className="text-xs">
                       {skill}
                     </Badge>
                   ))}
-                  {(student.StudentProfile?.skills?.length || 0) > 3 && (
+                  {(student.student_profile?.skills?.length || 0) > 3 && (
                     <Badge variant="outline" className="text-xs">
-                      +{(student.StudentProfile?.skills?.length || 0) - 3}
+                      +{(student.student_profile?.skills?.length || 0) - 3}
                     </Badge>
                   )}
                 </div>

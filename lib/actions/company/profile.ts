@@ -79,7 +79,7 @@ export async function getRecruiterProfile() {
     return { success: false, error: 'Failed to load recruiter access.' }
   }
 
-  const company = recruiterAccess?.Company?.[0] ?? null
+  const company = recruiterAccess?.company?.[0] ?? null
 
   return {
     success: true,
@@ -128,12 +128,12 @@ export async function getRecruiterCompanies() {
   const companies = (allAccess as unknown as AccessWithCompany[]).map(access => ({
     accessId: access.id,
     companyId: access.company_id,
-    companyName: access.Company[0]?.name ?? 'Unknown',
+    companyName: access.company[0]?.name ?? 'Unknown',
     isActive: access.is_active,
     accepted_at: access.accepted_at,
     granted_at: access.granted_at,
     revoked_at: access.revoked_at,
-    company: access.Company[0] ?? null
+    company: access.company[0] ?? null
   }))
 
   return {

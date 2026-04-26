@@ -9,7 +9,7 @@ import type { EventRow, EventRegistrationRow, RegistrationStatus } from '@/lib/t
 import { sendApplicationReceivedEmail } from '@/lib/emails/send-email'
 
 const EVENT_REGISTRATION_LOOKUP_SELECT =
-  'id, title, isPublished, startAt'
+  'id, title, is_published, start_at'
 
 function isActiveRegistrationStatus(status: RegistrationStatus | string | undefined): boolean {
   return status === 'registered' || status === 'attended'
@@ -52,13 +52,13 @@ export async function applyForEvent(eventId: string): Promise<{ success: true; r
     const { data: registration, error } = await supabase
       .from('event_registration')
       .insert({
-        eventId,
-        userId: user.id,
-        registeredAt: now,
+        event_id: eventId,
+        user_id: user.id,
+        registered_at: now,
         status: 'pending_review' as RegistrationStatus,
-        qrToken: null,
-        checkedInAt: null,
-        checkedInById: null,
+        qr_token: null,
+        checked_in_at: null,
+        checked_in_by_id: null,
       })
       .select()
       .single<EventRegistrationRow>()
@@ -70,18 +70,18 @@ export async function applyForEvent(eventId: string): Promise<{ success: true; r
 
     const { data: eventData } = await supabase
       .from('event')
-      .select('title, chapterId, Chapter!inner(name)')
+      .select('title, chapter_id, chapter!inner(name)')
       .eq('id', eventId)
       .single()
 
-    const chapterName = Array.isArray(eventData?.Chapter) ? eventData.Chapter[0]?.name : eventData?.Chapter?.name || 'LEAD Chapter'
+    const chapter_name = Array.isArray(eventData?.chapter) ? eventData.chapter[0]?.name : eventData?.chapter?.name || 'LEAD Chapter'
 
     if (eventData?.title) {
       void sendApplicationReceivedEmail(
         user.email!,
         user.name || user.email!.split('@')[0],
         eventData.title,
-        chapterName
+        chapter_name
       ).catch(err => console.error('Failed to send application received email:', err))
     }
 
@@ -112,7 +112,7 @@ export async function registerForEvent(
       .from('event')
       .select(EVENT_REGISTRATION_LOOKUP_SELECT)
       .eq('id', eventId)
-      .maybeSingle<Pick<EventRow, 'id' | 'title' | 'isPublished' | 'startAt'>>()
+      .maybeSingle<Pick<EventRow, 'id' | 'title' | 'is_published' | 'start_at'>>()
 
     if (eventError) {
       return { error: 'Could not load this event.' }
@@ -121,15 +121,15 @@ export async function registerForEvent(
       return { error: 'Event not found.' }
     }
 
-    if (!event.isPublished) {
+    if (!event.is_published) {
       return { error: 'This event is not open for registration.' }
     }
 
-    const startsAt = new Date(event.startAt).getTime()
-    if (!Number.isFinite(startsAt)) {
+    const starts_at = new Date(event.start_at).getTime()
+    if (!Number.isFinite(starts_at)) {
       return { error: 'This event has invalid dates.' }
     }
-    if (Date.now() >= startsAt) {
+    if (Date.now() >= starts_at) {
       return { error: 'Registration is closed because the event has already started.' }
     }
 
@@ -177,13 +177,13 @@ export async function registerForEvent(
     const { data: registration, error } = await supabase
       .from('event_registration')
       .insert({
-        eventId,
-        userId: user.id,
-        registeredAt: now,
+        event_id: eventId,
+        user_id: user.id,
+        registered_at: now,
         status: 'registered',
-        qrToken: randomUUID(),
-        checkedInAt: null,
-        checkedInById: null,
+        qr_token: randomUUID(),
+        checked_in_at: null,
+        checked_in_by_id: null,
       })
       .select()
       .single<EventRegistrationRow>()
@@ -208,17 +208,17 @@ export async function registerForEvent(
         }
         if (row?.status === 'cancelled') {
           const { data: revived, error: reviveError } = await supabase
-            .from('event_registration')
-            .update({
-              status: 'registered' as RegistrationStatus,
-              registeredAt: now,
-              qrToken: randomUUID(),
-              checkedInAt: null,
-              checkedInById: null,
-            })
-            .eq('id', row.id)
-            .select()
-            .single<EventRegistrationRow>()
+          .from('event_registration')
+          .update({
+            status: 'registered' as RegistrationStatus,
+            registered_at: now,
+            qr_token: randomUUID(),
+            checked_in_at: null,
+            checked_in_by_id: null,
+          })
+          .eq('id', row.id)
+          .select()
+          .single<EventRegistrationRow>()
 
           if (!reviveError && revived) {
             revalidateEventRegistrationPaths(eventId)

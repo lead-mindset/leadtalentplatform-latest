@@ -29,7 +29,7 @@ export default function MemberCard({
   onSelectChange?: (checked: boolean) => void
   showSelector?: boolean
 }) {
-  const profile = member.StudentProfile
+  const profile = member.student_profile
 
   const approval_status = profile?.approval_status
   const isPending  = profile?.is_filled === true && approval_status === 'pending'

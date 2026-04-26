@@ -95,7 +95,7 @@ export async function requireUserWithRole(role: string): Promise<{
 export async function requireChapterMember(): Promise<{
   supabase: SupabaseClient<Database>
   user: UserRow
-  chapterId: string
+  chapter_id: string
 }> {
   const { supabase, user } = await requireUser()
  
@@ -117,7 +117,7 @@ export async function requireChapterMember(): Promise<{
   return {
     supabase,
     user,
-    chapterId: profile.chapter_id,
+    chapter_id: profile.chapter_id,
   }
 }
 
@@ -167,22 +167,22 @@ export async function canUserAccessChapter(
 
 export async function getSidebarStatsForEditor(
   supabase: SupabaseClient<Database>,
-  chapterId: string
+  chapter_id: string
 ): Promise<EditorSidebarStats> {
 const { count, error: countError } = await supabase
     .from('student_profile')
     .select('user_id', { count: 'exact', head: true })
-    .eq('chapter_id', chapterId)
+    .eq('chapter_id', chapter_id)
     .eq('approval_status', 'pending')
     .eq('is_filled', true)
     .limit(1)
 
   if (countError) {
     console.error('Error fetching pending approvals:', countError)
-    return { hasPendingApprovals: false }
+    return { has_pending_approvals: false }
   }
 
-  return { hasPendingApprovals: (count ?? 0) > 0 }
+  return { has_pending_approvals: (count ?? 0) > 0 }
 }
 
 export async function getSidebarStatsForAdmin(
@@ -193,9 +193,9 @@ export async function getSidebarStatsForAdmin(
   const [
     { count: pendingInvitesCount, error: e1 },
     { count: pendingApprovalsCount, error: e2 },
-    { count: totalUsers, error: e3 },
-    { count: totalChapters, error: e4 },
-    { count: totalCompanies, error: e5 }
+    { count: total_users, error: e3 },
+    { count: total_chapters, error: e4 },
+    { count: total_companies, error: e5 }
   ] = await Promise.all([
 supabase.from('recruiter_access')
       .select('id', { count: 'exact', head: true })
@@ -224,11 +224,11 @@ supabase.from('recruiter_access')
   }
 
   return {
-    pendingInvites: pendingInvitesCount ?? 0,
-    pendingApprovals: pendingApprovalsCount ?? 0,
-    totalUsers: totalUsers ?? 0,
-    totalChapters: totalChapters ?? 0,
-    totalCompanies: totalCompanies ?? 0
+    pending_invites: pendingInvitesCount ?? 0,
+    pending_approvals: pendingApprovalsCount ?? 0,
+    total_users: total_users ?? 0,
+    total_chapters: total_chapters ?? 0,
+    total_companies: total_companies ?? 0
   }
 }
 
@@ -278,7 +278,7 @@ export async function requireRecruiter(): Promise<{
     .select(RECRUITER_ACCESS_SELECT)
     .eq('accepted_by_user_id', authUser.id)
 
-  const company = activeAccess.Company?.[0] ?? null
+  const company = activeAccess.company?.[0] ?? null
   
   const user: RecruiterUser = {
     ...userData,

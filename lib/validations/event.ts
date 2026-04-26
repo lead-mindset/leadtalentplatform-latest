@@ -73,14 +73,14 @@ export const eventSchema = z.object({
   // Validate date logic
   const start = new Date(data.startAt)
   const end = new Date(data.endAt)
-  
+
   if (start >= end) {
     return {
       message: "End date must be after start date",
       path: ["endAt"]
     }
   }
-  
+
   // Validate event type requirements
   if (data.eventType === 'in_person' && !data.location?.trim()) {
     return {
@@ -88,21 +88,21 @@ export const eventSchema = z.object({
       path: ["location"]
     }
   }
-  
+
   if (data.eventType === 'online' && !data.meetingUrl?.trim()) {
     return {
       message: "Meeting URL is required for online events",
       path: ["meetingUrl"]
     }
   }
-  
+
   if (data.eventType === 'hybrid' && (!data.location?.trim() || !data.meetingUrl?.trim())) {
     return {
       message: "Both location and meeting URL are required for hybrid events",
       path: ["location", "meetingUrl"]
     }
   }
-  
+
   // Validate location fields for in-person and hybrid events
   if ((data.eventType === 'in_person' || data.eventType === 'hybrid') && data.locationName?.trim() && !data.locationAddress?.trim()) {
     return {
@@ -110,12 +110,12 @@ export const eventSchema = z.object({
       path: ["locationAddress"]
     }
   }
-  
+
   // Validate application model requirements
   if (data.accessModel === 'application' && !data.applicationFormUrl?.trim()) {
     return false
   }
-  
+
   return true
 }, {
   message: 'Please check the following requirements: end date must be after start date, location required for in-person events, meeting URL required for online events, both required for hybrid events, and application form URL required for application-gated events'

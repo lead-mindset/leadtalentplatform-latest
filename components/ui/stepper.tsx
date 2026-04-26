@@ -566,7 +566,7 @@ export function FormStepper({
   );
 }
 
-interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface FormInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   label: string;
   name: string;
   error?: string;

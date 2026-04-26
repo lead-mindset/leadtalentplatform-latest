@@ -1,6 +1,6 @@
 'use client'
 
-import { LogoutButton } from "../../logout-button"
+import { LogoutButton } from "@/components/auth/logout-button"
 import { Badge } from "../badge"
 import { Avatar, AvatarFallback } from "../avatar"
 import { getInitials } from "@/lib/utils"

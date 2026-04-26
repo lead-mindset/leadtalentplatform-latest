@@ -3,12 +3,12 @@
 import { requireAdmin } from '@/lib/auth'
 
 export type AdminEventStatus = 'published' | 'draft' | 'upcoming' | 'past'
-export type EventSortKey = 'title' | 'startAt' | 'chapter' | 'status' | 'registrations'
+export type EventSortKey = 'title' | 'start_at' | 'chapter' | 'status' | 'registrations'
 export type SortOrder = 'asc' | 'desc'
 
 export type EventFilters = {
   search?: string
-  chapterIds?: string[]
+  chapter_ids?: string[]
   statuses?: AdminEventStatus[]
 }
 
@@ -22,17 +22,17 @@ export type EventPagination = {
 export type AdminEventListItem = {
   id: string
   title: string
-  startAt: string
-  endAt: string
-  isPublished: boolean
-  chapterId: string | null
-  chapterName: string | null
+  start_at: string
+  end_at: string
+  is_published: boolean
+  chapter_id: string | null
+  chapter_name: string | null
   registrations: number
   capacity: number | null
-  Chapter?: { id: string; name: string; university: string } | null
-  EventChapter?: Array<{
+  chapter?: { id: string; name: string; university: string } | null
+  event_chapter?: Array<{
     id: string
-    Chapter: { id: string; name: string; university: string }
+    chapter: { id: string; name: string; university: string }
   }>
 }
 
@@ -45,10 +45,10 @@ export type AdminEventsListResponse = {
 
 function getStatus(row: AdminEventListItem): AdminEventStatus {
   const now = Date.now()
-  const ended = new Date(row.endAt).getTime() < now
+  const ended = new Date(row.end_at).getTime() < now
   if (ended) return 'past'
-  if (!row.isPublished) return 'draft'
-  if (new Date(row.startAt).getTime() > now) return 'upcoming'
+  if (!row.is_published) return 'draft'
+  if (new Date(row.start_at).getTime() > now) return 'upcoming'
   return 'published'
 }
 
@@ -59,14 +59,14 @@ function sortRows(rows: AdminEventListItem[], sortBy: EventSortKey, sortOrder: S
       case 'title':
         return a.title.localeCompare(b.title) * direction
       case 'chapter':
-        return (a.chapterName ?? '').localeCompare(b.chapterName ?? '') * direction
+        return (a.chapter_name ?? '').localeCompare(b.chapter_name ?? '') * direction
       case 'status':
         return getStatus(a).localeCompare(getStatus(b)) * direction
       case 'registrations':
         return (a.registrations - b.registrations) * direction
-      case 'startAt':
+      case 'start_at':
       default:
-        return (new Date(a.startAt).getTime() - new Date(b.startAt).getTime()) * direction
+        return (new Date(a.start_at).getTime() - new Date(b.start_at).getTime()) * direction
     }
   })
 }
@@ -79,15 +79,15 @@ export async function getAdminEventsList(
 
   let query = supabase
     .from('event')
-    .select('id, title, startAt, endAt, isPublished, chapterId, capacity, Chapter(name, university), EventChapter(id, Chapter(name, university)), EventRegistration(id, status)')
+    .select('id, title, start_at, end_at, is_published, chapter_id, capacity, chapter(name, university), event_chapter(id, chapter(name, university)), event_registration(id, status)')
 
   const search = filters.search?.trim()
   if (search) {
     query = query.ilike('title', `%${search}%`)
   }
 
-  if (filters.chapterIds?.length) {
-    query = query.in('chapterId', filters.chapterIds)
+  if (filters.chapter_ids?.length) {
+    query = query.in('chapter_id', filters.chapter_ids)
   }
 
   const { data, error } = await query
@@ -97,23 +97,23 @@ export async function getAdminEventsList(
   }
 
   const rows: AdminEventListItem[] = data.map((row) => {
-    const chapter = Array.isArray(row.Chapter) ? row.Chapter[0] : row.Chapter
-    const registrations = Array.isArray(row.EventRegistration)
-      ? row.EventRegistration.filter((r) => r.status === 'registered').length
+    const chapter = Array.isArray(row.chapter) ? row.chapter[0] : row.chapter
+    const registrations = Array.isArray(row.event_registration)
+      ? row.event_registration.filter((r) => r.status === 'registered').length
       : 0
 
     return {
       id: row.id,
       title: row.title,
-      startAt: row.startAt,
-      endAt: row.endAt,
-      isPublished: row.isPublished,
-      chapterId: row.chapterId,
-      chapterName: chapter?.name ?? null,
+      start_at: row.start_at,
+      end_at: row.end_at,
+      is_published: row.is_published,
+      chapter_id: row.chapter_id,
+      chapter_name: chapter?.name ?? null,
       registrations,
       capacity: row.capacity,
-      Chapter: chapter,
-      EventChapter: Array.isArray(row.EventChapter) ? row.EventChapter : [],
+      chapter: chapter,
+      event_chapter: Array.isArray(row.event_chapter) ? row.event_chapter : [],
     }
   })
 

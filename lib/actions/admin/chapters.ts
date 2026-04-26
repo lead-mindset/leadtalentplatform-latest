@@ -10,8 +10,8 @@ export type ChapterSortKey =
   | 'university'
   | 'city'
   | 'region'
-  | 'memberCount'
-  | 'activeEventsCount'
+  | 'member_count'
+  | 'active_events_count'
 
 export type SortOrder = 'asc' | 'desc'
 
@@ -32,8 +32,8 @@ export type ChapterListItem = {
   university: string
   city: string | null
   region: string | null
-  memberCount: number
-  activeEventsCount: number
+  member_count: number
+  active_events_count: number
   editors: { id: string; name: string; email: string }[]
 }
 
@@ -57,14 +57,14 @@ type ActionResult = { success: true } | { success: false; error: string }
 
 type ChapterListRow = Pick<ChapterRow, 'id' | 'name' | 'university' | 'city' | 'region'>
 type ChapterProfileRow = Pick<StudentProfileRow, 'chapter_id' | 'user_id'> & {
-  User:
+  user:
     | Pick<UserRow, 'name' | 'email' | 'role'>
     | Pick<UserRow, 'name' | 'email' | 'role'>[]
     | null
 }
 type ChapterEventRow = Pick<EventRow, 'id' | 'chapter_id'>
 type AvailableEditorRow = Pick<StudentProfileRow, 'user_id'> & {
-  User:
+  user:
     | Pick<UserRow, 'id' | 'name' | 'email' | 'role'>
     | Pick<UserRow, 'id' | 'name' | 'email' | 'role'>[]
     | null
@@ -97,10 +97,10 @@ function sortRows(items: ChapterListItem[], sortBy: ChapterSortKey, sortOrder: S
         return (a.city ?? '').localeCompare(b.city ?? '') * direction
       case 'region':
         return (a.region ?? '').localeCompare(b.region ?? '') * direction
-      case 'memberCount':
-        return (a.memberCount - b.memberCount) * direction
-      case 'activeEventsCount':
-        return (a.activeEventsCount - b.activeEventsCount) * direction
+      case 'member_count':
+        return (a.member_count - b.member_count) * direction
+      case 'active_events_count':
+        return (a.active_events_count - b.active_events_count) * direction
       default:
         return a.name.localeCompare(b.name) * direction
     }
@@ -129,8 +129,8 @@ export async function getChaptersList(
   }
 
   const chapterRows = chapters as ChapterListRow[]
-  const chapterIds = chapterRows.map((chapter: ChapterListRow) => chapter.id)
-  if (chapterIds.length === 0) {
+  const chapter_ids = chapterRows.map((chapter: ChapterListRow) => chapter.id)
+  if (chapter_ids.length === 0) {
     return { items: [], total: 0, page: 1, pageSize: pagination.pageSize }
   }
 
@@ -138,18 +138,18 @@ export async function getChaptersList(
   const [{ data: profiles }, { data: events }] = await Promise.all([
     supabase
       .from('student_profile')
-      .select('chapter_id, user_id, User!StudentProfile_userId_fkey(name, email, role)')
-      .in('chapter_id', chapterIds),
+      .select('chapter_id, user_id, user!student_profile_user_id_fkey(name, email, role)')
+      .in('chapter_id', chapter_ids),
     supabase
       .from('event')
       .select('id, chapter_id')
-      .in('chapter_id', chapterIds)
+      .in('chapter_id', chapter_ids)
       .eq('is_published', true)
       .gt('end_at', now),
   ])
 
-  const profileRows = (profiles ?? []) as ChapterProfileRow[]
-  const eventRows = (events ?? []) as ChapterEventRow[]
+  const profileRows = (profiles ?? []) as unknown as ChapterProfileRow[]
+  const eventRows = (events ?? []) as unknown as ChapterEventRow[]
 
 const profileByChapter = new Map<string, ChapterProfileRow[]>()
   profileRows.forEach((profile: ChapterProfileRow) => {
@@ -168,11 +168,11 @@ const profileByChapter = new Map<string, ChapterProfileRow[]>()
     const chapterProfiles = profileByChapter.get(chapter.id) ?? []
     const editors = chapterProfiles
       .filter((profile: ChapterProfileRow) => {
-        const user = Array.isArray(profile.User) ? profile.User[0] : profile.User
+        const user = Array.isArray(profile.user) ? profile.user[0] : profile.user
         return user?.role === 'editor'
       })
-.map((profile: ChapterProfileRow) => {
-        const user = Array.isArray(profile.User) ? profile.User[0] : profile.User
+      .map((profile: ChapterProfileRow) => {
+        const user = Array.isArray(profile.user) ? profile.user[0] : profile.user
         return {
           id: profile.user_id,
           name: user?.name ?? 'Unknown',
@@ -186,8 +186,8 @@ const profileByChapter = new Map<string, ChapterProfileRow[]>()
       university: chapter.university,
       city: chapter.city,
       region: chapter.region,
-      memberCount: chapterProfiles.length,
-      activeEventsCount: eventCountByChapter.get(chapter.id) ?? 0,
+      member_count: chapterProfiles.length,
+      active_events_count: eventCountByChapter.get(chapter.id) ?? 0,
       editors,
     }
   })
@@ -330,21 +330,21 @@ const [{ count: membersCount }, { count: eventsCount }] = await Promise.all([
   return { success: true }
 }
 
-export async function getAvailableEditors(chapterId: string) {
+export async function getAvailableEditors(chapter_id: string) {
   const { supabase } = await requireAdmin()
   const { data, error } = await supabase
     .from('student_profile')
-    .select('user_id, User!StudentProfile_userId_fkey(id, name, email, role)')
-    .eq('chapter_id', chapterId)
+    .select('user_id, user!student_profile_user_id_fkey(id, name, email, role)')
+    .eq('chapter_id', chapter_id)
 
   if (error) {
     console.error('[admin/chapters] getAvailableEditors error:', error)
     return []
   }
 
-  return ((data ?? []) as AvailableEditorRow[])
+  return ((data ?? []) as unknown as AvailableEditorRow[])
     .map((row: AvailableEditorRow) => {
-      const user = Array.isArray(row.User) ? row.User[0] : row.User
+      const user = Array.isArray(row.user) ? row.user[0] : row.user
       if (!user) return null
       if (user.role !== 'member' && user.role !== 'editor') return null
       return {
@@ -357,7 +357,7 @@ export async function getAvailableEditors(chapterId: string) {
     .filter((item): item is NonNullable<typeof item> => item !== null)
 }
 
-export async function assignEditor(userId: string, chapterId: string): Promise<ActionResult> {
+export async function assignEditor(userId: string, chapter_id: string): Promise<ActionResult> {
   const { supabase } = await requireAdmin()
   const { data: profile } = await supabase
     .from('student_profile')
@@ -365,7 +365,7 @@ export async function assignEditor(userId: string, chapterId: string): Promise<A
     .eq('user_id', userId)
     .maybeSingle()
 
-  if (!profile || profile.chapter_id !== chapterId) {
+  if (!profile || profile.chapter_id !== chapter_id) {
     return { success: false, error: 'User must be a member of this chapter.' }
   }
 
@@ -379,7 +379,7 @@ export async function assignEditor(userId: string, chapterId: string): Promise<A
   return { success: true }
 }
 
-export async function removeEditor(userId: string, chapterId: string): Promise<ActionResult> {
+export async function removeEditor(userId: string, chapter_id: string): Promise<ActionResult> {
   const { supabase } = await requireAdmin()
   const { data: profile } = await supabase
     .from('student_profile')
@@ -387,7 +387,7 @@ export async function removeEditor(userId: string, chapterId: string): Promise<A
     .eq('user_id', userId)
     .maybeSingle()
 
-  if (!profile || profile.chapter_id !== chapterId) {
+  if (!profile || profile.chapter_id !== chapter_id) {
     return { success: false, error: 'User does not belong to this chapter.' }
   }
 
@@ -422,8 +422,8 @@ const [{ count: members }, { count: publishedActiveEvents }, { count: totalEvent
   ])
 
   return {
-    memberCount: members ?? 0,
-    activeEventsCount: publishedActiveEvents ?? 0,
+    member_count: members ?? 0,
+    active_events_count: publishedActiveEvents ?? 0,
     totalEvents: totalEvents ?? 0,
   }
 }

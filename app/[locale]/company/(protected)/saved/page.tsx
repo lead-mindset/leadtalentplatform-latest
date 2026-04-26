@@ -8,9 +8,9 @@ import { Button } from '@/components/ui/button';
 
 export default async function SavedStudentsPage() {
   const { supabase, user } = await requireRecruiter();
-  const savedStudents = await getSavedStudents(supabase, user.id);
+  const saved_students = await getSavedStudents(supabase, user.id);
 
-  const students = savedStudents.map((s) => s.Student);
+  const students = saved_students.map((s) => s.Student);
   const savedStudentIds = students.map((s) => s.id);
 
   return (
@@ -26,12 +26,12 @@ export default async function SavedStudentsPage() {
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <div>
             <CardTitle>Your Collection</CardTitle>
-            <CardDescription>{savedStudents.length} saved students</CardDescription>
+            <CardDescription>{saved_students.length} saved students</CardDescription>
           </div>
           <Heart className="h-5 w-5 text-red-500" />
         </CardHeader>
         <CardContent>
-          {savedStudents.length === 0 ? (
+          {saved_students.length === 0 ? (
             <div className="text-center py-12">
               <Heart className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground mb-2">No saved students yet</p>

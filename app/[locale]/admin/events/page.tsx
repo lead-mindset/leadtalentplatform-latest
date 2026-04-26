@@ -44,7 +44,7 @@ export default async function AdminEventsPage({
 
   const [list, chapters] = await Promise.all([
     getAdminEventsList(
-      { search, chapterIds: chapterFilters, statuses: statusFilters },
+      { search, chapter_ids: chapterFilters, statuses: statusFilters },
       { page, pageSize, sortBy, sortOrder }
     ),
     getChapters(),

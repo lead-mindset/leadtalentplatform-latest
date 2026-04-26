@@ -124,11 +124,11 @@ function RecentApprovals({ members }: { members: RecentActivityMember[] }) {
           <div className="min-w-0">
             <p className="text-sm font-medium truncate">{member.name || 'Unknown'}</p>
             <p className="text-xs text-muted-foreground truncate">
-              {member.StudentProfile.major}
+              {member.student_profile.major}
             </p>
           </div>
           <p className="text-xs text-muted-foreground ml-3 shrink-0">
-            {new Date(member.StudentProfile.updated_at).toLocaleDateString(undefined, {
+            {new Date(member.student_profile.updated_at).toLocaleDateString(undefined, {
               month: 'short',
               day: 'numeric',
             })}
@@ -228,7 +228,7 @@ function EventOpsList({
 }
 
 async function ChapterContent() {
-  const { supabase, user, chapterId } = await requireChapterMember()
+  const { supabase, user, chapter_id } = await requireChapterMember()
 
   const { data: profileData } = await supabase
     .from('student_profile')
@@ -239,7 +239,7 @@ async function ChapterContent() {
     .eq('user_id', user.id)
     .maybeSingle()
 
-  if (!profileData?.Chapter) {
+  if (!profileData?.chapter) {
     return (
       <Card className="max-w-md mx-auto mt-20">
         <CardHeader>
@@ -254,13 +254,13 @@ async function ChapterContent() {
     )
   }
 
-  const chapter = Array.isArray(profileData.Chapter)
-    ? profileData.Chapter[0]
-    : profileData.Chapter
+  const chapter = Array.isArray(profileData.chapter)
+    ? profileData.chapter[0]
+    : profileData.chapter
 
   const [allMembers, recentActivity, chapterEvents] = await Promise.all([
-    getChapterMembers(chapterId),
-    getRecentChapterActivity(chapterId, 4),
+    getChapterMembers(chapter_id),
+    getRecentChapterActivity(chapter_id, 4),
     getChapterEvents(),
   ])
 
@@ -268,8 +268,8 @@ async function ChapterContent() {
   const approvalRate =
     stats.total > 0 ? Math.round((stats.approved / stats.total) * 100) : 0
 
-  const pendingMembers = allMembers.filter(
-    m => m.StudentProfile?.is_filled && m.StudentProfile?.approval_status === 'pending'
+  const pending_members = allMembers.filter(
+    m => m.student_profile?.is_filled && m.student_profile?.approval_status === 'pending'
   )
   const upcomingEventsCount = chapterEvents.filter((event) => new Date(event.end_at) >= new Date()).length
 
@@ -354,7 +354,7 @@ async function ChapterContent() {
               </div>
 
               <PendingInbox
-                members={pendingMembers}
+                members={pending_members}
                 currentUserId={user.id}
                 total={stats.pending}
               />

@@ -215,8 +215,8 @@ export function ChaptersManagementClient({
                     ['university', 'University'],
                     ['city', 'City'],
                     ['region', 'Region'],
-                    ['memberCount', 'Member Count'],
-                    ['activeEventsCount', 'Active Events'],
+                    ['member_count', 'Member Count'],
+                    ['active_events_count', 'Active Events'],
                   ].map(([key, label]) => (
                     <th key={key} className="text-left p-2">
                       <button className="hover:underline" onClick={() => toggleSort(key)}>
@@ -239,8 +239,8 @@ export function ChaptersManagementClient({
                     <td className="p-2">{chapter.university}</td>
                     <td className="p-2">{chapter.city ?? '—'}</td>
                     <td className="p-2">{chapter.region ?? '—'}</td>
-                    <td className="p-2">{chapter.memberCount}</td>
-                    <td className="p-2">{chapter.activeEventsCount}</td>
+                    <td className="p-2">{chapter.member_count}</td>
+                    <td className="p-2">{chapter.active_events_count}</td>
                     <td className="p-2">
                       {chapter.editors.length === 0 ? '—' : chapter.editors.map((editor) => editor.email).join(', ')}
                     </td>
@@ -275,7 +275,7 @@ export function ChaptersManagementClient({
                         <Button
                           size="sm"
                           variant="outline"
-                          disabled={chapter.memberCount > 0 || chapter.activeEventsCount > 0}
+                          disabled={chapter.member_count > 0 || chapter.active_events_count > 0}
                           onClick={() => setDeleteOpen(chapter)}
                         >
                           Delete

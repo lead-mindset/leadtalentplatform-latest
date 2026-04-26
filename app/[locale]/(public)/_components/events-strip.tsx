@@ -92,9 +92,9 @@ function EventCard({ event }: { event: ExampleEvent }) {
         style={{ minHeight: "88px", height: "88px" }}
         aria-hidden="true"
       >
-        {event.coverImage ? (
+        {event.cover_image ? (
           <Image
-            src={event.coverImage}
+            src={event.cover_image}
             alt=""
             fill
             className="object-cover"
@@ -119,7 +119,7 @@ function EventCard({ event }: { event: ExampleEvent }) {
         </div>
 
         <div className="flex items-center justify-between mt-1">
-          <EventTypeBadge type={event.eventType} />
+          <EventTypeBadge type={event.event_type} />
           <span className="text-xs text-primary font-medium group-hover:underline underline-offset-2">
             Ver evento&nbsp;→
           </span>

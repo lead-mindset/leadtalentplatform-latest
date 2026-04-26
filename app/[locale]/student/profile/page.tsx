@@ -29,10 +29,10 @@ async function ProfileData() {
     graduation_year: profileData?.graduation_year || 0,
     skills: profileData?.skills || [],
     linkedin_url: profileData?.linkedin_url || '',
-    consent_recruiter_visibility: profileData?.consent_recruiter_visibility || false,
-    email_notifications_enabled: profileData?.email_notifications_enabled ?? true,
-    member_id: profileData?.member_id || null,
-    approval_status: profileData?.approval_status || 'pending',
+    consentRecruiterVisibility: profileData?.consent_recruiter_visibility || false,
+    emailNotificationsEnabled: profileData?.email_notifications_enabled ?? true,
+    memberId: profileData?.member_id || null,
+    approvalStatus: profileData?.approval_status || 'pending',
   };
 
   return (

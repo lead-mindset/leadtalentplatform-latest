@@ -9,7 +9,7 @@ interface ChapterLayoutProps {
 }
 
 export default async function ChapterLayout({ children }: ChapterLayoutProps) {
-  const { supabase, user, chapterId } = await requireChapterMember()
+  const { supabase, user, chapter_id } = await requireChapterMember()
 
   const { data: profile } = await supabase
     .from('student_profile')
@@ -17,9 +17,9 @@ export default async function ChapterLayout({ children }: ChapterLayoutProps) {
     .eq('user_id', user.id)
     .maybeSingle()
 
-  const { hasPendingApprovals } = await getSidebarStatsForEditor(
+  const { has_pending_approvals } = await getSidebarStatsForEditor(
     supabase,
-    chapterId
+    chapter_id
   )
 
   return (
@@ -33,7 +33,7 @@ export default async function ChapterLayout({ children }: ChapterLayoutProps) {
         >
           <StudentNavigation
             userRole={user.role}
-            hasPendingApprovals={hasPendingApprovals}
+            has_pending_approvals={has_pending_approvals}
           />
         </BaseSidebar>
       }

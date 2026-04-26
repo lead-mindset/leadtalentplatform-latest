@@ -24,7 +24,7 @@ export function createBaseProfileSchema(t: Translator) {
 
     career: z.string().min(1, t('validation.careerRequired')),
 
-    graduationYear: z.coerce
+    graduation_year: z.coerce
       .number({ message: t('validation.enterGraduationYear') })
       .refine((val) => val !== 0, { message: t('validation.yearInvalid') })
       .refine((val) => val >= 2000 && val <= MAX_YEAR, {
@@ -74,7 +74,7 @@ export type ProfileData = {
   gender?: 'man' | 'woman' | 'non_binary' | 'prefer_not_to_say'
   lead_chapter: string
   career: string
-  graduationYear: number
+  graduation_year: number
   skills: string[]
   linkedin_url: string
   consentRecruiterVisibility: boolean

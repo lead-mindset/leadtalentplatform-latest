@@ -19,7 +19,7 @@ const PROFILE_SELECT = `
   email_notifications_enabled,
   gender,
   member_id,
-  Chapter:chapter_id (
+  chapter:chapter!student_profile_chapter_id_fkey (
     id,
     name,
     university,
@@ -31,7 +31,7 @@ const PROFILE_SELECT = `
 `
 
 type ChapterProfileRow = Pick<
-StudentProfileRow,
+  StudentProfileRow,
   | 'user_id'
   | 'major'
   | 'graduation_year'
@@ -50,28 +50,28 @@ StudentProfileRow,
   | 'gender'
   | 'member_id'
 > & {
-User:
+  user:
     | Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'role' | 'created_at' | 'updated_at' | 'deactivated_at'>
     | Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'role' | 'created_at' | 'updated_at' | 'deactivated_at'>[]
-  Chapter: ChapterRow | ChapterRow[] | null
+  chapter: ChapterRow | ChapterRow[] | null
 }
 
 function mapProfile(profile: ChapterProfileRow): MemberWithProfile | null {
-  const user = Array.isArray(profile.User) ? profile.User[0] : profile.User
-  const chapter = Array.isArray(profile.Chapter) ? profile.Chapter[0] : profile.Chapter
+  const user = Array.isArray(profile.user) ? profile.user[0] : profile.user
+  const chapter = Array.isArray(profile.chapter) ? profile.chapter[0] : profile.chapter
 
   if (!user) return null
 
   return {
     id: user.id,
     email: user.email,
-    name: user.name,
+    name: user.name ?? '',
     phone: user.phone ?? null,
     role: user.role,
-created_at: user.created_at,
+    created_at: user.created_at,
     updated_at: user.updated_at,
     deactivated_at: user.deactivated_at,
-StudentProfile: {
+    student_profile: {
       user_id: profile.user_id,
       major: profile.major,
       graduation_year: profile.graduation_year,
@@ -90,20 +90,20 @@ StudentProfile: {
       gender: profile.gender,
       member_id: profile.member_id,
     },
-    Chapter: chapter ?? null,
+    chapter: chapter ?? null,
   }
 }
 
 
 export async function getChapterMembers(
-  chapterId: string
+  chapter_id: string
 ): Promise<MemberWithProfile[]> {
   const supabase = await createClient()
 
   const { data, error } = await supabase
     .from('student_profile')
     .select(PROFILE_SELECT)
-    .eq('chapter_id', chapterId)
+    .eq('chapter_id', chapter_id)
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -121,15 +121,15 @@ export async function getChapterMembers(
 
 
 export function getMemberStats(members: MemberWithProfile[]) {
-  const incomplete = members.filter((member: MemberWithProfile) => !member.StudentProfile?.is_filled)
+  const incomplete = members.filter((member: MemberWithProfile) => !member.student_profile?.is_filled)
   const pending = members.filter(
-    (member: MemberWithProfile) => member.StudentProfile?.is_filled && member.StudentProfile?.approval_status === 'pending'
+    (member: MemberWithProfile) => member.student_profile?.is_filled && member.student_profile?.approval_status === 'pending'
   )
   const approved = members.filter(
-    (member: MemberWithProfile) => member.StudentProfile?.approval_status === 'approved'
+    (member: MemberWithProfile) => member.student_profile?.approval_status === 'approved'
   )
   const rejected = members.filter(
-    (member: MemberWithProfile) => member.StudentProfile?.approval_status === 'rejected'
+    (member: MemberWithProfile) => member.student_profile?.approval_status === 'rejected'
   )
 
   return {
@@ -138,17 +138,17 @@ export function getMemberStats(members: MemberWithProfile[]) {
     pending: pending.length,
     approved: approved.length,
     rejected: rejected.length,
-    pendingMembers: pending,
-    approvedMembers: approved,
-    rejectedMembers: rejected,
-    completeProfiles: members.filter((member: MemberWithProfile) => member.StudentProfile?.is_filled).length,
-    visibleToRecruiters: members.filter((member: MemberWithProfile) => member.StudentProfile?.is_recruiter_visible).length,
+    pending_members: pending,
+    approved_members: approved,
+    rejected_members: rejected,
+    complete_profiles: members.filter((member: MemberWithProfile) => member.student_profile?.is_filled).length,
+    visible_to_recruiters: members.filter((member: MemberWithProfile) => member.student_profile?.is_recruiter_visible).length,
   }
 }
 
 
 export async function getRecentChapterActivity(
-  chapterId: string,
+  chapter_id: string,
   limit: number = 5
 ): Promise<MemberWithProfile[]> {
   const supabase = await createClient()
@@ -156,7 +156,7 @@ export async function getRecentChapterActivity(
   const { data, error } = await supabase
     .from('student_profile')
     .select(PROFILE_SELECT)
-    .eq('chapter_id', chapterId)
+    .eq('chapter_id', chapter_id)
     .eq('approval_status', 'approved')
     .order('updated_at', { ascending: false })
     .limit(limit)

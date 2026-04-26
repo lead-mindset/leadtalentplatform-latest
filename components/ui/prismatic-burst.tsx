@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type CSSProperties } from 'react';
 import { Renderer, Program, Mesh, Triangle, Texture } from 'ogl';
 import './prismatic-burst.css';
 
@@ -178,7 +178,7 @@ void main(){
 }
 `;
 
-const hexToRgb01 = hex => {
+const hexToRgb01 = (hex: string) => {
   let h = hex.trim();
   if (h.startsWith('#')) h = h.slice(1);
   if (h.length === 3) {
@@ -195,7 +195,7 @@ const hexToRgb01 = hex => {
   return [r, g, b];
 };
 
-const toPx = v => {
+const toPx = (v: string | number | null | undefined) => {
   if (v == null) return 0;
   if (typeof v === 'number') return v;
   const s = String(v).trim();
@@ -264,7 +264,7 @@ export default function PrismaticBurst({
     gl.canvas.style.inset = '0';
     gl.canvas.style.width = '100%';
     gl.canvas.style.height = '100%';
-    gl.canvas.style.mixBlendMode = mixBlendMode && mixBlendMode !== 'none' ? mixBlendMode : '';
+    gl.canvas.style.mixBlendMode = mixBlendMode || '';
     container.appendChild(gl.canvas);
 
     const white = new Uint8Array([255, 255, 255, 255]);
@@ -321,7 +321,7 @@ export default function PrismaticBurst({
       ro = new ResizeObserver(resize);
       ro.observe(container);
     } else {
-      window.addEventListener('resize', resize);
+      (window as any).addEventListener('resize', resize);
     }
     resize();
 
@@ -376,7 +376,9 @@ export default function PrismaticBurst({
         programRef.current.uniforms.uTime.value = accumTime;
       }
 
-      renderer.render({ scene: meshRef.current });
+      if (meshRef.current) {
+        renderer.render({ scene: meshRef.current });
+      }
       raf = requestAnimationFrame(update);
     };
     raf = requestAnimationFrame(update);
@@ -394,7 +396,7 @@ export default function PrismaticBurst({
         console.warn('Canvas already removed');
       }
       try {
-        meshRef.current?.remove?.();
+        // meshRef.current?.remove?.();
       } catch (e) {
         
       }
@@ -428,7 +430,7 @@ export default function PrismaticBurst({
     const canvas = rendererRef.current?.gl?.canvas;
 
     if (canvas) {
-      canvas.style.mixBlendMode = mixBlendMode && mixBlendMode !== 'none' ? mixBlendMode : '';
+      canvas.style.mixBlendMode = mixBlendMode || '';
     }
   }, [mixBlendMode]);
 

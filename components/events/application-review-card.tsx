@@ -27,7 +27,7 @@ interface ApplicationReviewCardProps {
     }
     StudentProfile: {
       major: string
-      graduationYear: number
+      graduation_year: number
       linkedinUrl?: string | null
     }
   }
@@ -95,16 +95,16 @@ export function ApplicationReviewCard({
           )}
 
           <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <Icons.User className="h-4 w-4 text-primary" />
+            <Icons.user className="h-4 w-4 text-primary" />
           </div>
 
           <div className="flex-1 space-y-2">
             <div className="flex items-start justify-between flex-wrap gap-2">
               <div>
-                <h3 className="font-semibold">{application.User.name}</h3>
+                <h3 className="font-semibold">{application.user.name}</h3>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mt-0.5">
                   <Icons.Mail className="h-4 w-4" />
-                  <span>{application.User.email}</span>
+                  <span>{application.user.email}</span>
                 </div>
               </div>
 
@@ -118,17 +118,17 @@ export function ApplicationReviewCard({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Icons.GraduationCap className="h-4 w-4" />
-                <span>Major: {application.StudentProfile.major}</span>
+                <span>Major: {application.student_profile.major}</span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Icons.Calendar className="h-4 w-4" />
-                <span>Graduation: {application.StudentProfile.graduationYear}</span>
+                <span>Graduation: {application.student_profile.graduation_year}</span>
               </div>
             </div>
 
-            {application.StudentProfile.linkedinUrl && (
+            {application.student_profile.linkedin_url && (
               <a
-                href={application.StudentProfile.linkedinUrl}
+                href={application.student_profile.linkedin_url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-sm text-primary underline hover:underline"
@@ -139,7 +139,7 @@ export function ApplicationReviewCard({
             )}
 
             <p className="text-xs text-muted-foreground">
-              Applied: {new Date(application.registeredAt).toLocaleDateString()}
+              Applied: {new Date(application.registered_at).toLocaleDateString()}
             </p>
           </div>
 
@@ -173,7 +173,7 @@ export function ApplicationReviewCard({
           <DialogHeader>
             <DialogTitle>Reject Application</DialogTitle>
             <DialogDescription>
-              Reject {application.User.name}'s application for this event.
+              Reject {application.user.name}'s application for this event.
               {!showCheckbox && (
                 <span className="block mt-2 text-sm text-muted-foreground">
                   Note: The student will be notified via email, but the reason is internal only (not shared with the student in v1).

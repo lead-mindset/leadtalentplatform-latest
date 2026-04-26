@@ -673,13 +673,13 @@ export type Database = {
         Row: {
           approvalStatus: Database["public"]["Enums"]["approval_status"] | null
           approvedById: string | null
-          chapterId: string | null
+          chapter_id: string | null
           consentDate: string | null
           consentRecruiterVisibility: boolean | null
           createdAt: string | null
           emailNotificationsEnabled: boolean | null
           gender: string | null
-          graduationYear: number | null
+          graduation_year: number | null
           isFilled: boolean | null
           isRecruiterVisible: boolean | null
           linkedinUrl: string | null
@@ -692,13 +692,13 @@ export type Database = {
         Insert: {
           approvalStatus?: Database["public"]["Enums"]["approval_status"] | null
           approvedById?: string | null
-          chapterId?: string | null
+          chapter_id?: string | null
           consentDate?: string | null
           consentRecruiterVisibility?: boolean | null
           createdAt?: string | null
           emailNotificationsEnabled?: boolean | null
           gender?: string | null
-          graduationYear?: number | null
+          graduation_year?: number | null
           isFilled?: boolean | null
           isRecruiterVisible?: boolean | null
           linkedinUrl?: string | null
@@ -711,13 +711,13 @@ export type Database = {
         Update: {
           approvalStatus?: Database["public"]["Enums"]["approval_status"] | null
           approvedById?: string | null
-          chapterId?: string | null
+          chapter_id?: string | null
           consentDate?: string | null
           consentRecruiterVisibility?: boolean | null
           createdAt?: string | null
           emailNotificationsEnabled?: boolean | null
           gender?: string | null
-          graduationYear?: number | null
+          graduation_year?: number | null
           isFilled?: boolean | null
           isRecruiterVisible?: boolean | null
           linkedinUrl?: string | null

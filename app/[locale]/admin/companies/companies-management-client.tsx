@@ -110,12 +110,12 @@ export function CompaniesManagementClient({
                   {[
                     ['name', 'Company Name'],
                     ['createdat', 'Created At'],
-                    ['createdByName', 'Created By'],
-                    ['activeRecruiters', 'Active Recruiters'],
-                    ['pendingInvites', 'Pending Invites'],
+                    ['created_by_name', 'Created By'],
+                    ['active_recruiters', 'Active Recruiters'],
+                    ['pending_invites', 'Pending Invites'],
                   ].map(([key, label]) => (
                     <TableHead key={key} className="text-left p-2">
-                      {key === 'createdByName' ? (
+                      {key === 'created_by_name' ? (
                         label
                       ) : (
                         <button
@@ -135,9 +135,9 @@ export function CompaniesManagementClient({
                   <TableRow key={company.id}>
                     <TableCell className="p-2 font-medium">{company.name}</TableCell>
                     <TableCell className="p-2">{new Date(company.created_at).toLocaleDateString()}</TableCell>
-                    <TableCell className="p-2">{company.createdByName ?? '-'}</TableCell>
-                    <TableCell className="p-2">{company.activeRecruiters}</TableCell>
-                    <TableCell className="p-2">{company.pendingInvites}</TableCell>
+                    <TableCell className="p-2">{company.created_by_name ?? '-'}</TableCell>
+                    <TableCell className="p-2">{company.active_recruiters}</TableCell>
+                    <TableCell className="p-2">{company.pending_invites}</TableCell>
                     <TableCell className="p-2">
                       <div className="flex gap-2">
                         <Button asChild size="sm" variant="outline">
@@ -156,7 +156,7 @@ export function CompaniesManagementClient({
                         <Button
                           size="sm"
                           variant="outline"
-                          disabled={company.activeRecruiters > 0 || company.pendingInvites > 0}
+                          disabled={company.active_recruiters > 0 || company.pending_invites > 0}
                           onClick={() => setDeleteOpen(company)}
                         >
                           Delete

@@ -6,9 +6,9 @@ import type { EventChapterInsert } from '@/lib/types'
 
 export async function addEventCollaborators(
   eventId: string,
-  chapterIds: string[]
+  chapter_ids: string[]
 ) {
-  if (!eventId || eventId === 'new' || !chapterIds.length) {
+  if (!eventId || eventId === 'new' || !chapter_ids.length) {
     return { error: 'Event ID and at least one chapter ID are required' }
   }
 
@@ -32,9 +32,9 @@ export async function addEventCollaborators(
   }
 
   // Prepare insert data
-  const inserts: EventChapterInsert[] = chapterIds.map(chapterId => ({
+  const inserts: EventChapterInsert[] = chapter_ids.map(chapter_id => ({
     eventId,
-    chapterId,
+    chapter_id,
     addedById: user.id,
   }))
 

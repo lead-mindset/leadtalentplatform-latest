@@ -77,20 +77,20 @@ export function EventForm({
 
   const [title, setTitle] = useState(defaults.title)
   const [description, setDescription] = useState(defaults.description)
-  const [coverImage, setCoverImage] = useState(defaults.coverImage)
-  const [startAt, setStartAt] = useState(defaults.startAt)
-  const [endAt, setEndAt] = useState(defaults.endAt)
+  const [coverImage, setCoverImage] = useState(defaults.cover_image)
+  const [startAt, setStartAt] = useState(defaults.start_at)
+  const [endAt, setEndAt] = useState(defaults.end_at)
   const [location, setLocation] = useState(defaults.location)
   const [locationName, setLocationName] = useState(defaults.locationName)
   const [locationAddress, setLocationAddress] = useState(defaults.locationAddress)
   const [locationCity, setLocationCity] = useState(defaults.locationCity)
   const [locationRegion, setLocationRegion] = useState(defaults.locationRegion)
-  const [meetingUrl, setMeetingUrl] = useState(defaults.meetingUrl)
-  const [eventType, setEventType] = useState<EventType>(defaults.eventType)
+  const [meetingUrl, setMeetingUrl] = useState(defaults.meeting_url)
+  const [eventType, setEventType] = useState<EventType>(defaults.event_type)
   const [capacity, setCapacity] = useState(defaults.capacity)
-  const [isPublished, setIsPublished] = useState(defaults.isPublished)
-  const [accessModel, setAccessModel] = useState<EventAccessModel>(defaults.accessModel)
-  const [applicationFormUrl, setApplicationFormUrl] = useState(defaults.applicationFormUrl)
+  const [isPublished, setIsPublished] = useState(defaults.is_published)
+  const [accessModel, setAccessModel] = useState<EventAccessModel>(defaults.access_model)
+  const [applicationFormUrl, setApplicationFormUrl] = useState(defaults.application_form_url)
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
   const [isAutoSaving, setIsAutoSaving] = useState(false)
   const [isDraggingCover, setIsDraggingCover] = useState(false)
@@ -157,14 +157,14 @@ export function EventForm({
       if (!title.trim()) { errors.title = 'Title is required'; isValid = false }
       if (title.length > 100) { errors.title = 'Title must be less than 100 characters'; isValid = false }
       if (description.length > 2000) { errors.description = 'Description must be less than 2000 characters'; isValid = false }
-      if (coverImage && !coverImage.startsWith('http')) { errors.coverImage = 'Invalid image URL'; isValid = false }
+      if (coverImage && !coverImage.startsWith('http')) { errors.cover_image = 'Invalid image URL'; isValid = false }
     }
     
     if (checkLogistics) {
-      if (!startAt) { errors.startAt = 'Start date and time are required'; isValid = false }
-      if (!endAt) { errors.endAt = 'End date and time are required'; isValid = false }
+      if (!startAt) { errors.start_at = 'Start date and time are required'; isValid = false }
+      if (!endAt) { errors.end_at = 'End date and time are required'; isValid = false }
       if (startAt && endAt && new Date(startAt) >= new Date(endAt)) {
-        errors.endAt = 'End date must be after start date'
+        errors.end_at = 'End date must be after start date'
         isValid = false
       }
       if (eventType === 'in_person' && !location?.trim()) {
@@ -172,12 +172,12 @@ export function EventForm({
         isValid = false
       }
       if (eventType === 'online' && !meetingUrl?.trim()) {
-        errors.meetingUrl = 'Meeting URL is required for online events'
+        errors.meeting_url = 'Meeting URL is required for online events'
         isValid = false
       }
       if (eventType === 'hybrid') {
         if (!location?.trim()) { errors.location = 'Location is required for hybrid events'; isValid = false }
-        if (!meetingUrl?.trim()) { errors.meetingUrl = 'Meeting URL is required for hybrid events'; isValid = false }
+        if (!meetingUrl?.trim()) { errors.meeting_url = 'Meeting URL is required for hybrid events'; isValid = false }
       }
     }
     
@@ -187,7 +187,7 @@ export function EventForm({
         isValid = false
       }
       if (accessModel === 'application' && !applicationFormUrl?.trim()) {
-        errors.applicationFormUrl = 'Application form URL is required'
+        errors.application_form_url = 'Application form URL is required'
         isValid = false
       }
     }
@@ -424,7 +424,7 @@ export function EventForm({
           )}
         </div>
         {coverError && <p className="text-sm text-destructive mt-2">{coverError}</p>}
-        {fieldErrors.coverImage && <p className="text-sm text-destructive mt-2">{fieldErrors.coverImage}</p>}
+        {fieldErrors.cover_image && <p className="text-sm text-destructive mt-2">{fieldErrors.cover_image}</p>}
         
         <div className="mt-4 space-y-2">
           <Label htmlFor="coverImageUrl" className="text-sm text-muted-foreground">Or paste image URL</Label>
@@ -486,9 +486,9 @@ export function EventForm({
               type="datetime-local"
               value={startAt}
               onChange={(e) => setStartAt(e.target.value)}
-              className={`h-12 bg-muted/50 border-transparent focus-visible:bg-background ${fieldErrors.startAt ? 'border-destructive' : ''}`}
+              className={`h-12 bg-muted/50 border-transparent focus-visible:bg-background ${fieldErrors.start_at ? 'border-destructive' : ''}`}
             />
-            {fieldErrors.startAt && <p className="text-xs text-destructive ml-1">{fieldErrors.startAt}</p>}
+            {fieldErrors.start_at && <p className="text-xs text-destructive ml-1">{fieldErrors.start_at}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="endAt" className="text-sm font-semibold text-muted-foreground ml-1">End Date & Time</Label>
@@ -497,9 +497,9 @@ export function EventForm({
               type="datetime-local"
               value={endAt}
               onChange={(e) => setEndAt(e.target.value)}
-              className={`h-12 bg-muted/50 border-transparent focus-visible:bg-background ${fieldErrors.endAt ? 'border-destructive' : ''}`}
+              className={`h-12 bg-muted/50 border-transparent focus-visible:bg-background ${fieldErrors.end_at ? 'border-destructive' : ''}`}
             />
-            {fieldErrors.endAt && <p className="text-xs text-destructive ml-1">{fieldErrors.endAt}</p>}
+            {fieldErrors.end_at && <p className="text-xs text-destructive ml-1">{fieldErrors.end_at}</p>}
           </div>
         </div>
       </section>
@@ -561,10 +561,10 @@ export function EventForm({
               value={meetingUrl}
               onChange={(e) => setMeetingUrl(e.target.value)}
               placeholder="https://zoom.us/j/..."
-              className={`h-12 bg-muted/50 border-transparent focus-visible:bg-background ${fieldErrors.meetingUrl ? 'border-destructive' : ''}`}
+              className={`h-12 bg-muted/50 border-transparent focus-visible:bg-background ${fieldErrors.meeting_url ? 'border-destructive' : ''}`}
             />
             <p className="text-xs text-muted-foreground ml-1 italic mt-1">Link will be shared with approved attendees only.</p>
-            {fieldErrors.meetingUrl && <p className="text-xs text-destructive ml-1">{fieldErrors.meetingUrl}</p>}
+            {fieldErrors.meeting_url && <p className="text-xs text-destructive ml-1">{fieldErrors.meeting_url}</p>}
           </div>
         </section>
       )}
@@ -614,12 +614,12 @@ export function EventForm({
               value={applicationFormUrl}
               onChange={(e) => setApplicationFormUrl(e.target.value)}
               placeholder="https://forms.google.com/..."
-              className={`bg-background ${fieldErrors.applicationFormUrl ? 'border-destructive' : ''}`}
+              className={`bg-background ${fieldErrors.application_form_url ? 'border-destructive' : ''}`}
             />
             <p className="text-xs text-muted-foreground mt-2">
               Paste any form link — Google Forms, Typeform, etc. Students will be redirected here when they click "Apply".
             </p>
-            {fieldErrors.applicationFormUrl && <p className="text-xs text-destructive mt-1">{fieldErrors.applicationFormUrl}</p>}
+            {fieldErrors.application_form_url && <p className="text-xs text-destructive mt-1">{fieldErrors.application_form_url}</p>}
           </div>
         )}
       </section>

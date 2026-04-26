@@ -32,9 +32,9 @@ type Props = {
 
 function getStatus(item: AdminEventListItem) {
   const now = Date.now()
-  if (new Date(item.endAt).getTime() < now) return 'past'
-  if (!item.isPublished) return 'draft'
-  if (new Date(item.startAt).getTime() > now) return 'upcoming'
+  if (new Date(item.end_at).getTime() < now) return 'past'
+  if (!item.is_published) return 'draft'
+  if (new Date(item.start_at).getTime() > now) return 'upcoming'
   return 'published'
 }
 
@@ -163,24 +163,24 @@ export function EventsManagementClient({
                   return (
                     <TableRow key={event.id}>
                       <TableCell className="p-2 font-medium">{event.title}</TableCell>
-                      <TableCell className="p-2">{new Date(event.startAt).toLocaleString()}</TableCell>
+                      <TableCell className="p-2">{new Date(event.start_at).toLocaleString()}</TableCell>
                       <TableCell className="p-2">
                         <div className="flex flex-wrap gap-1">
-                          {event.Chapter && (
+                          {event.chapter && (
                             <Badge 
                               variant="outline" 
                               className="text-xs px-2 py-1 border-primary/20 text-primary"
                             >
-                              {event.Chapter.name}
+                              {event.chapter.name}
                             </Badge>
                           )}
-                          {event.EventChapter?.map((collaborator) => (
+                          {event.event_chapter?.map((collaborator) => (
                             <Badge 
                               key={collaborator.id} 
                               variant="secondary" 
                               className="text-xs px-2 py-1"
                             >
-                              {collaborator.Chapter?.name || 'Unknown Chapter'}
+                              {collaborator.chapter?.name || 'Unknown Chapter'}
                             </Badge>
                           ))}
                         </div>

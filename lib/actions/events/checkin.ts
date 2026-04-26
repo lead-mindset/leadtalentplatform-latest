@@ -134,7 +134,7 @@ export async function resolveCheckInCandidate(formData: FormData): Promise<Check
       status: 'already_checked_in',
       eventId,
       attendee: attendeePayload,
-      checkedInAt: registration.checkedInAt ?? new Date().toISOString(),
+      checkedInAt: registration.checked_in_at ?? new Date().toISOString(),
       checkedInByName,
       counter: counter ?? { checkedIn: 0, total: 0 },
     }
@@ -221,7 +221,7 @@ export async function checkInAttendee(formData: FormData): Promise<CheckInRespon
   const { data: attendeeData } = await supabase
     .from('user')
     .select('id, name, email')
-    .eq('id', reg.userId)
+    .eq('id', reg.user_id)
     .maybeSingle()
 
   const attendeePayload = {

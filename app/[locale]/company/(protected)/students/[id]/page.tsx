@@ -73,37 +73,37 @@ export default async function StudentProfilePage({
             <CardTitle>Education</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {resolvedStudent.StudentProfile?.major && (
+            {resolvedStudent.student_profile?.major && (
               <div className="flex items-start gap-3">
                 <GraduationCap className="h-5 w-5 mt-0.5 text-muted-foreground" />
                 <div>
-                  <p className="font-medium">{resolvedStudent.StudentProfile.major}</p>
+                  <p className="font-medium">{resolvedStudent.student_profile.major}</p>
                   <p className="text-sm text-muted-foreground">Major</p>
                 </div>
               </div>
             )}
 
-            {resolvedStudent.StudentProfile?.graduation_year && (
+            {resolvedStudent.student_profile?.graduation_year && (
               <div className="flex items-start gap-3">
                 <Calendar className="h-5 w-5 mt-0.5 text-muted-foreground" />
                 <div>
                   <p className="font-medium">
-                    Class of {resolvedStudent.StudentProfile.graduation_year}
+                    Class of {resolvedStudent.student_profile.graduation_year}
                   </p>
                   <p className="text-sm text-muted-foreground">Expected Graduation</p>
                 </div>
               </div>
             )}
 
-            {resolvedStudent.Chapter && (
+            {resolvedStudent.chapter && (
               <div className="flex items-start gap-3">
                 <Building2 className="h-5 w-5 mt-0.5 text-muted-foreground" />
                 <div>
-                  <p className="font-medium">{resolvedStudent.Chapter.name}</p>
-                  <p className="text-sm text-muted-foreground">{resolvedStudent.Chapter.university}</p>
-                  {(resolvedStudent.Chapter.city || resolvedStudent.Chapter.region) && (
+                  <p className="font-medium">{resolvedStudent.chapter.name}</p>
+                  <p className="text-sm text-muted-foreground">{resolvedStudent.chapter.university}</p>
+                  {(resolvedStudent.chapter.city || resolvedStudent.chapter.region) && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      {[resolvedStudent.Chapter.city, resolvedStudent.Chapter.region]
+                      {[resolvedStudent.chapter.city, resolvedStudent.chapter.region]
                         .filter(Boolean)
                         .join(', ')}
                     </p>
@@ -120,9 +120,9 @@ export default async function StudentProfilePage({
             <CardDescription>Technical and professional skills</CardDescription>
           </CardHeader>
           <CardContent>
-            {resolvedStudent.StudentProfile?.skills && resolvedStudent.StudentProfile.skills.length > 0 ? (
+            {resolvedStudent.student_profile?.skills && resolvedStudent.student_profile.skills.length > 0 ? (
               <div className="flex flex-wrap gap-2">
-                {resolvedStudent.StudentProfile.skills.map((skill: string, i: number) => (
+                {resolvedStudent.student_profile.skills.map((skill: string, i: number) => (
                   <Badge key={i} variant="secondary">
                     {skill}
                   </Badge>
@@ -135,7 +135,7 @@ export default async function StudentProfilePage({
         </Card>
       </div>
 
-      {resolvedStudent.StudentProfile?.linkedin_url && (
+      {resolvedStudent.student_profile?.linkedin_url && (
         <Card>
           <CardHeader>
             <CardTitle>Professional Links</CardTitle>
@@ -143,7 +143,7 @@ export default async function StudentProfilePage({
           <CardContent>
             <Button asChild variant="outline" className="gap-2">
               <NextLink
-                href={resolvedStudent.StudentProfile.linkedin_url}
+                href={resolvedStudent.student_profile.linkedin_url}
                 target="_blank"
                 rel="noopener noreferrer"
               >

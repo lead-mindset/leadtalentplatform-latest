@@ -26,7 +26,7 @@ export default async function CompanySettingsPage() {
           <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
             <Building className="h-5 w-5 text-muted-foreground" />
             <div>
-              <p className="font-medium">{user.Company?.name}</p>
+              <p className="font-medium">{user.company?.name}</p>
               <p className="text-sm text-muted-foreground">Company Name</p>
             </div>
           </div>

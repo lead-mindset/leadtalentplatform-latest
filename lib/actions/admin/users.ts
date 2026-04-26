@@ -5,14 +5,14 @@ import { requireAdmin } from '@/lib/auth'
 import type { ChapterRow, Role, StudentProfileRow, UserRow } from '@/lib/types'
 
 export type ProfileStatusFilter = 'complete' | 'pending_approval' | 'incomplete' | 'no_profile'
-export type UserSortKey = 'name' | 'email' | 'role' | 'chapter' | 'created_at' | 'profileStatus'
+export type UserSortKey = 'name' | 'email' | 'role' | 'chapter' | 'created_at' | 'profile_status'
 export type SortOrder = 'asc' | 'desc'
 
 export type UsersFilters = {
   search?: string
   roles?: Role[]
-  chapterIds?: string[]
-  approvalStatuses?: ProfileStatusFilter[]
+  chapter_ids?: string[]
+  approval_statuses?: ProfileStatusFilter[]
 }
 
 export type UsersPagination = {
@@ -24,14 +24,14 @@ export type UsersPagination = {
 
 export type AdminUserListItem = {
   id: string
-  name: string
+  name: string | null
   email: string
   role: Role
   created_at: string
   deactivated_at: string | null
   chapter_id: string | null
-  chapterName: string | null
-  profileStatus: ProfileStatusFilter
+  chapter_name: string | null
+  profile_status: ProfileStatusFilter
 }
 
 export type UsersListResponse = {
@@ -49,12 +49,12 @@ type BulkAction =
   | { type: 'reactivate' }
 
 type AdminUsersProfileRow = Pick<StudentProfileRow, 'user_id' | 'chapter_id' | 'is_filled' | 'approval_status'> & {
-  Chapter: Pick<ChapterRow, 'name'> | Pick<ChapterRow, 'name'>[] | null
+  chapter: Pick<ChapterRow, 'name'> | Pick<ChapterRow, 'name'>[] | null
 }
 
 type AdminUsersProfileSummary = {
   chapter_id: string | null
-  chapterName: string | null
+  chapter_name: string | null
   is_filled: boolean
   approval_status: StudentProfileRow['approval_status']
 }
@@ -96,7 +96,7 @@ async function queryFilteredUsers(filters: UsersFilters): Promise<AdminUserListI
 
   const { data: profiles, error: profilesError } = await supabase
     .from('student_profile')
-    .select('user_id, chapter_id, is_filled, approval_status, Chapter(name)')
+    .select('user_id, chapter_id, is_filled, approval_status, chapter:chapter!student_profile_chapter_id_fkey(name)')
     .in('user_id', userIds)
 
   if (profilesError) {
@@ -108,10 +108,10 @@ async function queryFilteredUsers(filters: UsersFilters): Promise<AdminUserListI
     typedProfiles.map((profile) => [
       profile.user_id,
       {
-        chapterId: profile.chapter_id,
-        chapterName: Array.isArray(profile.Chapter) ? profile.Chapter[0]?.name ?? null : profile.Chapter?.name ?? null,
-        isFilled: profile.is_filled,
-        approvalStatus: profile.approval_status,
+        chapter_id: profile.chapter_id,
+        chapter_name: Array.isArray(profile.chapter) ? profile.chapter[0]?.name ?? null : profile.chapter?.name ?? null,
+        is_filled: profile.is_filled,
+        approval_status: profile.approval_status,
       },
     ])
   )
@@ -126,8 +126,8 @@ async function queryFilteredUsers(filters: UsersFilters): Promise<AdminUserListI
       created_at: user.created_at,
       deactivated_at: user.deactivated_at ?? null,
       chapter_id: profile?.chapter_id ?? null,
-      chapterName: profile?.chapterName ?? null,
-      profileStatus: toProfileStatus(
+      chapter_name: profile?.chapter_name ?? null,
+      profile_status: toProfileStatus(
         profile
           ? {
               is_filled: profile.is_filled,
@@ -139,12 +139,12 @@ async function queryFilteredUsers(filters: UsersFilters): Promise<AdminUserListI
   })
 
   return rows.filter((row) => {
-    if (filters.chapterIds && filters.chapterIds.length > 0) {
-      if (!row.chapter_id || !filters.chapterIds.includes(row.chapter_id)) return false
+    if (filters.chapter_ids && filters.chapter_ids.length > 0) {
+      if (!row.chapter_id || !filters.chapter_ids.includes(row.chapter_id)) return false
     }
 
-    if (filters.approvalStatuses && filters.approvalStatuses.length > 0) {
-      if (!filters.approvalStatuses.includes(row.profileStatus)) return false
+    if (filters.approval_statuses && filters.approval_statuses.length > 0) {
+      if (!filters.approval_statuses.includes(row.profile_status)) return false
     }
 
     return true
@@ -167,9 +167,9 @@ function sortRows(items: AdminUserListItem[], sortBy: UserSortKey, sortOrder: So
       case 'role':
         return byString(a.role, b.role)
       case 'chapter':
-        return byString(a.chapterName ?? '', b.chapterName ?? '')
-      case 'profileStatus':
-        return byString(a.profileStatus, b.profileStatus)
+        return byString(a.chapter_name ?? '', b.chapter_name ?? '')
+      case 'profile_status':
+        return byString(a.profile_status, b.profile_status)
       case 'created_at':
       default:
         return byDate(a.created_at, b.created_at)
@@ -296,9 +296,9 @@ export async function exportUsersCSV(filters: UsersFilters): Promise<string> {
       csvCell(row.name),
       csvCell(row.email),
       csvCell(row.role),
-      csvCell(row.chapterName),
+      csvCell(row.chapter_name),
       csvCell(new Date(row.created_at).toISOString()),
-      csvCell(row.profileStatus),
+      csvCell(row.profile_status),
       csvCell(row.deactivated_at),
     ].join(',')
   )

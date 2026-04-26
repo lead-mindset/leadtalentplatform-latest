@@ -11,12 +11,12 @@ import { STUDENT_NAV, CHAPTER_NAV } from '@/lib/nav-config'
 
 interface StudentNavigationProps {
   userRole: string
-  hasPendingApprovals: boolean
+  has_pending_approvals: boolean
 }
 
 export function StudentNavigation({ 
   userRole, 
-  hasPendingApprovals 
+  has_pending_approvals 
 }: StudentNavigationProps) {
   const isEditor = userRole === 'editor'
 
@@ -45,7 +45,7 @@ export function StudentNavigation({
                 <SidebarNavItem
                   key={item.id}
                   item={item}
-                  showPing={item.id === 'overview' && hasPendingApprovals}
+                  showPing={item.id === 'overview' && has_pending_approvals}
                 />
               ))}
             </SidebarMenu>

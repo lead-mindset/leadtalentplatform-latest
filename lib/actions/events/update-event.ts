@@ -30,7 +30,7 @@ const UpdateEventSchema = z.object({
   eventType: z.enum(['in_person', 'online', 'hybrid']).optional(),
   capacity: z.number().int().nonnegative().nullable().optional(),
   isPublished: z.boolean().optional(),
-  chapterId: z.string().nullable().optional(),
+  chapter_id: z.string().nullable().optional(),
   accessModel: z.enum(['open', 'application']).optional(),
   applicationFormUrl: z.string().url().nullable().optional(),
   locationName: z.string().nullable().optional(),
@@ -52,9 +52,9 @@ export async function updateEvent(input: UpdateEventInput): Promise<UpdateEventR
   if (!parsed.success) return { error: 'Validation failed' }
 
   const { supabase, user } = await requireUser()
-  const { chapterId } = await requireChapterMember()
+  const { chapter_id } = await requireChapterMember()
 
-  if (!chapterId) {
+  if (!chapter_id) {
     return { error: 'No chapter assigned' }
   }
 
@@ -68,7 +68,7 @@ export async function updateEvent(input: UpdateEventInput): Promise<UpdateEventR
     return { error: 'Event not found' }
   }
 
-  const isOwner = existing.chapter_id === chapterId
+  const isOwner = existing.chapter_id === chapter_id
 
   let isCollaborator = false
   if (!isOwner) {
@@ -76,7 +76,7 @@ export async function updateEvent(input: UpdateEventInput): Promise<UpdateEventR
       .from('event_chapter')
       .select('id')
       .eq('event_id', existing.id)
-      .eq('chapter_id', chapterId)
+      .eq('chapter_id', chapter_id)
       .maybeSingle()
     
     isCollaborator = !collabError && collaboration !== null
@@ -86,20 +86,33 @@ export async function updateEvent(input: UpdateEventInput): Promise<UpdateEventR
     return { error: 'Insufficient permissions' }
   }
 
-  if (user.role === 'editor' && parsed.data.chapterId !== undefined && parsed.data.chapterId !== existing.chapter_id) {
+  if (user.role === 'editor' && parsed.data.chapter_id !== undefined && parsed.data.chapter_id !== existing.chapter_id) {
     return { error: 'Editors cannot change chapter' }
   }
 
+  const d = parsed.data
   const { data: event, error } = await supabase
     .from('event')
     .update({
-      ...parsed.data,
-      location_name: parsed.data.locationName ?? null,
-      location_address: parsed.data.locationAddress ?? null,
-      location_city: parsed.data.locationCity ?? null,
-      location_region: parsed.data.locationRegion ?? null,
-      location_latitude: parsed.data.locationLatitude ?? null,
-      location_longitude: parsed.data.locationLongitude ?? null,
+      title: d.title,
+      description: d.description,
+      cover_image: d.coverImage,
+      start_at: d.startAt,
+      end_at: d.endAt,
+      location: d.location,
+      meeting_url: d.meetingUrl,
+      event_type: d.eventType,
+      capacity: d.capacity,
+      is_published: d.isPublished,
+      chapter_id: d.chapter_id,
+      access_model: d.accessModel,
+      application_form_url: d.applicationFormUrl,
+      location_name: d.locationName ?? null,
+      location_address: d.locationAddress ?? null,
+      location_city: d.locationCity ?? null,
+      location_region: d.locationRegion ?? null,
+      location_latitude: d.locationLatitude ?? null,
+      location_longitude: d.locationLongitude ?? null,
       updated_at: new Date().toISOString(),
     })
     .eq('id', existing.id)

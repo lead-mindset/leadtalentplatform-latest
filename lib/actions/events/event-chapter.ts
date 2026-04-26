@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 
-export async function addEventCollaborator(eventId: string, chapterId: string) {
+export async function addEventCollaborator(eventId: string, chapter_id: string) {
   try {
     // Backend safety guard - prevent invalid eventId usage
     if (!eventId || eventId === 'new') {
@@ -22,7 +22,7 @@ export async function addEventCollaborator(eventId: string, chapterId: string) {
     // Verify the caller owns this event before allowing collaborator addition
     const { data: event, error: eventError } = await supabase
       .from('event')
-      .select('id, chapterId')
+      .select('id, chapter_id')
       .eq('id', eventId)
       .maybeSingle()
 
@@ -31,7 +31,7 @@ export async function addEventCollaborator(eventId: string, chapterId: string) {
     }
 
     // Prevent owner chapter from being added as collaborator
-    if (chapterId === event.chapterId) {
+    if (chapter_id === event.chapter_id) {
       return { error: 'The owner chapter cannot be added as a collaborator' }
     }
 
@@ -40,7 +40,7 @@ export async function addEventCollaborator(eventId: string, chapterId: string) {
       .from('event_chapter')
       .select('id')
 .eq('event_id', eventId)
-      .eq('chapter_id', chapterId)
+      .eq('chapter_id', chapter_id)
 
     if (existing) {
       return { error: 'This chapter is already a collaborator' }
@@ -50,16 +50,16 @@ export async function addEventCollaborator(eventId: string, chapterId: string) {
       .from('event_chapter')
       .insert({
         event_id: eventId,
-        chapter_id: chapterId,
+        chapter_id: chapter_id,
         added_by_id: user.id,
       })
       .select(`
         id,
-        chapterId,
-        addedAt,
-        addedById,
-        chapter:Chapter!EventChapter_chapterId_fkey (id, name, university),
-        addedBy:User!EventChapter_addedById_fkey (id, name, email)
+        chapter_id,
+        added_at,
+        added_by_id,
+        chapter:chapter!event_chapter_chapter_id_fkey (id, name, university),
+        added_by:user!event_chapter_added_by_id_fkey (id, name, email)
       `)
       .single()
 
@@ -130,7 +130,7 @@ export async function getEventCollaborators(eventId: string, ownerChapterId?: st
 
     // Filter out the owner chapter from the collaborator list — display only, no DB writes
     const collaborators = (eventChapters || []).filter(
-      (collab: any) => collab.chapterId !== ownerChapterId
+      (collab: any) => collab.chapter_id !== ownerChapterId
     )
 
     return { success: true, data: collaborators }

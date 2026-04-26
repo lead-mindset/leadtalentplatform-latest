@@ -28,7 +28,7 @@ async function AdminStats() {
             <Users className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalStudents}</div>
+            <div className="text-2xl font-bold">{stats.total_students}</div>
             <p className="text-xs text-muted-foreground">Members with student role</p>
           </CardContent>
         </Card>
@@ -39,7 +39,7 @@ async function AdminStats() {
             <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.activeChapters}</div>
+            <div className="text-2xl font-bold">{stats.active_chapters}</div>
             <p className="text-xs text-muted-foreground">Chapters with members</p>
           </CardContent>
         </Card>
@@ -50,7 +50,7 @@ async function AdminStats() {
             <CalendarDays className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.eventsThisMonth}</div>
+            <div className="text-2xl font-bold">{stats.events_this_month}</div>
             <p className="text-xs text-muted-foreground">Events starting this month</p>
           </CardContent>
         </Card>
@@ -61,7 +61,7 @@ async function AdminStats() {
             <TrendingUp className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.recruiterOptInRate}%</div>
+            <div className="text-2xl font-bold">{stats.recruiter_opt_in_rate}%</div>
             <p className="text-xs text-muted-foreground">Approved and recruiter-visible</p>
           </CardContent>
         </Card>
@@ -93,10 +93,10 @@ async function AdminInsights() {
                 <div key={chapter.id} className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
                   <div>
                     <p className="text-sm font-medium">{chapter.name}</p>
-                    <p className="text-xs text-muted-foreground">{chapter.memberCount} members • {chapter.pendingApprovals} pending</p>
+                    <p className="text-xs text-muted-foreground">{chapter.member_count} members • {chapter.pending_approvals} pending</p>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {chapter.lastEventAt ? new Date(chapter.lastEventAt).toLocaleDateString() : 'No events'}
+                    {chapter.last_event_at ? new Date(chapter.last_event_at).toLocaleDateString() : 'No events'}
                   </p>
                 </div>
               ))}
@@ -144,8 +144,8 @@ async function AdminInsights() {
               {pendingRecruiterRequests.map((request) => (
                 <div key={request.id} className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
                   <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{request.recruiterEmail}</p>
-                    <p className="text-xs text-muted-foreground truncate">{request.companyName ?? 'Unknown company'}</p>
+                    <p className="text-sm font-medium truncate">{request.recruiter_email}</p>
+                    <p className="text-xs text-muted-foreground truncate">{request.company_name ?? 'Unknown company'}</p>
                   </div>
                   <Button asChild variant="outline" size="sm">
                     <Link href="/admin/invites">

@@ -19,7 +19,7 @@ import { addEventCollaborator, removeEventCollaborator, getEventCollaborators } 
 
 type Collaborator = {
   id: string
-  chapterId: string
+  chapter_id: string
   chapter: {
     id: string
     name: string
@@ -42,7 +42,7 @@ export function CollaboratorManager({
   eventId: string
   ownerChapterId: string | null
   mode: 'create' | 'edit'
-  onCollaboratorsChange?: (chapterIds: string[]) => void
+  onCollaboratorsChange?: (chapter_ids: string[]) => void
 }) {
   const [collaborators, setCollaborators] = useState<Collaborator[]>([])
   const [availableChapters, setAvailableChapters] = useState<ChapterRow[]>([])
@@ -78,7 +78,7 @@ const addedBy = Array.isArray(collab.addedBy) ? collab.addedBy[0] : collab.added
 
                 return {
                   id: collab.id,
-                  chapterId: collab.chapterId,
+                  chapter_id: collab.chapter_id,
                   chapter: {
                     id: chapter.id,
                     name: chapter.name,
@@ -135,7 +135,7 @@ const addedBy = Array.isArray(collab.addedBy) ? collab.addedBy[0] : collab.added
 
           const newCollaborator: Collaborator = {
             id: result.data.id,
-            chapterId: result.data.chapterId,
+            chapter_id: result.data.chapter_id,
             chapter: {
               id: chapter.id,
               name: chapter.name,
@@ -151,7 +151,7 @@ const addedBy = Array.isArray(collab.addedBy) ? collab.addedBy[0] : collab.added
 
           setCollaborators(prev => {
             const updated = [...prev, newCollaborator]
-            onCollaboratorsChange?.(updated.map(c => c.chapterId))
+            onCollaboratorsChange?.(updated.map(c => c.chapter_id))
             return updated
           })
         
@@ -178,12 +178,12 @@ const addedBy = Array.isArray(collab.addedBy) ? collab.addedBy[0] : collab.added
         const updatedCollaborators = collaborators.filter(c => c.id !== collaborator.id)
         setCollaborators(updatedCollaborators)
         // Find the full chapter object from all chapters to add back to available chapters
-        const fullChapter = availableChapters.find(c => c.id === collaborator.chapterId)
+        const fullChapter = availableChapters.find(c => c.id === collaborator.chapter_id)
         if (fullChapter) {
           setAvailableChapters([...availableChapters, fullChapter])
         }
         
-        onCollaboratorsChange?.(updatedCollaborators.map(c => c.chapterId))
+        onCollaboratorsChange?.(updatedCollaborators.map(c => c.chapter_id))
         
         toast.success(`${collaborator.chapter.name} removed as collaborator`)
       } catch (error) {

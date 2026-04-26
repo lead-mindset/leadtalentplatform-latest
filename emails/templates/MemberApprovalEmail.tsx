@@ -11,7 +11,7 @@ import {
 type MemberApprovalEmailProps = {
   name: string
   memberId: string
-  chapterName: string
+  chapter_name: string
   dashboardUrl: string
   locale?: 'en' | 'es'
 }
@@ -19,7 +19,7 @@ type MemberApprovalEmailProps = {
 export default function MemberApprovalEmail({
   name,
   memberId,
-  chapterName,
+  chapter_name,
   dashboardUrl,
   locale = 'es',
 }: MemberApprovalEmailProps) {
@@ -28,7 +28,7 @@ export default function MemberApprovalEmail({
       title: '¡Felicidades! Tu membresía ha sido aprobada',
       preview: 'Bienvenido oficialmente a LEAD. Tu Member ID está listo.',
       greeting: `¡Hola, ${name}!`,
-      intro: `¡Excelentes noticias! Tu solicitud de membresía para <strong>${chapterName}</strong> ha sido aprobada.`,
+      intro: `¡Excelentes noticias! Tu solicitud de membresía para <strong>${chapter_name}</strong> ha sido aprobada.`,
       memberIdTitle: 'Tu Member ID:',
       memberIdDesc: 'Este es tu identificador único como miembro de LEAD. Guárdalo para futuras referencias.',
       featuresTitle: 'Con tu membresía ahora tienes acceso a:',
@@ -47,7 +47,7 @@ export default function MemberApprovalEmail({
       title: 'Congratulations! Your Membership is Approved',
       preview: 'Welcome officially to LEAD. Your Member ID is ready.',
       greeting: `Hi, ${name}!`,
-      intro: `Great news! Your membership application for <strong>${chapterName}</strong> has been approved.`,
+      intro: `Great news! Your membership application for <strong>${chapter_name}</strong> has been approved.`,
       memberIdTitle: 'Your Member ID:',
       memberIdDesc: 'This is your unique identifier as a LEAD member. Keep it for future reference.',
       featuresTitle: 'With your membership you now have access to:',

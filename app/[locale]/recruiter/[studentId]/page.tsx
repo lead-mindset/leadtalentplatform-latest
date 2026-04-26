@@ -71,7 +71,7 @@ export default async function RecruiterStudentProfilePage({
             </div>
 
             <div className="flex items-center gap-2 text-sm">
-              <Icons.User className="h-4 w-4 text-muted-foreground" />
+              <Icons.user className="h-4 w-4 text-muted-foreground" />
               {resolvedStudent.major ?? 'Major not specified'}
             </div>
           </CardContent>

@@ -45,8 +45,8 @@ export default async function AdminUsersPage({
       {
         search,
         roles: roleFilters,
-        chapterIds: chapterFilters,
-        approvalStatuses: approvalFilters,
+        chapter_ids: chapterFilters,
+        approval_statuses: approvalFilters,
       },
       { page, pageSize, sortBy: 'created_at', sortOrder: 'desc' }
     ),

@@ -9,7 +9,7 @@ import {
 type ApplicationReceivedEmailProps = {
   name: string
   eventTitle: string
-  chapterName: string
+  chapter_name: string
   eventsUrl: string
   locale?: 'en' | 'es'
 }
@@ -17,7 +17,7 @@ type ApplicationReceivedEmailProps = {
 export default function ApplicationReceivedEmail({
   name,
   eventTitle,
-  chapterName,
+  chapter_name,
   eventsUrl,
   locale = 'es',
 }: ApplicationReceivedEmailProps) {
@@ -86,7 +86,7 @@ export default function ApplicationReceivedEmail({
             <strong style={{ color: C.primary }}>Evento:</strong> {eventTitle}
           </p>
           <p style={{ margin: 0 }}>
-            <strong style={{ color: C.primary }}>{t.chapter}</strong> {chapterName}
+            <strong style={{ color: C.primary }}>{t.chapter}</strong> {chapter_name}
           </p>
         </div>
       </div>

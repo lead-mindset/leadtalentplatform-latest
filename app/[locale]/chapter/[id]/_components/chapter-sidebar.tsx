@@ -64,16 +64,16 @@ function CalendarWidget() {
 }
 
 function StatsWidget({
-  memberCount,
+  member_count,
   pastEventsCount,
   upcomingEventsCount,
 }: {
-  memberCount: number
+  member_count: number
   pastEventsCount: number
   upcomingEventsCount: number
 }) {
   const stats = [
-    { label: 'Members', value: memberCount, color: 'text-primary' },
+    { label: 'Members', value: member_count, color: 'text-primary' },
     { label: 'Past Events', value: pastEventsCount, color: 'text-accent' },
     { label: 'Upcoming', value: upcomingEventsCount, color: 'text-[#00d4aa]' },
   ]
@@ -135,12 +135,12 @@ function LocationWidget({ chapter }: { chapter: ChapterData }) {
 
 export function ChapterSidebar({
   chapter,
-  memberCount,
+  member_count,
   pastEventsCount,
   upcomingEventsCount,
 }: {
   chapter: ChapterData
-  memberCount: number
+  member_count: number
   pastEventsCount: number
   upcomingEventsCount: number
 }) {
@@ -148,7 +148,7 @@ export function ChapterSidebar({
     <>
       <CalendarWidget />
       <StatsWidget
-        memberCount={memberCount}
+        member_count={member_count}
         pastEventsCount={pastEventsCount}
         upcomingEventsCount={upcomingEventsCount}
       />

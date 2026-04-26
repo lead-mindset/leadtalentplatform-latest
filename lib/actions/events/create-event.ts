@@ -17,7 +17,7 @@ const EventInputSchema = z
     meetingUrl: z.string().url().optional().or(z.literal('')),
     eventType: z.enum(['in_person', 'online', 'hybrid']),
     capacity: z.coerce.number().int().nonnegative().optional(),
-    chapterId: z.string().optional().nullable(),
+    chapter_id: z.string().optional().nullable(),
     isPublished: z.coerce.boolean().optional(),
     accessModel: z.enum(['open', 'application']).default('open'),
     applicationFormUrl: z.string().url().nullable().optional(),
@@ -80,12 +80,12 @@ export async function createEvent(input: CreateEventInput): Promise<CreateEventR
     let redirectPath = '/student';
 
     if (user.role === 'admin') {
-      targetChapterId = data.chapterId ?? null;
+      targetChapterId = data.chapter_id ?? null;
       redirectPath = '/admin/events';
     } else if (user.role === 'editor') {
-      const { chapterId } = await requireChapterMember();
-      if (!chapterId) return { error: 'No chapter assigned' };
-      targetChapterId = chapterId;
+      const { chapter_id } = await requireChapterMember();
+      if (!chapter_id) return { error: 'No chapter assigned' };
+      targetChapterId = chapter_id;
       redirectPath = '/chapter/events';
     } else {
       return { error: 'Insufficient permissions' };
@@ -93,7 +93,7 @@ export async function createEvent(input: CreateEventInput): Promise<CreateEventR
 
     const event = await EventService.createEvent(supabase, {
       ...data,
-      chapterId: targetChapterId,
+      chapter_id: targetChapterId,
       createdById: user.id,
     });
 

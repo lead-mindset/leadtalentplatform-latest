@@ -52,7 +52,7 @@ function EventRegistrationCard({
   showQr,
   qrDataUrl,
 }: EventRegistrationCardProps) {
-  const event = registration.Event
+  const event = registration.event
   const isRejected = registration.status === 'rejected'
   const isPending = registration.status === 'pending_review'
 
@@ -151,8 +151,8 @@ export default async function StudentEventsPage({
   const upcomingRegistrations = registrations.filter(
     (registration) =>
       (registration.status === 'registered' || registration.status === 'attended') &&
-      registration.Event?.start_at &&
-      new Date(registration.Event.start_at) > new Date()
+      registration.event?.start_at &&
+      new Date(registration.event.start_at) > new Date()
   )
 
   const pendingRegistrations = registrations.filter(
@@ -162,8 +162,8 @@ export default async function StudentEventsPage({
   const pastRegistrations = registrations.filter(
     (registration) =>
       (registration.status === 'attended' || registration.status === 'rejected') &&
-      registration.Event?.start_at &&
-      new Date(registration.Event.start_at) < new Date()
+      registration.event?.start_at &&
+      new Date(registration.event.start_at) < new Date()
   )
 
   const cancelledRegistrations = registrations.filter(
@@ -172,8 +172,8 @@ export default async function StudentEventsPage({
   
   const recentActivity = [...registrations]
     .sort((a, b) => {
-      const dateA = (a as any).created_at ? new Date((a as any).created_at) : new Date(a.Event?.start_at || 0)
-      const dateB = (b as any).created_at ? new Date((b as any).created_at) : new Date(b.Event?.start_at || 0)
+      const dateA = (a as any).created_at ? new Date((a as any).created_at) : new Date(a.event?.start_at || 0)
+      const dateB = (b as any).created_at ? new Date((b as any).created_at) : new Date(b.event?.start_at || 0)
       return dateB.getTime() - dateA.getTime()
     })
     .slice(0, 5)
@@ -227,19 +227,19 @@ export default async function StudentEventsPage({
                   </span>
                   <div>
                     <h2 className="text-3xl sm:text-4xl font-bold font-headline mb-3 text-foreground group-hover:text-primary transition-colors">
-                      {nextEventRegistration.Event?.title}
+                      {nextEventRegistration.event?.title}
                     </h2>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 text-muted-foreground text-sm font-medium">
-                      {nextEventRegistration.Event?.start_at && (
+                      {nextEventRegistration.event?.start_at && (
                         <span className="flex items-center gap-2">
                           <Icons.Calendar className="w-4 h-4 text-primary" />
-                          {formatDateTime(nextEventRegistration.Event.start_at)}
+                          {formatDateTime(nextEventRegistration.event.start_at)}
                         </span>
                       )}
-                      {nextEventRegistration.Event?.location && (
+                      {nextEventRegistration.event?.location && (
                         <span className="flex items-center gap-2">
                           <Icons.MapPin className="w-4 h-4 text-primary" />
-                          {nextEventRegistration.Event.location}
+                          {nextEventRegistration.event.location}
                         </span>
                       )}
                     </div>
@@ -251,7 +251,7 @@ export default async function StudentEventsPage({
                     {!nextEventRegistration.checked_in_at && (
                       <CancelRegistrationDialog
                         registrationId={nextEventRegistration.id}
-                        eventTitle={nextEventRegistration.Event?.title ?? 'this event'}
+                        eventTitle={nextEventRegistration.event?.title ?? 'this event'}
                         triggerClassName="rounded-full"
                       />
                     )}
@@ -490,7 +490,7 @@ export default async function StudentEventsPage({
                          activity.status === 'cancelled' ? 'Cancelled ' :
                          activity.status === 'rejected' ? 'Not selected for ' :
                          activity.status === 'attended' ? 'Attended ' : 'Updated '} 
-                        <span className="font-semibold">{activity.Event?.title}</span>
+                        <span className="font-semibold">{activity.event?.title}</span>
                       </p>
                       <p className="text-[11px] text-muted-foreground mt-1.5 font-light uppercase tracking-wider">
                         {(activity as any).created_at ? formatRelativeTime((activity as any).created_at) : 'Recently'}

@@ -159,7 +159,7 @@ export async function createRecruiterInvite(formData: {
       company_id: formData.companyId,
       granted_by_id: user.id,
       granted_at: new Date().toISOString(),
-      invite_token,
+      invite_token: inviteToken,
       invite_expires_at: expirationDate,
       is_active: false,
     })
@@ -196,7 +196,7 @@ export async function resendInvite(inviteId: string): Promise<ActionResult> {
 
   const { data: invite } = await supabase
     .from('recruiter_access')
-    .select('id, recruiter_email, company_id, revoked_at, accepted_at, Company(name)')
+    .select('id, recruiter_email, company_id, revoked_at, accepted_at, company(name)')
     .eq('id', inviteId)
     .single<RecruiterInviteWithCompany>()
   if (!invite) return { success: false, error: 'Invite not found' }
@@ -218,7 +218,7 @@ export async function resendInvite(inviteId: string): Promise<ActionResult> {
 
   // Resend email
   try {
-    const company = Array.isArray(invite.Company) ? invite.Company[0] : invite.Company
+    const company = Array.isArray(invite.company) ? invite.company[0] : invite.company
     const companyName = company?.name
     await sendInviteEmail(invite.recruiter_email, newToken, companyName)
   } catch (error) {
@@ -246,7 +246,7 @@ export async function revokeInvite(inviteId: string): Promise<ActionResult> {
     .eq('id', inviteId)
     .single<Pick<RecruiterAccessRow, 'id' | 'recruiter_email' | 'company_id' | 'revoked_at'>>()
   if (!invite) return { success: false, error: 'Invite not found' }
-  if (invite.revokedAt) return { success: false, error: 'Invite already revoked' }
+  if (invite.revoked_at) return { success: false, error: 'Invite already revoked' }
 
   const { error } = await supabase
     .from('recruiter_access')
@@ -262,8 +262,8 @@ export async function revokeInvite(inviteId: string): Promise<ActionResult> {
   await auditLog('REVOKE_INVITE', {
     adminId: user.id,
     inviteId,
-    recruiterEmail: invite.recruiterEmail,
-    companyId: invite.companyId,
+    recruiterEmail: invite.recruiter_email,
+    companyId: invite.company_id,
   })
 
   revalidatePath('/admin/invites')

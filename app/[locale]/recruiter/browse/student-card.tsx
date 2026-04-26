@@ -56,7 +56,7 @@ export function StudentCard({ student, isSaved, profileHref, onSavedChange }: St
         </p>
         <p>
           <span className="text-muted-foreground">Graduation: </span>
-          {student.graduationYear ? `Class of ${student.graduationYear}` : 'Not specified'}
+          {student.graduation_year ? `Class of ${student.graduation_year}` : 'Not specified'}
         </p>
         <div className="flex flex-wrap gap-1">
           {student.skills.slice(0, 3).map(skill => (

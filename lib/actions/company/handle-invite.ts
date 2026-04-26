@@ -20,7 +20,7 @@ export async function acceptInvite(formData: {
   const { data: existingUser } = await serviceSupabase
     .from('user')
     .select('id')
-    .eq('email', invite.recruiterEmail)
+    .eq('email', invite.recruiter_email)
     .maybeSingle()
 
   let userId: string
@@ -37,7 +37,7 @@ export async function acceptInvite(formData: {
       .eq('id', userId)
   } else {
     const { data: authData, error: authError } = await serviceSupabase.auth.admin.createUser({
-      email: invite.recruiterEmail,
+      email: invite.recruiter_email,
       email_confirm: true,
     })
 
@@ -52,7 +52,7 @@ export async function acceptInvite(formData: {
       .from('user')
       .insert({
         id: userId,
-        email: invite.recruiterEmail,
+        email: invite.recruiter_email,
         role: 'recruiter',
         name: formData.name,
       })
@@ -81,7 +81,7 @@ export async function acceptInvite(formData: {
   // Send OTP magic link for login
   const baseUrl = (process.env.NEXT_PUBLIC_FRONTEND_URL || process.env.FRONTEND_URL || 'http://localhost:3000').trim()
   const { error: otpError } = await serviceSupabase.auth.signInWithOtp({
-    email: invite.recruiterEmail,
+    email: invite.recruiter_email,
     options: {
       emailRedirectTo: `${baseUrl}/${formData.locale}/auth/confirm?next=/company/dashboard`,
     },
@@ -92,14 +92,14 @@ export async function acceptInvite(formData: {
     return {
       success: true,
       warning: 'Account created! Please use the login page to access your dashboard.',
-      recruiterEmail: invite.recruiterEmail,
+      recruiterEmail: invite.recruiter_email,
     }
   }
 
   return {
     success: true,
     message: 'Check your email for a login link',
-    recruiterEmail: invite.recruiterEmail,
+    recruiterEmail: invite.recruiter_email,
   }
 }
 
@@ -110,14 +110,14 @@ export async function validateInviteToken(inviteToken: string) {
   }
   const { invite } = inviteResult
 
-  const company = invite.companyId ? await getInviteCompany(invite.companyId) : null
+  const company = invite.company_id ? await getInviteCompany(invite.company_id) : null
 
   return {
     success: true,
     data: {
-      companyId: company?.id ?? invite.companyId,
+      companyId: company?.id ?? invite.company_id,
       companyName: company?.name ?? null,
-      recruiterEmail: invite.recruiterEmail,
+      recruiterEmail: invite.recruiter_email,
       inviteId: invite.id,
     },
   }

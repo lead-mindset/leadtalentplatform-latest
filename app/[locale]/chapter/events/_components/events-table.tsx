@@ -63,9 +63,9 @@ export function EventsTable({ events }: { events: EventWithDetails[] }) {
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  {event.isOwnedByChapter !== undefined && (
-                    <div className="flex items-center gap-1" title={event.isOwnedByChapter ? "Your chapter owns this event" : "Your chapter is collaborating on this event"}>
-                      {event.isOwnedByChapter ? (
+                  {event.is_owned_by_chapter !== undefined && (
+                    <div className="flex items-center gap-1" title={event.is_owned_by_chapter ? "Your chapter owns this event" : "Your chapter is collaborating on this event"}>
+                      {event.is_owned_by_chapter ? (
                         <div title="Your chapter owns this event">
                           <Icons.Crown className="h-4 w-4 text-primary" />
                         </div>
@@ -90,7 +90,7 @@ export function EventsTable({ events }: { events: EventWithDetails[] }) {
                     ? `${registrations} registrations`
                     : `${registrations}/${event.capacity} registrations`}
                 </p>
-                {event.isOwnedByChapter !== undefined && !event.isOwnedByChapter && (
+                {event.is_owned_by_chapter !== undefined && !event.is_owned_by_chapter && (
                   <Badge variant="outline" className="text-xs">Collaborating</Badge>
                 )}
               </div>
@@ -113,7 +113,7 @@ export function EventsTable({ events }: { events: EventWithDetails[] }) {
                 >
                   <Link href={`/chapter/events/${event.id}/applications`}>
                     <Icons.Users className="w-4 h-4 mr-1" />
-                    Applications ({event._count?.pendingApplications || 0})
+                    Applications ({event._count?.pending_applications || 0})
                   </Link>
                 </Button>
               )}

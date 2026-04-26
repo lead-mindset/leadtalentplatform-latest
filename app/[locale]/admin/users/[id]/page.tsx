@@ -49,7 +49,7 @@ export default async function UserDetailPage({
     currentUserData &&
     (currentUserData.role === 'admin' || currentUserData.role === 'editor')
 
-  const profile = resolvedUser.StudentProfile
+  const profile = resolvedUser.student_profile
   // approvalStatus is the single source of truth
   const approval_status = profile?.approval_status ?? 'pending'
 
@@ -216,12 +216,12 @@ export default async function UserDetailPage({
                       <div className="text-sm text-muted-foreground">Graduation Year</div>
                       <div className="font-medium">{profile.graduation_year}</div>
                     </div>
-                    {profile.Chapter && (
+                    {profile.chapter && (
                       <div className="sm:col-span-2 space-y-1">
                         <div className="text-sm text-muted-foreground">Chapter</div>
-                        <div className="font-medium">{profile.Chapter.name}</div>
+                        <div className="font-medium">{profile.chapter.name}</div>
                         <div className="text-sm text-muted-foreground">
-                          {profile.Chapter.university}
+                          {profile.chapter.university}
                         </div>
                       </div>
                     )}

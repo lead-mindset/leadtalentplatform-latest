@@ -5,7 +5,7 @@ import { requireUser } from '@/lib/auth'
 import { requireChapterMember } from '@/lib/auth'
 import type { EventRow } from '@/lib/types'
 
-const EVENT_LOOKUP_SELECT = 'id, chapterId'
+const EVENT_LOOKUP_SELECT = 'id, chapter_id'
 
 export type DeleteEventResponse =
   | { success: true }
@@ -18,14 +18,14 @@ export async function deleteEvent(eventId: string): Promise<DeleteEventResponse>
     .from('event')
     .select(EVENT_LOOKUP_SELECT)
     .eq('id', eventId)
-    .maybeSingle<Pick<EventRow, 'id' | 'chapterId'>>()
+    .maybeSingle<Pick<EventRow, 'id' | 'chapter_id'>>()
 
   if (!existing) return { error: 'Event not found' }
 
   if (user.role === 'editor') {
-    const { chapterId } = await requireChapterMember()
-    if (!chapterId) return { error: 'No chapter assigned' }
-    if (existing.chapterId !== chapterId) return { error: 'Insufficient permissions' }
+    const { chapter_id } = await requireChapterMember()
+    if (!chapter_id) return { error: 'No chapter assigned' }
+    if (existing.chapter_id !== chapter_id) return { error: 'Insufficient permissions' }
   } else if (user.role !== 'admin' && user.role !== 'editor') {
     return { error: 'Insufficient permissions' }
   }

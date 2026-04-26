@@ -33,23 +33,24 @@ export async function POST(
     .from('event_registration')
     .update({
       status: 'rejected',
-      qrToken: undefined,
     })
     .eq('id', applicationId)
-    .eq('eventId', eventId)
+    .eq('event_id', eventId)
 
   if (error) {
     console.error('Rejection error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  if (application && application.User && application.Event) {
+  if (application && application.user && application.event) {
+    const user = application.user as unknown as { email: string; name: string | null }
+    const event = application.event as unknown as { title: string; Chapter?: { name: string } | null }
     import('@/lib/emails/send-email').then(({ sendApplicationRejectedEmail }) => {
       sendApplicationRejectedEmail(
-        application.User.email,
-        application.User.name,
-        application.Event.title,
-        application.Event.Chapter?.name || 'LEAD Chapter'
+        user.email,
+        user.name ?? 'Student',
+        event.title,
+        event.chapter?.name || 'LEAD Chapter'
       ).catch(err => console.error('Email error:', err))
     })
   }

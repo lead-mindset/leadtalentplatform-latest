@@ -47,7 +47,7 @@ export default function Onboarding() {
       full_name: '',
       phone: '',
       career: '',
-      graduationYear: 0,
+      graduation_year: 0,
       skills: [],
       gender: undefined,
       lead_chapter: '',
@@ -63,7 +63,7 @@ export default function Onboarding() {
 
   const stepFields: Record<number, (keyof OnboardingValues)[]> = {
     1: ['full_name', 'phone', 'gender', 'lead_chapter'],
-    2: ['career', 'graduationYear', 'skills'],
+    2: ['career', 'graduation_year', 'skills'],
     3: ['linkedin_url', 'resume_pdf'],
     4: ['termsAccepted'],
   }
@@ -236,10 +236,10 @@ export default function Onboarding() {
 
             <FormInput
               label={t('expectedGradYear')}
-              name="graduationYear"
+              name="graduation_year"
               type="number"
               validation={{ valueAsNumber: true }}
-              error={errors.graduationYear?.message}
+              error={errors.graduation_year?.message}
             />
 
             <Controller

@@ -34,8 +34,8 @@ export default async function RecruiterBrowsePage({ searchParams }: RecruiterBro
     getTalentPool(
       {
         query: params.q,
-        chapterId: params.chapter,
-        graduationYear: params.year ? Number(params.year) : undefined,
+        chapter_id: params.chapter,
+        graduation_year: params.year ? Number(params.year) : undefined,
         skills: selectedSkills,
       },
       { page: currentPage, pageSize: 12 }

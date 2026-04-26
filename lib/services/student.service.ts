@@ -22,12 +22,12 @@ export type UpdateProfileParams = {
   phone: string;
   career: string;
   gender?: string;
-  graduationYear: number;
+  graduation_year: number;
   skills: string[];
   linkedinUrl: string;
   consentRecruiterVisibility: boolean;
   emailNotificationsEnabled: boolean;
-  chapterId: string;
+  chapter_id: string;
   resumePdf?: File;
 };
 
@@ -66,14 +66,14 @@ export const StudentService = {
         user_id: params.userId,
         major: params.career,
         gender: params.gender,
-        graduation_year: params.graduationYear,
+        graduation_year: params.graduation_year,
         skills: params.skills,
         linkedin_url: params.linkedinUrl,
         consent_recruiter_visibility: params.consentRecruiterVisibility,
         consent_date: params.consentRecruiterVisibility ? now : null,
         email_notifications_enabled: params.emailNotificationsEnabled,
         updated_at: now,
-        chapter_id: params.chapterId,
+        chapter_id: params.chapter_id,
       },
       { onConflict: 'user_id' }
     );

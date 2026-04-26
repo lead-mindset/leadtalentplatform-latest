@@ -14,10 +14,10 @@ interface ChapterData {
 
 export function ChapterHero({
   chapter,
-  memberCount,
+  member_count,
 }: {
   chapter: ChapterData
-  memberCount: number
+  member_count: number
 }) {
   const initials = chapter.name
     .split(' ')
@@ -78,7 +78,7 @@ export function ChapterHero({
                 </a>
               )}
               <span className="text-xs text-muted-foreground/60">
-                {memberCount} member{memberCount !== 1 ? 's' : ''}
+                {member_count} member{member_count !== 1 ? 's' : ''}
               </span>
             </div>
           </div>

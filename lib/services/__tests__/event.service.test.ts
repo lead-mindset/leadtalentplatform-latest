@@ -23,7 +23,7 @@ describe('EventService', () => {
       endAt: new Date().toISOString(),
       eventType: 'in_person',
       accessModel: 'open',
-      chapterId: 'chapter-123',
+      chapter_id: 'chapter-123',
       createdById: 'user-123',
     });
 
@@ -50,7 +50,7 @@ describe('EventService', () => {
         endAt: new Date().toISOString(),
         eventType: 'in_person',
         accessModel: 'open',
-        chapterId: 'chapter-123',
+        chapter_id: 'chapter-123',
         createdById: 'user-123',
       })
     ).rejects.toThrow('Database error');

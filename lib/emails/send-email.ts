@@ -44,7 +44,7 @@ async function sendEmail({ to, subject, html, replyTo }: SendEmailParams): Promi
 export async function sendWelcomeEmail(
   to: string, 
   name: string, 
-  chapterName: string,
+  chapter_name: string,
   locale: 'en' | 'es' = 'es'
 ) {
   const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL}/student` 
@@ -70,7 +70,7 @@ export async function sendMemberApprovalEmail(
   to: string, 
   name: string, 
   memberId: string, 
-  chapterName: string,
+  chapter_name: string,
   locale: 'en' | 'es' = 'es'
 ) {
   const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL}/student` 
@@ -79,7 +79,7 @@ export async function sendMemberApprovalEmail(
     MemberApprovalEmail({ 
       name, 
       memberId, 
-      chapterName, 
+      chapter_name, 
       dashboardUrl,
       locale 
     })
@@ -97,7 +97,7 @@ export async function sendApplicationReceivedEmail(
   to: string, 
   name: string, 
   eventTitle: string, 
-  chapterName: string,
+  chapter_name: string,
   locale: 'en' | 'es' = 'es'
 ) {
   const eventsUrl = `${process.env.NEXT_PUBLIC_APP_URL}/student/events` 
@@ -106,7 +106,7 @@ export async function sendApplicationReceivedEmail(
     ApplicationReceivedEmail({ 
       name, 
       eventTitle, 
-      chapterName, 
+      chapter_name, 
       eventsUrl,
       locale 
     })
@@ -160,7 +160,7 @@ export async function sendApplicationRejectedEmail(
   to: string,
   name: string,
   eventTitle: string,
-  chapterName: string,
+  chapter_name: string,
   locale: 'en' | 'es' = 'es'
 ) {
   const eventsUrl = `${process.env.NEXT_PUBLIC_APP_URL}/student/events` 
@@ -169,7 +169,7 @@ export async function sendApplicationRejectedEmail(
     ApplicationRejectedEmail({ 
       name, 
       eventTitle, 
-      chapterName, 
+      chapter_name, 
       eventsUrl,
       locale 
     })

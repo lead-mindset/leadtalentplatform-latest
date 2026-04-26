@@ -32,29 +32,29 @@ const EVENT_SELECT = `
   created_by_id,
   created_at,
   updated_at,
-  ownerChapter:Chapter!Event_chapter_id_fkey ( id, name, university ),
-  collaborators:EventChapter (
-    chapter:Chapter!EventChapter_chapter_id_fkey ( id, name, university, city, region )
+  owner_chapter:chapter!event_chapter_id_fkey ( id, name, university ),
+  collaborators:event_chapter (
+    chapter:chapter!event_chapter_chapter_id_fkey ( id, name, university, city, region )
   ),
-  CreatedBy:User!Event_created_by_id_fkey ( id, name, email ),
-  EventRegistration:EventRegistration!EventRegistration_event_id_fkey ( id, status )
+  created_by:user!event_created_by_id_fkey ( id, name, email ),
+  event_registration:event_registration!event_registration_event_id_fkey ( id, status )
 `
 
 type RegistrationEventRow = EventRegistrationRow & {
-  Event: EventRow | EventRow[] | null
+  event: EventRow | EventRow[] | null
 }
 
 type RegistrationUserRow = EventRegistrationRow & {
-  User:
+  user:
     | (Pick<UserRow, 'id' | 'name' | 'email' | 'phone'> & {
-        StudentProfile:
+        student_profile:
           | Pick<StudentProfileRow, 'major' | 'graduation_year' | 'linkedin_url'>
           | Pick<StudentProfileRow, 'major' | 'graduation_year' | 'linkedin_url'>[]
           | null
       })
     | Array<
         Pick<UserRow, 'id' | 'name' | 'email' | 'phone'> & {
-          StudentProfile:
+          student_profile:
             | Pick<StudentProfileRow, 'major' | 'graduation_year' | 'linkedin_url'>
             | Pick<StudentProfileRow, 'major' | 'graduation_year' | 'linkedin_url'>[]
             | null
@@ -64,17 +64,17 @@ type RegistrationUserRow = EventRegistrationRow & {
 }
 
 type RegistrationWithEventRow = EventRegistrationRow & {
-  Event: EventRow | EventRow[] | null
-  User:
+  event: EventRow | EventRow[] | null
+  user:
     | (Pick<UserRow, 'id' | 'name' | 'email' | 'phone'> & {
-        StudentProfile:
+        student_profile:
           | Pick<StudentProfileRow, 'major' | 'graduation_year' | 'linkedin_url'>
           | Pick<StudentProfileRow, 'major' | 'graduation_year' | 'linkedin_url'>[]
           | null
       })
     | Array<
         Pick<UserRow, 'id' | 'name' | 'email' | 'phone'> & {
-          StudentProfile:
+          student_profile:
             | Pick<StudentProfileRow, 'major' | 'graduation_year' | 'linkedin_url'>
             | Pick<StudentProfileRow, 'major' | 'graduation_year' | 'linkedin_url'>[]
             | null
@@ -86,8 +86,8 @@ type RegistrationWithEventRow = EventRegistrationRow & {
 function mapEvent(raw: any, registeredCount = 0): EventWithDetails | null {
   if (!raw) return null
 
-  const ownerChapter = raw.ownerChapter ?? null
-  const createdBy = raw.CreatedBy ?? null
+  const owner_chapter = raw.owner_chapter ?? null
+  const createdBy = raw.created_by ?? null
 
   const collaborators = (raw.collaborators ?? [])
     .map((c: any) => {
@@ -98,11 +98,11 @@ function mapEvent(raw: any, registeredCount = 0): EventWithDetails | null {
         chapter_id: c.chapter_id,
         added_at: c.added_at,
         added_by_id: c.added_by_id,
-        Chapter: chapter,
+        chapter: chapter,
         name: chapter?.name ?? 'Unknown Chapter',
       }
     })
-    .filter((c: any) => c.Chapter)
+    .filter((c: any) => c.chapter)
 
   return {
     id: raw.id,
@@ -122,11 +122,11 @@ function mapEvent(raw: any, registeredCount = 0): EventWithDetails | null {
     created_by_id: raw.created_by_id,
     created_at: raw.created_at,
     updated_at: raw.updated_at,
-    Chapter: ownerChapter,
-    ownerChapter: ownerChapter,
-    EventChapter: collaborators,
+    chapter: owner_chapter,
+    owner_chapter: owner_chapter,
+    event_chapter: collaborators,
     collaborators,
-    CreatedBy: createdBy,
+    created_by: createdBy,
     _count: {
       registrations: registeredCount,
       chapters: collaborators.length,
@@ -218,11 +218,11 @@ export async function getPublishedEvents(): Promise<EventWithDetails[]> {
         created_by_id: event.created_by_id,
         created_at: event.created_at,
         updated_at: event.updated_at,
-        Chapter: chapter,
-        ownerChapter: chapter,
-        EventChapter: [],
+        chapter: chapter,
+        owner_chapter: chapter,
+        event_chapter: [],
         collaborators: [],
-        CreatedBy: null,
+        created_by: null,
         _count: {
           registrations: countsByEventId.get(event.id) ?? 0,
           chapters: 0,
@@ -311,11 +311,11 @@ export async function getEventById(id: string): Promise<EventWithDetails | null>
     created_by_id: data.created_by_id,
     created_at: data.created_at,
     updated_at: data.updated_at,
-    Chapter: chapter,
-    ownerChapter: chapter,
-    EventChapter: [],
+    chapter: chapter,
+    owner_chapter: chapter,
+    event_chapter: [],
     collaborators: [],
-    CreatedBy: null,
+    created_by: null,
     _count: {
       registrations: count ?? 0,
       chapters: 0,
@@ -325,7 +325,7 @@ export async function getEventById(id: string): Promise<EventWithDetails | null>
   return event
 }
 
-export async function getMyRegistrations(): Promise<(EventRegistrationRow & { Event: EventRow | null })[]> {
+export async function getMyRegistrations(): Promise<(EventRegistrationRow & { event: EventRow | null })[]> {
   const { supabase, user } = await requireUser()
 
   const { data, error } = await supabase
@@ -389,21 +389,21 @@ export async function getMyRegistrations(): Promise<(EventRegistrationRow & { Ev
       qr_token: row.qr_token,
       checked_in_at: row.checked_in_at,
       checked_in_by_id: row.checked_in_by_id,
-      Event: event
+      event: event
     }
   })
 }
 
 export async function getEditorChapterId(): Promise<string | null> {
-  const { chapterId } = await requireChapterMember()
-  return chapterId
+  const { chapter_id } = await requireChapterMember()
+  return chapter_id
 }
 
 export async function getChapterEvents(): Promise<EventWithDetails[]> {
   const { supabase } = await requireUser()
-  const { chapterId } = await requireChapterMember()
+  const { chapter_id } = await requireChapterMember()
 
-  if (!chapterId) {
+  if (!chapter_id) {
     console.error('[getChapterEvents] No chapter assigned')
     return []
   }
@@ -435,7 +435,7 @@ export async function getChapterEvents(): Promise<EventWithDetails[]> {
         chapter_city,
         chapter_region
       `)
-      .eq('chapter_id', chapterId)
+      .eq('chapter_id', chapter_id)
       .order('start_at', { ascending: false })
 
     if (ownedError) {
@@ -445,10 +445,10 @@ export async function getChapterEvents(): Promise<EventWithDetails[]> {
     const { data: eventChapterRecords, error: ecError } = await (supabase as any)
       .from('event_chapter')
       .select('event_id')
-      .eq('chapter_id', chapterId)
+      .eq('chapter_id', chapter_id)
 
     if (ecError) {
-      console.error('[getChapterEvents] EventChapter lookup error:', ecError)
+      console.error('[getChapterEvents] event_chapter lookup error:', ecError)
     }
 
     let collaboratedEvents: any[] = []
@@ -521,11 +521,11 @@ export async function getChapterEvents(): Promise<EventWithDetails[]> {
         created_by_id: event.created_by_id,
         created_at: event.created_at,
         updated_at: event.updated_at,
-        Chapter: chapter,
-        ownerChapter: chapter,
-        EventChapter: [],
+        chapter: chapter,
+        owner_chapter: chapter,
+        event_chapter: [],
         collaborators: [],
-        CreatedBy: null,
+        created_by: null,
         _count: {
           registrations: 0,
           chapters: 0,
@@ -542,9 +542,9 @@ export async function getChapterEvents(): Promise<EventWithDetails[]> {
     return uniqueEvents.map(transformEventData)
       .map((event) => ({
         ...event,
-        isOwnedByChapter: event.chapter_id === chapterId,
+        is_owned_by_chapter: event.chapter_id === chapter_id,
       }))
-      .filter((e): e is EventWithDetails & { isOwnedByChapter: boolean } => e !== null)
+      .filter((e): e is EventWithDetails & { is_owned_by_chapter: boolean } => e !== null)
 
   } catch (error) {
     console.error('[getChapterEvents] Unexpected error:', error)
@@ -572,8 +572,8 @@ export async function getAllEventsAdmin(): Promise<EventWithDetails[]> {
 
 function mapRegistration(raw: RegistrationUserRow | null): RegistrationWithUser | null {
   if (!raw) return null
-  const u = Array.isArray(raw.User) ? raw.User[0] : raw.User
-  const profile = Array.isArray(u?.StudentProfile) ? u.StudentProfile[0] : u?.StudentProfile
+  const u = Array.isArray(raw.user) ? raw.user[0] : raw.user
+  const profile = Array.isArray(u?.student_profile) ? u.student_profile[0] : u?.student_profile
   return {
     id: raw.id,
     event_id: raw.event_id,
@@ -583,8 +583,8 @@ function mapRegistration(raw: RegistrationUserRow | null): RegistrationWithUser 
     qr_token: raw.qr_token,
     checked_in_at: raw.checked_in_at ?? null,
     checked_in_by_id: raw.checked_in_by_id ?? null,
-    User: u ?? null,
-    StudentProfile: profile ?? null,
+    user: u ?? null,
+    student_profile: profile ?? null,
   }
 }
 
@@ -604,12 +604,12 @@ export async function getEventRegistrations(eventId: string): Promise<Registrati
       qr_token,
       checked_in_at,
       checked_in_by_id,
-      User:User!EventRegistration_user_id_fkey (
+      user:user!event_registration_user_id_fkey (
         id,
         name,
         email,
         phone,
-        StudentProfile!inner ( major, graduation_year, linkedin_url )
+        student_profile!user_id!inner ( major, graduation_year, linkedin_url )
       )
     `)
     .eq('event_id', eventId)

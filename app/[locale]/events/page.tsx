@@ -127,9 +127,9 @@ async function EventsContent() {
                             {formatTime(event.start_at)}
                           </span>
                           <span className="text-muted-foreground hidden sm:inline">•</span>
-                          {event.Chapter?.name && (
+                          {event.chapter?.name && (
                             <span className="text-primary text-[10px] font-black px-2.5 py-1 bg-primary/10 rounded uppercase tracking-tighter truncate max-w-[150px]">
-                              {event.Chapter.name}
+                              {event.chapter.name}
                             </span>
                           )}
                         </div>

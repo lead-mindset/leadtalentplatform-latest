@@ -38,7 +38,7 @@ export function EventApplicationsClient({
   const applications = useMemo(
     () =>
       initialApplications.filter(
-        (application) => application.User && application.StudentProfile
+        (application) => application.user && application.student_profile
       ),
     [initialApplications]
   )
@@ -110,7 +110,7 @@ export function EventApplicationsClient({
         <h1 className="text-3xl font-bold">{event.title}</h1>
         <div className="mt-2 flex items-center gap-3">
           <Badge variant="outline" className="text-sm">
-            {event.accessModel === 'application' ? 'Application Required' : 'Open Registration'}
+            {event.access_model === 'application' ? 'Application Required' : 'Open Registration'}
           </Badge>
           <span className="text-sm text-muted-foreground">
             Capacity: {registeredCount} / {capacity ?? 'Unlimited'} registered
@@ -190,13 +190,13 @@ export function EventApplicationsClient({
                   registeredAt: application.registered_at,
                   status: application.status as 'pending_review' | 'registered' | 'rejected',
                   User: {
-                    name: application.User?.name ?? 'Unknown attendee',
-                    email: application.User?.email ?? '',
+                    name: application.user?.name ?? 'Unknown attendee',
+                    email: application.user?.email ?? '',
                   },
                   StudentProfile: {
-                    major: application.StudentProfile?.major ?? 'Unknown major',
-                    graduationYear: application.StudentProfile?.graduation_year ?? 0,
-                    linkedinUrl: application.StudentProfile?.linkedin_url ?? null,
+                    major: application.student_profile?.major ?? 'Unknown major',
+                    graduation_year: application.student_profile?.graduation_year ?? 0,
+                    linkedinUrl: application.student_profile?.linkedin_url ?? null,
                   },
                 }}
                 isSelected={selectedApplications.has(application.id)}
@@ -232,13 +232,13 @@ export function EventApplicationsClient({
                   registeredAt: application.registered_at,
                   status: application.status as 'pending_review' | 'registered' | 'rejected',
                   User: {
-                    name: application.User?.name ?? 'Unknown attendee',
-                    email: application.User?.email ?? '',
+                    name: application.user?.name ?? 'Unknown attendee',
+                    email: application.user?.email ?? '',
                   },
                   StudentProfile: {
-                    major: application.StudentProfile?.major ?? 'Unknown major',
-                    graduationYear: application.StudentProfile?.graduation_year ?? 0,
-                    linkedinUrl: application.StudentProfile?.linkedin_url ?? null,
+                    major: application.student_profile?.major ?? 'Unknown major',
+                    graduation_year: application.student_profile?.graduation_year ?? 0,
+                    linkedinUrl: application.student_profile?.linkedin_url ?? null,
                   },
                 }}
                 onApprove={handleApprove}
@@ -266,13 +266,13 @@ export function EventApplicationsClient({
                   registeredAt: application.registered_at,
                   status: application.status as 'pending_review' | 'registered' | 'rejected',
                   User: {
-                    name: application.User?.name ?? 'Unknown attendee',
-                    email: application.User?.email ?? '',
+                    name: application.user?.name ?? 'Unknown attendee',
+                    email: application.user?.email ?? '',
                   },
                   StudentProfile: {
-                    major: application.StudentProfile?.major ?? 'Unknown major',
-                    graduationYear: application.StudentProfile?.graduation_year ?? 0,
-                    linkedinUrl: application.StudentProfile?.linkedin_url ?? null,
+                    major: application.student_profile?.major ?? 'Unknown major',
+                    graduation_year: application.student_profile?.graduation_year ?? 0,
+                    linkedinUrl: application.student_profile?.linkedin_url ?? null,
                   },
                 }}
                 onApprove={handleApprove}

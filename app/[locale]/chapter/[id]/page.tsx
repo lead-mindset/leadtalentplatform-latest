@@ -83,7 +83,7 @@ export default async function ChapterDetailPage({ params }: ChapterDetailPagePro
     .limit(50)
 
   // ── Fetch member count ──
-  const { count: memberCount } = await supabase
+  const { count: member_count } = await supabase
     .from('student_profile')
     .select('*', { count: 'exact', head: true })
     .eq('chapter_id', chapter.id)
@@ -106,7 +106,7 @@ export default async function ChapterDetailPage({ params }: ChapterDetailPagePro
         chapter={JSON.parse(JSON.stringify(chapter))}
         events={JSON.parse(JSON.stringify(events || []))}
         members={JSON.parse(JSON.stringify(members || []))}
-        memberCount={memberCount ?? 0}
+        member_count={member_count ?? 0}
         pastEventsCount={pastEventsCount ?? 0}
       />
     </>

@@ -7,8 +7,8 @@ import type { ChapterRow, StudentProfileRow, UserRow } from '@/lib/types'
 
 export type TalentPoolFilters = {
   query?: string
-  graduationYear?: number
-  chapterId?: string
+  graduation_year?: number
+  chapter_id?: string
   skills?: string[]
 }
 
@@ -22,7 +22,7 @@ export type TalentPoolStudent = {
   name: string
   email: string
   chapter: { name: string; university: string } | null
-  graduationYear: number | null
+  graduation_year: number | null
   major: string | null
   skills: string[]
   updated_at: string
@@ -32,30 +32,30 @@ type TalentPoolProfileRow = Pick<
   StudentProfileRow,
   'graduation_year' | 'major' | 'skills' | 'updated_at'
 > & {
-  Chapter: Pick<ChapterRow, 'name' | 'university'> | Pick<ChapterRow, 'name' | 'university'>[] | null
+  chapter: Pick<ChapterRow, 'name' | 'university'> | Pick<ChapterRow, 'name' | 'university'>[] | null
 }
 
 type TalentPoolRow = Pick<UserRow, 'id' | 'name' | 'email'> & {
-  StudentProfile: TalentPoolProfileRow | TalentPoolProfileRow[] | null
+  student_profile: TalentPoolProfileRow | TalentPoolProfileRow[] | null
 }
 
 type SavedTalentPoolRow = {
-  Student: TalentPoolRow | TalentPoolRow[] | null
+  student: TalentPoolRow | TalentPoolRow[] | null
 }
 
-type TalentPoolFilterRow = Pick<StudentProfileRow, 'graduationYear'> & {
-  Chapter: { id: string; name: string } | { id: string; name: string }[] | null
+type TalentPoolFilterRow = Pick<StudentProfileRow, 'graduation_year'> & {
+  chapter: { id: string; name: string } | { id: string; name: string }[] | null
 }
 
 function mapTalentPoolRow(row: TalentPoolRow): TalentPoolStudent | null {
-  const profile = Array.isArray(row.StudentProfile) ? row.StudentProfile[0] : row.StudentProfile
+  const profile = Array.isArray(row.student_profile) ? row.student_profile[0] : row.student_profile
   if (!profile) return null
 
-  const chapter = Array.isArray(profile.Chapter) ? profile.Chapter[0] : profile.Chapter
+  const chapter = Array.isArray(profile.chapter) ? profile.chapter[0] : profile.chapter
 
   return {
     id: row.id,
-    name: row.name,
+    name: row.name ?? '',
     email: row.email,
     chapter: chapter
       ? {
@@ -88,33 +88,33 @@ export async function getTalentPool(filters: TalentPoolFilters, pagination?: Tal
     .select(
       `
       id, name, email,
-      StudentProfile!inner (
-graduation_year, major, skills, updated_at, chapter_id, is_recruiter_visible, approval_status,
-         Chapter:Chapter!StudentProfile_chapter_id_fkey (name, university)
-       )
-       `,
+      student_profile!user_id!inner (
+        graduation_year, major, skills, updated_at, chapter_id, is_recruiter_visible, approval_status,
+        chapter:chapter!student_profile_chapter_id_fkey (name, university)
+      )
+      `,
       { count: 'exact' }
     )
     .eq('role', 'member')
-    .eq('StudentProfile.is_recruiter_visible', true)
-    .eq('StudentProfile.approval_status', 'approved')
-    .order('updated_at', { ascending: false, referencedTable: 'StudentProfile' })
+    .eq('student_profile.is_recruiter_visible', true)
+    .eq('student_profile.approval_status', 'approved')
+    .order('updated_at', { ascending: false, referencedTable: 'student_profile' })
     .range(from, to)
 
   if (filters.query?.trim()) {
     query = query.ilike('name', `%${filters.query.trim()}%`)
   }
 
-  if (filters.graduationYear) {
-    query = query.eq('StudentProfile.graduation_year', filters.graduationYear)
+  if (filters.graduation_year) {
+    query = query.eq('student_profile.graduation_year', filters.graduation_year)
   }
 
-  if (filters.chapterId) {
-    query = query.eq('StudentProfile.chapter_id', filters.chapterId)
+  if (filters.chapter_id) {
+    query = query.eq('student_profile.chapter_id', filters.chapter_id)
   }
 
   if (filters.skills && filters.skills.length > 0) {
-    query = query.contains('StudentProfile.skills', filters.skills)
+    query = query.contains('student_profile.skills', filters.skills)
   }
 
   const { data, error, count } = await query
@@ -171,36 +171,36 @@ export async function getSavedStudents(filters: TalentPoolFilters, pagination?: 
     .select(
       `
       student_id,
-      Student:User!SavedStudent_student_id_fkey (
+      student:user!saved_student_student_id_fkey (
         id, name, email,
-        StudentProfile!inner (
+        student_profile!user_id!inner (
           graduation_year, major, skills, updated_at, chapter_id, is_recruiter_visible, approval_status,
-          Chapter:Chapter!StudentProfile_chapter_id_fkey (name, university)
+          chapter:chapter!student_profile_chapter_id_fkey (name, university)
         )
       )
       `,
       { count: 'exact' }
     )
     .eq('recruiter_id', authUser.id)
-    .eq('Student.StudentProfile.is_recruiter_visible', true)
-    .eq('Student.StudentProfile.approval_status', 'approved')
+    .eq('student.student_profile.is_recruiter_visible', true)
+    .eq('student.student_profile.approval_status', 'approved')
     .order('saved_at', { ascending: false })
     .range(from, to)
 
   if (filters.query?.trim()) {
-    query = query.ilike('Student.name', `%${filters.query.trim()}%`)
+    query = query.ilike('student.name', `%${filters.query.trim()}%`)
   }
 
-  if (filters.graduationYear) {
-    query = query.eq('Student.StudentProfile.graduation_year', filters.graduationYear)
+  if (filters.graduation_year) {
+    query = query.eq('student.student_profile.graduation_year', filters.graduation_year)
   }
 
-  if (filters.chapterId) {
-    query = query.eq('Student.StudentProfile.chapter_id', filters.chapterId)
+  if (filters.chapter_id) {
+    query = query.eq('student.student_profile.chapter_id', filters.chapter_id)
   }
 
   if (filters.skills && filters.skills.length > 0) {
-    query = query.contains('Student.StudentProfile.skills', filters.skills)
+    query = query.contains('student.student_profile.skills', filters.skills)
   }
 
   const { data, error, count } = await query
@@ -218,7 +218,7 @@ export async function getSavedStudents(filters: TalentPoolFilters, pagination?: 
 
   const students = ((data ?? []) as SavedTalentPoolRow[])
     .map((row) => {
-      const user = Array.isArray(row.Student) ? row.Student[0] : row.Student
+      const user = Array.isArray(row.student) ? row.student[0] : row.student
       return user ? mapTalentPoolRow(user) : null
     })
     .filter((student): student is TalentPoolStudent => student !== null)
@@ -243,7 +243,7 @@ export async function getTalentPoolFilterOptions() {
     .select(
       `
       graduation_year, chapter_id,
-      Chapter:Chapter!StudentProfile_chapter_id_fkey (id, name)
+      chapter:chapter!student_profile_chapter_id_fkey (id, name)
       `
     )
     .eq('is_recruiter_visible', true)
@@ -261,7 +261,7 @@ export async function getTalentPoolFilterOptions() {
 
   const chaptersById = new Map<string, { id: string; name: string }>()
   for (const row of filterRows) {
-    const chapter = Array.isArray(row.Chapter) ? row.Chapter[0] : row.Chapter
+    const chapter = Array.isArray(row.chapter) ? row.chapter[0] : row.chapter
     if (chapter?.id && chapter?.name && !chaptersById.has(chapter.id)) {
       chaptersById.set(chapter.id, { id: chapter.id, name: chapter.name })
     }

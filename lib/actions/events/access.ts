@@ -11,7 +11,7 @@ type EventManager = {
 type EventAccessSuccess = {
   supabase: Awaited<ReturnType<typeof requireUser>>['supabase']
   user: EventManager
-  event: Pick<EventRow, 'id' | 'chapterId' | 'capacity' | 'title' | 'accessModel'>
+  event: Pick<EventRow, 'id' | 'chapter_id' | 'capacity' | 'title' | 'access_model'>
 }
 
 type EventAccessFailure = {
@@ -23,9 +23,9 @@ export async function assertCanManageEvent(eventId: string): Promise<EventAccess
 
   const { data: event, error } = await supabase
     .from('event')
-    .select('id, chapterId, capacity, title, accessModel')
+    .select('id, chapter_id, capacity, title, access_model')
     .eq('id', eventId)
-    .maybeSingle<Pick<EventRow, 'id' | 'chapterId' | 'capacity' | 'title' | 'accessModel'>>()
+    .maybeSingle<Pick<EventRow, 'id' | 'chapter_id' | 'capacity' | 'title' | 'access_model'>>()
 
   if (error || !event) {
     return { error: 'Event not found' }
@@ -36,7 +36,7 @@ export async function assertCanManageEvent(eventId: string): Promise<EventAccess
   }
 
   // Check if user can access this event (owner or collaborator)
-  const canAccess = await canUserAccessChapter(supabase, user, event.chapterId, eventId)
+  const canAccess = await canUserAccessChapter(supabase, user, event.chapter_id ?? '', eventId)
   if (!canAccess) {
     return { error: 'Insufficient permissions' }
   }

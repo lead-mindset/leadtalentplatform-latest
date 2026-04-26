@@ -196,7 +196,7 @@ export async function approveMembersBulk(user_ids: string[], approverId: string)
             approval_status: 'approved',
             member_id: member_id,
             is_recruiter_visible: true,
-            updatedAt: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           })
           .eq('user_id', user_id)
 
@@ -277,7 +277,7 @@ export async function rejectMember(user_id: string, rejecterId: string, _reason?
         approval_status: 'rejected',
         member_id: null,
         is_recruiter_visible: false,
-        updatedAt: new Date().toISOString()
+        updated_at: new Date().toISOString()
       })
       .eq('user_id', user_id)
 
@@ -345,7 +345,7 @@ export async function revokeApproval(user_id: string, revokerId: string) {
         approval_status: 'pending',
         member_id: null,
         is_recruiter_visible: false,
-        updatedAt: new Date().toISOString()
+        updated_at: new Date().toISOString()
       })
       .eq('user_id', user_id)
 

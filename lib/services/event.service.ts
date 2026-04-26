@@ -39,7 +39,7 @@ export type CreateEventParams = {
   eventType: string;
   capacity?: number | null;
   isPublished?: boolean;
-  chapterId: string | null;
+  chapter_id: string | null;
   accessModel: 'open' | 'application';
   applicationFormUrl?: string | null;
   locationName?: string | null;
@@ -71,7 +71,7 @@ export const EventService = {
         event_type: params.eventType as EventType,
         capacity: params.capacity ?? null,
         is_published: params.isPublished ?? false,
-        chapter_id: params.chapterId,
+        chapter_id: params.chapter_id,
         access_model: params.accessModel,
         application_form_url:
           params.accessModel === 'application' ? params.applicationFormUrl : null,

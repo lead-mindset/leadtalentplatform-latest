@@ -44,7 +44,7 @@ interface ChapterPortalContentProps {
   chapter: ChapterData
   events: EventData[]
   members: MemberData[]
-  memberCount: number
+  member_count: number
   pastEventsCount: number
 }
 
@@ -52,13 +52,13 @@ export function ChapterPortalContent({
   chapter,
   events,
   members,
-  memberCount,
+  member_count,
   pastEventsCount,
 }: ChapterPortalContentProps) {
   return (
     <main className="min-h-screen bg-background">
       {/* Hero Section */}
-      <ChapterHero chapter={chapter} memberCount={memberCount} />
+      <ChapterHero chapter={chapter} member_count={member_count} />
 
       {/* Content Grid */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -72,7 +72,7 @@ export function ChapterPortalContent({
         <div className="lg:col-span-4 space-y-8">
           <ChapterSidebar
             chapter={chapter}
-            memberCount={memberCount}
+            member_count={member_count}
             pastEventsCount={pastEventsCount}
             upcomingEventsCount={events.length}
           />

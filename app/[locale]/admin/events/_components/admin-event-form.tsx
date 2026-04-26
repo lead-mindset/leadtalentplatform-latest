@@ -69,7 +69,7 @@ export function AdminEventForm({
   const [eventType, setEventType] = useState<EventType>(defaults.event_type)
   const [capacity, setCapacity] = useState(defaults.capacity)
   const [isPublished, setIsPublished] = useState(defaults.is_published)
-  const [chapterId, setChapterId] = useState(defaults.chapter_id)
+  const [chapter_id, setChapterId] = useState(defaults.chapter_id)
 
   async function onSubmit() {
     setError(null)
@@ -85,7 +85,7 @@ const payload: CreateEventInput = {
         eventType: eventType,
         capacity: capacity === '' ? undefined : Number(capacity),
         isPublished: isPublished,
-        chapterId: chapterId === 'global' ? null : chapterId,
+        chapter_id: chapter_id === 'global' ? null : chapter_id,
         accessModel: (initial?.access_model as 'open' | 'application') ?? 'open',
         applicationFormUrl: initial?.application_form_url ?? null,
       }
@@ -178,8 +178,8 @@ const payload: CreateEventInput = {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="chapterId">Chapter</Label>
-            <Select value={chapterId ?? 'global'} onValueChange={setChapterId}>
+            <Label htmlFor="chapter_id">Chapter</Label>
+            <Select value={chapter_id ?? 'global'} onValueChange={setChapterId}>
               <SelectTrigger>
                 <SelectValue placeholder="Select chapter" />
               </SelectTrigger>

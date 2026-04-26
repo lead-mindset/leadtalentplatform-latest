@@ -27,10 +27,10 @@ export default async function ChapterDetailPage({
   if (!chapter) notFound()
   const resolvedChapter = chapter ?? notFound()
   const members = await getChapterMembers(resolvedChapter.id)
-  const approvedMembers  = members.filter(m => m.StudentProfile?.approval_status === 'approved')
-  const pendingMembers   = members.filter(m => m.StudentProfile?.is_filled && m.StudentProfile?.approval_status === 'pending')
-  const rejectedMembers  = members.filter(m => m.StudentProfile?.approval_status === 'rejected')
-  const incompleteMembers = members.filter(m => !m.StudentProfile?.is_filled)
+  const approved_members  = members.filter(m => m.student_profile?.approval_status === 'approved')
+  const pending_members   = members.filter(m => m.student_profile?.is_filled && m.student_profile?.approval_status === 'pending')
+  const rejected_members  = members.filter(m => m.student_profile?.approval_status === 'rejected')
+  const incomplete_members = members.filter(m => !m.student_profile?.is_filled)
 
   return (
     <div className="space-y-8">
@@ -124,17 +124,17 @@ export default async function ChapterDetailPage({
         <div className="space-y-4">
           <h2 className="text-2xl font-bold">Members ({members.length})</h2>
 
-          {pendingMembers.length > 0 && (
+          {pending_members.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Clock className="h-5 w-5 text-warning" />
-                  Pending Approval ({pendingMembers.length})
+                  Pending Approval ({pending_members.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {pendingMembers.map((member) => (
+                  {pending_members.map((member) => (
                     <div
                       key={member.id}
                       className="flex items-center justify-between p-3 border rounded-lg"
@@ -172,17 +172,17 @@ export default async function ChapterDetailPage({
             </Card>
           )}
 
-          {approvedMembers.length > 0 && (
+          {approved_members.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-success" />
-                  Approved Members ({approvedMembers.length})
+                  Approved Members ({approved_members.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {approvedMembers.map((member) => (
+                  {approved_members.map((member) => (
                     <div
                       key={member.id}
                       className="flex items-center justify-between p-3 border rounded-lg"
@@ -196,7 +196,7 @@ export default async function ChapterDetailPage({
                           >
                             Approved
                           </Badge>
-                          {member.StudentProfile?.is_recruiter_visible && (
+                          {member.student_profile?.is_recruiter_visible && (
                             <Badge variant="secondary">Visible to Recruiters</Badge>
                           )}
                         </div>
@@ -223,17 +223,17 @@ export default async function ChapterDetailPage({
             </Card>
           )}
 
-          {rejectedMembers.length > 0 && (
+          {rejected_members.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <XCircle className="h-5 w-5 text-destructive" />
-                  Rejected ({rejectedMembers.length})
+                  Rejected ({rejected_members.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {rejectedMembers.map((member) => (
+                  {rejected_members.map((member) => (
                     <div
                       key={member.id}
                       className="flex items-center justify-between p-3 border rounded-lg"
@@ -268,17 +268,17 @@ export default async function ChapterDetailPage({
             </Card>
           )}
 
-          {incompleteMembers.length > 0 && (
+          {incomplete_members.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <XCircle className="h-5 w-5 text-muted-foreground" />
-                  Incomplete Profiles ({incompleteMembers.length})
+                  Incomplete Profiles ({incomplete_members.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {incompleteMembers.map((member) => (
+                  {incomplete_members.map((member) => (
                     <div
                       key={member.id}
                       className="flex items-center justify-between p-3 border rounded-lg bg-muted/30"

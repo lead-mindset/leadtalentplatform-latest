@@ -36,16 +36,18 @@ export async function POST(
     .eq('id', applicationId)
     .single()
 
-  if (registration && registration.User && registration.Event) {
+  if (registration && registration.user && registration.event) {
+    const user = registration.user as unknown as { email: string; name: string | null }
+    const event = registration.event as unknown as { title: string; start_at: string; location: string | null; meeting_url: string | null; event_type: string }
     import('@/lib/emails/send-email').then(({ sendApplicationApprovedEmail }) => {
       sendApplicationApprovedEmail(
-        registration.User.email,
-        registration.User.name,
-        registration.Event.title,
-        new Date(registration.Event.start_at).toLocaleString(),
-        registration.Event.location,
-        registration.Event.meeting_url,
-        registration.Event.event_type,
+        user.email,
+        user.name ?? 'Student',
+        event.title,
+        new Date(event.start_at).toLocaleString(),
+        event.location,
+        event.meeting_url,
+        event.event_type,
         registration.id
       ).catch(err => console.error('Email error:', err))
     })

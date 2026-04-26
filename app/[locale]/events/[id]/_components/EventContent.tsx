@@ -114,8 +114,8 @@ export function EventContent({
   }
 
   const registeredCount = event._count.registrations
-  const ownerChapterLabel = event.Chapter ? event.Chapter.name : 'Global'
-  const collaborators = event.EventChapter?.map((ec: any) => ec.Chapter).filter(Boolean) || []
+  const ownerChapterLabel = event.chapter ? event.chapter.name : 'Global'
+  const collaborators = event.event_chapter?.map((ec: any) => ec.chapter).filter(Boolean) || []
 
   const heroImageSrc = event.cover_image || "https://lh3.googleusercontent.com/aida-public/AB6AXuCPkIXdCnOC4xM_keP1HVTc8Nn_asHtEtsE3T3mkN8Dr3QDObO6BA_ppVqlJIOjEtv0dKqF4KMU1-fhBVeeVu3IXJeHu8VndjHef3GU9_jWWTgMaM292D6UJYbE5a_U0cvkFDiDGhTFm8THZlrg838_CIZKgIu5YgUAX7YVP9gXTVeR__XeheoSuPRYMbn2NDMzbAW30OW15MOIUgace6VZNCZ51xoLDKKL7SXJmeoAjaoD8u32pDMrs3HiE7HRqw5Cps0fVyH8KRJU"
 
@@ -250,7 +250,7 @@ export function EventContent({
                     hadCancelledRegistration={isCancelled}
                     canCancel={
                       myRegistration?.status === 'registered' &&
-                      !myRegistration.checkedInAt &&
+                      !myRegistration.checked_in_at &&
                       !registrationClosed
                     }
                     registrationId={myRegistration?.id ?? null}

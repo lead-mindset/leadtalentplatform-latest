@@ -35,20 +35,20 @@ const studentFilters = {
 
   const majors = [...new Set(
     students
-      .map(s => s.StudentProfile?.major)
+      .map(s => s.student_profile?.major)
       .filter((m): m is string => Boolean(m))
   )].sort()
 
   const years = [...new Set(
     students
-      .map(s => s.StudentProfile?.graduation_year)
+      .map(s => s.student_profile?.graduation_year)
       .filter((y): y is number => Boolean(y))
   )].sort()
 
   const chapters = [...new Map(
     students
-      .filter(s => s.StudentProfile?.chapter_id && s.Chapter)
-      .map(s => [s.StudentProfile!.chapter_id, s.Chapter!.name])
+      .filter(s => s.student_profile?.chapter_id && s.chapter)
+      .map(s => [s.student_profile!.chapter_id, s.chapter!.name])
   ).entries()]
 
   return (

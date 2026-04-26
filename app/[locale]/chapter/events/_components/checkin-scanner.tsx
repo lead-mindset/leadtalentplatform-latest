@@ -171,7 +171,7 @@ export function CheckinScanner({
       }
       if (candidate.status === 'already_checked_in') {
         setCounter(candidate.counter)
-        const time = new Date(candidate.checkedInAt).toLocaleTimeString()
+        const time = new Date(candidate.checked_in_at).toLocaleTimeString()
         showStatus('neutral',
           `${candidate.attendee.name} already checked in at ${time}${candidate.checkedInByName ? ` by ${candidate.checkedInByName}` : ''}`,
           false
@@ -180,7 +180,7 @@ export function CheckinScanner({
       }
       setPendingCandidate({
         registrationId: candidate.registrationId,
-        eventId: candidate.eventId,
+        eventId: candidate.event_id,
         attendee: candidate.attendee,
       })
       setStatus(null)
@@ -189,14 +189,14 @@ export function CheckinScanner({
 
   function prepareFromSearchResult(result: CheckInSearchResult) {
     if (result.status === 'attended') {
-      const time = result.checkedInAt ? new Date(result.checkedInAt).toLocaleTimeString() : ''
+      const time = result.checked_in_at ? new Date(result.checked_in_at).toLocaleTimeString() : ''
       showStatus('neutral', `${result.name} is already checked in${time ? ` at ${time}` : ''}`, false)
       return
     }
     setPendingCandidate({
       registrationId: result.registrationId,
       eventId,
-      attendee: { id: result.userId, name: result.name, email: result.email },
+      attendee: { id: result.user_id, name: result.name, email: result.email },
     })
     setStatus(null)
     // Clear search so the confirm card is the focus
@@ -212,7 +212,7 @@ export function CheckinScanner({
     try {
       const formData = new FormData()
       formData.set('registrationId', pendingCandidate.registrationId)
-      formData.set('eventId', pendingCandidate.eventId)
+      formData.set('eventId', pendingCandidate.event_id)
       const result = await checkInAttendee(formData)
 
       if ('error' in result) {
