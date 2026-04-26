@@ -7,6 +7,19 @@ import { revalidatePath } from 'next/cache';
 import { getTranslations } from 'next-intl/server';
 import { StudentService } from '@/lib/services/student.service';
 
+export async function getCurrentUserResume() {
+  const { user } = await requireUser();
+  const supabase = createServiceClient();
+
+  try {
+    const resume = await StudentService.getResume(supabase, user.id);
+    return resume;
+  } catch (error) {
+    console.error('Resume fetch error:', error);
+    return null;
+  }
+}
+
 export async function getProfileData() {
   const { user } = await requireUser();
   const supabase = createServiceClient();
