@@ -88,6 +88,17 @@ export const StudentService = {
     return { success: true };
   },
 
+  async getResume(supabase: SupabaseClient<Database>, userId: string) {
+    const { data: resume, error } = await supabase
+      .from('resume')
+      .select('student_id, file_url, file_name, file_size, uploaded_at')
+      .eq('student_id', userId)
+      .single();
+
+    if (error) return null;
+    return resume;
+  },
+
   async uploadResume(supabase: SupabaseClient<Database>, userId: string, file: File) {
     const now = new Date().toISOString();
     const filePath = `${userId}/${crypto.randomUUID()}.pdf`;
