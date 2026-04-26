@@ -1,5 +1,6 @@
 # Agent Guidance
 
+
 ## Tech Stack
 - **Framework**: Next.js 15 (App Router, React 19)
 - **Database**: Supabase (generated types in `lib/database.generated.ts`)
@@ -7,39 +8,29 @@
 - **UI**: Radix UI primitives + custom shadcn-like components in `components/ui`
 - **i18n**: `next-intl` with locale-based routing (`app/[locale]/*`)
 - **Package manager**: pnpm
+- **Testing**: Vitest (Mandatory for Service Layer)
 
-## Developer Commands
-```bash
-npm run dev      # Start dev server on localhost:3000
-npm run build   # Production build
-npm run lint    # ESLint
-npm run start   # Start production server
-```
+## Technical Architecture (The Service Layer)
+We follow a strict **Service Layer Pattern** (see `docs/adr/001-service-layer-pattern.md`).
+- **Logic:** ALL business and database logic must live in `lib/services/`.
+- **Controllers:** Server Actions (`lib/actions/`) and API Routes are "thin." They handle Auth, Zod validation, and call services.
+- **Organization:** Group by domain, not by type.
 
-**Note**: No test framework configured.
+## Developer Workflow & Workflow
+- **Branch-First:** Never edit code directly on `main`. Work in `feat/`, `fix/`, or `refactor/` branches.
+- **Commits:** Use Conventional Commits.
+- **Migrations:** Never use the Supabase Dashboard for schema changes. Use Supabase CLI migrations.
 
-## Architecture
-- **Route structure**: `app/[locale]/{chapter,admin,auth}/**` - locale is required (e.g., `/en/chapter/events`)
-- **API routes**: `app/api/**` - no locale prefix
-- **Server actions**: `lib/actions/**/*.ts` - organized by domain (admin, company, events, student, recruiter, chapter)
-- **Components**: `components/ui/*` (shadcn-style), `components/events/*`, `components/global/*`
-- **Database types**: Generated in `lib/database.generated.ts` - regenerate via Supabase CLI if schema changes
-
-## Auth Flow
-- Supabase Auth with Google OAuth
-- Callback: `app/[locale]/auth/callback/route.ts` handles session exchange
-- Protected routes check session in layouts
-
-## Environment
-- `.env.local` contains secrets (Supabase keys, Resend API key, SMTP creds)
-- `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` required at build time
-
-## Codegen
-- Run `pnpm exec supabase gen types typescript --local > lib/database.generated.ts` after schema changes
+## Definition of Done (DoD)
+Before claiming a task is complete, ensure:
+1.  **Type Safety:** No `any`. Strict TypeScript everywhere.
+2.  **Testing:** 100% unit test coverage for new logic in `lib/services/`.
+3.  **Linting:** `npm run lint` passes.
+4.  **Documentation:** New services are documented; ADRs created for major changes.
 
 ## Common Gotchas
-- Tailwind CSS 4 uses `@import "tailwindcss"` in CSS, not `@tailwind` directives
-- Route params are async - access via `{ params }: { params: Promise<{ ... }> }`
-- Server components by default; add `"use client"` for interactivity
-- `lib/supabase/*` provides client, server, and admin clients
-- Images use Next.js `<Image />` with configured remotePatterns for Supabase Storage
+- Tailwind CSS 4 uses `@import "tailwindcss"` in CSS, not `@tailwind` directives.
+- Route params are async - access via `{ params }: { params: Promise<{ ... }> }`.
+- Server components by default; add `"use client"` for interactivity.
+- `lib/supabase/*` provides client, server, and admin clients.
+- Images use Next.js `<Image />` with configured remotePatterns for Supabase Storage.
