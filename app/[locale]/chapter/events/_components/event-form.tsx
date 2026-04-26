@@ -257,7 +257,7 @@ export function EventForm({
         }
         toast.success(mode === 'create' ? 'Event created successfully!' : 'Event updated successfully!')
         setLastSavedAt(new Date().toLocaleTimeString())
-        setIsPublished(res.event.isPublished)
+        setIsPublished(res.event.is_published)
 
         if (mode === 'create') {
           router.push(`/${locale}/chapter/events/${res.event.id}/edit`)

@@ -21,7 +21,7 @@ export default async function ProfilePage() {
       </div>
 
       <ProfileForm
-        user={user}
+        user={{ ...user, name: user.name ?? 'Recruiter' }}
         company={company}
         accessInfo={accessInfo}
       />

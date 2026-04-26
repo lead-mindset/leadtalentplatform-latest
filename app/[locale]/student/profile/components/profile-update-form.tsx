@@ -59,13 +59,13 @@ export default function ProfileUpdateForm({
       phone: initialData?.phone || '',
       career: initialData?.career || '',
       gender: initialData?.gender ?? undefined,
-      graduation_year: initialData?.graduation_year || 0,
+      graduationYear: initialData?.graduationYear || 0,
       skills: initialData?.skills || [],
       lead_chapter: initialData?.lead_chapter || '',
       linkedin_url: initialData?.linkedin_url || '',
       resume_pdf: undefined,
-      consent_recruiter_visibility: initialData?.consent_recruiter_visibility || false,
-      email_notifications_enabled: initialData?.email_notifications_enabled ?? true,
+      consentRecruiterVisibility: initialData?.consentRecruiterVisibility || false,
+      emailNotificationsEnabled: initialData?.emailNotificationsEnabled ?? true,
 
     },
   })
@@ -83,13 +83,13 @@ export default function ProfileUpdateForm({
       phone: initialData?.phone || '',
       career: initialData?.career || '',
       gender: initialData?.gender ?? undefined,
-      graduation_year: initialData?.graduation_year || 0,
+      graduationYear: initialData?.graduationYear || 0,
       skills: initialData?.skills || [],
       lead_chapter: initialData?.lead_chapter || '',
       linkedin_url: initialData?.linkedin_url || '',
       resume_pdf: undefined,
-      consent_recruiter_visibility: initialData?.consent_recruiter_visibility || false,
-      email_notifications_enabled: initialData?.email_notifications_enabled ?? true,
+      consentRecruiterVisibility: initialData?.consentRecruiterVisibility || false,
+      emailNotificationsEnabled: initialData?.emailNotificationsEnabled ?? true,
     })
   }, [initialData, reset])
 
@@ -133,7 +133,7 @@ export default function ProfileUpdateForm({
   return (
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-12">
-        {initialData.approval_status === 'approved' && initialData.member_id ? (
+        {initialData.approvalStatus === 'approved' && initialData.memberId ? (
           <div className="rounded-lg bg-primary/5 border border-primary/10 p-4">
             <div className="flex items-center gap-2 mb-2">
               <Icons.IdCard className="h-4 w-4 text-primary" />
@@ -141,7 +141,7 @@ export default function ProfileUpdateForm({
             </div>
             <div className="flex items-center gap-2">
               <code className="px-3 py-1.5 bg-background rounded-md border border-border text-lg font-mono font-semibold text-primary">
-                {initialData.member_id}
+                {initialData.memberId}
               </code>
             </div>
             <p className="text-xs text-muted-foreground mt-2">This is your unique identifier as a LEAD member</p>

@@ -15,7 +15,7 @@ import { Icons } from '@/components/ui/icons'
 function statusForEvent(event: EventWithDetails): 'Draft' | 'Published' | 'Past' {
   const isPast = new Date(event.end_at) < new Date()
   if (isPast) return 'Past'
-  return event.isPublished ? 'Published' : 'Draft'
+  return event.is_published ? 'Published' : 'Draft'
 }
 
 export function EventsTable({ events }: { events: EventWithDetails[] }) {
@@ -24,12 +24,12 @@ export function EventsTable({ events }: { events: EventWithDetails[] }) {
 
   function onTogglePublish(event: EventWithDetails) {
     startTransition(async () => {
-      const response = await updateEvent({ id: event.id, isPublished: !event.isPublished })
+      const response = await updateEvent({ id: event.id, isPublished: !event.is_published })
       if ('error' in response) {
         toast.error(response.error)
         return
       }
-      toast.success(response.event.isPublished ? 'Event published' : 'Event moved to draft')
+      toast.success(response.event.is_published ? 'Event published' : 'Event moved to draft')
       router.refresh()
     })
   }
@@ -105,7 +105,7 @@ export function EventsTable({ events }: { events: EventWithDetails[] }) {
               <Button asChild size="sm" variant="outline">
                 <Link href={`/chapter/events/${event.id}`}>Edit</Link>
               </Button>
-              {event.accessModel === 'application' && (
+              {event.access_model === 'application' && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -118,7 +118,7 @@ export function EventsTable({ events }: { events: EventWithDetails[] }) {
                 </Button>
               )}
               <Button size="sm" variant="outline" disabled={isPending} onClick={() => onTogglePublish(event)}>
-                {event.isPublished ? 'Unpublish' : 'Publish'}
+                {event.is_published ? 'Unpublish' : 'Publish'}
               </Button>
               <Button asChild size="sm" variant="outline">
                 <Link href={`/chapter/events/${event.id}/checkin`}>Check-in</Link>

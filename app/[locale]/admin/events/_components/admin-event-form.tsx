@@ -86,7 +86,7 @@ const payload: CreateEventInput = {
         capacity: capacity === '' ? undefined : Number(capacity),
         isPublished: isPublished,
         chapterId: chapterId === 'global' ? null : chapterId,
-        accessModel: initial?.access_model ?? 'open',
+        accessModel: (initial?.access_model as 'open' | 'application') ?? 'open',
         applicationFormUrl: initial?.application_form_url ?? null,
       }
 

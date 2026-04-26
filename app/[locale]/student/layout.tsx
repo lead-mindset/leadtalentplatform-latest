@@ -34,13 +34,13 @@ export default async function StudentLayout({
     <SidebarLayout
       headerRight={
         <MobileUserBadge
-          name={user.name}
+          name={user.name ?? 'Student'}
           memberId={profile?.member_id ?? undefined}
         />
       }
       sidebar={
         <BaseSidebar
-          userName={user.name}
+          userName={user.name ?? 'Student'}
           userEmail={user.email}
           userRole={user.role}
           memberId={profile?.member_id ?? undefined}

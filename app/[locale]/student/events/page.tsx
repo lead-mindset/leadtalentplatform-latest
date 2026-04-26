@@ -139,11 +139,7 @@ export default async function StudentEventsPage({
 
       const qrDataUrl = await QRCode.toDataURL(registration.qr_token, {
         margin: 1,
-        width: 240,
-        color: {
-          dark: '#02041a',
-          light: '#ffffff'
-        }
+        width: 240
       })
 
       return [registration.id, qrDataUrl] as const

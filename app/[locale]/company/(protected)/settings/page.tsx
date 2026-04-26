@@ -43,7 +43,7 @@ export default async function CompanySettingsPage() {
             <Label htmlFor="name">Full Name</Label>
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 text-muted-foreground" />
-              <Input id="name" value={user.name} disabled />
+              <Input id="name" value={user.name ?? ''} disabled />
             </div>
           </div>
 

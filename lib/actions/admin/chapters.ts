@@ -349,7 +349,7 @@ export async function getAvailableEditors(chapterId: string) {
       if (user.role !== 'member' && user.role !== 'editor') return null
       return {
         id: user.id,
-        name: user.name,
+        name: user.name ?? 'Unknown',
         email: user.email,
         role: user.role,
       }

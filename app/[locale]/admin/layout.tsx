@@ -16,7 +16,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
     <SidebarLayout
       sidebar={
         <BaseSidebar
-          userName={user.name}
+          userName={user.name ?? 'Admin'}
           userEmail={user.email}
           userRole={user.role}
         >

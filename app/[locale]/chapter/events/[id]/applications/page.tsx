@@ -23,7 +23,7 @@ export default async function EventApplicationsPage({
 
   return (
     <EventApplicationsClient
-      event={access.event}
+      event={{ ...access.event, accessModel: access.event.accessModel as 'application' | 'open' }}
       initialApplications={applications}
     />
   )
