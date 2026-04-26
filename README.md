@@ -199,13 +199,17 @@ linke/
 │   ├── theme-switcher.tsx        # Theme toggle
 │   └── language-switcher.tsx     # Language toggle
 ├── lib/                          # Utilities and business logic
-│   ├── actions/                  # Server actions
+│   ├── actions/                  # Server actions (thin controllers)
 │   │   ├── admin/                # Admin actions
 │   │   ├── chapter/              # Chapter actions
 │   │   ├── company/              # Company actions
 │   │   ├── events/               # Event actions
 │   │   ├── recruiter/            # Recruiter actions
 │   │   └── student/              # Student actions
+│   ├── services/                 # Business logic & database layer (Service Layer)
+│   │   ├── __tests__/            # Unit tests for services
+│   │   ├── event.service.ts      # Event domain logic
+│   │   └── student.service.ts    # Student profile logic
 │   ├── supabase/                 # Supabase clients
 │   │   ├── client.ts             # Browser client
 │   │   ├── server.ts             # Server client
@@ -331,10 +335,12 @@ FRONTEND_URL=localhost:3000
 ### Available Scripts
 
 ```bash
-pnpm dev      # Start development server
-pnpm build    # Production build
-pnpm start    # Start production server
-pnpm lint     # Run ESLint
+pnpm dev          # Start development server
+pnpm build        # Production build
+pnpm start        # Start production server
+pnpm lint         # Run ESLint
+pnpm test         # Run all tests (Vitest)
+pnpm test:watch   # Run tests in watch mode
 ```
 
 ### Code Style
@@ -343,6 +349,22 @@ pnpm lint     # Run ESLint
 - **Client Components** explicitly marked with "use client"
 - Path aliases via `@/*` mapped to root
 - TypeScript strict mode enabled
+
+### Testing
+
+We use **Vitest** with 100% unit test coverage required for all `lib/services/*` files.
+
+```bash
+pnpm test         # Run all tests once
+pnpm test:watch   # Run tests in watch mode during development
+```
+
+**Architecture:**
+- **Service Layer** (`lib/services/`): Contains all business logic and database queries. Must be pure and framework-agnostic.
+- **Controllers** (`lib/actions/`): Thin Server Actions that handle auth, Zod validation, and delegate to services.
+- **Tests** (`lib/services/__tests__/`): Mock Supabase clients to test logic in isolation.
+
+See `docs/handbook/TESTING.md` for full testing guidelines.
 
 ### Database Types
 
