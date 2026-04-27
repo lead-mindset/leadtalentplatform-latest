@@ -159,7 +159,7 @@ export const EventService = {
         end_at: params.endAt,
         location: params.location ?? null,
         meeting_url: params.meetingUrl || null,
-        event_type: params.eventType as any,
+        event_type: params.eventType as 'in_person' | 'online' | 'hybrid',
         capacity: params.capacity ?? null,
         is_published: params.isPublished ?? false,
         chapter_id: params.chapter_id,
@@ -587,5 +587,153 @@ export const EventService = {
       attendee: attendeePayload,
       counter: counter ?? { checkedIn: 0, total: 0 },
     };
+  },
+
+  async getEventById(
+    supabase: SupabaseClient<Database>,
+    eventId: string,
+    select: string = EVENT_MUTATION_SELECT
+  ) {
+    const { data: event, error } = await supabase
+      .from('event')
+      .select(select)
+      .eq('id', eventId)
+      .maybeSingle<EventRow>();
+
+    if (error || !event) return null;
+    return event as EventRow;
+  },
+
+  async updateEvent(
+    supabase: SupabaseClient<Database>,
+    eventId: string,
+    updates: Partial<Pick<EventRow,
+      | 'title'
+      | 'description'
+      | 'cover_image'
+      | 'start_at'
+      | 'end_at'
+      | 'location'
+      | 'meeting_url'
+      | 'event_type'
+      | 'capacity'
+      | 'is_published'
+      | 'chapter_id'
+      | 'access_model'
+      | 'application_form_url'
+      | 'location_name'
+      | 'location_address'
+      | 'location_city'
+      | 'location_region'
+      | 'location_latitude'
+      | 'location_longitude'
+      | 'updated_at'
+    >>
+  ): Promise<EventRow | null> {
+    const { data: event, error } = await supabase
+      .from('event')
+      .update(updates)
+      .eq('id', eventId)
+      .select(EVENT_MUTATION_SELECT)
+      .single();
+
+    if (error || !event) {
+      console.error('[EventService.updateEvent] Error:', error);
+      return null;
+    }
+
+    return event as EventRow;
+  },
+
+  async deleteEvent(supabase: SupabaseClient<Database>, eventId: string): Promise<{ success: boolean; error?: string }> {
+    const { error } = await supabase.from('event').delete().eq('id', eventId);
+    if (error) {
+      console.error('[EventService.deleteEvent] Error:', error);
+      return { success: false, error: 'Failed to delete event' };
+    }
+    return { success: true };
+  },
+
+  async cancelRegistration(
+    supabase: SupabaseClient<Database>,
+    registrationId: string,
+    userId: string
+  ): Promise<{ success: boolean; error?: string }> {
+    const REGISTRATION_SELECT = 'id, event_id, user_id, status, checked_in_at';
+    const EVENT_DATE_SELECT = 'id, start_at';
+
+    const { data: reg, error: regError } = await supabase
+      .from('event_registration')
+      .select(REGISTRATION_SELECT)
+      .eq('id', registrationId)
+      .maybeSingle<Pick<EventRegistrationRow, 'id' | 'event_id' | 'user_id' | 'status' | 'checked_in_at'>>();
+
+    if (regError || !reg) {
+      return { success: false, error: 'Registration not found' };
+    }
+    if (reg.user_id !== userId) {
+      return { success: false, error: 'Unauthorized' };
+    }
+    if (reg.checked_in_at) {
+      return { success: false, error: 'Already checked in' };
+    }
+    if (reg.status !== 'registered') {
+      return { success: false, error: 'Not registered' };
+    }
+
+    const { data: event } = await supabase
+      .from('event')
+      .select(EVENT_DATE_SELECT)
+      .eq('id', reg.event_id)
+      .maybeSingle<Pick<EventRow, 'id' | 'startAt'>>();
+
+    if (event) {
+      const startsAt = new Date(event.start_at).getTime();
+      if (Number.isFinite(startsAt) && Date.now() >= startsAt) {
+        return { success: false, error: 'Event already started' };
+      }
+    }
+
+    const { data: updated, error } = await supabase
+      .from('event_registration')
+      .update({
+        status: 'cancelled' as RegistrationStatus,
+      })
+      .eq('id', reg.id)
+      .select()
+      .single<EventRegistrationRow>();
+
+    if (error || !updated) {
+      console.error('[EventService.cancelRegistration] Error:', error);
+      return { success: false, error: 'Failed to cancel registration' };
+    }
+
+    return { success: true };
+  },
+
+  async uploadEventCover(
+    supabase: SupabaseClient<Database>,
+    userId: string,
+    file: File
+  ): Promise<{ publicUrl: string }> {
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+    const filePath = `${userId}/${crypto.randomUUID()}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('event-covers')
+      .upload(filePath, file, {
+        contentType: file.type,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      throw new Error('Failed to upload cover image');
+    }
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from('event-covers').getPublicUrl(filePath);
+
+    return { publicUrl };
   },
 };

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/auth'
+import { AdminService } from '@/lib/services/admin.service'
 
 interface CreateCompanyInput {
   name: string
@@ -24,42 +25,20 @@ export async function createCompany(
       }
     }
 
-    const { data, error } = await supabase
-      .from('company')
-      .insert({
-        name: input.name.trim(),
-        created_by_id: user.id,
-      })
-      .select('id')
-      .single()
+    const result = await AdminService.createCompany(supabase, {
+      name: input.name.trim(),
+      createdById: user.id,
+    })
 
-    if (error) {
-      if (error.code === '23505') {
-        return {
-          success: false,
-          error: 'A company with this name already exists',
-        }
-      }
-
-      console.error('Error creating company:', error)
-      return {
-        success: false,
-        error: 'Failed to create company',
-      }
-    }
-
-    if (!data) {
-      return {
-        success: false,
-        error: 'Failed to create company',
-      }
+    if (!result.success) {
+      return { success: false, error: result.error }
     }
 
     revalidatePath('/admin/companies')
 
     return {
       success: true,
-      companyId: data.id,
+      companyId: result.companyId,
     }
   } catch (err) {
     console.error('Unexpected error creating company:', err)

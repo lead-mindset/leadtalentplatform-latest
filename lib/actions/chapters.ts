@@ -1,37 +1,13 @@
-'use server'
-
 import { createClient } from '@/lib/supabase/server'
+import { ChapterService } from '@/lib/services/chapter.service'
 import type { ChapterRow } from '@/lib/types'
 
 export async function getAllChapters(): Promise<ChapterRow[]> {
   const supabase = await createClient()
-
-  const { data, error } = await supabase
-    .from('chapter')
-    .select('id, name, university, city, region, created_at, updated_at, instagram_url, latitude, longitude, location_point')
-    .order('name', { ascending: true })
-
-  if (error) {
-    console.error('[getAllChapters] Error:', error)
-    return []
-  }
-
-  return data || []
+  return ChapterService.getAllChapters(supabase)
 }
 
 export async function getChapterById(id: string): Promise<ChapterRow | null> {
   const supabase = await createClient()
-
-  const { data, error } = await supabase
-    .from('chapter')
-    .select('id, name, university, city, region, created_at, updated_at, instagram_url, latitude, longitude, location_point')
-    .eq('id', id)
-    .maybeSingle()
-
-  if (error) {
-    console.error('[getChapterById] Error:', error)
-    return null
-  }
-
-  return data
+  return ChapterService.getChapterById(supabase, id)
 }

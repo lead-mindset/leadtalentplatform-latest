@@ -4,19 +4,11 @@ import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
 import { requireUser } from '@/lib/auth'
 import { requireChapterMember } from '@/lib/auth'
+import { EventService } from '@/lib/services/event.service'
 import type { EventRow, EventType } from '@/lib/types'
 
 const EVENT_MUTATION_SELECT =
   'id, title, description, cover_image, start_at, end_at, location, meeting_url, event_type, capacity, is_published, chapter_id, created_by_id, created_at, updated_at, access_model, application_form_url, location_name, location_address, location_city, location_region, location_latitude, location_longitude'
-
-function sanitizeRichTextHtml(input: string): string {
-  return input
-    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
-    .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
-    .replace(/\son\w+="[^"]*"/gi, '')
-    .replace(/\son\w+='[^']*'/gi, '')
-    .replace(/javascript:/gi, '')
-}
 
 const UpdateEventSchema = z.object({
   id: z.string().uuid(),
@@ -58,13 +50,9 @@ export async function updateEvent(input: UpdateEventInput): Promise<UpdateEventR
     return { error: 'No chapter assigned' }
   }
 
-  const { data: existing, error: fetchError } = await supabase
-    .from('event')
-    .select(EVENT_MUTATION_SELECT)
-    .eq('id', parsed.data.id)
-    .maybeSingle<EventRow>()
+  const existing = await EventService.getEventById(supabase, parsed.data.id, EVENT_MUTATION_SELECT)
 
-  if (fetchError || !existing) {
+  if (!existing) {
     return { error: 'Event not found' }
   }
 
@@ -72,6 +60,7 @@ export async function updateEvent(input: UpdateEventInput): Promise<UpdateEventR
 
   let isCollaborator = false
   if (!isOwner) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: collaboration, error: collabError } = await (supabase as any)
       .from('event_chapter')
       .select('id')
@@ -91,35 +80,30 @@ export async function updateEvent(input: UpdateEventInput): Promise<UpdateEventR
   }
 
   const d = parsed.data
-  const { data: event, error } = await supabase
-    .from('event')
-    .update({
-      title: d.title,
-      description: d.description,
-      cover_image: d.coverImage,
-      start_at: d.startAt,
-      end_at: d.endAt,
-      location: d.location,
-      meeting_url: d.meetingUrl,
-      event_type: d.eventType,
-      capacity: d.capacity,
-      is_published: d.isPublished,
-      chapter_id: d.chapter_id,
-      access_model: d.accessModel,
-      application_form_url: d.applicationFormUrl,
-      location_name: d.locationName ?? null,
-      location_address: d.locationAddress ?? null,
-      location_city: d.locationCity ?? null,
-      location_region: d.locationRegion ?? null,
-      location_latitude: d.locationLatitude ?? null,
-      location_longitude: d.locationLongitude ?? null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', existing.id)
-    .select(EVENT_MUTATION_SELECT)
-    .single()
+  const event = await EventService.updateEvent(supabase, existing.id, {
+    title: d.title,
+    description: d.description,
+    cover_image: d.coverImage,
+    start_at: d.startAt,
+    end_at: d.endAt,
+    location: d.location,
+    meeting_url: d.meetingUrl,
+    event_type: d.eventType as EventType,
+    capacity: d.capacity,
+    is_published: d.isPublished,
+    chapter_id: d.chapter_id,
+    access_model: d.accessModel,
+    application_form_url: d.applicationFormUrl,
+    location_name: d.locationName ?? null,
+    location_address: d.locationAddress ?? null,
+    location_city: d.locationCity ?? null,
+    location_region: d.locationRegion ?? null,
+    location_latitude: d.locationLatitude ?? null,
+    location_longitude: d.locationLongitude ?? null,
+    updated_at: new Date().toISOString(),
+  })
 
-  if (error || !event) {
+  if (!event) {
     return { error: 'Failed to update event' }
   }
 
@@ -128,4 +112,3 @@ export async function updateEvent(input: UpdateEventInput): Promise<UpdateEventR
 
   return { success: true, event }
 }
-

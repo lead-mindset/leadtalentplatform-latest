@@ -107,7 +107,7 @@ export const StudentService = {
       .from('resumes')
       .upload(filePath, file, {
         contentType: 'application/pdf',
-        upsert: false,
+        upsert: true,
       });
 
     if (uploadError) throw uploadError;
@@ -129,5 +129,115 @@ export const StudentService = {
 
     if (dbError) throw dbError;
     return publicUrl;
+  },
+
+  async saveResume(
+    supabase: SupabaseClient<Database>,
+    userId: string,
+    file: File
+  ): Promise<{ success: true; publicUrl: string } | { success: false; error: string }> {
+    try {
+      const publicUrl = await this.uploadResume(supabase, userId, file);
+      return { success: true, publicUrl };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Upload failed';
+      return { success: false, error: message };
+    }
+  },
+
+  async submitOnboarding(
+    supabase: SupabaseClient<Database>,
+    params: {
+      userId: string
+      email: string
+      fullName: string
+      phone: string
+      career: string
+      gender: string
+      graduationYear: number
+      skills: string[]
+      linkedinUrl: string
+      consentRecruiterVisibility: boolean
+      emailNotificationsEnabled: boolean
+      leadChapter: string
+      resumePdf?: File | null
+      generateMemberId: (supabase: SupabaseClient<Database>) => Promise<string>
+    }
+  ): Promise<{ success: true } | { success: false; error: string }> {
+    const now = new Date().toISOString()
+
+    // Update User table
+    const { error: userError } = await supabase
+      .from('user')
+      .upsert({
+        id: params.userId,
+        email: params.email,
+        name: params.fullName,
+        phone: params.phone,
+        updated_at: now,
+      })
+      .eq('id', params.userId)
+
+    if (userError) {
+      return { success: false, error: userError.message }
+    }
+
+    const { data: existingUser, error: existingUserError } = await supabase
+      .from('user')
+      .select('id')
+      .eq('id', params.userId)
+      .single()
+
+    if (existingUserError) {
+      return { success: false, error: existingUserError.message }
+    }
+
+    if (!existingUser) {
+      return { success: false, error: 'User row does not exist for StudentProfile insert' }
+    }
+
+    const { data: existingProfile, error: existingProfileError } = await supabase
+      .from('student_profile')
+      .select('member_id')
+      .eq('user_id', params.userId)
+      .maybeSingle()
+
+    if (existingProfileError) {
+      return { success: false, error: existingProfileError.message }
+    }
+
+    const memberId = existingProfile?.member_id ?? await params.generateMemberId(supabase)
+
+    const { error: profileError } = await supabase
+      .from('student_profile')
+      .upsert({
+        user_id: params.userId,
+        major: params.career,
+        gender: params.gender,
+        graduation_year: params.graduationYear,
+        linkedin_url: params.linkedinUrl,
+        skills: params.skills,
+        consent_recruiter_visibility: params.consentRecruiterVisibility,
+        consent_date: params.consentRecruiterVisibility ? now : null,
+        email_notifications_enabled: params.emailNotificationsEnabled,
+        updated_at: now,
+        is_filled: true,
+        chapter_id: params.leadChapter,
+        member_id: memberId,
+      })
+
+    if (profileError) {
+      return { success: false, error: profileError.message }
+    }
+
+    // Handle resume upload if provided
+    if (params.resumePdf) {
+      const resumeResult = await this.saveResume(supabase, params.userId, params.resumePdf)
+      if (!resumeResult.success) {
+        return { success: false, error: resumeResult.error }
+      }
+    }
+
+    return { success: true }
   },
 };

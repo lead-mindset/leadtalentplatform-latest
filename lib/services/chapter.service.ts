@@ -1,6 +1,7 @@
 import { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.generated'
 import { generateUniqueMemberId } from '@/lib/utils/member-id'
+import type { ChapterRow, MemberWithProfile, StudentProfileRow, UserRow } from '@/lib/types'
 
 /**
  * Service Layer: Chapter Member Management
@@ -11,7 +12,204 @@ import { generateUniqueMemberId } from '@/lib/utils/member-id'
 
 type ApprovalResult = { success: true; member_id: string } | { success: false; error: string }
 
+const PROFILE_SELECT = `
+  user_id,
+  major,
+  graduation_year,
+  linkedin_url,
+  skills,
+  consent_recruiter_visibility,
+  is_recruiter_visible,
+  approved_by_id,
+  approval_status,
+  is_filled,
+  updated_at,
+  created_at,
+  consent_date,
+  chapter_id,
+  email_notifications_enabled,
+  gender,
+  member_id,
+  chapter:chapter!student_profile_chapter_id_fkey (
+    id,
+    name,
+    university,
+    city,
+    region,
+    created_at,
+    updated_at
+  )
+`
+
+type ChapterProfileRow = Pick<
+  StudentProfileRow,
+  | 'user_id'
+  | 'major'
+  | 'graduation_year'
+  | 'linkedin_url'
+  | 'skills'
+  | 'consent_recruiter_visibility'
+  | 'is_recruiter_visible'
+  | 'approved_by_id'
+  | 'approval_status'
+  | 'is_filled'
+  | 'updated_at'
+  | 'created_at'
+  | 'consent_date'
+  | 'chapter_id'
+  | 'email_notifications_enabled'
+  | 'gender'
+  | 'member_id'
+> & {
+  user:
+    | Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'role' | 'created_at' | 'updated_at' | 'deactivated_at'>
+    | Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'role' | 'created_at' | 'updated_at' | 'deactivated_at'>[]
+  chapter: ChapterRow | ChapterRow[] | null
+}
+
+function mapProfile(profile: ChapterProfileRow): MemberWithProfile | null {
+  const user = Array.isArray(profile.user) ? profile.user[0] : profile.user
+  const chapter = Array.isArray(profile.chapter) ? profile.chapter[0] : profile.chapter
+
+  if (!user) return null
+
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name ?? '',
+    phone: user.phone ?? null,
+    role: user.role,
+    created_at: user.created_at,
+    updated_at: user.updated_at,
+    deactivated_at: user.deactivated_at,
+    student_profile: {
+      user_id: profile.user_id,
+      major: profile.major,
+      graduation_year: profile.graduation_year,
+      linkedin_url: profile.linkedin_url,
+      skills: profile.skills,
+      consent_recruiter_visibility: profile.consent_recruiter_visibility,
+      is_recruiter_visible: profile.is_recruiter_visible,
+      approved_by_id: profile.approved_by_id,
+      approval_status: profile.approval_status,
+      is_filled: profile.is_filled,
+      updated_at: profile.updated_at,
+      created_at: profile.created_at,
+      consent_date: profile.consent_date,
+      chapter_id: profile.chapter_id,
+      email_notifications_enabled: profile.email_notifications_enabled,
+      gender: profile.gender,
+      member_id: profile.member_id,
+    },
+    chapter: chapter ?? null,
+  }
+}
+
+const CHAPTER_SELECT = 'id, name, university, city, region, created_at, updated_at, instagram_url, latitude, longitude, location_point'
+
 export const ChapterService = {
+  async getAllChapters(supabase: SupabaseClient<Database>): Promise<ChapterRow[]> {
+    const { data, error } = await supabase
+      .from('chapter')
+      .select(CHAPTER_SELECT)
+      .order('name', { ascending: true })
+
+    if (error) {
+      console.error('[ChapterService.getAllChapters] Error:', error)
+      return []
+    }
+
+    return data || []
+  },
+
+  async getChapterById(supabase: SupabaseClient<Database>, id: string): Promise<ChapterRow | null> {
+    const { data, error } = await supabase
+      .from('chapter')
+      .select(CHAPTER_SELECT)
+      .eq('id', id)
+      .maybeSingle()
+
+    if (error) {
+      console.error('[ChapterService.getChapterById] Error:', error)
+      return null
+    }
+
+    return data
+  },
+
+  async getChapterMembers(
+    supabase: SupabaseClient<Database>,
+    chapter_id: string
+  ): Promise<MemberWithProfile[]> {
+    const { data, error } = await supabase
+      .from('student_profile')
+      .select(PROFILE_SELECT)
+      .eq('chapter_id', chapter_id)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('[ChapterService.getChapterMembers] Error:', error)
+      return []
+    }
+
+    const rows = (data ?? []) as ChapterProfileRow[]
+
+    return rows
+      .map(mapProfile)
+      .filter((m): m is MemberWithProfile => m !== null)
+      .filter((member: MemberWithProfile) => member.role === 'member' || member.role === 'editor')
+  },
+
+  getMemberStats(members: MemberWithProfile[]) {
+    const incomplete = members.filter((member: MemberWithProfile) => !member.student_profile?.is_filled)
+    const pending = members.filter(
+      (member: MemberWithProfile) => member.student_profile?.is_filled && member.student_profile?.approval_status === 'pending'
+    )
+    const approved = members.filter(
+      (member: MemberWithProfile) => member.student_profile?.approval_status === 'approved'
+    )
+    const rejected = members.filter(
+      (member: MemberWithProfile) => member.student_profile?.approval_status === 'rejected'
+    )
+
+    return {
+      total: members.length,
+      incomplete: incomplete.length,
+      pending: pending.length,
+      approved: approved.length,
+      rejected: rejected.length,
+      pending_members: pending,
+      approved_members: approved,
+      rejected_members: rejected,
+      complete_profiles: members.filter((member: MemberWithProfile) => member.student_profile?.is_filled).length,
+      visible_to_recruiters: members.filter((member: MemberWithProfile) => member.student_profile?.is_recruiter_visible).length,
+    }
+  },
+
+  async getRecentChapterActivity(
+    supabase: SupabaseClient<Database>,
+    chapter_id: string,
+    limit: number = 5
+  ): Promise<MemberWithProfile[]> {
+    const { data, error } = await supabase
+      .from('student_profile')
+      .select(PROFILE_SELECT)
+      .eq('chapter_id', chapter_id)
+      .eq('approval_status', 'approved')
+      .order('updated_at', { ascending: false })
+      .limit(limit)
+
+    if (error || !data) {
+      console.error('[ChapterService.getRecentChapterActivity] Error:', error)
+      return []
+    }
+
+    return (data as ChapterProfileRow[])
+      .map(mapProfile)
+      .filter((m): m is MemberWithProfile => m !== null)
+  },
+
+  // ───────────────────────────────────────────────────────────────
   /**
    * Approve a single member.
    * Validates profile is complete, generates a unique member ID,

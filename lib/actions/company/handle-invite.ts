@@ -1,7 +1,7 @@
 'use server'
 
 import { createServiceClient } from '@/lib/supabase/server-service'
-import { getInviteCompany, getValidatedRecruiterInvite } from './invite-shared'
+import { CompanyService } from '@/lib/services/company.service'
 
 export async function acceptInvite(formData: {
   inviteToken: string
@@ -10,7 +10,7 @@ export async function acceptInvite(formData: {
 }) {
   const serviceSupabase = createServiceClient()
 
-  const inviteResult = await getValidatedRecruiterInvite(formData.inviteToken)
+  const inviteResult = await CompanyService.getValidatedRecruiterInvite(serviceSupabase, formData.inviteToken)
   if (!inviteResult.success) {
     return inviteResult
   }
@@ -104,13 +104,14 @@ export async function acceptInvite(formData: {
 }
 
 export async function validateInviteToken(inviteToken: string) {
-  const inviteResult = await getValidatedRecruiterInvite(inviteToken)
+  const serviceSupabase = createServiceClient()
+  const inviteResult = await CompanyService.getValidatedRecruiterInvite(serviceSupabase, inviteToken)
   if (!inviteResult.success) {
     return inviteResult
   }
   const { invite } = inviteResult
 
-  const company = invite.company_id ? await getInviteCompany(invite.company_id) : null
+  const company = invite.company_id ? await CompanyService.getInviteCompany(serviceSupabase, invite.company_id) : null
 
   return {
     success: true,

@@ -1,6 +1,7 @@
 'use server'
 
 import { canUserAccessChapter, requireUser } from '@/lib/auth'
+import { EventService } from '@/lib/services/event.service'
 import type { EventRow, Role } from '@/lib/types'
 
 type EventManager = {
@@ -21,13 +22,9 @@ type EventAccessFailure = {
 export async function assertCanManageEvent(eventId: string): Promise<EventAccessSuccess | EventAccessFailure> {
   const { supabase, user } = await requireUser()
 
-  const { data: event, error } = await supabase
-    .from('event')
-    .select('id, chapter_id, capacity, title, access_model')
-    .eq('id', eventId)
-    .maybeSingle<Pick<EventRow, 'id' | 'chapter_id' | 'capacity' | 'title' | 'access_model'>>()
+  const event = await EventService.getEventById(supabase, eventId, 'id, chapter_id, capacity, title, access_model')
 
-  if (error || !event) {
+  if (!event) {
     return { error: 'Event not found' }
   }
 

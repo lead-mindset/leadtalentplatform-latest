@@ -283,7 +283,7 @@ describe('StudentService', () => {
         mockFile,
         expect.objectContaining({
           contentType: 'application/pdf',
-          upsert: false,
+          upsert: true,
         })
       );
 

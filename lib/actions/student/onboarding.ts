@@ -5,8 +5,9 @@ import { createBaseProfileSchema } from '@/lib/memberschema'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
-import { generateUniqueMemberId } from './generate-member-ids'
+import { generateUniqueMemberId } from '@/lib/utils/member-id'
 import { sendWelcomeEmail } from '@/lib/emails/send-email'
+import { StudentService } from '@/lib/services/student.service'
 
 function parseSkills(rawValue: FormDataEntryValue | null): string[] {
     if (typeof rawValue !== 'string' || !rawValue.trim()) {
@@ -56,116 +57,26 @@ export async function submitOnboarding(formData: FormData) {
         }
 
         const data = parsed.data
-        const now = new Date().toISOString()
 
-        // Update User table
-        const { error: userError } = await supabase
-            .from('user')
-            .upsert({
-                id: user.id,
-                email: user.email,
-                name: data.full_name,
-                phone: data.phone,
-                updated_at: now,
-            })
-            .eq('id', user.id)
+        const result = await StudentService.submitOnboarding(supabase, {
+            userId: user.id,
+            email: user.email,
+            fullName: data.full_name,
+            phone: data.phone,
+            career: data.career,
+            gender: data.gender,
+            graduationYear: data.graduation_year,
+            skills: data.skills,
+            linkedinUrl: data.linkedin_url,
+            consentRecruiterVisibility: data.consent_recruiter_visibility,
+            emailNotificationsEnabled: data.email_notifications_enabled,
+            leadChapter: data.lead_chapter,
+            resumePdf: resume && resume.size > 0 ? resume : null,
+            generateMemberId: generateUniqueMemberId,
+        })
 
-        if (userError) {
-            return { error: userError.message }
-        }
-
-        const { data: existingUser, error: existingUserError } = await supabase
-            .from('user')
-            .select('id')
-            .eq('id', user.id)
-            .single()
-
-        if (existingUserError) {
-            return { error: existingUserError.message }
-        }
-
-        if (!existingUser) {
-            return { error: 'User row does not exist for StudentProfile insert' }
-        }
-
-        const { data: existingProfile, error: existingProfileError } = await supabase
-            .from('student_profile')
-.select('member_id')
-    .eq('user_id', user.id)
-            .maybeSingle()
-
-        if (existingProfileError) {
-            return { error: existingProfileError.message }
-        }
-
-        const memberId = existingProfile?.member_id ?? await generateUniqueMemberId(supabase)
-
-        const { error: profileError } = await supabase
-            .from('student_profile')
-            .upsert({
-                user_id: user.id,
-                major: data.career,
-                gender: data.gender,
-                graduation_year: data.graduation_year,
-                linkedin_url: data.linkedin_url,
-                skills: data.skills,
-                consent_recruiter_visibility: data.consent_recruiter_visibility,
-                consent_date: data.consent_recruiter_visibility ? now : null,
-                email_notifications_enabled: data.email_notifications_enabled,
-                updated_at: now,
-                is_filled: true,
-                chapter_id: data.lead_chapter,
-                member_id,
-            })
-
-        if (profileError) {
-            return { error: profileError.message }
-        }
-
-        if (resume) {
-            if (resume.type !== "application/pdf") {
-                return { error: "Only PDF resumes are allowed" }
-            }
-
-            if (resume.size > 10 * 1024 * 1024) {
-                return { error: "PDF must be smaller than 10MB" }
-            }
-
-            const filePath = `${user.id}/${crypto.randomUUID()}.pdf`
-
-            const { error: uploadError } = await supabase.storage
-                .from("resumes")
-                .upload(filePath, resume, {
-                    contentType: "application/pdf",
-                    upsert: true,
-                })
-
-            if (uploadError) {
-                return { error: uploadError.message }
-            }
-
-            const { data: publicUrlData } = supabase.storage
-                .from("resumes")
-                .getPublicUrl(filePath)
-
-            const fileUrl = publicUrlData.publicUrl
-
-            const { error: resumeDbError } = await supabase
-                .from("resume")
-                .upsert(
-                    {
-                        studentId: user.id,
-                        fileUrl,
-                        fileName: resume.name,
-                        fileSize: resume.size,
-                        uploadedAt: now,
-                    },
-                    { onConflict: 'studentId' }
-                )
-
-            if (resumeDbError) {
-                return { error: resumeDbError.message }
-            }
+        if (!result.success) {
+            return { error: result.error }
         }
 
         const { data: chapterData, error: chapterError } = await supabase
@@ -186,7 +97,6 @@ export async function submitOnboarding(formData: FormData) {
                 'es'
             ).catch(err => console.error('Failed to send welcome email:', err))
         }
-
     } catch (error) {
         console.error('Onboarding submission error:', error)
         return { error: 'Internal server error' }

@@ -1169,6 +1169,78 @@ export const AdminService = {
     return chapter
   },
 
+  async createChapter(
+    supabase: SupabaseClient<Database>,
+    params: {
+      id: string
+      name: string
+      university: string
+      city?: string | null
+      region?: string | null
+    }
+  ): Promise<{ success: true; chapter: ChapterRow } | { success: false; error: string }> {
+    const { data: existing } = await supabase
+      .from('chapter')
+      .select('id')
+      .eq('id', params.id)
+      .maybeSingle()
+
+    if (existing) {
+      return { success: false, error: 'Chapter ID already exists' }
+    }
+
+    const now = new Date().toISOString()
+
+    const { data: chapter, error: insertError } = await supabase
+      .from('chapter')
+      .insert({
+        id: params.id,
+        name: params.name,
+        university: params.university,
+        city: params.city || null,
+        region: params.region || null,
+        created_at: now,
+        updated_at: now,
+      })
+      .select(CHAPTER_SELECT)
+      .single<ChapterRow>()
+
+    if (insertError || !chapter) {
+      console.error('Failed to create chapter:', insertError)
+      return { success: false, error: 'Failed to create chapter' }
+    }
+
+    return { success: true, chapter }
+  },
+
+  async createCompany(
+    supabase: SupabaseClient<Database>,
+    params: { name: string; createdById: string }
+  ): Promise<{ success: true; companyId: string } | { success: false; error: string }> {
+    const { data, error } = await supabase
+      .from('company')
+      .insert({
+        name: params.name.trim(),
+        created_by_id: params.createdById,
+      })
+      .select('id')
+      .single()
+
+    if (error) {
+      if (error.code === '23505') {
+        return { success: false, error: 'A company with this name already exists' }
+      }
+      console.error('Error creating company:', error)
+      return { success: false, error: 'Failed to create company' }
+    }
+
+    if (!data) {
+      return { success: false, error: 'Failed to create company' }
+    }
+
+    return { success: true, companyId: data.id }
+  },
+
   // ───────────────────────────────────────────────────────────────
   // queryFilteredUsers (internal users helper, exposed on service)
   // ───────────────────────────────────────────────────────────────
