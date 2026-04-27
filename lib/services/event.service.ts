@@ -1685,4 +1685,25 @@ export const EventService = {
 
     return { success: true }
   },
+
+  /**
+   * Get a user's role from the user table.
+   */
+  async getUserRole(
+    supabase: SupabaseClient<Database>,
+    userId: string
+  ): Promise<string | null> {
+    const { data, error } = await supabase
+      .from('user')
+      .select('role')
+      .eq('id', userId)
+      .maybeSingle()
+
+    if (error) {
+      console.error('[getUserRole] error:', error)
+      return null
+    }
+
+    return (data?.role as string) ?? null
+  },
 };

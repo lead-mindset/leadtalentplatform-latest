@@ -61,11 +61,5 @@ export async function getCurrentUserRole(): Promise<Role | null> {
   const { data: auth } = await supabase.auth.getUser()
   if (!auth.user) return null
 
-  const { data } = await supabase
-    .from('user')
-    .select('role')
-    .eq('id', auth.user.id)
-    .maybeSingle()
-
-  return (data?.role as Role) ?? null
+  return (await EventService.getUserRole(supabase, auth.user.id)) as Role | null
 }
