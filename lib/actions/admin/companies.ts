@@ -48,14 +48,13 @@ export async function createCompany(name: string): Promise<ActionResult> {
       return { success: false, error: 'Company name must be at least 2 characters long.' }
     }
 
-    const { error } = await supabase
-      .from('company')
-      .insert({ name: parsedName.data, created_by_id: user.id })
+    const result = await AdminService.createCompany(supabase, {
+      name: parsedName.data,
+      createdById: user.id,
+    })
 
-    if (error) {
-      if (error.code === '23505') return { success: false, error: 'Company name must be unique.' }
-      console.error('[admin/companies] createCompany error:', error)
-      return { success: false, error: 'Failed to create company.' }
+    if (!result.success) {
+      return result
     }
 
     revalidatePath('/admin/companies')
