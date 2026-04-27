@@ -99,11 +99,7 @@ export async function createRecruiterInvite(formData: {
   const { supabase, user } = await requireAdmin()
 
   // Validate company exists
-  const { data: company } = await supabase
-    .from('company')
-    .select('id, name')
-    .eq('id', formData.companyId)
-    .single()
+  const company = await AdminService.validateCompanyExists(supabase, formData.companyId)
   if (!company) return { success: false, error: 'Company not found' }
 
   // Validate email format
@@ -112,12 +108,11 @@ export async function createRecruiterInvite(formData: {
     return { success: false, error: 'Invalid email' }
 
   // Check existing invite
-  const { data: existingInvite } = await supabase
-    .from('recruiter_access')
-    .select('id, accepted_at, revoked_at')
-    .eq('recruiter_email', formData.recruiterEmail)
-    .eq('company_id', formData.companyId)
-    .maybeSingle()
+  const existingInvite = await AdminService.checkExistingRecruiterInvite(
+    supabase,
+    formData.recruiterEmail,
+    formData.companyId
+  )
 
   if (existingInvite) {
     if (existingInvite.accepted_at)

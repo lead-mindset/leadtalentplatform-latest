@@ -2214,6 +2214,42 @@ export const AdminService = {
   // ───────────────────────────────────────────────────────────────
   // createRecruiterInvite
   // ───────────────────────────────────────────────────────────────
+  async validateCompanyExists(
+    supabase: SupabaseClient<Database>,
+    companyId: string
+  ): Promise<{ id: string; name: string } | null> {
+    const { data, error } = await supabase
+      .from('company')
+      .select('id, name')
+      .eq('id', companyId)
+      .single()
+
+    if (error || !data) {
+      return null
+    }
+
+    return data
+  },
+
+  async checkExistingRecruiterInvite(
+    supabase: SupabaseClient<Database>,
+    email: string,
+    companyId: string
+  ): Promise<{ id: string; accepted_at: string | null; revoked_at: string | null } | null> {
+    const { data, error } = await supabase
+      .from('recruiter_access')
+      .select('id, accepted_at, revoked_at')
+      .eq('recruiter_email', email)
+      .eq('company_id', companyId)
+      .maybeSingle()
+
+    if (error || !data) {
+      return null
+    }
+
+    return data as { id: string; accepted_at: string | null; revoked_at: string | null }
+  },
+
   async createRecruiterInvite(
     supabase: SupabaseClient<Database>,
     userId: string,
