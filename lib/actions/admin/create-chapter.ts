@@ -14,8 +14,6 @@ const ChapterSchema = z.object({
   region: z.string().optional(),
 })
 
-const CHAPTER_SELECT = 'id, name, university, city, region, created_at, updated_at, instagram_url, latitude, longitude, location_point'
-
 type CreateChapterInput = z.infer<typeof ChapterSchema>
 
 type CreateChapterResponse = 
@@ -62,15 +60,10 @@ export async function createChapter(formData: CreateChapterInput): Promise<Creat
 export async function getChapters(): Promise<GetChaptersResponse> {
   const { supabase } = await requireAdmin()
 
-  const { data: chapters, error } = await supabase
-    .from('chapter')
-    .select(CHAPTER_SELECT)
-    .order('name', { ascending: true })
-
-  if (error || !chapters) {
-    console.error('Failed to fetch chapters:', error)
-    return { error: 'Failed to fetch chapters' }
+  const result = await AdminService.getAllChapters(supabase)
+  if ('error' in result) {
+    return { error: result.error }
   }
 
-  return { chapters }
+  return { chapters: result.chapters }
 }

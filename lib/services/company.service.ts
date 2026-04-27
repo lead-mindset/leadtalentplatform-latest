@@ -599,4 +599,105 @@ export const CompanyService = {
       }
     }
   },
+
+  async acceptInvite(
+    supabase: SupabaseClient<Database>,
+    params: {
+      inviteToken: string
+      name: string
+      locale: string
+    }
+  ) {
+    const inviteResult = await this.getValidatedRecruiterInvite(supabase, params.inviteToken)
+    if (!inviteResult.success) {
+      return inviteResult
+    }
+
+    const { invite } = inviteResult
+
+    const { data: existingUser } = await supabase
+      .from('user')
+      .select('id')
+      .eq('email', invite.recruiter_email)
+      .maybeSingle()
+
+    let userId: string
+
+    if (existingUser) {
+      userId = existingUser.id
+
+      await supabase
+        .from('user')
+        .update({
+          name: params.name,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', userId)
+    } else {
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: invite.recruiter_email,
+        email_confirm: true,
+      })
+
+      if (!authData.user || authError) {
+        console.error('[CompanyService.acceptInvite] Auth creation failed:', authError)
+        return { success: false as const, error: 'Failed to create account' }
+      }
+
+      userId = authData.user.id
+
+      const { error: profileError } = await supabase
+        .from('user')
+        .insert({
+          id: userId,
+          email: invite.recruiter_email,
+          role: 'recruiter',
+          name: params.name,
+        })
+
+      if (profileError) {
+        console.error('[CompanyService.acceptInvite] Profile creation failed:', profileError)
+        return { success: false as const, error: 'Failed to create profile' }
+      }
+    }
+
+    // Activate the invite
+    const { error: updateError } = await supabase
+      .from('recruiter_access')
+      .update({
+        accepted_at: new Date().toISOString(),
+        accepted_by_user_id: userId,
+        is_active: true,
+      })
+      .eq('id', invite.id)
+
+    if (updateError) {
+      console.error('[CompanyService.acceptInvite] Activation failed:', updateError)
+      return { success: false as const, error: 'Failed to activate access' }
+    }
+
+    // Send OTP magic link for login
+    const baseUrl = (process.env.NEXT_PUBLIC_FRONTEND_URL || process.env.FRONTEND_URL || 'http://localhost:3000').trim()
+    const { error: otpError } = await supabase.auth.signInWithOtp({
+      email: invite.recruiter_email,
+      options: {
+        emailRedirectTo: `${baseUrl}/${params.locale}/auth/confirm?next=/company/dashboard`,
+      },
+    })
+
+    if (otpError) {
+      console.error('[CompanyService.acceptInvite] OTP send failed:', otpError)
+      return {
+        success: true as const,
+        warning: 'Account created! Please use the login page to access your dashboard.',
+        recruiterEmail: invite.recruiter_email,
+      }
+    }
+
+    return {
+      success: true as const,
+      message: 'Check your email for a login link',
+      recruiterEmail: invite.recruiter_email,
+    }
+  },
 }

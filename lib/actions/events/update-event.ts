@@ -60,15 +60,7 @@ export async function updateEvent(input: UpdateEventInput): Promise<UpdateEventR
 
   let isCollaborator = false
   if (!isOwner) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: collaboration, error: collabError } = await (supabase as any)
-      .from('event_chapter')
-      .select('id')
-      .eq('event_id', existing.id)
-      .eq('chapter_id', chapter_id)
-      .maybeSingle()
-    
-    isCollaborator = !collabError && collaboration !== null
+    isCollaborator = await EventService.checkEventCollaboration(supabase, existing.id, chapter_id)
   }
 
   if (!isOwner && !isCollaborator) {

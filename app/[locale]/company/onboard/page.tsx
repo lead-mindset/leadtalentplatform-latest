@@ -72,7 +72,7 @@ async function OnboardLoader({
     <OnboardContent
       inviteToken={inviteToken}
       companyName={result.data!.companyName}
-      recruiterEmail={result.data!.recruiter_email}
+      recruiterEmail={result.data!.recruiterEmail}
     />
   )
 }

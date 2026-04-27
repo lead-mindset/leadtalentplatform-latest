@@ -10,14 +10,12 @@ import { Textarea } from '@/components/ui/textarea'
 
 interface MemberActionButtonsProps {
   userId: string
-  currentUserId: string
   userName: string
   currentState: 'pending' | 'approved' | 'rejected'
 }
 
 export function MemberActionButtons({
   userId,
-  currentUserId,
   userName,
   currentState
 }: MemberActionButtonsProps) {
@@ -29,7 +27,7 @@ export function MemberActionButtons({
   async function handleApprove() {
     setIsLoading(true)
     try {
-      const result = await approveMember(userId, currentUserId)
+      const result = await approveMember(userId)
       if (result.success) {
         toast.success(`${userName} approved successfully`)
         router.refresh()
@@ -46,7 +44,7 @@ export function MemberActionButtons({
   async function handleReject() {
     setIsLoading(true)
     try {
-      const result = await rejectMember(userId, currentUserId, rejectReason || undefined)
+      const result = await rejectMember(userId, rejectReason || undefined)
       if (result.success) {
         toast.success(`${userName}'s profile has been rejected`)
         setShowRejectReason(false)
@@ -65,7 +63,7 @@ export function MemberActionButtons({
   async function handleRevoke() {
     setIsLoading(true)
     try {
-      const result = await revokeApproval(userId, currentUserId)
+      const result = await revokeApproval(userId)
       if (result.success) {
         toast.success(`${userName}'s approval has been revoked`)
         router.refresh()

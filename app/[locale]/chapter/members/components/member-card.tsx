@@ -18,13 +18,11 @@ import { MemberActionButtons } from "./member-actions"
 
 export default function MemberCard({
   member,
-  currentUserId,
   selected = false,
   onSelectChange,
   showSelector = false,
 }: {
   member: MemberWithProfile
-  currentUserId: string
   selected?: boolean
   onSelectChange?: (checked: boolean) => void
   showSelector?: boolean
@@ -149,7 +147,6 @@ export default function MemberCard({
             <div className="pt-4 border-t">
               <MemberActionButtons
                 userId={member.id}
-                currentUserId={currentUserId}
                 userName={member.name ?? member.email}
                 currentState="pending"
               />
@@ -173,7 +170,6 @@ export default function MemberCard({
               )}
               <MemberActionButtons
                 userId={member.id}
-                currentUserId={currentUserId}
                 userName={member.name ?? member.email}
                 currentState="approved"
               />
@@ -188,7 +184,6 @@ export default function MemberCard({
               </div>
               <MemberActionButtons
                 userId={member.id}
-                currentUserId={currentUserId}
                 userName={member.name ?? member.email}
                 currentState="rejected"
               />

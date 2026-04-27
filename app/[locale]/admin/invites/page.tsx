@@ -190,9 +190,9 @@ async function InvitesList() {
                         </td>
                         <td className="p-3">
                           <div className="text-sm">
-                            <p className="font-medium">{invite.GrantedBy?.name || 'Unknown'}</p>
+                            <p className="font-medium">{invite.granted_by?.name || 'Unknown'}</p>
                             <p className="text-muted-foreground text-xs">
-                              {invite.GrantedBy?.email}
+                              {invite.granted_by?.email}
                             </p>
                           </div>
                         </td>

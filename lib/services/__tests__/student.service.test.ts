@@ -14,9 +14,20 @@ describe('StudentService', () => {
   // ───────────────────────────────────────────────────────────────
   // Helper: Build a Supabase mock that routes `from(table)` calls
   // ───────────────────────────────────────────────────────────────
-  const buildMockSupabase = (overrides: Record<string, any> = {}) => {
+  interface TableMock {
+    update?: ReturnType<typeof vi.fn>
+    eq?: ReturnType<typeof vi.fn>
+    select?: ReturnType<typeof vi.fn>
+    single?: ReturnType<typeof vi.fn>
+    upsert?: ReturnType<typeof vi.fn>
+    insert?: ReturnType<typeof vi.fn>
+    remove?: ReturnType<typeof vi.fn>
+    list?: ReturnType<typeof vi.fn>
+  }
+
+  const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
     // Per-table mock chains
-    const tableMocks: Record<string, any> = {
+    const tableMocks: Record<string, TableMock> = {
       user: {
         update: vi.fn().mockReturnThis(),
         eq: vi.fn(),
@@ -70,7 +81,7 @@ describe('StudentService', () => {
       const { mockSupabase, tableMocks } = buildMockSupabase();
       tableMocks.student_profile.single.mockResolvedValue({ data: mockProfile, error: null });
 
-      const result = await StudentService.getProfile(mockSupabase as any, 'user-123');
+      const result = await StudentService.getProfile(mockSupabase as unknown as SupabaseClient, 'user-123');
 
       expect(result).toEqual(mockProfile);
       expect(mockSupabase.from).toHaveBeenCalledWith('student_profile');
@@ -87,7 +98,7 @@ describe('StudentService', () => {
         error: { message: 'Row not found' },
       });
 
-      await expect(StudentService.getProfile(mockSupabase as any, 'user-123')).rejects.toThrow(
+      await expect(StudentService.getProfile(mockSupabase as unknown as SupabaseClient, 'user-123')).rejects.toThrow(
         'Student profile not found'
       );
     });
@@ -119,7 +130,7 @@ describe('StudentService', () => {
       // 2. Profile upsert succeeds
       tableMocks.student_profile.upsert.mockResolvedValue({ error: null });
 
-      const result = await StudentService.updateProfile(mockSupabase as any, baseParams);
+      const result = await StudentService.updateProfile(mockSupabase as unknown as SupabaseClient, baseParams);
 
       expect(result).toEqual({ success: true });
 
@@ -157,7 +168,7 @@ describe('StudentService', () => {
       tableMocks.user.eq.mockResolvedValue({ error: null });
       tableMocks.student_profile.upsert.mockResolvedValue({ error: null });
 
-      await StudentService.updateProfile(mockSupabase as any, {
+      await StudentService.updateProfile(mockSupabase as unknown as SupabaseClient, {
         ...baseParams,
         consentRecruiterVisibility: false,
       });
@@ -177,7 +188,7 @@ describe('StudentService', () => {
       const userError = new Error('User update failed');
       tableMocks.user.eq.mockResolvedValue({ error: userError });
 
-      await expect(StudentService.updateProfile(mockSupabase as any, baseParams)).rejects.toThrow(
+      await expect(StudentService.updateProfile(mockSupabase as unknown as SupabaseClient, baseParams)).rejects.toThrow(
         'User update failed'
       );
 
@@ -195,7 +206,7 @@ describe('StudentService', () => {
       const profileError = new Error('Profile upsert failed');
       tableMocks.student_profile.upsert.mockResolvedValue({ error: profileError });
 
-      await expect(StudentService.updateProfile(mockSupabase as any, baseParams)).rejects.toThrow(
+      await expect(StudentService.updateProfile(mockSupabase as unknown as SupabaseClient, baseParams)).rejects.toThrow(
         'Profile upsert failed'
       );
     });
@@ -210,7 +221,7 @@ describe('StudentService', () => {
       mockSupabase.storage.upload.mockResolvedValue({ error: null });
       tableMocks.resume.upsert.mockResolvedValue({ error: null });
 
-      const result = await StudentService.updateProfile(mockSupabase as any, {
+      const result = await StudentService.updateProfile(mockSupabase as unknown as SupabaseClient, {
         ...baseParams,
         resumePdf: mockFile,
       });
@@ -239,7 +250,7 @@ describe('StudentService', () => {
       tableMocks.resume.select = vi.fn().mockReturnThis();
       tableMocks.resume.eq = vi.fn().mockReturnThis();
 
-      const result = await StudentService.getResume(mockSupabase as any, 'user-123');
+      const result = await StudentService.getResume(mockSupabase as unknown as SupabaseClient, 'user-123');
 
       expect(result).toEqual(mockResume);
       expect(mockSupabase.from).toHaveBeenCalledWith('resume');
@@ -254,7 +265,7 @@ describe('StudentService', () => {
       tableMocks.resume.select = vi.fn().mockReturnThis();
       tableMocks.resume.eq = vi.fn().mockReturnThis();
 
-      const result = await StudentService.getResume(mockSupabase as any, 'user-123');
+      const result = await StudentService.getResume(mockSupabase as unknown as SupabaseClient, 'user-123');
 
       expect(result).toBeNull();
     });
@@ -272,7 +283,7 @@ describe('StudentService', () => {
       mockSupabase.storage.upload.mockResolvedValue({ error: null });
       tableMocks.resume.upsert.mockResolvedValue({ error: null });
 
-      const result = await StudentService.uploadResume(mockSupabase as any, 'user-123', mockFile);
+      const result = await StudentService.uploadResume(mockSupabase as unknown as SupabaseClient, 'user-123', mockFile);
 
       expect(result).toBe('https://example.com/resume.pdf');
 
@@ -309,7 +320,7 @@ describe('StudentService', () => {
       mockSupabase.storage.upload.mockResolvedValue({ error: uploadError });
 
       await expect(
-        StudentService.uploadResume(mockSupabase as any, 'user-123', mockFile)
+        StudentService.uploadResume(mockSupabase as unknown as SupabaseClient, 'user-123', mockFile)
       ).rejects.toThrow('Storage upload failed');
     });
 
@@ -324,7 +335,7 @@ describe('StudentService', () => {
       tableMocks.resume.upsert.mockResolvedValue({ error: dbError });
 
       await expect(
-        StudentService.uploadResume(mockSupabase as any, 'user-123', mockFile)
+        StudentService.uploadResume(mockSupabase as unknown as SupabaseClient, 'user-123', mockFile)
       ).rejects.toThrow('Resume insert failed');
     });
   });

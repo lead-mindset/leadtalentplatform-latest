@@ -372,4 +372,64 @@ export const ChapterService = {
 
     return { success: true }
   },
+
+  /**
+   * Get a student's chapter_id from their profile.
+   */
+  async getStudentChapterId(
+    supabase: SupabaseClient<Database>,
+    userId: string
+  ): Promise<string | null> {
+    const { data: profile, error } = await supabase
+      .from('student_profile')
+      .select('chapter_id')
+      .eq('user_id', userId)
+      .single()
+
+    if (error || !profile) {
+      return null
+    }
+
+    return profile.chapter_id ?? null
+  },
+
+  /**
+   * Get basic user info (email, name) by ID.
+   */
+  async getUserBasicInfo(
+    supabase: SupabaseClient<Database>,
+    userId: string
+  ): Promise<{ email: string; name: string | null } | null> {
+    const { data, error } = await supabase
+      .from('user')
+      .select('email, name')
+      .eq('id', userId)
+      .single()
+
+    if (error || !data) {
+      return null
+    }
+
+    return { email: data.email, name: data.name }
+  },
+
+  /**
+   * Get chapter name by ID.
+   */
+  async getChapterName(
+    supabase: SupabaseClient<Database>,
+    chapterId: string
+  ): Promise<string | null> {
+    const { data, error } = await supabase
+      .from('chapter')
+      .select('name')
+      .eq('id', chapterId)
+      .single()
+
+    if (error || !data) {
+      return null
+    }
+
+    return data.name ?? null
+  },
 }

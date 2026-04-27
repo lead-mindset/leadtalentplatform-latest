@@ -28,7 +28,7 @@ export default async function NavHeader() {
         .eq("userId", authUser.id)
         .single();
 
-      memberId = profile?.member_id ?? null;
+      memberId = profile?.memberId ?? null;
     }
   }
 

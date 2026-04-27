@@ -250,7 +250,7 @@ export function EventContent({
                     hadCancelledRegistration={isCancelled}
                     canCancel={
                       myRegistration?.status === 'registered' &&
-                      !myRegistration.checked_in_at &&
+                      !myRegistration.checkedInAt &&
                       !registrationClosed
                     }
                     registrationId={myRegistration?.id ?? null}

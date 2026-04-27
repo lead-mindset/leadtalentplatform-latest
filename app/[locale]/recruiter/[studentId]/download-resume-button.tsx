@@ -18,7 +18,7 @@ export function DownloadResumeButton({ studentId }: DownloadResumeButtonProps) {
       onClick={() => {
         startTransition(async () => {
           const result = await downloadResume(studentId)
-          if (!result.success || !result.url) {
+          if ('error' in result) {
             toast.error(result.error ?? 'Failed to download resume.')
             return
           }

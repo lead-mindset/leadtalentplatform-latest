@@ -37,8 +37,8 @@ export async function getProfileData() {
       graduation_year: profileData.graduation_year || 0,
       skills: profileData.skills || [],
       linkedin_url: profileData.linkedin_url || '',
-      consent_recruiter_visibility: profileData.consent_recruiter_visibility || false,
-      email_notifications_enabled: profileData.email_notifications_enabled ?? true,
+      consentRecruiterVisibility: profileData.consent_recruiter_visibility || false,
+      emailNotificationsEnabled: profileData.email_notifications_enabled ?? true,
     };
   } catch (error) {
     throw new Error('User profile not found');
@@ -63,8 +63,8 @@ export async function updateProfile(formData: FormData) {
       graduation_year: Number(formData.get('graduation_year') ?? 0),
       skills: JSON.parse(formData.get('skills')?.toString() || '[]'),
       linkedin_url: formData.get('linkedin_url')?.toString() || '',
-      consent_recruiter_visibility: formData.get('consent_recruiter_visibility') === 'true',
-      email_notifications_enabled: formData.get('email_notifications_enabled') === 'true',
+      consentRecruiterVisibility: formData.get('consentRecruiterVisibility') === 'true',
+      emailNotificationsEnabled: formData.get('emailNotificationsEnabled') === 'true',
       resume_pdf: resume || undefined,
     };
 
@@ -84,8 +84,8 @@ export async function updateProfile(formData: FormData) {
       graduation_year: data.graduation_year,
       skills: data.skills,
       linkedinUrl: data.linkedin_url,
-      consentRecruiterVisibility: data.consent_recruiter_visibility,
-      emailNotificationsEnabled: data.email_notifications_enabled,
+      consentRecruiterVisibility: data.consentRecruiterVisibility,
+      emailNotificationsEnabled: data.emailNotificationsEnabled,
       chapter_id: data.lead_chapter,
       resumePdf: data.resume_pdf,
     });

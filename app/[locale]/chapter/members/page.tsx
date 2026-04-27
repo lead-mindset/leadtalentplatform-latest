@@ -53,7 +53,7 @@ export default async function ChapterMembersPage({
     .eq('user_id', user.id)
     .maybeSingle()
 
-  if (!profile?.chapter) {
+  if (!profile?.Chapter) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Card>
@@ -141,7 +141,7 @@ export default async function ChapterMembersPage({
           </CardContent>
         </Card>
       ) : (
-        <MembersList members={displayMembers} currentUserId={user.id} status={safeStatus} />
+        <MembersList members={displayMembers} status={safeStatus} />
       )}
     </div>
   )

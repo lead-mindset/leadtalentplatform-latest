@@ -98,9 +98,9 @@ export default async function CompanyDashboardPage() {
                 {recentlySaved.map((saved) => (
                   <div key={saved.id} className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-sm">{saved.Student.name}</p>
+                      <p className="font-medium text-sm">{saved.student.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {saved.Student.student_profile?.major || 'No major listed'}
+                        {saved.student.student_profile?.major || 'No major listed'}
                       </p>
                     </div>
                     <Button asChild size="sm" variant="ghost">

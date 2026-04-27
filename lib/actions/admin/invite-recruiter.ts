@@ -2,14 +2,14 @@
 
 import { requireAdmin } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
-import { randomUUID } from 'crypto'
 import nodemailer from 'nodemailer'
-import type { CompanyRow, RecruiterAccessRow } from '@/lib/types'
+import { AdminService } from '@/lib/services/admin.service'
+
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: Number(process.env.SMTP_PORT),
-  secure: false, // true for 465, false for 587
+  secure: false,
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
@@ -18,18 +18,16 @@ const transporter = nodemailer.createTransport({
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000'
 
-function generateInviteToken(): string {
-  return randomUUID()
+function generateInviteLink(token: string): string {
+  return `${FRONTEND_URL}/company/onboard?inviteToken=${token}`
 }
 
-function calculateExpirationDate(expiresInDays: number): string {
-  const expirationDate = new Date()
-  expirationDate.setDate(expirationDate.getDate() + expiresInDays)
-  return expirationDate.toISOString()
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'Unknown error'
 }
 
 async function sendInviteEmail(email: string, inviteToken: string, companyName?: string) {
-  const url = `${FRONTEND_URL}/company/onboard?inviteToken=${inviteToken}`
+  const url = generateInviteLink(inviteToken)
 
   await transporter.sendMail({
     from: `"${companyName || 'Company'} Admin" <${process.env.SMTP_USER}>`,
@@ -38,15 +36,12 @@ async function sendInviteEmail(email: string, inviteToken: string, companyName?:
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: hsl(var(--primary));">Welcome to ${companyName || 'the Team'}!</h2>
-        
         <p>You've been invited to join the recruiter portal. Click the button below to get started:</p>
-        
         <div style="text-align: center; margin: 30px 0;">
           <a href="${url}" style="display: inline-block; padding: 12px 24px; background-color: hsl(var(--primary)); color: hsl(var(--primary-foreground)); text-decoration: none; border-radius: 6px; font-weight: 500;">
             Accept Invitation
           </a>
         </div>
-        
         <p style="color: hsl(var(--muted-foreground)); font-size: 14px;">
           <strong>What happens next:</strong>
         </p>
@@ -56,19 +51,15 @@ async function sendInviteEmail(email: string, inviteToken: string, companyName?:
           <li>You'll receive a login link via email (no password needed!)</li>
           <li>Start accessing candidate profiles</li>
         </ol>
-        
         <div style="background-color: hsl(var(--primary)/10); border-left: 4px solid hsl(var(--primary)); padding: 12px; margin: 20px 0;">
           <p style="margin: 0; color: hsl(var(--primary)); font-size: 14px;">
-            🔒 <strong>Passwordless Access:</strong> We use secure email links for login. No passwords to remember!
+            <strong>Passwordless Access:</strong> We use secure email links for login. No passwords to remember!
           </p>
         </div>
-        
         <p style="color: hsl(var(--muted-foreground)); font-size: 12px; margin-top: 30px;">
           This invitation link will expire in 7 days.
         </p>
-        
         <hr style="border: none; border-top: 1px solid hsl(var(--border)); margin: 30px 0;">
-        
         <p style="color: hsl(var(--muted-foreground)); font-size: 12px;">
           If you didn't expect this invitation, you can safely ignore this email.
         </p>
@@ -96,22 +87,10 @@ async function auditLog(action: string, details: Record<string, string | number 
   console.log(`[AUDIT] ${new Date().toISOString()} - ${action}`, details)
 }
 
-type RecruiterInviteWithCompany = Pick<
-  RecruiterAccessRow,
-  'id' | 'recruiter_email' | 'company_id' | 'revoked_at' | 'accepted_at'
-> & {
-  Company: Pick<CompanyRow, 'name'> | Pick<CompanyRow, 'name'>[] | null
-}
-
 type ActionResult =
   | { success: true; inviteId?: string; message: string }
   | { success: false; error: string }
 
-function getErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : 'Unknown error'
-}
-
-// ===== CREATE RECRUITER INVITE =====
 export async function createRecruiterInvite(formData: {
   recruiterEmail: string
   companyId: string
@@ -147,34 +126,22 @@ export async function createRecruiterInvite(formData: {
       return { success: false, error: 'Pending invite already exists' }
   }
 
-  const inviteToken = generateInviteToken()
-  const expiresInDays = formData.expiresInDays || 7
-  const expirationDate = calculateExpirationDate(expiresInDays)
+  const result = await AdminService.createRecruiterInvite(supabase, user.id, {
+    recruiterEmail: formData.recruiterEmail,
+    companyId: formData.companyId,
+    expiresInDays: formData.expiresInDays,
+  })
 
-  // Insert invite into DB
-  const { data: invite, error: inviteError } = await supabase
-    .from('recruiter_access')
-    .insert({
-      recruiter_email: formData.recruiterEmail,
-      company_id: formData.companyId,
-      granted_by_id: user.id,
-      granted_at: new Date().toISOString(),
-      invite_token: inviteToken,
-      invite_expires_at: expirationDate,
-      is_active: false,
-    })
-    .select('id')
-    .single()
-
-  if (inviteError || !invite)
-    return { success: false, error: inviteError?.message }
+  if (!result.success) {
+    return { success: false, error: result.error }
+  }
 
   // Send onboarding email
   try {
-    await sendInviteEmail(formData.recruiterEmail, inviteToken, company.name)
+    await sendInviteEmail(formData.recruiterEmail, result.token, company.name)
   } catch (error) {
     // Clean up if email fails
-    await supabase.from('recruiter_access').delete().eq('id', invite.id)
+    await AdminService.deleteInvite(supabase, result.inviteId)
     return { success: false, error: `Failed to send email: ${getErrorMessage(error)}` }
   }
 
@@ -182,45 +149,31 @@ export async function createRecruiterInvite(formData: {
     adminId: user.id,
     recruiterEmail: formData.recruiterEmail,
     companyId: formData.companyId,
-    inviteId: invite.id,
-    expiresInDays,
+    inviteId: result.inviteId,
+    expiresInDays: formData.expiresInDays ?? 7,
   })
 
   revalidatePath('/admin/invites')
 
-  return { success: true, inviteId: invite.id, message: 'Invite sent successfully' }
+  return { success: true, inviteId: result.inviteId, message: 'Invite sent successfully' }
 }
 
 export async function resendInvite(inviteId: string): Promise<ActionResult> {
   const { supabase, user } = await requireAdmin()
 
-  const { data: invite } = await supabase
-    .from('recruiter_access')
-    .select('id, recruiter_email, company_id, revoked_at, accepted_at, company(name)')
-    .eq('id', inviteId)
-    .single<RecruiterInviteWithCompany>()
+  const invite = await AdminService.getInviteForResend(supabase, inviteId)
   if (!invite) return { success: false, error: 'Invite not found' }
   if (invite.revoked_at) return { success: false, error: 'Invite revoked' }
   if (invite.accepted_at) return { success: false, error: 'Invite already accepted' }
 
-  // Regenerate token and extend expiration
-  const newToken = generateInviteToken()
-  const newExpiration = calculateExpirationDate(7)
-  
-  const { error: updateError } = await supabase
-    .from('recruiter_access')
-    .update({ 
-      invite_token: newToken,
-      invite_expires_at: newExpiration
-    })
-    .eq('id', inviteId)
-  if (updateError) return { success: false, error: 'Failed to update invite token' }
+  const regenerateResult = await AdminService.regenerateInviteToken(supabase, inviteId)
+  if (!regenerateResult.success) {
+    return { success: false, error: regenerateResult.error }
+  }
 
   // Resend email
   try {
-    const company = Array.isArray(invite.company) ? invite.company[0] : invite.company
-    const companyName = company?.name
-    await sendInviteEmail(invite.recruiter_email, newToken, companyName)
+    await sendInviteEmail(invite.recruiter_email, regenerateResult.token, invite.company?.name)
   } catch (error) {
     return { success: false, error: `Failed to send email: ${getErrorMessage(error)}` }
   }
@@ -240,24 +193,14 @@ export async function resendInvite(inviteId: string): Promise<ActionResult> {
 export async function revokeInvite(inviteId: string): Promise<ActionResult> {
   const { supabase, user } = await requireAdmin()
 
-  const { data: invite } = await supabase
-    .from('recruiter_access')
-    .select('id, recruiter_email, company_id, revoked_at')
-    .eq('id', inviteId)
-    .single<Pick<RecruiterAccessRow, 'id' | 'recruiter_email' | 'company_id' | 'revoked_at'>>()
+  const invite = await AdminService.getInviteForRevoke(supabase, inviteId)
   if (!invite) return { success: false, error: 'Invite not found' }
   if (invite.revoked_at) return { success: false, error: 'Invite already revoked' }
 
-  const { error } = await supabase
-    .from('recruiter_access')
-    .update({
-      revoked_at: new Date().toISOString(),
-      revoked_by_id: user.id,
-      is_active: false,
-    })
-    .eq('id', inviteId)
-
-  if (error) return { success: false, error: 'Failed to revoke invite' }
+  const result = await AdminService.revokeInvite(supabase, user.id, inviteId)
+  if (!result.success) {
+    return result
+  }
 
   await auditLog('REVOKE_INVITE', {
     adminId: user.id,

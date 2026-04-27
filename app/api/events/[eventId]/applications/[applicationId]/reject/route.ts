@@ -42,15 +42,15 @@ export async function POST(
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  if (application && application.user && application.event) {
-    const user = application.user as unknown as { email: string; name: string | null }
-    const event = application.event as unknown as { title: string; Chapter?: { name: string } | null }
+  if (application && application.User && application.Event) {
+    const user = application.User as unknown as { email: string; name: string | null }
+    const event = application.Event as unknown as { title: string; Chapter?: { name: string } | null }
     import('@/lib/emails/send-email').then(({ sendApplicationRejectedEmail }) => {
       sendApplicationRejectedEmail(
         user.email,
         user.name ?? 'Student',
         event.title,
-        event.chapter?.name || 'LEAD Chapter'
+        event.Chapter?.name || 'LEAD Chapter'
       ).catch(err => console.error('Email error:', err))
     })
   }

@@ -110,7 +110,7 @@ export function EventApplicationsClient({
         <h1 className="text-3xl font-bold">{event.title}</h1>
         <div className="mt-2 flex items-center gap-3">
           <Badge variant="outline" className="text-sm">
-            {event.access_model === 'application' ? 'Application Required' : 'Open Registration'}
+            {event.accessModel === 'application' ? 'Application Required' : 'Open Registration'}
           </Badge>
           <span className="text-sm text-muted-foreground">
             Capacity: {registeredCount} / {capacity ?? 'Unlimited'} registered

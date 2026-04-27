@@ -31,20 +31,38 @@ describe('ChapterService', () => {
   // ───────────────────────────────────────────────────────────────
   // Helper: Build a Supabase mock that routes `from(table)` calls
   // ───────────────────────────────────────────────────────────────
-  const buildMockSupabase = (overrides: Record<string, any> = {}) => {
+  interface MockSelectChain {
+    eq: ReturnType<typeof vi.fn>
+    in: ReturnType<typeof vi.fn>
+    single: ReturnType<typeof vi.fn>
+  }
+
+  interface MockUpdateChain {
+    eq: ReturnType<typeof vi.fn>
+  }
+
+  interface TableMock {
+    select?: ReturnType<typeof vi.fn>
+    update?: ReturnType<typeof vi.fn>
+    upsert?: ReturnType<typeof vi.fn>
+    _selectChain?: MockSelectChain
+    _updateChain?: MockUpdateChain
+  }
+
+  const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
     // Chain for select queries: .select().eq().single() or .select().in()
-    const selectChain = {
+    const selectChain: MockSelectChain = {
       eq: vi.fn().mockReturnThis(),
       in: vi.fn().mockResolvedValue({ data: [], error: null }),
       single: vi.fn(),
     }
 
     // Chain for update queries: .update().eq()
-    const updateChain = {
+    const updateChain: MockUpdateChain = {
       eq: vi.fn().mockResolvedValue({ error: null }),
     }
 
-    const tableMocks: Record<string, any> = {
+    const tableMocks: Record<string, TableMock> = {
       student_profile: {
         select: vi.fn().mockReturnValue(selectChain),
         update: vi.fn().mockReturnValue(updateChain),
@@ -76,7 +94,7 @@ describe('ChapterService', () => {
 
       vi.mocked(generateUniqueMemberId).mockResolvedValue('LEAD-123456')
 
-      const result = await ChapterService.approveMember(mockSupabase as any, 'user-123', 'approver-1')
+      const result = await ChapterService.approveMember(mockSupabase as unknown as SupabaseClient, 'user-123', 'approver-1')
 
       expect(result).toEqual({ success: true, member_id: 'LEAD-123456' })
       expect(mockSupabase.from).toHaveBeenCalledWith('student_profile')
@@ -102,7 +120,7 @@ describe('ChapterService', () => {
         error: { message: 'Row not found' },
       })
 
-      const result = await ChapterService.approveMember(mockSupabase as any, 'user-123', 'approver-1')
+      const result = await ChapterService.approveMember(mockSupabase as unknown as SupabaseClient, 'user-123', 'approver-1')
 
       expect(result).toEqual({ success: false, error: 'Profile not found' })
       expect(generateUniqueMemberId).not.toHaveBeenCalled()
@@ -116,7 +134,7 @@ describe('ChapterService', () => {
         error: null,
       })
 
-      const result = await ChapterService.approveMember(mockSupabase as any, 'user-123', 'approver-1')
+      const result = await ChapterService.approveMember(mockSupabase as unknown as SupabaseClient, 'user-123', 'approver-1')
 
       expect(result).toEqual({ success: false, error: 'Cannot approve incomplete profile' })
       expect(generateUniqueMemberId).not.toHaveBeenCalled()
@@ -132,7 +150,7 @@ describe('ChapterService', () => {
 
       vi.mocked(generateUniqueMemberId).mockRejectedValue(new Error('Too many collisions'))
 
-      const result = await ChapterService.approveMember(mockSupabase as any, 'user-123', 'approver-1')
+      const result = await ChapterService.approveMember(mockSupabase as unknown as SupabaseClient, 'user-123', 'approver-1')
 
       expect(result).toEqual({
         success: false,
@@ -154,7 +172,7 @@ describe('ChapterService', () => {
         error: { message: 'Database error' },
       })
 
-      const result = await ChapterService.approveMember(mockSupabase as any, 'user-123', 'approver-1')
+      const result = await ChapterService.approveMember(mockSupabase as unknown as SupabaseClient, 'user-123', 'approver-1')
 
       expect(result).toEqual({ success: false, error: 'Failed to approve member' })
     })
@@ -185,7 +203,7 @@ describe('ChapterService', () => {
         .mockResolvedValueOnce('LEAD-222222')
 
       const result = await ChapterService.approveMembersBulk(
-        mockSupabase as any,
+        mockSupabase as unknown as SupabaseClient,
         ['user-1', 'user-2'],
         'approver-1',
         'ch-1'
@@ -217,7 +235,7 @@ describe('ChapterService', () => {
       vi.mocked(generateUniqueMemberId).mockResolvedValueOnce('LEAD-111111')
 
       const result = await ChapterService.approveMembersBulk(
-        mockSupabase as any,
+        mockSupabase as unknown as SupabaseClient,
         ['user-1', 'user-2'],
         'approver-1',
         'ch-1'
@@ -247,7 +265,7 @@ describe('ChapterService', () => {
       vi.mocked(generateUniqueMemberId).mockResolvedValueOnce('LEAD-111111')
 
       const result = await ChapterService.approveMembersBulk(
-        mockSupabase as any,
+        mockSupabase as unknown as SupabaseClient,
         ['user-1', 'user-2'],
         'approver-1',
         'ch-1'
@@ -266,7 +284,7 @@ describe('ChapterService', () => {
       })
 
       const result = await ChapterService.approveMembersBulk(
-        mockSupabase as any,
+        mockSupabase as unknown as SupabaseClient,
         ['user-1'],
         'approver-1',
         null
@@ -289,7 +307,7 @@ describe('ChapterService', () => {
       })
 
       const result = await ChapterService.approveMembersBulk(
-        mockSupabase as any,
+        mockSupabase as unknown as SupabaseClient,
         ['user-1', 'user-2'],
         'approver-1',
         'ch-1'
@@ -323,7 +341,7 @@ describe('ChapterService', () => {
         .mockRejectedValueOnce(new Error('Collision'))
 
       const result = await ChapterService.approveMembersBulk(
-        mockSupabase as any,
+        mockSupabase as unknown as SupabaseClient,
         ['user-1', 'user-2'],
         'approver-1',
         'ch-1'
@@ -346,7 +364,7 @@ describe('ChapterService', () => {
     it('should reject a member successfully', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      const result = await ChapterService.rejectMember(mockSupabase as any, 'user-123')
+      const result = await ChapterService.rejectMember(mockSupabase as unknown as SupabaseClient, 'user-123')
 
       expect(result).toEqual({ success: true })
       expect(tableMocks.student_profile.update).toHaveBeenCalledWith(
@@ -366,7 +384,7 @@ describe('ChapterService', () => {
         error: { message: 'Database error' },
       })
 
-      const result = await ChapterService.rejectMember(mockSupabase as any, 'user-123')
+      const result = await ChapterService.rejectMember(mockSupabase as unknown as SupabaseClient, 'user-123')
 
       expect(result).toEqual({ success: false, error: 'Failed to reject member' })
     })
@@ -379,7 +397,7 @@ describe('ChapterService', () => {
     it('should revoke approval successfully', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      const result = await ChapterService.revokeApproval(mockSupabase as any, 'user-123')
+      const result = await ChapterService.revokeApproval(mockSupabase as unknown as SupabaseClient, 'user-123')
 
       expect(result).toEqual({ success: true })
       expect(tableMocks.student_profile.update).toHaveBeenCalledWith(
@@ -400,7 +418,7 @@ describe('ChapterService', () => {
         error: { message: 'Database error' },
       })
 
-      const result = await ChapterService.revokeApproval(mockSupabase as any, 'user-123')
+      const result = await ChapterService.revokeApproval(mockSupabase as unknown as SupabaseClient, 'user-123')
 
       expect(result).toEqual({ success: false, error: 'Failed to revoke approval' })
     })

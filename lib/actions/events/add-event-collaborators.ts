@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import type { EventChapterInsert } from '@/lib/types'
+import { EventService } from '@/lib/services/event.service'
 
 export async function addEventCollaborators(
   eventId: string,
@@ -20,36 +20,13 @@ export async function addEventCollaborators(
     return { error: 'Authentication required' }
   }
 
-  // Validate that the event exists and user has permission
-  const { data: event, error: eventError } = await supabase
-    .from('event')
-    .select('id')
-    .eq('id', eventId)
-    .single()
-
-  if (eventError || !event) {
-    return { error: 'Event not found' }
-  }
-
-  // Prepare insert data
-  const inserts: EventChapterInsert[] = chapter_ids.map(chapter_id => ({
-    eventId,
-    chapter_id,
-    addedById: user.id,
-  }))
-
-  // Insert collaborators
-  const { error: insertError } = await supabase
-    .from('event_chapter')
-    .insert(inserts)
-
-  if (insertError) {
-    console.error('Failed to add event collaborators:', insertError)
-    return { error: 'Failed to add collaborators' }
+  const result = await EventService.addEventCollaboratorsBulk(supabase, eventId, chapter_ids, user.id)
+  if (!result.success) {
+    return { error: result.error ?? 'Failed to add collaborators' }
   }
 
   revalidatePath(`/chapter/events/${eventId}`)
   revalidatePath('/chapter/events')
-  
+
   return { success: true }
 }

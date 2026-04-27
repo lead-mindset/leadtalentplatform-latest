@@ -69,7 +69,7 @@ export default async function AdminEventsPage({
         sortOrder={sortOrder}
         chapterFilters={chapterFilters}
         statusFilters={statusFilters}
-        chapterOptions={chapters.map((chapter) => ({ id: chapter.id, name: chapter.name }))}
+        chapterOptions={chapters.map((chapter: { id: string; name: string }) => ({ id: chapter.id, name: chapter.name }))}
       />
     </div>
   )

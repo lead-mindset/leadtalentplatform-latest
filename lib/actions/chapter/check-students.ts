@@ -32,26 +32,15 @@ async function assertCanManageMember(
   let chapterId: string | null = null
 
   if (user.role === 'editor') {
-    const { data: profile } = await supabase
-      .from('student_profile')
-      .select('chapter_id')
-      .eq('user_id', user.id)
-      .single()
-
-    chapterId = profile?.chapter_id ?? null
+    chapterId = await ChapterService.getStudentChapterId(supabase, user.id)
     if (!chapterId) {
       return { success: false, error: 'No chapter assigned' }
     }
 
     // If a specific target user is provided, verify they're in the editor's chapter
     if (targetUserId) {
-      const { data: targetProfile } = await supabase
-        .from('student_profile')
-        .select('chapter_id')
-        .eq('user_id', targetUserId)
-        .single()
-
-      if (!targetProfile || targetProfile.chapter_id !== chapterId) {
+      const targetChapterId = await ChapterService.getStudentChapterId(supabase, targetUserId)
+      if (!targetChapterId || targetChapterId !== chapterId) {
         return { success: false, error: 'Member not in your chapter' }
       }
     }
@@ -76,7 +65,7 @@ export async function approveMember(user_id: string) {
   try {
     const parsed = UserIdSchema.safeParse(user_id)
     if (!parsed.success) {
-      return { success: false, error: parsed.error.errors[0]?.message ?? 'Invalid user ID' }
+      return { success: false, error: parsed.error.issues[0]?.message ?? 'Invalid user ID' }
     }
 
     const auth = await assertCanManageMember(parsed.data)
@@ -90,17 +79,17 @@ export async function approveMember(user_id: string) {
     revalidateMemberPaths(parsed.data)
 
     // Send approval email (fire-and-forget)
-    const [{ data: userData }, { data: chapterData }] = await Promise.all([
-      auth.supabase.from('user').select('email, name').eq('id', parsed.data).single(),
-      auth.supabase.from('chapter').select('name').eq('id', auth.chapterId ?? '').single(),
+    const [userData, chapterName] = await Promise.all([
+      ChapterService.getUserBasicInfo(auth.supabase, parsed.data),
+      auth.chapterId ? ChapterService.getChapterName(auth.supabase, auth.chapterId) : Promise.resolve(null),
     ])
 
-    if (userData?.email && chapterData?.name) {
+    if (userData?.email && chapterName) {
       sendMemberApprovalEmail(
         userData.email,
         userData.name || userData.email.split('@')[0],
         result.member_id,
-        chapterData.name
+        chapterName
       ).catch(() => {})
     }
 
@@ -114,7 +103,7 @@ export async function approveMembersBulk(user_ids: string[]) {
   try {
     const parsed = UserIdsSchema.safeParse(user_ids)
     if (!parsed.success) {
-      return { success: false, error: parsed.error.errors[0]?.message ?? 'Invalid member list' }
+      return { success: false, error: parsed.error.issues[0]?.message ?? 'Invalid member list' }
     }
 
     const auth = await assertCanManageMember()
@@ -144,7 +133,7 @@ export async function rejectMember(user_id: string, _reason?: string) {
 
     const parsed = UserIdSchema.safeParse(user_id)
     if (!parsed.success) {
-      return { success: false, error: parsed.error.errors[0]?.message ?? 'Invalid user ID' }
+      return { success: false, error: parsed.error.issues[0]?.message ?? 'Invalid user ID' }
     }
 
     const auth = await assertCanManageMember(parsed.data)
@@ -166,7 +155,7 @@ export async function revokeApproval(user_id: string) {
   try {
     const parsed = UserIdSchema.safeParse(user_id)
     if (!parsed.success) {
-      return { success: false, error: parsed.error.errors[0]?.message ?? 'Invalid user ID' }
+      return { success: false, error: parsed.error.issues[0]?.message ?? 'Invalid user ID' }
     }
 
     const auth = await assertCanManageMember(parsed.data)

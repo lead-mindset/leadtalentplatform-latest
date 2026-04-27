@@ -21,7 +21,7 @@ export async function deleteEvent(eventId: string): Promise<DeleteEventResponse>
     const { chapter_id } = await requireChapterMember()
     if (!chapter_id) return { error: 'No chapter assigned' }
     if (event.chapter_id !== chapter_id) return { error: 'Insufficient permissions' }
-  } else if (user.role !== 'admin' && user.role !== 'editor') {
+  } else if (user.role !== 'admin') {
     return { error: 'Insufficient permissions' }
   }
 

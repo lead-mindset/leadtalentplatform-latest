@@ -278,12 +278,12 @@ export async function requireRecruiter(): Promise<{
     .select(RECRUITER_ACCESS_SELECT)
     .eq('accepted_by_user_id', authUser.id)
 
-  const company = activeAccess.company?.[0] ?? null
+  const company = activeAccess.Company?.[0] ?? null
   
   const user: RecruiterUser = {
     ...userData,
-    RecruiterAccess: allAccess ?? [],
-    Company: company as CompanyRow | null,
+    recruiter_access: allAccess ?? [],
+    company: company as CompanyRow | null,
   }
 
   return { supabase, user }

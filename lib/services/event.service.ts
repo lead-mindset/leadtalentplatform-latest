@@ -736,4 +736,953 @@ export const EventService = {
 
     return { publicUrl };
   },
+
+  // ───────────────────────────────────────────────────────────────
+  // getPublishedEvents
+  // ───────────────────────────────────────────────────────────────
+  async getPublishedEvents(
+    supabase: SupabaseClient<Database>
+  ): Promise<EventWithDetails[]> {
+    const { data, error } = await supabase
+      .from('event_with_chapter')
+      .select(`
+        id,
+        title,
+        description,
+        cover_image,
+        start_at,
+        end_at,
+        location,
+        meeting_url,
+        event_type,
+        capacity,
+        is_published,
+        access_model,
+        application_form_url,
+        chapter_id,
+        created_by_id,
+        created_at,
+        updated_at,
+        chapter_name,
+        chapter_university,
+        chapter_city,
+        chapter_region
+      `)
+      .eq('is_published', true)
+      .order('start_at', { ascending: true })
+
+    if (error || !data) {
+      console.error('[getPublishedEvents] Error:', error)
+      return []
+    }
+
+    const eventRows = data as unknown[]
+    const eventIds = eventRows.map((event) => event.id)
+
+    const { data: registrations, error: registrationsError } = await supabase
+      .from('event_registration')
+      .select('event_id, status')
+      .in('event_id', eventIds)
+      .eq('status', 'registered')
+
+    if (registrationsError) {
+      console.error('[getPublishedEvents] Registration count error:', registrationsError)
+    }
+
+    const countsByEventId = new Map<string, number>()
+    for (const row of registrations ?? []) {
+      countsByEventId.set(row.event_id, (countsByEventId.get(row.event_id) ?? 0) + 1)
+    }
+
+    return eventRows
+      .map((event) => {
+        const chapter = event.chapter_name ? {
+          id: event.chapter_id,
+          name: event.chapter_name,
+          university: event.chapter_university,
+          city: event.chapter_city,
+          region: event.chapter_region,
+          created_at: null,
+          updated_at: null,
+          instagram_url: null,
+          latitude: null,
+          longitude: null,
+          location_point: null,
+        } : null
+
+        return {
+          id: event.id,
+          title: event.title,
+          description: event.description,
+          cover_image: event.cover_image,
+          start_at: event.start_at,
+          end_at: event.end_at,
+          location: event.location,
+          meeting_url: event.meeting_url,
+          event_type: event.event_type,
+          capacity: event.capacity,
+          is_published: event.is_published,
+          access_model: event.access_model,
+          application_form_url: event.application_form_url,
+          chapter_id: event.chapter_id,
+          created_by_id: event.created_by_id,
+          created_at: event.created_at,
+          updated_at: event.updated_at,
+          location_address: null,
+          location_city: null,
+          location_latitude: null,
+          location_longitude: null,
+          location_name: null,
+          location_point: null,
+          location_region: null,
+          chapter: chapter as unknown as EventWithDetails['chapter'],
+          owner_chapter: chapter as unknown as EventWithDetails['owner_chapter'],
+          event_chapter: [],
+          collaborators: [],
+          created_by: null,
+          _count: {
+            registrations: countsByEventId.get(event.id) ?? 0,
+            chapters: 0,
+          },
+        }
+      })
+      .filter((e): e is EventWithDetails => e !== null)
+  },
+
+  // ───────────────────────────────────────────────────────────────
+  // getEventById
+  // ───────────────────────────────────────────────────────────────
+  async getEventById(
+    supabase: SupabaseClient<Database>,
+    id: string
+  ): Promise<EventWithDetails | null> {
+    const { data, error } = await supabase
+      .from('event_with_chapter')
+      .select(`
+        id,
+        title,
+        description,
+        cover_image,
+        start_at,
+        end_at,
+        location,
+        meeting_url,
+        event_type,
+        capacity,
+        is_published,
+        access_model,
+        application_form_url,
+        chapter_id,
+        created_by_id,
+        created_at,
+        updated_at,
+        chapter_name,
+        chapter_university,
+        chapter_city,
+        chapter_region
+      `)
+      .eq('id', id)
+      .maybeSingle()
+
+    if (error) {
+      console.error('[getEventById] Error:', error)
+      return null
+    }
+
+    if (!data) return null
+
+    const { count, error: countError } = await supabase
+      .from('event_registration')
+      .select('id', { count: 'exact', head: true })
+      .eq('event_id', id)
+      .eq('status', 'registered')
+
+    if (countError) {
+      console.error('[getEventById] Registration count error:', countError)
+    }
+
+    const event = data as unknown
+    const chapter = event.chapter_name ? {
+      id: event.chapter_id,
+      name: event.chapter_name,
+      university: event.chapter_university,
+      city: event.chapter_city,
+      region: event.chapter_region,
+      created_at: null,
+      updated_at: null,
+      instagram_url: null,
+      latitude: null,
+      longitude: null,
+      location_point: null,
+    } : null
+
+    return {
+      id: event.id,
+      title: event.title,
+      description: event.description,
+      cover_image: event.cover_image,
+      start_at: event.start_at,
+      end_at: event.end_at,
+      location: event.location,
+      meeting_url: event.meeting_url,
+      event_type: event.event_type,
+      capacity: event.capacity,
+      is_published: event.is_published,
+      access_model: event.access_model,
+      application_form_url: event.application_form_url,
+      chapter_id: event.chapter_id,
+      created_by_id: event.created_by_id,
+      created_at: event.created_at,
+      updated_at: event.updated_at,
+      location_address: null,
+      location_city: null,
+      location_latitude: null,
+      location_longitude: null,
+      location_name: null,
+      location_point: null,
+      location_region: null,
+      chapter: chapter as unknown as EventWithDetails['chapter'],
+      owner_chapter: chapter as unknown as EventWithDetails['owner_chapter'],
+      event_chapter: [],
+      collaborators: [],
+      created_by: null,
+      _count: {
+        registrations: count ?? 0,
+        chapters: 0,
+      },
+    }
+  },
+
+  // ───────────────────────────────────────────────────────────────
+  // getMyRegistrations
+  // ───────────────────────────────────────────────────────────────
+  async getMyRegistrations(
+    supabase: SupabaseClient<Database>,
+    userId: string
+  ): Promise<(EventRegistrationRow & { event: EventRow | null })[]> {
+    const { data, error } = await supabase
+      .from('event_registration_with_event')
+      .select(`
+        id,
+        event_id,
+        user_id,
+        registered_at,
+        status,
+        qr_token,
+        checked_in_at,
+        checked_in_by_id,
+        event_title,
+        event_description,
+        event_start_at,
+        event_end_at,
+        event_location,
+        event_meeting_url,
+        event_type,
+        event_capacity,
+        event_is_published,
+        event_chapter_id,
+        event_access_model
+      `)
+      .eq('user_id', userId)
+      .order('registered_at', { ascending: false })
+
+    if (error || !data) {
+      console.error('[getMyRegistrations] Error:', error)
+      return []
+    }
+
+    return (data as unknown[]).map((row) => {
+      const event: EventRow | null = row.event_title ? {
+        id: row.event_id,
+        title: row.event_title,
+        description: row.event_description,
+        start_at: row.event_start_at,
+        end_at: row.event_end_at,
+        location: row.event_location,
+        meeting_url: row.event_meeting_url,
+        event_type: row.event_type,
+        capacity: row.event_capacity,
+        is_published: row.event_is_published,
+        chapter_id: row.event_chapter_id,
+        access_model: row.event_access_model,
+        created_by_id: null,
+        created_at: row.registered_at,
+        updated_at: row.registered_at,
+        cover_image: null,
+        application_form_url: null,
+        location_address: null,
+        location_city: null,
+        location_latitude: null,
+        location_longitude: null,
+        location_name: null,
+        location_point: null,
+        location_region: null,
+      } : null
+
+      return {
+        id: row.id,
+        event_id: row.event_id,
+        user_id: row.user_id,
+        registered_at: row.registered_at,
+        status: row.status,
+        qr_token: row.qr_token,
+        checked_in_at: row.checked_in_at,
+        checked_in_by_id: row.checked_in_by_id,
+        event: event,
+      }
+    })
+  },
+
+  // ───────────────────────────────────────────────────────────────
+  // getChapterEvents
+  // ───────────────────────────────────────────────────────────────
+  async getChapterEvents(
+    supabase: SupabaseClient<Database>,
+    chapter_id: string
+  ): Promise<(EventWithDetails & { is_owned_by_chapter: boolean })[]> {
+    try {
+      const { data: ownedEvents, error: ownedError } = await supabase
+        .from('event_with_chapter')
+        .select(`
+          id,
+          title,
+          description,
+          cover_image,
+          start_at,
+          end_at,
+          location,
+          meeting_url,
+          event_type,
+          capacity,
+          is_published,
+          access_model,
+          application_form_url,
+          chapter_id,
+          created_by_id,
+          created_at,
+          updated_at,
+          chapter_name,
+          chapter_university,
+          chapter_city,
+          chapter_region
+        `)
+        .eq('chapter_id', chapter_id)
+        .order('start_at', { ascending: false })
+
+      if (ownedError) {
+        console.error('[getChapterEvents] Owned events error:', ownedError)
+      }
+
+      const { data: eventChapterRecords, error: ecError } = await supabase
+        .from('event_chapter')
+        .select('event_id')
+        .eq('chapter_id', chapter_id)
+
+      if (ecError) {
+        console.error('[getChapterEvents] event_chapter lookup error:', ecError)
+      }
+
+      let collaboratedEvents: unknown[] = []
+
+      if (eventChapterRecords && eventChapterRecords.length > 0) {
+        const eventIds = eventChapterRecords.map((r: unknown) => (r as Record<string, unknown>).event_id as string)
+
+        const { data: collabData, error: collabError } = await supabase
+          .from('event_with_chapter')
+          .select(`
+            id,
+            title,
+            description,
+            cover_image,
+            start_at,
+            end_at,
+            location,
+            meeting_url,
+            event_type,
+            capacity,
+            is_published,
+            access_model,
+            application_form_url,
+            chapter_id,
+            created_by_id,
+            created_at,
+            updated_at,
+            chapter_name,
+            chapter_university,
+            chapter_city,
+            chapter_region
+          `)
+          .in('id', eventIds)
+          .order('start_at', { ascending: false })
+
+        if (collabError) {
+          console.error('[getChapterEvents] Collaborated events error:', collabError)
+        }
+
+        collaboratedEvents = collabData || []
+      }
+
+      const transformEventData = (event: unknown): EventWithDetails => {
+        const chapter = event.chapter_name ? {
+          id: event.chapter_id,
+          name: event.chapter_name,
+          university: event.chapter_university,
+          city: event.chapter_city,
+          region: event.chapter_region,
+          created_at: null,
+          updated_at: null,
+          instagram_url: null,
+          latitude: null,
+          longitude: null,
+          location_point: null,
+        } : null
+
+        return {
+          id: event.id,
+          title: event.title,
+          description: event.description,
+          cover_image: event.cover_image,
+          start_at: event.start_at,
+          end_at: event.end_at,
+          location: event.location,
+          meeting_url: event.meeting_url,
+          event_type: event.event_type,
+          capacity: event.capacity,
+          is_published: event.is_published,
+          access_model: event.access_model,
+          application_form_url: event.application_form_url,
+          chapter_id: event.chapter_id,
+          created_by_id: event.created_by_id,
+          created_at: event.created_at,
+          updated_at: event.updated_at,
+          location_address: null,
+          location_city: null,
+          location_latitude: null,
+          location_longitude: null,
+          location_name: null,
+          location_point: null,
+          location_region: null,
+          chapter: chapter as unknown as EventWithDetails['chapter'],
+          owner_chapter: chapter as unknown as EventWithDetails['owner_chapter'],
+          event_chapter: [],
+          collaborators: [],
+          created_by: null,
+          _count: {
+            registrations: 0,
+            chapters: 0,
+          },
+        }
+      }
+
+      const allEvents = [...(ownedEvents || []), ...collaboratedEvents]
+      const uniqueEvents = allEvents.reduce((acc: unknown[], event: unknown) => {
+        if (!acc.find((e) => e.id === event.id)) acc.push(event)
+        return acc
+      }, [])
+
+      return uniqueEvents
+        .map(transformEventData)
+        .map((event) => ({
+          ...event,
+          is_owned_by_chapter: event.chapter_id === chapter_id,
+        }))
+        .filter((e): e is EventWithDetails & { is_owned_by_chapter: boolean } => e !== null)
+    } catch (error) {
+      console.error('[getChapterEvents] Unexpected error:', error)
+      return []
+    }
+  },
+
+  // ───────────────────────────────────────────────────────────────
+  // getAllEventsAdmin
+  // ───────────────────────────────────────────────────────────────
+  async getAllEventsAdmin(supabase: SupabaseClient<Database>): Promise<EventWithDetails[]> {
+    const EVENT_SELECT = `
+      id,
+      title,
+      description,
+      cover_image,
+      start_at,
+      end_at,
+      location,
+      meeting_url,
+      event_type,
+      capacity,
+      is_published,
+      chapter_id,
+      created_by_id,
+      created_at,
+      updated_at,
+      access_model,
+      application_form_url,
+      location_name,
+      location_address,
+      location_city,
+      location_region,
+      location_latitude,
+      location_longitude,
+      owner_chapter:chapter!event_chapter_id_fkey ( id, name, university ),
+      collaborators:event_chapter (
+        chapter:chapter!event_chapter_chapter_id_fkey ( id, name, university, city, region )
+      ),
+      created_by:user!event_created_by_id_fkey ( id, name, email ),
+      event_registration:event_registration!event_registration_event_id_fkey ( id, status )
+    `
+
+    function mapEvent(raw: unknown, registeredCount = 0): EventWithDetails | null {
+      if (!raw || typeof raw !== 'object') return null
+      const r = raw as Record<string, unknown>
+
+      const owner_chapter = (r.owner_chapter as Record<string, unknown> | null) ?? null
+      const createdBy = (r.created_by as Record<string, unknown> | null) ?? null
+
+      const collaborators = ((r.collaborators as unknown[]) ?? [])
+        .map((c: unknown) => {
+          const collab = c as Record<string, unknown>
+          const chapter = (collab.chapter as Record<string, unknown> | null) ?? null
+          return {
+            id: String(collab.id),
+            event_id: String(collab.event_id),
+            chapter_id: String(collab.chapter_id),
+            added_at: String(collab.added_at),
+            added_by_id: String(collab.added_by_id),
+            chapter: chapter,
+            name: (chapter?.name as string) ?? 'Unknown Chapter',
+          }
+        })
+        .filter((c) => c.chapter)
+
+      return {
+        id: raw.id,
+        title: raw.title,
+        description: raw.description ?? null,
+        cover_image: raw.cover_image ?? null,
+        start_at: raw.start_at,
+        end_at: raw.end_at,
+        location: raw.location ?? null,
+        meeting_url: raw.meeting_url ?? null,
+        event_type: raw.event_type,
+        capacity: raw.capacity ?? null,
+        is_published: !!raw.is_published,
+        access_model: raw.access_model,
+        application_form_url: raw.application_form_url ?? null,
+        chapter_id: raw.chapter_id ?? null,
+        created_by_id: raw.created_by_id,
+        created_at: raw.created_at,
+        updated_at: raw.updated_at,
+        location_address: null,
+        location_city: null,
+        location_latitude: null,
+        location_longitude: null,
+        location_name: null,
+        location_point: null,
+        location_region: null,
+        chapter: owner_chapter,
+        owner_chapter: owner_chapter,
+        event_chapter: collaborators,
+        collaborators,
+        created_by: createdBy,
+        _count: {
+          registrations: registeredCount,
+          chapters: collaborators.length,
+        },
+      }
+    }
+
+    const { data, error } = await supabase
+      .from('event')
+      .select(EVENT_SELECT)
+      .order('start_at', { ascending: false })
+
+    if (error || !data) {
+      console.error('[getAllEventsAdmin] Error:', error)
+      return []
+    }
+
+    return (data as unknown[])
+      .map(event => mapEvent(event, 0))
+      .filter((e): e is EventWithDetails => e !== null)
+  },
+
+  // ───────────────────────────────────────────────────────────────
+  // getEventRegistrations
+  // ───────────────────────────────────────────────────────────────
+  async getEventRegistrations(
+    supabase: SupabaseClient<Database>,
+    eventId: string
+  ): Promise<RegistrationWithUser[]> {
+    const { data, error } = await supabase
+      .from('event_registration')
+      .select(`
+        id,
+        event_id,
+        user_id,
+        registered_at,
+        status,
+        qr_token,
+        checked_in_at,
+        checked_in_by_id,
+        user:user!event_registration_user_id_fkey (
+          id,
+          name,
+          email,
+          phone,
+          student_profile!user_id!inner ( major, graduation_year, linkedin_url )
+        )
+      `)
+      .eq('event_id', eventId)
+      .order('registered_at', { ascending: true })
+
+    if (error || !data) {
+      console.error('[getEventRegistrations] Error:', error)
+      return []
+    }
+
+    function mapRegistration(raw: unknown): RegistrationWithUser | null {
+      if (!raw || typeof raw !== 'object') return null
+      const r = raw as Record<string, unknown>
+      const u = Array.isArray(r.user) ? (r.user as unknown[])[0] : r.user
+      const userRecord = u as Record<string, unknown> | null
+      const profile = Array.isArray(userRecord?.student_profile) ? (userRecord.student_profile as unknown[])[0] : userRecord?.student_profile
+      return {
+        id: raw.id,
+        event_id: raw.event_id,
+        user_id: raw.user_id,
+        registered_at: raw.registered_at,
+        status: raw.status,
+        qr_token: raw.qr_token,
+        checked_in_at: raw.checked_in_at ?? null,
+        checked_in_by_id: raw.checked_in_by_id ?? null,
+        user: u ?? null,
+        student_profile: profile ?? null,
+      }
+    }
+
+    return (data as unknown[])
+      .map(mapRegistration)
+      .filter((r): r is RegistrationWithUser => r !== null)
+  },
+
+  // ───────────────────────────────────────────────────────────────
+  // Event collaborators
+  // ───────────────────────────────────────────────────────────────
+  async addEventCollaborator(
+    supabase: SupabaseClient<Database>,
+    eventId: string,
+    chapter_id: string,
+    userId: string
+  ): Promise<{ success: true; data?: unknown } | { error: string }> {
+    if (!eventId || eventId === 'new') {
+      return { error: 'Invalid event id' }
+    }
+
+    const { data: event, error: eventError } = await supabase
+      .from('event')
+      .select('id, chapter_id')
+      .eq('id', eventId)
+      .maybeSingle()
+
+    if (eventError || !event) {
+      return { error: 'Event not found or access denied' }
+    }
+
+    if (chapter_id === event.chapter_id) {
+      return { error: 'The owner chapter cannot be added as a collaborator' }
+    }
+
+    const { data: existing } = await supabase
+      .from('event_chapter')
+      .select('id')
+      .eq('event_id', eventId)
+      .eq('chapter_id', chapter_id)
+
+    if (existing && existing.length > 0) {
+      return { error: 'This chapter is already a collaborator' }
+    }
+
+    const { data: newEventChapter, error } = await supabase
+      .from('event_chapter')
+      .insert({
+        event_id: eventId,
+        chapter_id: chapter_id,
+        added_by_id: userId,
+      })
+      .select(`
+        id,
+        chapter_id,
+        added_at,
+        added_by_id,
+        chapter:chapter!event_chapter_chapter_id_fkey (id, name, university),
+        added_by:user!event_chapter_added_by_id_fkey (id, name, email)
+      `)
+      .single()
+
+    if (error) {
+      return { error: error.message || 'Failed to add collaborator' }
+    }
+
+    return { success: true, data: newEventChapter }
+  },
+
+  async removeEventCollaborator(
+    supabase: SupabaseClient<Database>,
+    collaboratorId: string
+  ): Promise<{ success: true } | { error: string }> {
+    const { error } = await supabase
+      .from('event_chapter')
+      .delete()
+      .eq('id', collaboratorId)
+
+    if (error) {
+      return { error: error.message || 'Failed to remove collaborator' }
+    }
+
+    return { success: true }
+  },
+
+  async getEventCollaborators(
+    supabase: SupabaseClient<Database>,
+    eventId: string,
+    ownerChapterId?: string
+  ): Promise<{ success: true; data: unknown[] } | { error: string; data: [] }> {
+    const { data: eventChapters, error } = await supabase
+      .from('event_chapter')
+      .select(`
+        id,
+        chapter_id,
+        added_at,
+        added_by_id
+      `)
+      .eq('event_id', eventId)
+
+    if (error) {
+      return { error: error.message || 'Failed to load collaborators', data: [] }
+    }
+
+    const collaborators = (eventChapters || []).filter(
+      (collab: unknown) => (collab as Record<string, unknown>).chapter_id !== ownerChapterId
+    )
+
+    return { success: true, data: collaborators }
+  },
+
+  /**
+   * Check if a chapter is a collaborator on an event.
+   */
+  async checkEventCollaboration(
+    supabase: SupabaseClient<Database>,
+    eventId: string,
+    chapterId: string
+  ): Promise<boolean> {
+    const { data, error } = await supabase
+      .from('event_chapter')
+      .select('id')
+      .eq('event_id', eventId)
+      .eq('chapter_id', chapterId)
+      .maybeSingle()
+
+    if (error) {
+      console.error('[checkEventCollaboration] error:', error)
+      return false
+    }
+
+    return data !== null
+  },
+
+  /**
+   * Get approved registrations with applicant and event details.
+   */
+  async getApprovedRegistrations(
+    supabase: SupabaseClient<Database>,
+    registrationIds: string[]
+  ): Promise<
+    Array<{
+      id: string
+      applicant: { email: string; name: string | null } | null
+      checked_in_by: { email: string; name: string | null } | null
+      event: {
+        title: string
+        start_at: string
+        location: string | null
+        meeting_url: string | null
+        event_type: string
+      } | null
+    }>
+  > {
+    const { data, error } = await supabase
+      .from('event_registration')
+      .select(`
+        id,
+        applicant:user!event_registration_user_id_fkey (email, name),
+        checked_in_by:user!event_registration_checked_in_by_id_fkey (email, name),
+        event:event!event_registration_event_id_fkey (title, start_at, location, meeting_url, event_type)
+      `)
+      .in('id', registrationIds)
+      .eq('status', 'registered')
+
+    if (error || !data) {
+      console.error('[getApprovedRegistrations] error:', error)
+      return []
+    }
+
+    return (data as unknown[]).map((raw) => {
+      const r = raw as Record<string, unknown>
+      const applicant = Array.isArray(r.applicant) ? (r.applicant as unknown[])[0] : r.applicant
+      const checkedInBy = Array.isArray(r.checked_in_by) ? (r.checked_in_by as unknown[])[0] : r.checked_in_by
+      const event = Array.isArray(r.event) ? (r.event as unknown[])[0] : r.event
+
+      return {
+        id: String(r.id),
+        applicant: applicant
+          ? {
+              email: String((applicant as Record<string, unknown>).email),
+              name: ((applicant as Record<string, unknown>).name as string | null) ?? null,
+            }
+          : null,
+        checked_in_by: checkedInBy
+          ? {
+              email: String((checkedInBy as Record<string, unknown>).email),
+              name: ((checkedInBy as Record<string, unknown>).name as string | null) ?? null,
+            }
+          : null,
+        event: event
+          ? {
+              title: String((event as Record<string, unknown>).title),
+              start_at: String((event as Record<string, unknown>).start_at),
+              location: ((event as Record<string, unknown>).location as string | null) ?? null,
+              meeting_url: ((event as Record<string, unknown>).meeting_url as string | null) ?? null,
+              event_type: String((event as Record<string, unknown>).event_type),
+            }
+          : null,
+      }
+    })
+  },
+
+  /**
+   * Get rejected registrations with user and event details.
+   */
+  async getRejectedRegistrations(
+    supabase: SupabaseClient<Database>,
+    registrationIds: string[]
+  ): Promise<
+    Array<{
+      id: string
+      user: { email: string; name: string | null } | null
+      event: {
+        title: string
+        chapter: { name: string } | null
+      } | null
+    }>
+  > {
+    const { data, error } = await supabase
+      .from('event_registration')
+      .select(`
+        id,
+        user:user!event_registration_user_id_fkey (email, name),
+        event:event!event_registration_event_id_fkey (title, chapter!inner(name))
+      `)
+      .in('id', registrationIds)
+      .eq('status', 'rejected')
+
+    if (error || !data) {
+      console.error('[getRejectedRegistrations] error:', error)
+      return []
+    }
+
+    return (data as unknown[]).map((raw) => {
+      const r = raw as Record<string, unknown>
+      const user = Array.isArray(r.user) ? (r.user as unknown[])[0] : r.user
+      const event = Array.isArray(r.event) ? (r.event as unknown[])[0] : r.event
+      const chapter = event
+        ? Array.isArray((event as Record<string, unknown>).chapter)
+          ? ((event as Record<string, unknown>).chapter as unknown[])[0]
+          : (event as Record<string, unknown>).chapter
+        : null
+
+      return {
+        id: String(r.id),
+        user: user
+          ? {
+              email: String((user as Record<string, unknown>).email),
+              name: ((user as Record<string, unknown>).name as string | null) ?? null,
+            }
+          : null,
+        event: event
+          ? {
+              title: String((event as Record<string, unknown>).title),
+              chapter: chapter
+                ? {
+                    name: String((chapter as Record<string, unknown>).name),
+                  }
+                : null,
+            }
+          : null,
+      }
+    })
+  },
+
+  /**
+   * Bulk reject event applications.
+   */
+  async bulkRejectApplications(
+    supabase: SupabaseClient<Database>,
+    eventId: string,
+    applicationIds: string[]
+  ): Promise<{ success: boolean; error?: string }> {
+    const { error } = await supabase
+      .from('event_registration')
+      .update({
+        status: 'rejected',
+        qr_token: undefined,
+      })
+      .in('id', applicationIds)
+      .eq('event_id', eventId)
+      .eq('status', 'pending_review')
+
+    if (error) {
+      console.error('Bulk reject error:', error)
+      return { success: false, error: 'Failed to reject applications' }
+    }
+
+    return { success: true }
+  },
+
+  /**
+   * Bulk add event collaborators.
+   */
+  async addEventCollaboratorsBulk(
+    supabase: SupabaseClient<Database>,
+    eventId: string,
+    chapterIds: string[],
+    addedById: string
+  ): Promise<{ success: boolean; error?: string }> {
+    if (!eventId || eventId === 'new' || !chapterIds.length) {
+      return { success: false, error: 'Event ID and at least one chapter ID are required' }
+    }
+
+    const { data: event, error: eventError } = await supabase
+      .from('event')
+      .select('id')
+      .eq('id', eventId)
+      .single()
+
+    if (eventError || !event) {
+      return { success: false, error: 'Event not found' }
+    }
+
+    const inserts = chapterIds.map((chapter_id) => ({
+      event_id: eventId,
+      chapter_id,
+      added_by_id: addedById,
+    }))
+
+    const { error: insertError } = await supabase.from('event_chapter').insert(inserts)
+
+    if (insertError) {
+      console.error('Failed to add event collaborators:', insertError)
+      return { success: false, error: 'Failed to add collaborators' }
+    }
+
+    return { success: true }
+  },
 };

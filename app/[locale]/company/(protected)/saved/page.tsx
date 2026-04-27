@@ -10,7 +10,7 @@ export default async function SavedStudentsPage() {
   const { supabase, user } = await requireRecruiter();
   const saved_students = await getSavedStudents(supabase, user.id);
 
-  const students = saved_students.map((s) => s.Student);
+  const students = saved_students.map((s) => s.student);
   const savedStudentIds = students.map((s) => s.id);
 
   return (

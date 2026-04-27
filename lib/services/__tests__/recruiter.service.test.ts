@@ -7,10 +7,30 @@ import { SupabaseClient } from '@supabase/supabase-js'
  * All chain methods return the builder (this) for fluent chaining,
  * and the builder itself is thenable so `await query` resolves the final data.
  */
-const buildMockSupabase = (overrides: Record<string, any> = {}) => {
-  let builderThenValue: any = { data: [], error: null }
+interface MockBuilder {
+  eq: ReturnType<typeof vi.fn>
+  in: ReturnType<typeof vi.fn>
+  or: ReturnType<typeof vi.fn>
+  ilike: ReturnType<typeof vi.fn>
+  contains: ReturnType<typeof vi.fn>
+  limit: ReturnType<typeof vi.fn>
+  order: ReturnType<typeof vi.fn>
+  range: ReturnType<typeof vi.fn>
+  maybeSingle: ReturnType<typeof vi.fn>
+  single: ReturnType<typeof vi.fn>
+  then: ReturnType<typeof vi.fn>
+  _setThenValue: (value: unknown) => void
+}
 
-  const builder: any = {
+interface TableMock {
+  select?: ReturnType<typeof vi.fn>
+  _builder?: MockBuilder
+}
+
+const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
+  let builderThenValue: unknown = { data: [], error: null }
+
+  const builder: MockBuilder = {
     eq: vi.fn(() => builder),
     in: vi.fn(() => builder),
     or: vi.fn(() => builder),
@@ -21,13 +41,13 @@ const buildMockSupabase = (overrides: Record<string, any> = {}) => {
     range: vi.fn(() => builder),
     maybeSingle: vi.fn(() => Promise.resolve(builderThenValue)),
     single: vi.fn(() => Promise.resolve(builderThenValue)),
-    then: vi.fn((resolve: any) => resolve(builderThenValue)),
-    _setThenValue: (value: any) => {
+    then: vi.fn((resolve: (value: unknown) => unknown) => resolve(builderThenValue)),
+    _setThenValue: (value: unknown) => {
       builderThenValue = value
     },
   }
 
-  const tableMocks: Record<string, any> = {
+  const tableMocks: Record<string, TableMock> = {
     user: {
       select: vi.fn(() => builder),
       _builder: builder,
@@ -78,7 +98,7 @@ describe('RecruiterService', () => {
         count: 1,
       })
 
-      const result = await RecruiterService.getTalentPool(mockSupabase as any, {})
+      const result = await RecruiterService.getTalentPool(mockSupabase as unknown as SupabaseClient, {})
 
       expect(result.students).toHaveLength(1)
       expect(result.total).toBe(1)
@@ -95,7 +115,7 @@ describe('RecruiterService', () => {
         count: 0,
       })
 
-      await RecruiterService.getTalentPool(mockSupabase as any, {
+      await RecruiterService.getTalentPool(mockSupabase as unknown as SupabaseClient, {
         query: 'john',
         graduation_year: 2025,
         chapter_id: 'ch-1',
@@ -117,7 +137,7 @@ describe('RecruiterService', () => {
         count: null,
       })
 
-      const result = await RecruiterService.getTalentPool(mockSupabase as any, {})
+      const result = await RecruiterService.getTalentPool(mockSupabase as unknown as SupabaseClient, {})
 
       expect(result.students).toEqual([])
       expect(result.total).toBe(0)
@@ -150,7 +170,7 @@ describe('RecruiterService', () => {
         count: 1,
       })
 
-      const result = await RecruiterService.getSavedStudents(mockSupabase as any, 'recruiter-1', {})
+      const result = await RecruiterService.getSavedStudents(mockSupabase as unknown as SupabaseClient, 'recruiter-1', {})
 
       expect(result.students).toHaveLength(1)
       expect(result.total).toBe(1)
@@ -170,7 +190,7 @@ describe('RecruiterService', () => {
         error: null,
       })
 
-      const result = await RecruiterService.getTalentPoolFilterOptions(mockSupabase as any)
+      const result = await RecruiterService.getTalentPoolFilterOptions(mockSupabase as unknown as SupabaseClient)
 
       expect(result.years).toEqual([2024, 2025])
       expect(result.chapters).toHaveLength(2)
@@ -186,7 +206,7 @@ describe('RecruiterService', () => {
         error: { message: 'DB error' },
       })
 
-      const result = await RecruiterService.getTalentPoolFilterOptions(mockSupabase as any)
+      const result = await RecruiterService.getTalentPoolFilterOptions(mockSupabase as unknown as SupabaseClient)
 
       expect(result.years).toEqual([])
       expect(result.chapters).toEqual([])
@@ -202,7 +222,7 @@ describe('RecruiterService', () => {
         error: null,
       })
 
-      const result = await RecruiterService.getSavedStatus(mockSupabase as any, 'recruiter-1', ['user-1', 'user-2', 'user-3'])
+      const result = await RecruiterService.getSavedStatus(mockSupabase as unknown as SupabaseClient, 'recruiter-1', ['user-1', 'user-2', 'user-3'])
 
       expect(result).toEqual(['user-1', 'user-2'])
     })
@@ -210,7 +230,7 @@ describe('RecruiterService', () => {
     it('should return empty array for empty studentIds', async () => {
       const { mockSupabase } = buildMockSupabase()
 
-      const result = await RecruiterService.getSavedStatus(mockSupabase as any, 'recruiter-1', [])
+      const result = await RecruiterService.getSavedStatus(mockSupabase as unknown as SupabaseClient, 'recruiter-1', [])
 
       expect(result).toEqual([])
     })
@@ -223,7 +243,7 @@ describe('RecruiterService', () => {
         error: { message: 'DB error' },
       })
 
-      const result = await RecruiterService.getSavedStatus(mockSupabase as any, 'recruiter-1', ['user-1'])
+      const result = await RecruiterService.getSavedStatus(mockSupabase as unknown as SupabaseClient, 'recruiter-1', ['user-1'])
 
       expect(result).toEqual([])
     })

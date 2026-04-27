@@ -12,11 +12,9 @@ import { approveMembersBulk } from '@/lib/actions/chapter/check-students'
 
 export function MembersList({
   members,
-  currentUserId,
   status,
 }: {
   members: MemberWithProfile[]
-  currentUserId: string
   status: MemberFilterStatus
 }) {
   const router = useRouter()
@@ -49,14 +47,14 @@ export function MembersList({
 
     setIsSubmitting(true)
     try {
-      const result = await approveMembersBulk(selectedUserIds, currentUserId)
-      if (!result.success) {
+      const result = await approveMembersBulk(selectedUserIds)
+      if ('error' in result) {
         toast.error(result.error || 'Failed to bulk approve members')
         return
       }
 
       toast.success(
-        result.skipped && result.skipped > 0
+        result.skipped > 0
           ? `${result.count} approved, ${result.skipped} skipped`
           : `${result.count} members approved`
       )
@@ -94,7 +92,6 @@ export function MembersList({
           <MemberCard
             key={member.id}
             member={member}
-            currentUserId={currentUserId}
             showSelector={status === 'pending' && member.student_profile?.approval_status === 'pending' && member.student_profile?.is_filled}
             selected={selectedUserIds.includes(member.id)}
             onSelectChange={(checked) => onToggle(member.id, checked)}

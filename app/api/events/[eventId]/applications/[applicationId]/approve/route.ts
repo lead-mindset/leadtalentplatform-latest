@@ -36,9 +36,9 @@ export async function POST(
     .eq('id', applicationId)
     .single()
 
-  if (registration && registration.user && registration.event) {
-    const user = registration.user as unknown as { email: string; name: string | null }
-    const event = registration.event as unknown as { title: string; start_at: string; location: string | null; meeting_url: string | null; event_type: string }
+  if (registration && registration.User && registration.Event) {
+    const user = registration.User as unknown as { email: string; name: string | null }
+    const event = registration.Event as unknown as { title: string; start_at: string; location: string | null; meeting_url: string | null; event_type: string }
     import('@/lib/emails/send-email').then(({ sendApplicationApprovedEmail }) => {
       sendApplicationApprovedEmail(
         user.email,

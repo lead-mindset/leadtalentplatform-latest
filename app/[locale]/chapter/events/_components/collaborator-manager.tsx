@@ -127,7 +127,7 @@ const addedBy = Array.isArray(collab.addedBy) ? collab.addedBy[0] : collab.added
 
         // Handle case where Supabase returns chapter as array or object
         const chapter = Array.isArray(result.data?.chapter) ? result.data.chapter[0] : result.data?.chapter
-        const addedBy = Array.isArray(result.data?.addedBy) ? result.data.addedBy[0] : result.data?.addedBy
+        const addedBy = Array.isArray(result.data?.added_by) ? result.data.added_by[0] : result.data?.added_by
 
           if (!chapter || !addedBy || !result.data) {
             return
@@ -141,7 +141,7 @@ const addedBy = Array.isArray(collab.addedBy) ? collab.addedBy[0] : collab.added
               name: chapter.name,
               university: chapter.university
             },
-            addedAt: result.data.addedAt,
+            addedAt: result.data.added_at,
             addedBy: {
               id: addedBy.id,
               name: addedBy.name,

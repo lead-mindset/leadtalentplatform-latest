@@ -273,6 +273,109 @@ export type AdminEventsListResponse = {
 }
 
 // ───────────────────────────────────────────────────────────────
+// Exported types (chapters.ts)
+// ───────────────────────────────────────────────────────────────
+
+export type ChapterSortKey =
+  | 'name'
+  | 'university'
+  | 'city'
+  | 'region'
+  | 'member_count'
+  | 'active_events_count'
+
+export type ChaptersFilters = {
+  search?: string
+}
+
+export type ChaptersPagination = {
+  page: number
+  pageSize: 25 | 50 | 100
+  sortBy?: ChapterSortKey
+  sortOrder?: SortOrder
+}
+
+export type ChapterListItem = {
+  id: string
+  name: string
+  university: string
+  city: string | null
+  region: string | null
+  member_count: number
+  active_events_count: number
+  editors: { id: string; name: string; email: string }[]
+}
+
+export type ChaptersListResponse = {
+  items: ChapterListItem[]
+  total: number
+  page: number
+  pageSize: number
+}
+
+export type ChapterFormInput = {
+  id: string
+  name: string
+  university: string
+  city?: string
+  region?: string
+  editorIds?: string[]
+}
+
+// ───────────────────────────────────────────────────────────────
+// Exported types (companies.ts)
+// ───────────────────────────────────────────────────────────────
+
+export type CompanySortKey = 'name' | 'created_at' | 'active_recruiters' | 'pending_invites'
+
+export type CompaniesFilters = {
+  search?: string
+}
+
+export type CompaniesPagination = {
+  page: number
+  pageSize: 25 | 50 | 100
+  sortBy?: CompanySortKey
+  sortOrder?: SortOrder
+}
+
+export type CompanyListItem = {
+  id: string
+  name: string
+  created_at: string
+  created_by_name: string | null
+  active_recruiters: number
+  pending_invites: number
+}
+
+export type CompanyDetail = {
+  id: string
+  name: string
+  created_at: string
+  created_by_name: string | null
+  recruiters: {
+    id: string
+    recruiter_email: string
+    is_active: boolean
+    invite_token: string
+    invite_expires_at: string | null
+    accepted_at: string | null
+    accepted_by_user_id: string | null
+    revoked_at: string | null
+    granted_at: string
+  }[]
+}
+
+export type CompaniesListResponse = {
+  items: CompanyListItem[]
+  total: number
+  page: number
+  pageSize: number
+}
+
+export type InviteResult = { success: true; inviteLink?: string } | { success: false; error: string }
+
+// ───────────────────────────────────────────────────────────────
 // Internal constants
 // ───────────────────────────────────────────────────────────────
 
@@ -436,6 +539,64 @@ function sortAdminEventRows(rows: AdminEventListItem[], sortBy: EventSortKey, so
       case 'start_at':
       default:
         return (new Date(a.start_at).getTime() - new Date(b.start_at).getTime()) * direction
+    }
+  })
+}
+
+// ───────────────────────────────────────────────────────────────
+// Internal helper functions (chapters.ts)
+// ───────────────────────────────────────────────────────────────
+
+function sortChapterRows(items: ChapterListItem[], sortBy: ChapterSortKey, sortOrder: SortOrder): ChapterListItem[] {
+  const direction = sortOrder === 'asc' ? 1 : -1
+  return [...items].sort((a, b) => {
+    switch (sortBy) {
+      case 'name':
+        return a.name.localeCompare(b.name) * direction
+      case 'university':
+        return a.university.localeCompare(b.university) * direction
+      case 'city':
+        return (a.city ?? '').localeCompare(b.city ?? '') * direction
+      case 'region':
+        return (a.region ?? '').localeCompare(b.region ?? '') * direction
+      case 'member_count':
+        return (a.member_count - b.member_count) * direction
+      case 'active_events_count':
+        return (a.active_events_count - b.active_events_count) * direction
+      default:
+        return a.name.localeCompare(b.name) * direction
+    }
+  })
+}
+
+// ───────────────────────────────────────────────────────────────
+// Internal helper functions (companies.ts)
+// ───────────────────────────────────────────────────────────────
+
+function generateInviteLink(token: string): string {
+  return `/recruiter/access?token=${token}`
+}
+
+function getExpiryDate(days: number | null): string | null {
+  if (days === null) return null
+  const date = new Date()
+  date.setDate(date.getDate() + days)
+  return date.toISOString()
+}
+
+function sortCompanyRows(rows: CompanyListItem[], sortBy: CompanySortKey, sortOrder: SortOrder): CompanyListItem[] {
+  const direction = sortOrder === 'asc' ? 1 : -1
+  return [...rows].sort((a, b) => {
+    switch (sortBy) {
+      case 'name':
+        return a.name.localeCompare(b.name) * direction
+      case 'active_recruiters':
+        return (a.active_recruiters - b.active_recruiters) * direction
+      case 'pending_invites':
+        return (a.pending_invites - b.pending_invites) * direction
+      case 'created_at':
+      default:
+        return (new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) * direction
     }
   })
 }
@@ -1511,5 +1672,756 @@ export const AdminService = {
       page,
       pageSize: pagination.pageSize,
     }
+  },
+
+  // ───────────────────────────────────────────────────────────────
+  // getChaptersList
+  // ───────────────────────────────────────────────────────────────
+  async getChaptersList(
+    supabase: SupabaseClient<Database>,
+    filters: ChaptersFilters,
+    pagination: ChaptersPagination
+  ): Promise<ChaptersListResponse> {
+    let query = supabase
+      .from('chapter')
+      .select('id, name, university, city, region, created_at, updated_at')
+
+    const search = filters.search?.trim()
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,university.ilike.%${search}%`)
+    }
+
+    const { data: chapters, error } = await query
+    if (error || !chapters) {
+      console.error('[admin/chapters] getChaptersList error:', error)
+      return { items: [], total: 0, page: 1, pageSize: pagination.pageSize }
+    }
+
+    const chapterRows = chapters as ChapterListRow[]
+    const chapter_ids = chapterRows.map((chapter: ChapterListRow) => chapter.id)
+    if (chapter_ids.length === 0) {
+      return { items: [], total: 0, page: 1, pageSize: pagination.pageSize }
+    }
+
+    const now = new Date().toISOString()
+    const [{ data: profiles }, { data: events }] = await Promise.all([
+      supabase
+        .from('student_profile')
+        .select('chapter_id, user_id, user!student_profile_user_id_fkey(name, email, role)')
+        .in('chapter_id', chapter_ids),
+      supabase
+        .from('event')
+        .select('id, chapter_id')
+        .in('chapter_id', chapter_ids)
+        .eq('is_published', true)
+        .gt('end_at', now),
+    ])
+
+    type ChapterProfileRow = Pick<StudentProfileRow, 'chapter_id' | 'user_id'> & {
+      user:
+        | Pick<UserRow, 'name' | 'email' | 'role'>
+        | Pick<UserRow, 'name' | 'email' | 'role'>[]
+        | null
+    }
+    type ChapterEventRow = Pick<EventRow, 'id' | 'chapter_id'>
+
+    const profileRows = (profiles ?? []) as unknown as ChapterProfileRow[]
+    const eventRows = (events ?? []) as unknown as ChapterEventRow[]
+
+    const profileByChapter = new Map<string, ChapterProfileRow[]>()
+    profileRows.forEach((profile: ChapterProfileRow) => {
+      const list = profileByChapter.get(profile.chapter_id) ?? []
+      list.push(profile)
+      profileByChapter.set(profile.chapter_id, list)
+    })
+
+    const eventCountByChapter = new Map<string, number>()
+    eventRows.forEach((event: ChapterEventRow) => {
+      const current = eventCountByChapter.get(event.chapter_id ?? '') ?? 0
+      eventCountByChapter.set(event.chapter_id ?? '', current + 1)
+    })
+
+    const rows: ChapterListItem[] = chapterRows.map((chapter: ChapterListRow) => {
+      const chapterProfiles = profileByChapter.get(chapter.id) ?? []
+      const editors = chapterProfiles
+        .filter((profile: ChapterProfileRow) => {
+          const user = Array.isArray(profile.user) ? profile.user[0] : profile.user
+          return user?.role === 'editor'
+        })
+        .map((profile: ChapterProfileRow) => {
+          const user = Array.isArray(profile.user) ? profile.user[0] : profile.user
+          return {
+            id: profile.user_id,
+            name: user?.name ?? 'Unknown',
+            email: user?.email ?? 'unknown@example.com',
+          }
+        })
+
+      return {
+        id: chapter.id,
+        name: chapter.name,
+        university: chapter.university,
+        city: chapter.city,
+        region: chapter.region,
+        member_count: chapterProfiles.length,
+        active_events_count: eventCountByChapter.get(chapter.id) ?? 0,
+        editors,
+      }
+    })
+
+    const sortBy = pagination.sortBy ?? 'name'
+    const sortOrder = pagination.sortOrder ?? 'asc'
+    const sorted = sortChapterRows(rows, sortBy, sortOrder)
+    const page = Math.max(1, pagination.page)
+    const start = (page - 1) * pagination.pageSize
+    const end = start + pagination.pageSize
+
+    return {
+      items: sorted.slice(start, end),
+      total: sorted.length,
+      page,
+      pageSize: pagination.pageSize,
+    }
+  },
+
+  // ───────────────────────────────────────────────────────────────
+  // updateChapter
+  // ───────────────────────────────────────────────────────────────
+  async updateChapter(
+    supabase: SupabaseClient<Database>,
+    id: string,
+    input: { name: string; university: string; city?: string | null; region?: string | null }
+  ): Promise<ActionResult> {
+    const { error } = await supabase
+      .from('chapter')
+      .update({
+        name: input.name,
+        university: input.university,
+        city: input.city || null,
+        region: input.region || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+
+    if (error) {
+      console.error('[admin/chapters] updateChapter error:', error)
+      return { success: false, error: 'Failed to update chapter.' }
+    }
+
+    return { success: true }
+  },
+
+  // ───────────────────────────────────────────────────────────────
+  // deleteChapter
+  // ───────────────────────────────────────────────────────────────
+  async deleteChapter(supabase: SupabaseClient<Database>, id: string): Promise<ActionResult> {
+    const [{ count: membersCount }, { count: eventsCount }] = await Promise.all([
+      supabase
+        .from('student_profile')
+        .select('user_id', { count: 'exact', head: true })
+        .eq('chapter_id', id),
+      supabase
+        .from('event')
+        .select('id', { count: 'exact', head: true })
+        .eq('chapter_id', id),
+    ])
+
+    if ((membersCount ?? 0) > 0 || (eventsCount ?? 0) > 0) {
+      return { success: false, error: 'Chapter cannot be deleted while it has members or events.' }
+    }
+
+    const { error } = await supabase.from('chapter').delete().eq('id', id)
+    if (error) {
+      console.error('[admin/chapters] deleteChapter error:', error)
+      return { success: false, error: 'Failed to delete chapter.' }
+    }
+
+    return { success: true }
+  },
+
+  // ───────────────────────────────────────────────────────────────
+  // getAvailableEditors
+  // ───────────────────────────────────────────────────────────────
+  async getAvailableEditors(
+    supabase: SupabaseClient<Database>,
+    chapter_id: string
+  ): Promise<{ id: string; name: string; email: string; role: string }[]> {
+    const { data, error } = await supabase
+      .from('student_profile')
+      .select('user_id, user!student_profile_user_id_fkey(id, name, email, role)')
+      .eq('chapter_id', chapter_id)
+
+    if (error) {
+      console.error('[admin/chapters] getAvailableEditors error:', error)
+      return []
+    }
+
+    type AvailableEditorRow = Pick<StudentProfileRow, 'user_id'> & {
+      user:
+        | Pick<UserRow, 'id' | 'name' | 'email' | 'role'>
+        | Pick<UserRow, 'id' | 'name' | 'email' | 'role'>[]
+        | null
+    }
+
+    return ((data ?? []) as unknown as AvailableEditorRow[])
+      .map((row: AvailableEditorRow) => {
+        const user = Array.isArray(row.user) ? row.user[0] : row.user
+        if (!user) return null
+        if (user.role !== 'member' && user.role !== 'editor') return null
+        return {
+          id: user.id,
+          name: user.name ?? 'Unknown',
+          email: user.email,
+          role: user.role,
+        }
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null)
+  },
+
+  // ───────────────────────────────────────────────────────────────
+  // assignEditor
+  // ───────────────────────────────────────────────────────────────
+  async assignEditor(supabase: SupabaseClient<Database>, userId: string, chapter_id: string): Promise<ActionResult> {
+    const { data: profile } = await supabase
+      .from('student_profile')
+      .select('user_id, chapter_id')
+      .eq('user_id', userId)
+      .maybeSingle()
+
+    if (!profile || profile.chapter_id !== chapter_id) {
+      return { success: false, error: 'User must be a member of this chapter.' }
+    }
+
+    const { error } = await supabase.from('user').update({ role: 'editor' }).eq('id', userId)
+    if (error) {
+      console.error('[admin/chapters] assignEditor error:', error)
+      return { success: false, error: 'Failed to assign editor.' }
+    }
+
+    return { success: true }
+  },
+
+  // ───────────────────────────────────────────────────────────────
+  // removeEditor
+  // ───────────────────────────────────────────────────────────────
+  async removeEditor(supabase: SupabaseClient<Database>, userId: string, chapter_id: string): Promise<ActionResult> {
+    const { data: profile } = await supabase
+      .from('student_profile')
+      .select('user_id, chapter_id')
+      .eq('user_id', userId)
+      .maybeSingle()
+
+    if (!profile || profile.chapter_id !== chapter_id) {
+      return { success: false, error: 'User does not belong to this chapter.' }
+    }
+
+    const { error } = await supabase.from('user').update({ role: 'member' }).eq('id', userId)
+    if (error) {
+      console.error('[admin/chapters] removeEditor error:', error)
+      return { success: false, error: 'Failed to remove editor.' }
+    }
+
+    return { success: true }
+  },
+
+  // ───────────────────────────────────────────────────────────────
+  // getChapterStats
+  // ───────────────────────────────────────────────────────────────
+  async getChapterStats(supabase: SupabaseClient<Database>, id: string) {
+    const now = new Date().toISOString()
+    const [{ count: members }, { count: publishedActiveEvents }, { count: totalEvents }] = await Promise.all([
+      supabase
+        .from('student_profile')
+        .select('user_id', { count: 'exact', head: true })
+        .eq('chapter_id', id),
+      supabase
+        .from('event')
+        .select('id', { count: 'exact', head: true })
+        .eq('chapter_id', id)
+        .eq('is_published', true)
+        .gt('end_at', now),
+      supabase
+        .from('event')
+        .select('id', { count: 'exact', head: true })
+        .eq('chapter_id', id),
+    ])
+
+    return {
+      member_count: members ?? 0,
+      active_events_count: publishedActiveEvents ?? 0,
+      totalEvents: totalEvents ?? 0,
+    }
+  },
+
+  // ───────────────────────────────────────────────────────────────
+  // getCompaniesList
+  // ───────────────────────────────────────────────────────────────
+  async getCompaniesList(
+    supabase: SupabaseClient<Database>,
+    filters: CompaniesFilters,
+    pagination: CompaniesPagination
+  ): Promise<CompaniesListResponse> {
+    const now = new Date().toISOString()
+
+    let query = supabase
+      .from('company')
+      .select('id, name, created_at, created_by_id, created_by:user!company_created_by_id_fkey(name)')
+
+    const search = filters.search?.trim()
+    if (search) {
+      query = query.ilike('name', `%${search}%`)
+    }
+
+    const { data: companies, error } = await query
+    if (error || !companies) {
+      console.error('[admin/companies] getCompaniesList error:', error)
+      return { items: [], total: 0, page: 1, pageSize: pagination.pageSize }
+    }
+
+    type CompanyListRow = Pick<CompanyRow, 'id' | 'name' | 'created_at' | 'created_by_id'> & {
+      created_by: Pick<UserRow, 'name'> | Pick<UserRow, 'name'>[] | null
+    }
+    type CompanyAccessRow = Pick<
+      RecruiterAccessRow,
+      'id' | 'company_id' | 'is_active' | 'accepted_at' | 'revoked_at' | 'invite_expires_at'
+    >
+
+    const companyRows = companies as CompanyListRow[]
+    const ids = companyRows.map((company: CompanyListRow) => company.id)
+    const { data: accessRows } = await supabase
+      .from('recruiter_access')
+      .select('id, company_id, is_active, accepted_at, revoked_at, invite_expires_at')
+      .in('company_id', ids)
+
+    const recruiterAccessRows = (accessRows ?? []) as unknown as CompanyAccessRow[]
+
+    const rows: CompanyListItem[] = companyRows.map((company: CompanyListRow) => {
+      const companyAccess = recruiterAccessRows.filter((row: CompanyAccessRow) => row.company_id === company.id)
+      const active_recruiters = companyAccess.filter((row: CompanyAccessRow) => row.is_active && !row.revoked_at).length
+      const pending_invites = companyAccess.filter(
+        (row: CompanyAccessRow) =>
+          !row.accepted_at &&
+          !row.revoked_at &&
+          (row.invite_expires_at === null || row.invite_expires_at > now)
+      ).length
+
+      const createdBy = Array.isArray(company.created_by) ? company.created_by[0] : company.created_by
+      return {
+        id: company.id,
+        name: company.name,
+        created_at: company.created_at,
+        created_by_name: createdBy?.name ?? null,
+        active_recruiters,
+        pending_invites,
+      }
+    })
+
+    const sortBy = pagination.sortBy ?? 'created_at'
+    const sortOrder = pagination.sortOrder ?? 'desc'
+    const sorted = sortCompanyRows(rows, sortBy, sortOrder)
+    const page = Math.max(1, pagination.page)
+    const start = (page - 1) * pagination.pageSize
+    const end = start + pagination.pageSize
+
+    return {
+      items: sorted.slice(start, end),
+      total: sorted.length,
+      page,
+      pageSize: pagination.pageSize,
+    }
+  },
+
+  // ───────────────────────────────────────────────────────────────
+  // getCompanyById
+  // ───────────────────────────────────────────────────────────────
+  async getCompanyById(supabase: SupabaseClient<Database>, id: string): Promise<CompanyDetail | null> {
+    const { data: company, error } = await supabase
+      .from('company')
+      .select('id, name, created_at, created_by_id, created_by:user!company_created_by_id_fkey(name)')
+      .eq('id', id)
+      .maybeSingle()
+
+    if (error || !company) {
+      console.error('[admin/companies] getCompanyById company error:', error)
+      return null
+    }
+
+    const { data: recruiters, error: recruitersError } = await supabase
+      .from('recruiter_access')
+      .select('id, recruiter_email, is_active, invite_token, invite_expires_at, accepted_at, accepted_by_user_id, revoked_at, granted_at')
+      .eq('company_id', id)
+      .order('granted_at', { ascending: false })
+
+    if (recruitersError) {
+      console.error('[admin/companies] getCompanyById recruiters error:', recruitersError)
+    }
+
+    const rawCreatedBy = (company as unknown as { created_by?: { name: string } | { name: string }[] | null }).created_by
+    const createdBy = Array.isArray(rawCreatedBy) ? rawCreatedBy[0] : rawCreatedBy
+    return {
+      id: company.id,
+      name: company.name,
+      created_at: company.created_at,
+      created_by_name: createdBy?.name ?? null,
+      recruiters: recruiters ?? [],
+    }
+  },
+
+  // ───────────────────────────────────────────────────────────────
+  // updateCompany
+  // ───────────────────────────────────────────────────────────────
+  async updateCompany(supabase: SupabaseClient<Database>, id: string, name: string): Promise<ActionResult> {
+    const { error } = await supabase.from('company').update({ name }).eq('id', id)
+    if (error) {
+      console.error('[admin/companies] updateCompany error:', error)
+      return { success: false, error: 'Failed to update company.' }
+    }
+    return { success: true }
+  },
+
+  // ───────────────────────────────────────────────────────────────
+  // deleteCompany
+  // ───────────────────────────────────────────────────────────────
+  async deleteCompany(supabase: SupabaseClient<Database>, id: string): Promise<ActionResult> {
+    const now = new Date().toISOString()
+
+    const { count } = await supabase
+      .from('recruiter_access')
+      .select('id', { count: 'exact', head: true })
+      .eq('company_id', id)
+      .or(`is_active.eq.true,and(accepted_at.is.null,revoked_at.is.null,invite_expires_at.is.null),and(accepted_at.is.null,revoked_at.is.null,invite_expires_at.gt.${now})`)
+
+    if ((count ?? 0) > 0) {
+      return { success: false, error: 'Cannot delete company with active recruiters or pending invites.' }
+    }
+
+    const { error } = await supabase.from('company').delete().eq('id', id)
+    if (error) {
+      console.error('[admin/companies] deleteCompany error:', error)
+      return { success: false, error: 'Failed to delete company.' }
+    }
+    return { success: true }
+  },
+
+  // ───────────────────────────────────────────────────────────────
+  // generateInviteToken
+  // ───────────────────────────────────────────────────────────────
+  async generateInviteToken(
+    supabase: SupabaseClient<Database>,
+    userId: string,
+    companyId: string,
+    recruiterEmail: string,
+    expiresInDays: 7 | 30 | null
+  ): Promise<InviteResult> {
+    const token = crypto.randomUUID()
+    const { error } = await supabase.from('recruiter_access').insert({
+      company_id: companyId,
+      recruiter_email: recruiterEmail,
+      granted_by_id: userId,
+      invite_token: token,
+      invite_expires_at: getExpiryDate(expiresInDays),
+      is_active: false,
+    })
+
+    if (error) {
+      console.error('[admin/companies] generateInviteToken error:', error)
+      return { success: false, error: 'Failed to create invite token.' }
+    }
+
+    return { success: true, inviteLink: generateInviteLink(token) }
+  },
+
+  // ───────────────────────────────────────────────────────────────
+  // revokeAccess
+  // ───────────────────────────────────────────────────────────────
+  async revokeAccess(supabase: SupabaseClient<Database>, userId: string, accessId: string): Promise<ActionResult> {
+    const { error } = await supabase
+      .from('recruiter_access')
+      .update({
+        revoked_at: new Date().toISOString(),
+        revoked_by_id: userId,
+        is_active: false,
+      })
+      .eq('id', accessId)
+
+    if (error) {
+      console.error('[admin/companies] revokeAccess error:', error)
+      return { success: false, error: 'Failed to revoke access.' }
+    }
+    return { success: true }
+  },
+
+  // ───────────────────────────────────────────────────────────────
+  // resendCompanyInvite
+  // ───────────────────────────────────────────────────────────────
+  async resendCompanyInvite(supabase: SupabaseClient<Database>, accessId: string): Promise<InviteResult> {
+    const { data: access } = await supabase
+      .from('recruiter_access')
+      .select('id, company_id, accepted_at, revoked_at')
+      .eq('id', accessId)
+      .maybeSingle()
+
+    if (!access) return { success: false, error: 'Invite not found.' }
+    if (access.accepted_at) return { success: false, error: 'Invite already accepted.' }
+    if (access.revoked_at) return { success: false, error: 'Invite already revoked.' }
+
+    const token = crypto.randomUUID()
+    const { error } = await supabase
+      .from('recruiter_access')
+      .update({
+        invite_token: token,
+        invite_expires_at: getExpiryDate(7),
+      })
+      .eq('id', accessId)
+
+    if (error) {
+      console.error('[admin/companies] resendInvite error:', error)
+      return { success: false, error: 'Failed to regenerate invite token.' }
+    }
+
+    return { success: true, inviteLink: generateInviteLink(token) }
+  },
+
+  // ───────────────────────────────────────────────────────────────
+  // getCompanyStats
+  // ───────────────────────────────────────────────────────────────
+  async getCompanyStats(supabase: SupabaseClient<Database>, id: string) {
+    const now = new Date().toISOString()
+    const [{ count: active_recruiters }, { count: pending_invites }] = await Promise.all([
+      supabase
+        .from('recruiter_access')
+        .select('id', { count: 'exact', head: true })
+        .eq('company_id', id)
+        .eq('is_active', true)
+        .is('revoked_at', null),
+      supabase
+        .from('recruiter_access')
+        .select('id', { count: 'exact', head: true })
+        .eq('company_id', id)
+        .is('accepted_at', null)
+        .is('revoked_at', null)
+        .or(`invite_expires_at.is.null,invite_expires_at.gt.${now}`),
+    ])
+
+    return {
+      active_recruiters: active_recruiters ?? 0,
+      pending_invites: pending_invites ?? 0,
+      totalViews: 0,
+      totalDownloads: 0,
+    }
+  },
+
+  // ───────────────────────────────────────────────────────────────
+  // createRecruiterInvite
+  // ───────────────────────────────────────────────────────────────
+  async createRecruiterInvite(
+    supabase: SupabaseClient<Database>,
+    userId: string,
+    params: {
+      recruiterEmail: string
+      companyId: string
+      expiresInDays?: number
+    }
+  ): Promise<{ success: true; inviteId: string; token: string } | { success: false; error: string }> {
+    const token = crypto.randomUUID()
+    const expiresInDays = params.expiresInDays || 7
+    const { data: invite, error: inviteError } = await supabase
+      .from('recruiter_access')
+      .insert({
+        recruiter_email: params.recruiterEmail,
+        company_id: params.companyId,
+        granted_by_id: userId,
+        granted_at: new Date().toISOString(),
+        invite_token: token,
+        invite_expires_at: getExpiryDate(expiresInDays),
+        is_active: false,
+      })
+      .select('id')
+      .single()
+
+    if (inviteError || !invite) {
+      console.error('[AdminService.createRecruiterInvite] insert error:', inviteError)
+      return { success: false, error: inviteError?.message ?? 'Failed to create invite' }
+    }
+
+    return { success: true, inviteId: invite.id, token }
+  },
+
+  // ───────────────────────────────────────────────────────────────
+  // regenerateInviteToken
+  // ───────────────────────────────────────────────────────────────
+  async regenerateInviteToken(
+    supabase: SupabaseClient<Database>,
+    accessId: string
+  ): Promise<{ success: true; token: string } | { success: false; error: string }> {
+    const { data: access } = await supabase
+      .from('recruiter_access')
+      .select('id, accepted_at, revoked_at')
+      .eq('id', accessId)
+      .maybeSingle()
+
+    if (!access) return { success: false, error: 'Invite not found' }
+    if (access.accepted_at) return { success: false, error: 'Invite already accepted' }
+    if (access.revoked_at) return { success: false, error: 'Invite already revoked' }
+
+    const token = crypto.randomUUID()
+    const { error } = await supabase
+      .from('recruiter_access')
+      .update({
+        invite_token: token,
+        invite_expires_at: getExpiryDate(7),
+      })
+      .eq('id', accessId)
+
+    if (error) {
+      console.error('[AdminService.regenerateInviteToken] update error:', error)
+      return { success: false, error: 'Failed to regenerate invite token' }
+    }
+
+    return { success: true, token }
+  },
+
+  // ───────────────────────────────────────────────────────────────
+  // revokeInvite
+  // ───────────────────────────────────────────────────────────────
+  async revokeInvite(supabase: SupabaseClient<Database>, userId: string, accessId: string): Promise<ActionResult> {
+    const { data: invite } = await supabase
+      .from('recruiter_access')
+      .select('id, revoked_at')
+      .eq('id', accessId)
+      .maybeSingle()
+
+    if (!invite) return { success: false, error: 'Invite not found' }
+    if (invite.revoked_at) return { success: false, error: 'Invite already revoked' }
+
+    const { error } = await supabase
+      .from('recruiter_access')
+      .update({
+        revoked_at: new Date().toISOString(),
+        revoked_by_id: userId,
+        is_active: false,
+      })
+      .eq('id', accessId)
+
+    if (error) {
+      console.error('[AdminService.revokeInvite] update error:', error)
+      return { success: false, error: 'Failed to revoke invite' }
+    }
+
+    return { success: true }
+  },
+
+  /**
+   * Get invite details for resending (includes company name).
+   */
+  async getInviteForResend(
+    supabase: SupabaseClient<Database>,
+    inviteId: string
+  ): Promise<
+    | {
+        id: string
+        recruiter_email: string
+        company_id: string
+        revoked_at: string | null
+        accepted_at: string | null
+        company: { name: string } | null
+      }
+    | null
+  > {
+    const { data, error } = await supabase
+      .from('recruiter_access')
+      .select('id, recruiter_email, company_id, revoked_at, accepted_at, company(name)')
+      .eq('id', inviteId)
+      .single()
+
+    if (error || !data) {
+      return null
+    }
+
+    const company = Array.isArray((data as Record<string, unknown>).company)
+      ? ((data as Record<string, unknown>).company as unknown[])[0]
+      : (data as Record<string, unknown>).company
+
+    return {
+      id: String((data as Record<string, unknown>).id),
+      recruiter_email: String((data as Record<string, unknown>).recruiter_email),
+      company_id: String((data as Record<string, unknown>).company_id),
+      revoked_at: ((data as Record<string, unknown>).revoked_at as string | null) ?? null,
+      accepted_at: ((data as Record<string, unknown>).accepted_at as string | null) ?? null,
+      company: company
+        ? {
+            name: String((company as Record<string, unknown>).name),
+          }
+        : null,
+    }
+  },
+
+  /**
+   * Get basic invite details for revoke validation.
+   */
+  async getInviteForRevoke(
+    supabase: SupabaseClient<Database>,
+    inviteId: string
+  ): Promise<
+    | {
+        id: string
+        recruiter_email: string
+        company_id: string
+        revoked_at: string | null
+      }
+    | null
+  > {
+    const { data, error } = await supabase
+      .from('recruiter_access')
+      .select('id, recruiter_email, company_id, revoked_at')
+      .eq('id', inviteId)
+      .single()
+
+    if (error || !data) {
+      return null
+    }
+
+    return {
+      id: String((data as Record<string, unknown>).id),
+      recruiter_email: String((data as Record<string, unknown>).recruiter_email),
+      company_id: String((data as Record<string, unknown>).company_id),
+      revoked_at: ((data as Record<string, unknown>).revoked_at as string | null) ?? null,
+    }
+  },
+
+  /**
+   * Delete a recruiter invite by ID.
+   */
+  async deleteInvite(
+    supabase: SupabaseClient<Database>,
+    inviteId: string
+  ): Promise<{ success: boolean; error?: string }> {
+    const { error } = await supabase.from('recruiter_access').delete().eq('id', inviteId)
+
+    if (error) {
+      console.error('[AdminService.deleteInvite] error:', error)
+      return { success: false, error: 'Failed to delete invite' }
+    }
+
+    return { success: true }
+  },
+
+  /**
+   * Get all chapters ordered by name (for dropdowns).
+   */
+  async getAllChapters(
+    supabase: SupabaseClient<Database>
+  ): Promise<{ chapters: Array<Pick<ChapterRow, 'id' | 'name' | 'university' | 'city' | 'region' | 'created_at' | 'updated_at' | 'instagram_url' | 'latitude' | 'longitude' | 'location_point'>> } | { error: string }> {
+    const { data, error } = await supabase
+      .from('chapter')
+      .select('id, name, university, city, region, created_at, updated_at, instagram_url, latitude, longitude, location_point')
+      .order('name', { ascending: true })
+
+    if (error || !data) {
+      console.error('Failed to fetch chapters:', error)
+      return { error: 'Failed to fetch chapters' }
+    }
+
+    return { chapters: data }
   },
 }

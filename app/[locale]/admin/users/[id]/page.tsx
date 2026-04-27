@@ -188,7 +188,6 @@ export default async function UserDetailPage({
             <CardContent>
               <MemberActionButtons
                 userId={resolvedUser.id}
-                currentUserId={currentUser.id}
                 userName={resolvedUser.name ?? resolvedUser.email}
                 currentState={approval_status}
               />

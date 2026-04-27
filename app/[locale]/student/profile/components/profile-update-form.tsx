@@ -64,8 +64,8 @@ export default function ProfileUpdateForm({
       lead_chapter: initialData?.lead_chapter || '',
       linkedin_url: initialData?.linkedin_url || '',
       resume_pdf: undefined,
-      consentRecruiterVisibility: initialData?.consent_recruiter_visibility || false,
-      emailNotificationsEnabled: initialData?.email_notifications_enabled ?? true,
+      consentRecruiterVisibility: initialData?.consentRecruiterVisibility || false,
+      emailNotificationsEnabled: initialData?.emailNotificationsEnabled ?? true,
 
     },
   })
@@ -88,8 +88,8 @@ export default function ProfileUpdateForm({
       lead_chapter: initialData?.lead_chapter || '',
       linkedin_url: initialData?.linkedin_url || '',
       resume_pdf: undefined,
-      consentRecruiterVisibility: initialData?.consent_recruiter_visibility || false,
-      emailNotificationsEnabled: initialData?.email_notifications_enabled ?? true,
+      consentRecruiterVisibility: initialData?.consentRecruiterVisibility || false,
+      emailNotificationsEnabled: initialData?.emailNotificationsEnabled ?? true,
     })
   }, [initialData, reset])
 
@@ -106,8 +106,8 @@ export default function ProfileUpdateForm({
       formData.append("graduation_year", String(data.graduation_year || 0))
       formData.append("skills", JSON.stringify(data.skills))
       formData.append("linkedin_url", data.linkedin_url || "")
-      formData.append("consentRecruiterVisibility", String(data.consent_recruiter_visibility))
-      formData.append("emailNotificationsEnabled", String(data.email_notifications_enabled))
+      formData.append("consentRecruiterVisibility", String(data.consentRecruiterVisibility))
+      formData.append("emailNotificationsEnabled", String(data.emailNotificationsEnabled))
       formData.append("gender", data.gender)
 
       if (data.resume_pdf) {
@@ -133,7 +133,7 @@ export default function ProfileUpdateForm({
   return (
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-12">
-        {initialData.approval_status === 'approved' && initialData.member_id ? (
+        {initialData.approvalStatus === 'approved' && initialData.memberId ? (
           <div className="rounded-lg bg-primary/5 border border-primary/10 p-4">
             <div className="flex items-center gap-2 mb-2">
               <Icons.IdCard className="h-4 w-4 text-primary" />
@@ -141,12 +141,12 @@ export default function ProfileUpdateForm({
             </div>
             <div className="flex items-center gap-2">
               <code className="px-3 py-1.5 bg-background rounded-md border border-border text-lg font-mono font-semibold text-primary">
-                {initialData.member_id}
+                {initialData.memberId}
               </code>
             </div>
             <p className="text-xs text-muted-foreground mt-2">This is your unique identifier as a LEAD member</p>
           </div>
-        ) : initialData.approval_status === 'pending' && (
+        ) : initialData.approvalStatus === 'pending' && (
           <div className="rounded-lg bg-muted p-4">
             <p className="text-sm text-muted-foreground">
               Member ID assigned after your application is reviewed.
@@ -394,10 +394,10 @@ export default function ProfileUpdateForm({
                     </label>
                   </div>
 
-                  {errors.consent_recruiter_visibility && (
+                  {errors.consentRecruiterVisibility && (
                     <p className="flex items-center gap-1.5 text-sm text-destructive">
                       <X className="h-3.5 w-3.5" />
-                      {errors.consent_recruiter_visibility.message}
+                      {errors.consentRecruiterVisibility.message}
                     </p>
                   )}
                 </div>

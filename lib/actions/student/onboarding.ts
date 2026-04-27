@@ -8,6 +8,7 @@ import { getTranslations } from 'next-intl/server'
 import { generateUniqueMemberId } from '@/lib/utils/member-id'
 import { sendWelcomeEmail } from '@/lib/emails/send-email'
 import { StudentService } from '@/lib/services/student.service'
+import { ChapterService } from '@/lib/services/chapter.service'
 
 function parseSkills(rawValue: FormDataEntryValue | null): string[] {
     if (typeof rawValue !== 'string' || !rawValue.trim()) {
@@ -47,8 +48,8 @@ export async function submitOnboarding(formData: FormData) {
             graduation_year: Number(formData.get('graduation_year')) || 0,
             skills: parseSkills(formData.get('skills')),
             linkedin_url: formData.get('linkedin_url')?.toString() || '',
-            consent_recruiter_visibility: formData.get('consentRecruiterVisibility') === 'true',
-            email_notifications_enabled: formData.get('emailNotificationsEnabled') === 'true',
+            consentRecruiterVisibility: formData.get('consentRecruiterVisibility') === 'true',
+            emailNotificationsEnabled: formData.get('emailNotificationsEnabled') === 'true',
         }
 
         const parsed = baseProfileSchema.safeParse(profileData)
@@ -68,8 +69,8 @@ export async function submitOnboarding(formData: FormData) {
             graduationYear: data.graduation_year,
             skills: data.skills,
             linkedinUrl: data.linkedin_url,
-            consentRecruiterVisibility: data.consent_recruiter_visibility,
-            emailNotificationsEnabled: data.email_notifications_enabled,
+            consentRecruiterVisibility: data.consentRecruiterVisibility,
+            emailNotificationsEnabled: data.emailNotificationsEnabled,
             leadChapter: data.lead_chapter,
             resumePdf: resume && resume.size > 0 ? resume : null,
             generateMemberId: generateUniqueMemberId,
@@ -79,21 +80,13 @@ export async function submitOnboarding(formData: FormData) {
             return { error: result.error }
         }
 
-        const { data: chapterData, error: chapterError } = await supabase
-            .from('chapter')
-            .select('name')
-            .eq('id', data.lead_chapter)
-            .single()
+        const chapterName = await ChapterService.getChapterName(supabase, data.lead_chapter)
 
-        if (chapterError) {
-            return { error: chapterError.message }
-        }
-
-        if (chapterData?.name) {
+        if (chapterName) {
             void sendWelcomeEmail(
                 user.email,
                 data.full_name,
-                chapterData.name,
+                chapterName,
                 'es'
             ).catch(err => console.error('Failed to send welcome email:', err))
         }

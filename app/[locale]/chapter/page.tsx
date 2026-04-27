@@ -90,7 +90,7 @@ function PendingInbox({
         <MemberCard
           key={member.id}
           member={member}
-          currentUserId={currentUserId}
+
         />
       ))}
       {remaining > 0 && (
@@ -239,7 +239,7 @@ async function ChapterContent() {
     .eq('user_id', user.id)
     .maybeSingle()
 
-  if (!profileData?.chapter) {
+  if (!profileData?.Chapter) {
     return (
       <Card className="max-w-md mx-auto mt-20">
         <CardHeader>
@@ -254,9 +254,9 @@ async function ChapterContent() {
     )
   }
 
-  const chapter = Array.isArray(profileData.chapter)
-    ? profileData.chapter[0]
-    : profileData.chapter
+  const chapter = Array.isArray(profileData.Chapter)
+    ? profileData.Chapter[0]
+    : profileData.Chapter
 
   const [allMembers, recentActivity, chapterEvents] = await Promise.all([
     getChapterMembers(chapter_id),

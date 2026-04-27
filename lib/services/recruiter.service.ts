@@ -383,4 +383,155 @@ export const RecruiterService = {
 
     return { success: true, url: signedData.signedUrl }
   },
+
+  async validateInviteToken(
+    supabase: SupabaseClient<Database>,
+    token: string
+  ): Promise<
+    | {
+        valid: true
+        access: {
+          id: string
+          recruiter_email: string
+          accepted_at: string | null
+          accepted_by_user_id: string | null
+          invite_expires_at: string | null
+          revoked_at: string | null
+          company_id: string
+        }
+      }
+    | { valid: false; error: string; code: 'invalid' | 'expired' | 'revoked' }
+  > {
+    const normalized = token.trim()
+    if (!normalized) {
+      return {
+        valid: false,
+        code: 'invalid',
+        error: "This invite link isn't valid. Contact your LEAD representative.",
+      }
+    }
+
+    const { data, error } = await supabase
+      .from('recruiter_access')
+      .select('id, recruiter_email, accepted_at, accepted_by_user_id, invite_expires_at, revoked_at, company_id')
+      .eq('invite_token', normalized)
+      .maybeSingle()
+
+    if (error || !data) {
+      return {
+        valid: false,
+        code: 'invalid',
+        error: "This invite link isn't valid. Contact your LEAD representative.",
+      }
+    }
+
+    if (data.revoked_at) {
+      return {
+        valid: false,
+        code: 'revoked',
+        error: "This invite link isn't valid. Contact your LEAD representative.",
+      }
+    }
+
+    if (data.invite_expires_at && new Date(data.invite_expires_at).getTime() <= Date.now()) {
+      return {
+        valid: false,
+        code: 'expired',
+        error:
+          'This invite link has expired. Reach out to support@leadtalentplatform.com to request a new one.',
+      }
+    }
+
+    return {
+      valid: true,
+      access: {
+        id: data.id,
+        recruiter_email: data.recruiter_email,
+        accepted_at: data.accepted_at,
+        accepted_by_user_id: data.accepted_by_user_id,
+        invite_expires_at: data.invite_expires_at,
+        revoked_at: data.revoked_at,
+        company_id: data.company_id,
+      },
+    }
+  },
+
+  async acceptInvite(
+    supabase: SupabaseClient<Database>,
+    userId: string,
+    token: string,
+    authEmail: string,
+    authName: string
+  ): Promise<{ success: true } | { success: false; error: string }> {
+    const validation = await this.validateInviteToken(supabase, token)
+    if (!validation.valid) return { success: false, error: validation.error }
+
+    const invitedEmail = validation.access.recruiter_email.toLowerCase()
+    if (authEmail.toLowerCase() !== invitedEmail) {
+      return {
+        success: false,
+        error: `This invite was sent to ${validation.access.recruiter_email}. Please sign in with that email address.`,
+      }
+    }
+
+    if (validation.access.accepted_at) {
+      return { success: true }
+    }
+
+    const now = new Date().toISOString()
+
+    const { error: updateInviteError } = await supabase
+      .from('recruiter_access')
+      .update({
+        accepted_at: now,
+        accepted_by_user_id: userId,
+        is_active: true,
+      })
+      .eq('id', validation.access.id)
+
+    if (updateInviteError) {
+      console.error('[RecruiterService.acceptInvite] update error:', updateInviteError)
+      return { success: false, error: 'Failed to accept invite.' }
+    }
+
+    const { data: existingUser, error: existingUserError } = await supabase
+      .from('user')
+      .select('id')
+      .eq('id', userId)
+      .maybeSingle()
+
+    if (existingUserError) {
+      console.error('[RecruiterService.acceptInvite] existing user lookup error:', existingUserError)
+      return { success: false, error: 'Failed to accept invite.' }
+    }
+
+    if (existingUser) {
+      const { error: roleError } = await supabase
+        .from('user')
+        .update({ role: 'recruiter', updated_at: now })
+        .eq('id', userId)
+
+      if (roleError) {
+        console.error('[RecruiterService.acceptInvite] role update error:', roleError)
+        return { success: false, error: 'Failed to accept invite.' }
+      }
+    } else {
+      const { error: createUserError } = await supabase.from('user').insert({
+        id: userId,
+        email: authEmail,
+        name: authName,
+        role: 'recruiter',
+        phone: null,
+        created_at: now,
+        updated_at: now,
+        deactivated_at: null,
+      })
+      if (createUserError) {
+        console.error('[RecruiterService.acceptInvite] user insert error:', createUserError)
+        return { success: false, error: 'Failed to accept invite.' }
+      }
+    }
+
+    return { success: true }
+  },
 }
