@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger'
 import { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.generated'
 import type {
@@ -654,7 +655,7 @@ export const AdminService = {
       .order('name', { ascending: true })
 
     if (error || !chapters) {
-      console.error('[getChapterActivityList] Failed:', error)
+      logger.error({ context: 'getChapterActivityList', error: error }, 'Failed')
       return []
     }
 
@@ -702,7 +703,7 @@ export const AdminService = {
       .limit(limit)
 
     if (error || !users) {
-      console.error('[getRecentJoins] Failed:', error)
+      logger.error({ context: 'getRecentJoins', error: error }, 'Failed')
       return []
     }
 
@@ -750,7 +751,7 @@ export const AdminService = {
       .limit(10)
 
     if (error || !data) {
-      console.error('[getPendingRecruiterRequests] Failed:', error)
+      logger.error({ context: 'getPendingRecruiterRequests', error: error }, 'Failed')
       return []
     }
 
@@ -811,7 +812,7 @@ export const AdminService = {
       visibleProfilesResult, activeRecruitersResult, pendingInvitesResult,
     ]
     results.forEach((r, i) => {
-      if (r.error) console.error(`[getSystemStats] Query ${i} failed:`, r.error)
+      if (r.error) logger.error({ context: 'getSystemStats', queryIndex: i, error: r.error }, `Query ${i} failed`)
     })
 
     const totalProfiles = totalProfilesResult.count ?? 0
@@ -886,7 +887,7 @@ export const AdminService = {
       .order('name', { ascending: true })
 
     if (error || !chapters) {
-      console.error('Failed to fetch chapters:', error)
+      logger.error({ context: 'Failed', error: error }, 'Failed to fetch chapters')
       return []
     }
 
@@ -918,7 +919,7 @@ export const AdminService = {
       .order('created_at', { ascending: false })
 
     if (error || !data) {
-      console.error('[admin/getChapterMembers] Error:', error)
+      logger.error({ context: 'admin/getChapterMembers', error: error }, 'Error')
       return []
     }
 
@@ -980,7 +981,7 @@ export const AdminService = {
       .order('created_at', { ascending: false })
 
     if (usersError || !users) {
-      console.error('Failed to fetch users:', usersError)
+      logger.error({ context: 'Failed', error: usersError }, 'Failed to fetch users')
       return []
     }
 
@@ -997,7 +998,7 @@ export const AdminService = {
     `)
 
     if (profilesError) {
-      console.error('Failed to fetch profiles:', profilesError)
+      logger.error({ context: 'Failed', error: profilesError }, 'Failed to fetch profiles')
       return []
     }
 
@@ -1054,7 +1055,7 @@ export const AdminService = {
       .limit(20)
 
     if (approvalsError) {
-      console.error('[getActivityLog] Approvals error:', approvalsError)
+      logger.error({ context: 'getActivityLog', error: approvalsError }, 'Approvals error')
     }
 
     const { data: invites, error: invitesError } = await supabase
@@ -1083,7 +1084,7 @@ export const AdminService = {
       .limit(20)
 
     if (invitesError) {
-      console.error('[getActivityLog] Invites error:', invitesError)
+      logger.error({ context: 'getActivityLog', error: invitesError }, 'Invites error')
     }
 
     const activities: ActivityItem[] = []
@@ -1169,7 +1170,7 @@ export const AdminService = {
       .order('created_at', { ascending: false })
 
     if (error || !companies) {
-      console.error('Failed to fetch companies:', error)
+      logger.error({ context: 'Failed', error: error }, 'Failed to fetch companies')
       return []
     }
 
@@ -1231,7 +1232,7 @@ export const AdminService = {
       .order('granted_at', { ascending: false })
 
     if (error || !invites) {
-      console.error('Failed to fetch invites:', error)
+      logger.error({ context: 'Failed', error: error }, 'Failed to fetch invites')
       return []
     }
 
@@ -1290,7 +1291,7 @@ export const AdminService = {
       .single()
 
     if (error || !user) {
-      console.error('getUserById error:', error)
+      logger.error({ context: 'getUserById', error }, 'Failed to fetch user')
       return null
     }
 
@@ -1323,7 +1324,7 @@ export const AdminService = {
       .single()
 
     if (error) {
-      console.error('Failed to fetch chapter:', error)
+      logger.error({ context: 'Failed', error: error }, 'Failed to fetch chapter')
       return null
     }
 
@@ -1367,7 +1368,7 @@ export const AdminService = {
       .single<ChapterRow>()
 
     if (insertError || !chapter) {
-      console.error('Failed to create chapter:', insertError)
+      logger.error({ context: 'Failed', error: insertError }, 'Failed to create chapter')
       return { success: false, error: 'Failed to create chapter' }
     }
 
@@ -1391,7 +1392,7 @@ export const AdminService = {
       if (error.code === '23505') {
         return { success: false, error: 'A company with this name already exists' }
       }
-      console.error('Error creating company:', error)
+      logger.error({ context: 'createCompany', error }, 'Failed to create company')
       return { success: false, error: 'Failed to create company' }
     }
 
@@ -1629,7 +1630,7 @@ export const AdminService = {
 
     const { data, error } = await query
     if (error || !data) {
-      console.error('[admin/events] getAdminEventsList error:', error)
+      logger.error({ context: 'admin/events', error: error }, 'getAdminEventsList error')
       return { items: [], total: 0, page: 1, pageSize: pagination.pageSize }
     }
 
@@ -1693,7 +1694,7 @@ export const AdminService = {
 
     const { data: chapters, error } = await query
     if (error || !chapters) {
-      console.error('[admin/chapters] getChaptersList error:', error)
+      logger.error({ context: 'admin/chapters', error: error }, 'getChaptersList error')
       return { items: [], total: 0, page: 1, pageSize: pagination.pageSize }
     }
 
@@ -1804,7 +1805,7 @@ export const AdminService = {
       .eq('id', id)
 
     if (error) {
-      console.error('[admin/chapters] updateChapter error:', error)
+      logger.error({ context: 'admin/chapters', error: error }, 'updateChapter error')
       return { success: false, error: 'Failed to update chapter.' }
     }
 
@@ -1832,7 +1833,7 @@ export const AdminService = {
 
     const { error } = await supabase.from('chapter').delete().eq('id', id)
     if (error) {
-      console.error('[admin/chapters] deleteChapter error:', error)
+      logger.error({ context: 'admin/chapters', error: error }, 'deleteChapter error')
       return { success: false, error: 'Failed to delete chapter.' }
     }
 
@@ -1852,7 +1853,7 @@ export const AdminService = {
       .eq('chapter_id', chapter_id)
 
     if (error) {
-      console.error('[admin/chapters] getAvailableEditors error:', error)
+      logger.error({ context: 'admin/chapters', error: error }, 'getAvailableEditors error')
       return []
     }
 
@@ -1894,7 +1895,7 @@ export const AdminService = {
 
     const { error } = await supabase.from('user').update({ role: 'editor' }).eq('id', userId)
     if (error) {
-      console.error('[admin/chapters] assignEditor error:', error)
+      logger.error({ context: 'admin/chapters', error: error }, 'assignEditor error')
       return { success: false, error: 'Failed to assign editor.' }
     }
 
@@ -1917,7 +1918,7 @@ export const AdminService = {
 
     const { error } = await supabase.from('user').update({ role: 'member' }).eq('id', userId)
     if (error) {
-      console.error('[admin/chapters] removeEditor error:', error)
+      logger.error({ context: 'admin/chapters', error: error }, 'removeEditor error')
       return { success: false, error: 'Failed to remove editor.' }
     }
 
@@ -1974,7 +1975,7 @@ export const AdminService = {
 
     const { data: companies, error } = await query
     if (error || !companies) {
-      console.error('[admin/companies] getCompaniesList error:', error)
+      logger.error({ context: 'admin/companies', error: error }, 'getCompaniesList error')
       return { items: [], total: 0, page: 1, pageSize: pagination.pageSize }
     }
 
@@ -2042,7 +2043,7 @@ export const AdminService = {
       .maybeSingle()
 
     if (error || !company) {
-      console.error('[admin/companies] getCompanyById company error:', error)
+      logger.error({ context: 'admin/companies', error: error }, 'getCompanyById company error')
       return null
     }
 
@@ -2053,7 +2054,7 @@ export const AdminService = {
       .order('granted_at', { ascending: false })
 
     if (recruitersError) {
-      console.error('[admin/companies] getCompanyById recruiters error:', recruitersError)
+      logger.error({ context: 'admin/companies', error: recruitersError }, 'getCompanyById recruiters error')
     }
 
     const rawCreatedBy = (company as unknown as { created_by?: { name: string } | { name: string }[] | null }).created_by
@@ -2073,7 +2074,7 @@ export const AdminService = {
   async updateCompany(supabase: SupabaseClient<Database>, id: string, name: string): Promise<ActionResult> {
     const { error } = await supabase.from('company').update({ name }).eq('id', id)
     if (error) {
-      console.error('[admin/companies] updateCompany error:', error)
+      logger.error({ context: 'admin/companies', error: error }, 'updateCompany error')
       return { success: false, error: 'Failed to update company.' }
     }
     return { success: true }
@@ -2097,7 +2098,7 @@ export const AdminService = {
 
     const { error } = await supabase.from('company').delete().eq('id', id)
     if (error) {
-      console.error('[admin/companies] deleteCompany error:', error)
+      logger.error({ context: 'admin/companies', error: error }, 'deleteCompany error')
       return { success: false, error: 'Failed to delete company.' }
     }
     return { success: true }
@@ -2124,7 +2125,7 @@ export const AdminService = {
     })
 
     if (error) {
-      console.error('[admin/companies] generateInviteToken error:', error)
+      logger.error({ context: 'admin/companies', error: error }, 'generateInviteToken error')
       return { success: false, error: 'Failed to create invite token.' }
     }
 
@@ -2145,7 +2146,7 @@ export const AdminService = {
       .eq('id', accessId)
 
     if (error) {
-      console.error('[admin/companies] revokeAccess error:', error)
+      logger.error({ context: 'admin/companies', error: error }, 'revokeAccess error')
       return { success: false, error: 'Failed to revoke access.' }
     }
     return { success: true }
@@ -2175,7 +2176,7 @@ export const AdminService = {
       .eq('id', accessId)
 
     if (error) {
-      console.error('[admin/companies] resendInvite error:', error)
+      logger.error({ context: 'admin/companies', error: error }, 'resendInvite error')
       return { success: false, error: 'Failed to regenerate invite token.' }
     }
 
@@ -2276,7 +2277,7 @@ export const AdminService = {
       .single()
 
     if (inviteError || !invite) {
-      console.error('[AdminService.createRecruiterInvite] insert error:', inviteError)
+      logger.error({ context: 'AdminService.createRecruiterInvite', error: inviteError }, 'insert error')
       return { success: false, error: inviteError?.message ?? 'Failed to create invite' }
     }
 
@@ -2310,7 +2311,7 @@ export const AdminService = {
       .eq('id', accessId)
 
     if (error) {
-      console.error('[AdminService.regenerateInviteToken] update error:', error)
+      logger.error({ context: 'AdminService.regenerateInviteToken', error: error }, 'update error')
       return { success: false, error: 'Failed to regenerate invite token' }
     }
 
@@ -2340,7 +2341,7 @@ export const AdminService = {
       .eq('id', accessId)
 
     if (error) {
-      console.error('[AdminService.revokeInvite] update error:', error)
+      logger.error({ context: 'AdminService.revokeInvite', error: error }, 'update error')
       return { success: false, error: 'Failed to revoke invite' }
     }
 
@@ -2435,7 +2436,7 @@ export const AdminService = {
     const { error } = await supabase.from('recruiter_access').delete().eq('id', inviteId)
 
     if (error) {
-      console.error('[AdminService.deleteInvite] error:', error)
+      logger.error({ context: 'AdminService.deleteInvite', error: error }, 'error')
       return { success: false, error: 'Failed to delete invite' }
     }
 
@@ -2454,7 +2455,7 @@ export const AdminService = {
       .order('name', { ascending: true })
 
     if (error || !data) {
-      console.error('Failed to fetch chapters:', error)
+      logger.error({ context: 'Failed', error: error }, 'Failed to fetch chapters')
       return { error: 'Failed to fetch chapters' }
     }
 

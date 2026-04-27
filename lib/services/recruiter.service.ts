@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger'
 import { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.generated'
 import type { ChapterRow, StudentProfileRow, UserRow } from '@/lib/types'
@@ -119,7 +120,7 @@ export const RecruiterService = {
 
     const { data, error, count } = await query
     if (error) {
-      console.error('[recruiter/talent-pool] getTalentPool error:', error)
+      logger.error({ context: 'recruiter/talent-pool', error: error }, 'getTalentPool error')
       return {
         students: [] as TalentPoolStudent[],
         total: 0,
@@ -194,7 +195,7 @@ export const RecruiterService = {
 
     const { data, error, count } = await query
     if (error) {
-      console.error('[recruiter/talent-pool] getSavedStudents error:', error)
+      logger.error({ context: 'recruiter/talent-pool', error: error }, 'getSavedStudents error')
       return {
         students: [] as TalentPoolStudent[],
         total: 0,
@@ -238,7 +239,7 @@ export const RecruiterService = {
       .eq('approval_status', 'approved')
 
     if (error) {
-      console.error('[recruiter/talent-pool] getTalentPoolFilterOptions error:', error)
+      logger.error({ context: 'recruiter/talent-pool', error: error }, 'getTalentPoolFilterOptions error')
       return { years: [] as number[], chapters: [] as Array<{ id: string; name: string }> }
     }
 
@@ -273,7 +274,7 @@ export const RecruiterService = {
       .in('student_id', studentIds)
 
     if (error) {
-      console.error('[recruiter/talent-pool] getSavedStatus error:', error)
+      logger.error({ context: 'recruiter/talent-pool', error: error }, 'getSavedStatus error')
       return []
     }
 
@@ -319,7 +320,7 @@ export const RecruiterService = {
       .maybeSingle()
 
     if (error || !data) {
-      if (error) console.error('[RecruiterService.getStudentProfile] error:', error)
+      if (error) logger.error({ context: 'RecruiterService.getStudentProfile', error: error }, 'error')
       return null
     }
 
@@ -366,7 +367,7 @@ export const RecruiterService = {
       .createSignedUrl(storagePath, 60 * 5)
 
     if (signedError || !signedData?.signedUrl) {
-      console.error('[RecruiterService.downloadResume] createSignedUrl error:', signedError)
+      logger.error({ context: 'RecruiterService.downloadResume', error: signedError }, 'createSignedUrl error')
       return { success: false, error: 'Failed to generate download URL.' }
     }
 
@@ -377,7 +378,7 @@ export const RecruiterService = {
     })
 
     if (logError) {
-      console.error('[RecruiterService.downloadResume] ResumeDownloadLog insert error:', logError)
+      logger.error({ context: 'RecruiterService.downloadResume', error: logError }, 'ResumeDownloadLog insert error')
       return { success: false, error: 'Failed to log resume download.' }
     }
 
@@ -490,7 +491,7 @@ export const RecruiterService = {
       .eq('id', validation.access.id)
 
     if (updateInviteError) {
-      console.error('[RecruiterService.acceptInvite] update error:', updateInviteError)
+      logger.error({ context: 'RecruiterService.acceptInvite', error: updateInviteError }, 'update error')
       return { success: false, error: 'Failed to accept invite.' }
     }
 
@@ -501,7 +502,7 @@ export const RecruiterService = {
       .maybeSingle()
 
     if (existingUserError) {
-      console.error('[RecruiterService.acceptInvite] existing user lookup error:', existingUserError)
+      logger.error({ context: 'RecruiterService.acceptInvite', error: existingUserError }, 'existing user lookup error')
       return { success: false, error: 'Failed to accept invite.' }
     }
 
@@ -512,7 +513,7 @@ export const RecruiterService = {
         .eq('id', userId)
 
       if (roleError) {
-        console.error('[RecruiterService.acceptInvite] role update error:', roleError)
+        logger.error({ context: 'RecruiterService.acceptInvite', error: roleError }, 'role update error')
         return { success: false, error: 'Failed to accept invite.' }
       }
     } else {
@@ -527,7 +528,7 @@ export const RecruiterService = {
         deactivated_at: null,
       })
       if (createUserError) {
-        console.error('[RecruiterService.acceptInvite] user insert error:', createUserError)
+        logger.error({ context: 'RecruiterService.acceptInvite', error: createUserError }, 'user insert error')
         return { success: false, error: 'Failed to accept invite.' }
       }
     }

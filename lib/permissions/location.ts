@@ -1,10 +1,13 @@
 import type { EventRow, ChapterRow, UserRow } from '@/lib/types'
 
+interface UserChapter extends ChapterRow {
+  role: 'admin' | 'editor' | 'member'
+}
 
 export function canEditLocation(
   event: EventRow | null,
   user: UserRow | null,
-  userChapter: ChapterRow | null
+  userChapter: UserChapter | null
 ): boolean {
   if (!event || !user) return false
 
@@ -13,7 +16,7 @@ export function canEditLocation(
   }
 
   // Chapter admins can edit location for events in their chapter
-  if (userChapter?.id === event.chapter_id && (userChapter as any).role === 'admin') {
+  if (userChapter?.id === event.chapter_id && userChapter.role === 'admin') {
     return true
   }
 

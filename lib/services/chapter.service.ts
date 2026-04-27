@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger'
 import { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.generated'
 import { generateUniqueMemberId } from '@/lib/utils/member-id'
@@ -115,7 +116,7 @@ export const ChapterService = {
       .order('name', { ascending: true })
 
     if (error) {
-      console.error('[ChapterService.getAllChapters] Error:', error)
+      logger.error({ context: 'ChapterService.getAllChapters', error: error }, 'Error')
       return []
     }
 
@@ -130,7 +131,7 @@ export const ChapterService = {
       .maybeSingle()
 
     if (error) {
-      console.error('[ChapterService.getChapterById] Error:', error)
+      logger.error({ context: 'ChapterService.getChapterById', error: error }, 'Error')
       return null
     }
 
@@ -148,7 +149,7 @@ export const ChapterService = {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('[ChapterService.getChapterMembers] Error:', error)
+      logger.error({ context: 'ChapterService.getChapterMembers', error: error }, 'Error')
       return []
     }
 
@@ -200,7 +201,7 @@ export const ChapterService = {
       .limit(limit)
 
     if (error || !data) {
-      console.error('[ChapterService.getRecentChapterActivity] Error:', error)
+      logger.error({ context: 'ChapterService.getRecentChapterActivity', error: error }, 'Error')
       return []
     }
 

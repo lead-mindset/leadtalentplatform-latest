@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger'
 import { randomUUID } from 'node:crypto';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/lib/database.generated';
@@ -245,7 +246,7 @@ export const EventService = {
       .single();
 
     if (error || !registration) {
-      console.error('[applyForEvent] Error:', error);
+      logger.error({ context: 'applyForEvent', error: error }, 'Error');
       return { success: false, error: 'Could not submit application. Please try again.' };
     }
 
@@ -271,7 +272,7 @@ export const EventService = {
       .maybeSingle<{ id: string; status: RegistrationStatus }>();
 
     if (existingError) {
-      console.error('[registerForEvent] existing lookup:', existingError);
+      logger.error({ context: 'registerForEvent', error: existingError }, 'existing lookup');
     }
 
     // 2. Handle already active registrations
@@ -301,7 +302,7 @@ export const EventService = {
       if (!reviveError && revived) {
         return { success: true, registration: revived as EventRegistrationRow, action: 'revived' };
       }
-      console.error('[registerForEvent] re-register after cancel failed:', reviveError);
+      logger.error({ context: 'registerForEvent', error: reviveError }, 're-register after cancel failed');
       return { success: false, error: 'Could not complete registration. Please try again.' };
     }
 
@@ -370,7 +371,7 @@ export const EventService = {
         return { success: false, error: 'You are already registered for this event.' };
       }
 
-      console.error('[registerForEvent] insert failed:', error);
+      logger.error({ context: 'registerForEvent', error: error }, 'insert failed');
       return { success: false, error: 'Could not complete registration. Please try again.' };
     }
 
@@ -574,7 +575,7 @@ export const EventService = {
       .single();
 
     if (updateError || !updated) {
-      console.error('[checkInAttendee] update error:', updateError);
+      logger.error({ context: 'checkInAttendee', error: updateError }, 'update error');
       return { error: 'Failed to check in' };
     }
 
@@ -638,7 +639,7 @@ export const EventService = {
       .single();
 
     if (error || !event) {
-      console.error('[EventService.updateEvent] Error:', error);
+      logger.error({ context: 'EventService.updateEvent', error: error }, 'Error');
       return null;
     }
 
@@ -648,7 +649,7 @@ export const EventService = {
   async deleteEvent(supabase: SupabaseClient<Database>, eventId: string): Promise<{ success: boolean; error?: string }> {
     const { error } = await supabase.from('event').delete().eq('id', eventId);
     if (error) {
-      console.error('[EventService.deleteEvent] Error:', error);
+      logger.error({ context: 'EventService.deleteEvent', error: error }, 'Error');
       return { success: false, error: 'Failed to delete event' };
     }
     return { success: true };
@@ -704,7 +705,7 @@ export const EventService = {
       .single<EventRegistrationRow>();
 
     if (error || !updated) {
-      console.error('[EventService.cancelRegistration] Error:', error);
+      logger.error({ context: 'EventService.cancelRegistration', error: error }, 'Error');
       return { success: false, error: 'Failed to cancel registration' };
     }
 
@@ -772,7 +773,7 @@ export const EventService = {
       .order('start_at', { ascending: true })
 
     if (error || !data) {
-      console.error('[getPublishedEvents] Error:', error)
+      logger.error({ context: 'getPublishedEvents', error: error }, 'Error')
       return []
     }
 
@@ -786,7 +787,7 @@ export const EventService = {
       .eq('status', 'registered')
 
     if (registrationsError) {
-      console.error('[getPublishedEvents] Registration count error:', registrationsError)
+      logger.error({ context: 'getPublishedEvents', error: registrationsError }, 'Registration count error')
     }
 
     const countsByEventId = new Map<string, number>()
@@ -885,7 +886,7 @@ export const EventService = {
       .maybeSingle()
 
     if (error) {
-      console.error('[getEventById] Error:', error)
+      logger.error({ context: 'getEventById', error: error }, 'Error')
       return null
     }
 
@@ -898,7 +899,7 @@ export const EventService = {
       .eq('status', 'registered')
 
     if (countError) {
-      console.error('[getEventById] Registration count error:', countError)
+      logger.error({ context: 'getEventById', error: countError }, 'Registration count error')
     }
 
     const event = data as unknown
@@ -987,7 +988,7 @@ export const EventService = {
       .order('registered_at', { ascending: false })
 
     if (error || !data) {
-      console.error('[getMyRegistrations] Error:', error)
+      logger.error({ context: 'getMyRegistrations', error: error }, 'Error')
       return []
     }
 
@@ -1070,7 +1071,7 @@ export const EventService = {
         .order('start_at', { ascending: false })
 
       if (ownedError) {
-        console.error('[getChapterEvents] Owned events error:', ownedError)
+        logger.error({ context: 'getChapterEvents', error: ownedError }, 'Owned events error')
       }
 
       const { data: eventChapterRecords, error: ecError } = await supabase
@@ -1079,7 +1080,7 @@ export const EventService = {
         .eq('chapter_id', chapter_id)
 
       if (ecError) {
-        console.error('[getChapterEvents] event_chapter lookup error:', ecError)
+        logger.error({ context: 'getChapterEvents', error: ecError }, 'event_chapter lookup error')
       }
 
       let collaboratedEvents: unknown[] = []
@@ -1116,7 +1117,7 @@ export const EventService = {
           .order('start_at', { ascending: false })
 
         if (collabError) {
-          console.error('[getChapterEvents] Collaborated events error:', collabError)
+          logger.error({ context: 'getChapterEvents', error: collabError }, 'Collaborated events error')
         }
 
         collaboratedEvents = collabData || []
@@ -1188,7 +1189,7 @@ export const EventService = {
         }))
         .filter((e): e is EventWithDetails & { is_owned_by_chapter: boolean } => e !== null)
     } catch (error) {
-      console.error('[getChapterEvents] Unexpected error:', error)
+      logger.error({ context: 'getChapterEvents', error: error }, 'Unexpected error')
       return []
     }
   },
@@ -1295,7 +1296,7 @@ export const EventService = {
       .order('start_at', { ascending: false })
 
     if (error || !data) {
-      console.error('[getAllEventsAdmin] Error:', error)
+      logger.error({ context: 'getAllEventsAdmin', error: error }, 'Error')
       return []
     }
 
@@ -1334,7 +1335,7 @@ export const EventService = {
       .order('registered_at', { ascending: true })
 
     if (error || !data) {
-      console.error('[getEventRegistrations] Error:', error)
+      logger.error({ context: 'getEventRegistrations', error: error }, 'Error')
       return []
     }
 
@@ -1482,7 +1483,7 @@ export const EventService = {
       .maybeSingle()
 
     if (error) {
-      console.error('[checkEventCollaboration] error:', error)
+      logger.error({ context: 'checkEventCollaboration', error: error }, 'error')
       return false
     }
 
@@ -1521,7 +1522,7 @@ export const EventService = {
       .eq('status', 'registered')
 
     if (error || !data) {
-      console.error('[getApprovedRegistrations] error:', error)
+      logger.error({ context: 'getApprovedRegistrations', error: error }, 'error')
       return []
     }
 
@@ -1585,7 +1586,7 @@ export const EventService = {
       .eq('status', 'rejected')
 
     if (error || !data) {
-      console.error('[getRejectedRegistrations] error:', error)
+      logger.error({ context: 'getRejectedRegistrations', error: error }, 'error')
       return []
     }
 
@@ -1640,7 +1641,7 @@ export const EventService = {
       .eq('status', 'pending_review')
 
     if (error) {
-      console.error('Bulk reject error:', error)
+      logger.error({ context: 'bulkRejectApplications', error }, 'Failed to reject applications')
       return { success: false, error: 'Failed to reject applications' }
     }
 
@@ -1679,7 +1680,7 @@ export const EventService = {
     const { error: insertError } = await supabase.from('event_chapter').insert(inserts)
 
     if (insertError) {
-      console.error('Failed to add event collaborators:', insertError)
+      logger.error({ context: 'Failed', error: insertError }, 'Failed to add event collaborators')
       return { success: false, error: 'Failed to add collaborators' }
     }
 
@@ -1700,7 +1701,7 @@ export const EventService = {
       .maybeSingle()
 
     if (error) {
-      console.error('[getUserRole] error:', error)
+      logger.error({ context: 'getUserRole', error: error }, 'error')
       return null
     }
 

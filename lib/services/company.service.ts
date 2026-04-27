@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger'
 import { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.generated'
 import type {
@@ -122,7 +123,7 @@ export const CompanyService = {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('[getVisibleStudents] Error:', error)
+      logger.error({ context: 'getVisibleStudents', error: error }, 'Error')
       return []
     }
 
@@ -154,7 +155,7 @@ export const CompanyService = {
       .single()
 
     if (error) {
-      console.error('[getStudentById] Error:', error)
+      logger.error({ context: 'getStudentById', error: error }, 'Error')
       return null
     }
 
@@ -199,7 +200,7 @@ export const CompanyService = {
       .order('saved_at', { ascending: false })
 
     if (error) {
-      console.error('[getSavedStudents] Error:', error)
+      logger.error({ context: 'getSavedStudents', error: error }, 'Error')
       return []
     }
 
@@ -271,7 +272,7 @@ export const CompanyService = {
       .eq('recruiter_id', userId)
 
     if (error) {
-      console.error('[getSavedStudentIds] Error:', error)
+      logger.error({ context: 'getSavedStudentIds', error: error }, 'Error')
       return []
     }
 
@@ -344,7 +345,7 @@ export const CompanyService = {
     const { data, error } = await query
 
     if (error) {
-      console.error('[searchStudents] Error:', error)
+      logger.error({ context: 'searchStudents', error: error }, 'Error')
       return []
     }
 
@@ -377,7 +378,7 @@ export const CompanyService = {
       .maybeSingle()
 
     if (checkError) {
-      console.error('[toggleSaveStudent] Check error:', checkError)
+      logger.error({ context: 'toggleSaveStudent', error: checkError }, 'Check error')
       return { success: false, isSaved: false, error: 'Failed to check save status' }
     }
 
@@ -388,7 +389,7 @@ export const CompanyService = {
         .eq('id', existing.id)
 
       if (deleteError) {
-        console.error('[toggleSaveStudent] Delete error:', deleteError)
+        logger.error({ context: 'toggleSaveStudent', error: deleteError }, 'Delete error')
         return { success: false, isSaved: true, error: 'Failed to unsave student' }
       }
       return { success: true, isSaved: false }
@@ -403,7 +404,7 @@ export const CompanyService = {
         })
 
       if (insertError) {
-        console.error('[toggleSaveStudent] Insert error:', insertError)
+        logger.error({ context: 'toggleSaveStudent', error: insertError }, 'Insert error')
         return { success: false, isSaved: false, error: 'Failed to save student' }
       }
       return { success: true, isSaved: true }
@@ -423,7 +424,7 @@ export const CompanyService = {
       .maybeSingle()
 
     if (error) {
-      console.error('[isStudentSaved] Error:', error)
+      logger.error({ context: 'isStudentSaved', error: error }, 'Error')
       return false
     }
     return !!data
@@ -517,7 +518,7 @@ export const CompanyService = {
       .maybeSingle<RecruiterAccessRow>()
 
     if (error) {
-      console.error('[CompanyService.getValidatedRecruiterInvite] Database error:', error)
+      logger.error({ context: 'CompanyService.getValidatedRecruiterInvite', error: error }, 'Database error')
       return { success: false, error: `Database error: ${error.message}` }
     }
 
@@ -551,7 +552,7 @@ export const CompanyService = {
       .maybeSingle<Pick<CompanyRow, 'id' | 'name'>>()
 
     if (error) {
-      console.error('[CompanyService.getInviteCompany] Company fetch error:', error)
+      logger.error({ context: 'CompanyService.getInviteCompany', error: error }, 'Company fetch error')
       return null
     }
 
@@ -640,7 +641,7 @@ export const CompanyService = {
       })
 
       if (!authData.user || authError) {
-        console.error('[CompanyService.acceptInvite] Auth creation failed:', authError)
+        logger.error({ context: 'CompanyService.acceptInvite', error: authError }, 'Auth creation failed')
         return { success: false as const, error: 'Failed to create account' }
       }
 
@@ -656,7 +657,7 @@ export const CompanyService = {
         })
 
       if (profileError) {
-        console.error('[CompanyService.acceptInvite] Profile creation failed:', profileError)
+        logger.error({ context: 'CompanyService.acceptInvite', error: profileError }, 'Profile creation failed')
         return { success: false as const, error: 'Failed to create profile' }
       }
     }
@@ -672,7 +673,7 @@ export const CompanyService = {
       .eq('id', invite.id)
 
     if (updateError) {
-      console.error('[CompanyService.acceptInvite] Activation failed:', updateError)
+      logger.error({ context: 'CompanyService.acceptInvite', error: updateError }, 'Activation failed')
       return { success: false as const, error: 'Failed to activate access' }
     }
 
@@ -686,7 +687,7 @@ export const CompanyService = {
     })
 
     if (otpError) {
-      console.error('[CompanyService.acceptInvite] OTP send failed:', otpError)
+      logger.error({ context: 'CompanyService.acceptInvite', error: otpError }, 'OTP send failed')
       return {
         success: true as const,
         warning: 'Account created! Please use the login page to access your dashboard.',
