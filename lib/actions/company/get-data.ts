@@ -1,73 +1,11 @@
-import { createClient } from '@/lib/supabase/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { CompanyService } from '@/lib/services/company.service'
 import type {
-  ChapterRow,
   CompanyStats,
   Database,
   SavedStudent,
-  SavedStudentRow,
   StudentForRecruiter,
-  StudentProfileRow,
-  UserRow,
 } from '@/lib/types'
-
-// Shared select string — keeps both query functions consistent
-const STUDENT_SELECT = `
-  id, email, name, phone, created_at,
-  student_profile!user_id!inner (
-    major, graduation_year, linkedin_url, skills,
-    is_recruiter_visible, is_filled, updated_at, chapter_id,
-    chapter:chapter!student_profile_chapter_id_fkey (
-      name, university, city, region
-    )
-  )
-`
-
-type StudentProfileRecruiterRow = Pick<
-  StudentProfileRow,
-  'major' | 'graduation_year' | 'linkedin_url' | 'skills' | 'is_recruiter_visible' | 'is_filled' | 'updated_at' | 'chapter_id'
-> & {
-  chapter: Pick<ChapterRow, 'name' | 'university' | 'city' | 'region'> | Pick<ChapterRow, 'name' | 'university' | 'city' | 'region'>[] | null
-}
-
-type RecruiterStudentRow = Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'created_at'> & {
-  student_profile: StudentProfileRecruiterRow | StudentProfileRecruiterRow[] | null
-}
-
-type SavedStudentWithUserRow = SavedStudentRow & {
-  student: RecruiterStudentRow | RecruiterStudentRow[] | null
-}
-
-function mapStudentRow(user: RecruiterStudentRow): StudentForRecruiter | null {
-  const profile = Array.isArray(user.student_profile)
-    ? user.student_profile[0]
-    : user.student_profile
-
-  if (!profile) return null
-
-  const chapter = Array.isArray(profile.chapter)
-    ? profile.chapter[0]
-    : profile.chapter
-
-  return {
-    id: user.id,
-    email: user.email,
-    name: user.name ?? '',
-    phone: user.phone,
-    created_at: user.created_at,
-    chapter: chapter ?? null,
-    student_profile: {
-      major: profile.major,
-      graduation_year: profile.graduation_year,
-      linkedin_url: profile.linkedin_url,
-      skills: profile.skills,
-      is_recruiter_visible: profile.is_recruiter_visible,
-      is_filled: profile.is_filled,
-      updated_at: profile.updated_at,
-      chapter_id: profile.chapter_id,
-    },
-  }
-}
 
 /**
  * Returns all students visible to recruiters.
@@ -76,28 +14,7 @@ function mapStudentRow(user: RecruiterStudentRow): StudentForRecruiter | null {
 export async function getVisibleStudents(
   supabase: SupabaseClient<Database>
 ): Promise<StudentForRecruiter[]> {
-  const { data, error } = await supabase
-    .from('user')
-    .select(STUDENT_SELECT)
-    .in('role', ['member', 'editor'])
-    .eq('student_profile.is_recruiter_visible', true)
-    .eq('student_profile.is_filled', true)
-    .order('created_at', { ascending: false })
-
-  if (error) {
-    console.error('[getVisibleStudents] Error:', error)
-    return []
-  }
-
-  const rows = (data ?? []) as RecruiterStudentRow[]
-
-  return rows
-    .map(mapStudentRow)
-    .filter((s): s is StudentForRecruiter =>
-      s !== null &&
-      s.student_profile?.is_recruiter_visible === true &&
-      s.student_profile?.is_filled === true
-    )
+  return CompanyService.getVisibleStudents(supabase)
 }
 
 /**
@@ -107,33 +24,7 @@ export async function getStudentById(
   supabase: SupabaseClient<Database>,
   studentId: string
 ): Promise<StudentForRecruiter | null> {
-  const { data, error } = await supabase
-    .from('user')
-    .select(STUDENT_SELECT)
-    .eq('id', studentId)
-    .in('role', ['member', 'editor'])
-    .eq('student_profile.is_recruiter_visible', true)
-    .eq('student_profile.is_filled', true)
-    .single()
-
-  if (error) {
-    console.error('[getStudentById] Error:', error)
-    return null
-  }
-
-  if (!data) return null
-
-  const student = mapStudentRow(data)
-
-  if (
-    !student ||
-    student.student_profile?.is_recruiter_visible !== true ||
-    student.student_profile?.is_filled !== true
-  ) {
-    return null
-  }
-
-  return student
+  return CompanyService.getStudentById(supabase, studentId)
 }
 
 /**
@@ -143,82 +34,7 @@ export async function getSavedStudents(
   supabase: SupabaseClient<Database>,
   userId: string
 ): Promise<SavedStudent[]> {
-  const { data, error } = await supabase
-    .from('saved_student')
-    .select(`
-      id, recruiter_id, student_id, saved_at, notes,
-      student:user!saved_student_student_id_fkey (
-        id, email, name, phone, created_at,
-        student_profile!user_id!inner (
-          major, graduation_year, linkedin_url, skills,
-          is_recruiter_visible, is_filled, updated_at, chapter_id,
-          chapter:chapter!student_profile_chapter_id_fkey (
-            name, university, city, region
-          )
-        )
-      )
-    `)
-    .eq('recruiter_id', userId)
-    .order('saved_at', { ascending: false })
-
-  if (error) {
-    console.error('[getSavedStudents] Error:', error)
-    return []
-  }
-
-  if (!data) return []
-
-  return (data as SavedStudentWithUserRow[])
-    .map((saved) => {
-      const studentData = Array.isArray(saved.student)
-        ? saved.student[0]
-        : saved.student
-
-      if (!studentData) {
-        return null
-      }
-
-      const profile = studentData?.student_profile
-        ? Array.isArray(studentData.student_profile)
-          ? studentData.student_profile[0]
-          : studentData.student_profile
-        : null
-
-      const chapter = profile?.chapter
-        ? Array.isArray(profile.chapter)
-          ? profile.chapter[0]
-          : profile.chapter
-        : null
-
-      return {
-        id: saved.id,
-        recruiter_id: saved.recruiter_id,
-        student_id: saved.student_id,
-        saved_at: saved.saved_at,
-        notes: saved.notes,
-        student: {
-          id: studentData.id,
-          email: studentData.email,
-          name: studentData.name ?? '',
-          phone: studentData.phone,
-          created_at: studentData.created_at,
-          chapter: chapter ?? null,
-          student_profile: profile
-            ? {
-                major: profile.major,
-                graduation_year: profile.graduation_year,
-                linkedin_url: profile.linkedin_url,
-                skills: profile.skills,
-                is_recruiter_visible: profile.is_recruiter_visible,
-                is_filled: profile.is_filled,
-                updated_at: profile.updated_at,
-                chapter_id: profile.chapter_id,
-              }
-            : null,
-        },
-      }
-    })
-    .filter((saved): saved is SavedStudent => saved !== null)
+  return CompanyService.getSavedStudents(supabase, userId)
 }
 
 /**
@@ -228,17 +44,7 @@ export async function getSavedStudentIds(
   supabase: SupabaseClient<Database>,
   userId: string
 ): Promise<string[]> {
-  const { data, error } = await supabase
-    .from('saved_student')
-    .select('student_id')
-    .eq('recruiter_id', userId)
-
-  if (error) {
-    console.error('[getSavedStudentIds] Error:', error)
-    return []
-  }
-
-  return (data ?? []).map((row: Pick<SavedStudentRow, 'student_id'>) => row.student_id)
+  return CompanyService.getSavedStudentIds(supabase, userId)
 }
 
 /**
@@ -248,20 +54,7 @@ export async function getCompanyStats(
   supabase: SupabaseClient<Database>,
   userId: string
 ): Promise<CompanyStats> {
-  const [{ count: total_students }, saved_students] = await Promise.all([
-    supabase
-.from('student_profile')
-      .select('user_id', { count: 'exact', head: true })
-      .eq('is_recruiter_visible', true)
-      .eq('is_filled', true),
-    getSavedStudents(supabase, userId),
-  ])
-
-  return {
-    total_students: total_students ?? 0,
-    saved_students: saved_students.length,
-    recent_views: 0,
-  }
+  return CompanyService.getCompanyStats(supabase, userId)
 }
 
 /**
@@ -277,49 +70,7 @@ export async function searchStudents(
     chapter_id?: string
   }
 ): Promise<StudentForRecruiter[]> {
-  let query = supabase
-    .from('user')
-    .select(STUDENT_SELECT)
-    .eq('role', 'member')
-    .eq('student_profile.is_recruiter_visible', true)
-    .eq('student_profile.is_filled', true)
-    .order('created_at', { ascending: false })
-
-  // Name/email search pushed to DB
-  if (filters.query) {
-    query = query.or(
-      `name.ilike.%${filters.query}%,email.ilike.%${filters.query}%`
-    )
-  }
-
-  if (filters.major) {
-    query = query.ilike('student_profile.major', `%${filters.major.trim()}%`)
-  }
-
-  if (filters.graduation_year) {
-    query = query.eq('student_profile.graduation_year', filters.graduation_year)
-  }
-
-  if (filters.chapter_id) {
-    query = query.eq('student_profile.chapter_id', filters.chapter_id)
-  }
-
-  const { data, error } = await query
-
-  if (error) {
-    console.error('[searchStudents] Error:', error)
-    return []
-  }
-
-  const rows = (data ?? []) as RecruiterStudentRow[]
-
-  return rows
-    .map(mapStudentRow)
-    .filter((s): s is StudentForRecruiter =>
-      s !== null &&
-      s.student_profile?.is_recruiter_visible === true &&
-      s.student_profile?.is_filled === true
-    )
+  return CompanyService.searchStudents(supabase, filters)
 }
 
 export async function toggleSaveStudent(
@@ -327,50 +78,7 @@ export async function toggleSaveStudent(
   userId: string,
   studentId: string
 ): Promise<{ success: boolean; isSaved: boolean; error?: string }> {
-  const student = await getStudentById(supabase, studentId)
-  if (!student) {
-    return { success: false, isSaved: false, error: 'Student is not available to recruiters.' }
-  }
-
-  const { data: existing, error: checkError } = await supabase
-    .from('saved_student')
-    .select('id')
-    .eq('recruiter_id', userId)
-    .eq('student_id', studentId)
-    .maybeSingle()
-
-  if (checkError) {
-    console.error('[toggleSaveStudent] Check error:', checkError)
-    return { success: false, isSaved: false, error: 'Failed to check save status' }
-  }
-
-  if (existing) {
-    const { error: deleteError } = await supabase
-      .from('saved_student')
-      .delete()
-      .eq('id', existing.id)
-
-    if (deleteError) {
-      console.error('[toggleSaveStudent] Delete error:', deleteError)
-      return { success: false, isSaved: true, error: 'Failed to unsave student' }
-    }
-    return { success: true, isSaved: false }
-  } else {
-    const { error: insertError } = await supabase
-      .from('saved_student')
-      .insert({
-        recruiter_id: userId,
-        student_id: studentId,
-        saved_at: new Date().toISOString(),
-        notes: null,
-      })
-
-    if (insertError) {
-      console.error('[toggleSaveStudent] Insert error:', insertError)
-      return { success: false, isSaved: false, error: 'Failed to save student' }
-    }
-    return { success: true, isSaved: true }
-  }
+  return CompanyService.toggleSaveStudent(supabase, userId, studentId)
 }
 
 export async function isStudentSaved(
@@ -378,16 +86,5 @@ export async function isStudentSaved(
   userId: string,
   studentId: string
 ): Promise<boolean> {
-  const { data, error } = await supabase
-    .from('saved_student')
-    .select('id')
-    .eq('recruiter_id', userId)
-    .eq('student_id', studentId)
-    .maybeSingle()
-
-  if (error) {
-    console.error('[isStudentSaved] Error:', error)
-    return false
-  }
-  return !!data
+  return CompanyService.isStudentSaved(supabase, userId, studentId)
 }
