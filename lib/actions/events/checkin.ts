@@ -10,8 +10,6 @@ import {
 } from '@/lib/services/event.service'
 import { assertCanManageEvent } from './access'
 
-type CheckInState = 'success' | 'already_checked_in' | 'not_registered'
-
 export type { CheckInCounter, CheckInCandidate, CheckInResponse, CheckInSearchResult }
 
 async function assertEventAccess(eventId: string) {

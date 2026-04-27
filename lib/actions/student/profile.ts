@@ -40,7 +40,7 @@ export async function getProfileData() {
       consentRecruiterVisibility: profileData.consent_recruiter_visibility || false,
       emailNotificationsEnabled: profileData.email_notifications_enabled ?? true,
     };
-  } catch (error) {
+  } catch {
     throw new Error('User profile not found');
   }
 }

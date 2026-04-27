@@ -49,7 +49,7 @@ export async function getSavedStatus(studentIds: string[]) {
   return RecruiterService.getSavedStatus(supabase, authUser.id, studentIds)
 }
 
-export async function saveStudent(studentId: string, _notes?: string) {
+export async function saveStudent(studentId: string) {
   const supabase = await createClient()
   const {
     data: { user: authUser },

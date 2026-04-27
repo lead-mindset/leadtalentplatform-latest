@@ -3,12 +3,15 @@ export type Role = "admin" | "editor" | "member" | "recruiter";
 import type { LucideIcon } from 'lucide-react';
 import type {
   Database,
+} from '@/lib/supabase.ts'
+
+export type {
+  Json,
   Tables,
   TablesInsert,
   TablesUpdate,
   Enums,
   CompositeTypes,
-  Json,
 } from '@/lib/supabase.ts'
 
 export type EventType = 'in_person' | 'online' | 'hybrid'
@@ -87,8 +90,6 @@ export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES]
 // DATABASE TYPES - Core schema types matching database exactly
 // ============================================================================
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected'
-
-export type { Json, Database, Tables, TablesInsert, TablesUpdate, Enums, CompositeTypes } from '@/lib/supabase'
 
 export { Constants } from '@/lib/supabase'
 
