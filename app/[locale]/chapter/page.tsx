@@ -58,11 +58,9 @@ function StatCard({
 
 function PendingInbox({
   members,
-  currentUserId,
   total,
 }: {
   members: MemberWithProfile[]
-  currentUserId: string
   total: number
 }) {
   if (members.length === 0) {
@@ -355,7 +353,6 @@ async function ChapterContent() {
 
               <PendingInbox
                 members={pending_members}
-                currentUserId={user.id}
                 total={stats.pending}
               />
             </>

@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { useLocale } from 'next-intl'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import type { EventRow, ChapterRow } from '@/lib/types'

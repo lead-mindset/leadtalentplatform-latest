@@ -39,7 +39,7 @@ export default function ProfileUpdateForm({
 }: ProfileUpdateFormProps) {
   const t = useTranslations('profile')
   const tCommon = useTranslations('common')
-  const tOnboarding = useTranslations('onboarding')
+
   const tValidation = useTranslations()
   const translatedGender = useTranslatedGender()
   const translatedSkills = useTranslatedSkills()
@@ -74,7 +74,7 @@ export default function ProfileUpdateForm({
     control,
     handleSubmit,
     reset,
-    formState: { errors, isDirty },
+    formState: { errors },
   } = methods
 
   useEffect(() => {

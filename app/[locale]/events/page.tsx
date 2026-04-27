@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import { Calendar, MapPin, Compass, ArrowRight, Clock } from 'lucide-react'
+import { Calendar, Compass, ArrowRight, Clock } from 'lucide-react'
 import { getPublishedEvents } from '@/lib/actions/events/get-data'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

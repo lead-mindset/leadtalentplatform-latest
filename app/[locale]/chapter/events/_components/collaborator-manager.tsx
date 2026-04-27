@@ -70,11 +70,11 @@ export function CollaboratorManager({
           } else {
             // Handle case where Supabase returns chapter as array or object
             const normalizedData = (result.data || [])
-              .map((collab: any): Collaborator => {
-                const chapter = Array.isArray(collab.chapter) ? collab.chapter[0] : collab.chapter
-const addedBy = Array.isArray(collab.addedBy) ? collab.addedBy[0] : collab.addedBy
+              .map((collab: Record<string, unknown>): Collaborator | null => {
+                const chapter = Array.isArray(collab.chapter) ? (collab.chapter as unknown[])[0] : collab.chapter
+                const addedBy = Array.isArray(collab.addedBy) ? (collab.addedBy as unknown[])[0] : collab.addedBy
 
-                if (!chapter || !addedBy) return null as any
+                if (!chapter || !addedBy) return null
 
                 return {
                   id: collab.id,

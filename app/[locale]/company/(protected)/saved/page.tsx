@@ -18,7 +18,7 @@ export default async function SavedStudentsPage() {
       <div>
         <h1 className="text-3xl font-bold mb-2">Saved Students</h1>
         <p className="text-muted-foreground">
-          Students you've saved for future reference
+          Students you&apos;ve saved for future reference
         </p>
       </div>
 

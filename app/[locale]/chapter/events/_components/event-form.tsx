@@ -16,7 +16,6 @@ import { useLocale } from 'next-intl'
 import { uploadEventCover } from '@/lib/actions/events/upload-cover'
 import { ImagePlus, Check, ArrowRight, ArrowLeft, UploadCloud, MapPin, Video, MonitorSmartphone, Lightbulb, UserCheck, QrCode, Rocket, Save, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { validateEventForm, type EventFormData } from '@/lib/validations/event'
 import { CollaboratorManager } from './collaborator-manager'
 import { LocationAutocomplete } from '@/components/events/location-autocomplete'
 
@@ -264,7 +263,7 @@ export function EventForm({
         } else {
           router.refresh()
         }
-      } catch (error) {
+      } catch {
         toast.error('An unexpected error occurred. Please try again.')
       }
     })
@@ -617,7 +616,7 @@ export function EventForm({
               className={`bg-background ${fieldErrors.application_form_url ? 'border-destructive' : ''}`}
             />
             <p className="text-xs text-muted-foreground mt-2">
-              Paste any form link — Google Forms, Typeform, etc. Students will be redirected here when they click "Apply".
+              Paste any form link — Google Forms, Typeform, etc. Students will be redirected here when they click &quot;Apply&quot;.
             </p>
             {fieldErrors.application_form_url && <p className="text-xs text-destructive mt-1">{fieldErrors.application_form_url}</p>}
           </div>

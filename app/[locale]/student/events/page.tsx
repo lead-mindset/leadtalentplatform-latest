@@ -1,7 +1,7 @@
 import QRCode from 'qrcode'
 import Image from 'next/image'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { getMyRegistrations } from '@/lib/actions/events/get-data'
@@ -95,7 +95,7 @@ function EventRegistrationCard({
         {isPending ? (
           <div className="rounded-lg border p-3 bg-muted/30">
             <p className="text-sm">
-              Your application is under review. You'll receive an email when a decision is made.
+              Your application is under review. You&apos;ll receive an email when a decision is made.
             </p>
           </div>
         ) : null}
@@ -172,8 +172,8 @@ export default async function StudentEventsPage({
   
   const recentActivity = [...registrations]
     .sort((a, b) => {
-      const dateA = (a as any).created_at ? new Date((a as any).created_at) : new Date(a.event?.start_at || 0)
-      const dateB = (b as any).created_at ? new Date((b as any).created_at) : new Date(b.event?.start_at || 0)
+      const dateA = (a as unknown as { created_at?: string }).created_at ? new Date((a as unknown as { created_at?: string }).created_at!) : new Date(a.event?.start_at || 0)
+      const dateB = (b as unknown as { created_at?: string }).created_at ? new Date((b as unknown as { created_at?: string }).created_at!) : new Date(b.event?.start_at || 0)
       return dateB.getTime() - dateA.getTime()
     })
     .slice(0, 5)
@@ -318,7 +318,7 @@ export default async function StudentEventsPage({
                   <CardContent className="py-12 text-center text-muted-foreground">
                     <Icons.Calendar className="mx-auto mb-4 h-12 w-12 opacity-50 text-primary" />
                     <p className="text-lg font-medium text-foreground">No other upcoming events</p>
-                    <p className="mt-2 text-sm">You haven't registered for any other upcoming events yet.</p>
+                    <p className="mt-2 text-sm">You haven&apos;t registered for any other upcoming events yet.</p>
                   </CardContent>
                 </Card>
               ) : (
@@ -365,7 +365,7 @@ export default async function StudentEventsPage({
                   <CardContent className="py-12 text-center text-muted-foreground">
                     <Icons.Calendar className="mx-auto mb-4 h-12 w-12 opacity-50" />
                     <p className="text-lg font-medium text-foreground">No past events</p>
-                    <p className="mt-2 text-sm">Events you've attended will appear here.</p>
+                    <p className="mt-2 text-sm">Events you&apos;ve attended will appear here.</p>
                   </CardContent>
                 </Card>
               ) : (
@@ -493,7 +493,7 @@ export default async function StudentEventsPage({
                         <span className="font-semibold">{activity.event?.title}</span>
                       </p>
                       <p className="text-[11px] text-muted-foreground mt-1.5 font-light uppercase tracking-wider">
-                        {(activity as any).created_at ? formatRelativeTime((activity as any).created_at) : 'Recently'}
+                        {(activity as unknown as { created_at?: string }).created_at ? formatRelativeTime((activity as unknown as { created_at?: string }).created_at) : 'Recently'}
                       </p>
                     </div>
                   </div>

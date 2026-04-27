@@ -374,7 +374,7 @@ export function CheckinScanner({
           </div>
 
           {searchQuery.trim().length >= 2 && !isSearching && searchResults.length === 0 && (
-            <p className="text-sm text-muted-foreground">No attendees found for "{searchQuery}"</p>
+            <p className="text-sm text-muted-foreground">No attendees found for &quot;{searchQuery}&quot;</p>
           )}
 
           {searchResults.length > 0 && (

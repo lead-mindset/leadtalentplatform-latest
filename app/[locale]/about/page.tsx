@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { MainContainer } from '@/components/global/main-container'
@@ -65,7 +65,7 @@ export default function AboutPage() {
             <CardContent>
               <p className="text-muted-foreground leading-relaxed">
                 We build inclusive communities where students can collaborate, learn together, 
-                and support each other's growth.
+                and support each other&apos;s growth.
               </p>
             </CardContent>
           </Card>

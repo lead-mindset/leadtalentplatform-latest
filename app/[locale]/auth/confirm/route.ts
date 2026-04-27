@@ -6,7 +6,7 @@ import { isValidLocale, routing } from "@/i18n/routing";
 const SITE_URL = process.env.NEXT_PUBLIC_FRONTEND_URL!
 
 export async function GET(request: NextRequest) {
-  const { searchParams, origin, pathname } = new URL(request.url);
+  const { searchParams, pathname } = new URL(request.url);
   const token_hash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
 

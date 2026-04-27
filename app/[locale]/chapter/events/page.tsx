@@ -21,7 +21,7 @@ export default async function ChapterEventsPage() {
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div className="space-y-2">
             <h1 className="text-3xl font-bold tracking-tight">Chapter Events</h1>
-            <p className="text-muted-foreground text-lg">Create and manage your chapter's events</p>
+            <p className="text-muted-foreground text-lg">Create and manage your chapter&apos;s events</p>
           </div>
           <Button asChild size="lg" className="shrink-0">
             <Link href="/chapter/events/new">
@@ -68,7 +68,7 @@ export default async function ChapterEventsPage() {
               No events yet
             </h3>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Your chapter hasn't hosted any events. Create your first event to start engaging with your community.
+              Your chapter hasn&apos;t hosted any events. Create your first event to start engaging with your community.
             </p>
             <Button asChild size="lg">
               <Link href="/chapter/events/new">

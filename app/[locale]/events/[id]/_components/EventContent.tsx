@@ -3,9 +3,8 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Calendar, MapPin, Clock, Users, CheckCircle, ArrowRight, Building, HelpCircle, ExternalLink, Flag } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Calendar, MapPin, ArrowRight, Building } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { EventRegistrationCheckout } from '@/components/events/event-registration-checkout'
 import { ApplyModal } from '@/components/events/apply-modal'
@@ -115,7 +114,9 @@ export function EventContent({
 
   const registeredCount = event._count.registrations
   const ownerChapterLabel = event.chapter ? event.chapter.name : 'Global'
-  const collaborators = event.event_chapter?.map((ec: any) => ec.chapter).filter(Boolean) || []
+  const collaborators = event.event_chapter
+    ?.map((ec: { chapter: { id: string; name: string } | null }) => ec.chapter)
+    .filter((chapter): chapter is { id: string; name: string } => Boolean(chapter)) ?? []
 
   const heroImageSrc = event.cover_image || "https://lh3.googleusercontent.com/aida-public/AB6AXuCPkIXdCnOC4xM_keP1HVTc8Nn_asHtEtsE3T3mkN8Dr3QDObO6BA_ppVqlJIOjEtv0dKqF4KMU1-fhBVeeVu3IXJeHu8VndjHef3GU9_jWWTgMaM292D6UJYbE5a_U0cvkFDiDGhTFm8THZlrg838_CIZKgIu5YgUAX7YVP9gXTVeR__XeheoSuPRYMbn2NDMzbAW30OW15MOIUgace6VZNCZ51xoLDKKL7SXJmeoAjaoD8u32pDMrs3HiE7HRqw5Cps0fVyH8KRJU"
 
@@ -156,7 +157,7 @@ export function EventContent({
                 </div>
               </div>
 
-              {collaborators.map((chapter: any) => (
+              {collaborators.map((chapter) => (
                 <div key={chapter.id} className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center border border-secondary/20 shrink-0">
                     <Building className="text-secondary w-5 h-5" />
@@ -263,7 +264,7 @@ export function EventContent({
                   {isPending ? (
                     <div className="rounded-xl border bg-muted p-4 text-center">
                       <p className="text-sm text-foreground">
-                        Your application is under review. You'll receive an email when a decision is made.
+                        Your application is under review. You&apos;ll receive an email when a decision is made.
                       </p>
                     </div>
                   ) : null}
@@ -277,7 +278,7 @@ export function EventContent({
                   {isRegistered ? (
                     <div className="rounded-xl border border-primary/20 bg-primary/10 p-4 text-center">
                       <p className="text-sm font-medium text-foreground">
-                        You're registered for this event. Check your email for QR code details.
+                        You&apos;re registered for this event. Check your email for QR code details.
                       </p>
                     </div>
                   ) : isPending ? (

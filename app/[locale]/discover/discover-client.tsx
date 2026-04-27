@@ -3,7 +3,6 @@
 import { useState, useCallback } from "react"
 import Link from "next/link"
 import { MapPin, Compass, Users, Sparkles } from "lucide-react"
-import { User } from "@supabase/supabase-js"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -20,7 +19,6 @@ import { CalendarRow } from "@/components/events/calendar-row"
 import { CityCard } from "@/components/events/city-card"
 import { DiscoverSectionHeader } from "@/components/events/discover-section-header"
 import { MobileFilters } from "@/components/events/mobile-filters"
-import { cn } from "@/lib/utils"
 import { MainContainer } from "@/components/global/main-container"
 
 interface Event {
@@ -70,7 +68,6 @@ interface DiscoverClientProps {
   cities: City[]
   currentCity?: string
   currentCategory?: string
-  user: User | null
 }
 
 // Region groupings for city tabs
@@ -89,7 +86,6 @@ export function DiscoverClient({
   cities,
   currentCity,
   currentCategory,
-  user,
 }: DiscoverClientProps) {
   const [selectedCity, setSelectedCity] = useState(currentCity || "")
   const [searchQuery, setSearchQuery] = useState("")

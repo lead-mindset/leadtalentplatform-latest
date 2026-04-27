@@ -1,6 +1,5 @@
 'use client'
 
-import { useMemo } from 'react'
 
 interface ChapterData {
   id: string

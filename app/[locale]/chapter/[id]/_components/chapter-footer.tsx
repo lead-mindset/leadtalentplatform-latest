@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+
 interface ChapterData {
   name: string
   university: string
@@ -24,23 +26,23 @@ export function ChapterFooter({ chapter }: { chapter: ChapterData }) {
             <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">
               Resources
             </p>
-            <a href="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
+            <Link href="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
               Privacy Policy
-            </a>
-            <a href="/terms" className="text-muted-foreground hover:text-foreground transition-colors">
+            </Link>
+            <Link href="/terms" className="text-muted-foreground hover:text-foreground transition-colors">
               Terms of Service
-            </a>
+            </Link>
           </div>
           <div className="flex flex-col gap-3">
             <p className="text-[10px] font-bold text-accent uppercase tracking-widest mb-1">
               Support
             </p>
-            <a href="/help" className="text-muted-foreground hover:text-foreground transition-colors">
+            <Link href="/help" className="text-muted-foreground hover:text-foreground transition-colors">
               Contact Us
-            </a>
-            <a href="/faq" className="text-muted-foreground hover:text-foreground transition-colors">
+            </Link>
+            <Link href="/faq" className="text-muted-foreground hover:text-foreground transition-colors">
               FAQ
-            </a>
+            </Link>
           </div>
         </div>
 

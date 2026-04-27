@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
 import { DiscoverClient } from "./discover-client"
 
 export const metadata = {
@@ -23,9 +22,6 @@ export default async function DiscoverPage({
   const { locale } = await params
   const { city, category } = await searchParams
   const supabase = await createClient()
-
-  // Fetch user session
-  const { data: { user } } = await supabase.auth.getUser()
 
   // Fetch popular events (next 30 days, filtered by city if provided)
   const today = new Date().toISOString()
@@ -142,7 +138,7 @@ export default async function DiscoverPage({
       cities={citiesList}
       currentCity={city}
       currentCategory={category}
-      user={user}
+
     />
   )
 }

@@ -65,7 +65,7 @@ export function EventApplicationsClient({
     })
   }
 
-  const handleReject = async (applicationId: string, _internalNote?: string) => {
+  const handleReject = async (applicationId: string) => {
     startTransition(async () => {
       await bulkRejectApplications(event.id, [applicationId])
       refreshPage()

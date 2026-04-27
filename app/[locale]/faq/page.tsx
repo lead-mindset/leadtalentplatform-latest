@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 
 export const metadata: Metadata = {
   title: 'FAQ - LEAD',
@@ -41,7 +41,7 @@ export default function FAQPage() {
               <CardContent>
                 <p className="text-muted-foreground">
                   LEAD is open to all students interested in pursuing a career in technology. 
-                  Whether you're just starting your journey or already have experience, we have 
+                  Whether you&apos;re just starting your journey or already have experience, we have 
                   programs and resources tailored to your needs.
                 </p>
               </CardContent>
@@ -65,7 +65,7 @@ export default function FAQPage() {
               <CardContent>
                 <p className="text-muted-foreground">
                   LEAD has chapters at universities across the country. Check our events page 
-                  to see if there's a chapter near you, or contact us about starting a new chapter 
+                  to see if there&apos;s a chapter near you, or contact us about starting a new chapter 
                   at your school.
                 </p>
               </CardContent>
@@ -83,19 +83,19 @@ export default function FAQPage() {
               <CardContent>
                 <p className="text-muted-foreground">
                   Simply sign up on our platform and complete your profile. Once your profile 
-                  is approved by your local chapter, you'll have full access to all LEAD 
+                  is approved by your local chapter, you&apos;ll have full access to all LEAD 
                   resources and events.
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">What's the approval process?</CardTitle>
+                <CardTitle className="text-lg">What&apos;s the approval process?</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
                   After you sign up and complete your profile, it will be reviewed by the chapter 
-                  editors at your university. This typically takes 1-2 business days. You'll 
+                  editors at your university. This typically takes 1-2 business days. You&apos;ll 
                   receive an email once your profile is approved.
                 </p>
               </CardContent>
@@ -148,7 +148,7 @@ export default function FAQPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Once you're an approved member, you can register for events through our platform. 
+                  Once you&apos;re an approved member, you can register for events through our platform. 
                   Some events may require an application or have limited capacity, so register early 
                   to secure your spot.
                 </p>
@@ -221,11 +221,11 @@ export default function FAQPage() {
           <div className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">I'm having trouble with my profile. What should I do?</CardTitle>
+                <CardTitle className="text-lg">I&apos;m having trouble with my profile. What should I do?</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  If you're experiencing issues with your profile, first try refreshing the page 
+                  If you&apos;re experiencing issues with your profile, first try refreshing the page 
                   and clearing your browser cache. If the problem persists, contact your local 
                   chapter leaders or reach out to our support team.
                 </p>
@@ -237,8 +237,8 @@ export default function FAQPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  For in-person events, you'll receive a QR code after registering. Simply show 
-                  this QR code at the event entrance for quick check-in. Virtual events don't 
+                  For in-person events, you&apos;ll receive a QR code after registering. Simply show 
+                  this QR code at the event entrance for quick check-in. Virtual events don&apos;t 
                   require check-in.
                 </p>
               </CardContent>
@@ -262,16 +262,16 @@ export default function FAQPage() {
         <CardContent className="py-8 text-center">
           <h3 className="text-2xl font-bold mb-4">Still Have Questions?</h3>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Can't find the answer you're looking for? Our team is here to help. Reach out to us 
-            and we'll get back to you as soon as possible.
+            Can&apos;t find the answer you&apos;re looking for? Our team is here to help. Reach out to us 
+            and we&apos;ll get back to you as soon as possible.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a href="mailto:support@leadtech.org" className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
               Contact Support
             </a>
-            <a href="/events" className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+            <Link href="/events" className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
               View Events
-            </a>
+            </Link>
           </div>
         </CardContent>
       </Card>

@@ -347,7 +347,7 @@ export default async function UserDetailPage({
               </div>
               <h3 className="font-semibold text-lg mb-2">No Student Profile</h3>
               <p className="text-sm text-muted-foreground text-center max-w-sm">
-                This user hasn't created a student profile yet.
+                This user hasn&apos;t created a student profile yet.
               </p>
             </CardContent>
           </Card>

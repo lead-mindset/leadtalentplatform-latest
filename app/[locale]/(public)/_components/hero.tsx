@@ -1,10 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MainContainer } from "@/components/global/main-container";
-import { Icon } from "@/components/ui/icon";
 import GradientText from "@/components/ui/gradient-text";
 import Aurora from "@/components/ui/aurora";
 
@@ -45,7 +43,7 @@ export function Hero() {
           </GradientText>
         </h1>
         <p className="fluid-body-lg text-muted-foreground max-w-3xl mx-auto mb-10 font-medium">
-          We're a community of dreamers and builders bridging Latin America to the global stage through elite mentorship and tech opportunities.
+          We&apos;re a community of dreamers and builders bridging Latin America to the global stage through elite mentorship and tech opportunities.
         </p>
         
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">

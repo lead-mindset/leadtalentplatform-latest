@@ -82,7 +82,7 @@ export default async function CompanyDashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Recently Saved</CardTitle>
-            <CardDescription>Students you've saved recently</CardDescription>
+            <CardDescription>Students you&apos;ve saved recently</CardDescription>
           </CardHeader>
           <CardContent>
             {recentlySaved.length === 0 ? (

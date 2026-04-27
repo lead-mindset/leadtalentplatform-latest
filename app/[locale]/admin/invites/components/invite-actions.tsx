@@ -80,7 +80,7 @@ export function InviteActions({ inviteId, status }: InviteActionsProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Revoke Recruiter Access</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to revoke this recruiter's access? They will
+              Are you sure you want to revoke this recruiter&apos;s access? They will
               immediately lose access to student profiles. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

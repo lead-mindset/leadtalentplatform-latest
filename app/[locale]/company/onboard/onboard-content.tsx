@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { CheckCircle2, AlertCircle, Info, Lock } from 'lucide-react'
+import { CheckCircle2, AlertCircle, Lock } from 'lucide-react'
 import { useLocale } from 'next-intl'
 import { Link } from '@/i18n/routing'
 
@@ -131,7 +131,7 @@ export default function OnboardContent({
               <AlertDescription className="ml-2">
                 <strong className="text-foreground">Passwordless login:</strong>{' '}
                 <span className="text-muted-foreground">
-                  You'll receive a secure login link via email each time you sign in. No password needed!
+                  You&apos;ll receive a secure login link via email each time you sign in. No password needed!
                 </span>
               </AlertDescription>
             </Alert>

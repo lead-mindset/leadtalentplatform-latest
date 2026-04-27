@@ -4,7 +4,7 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { CommandBar } from "@/components/ui/command-bar-fixed";
 import { AppSidebar } from "@/components/navigation/app-sidebar";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -131,7 +131,7 @@ export default function StudentDashboardRedesign() {
 
           <motion.section variants={itemVariants}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {stats.map((stat, index) => (
+              {stats.map((stat) => (
                 <Card
                   key={stat.label}
                   variant="default"
@@ -272,7 +272,7 @@ export default function StudentDashboardRedesign() {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {upcomingEvents.map((event, index) => (
+              {upcomingEvents.map((event) => (
                 <Card 
                   key={event.title} 
                   variant="interactive" 

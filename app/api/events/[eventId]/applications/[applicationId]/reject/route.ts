@@ -14,7 +14,7 @@ export async function POST(
   const { supabase } = access
 
   try {
-    const body = await request.json()
+    await request.json()
   } catch {
     // Ignore optional JSON payload; the current implementation does not persist notes.
   }

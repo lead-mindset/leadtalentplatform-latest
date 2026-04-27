@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { ChapterHero } from './chapter-hero'
 import { ChapterEvents } from './chapter-events'
 import { ChapterTeam } from './chapter-team'
