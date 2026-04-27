@@ -70,6 +70,14 @@ describe('ChapterService', () => {
         _selectChain: selectChain,
         _updateChain: updateChain,
       },
+      user: {
+        select: vi.fn().mockReturnValue(selectChain),
+        _selectChain: selectChain,
+      },
+      chapter: {
+        select: vi.fn().mockReturnValue(selectChain),
+        _selectChain: selectChain,
+      },
       ...overrides,
     }
 
@@ -421,6 +429,101 @@ describe('ChapterService', () => {
       const result = await ChapterService.revokeApproval(mockSupabase as unknown as SupabaseClient, 'user-123')
 
       expect(result).toEqual({ success: false, error: 'Failed to revoke approval' })
+    })
+  })
+
+  // ───────────────────────────────────────────────────────────────
+  // getStudentChapterId
+  // ───────────────────────────────────────────────────────────────
+  describe('getStudentChapterId', () => {
+    it('should return chapter id when profile exists', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.student_profile._selectChain.single.mockResolvedValueOnce({
+        data: { chapter_id: 'ch-1' },
+        error: null,
+      })
+
+      const result = await ChapterService.getStudentChapterId(mockSupabase as unknown as SupabaseClient, 'user-123')
+
+      expect(result).toBe('ch-1')
+    })
+
+    it('should return null when profile not found', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.student_profile._selectChain.single.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'Not found' },
+      })
+
+      const result = await ChapterService.getStudentChapterId(mockSupabase as unknown as SupabaseClient, 'user-123')
+
+      expect(result).toBeNull()
+    })
+  })
+
+  // ───────────────────────────────────────────────────────────────
+  // getUserBasicInfo
+  // ───────────────────────────────────────────────────────────────
+  describe('getUserBasicInfo', () => {
+    it('should return user info when found', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.user._selectChain.single.mockResolvedValueOnce({
+        data: { email: 'user@test.com', name: 'User Name' },
+        error: null,
+      })
+
+      const result = await ChapterService.getUserBasicInfo(mockSupabase as unknown as SupabaseClient, 'user-123')
+
+      expect(result).not.toBeNull()
+      expect(result?.email).toBe('user@test.com')
+      expect(result?.name).toBe('User Name')
+    })
+
+    it('should return null when user not found', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.user._selectChain.single.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'Not found' },
+      })
+
+      const result = await ChapterService.getUserBasicInfo(mockSupabase as unknown as SupabaseClient, 'user-123')
+
+      expect(result).toBeNull()
+    })
+  })
+
+  // ───────────────────────────────────────────────────────────────
+  // getChapterName
+  // ───────────────────────────────────────────────────────────────
+  describe('getChapterName', () => {
+    it('should return chapter name when found', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.chapter._selectChain.single.mockResolvedValueOnce({
+        data: { name: 'Alpha Chapter' },
+        error: null,
+      })
+
+      const result = await ChapterService.getChapterName(mockSupabase as unknown as SupabaseClient, 'ch-1')
+
+      expect(result).toBe('Alpha Chapter')
+    })
+
+    it('should return null when chapter not found', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.chapter._selectChain.single.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'Not found' },
+      })
+
+      const result = await ChapterService.getChapterName(mockSupabase as unknown as SupabaseClient, 'ch-missing')
+
+      expect(result).toBeNull()
     })
   })
 })

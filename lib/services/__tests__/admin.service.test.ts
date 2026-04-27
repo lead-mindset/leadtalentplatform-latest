@@ -81,6 +81,7 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
       select: vi.fn(() => recruiterAccessBuilder),
       update: vi.fn(() => recruiterAccessBuilder),
       insert: vi.fn(() => recruiterAccessBuilder),
+      delete: vi.fn(() => recruiterAccessBuilder),
       _builder: recruiterAccessBuilder,
     },
     ...overrides,
@@ -598,6 +599,249 @@ describe('AdminService', () => {
       const result = await AdminService.revokeInvite(mockSupabase as unknown as SupabaseClient, 'admin-1', 'ra-1')
 
       expect(result.success).toBe(true)
+    })
+  })
+
+  // ───────────────────────────────────────────────────────────────
+  // validateCompanyExists
+  // ───────────────────────────────────────────────────────────────
+  describe('validateCompanyExists', () => {
+    it('should return company when found', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.company._builder._setThenValue({
+        data: { id: 'co-1', name: 'Company A' },
+        error: null,
+      })
+
+      const result = await AdminService.validateCompanyExists(mockSupabase as unknown as SupabaseClient, 'co-1')
+
+      expect(result).not.toBeNull()
+      expect(result?.id).toBe('co-1')
+      expect(result?.name).toBe('Company A')
+    })
+
+    it('should return null when not found', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.company._builder._setThenValue({
+        data: null,
+        error: { message: 'Not found' },
+      })
+
+      const result = await AdminService.validateCompanyExists(mockSupabase as unknown as SupabaseClient, 'co-missing')
+
+      expect(result).toBeNull()
+    })
+  })
+
+  // ───────────────────────────────────────────────────────────────
+  // checkExistingRecruiterInvite
+  // ───────────────────────────────────────────────────────────────
+  describe('checkExistingRecruiterInvite', () => {
+    it('should return existing invite', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.recruiter_access._builder._setThenValue({
+        data: { id: 'ra-1', accepted_at: null, revoked_at: null },
+        error: null,
+      })
+
+      const result = await AdminService.checkExistingRecruiterInvite(mockSupabase as unknown as SupabaseClient, 'rec@test.com', 'co-1')
+
+      expect(result).not.toBeNull()
+      expect(result?.id).toBe('ra-1')
+    })
+
+    it('should return null when no invite exists', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.recruiter_access._builder._setThenValue({
+        data: null,
+        error: null,
+      })
+
+      const result = await AdminService.checkExistingRecruiterInvite(mockSupabase as unknown as SupabaseClient, 'new@test.com', 'co-1')
+
+      expect(result).toBeNull()
+    })
+  })
+
+  // ───────────────────────────────────────────────────────────────
+  // getInviteForResend
+  // ───────────────────────────────────────────────────────────────
+  describe('getInviteForResend', () => {
+    it('should return invite with company name when company is an array', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.recruiter_access._builder._setThenValue({
+        data: {
+          id: 'ra-1',
+          recruiter_email: 'rec@test.com',
+          company_id: 'co-1',
+          revoked_at: null,
+          accepted_at: null,
+          company: [{ name: 'Company A' }],
+        },
+        error: null,
+      })
+
+      const result = await AdminService.getInviteForResend(mockSupabase as unknown as SupabaseClient, 'ra-1')
+
+      expect(result).not.toBeNull()
+      expect(result?.id).toBe('ra-1')
+      expect(result?.recruiter_email).toBe('rec@test.com')
+      expect(result?.company?.name).toBe('Company A')
+    })
+
+    it('should return invite with company name when company is an object', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.recruiter_access._builder._setThenValue({
+        data: {
+          id: 'ra-2',
+          recruiter_email: 'rec2@test.com',
+          company_id: 'co-2',
+          revoked_at: '2024-01-01T00:00:00Z',
+          accepted_at: '2024-01-02T00:00:00Z',
+          company: { name: 'Company B' },
+        },
+        error: null,
+      })
+
+      const result = await AdminService.getInviteForResend(mockSupabase as unknown as SupabaseClient, 'ra-2')
+
+      expect(result).not.toBeNull()
+      expect(result?.revoked_at).toBe('2024-01-01T00:00:00Z')
+      expect(result?.accepted_at).toBe('2024-01-02T00:00:00Z')
+      expect(result?.company?.name).toBe('Company B')
+    })
+
+    it('should return null on error', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.recruiter_access._builder._setThenValue({
+        data: null,
+        error: { message: 'Not found' },
+      })
+
+      const result = await AdminService.getInviteForResend(mockSupabase as unknown as SupabaseClient, 'ra-missing')
+
+      expect(result).toBeNull()
+    })
+  })
+
+  // ───────────────────────────────────────────────────────────────
+  // getInviteForRevoke
+  // ───────────────────────────────────────────────────────────────
+  describe('getInviteForRevoke', () => {
+    it('should return invite details', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.recruiter_access._builder._setThenValue({
+        data: {
+          id: 'ra-1',
+          recruiter_email: 'rec@test.com',
+          company_id: 'co-1',
+          revoked_at: null,
+        },
+        error: null,
+      })
+
+      const result = await AdminService.getInviteForRevoke(mockSupabase as unknown as SupabaseClient, 'ra-1')
+
+      expect(result).not.toBeNull()
+      expect(result?.id).toBe('ra-1')
+      expect(result?.recruiter_email).toBe('rec@test.com')
+      expect(result?.company_id).toBe('co-1')
+      expect(result?.revoked_at).toBeNull()
+    })
+
+    it('should return null on error', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.recruiter_access._builder._setThenValue({
+        data: null,
+        error: { message: 'Not found' },
+      })
+
+      const result = await AdminService.getInviteForRevoke(mockSupabase as unknown as SupabaseClient, 'ra-missing')
+
+      expect(result).toBeNull()
+    })
+  })
+
+  // ───────────────────────────────────────────────────────────────
+  // deleteInvite
+  // ───────────────────────────────────────────────────────────────
+  describe('deleteInvite', () => {
+    it('should delete invite successfully', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.recruiter_access._builder._setThenValue({
+        error: null,
+      })
+
+      const result = await AdminService.deleteInvite(mockSupabase as unknown as SupabaseClient, 'ra-1')
+
+      expect(result.success).toBe(true)
+    })
+
+    it('should return error on failure', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.recruiter_access._builder._setThenValue({
+        error: { message: 'Delete failed' },
+      })
+
+      const result = await AdminService.deleteInvite(mockSupabase as unknown as SupabaseClient, 'ra-1')
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('Failed to delete invite')
+    })
+  })
+
+  // ───────────────────────────────────────────────────────────────
+  // getAllChapters
+  // ───────────────────────────────────────────────────────────────
+  describe('getAllChapters', () => {
+    it('should return all chapters ordered by name', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.chapter._builder._setThenValue({
+        data: [
+          { id: 'ch-1', name: 'Alpha Chapter', university: 'Uni A', city: 'City A', region: 'Region A', created_at: '2024-01-01', updated_at: '2024-01-01', instagram_url: null, latitude: null, longitude: null, location_point: null },
+          { id: 'ch-2', name: 'Beta Chapter', university: 'Uni B', city: 'City B', region: 'Region B', created_at: '2024-02-01', updated_at: '2024-02-01', instagram_url: null, latitude: null, longitude: null, location_point: null },
+        ],
+        error: null,
+      })
+
+      const result = await AdminService.getAllChapters(mockSupabase as unknown as SupabaseClient)
+
+      if ('error' in result) {
+        throw new Error('Expected chapters')
+      }
+
+      expect(result.chapters).toHaveLength(2)
+      expect(result.chapters[0].name).toBe('Alpha Chapter')
+      expect(result.chapters[1].name).toBe('Beta Chapter')
+    })
+
+    it('should return error on failure', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.chapter._builder._setThenValue({
+        data: null,
+        error: { message: 'DB error' },
+      })
+
+      const result = await AdminService.getAllChapters(mockSupabase as unknown as SupabaseClient)
+
+      if ('chapters' in result) {
+        throw new Error('Expected error')
+      }
+
+      expect(result.error).toBe('Failed to fetch chapters')
     })
   })
 })

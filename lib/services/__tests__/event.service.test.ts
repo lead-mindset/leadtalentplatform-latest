@@ -23,6 +23,7 @@ interface MockUpdateChain {
   in: ReturnType<typeof vi.fn>
   select: ReturnType<typeof vi.fn>
   single: ReturnType<typeof vi.fn>
+  then: ReturnType<typeof vi.fn>
 }
 
 interface MockInsertChain {
@@ -64,6 +65,7 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
     in: vi.fn().mockReturnThis(),
     select: vi.fn().mockReturnThis(),
     single: vi.fn().mockResolvedValue({ data: null, error: null }),
+    then: vi.fn((resolve: (value: unknown) => unknown) => resolve({ data: null, error: null })),
   }
 
   const insertChain: MockInsertChain = {
@@ -1009,6 +1011,236 @@ describe('EventService', () => {
       expect(result).toHaveLength(1)
       expect(result[0].id).toBe('evt-1')
       expect(result[0].chapter?.name).toBe('Chapter 1')
+    })
+  })
+
+  // ───────────────────────────────────────────────────────────────
+  // getUserRole
+  // ───────────────────────────────────────────────────────────────
+  describe('getUserRole', () => {
+    it('should return role when user exists', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.user._selectChain.maybeSingle.mockResolvedValueOnce({
+        data: { role: 'admin' },
+        error: null,
+      })
+
+      const result = await EventService.getUserRole(mockSupabase as unknown as SupabaseClient, 'user-1')
+
+      expect(result).toBe('admin')
+    })
+
+    it('should return null on error', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.user._selectChain.maybeSingle.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'DB error' },
+      })
+
+      const result = await EventService.getUserRole(mockSupabase as unknown as SupabaseClient, 'user-1')
+
+      expect(result).toBeNull()
+    })
+  })
+
+  // ───────────────────────────────────────────────────────────────
+  // checkEventCollaboration
+  // ───────────────────────────────────────────────────────────────
+  describe('checkEventCollaboration', () => {
+    it('should return true when collaboration exists', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.event_chapter._selectChain.maybeSingle.mockResolvedValueOnce({
+        data: { id: 'ec-1' },
+        error: null,
+      })
+
+      const result = await EventService.checkEventCollaboration(mockSupabase as unknown as SupabaseClient, 'evt-1', 'ch-2')
+
+      expect(result).toBe(true)
+    })
+
+    it('should return false when no collaboration exists', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.event_chapter._selectChain.maybeSingle.mockResolvedValueOnce({
+        data: null,
+        error: null,
+      })
+
+      const result = await EventService.checkEventCollaboration(mockSupabase as unknown as SupabaseClient, 'evt-1', 'ch-2')
+
+      expect(result).toBe(false)
+    })
+
+    it('should return false on error', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.event_chapter._selectChain.maybeSingle.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'DB error' },
+      })
+
+      const result = await EventService.checkEventCollaboration(mockSupabase as unknown as SupabaseClient, 'evt-1', 'ch-2')
+
+      expect(result).toBe(false)
+    })
+  })
+
+  // ───────────────────────────────────────────────────────────────
+  // getApprovedRegistrations
+  // ───────────────────────────────────────────────────────────────
+  describe('getApprovedRegistrations', () => {
+    it('should return approved registrations with details', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.event_registration._selectChain.then.mockImplementationOnce((resolve: (value: unknown) => unknown) =>
+        resolve({
+          data: [
+            {
+              id: 'reg-1',
+              applicant: { email: 'user@test.com', name: 'User' },
+              checked_in_by: null,
+              event: { title: 'Event', start_at: new Date().toISOString(), location: null, meeting_url: null, event_type: 'in_person' },
+            },
+          ],
+          error: null,
+        })
+      )
+
+      const result = await EventService.getApprovedRegistrations(mockSupabase as unknown as SupabaseClient, ['reg-1'])
+
+      expect(result).toHaveLength(1)
+      expect(result[0].id).toBe('reg-1')
+      expect(result[0].applicant?.email).toBe('user@test.com')
+    })
+
+    it('should return empty array on error', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.event_registration._selectChain.then.mockImplementationOnce((resolve: (value: unknown) => unknown) =>
+        resolve({ data: null, error: { message: 'DB error' } })
+      )
+
+      const result = await EventService.getApprovedRegistrations(mockSupabase as unknown as SupabaseClient, ['reg-1'])
+
+      expect(result).toEqual([])
+    })
+  })
+
+  // ───────────────────────────────────────────────────────────────
+  // getRejectedRegistrations
+  // ───────────────────────────────────────────────────────────────
+  describe('getRejectedRegistrations', () => {
+    it('should return rejected registrations with details', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.event_registration._selectChain.then.mockImplementationOnce((resolve: (value: unknown) => unknown) =>
+        resolve({
+          data: [
+            {
+              id: 'reg-1',
+              user: { email: 'user@test.com', name: 'User' },
+              event: { title: 'Event', chapter: { name: 'Chapter' } },
+            },
+          ],
+          error: null,
+        })
+      )
+
+      const result = await EventService.getRejectedRegistrations(mockSupabase as unknown as SupabaseClient, ['reg-1'])
+
+      expect(result).toHaveLength(1)
+      expect(result[0].id).toBe('reg-1')
+      expect(result[0].user?.email).toBe('user@test.com')
+      expect(result[0].event?.chapter?.name).toBe('Chapter')
+    })
+
+    it('should return empty array on error', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.event_registration._selectChain.then.mockImplementationOnce((resolve: (value: unknown) => unknown) =>
+        resolve({ data: null, error: { message: 'DB error' } })
+      )
+
+      const result = await EventService.getRejectedRegistrations(mockSupabase as unknown as SupabaseClient, ['reg-1'])
+
+      expect(result).toEqual([])
+    })
+  })
+
+  // ───────────────────────────────────────────────────────────────
+  // bulkRejectApplications
+  // ───────────────────────────────────────────────────────────────
+  describe('bulkRejectApplications', () => {
+    it('should reject applications successfully', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.event_registration._updateChain.then.mockImplementationOnce((resolve: (value: unknown) => unknown) =>
+        resolve({ error: null })
+      )
+
+      const result = await EventService.bulkRejectApplications(mockSupabase as unknown as SupabaseClient, 'evt-1', ['reg-1', 'reg-2'])
+
+      expect(result.success).toBe(true)
+    })
+
+    it('should return error on failure', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.event_registration._updateChain.then.mockImplementationOnce((resolve: (value: unknown) => unknown) =>
+        resolve({ error: { message: 'Update failed' } })
+      )
+
+      const result = await EventService.bulkRejectApplications(mockSupabase as unknown as SupabaseClient, 'evt-1', ['reg-1'])
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('Failed to reject applications')
+    })
+  })
+
+  // ───────────────────────────────────────────────────────────────
+  // addEventCollaboratorsBulk
+  // ───────────────────────────────────────────────────────────────
+  describe('addEventCollaboratorsBulk', () => {
+    it('should add collaborators successfully', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.event._selectChain.single.mockResolvedValueOnce({
+        data: { id: 'evt-1' },
+        error: null,
+      })
+      tableMocks.event_chapter._insertChain.single.mockResolvedValueOnce({
+        data: null,
+        error: null,
+      })
+
+      const result = await EventService.addEventCollaboratorsBulk(mockSupabase as unknown as SupabaseClient, 'evt-1', ['ch-1', 'ch-2'], 'user-1')
+
+      expect(result.success).toBe(true)
+    })
+
+    it('should return error for invalid event id', async () => {
+      const result = await EventService.addEventCollaboratorsBulk({} as unknown as SupabaseClient, 'new', ['ch-1'], 'user-1')
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('Event ID and at least one chapter ID are required')
+    })
+
+    it('should return error when event not found', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.event._selectChain.single.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'Not found' },
+      })
+
+      const result = await EventService.addEventCollaboratorsBulk(mockSupabase as unknown as SupabaseClient, 'evt-1', ['ch-1'], 'user-1')
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('Event not found')
     })
   })
 })
