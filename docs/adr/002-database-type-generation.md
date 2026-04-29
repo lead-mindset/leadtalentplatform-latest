@@ -74,6 +74,22 @@ Added convenience scripts to `package.json`:
 - Hooks are committed to `.husky/` directory
 - Team members get hooks automatically when cloning repo
 
+## Educational Context: The "Recipe" Approach to Database Migrations
+
+To help team members understand *why* this workflow is crucial, we use the "recipe" analogy:
+
+To keep a team in sync, you have to move away from clicking buttons in a dashboard and move toward code-based changes. Think of a migration file as a "recipe" that everyone's computer follows to get the same result.
+
+**The Workflow:**
+1. **Create the "Instruction":** Run `pnpm run migration:new add_feature`. An empty SQL file is created.
+2. **Write the Change:** Add the SQL to the new file (the "recipe").
+3. **Apply Locally:** Run `pnpm run supabase:reset`. The database runs the recipe, and the Husky hook automatically regenerates `database.types.ts`.
+4. **Share via GitHub:** Commit and push the `.sql` file.
+5. **Team Sync:** A teammate runs `git pull`. The Husky post-merge hook detects the new `.sql` file, automatically applies it to their local database, and regenerates their `database.types.ts`.
+
+**Why we do this:**
+Without this, database changes require manual out-of-band communication ("Hey, add this column in the dashboard"), leading to misaligned schemas, runtime crashes, and lost time. With this workflow, database changes travel through Git exactly like code changes, turning a confusing coordination problem into an invisible, automatic 0-second process.
+
 ## Consequences
 
 ### Positive
