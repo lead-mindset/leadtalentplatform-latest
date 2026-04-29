@@ -54,6 +54,7 @@ export const StudentService = {
       .update({
         name: params.fullName,
         phone: params.phone,
+        gender: params.gender,
         updated_at: now,
       })
       .eq('id', params.userId);
@@ -174,6 +175,7 @@ export const StudentService = {
         email: params.email,
         name: params.fullName,
         phone: params.phone,
+        gender: params.gender,
         updated_at: now,
       })
       .eq('id', params.userId)
