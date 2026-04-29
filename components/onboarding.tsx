@@ -91,9 +91,15 @@ export default function Onboarding() {
       }
     })
 
-    const result = await submitOnboarding(formData)
-    if (result?.error) {
-      console.error(result.error)
+    try {
+      const result = await submitOnboarding(formData)
+      if (result?.error) {
+        console.error(result.error)
+      }
+      // Success redirects automatically, so no else needed
+    } catch (err) {
+      console.error(err)
+    } finally {
       setIsSubmitting(false)
     }
   }
