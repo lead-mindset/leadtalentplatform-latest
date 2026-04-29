@@ -28,6 +28,15 @@ Before claiming a task is complete, ensure:
 3.  **Linting:** `npm run lint` passes.
 4.  **Documentation:** New services are documented; ADRs created for major changes.
 
+### Vertical Slices (Tracer Bullets)
+- **NEVER work horizontally** (all DB first, then all API, then all UI)
+- **ALWAYS work in vertical slices** — implement ONE complete feature end-to-end
+- Each slice must touch: database → service → server action → UI component
+- Move to next slice only when current slice is functional and testable
+
+
+**Threshold**: ~100k tokens is the "dumb zone" — reset before hitting it.
+
 ## Common Gotchas
 - Tailwind CSS 4 uses `@import "tailwindcss"` in CSS, not `@tailwind` directives.
 - Route params are async - access via `{ params }: { params: Promise<{ ... }> }`.
