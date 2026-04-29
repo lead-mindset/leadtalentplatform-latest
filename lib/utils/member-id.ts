@@ -19,8 +19,8 @@ async function isMemberIdUnique(
 ): Promise<boolean> {
   const { data, error } = await supabase
     .from('student_profile')
-    .select('memberId')
-    .eq('memberId', memberId)
+    .select('member_id')
+    .eq('member_id', memberId)
     .single()
 
   if (error && error.code === 'PGRST116') {
