@@ -598,10 +598,10 @@ export function FormInput({
       />
 
       {error && (
-        <p className="flex items-center gap-1 text-sm text-destructive">
+        <div className="flex items-center gap-1 text-sm text-destructive">
           <Icons.X className="h-3 w-3" />
           {error}
-        </p>
+        </div>
       )}
     </div>
   )
