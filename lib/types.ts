@@ -3,7 +3,7 @@ export type Role = "admin" | "editor" | "member" | "recruiter";
 import type { LucideIcon } from 'lucide-react';
 import type {
   Database,
-} from '@/lib/supabase.ts'
+} from '@/lib/database.types'
 
 export type {
   Json,
@@ -12,7 +12,7 @@ export type {
   TablesUpdate,
   Enums,
   CompositeTypes,
-} from '@/lib/supabase.ts'
+} from '@/lib/database.types'
 
 export type EventType = 'in_person' | 'online' | 'hybrid'
 export type EventAccessModel = 'open' | 'application'
@@ -91,7 +91,7 @@ export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES]
 // ============================================================================
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected'
 
-export { Constants } from '@/lib/supabase'
+// Note: Constants should be defined in a separate constants file if needed
 
 // ============================================================================
 // EXTRACTED ROW TYPES
