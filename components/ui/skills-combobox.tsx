@@ -52,7 +52,6 @@ export function SkillsCombobox({
 }: SkillsComboboxProps) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
-  const [selectedValue, setSelectedValue] = useState('')
   const [showCreate, setShowCreate] = useState(false)
 
   const filteredOptions = options.filter((opt) =>
@@ -106,9 +105,11 @@ export function SkillsCombobox({
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className="w-full justify-between font-normal text-muted-foreground"
+            className="w-full justify-between font-normal"
           >
-            {placeholder}
+            {value.length > 0
+              ? `${value.length} skill${value.length > 1 ? 's' : ''} selected`
+              : placeholder}
             <Icons.ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
@@ -131,9 +132,10 @@ export function SkillsCombobox({
                   <CommandItem
                     key={option.value}
                     value={option.value}
-                    onSelect={(currentValue) => {
-                      setSelectedValue(currentValue)
-                      setShowCreate(false)
+                    onSelect={() => {
+                      toggle(option.value)
+                      setSearch('')
+                      setOpen(false)
                     }}
                   >
                     <Icons.CheckCircle2
@@ -147,17 +149,18 @@ export function SkillsCombobox({
                 ))}
                 {showCreate && (
                   <CommandItem
-                    value={selectedValue}
+                    value={search}
                     onSelect={() => {
-                      if (selectedValue && !value.includes(selectedValue)) {
-                        onChange([...value, selectedValue])
+                      if (search && !value.includes(search)) {
+                        onChange([...value, search])
                       }
                       setShowCreate(false)
-                      setSelectedValue("")
+                      setSearch('')
+                      setOpen(false)
                     }}
                   >
                     <Icons.Plus className="mr-2 h-4 w-4" />
-                    Create "{selectedValue}"
+                    Create "{search}"
                   </CommandItem>
                 )}
               </CommandGroup>
