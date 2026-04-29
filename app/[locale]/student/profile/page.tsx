@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+export const dynamic = "force-dynamic";
 import { requireUser } from "@/lib/auth";
 import ProfileUpdateForm from "./components/profile-update-form";
 import type { ProfileData } from "@/lib/memberschema";
@@ -11,7 +12,7 @@ async function ProfileData() {
   const { data: profileData, error: profileError } = await supabase
     .from("student_profile")
     .select(
-      "user_id, chapter_id, major, graduation_year, skills, linkedin_url, consent_recruiter_visibility, email_notifications_enabled, member_id, approval_status"
+    "user_id, chapter_id, major, graduation_year, skills, linkedin_url, consent_recruiter_visibility, email_notifications_enabled, member_id, approval_status, gender"
     )
     .eq("user_id", user.id)
     .maybeSingle<StudentProfileRow>();
@@ -24,6 +25,7 @@ async function ProfileData() {
     id: user.id,
     full_name: user.name || '',
     phone: user.phone || '',
+    gender: (profileData?.gender || (user as any).gender) as any,
     lead_chapter: profileData?.chapter_id || '',
     career: profileData?.major || '',
     graduation_year: profileData?.graduation_year || 0,
