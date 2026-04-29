@@ -11,7 +11,7 @@ import type {
   UserRow,
 } from './types'
 
-const USER_SELECT = 'id, email, name, role, phone, created_at, updated_at, deactivated_at'
+const USER_SELECT = 'id, email, name, role, phone, gender, created_at, updated_at, deactivated_at'
 const RECRUITER_ACCESS_SELECT =
   'id, company_id, is_active, granted_by_id, accepted_by_user_id, granted_at, accepted_at, revoked_at, invite_expires_at, recruiter_email, invite_token, revoked_by_id'
 
@@ -255,14 +255,14 @@ export async function requireRecruiter(): Promise<{
   }
 
   type ActiveAccessRaw = RecruiterAccessRow & {
-    Company: { id: string; name: string; createdat: string; createdbyid: string }[];
+    Company: { id: string; name: string; created_at: string; created_by_id: string }[];
   }
 
   const { data: activeAccess, error: accessError } = await supabase
     .from('recruiter_access')
     .select(`
       ${RECRUITER_ACCESS_SELECT},
-      Company!inner (id, name, createdat, createdbyid)
+      Company!inner (id, name, created_at, created_by_id)
     `)
     .eq('accepted_by_user_id', authUser.id)
     .eq('is_active', true)
