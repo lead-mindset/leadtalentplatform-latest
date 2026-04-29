@@ -58,7 +58,7 @@ export default function ProfileUpdateForm({
       full_name: initialData?.full_name || '',
       phone: initialData?.phone || '',
       career: initialData?.career || '',
-      gender: initialData?.gender ?? undefined,
+      gender: initialData?.gender || undefined,
       graduation_year: initialData?.graduation_year || 0,
       skills: initialData?.skills || [],
       lead_chapter: initialData?.lead_chapter || '',
@@ -82,7 +82,7 @@ export default function ProfileUpdateForm({
       full_name: initialData?.full_name || '',
       phone: initialData?.phone || '',
       career: initialData?.career || '',
-      gender: initialData?.gender ?? undefined,
+      gender: initialData?.gender || undefined,
       graduation_year: initialData?.graduation_year || 0,
       skills: initialData?.skills || [],
       lead_chapter: initialData?.lead_chapter || '',
@@ -287,7 +287,7 @@ export default function ProfileUpdateForm({
             />
 
             <FormInput
-              label={t('academic.graduation_year')}
+              label={t('academic.graduationYear')}
               name="graduation_year"
               type="number"
               validation={{ valueAsNumber: true }}
