@@ -380,6 +380,84 @@ pnpm exec supabase gen types typescript --local > lib/supabase.ts
 2. Add corresponding keys to `messages/es.json`
 3. Use `useTranslations()` hook in components
 
+## Supabase Type Generation
+
+### Prerequisites
+- Docker Desktop must be running
+- Local Supabase instance started
+
+### Quick Start
+
+1. **Start local Supabase:**
+   ```bash
+   pnpm run supabase:start
+   ```
+
+2. **Generate types:**
+   ```bash
+   pnpm run types:generate
+   ```
+
+### Available Commands
+
+| Command | Description |
+|---------|-------------|
+| `pnpm run types:generate` | Generate types from local Supabase |
+| `pnpm run types:watch` | Watch for changes and auto-generate |
+| `pnpm run db:pull` | Pull schema from remote + generate types |
+| `pnpm run db:push` | Push schema to remote + generate types |
+| `pnpm run migration:new <name>` | Create a new migration |
+| `pnpm run supabase:start` | Start local Supabase |
+| `pnpm run supabase:stop` | Stop local Supabase |
+| `pnpm run supabase:status` | Check Supabase status |
+| `pnpm run supabase:reset` | Reset local database |
+
+### Workflow for Schema Changes
+
+1. **Create a migration:**
+   ```bash
+   pnpm run migration:new add_new_feature
+   ```
+
+2. **Edit the migration file** in `supabase/migrations/`
+
+3. **Apply the migration:**
+   ```bash
+   pnpm run supabase:reset
+   ```
+
+4. **Types auto-generate** to `lib/database.types.ts`
+
+### Automatic Type Generation
+
+Types automatically regenerate when:
+- ✅ You pull Git changes that include migrations (via Git hook)
+- ✅ You run `db:pull` or `db:push` commands
+- ✅ You manually run `types:generate`
+
+### Using Types in Code
+
+```typescript
+import { Database, Tables } from '@/lib/database.generated'
+
+// Use table types
+type User = Tables<'user'>
+type Event = Tables<'event'>
+
+// Use with Supabase client
+const { data } = await supabase
+  .from('user')
+  .select('*')
+  .returns<User[]>()
+```
+
+### Important Notes
+
+- ❌ **Never edit** `lib/database.types.ts` manually (auto-generated)
+- ❌ **Never use** Supabase Dashboard for schema changes
+- ✅ **Always use** migrations for schema changes
+- ✅ Types are generated from **local** Supabase by default
+
 ## Deployment
 
 ### Vercel (Recommended)

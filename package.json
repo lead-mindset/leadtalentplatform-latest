@@ -6,8 +6,18 @@
     "start": "next start",
     "lint": "eslint .",
     "supabase": "supabase",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:status": "supabase status",
+    "supabase:reset": "supabase db reset",
+    "types:generate": "supabase gen types typescript --local > lib/database.types.ts",
+    "types:watch": "supabase gen types typescript --local --watch > lib/database.types.ts",
+    "db:pull": "supabase db pull && npm run types:generate",
+    "db:push": "supabase db push && npm run types:generate",
+    "migration:new": "supabase migration new",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prepare": "husky"
   },
   "dependencies": {
     "@base-ui/react": "^1.1.0",
@@ -75,6 +85,7 @@
     "@vitest/coverage-v8": "^4.1.5",
     "eslint": "^9",
     "eslint-config-next": "15.3.1",
+    "husky": "^9.1.7",
     "jsdom": "^29.0.2",
     "shadcn": "^4.3.0",
     "supabase": "2.92.1",

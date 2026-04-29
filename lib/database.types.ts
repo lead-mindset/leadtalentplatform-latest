@@ -7,11 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.1"
-  }
   graphql_public: {
     Tables: {
       [_ in never]: never
@@ -469,51 +464,6 @@ export type Database = {
           },
         ]
       }
-      resume_storage_backup_20260416_2001: {
-        Row: {
-          bucket_id: string | null
-          created_at: string | null
-          id: string | null
-          last_accessed_at: string | null
-          metadata: Json | null
-          name: string | null
-          owner: string | null
-          owner_id: string | null
-          path_tokens: string[] | null
-          updated_at: string | null
-          user_metadata: Json | null
-          version: string | null
-        }
-        Insert: {
-          bucket_id?: string | null
-          created_at?: string | null
-          id?: string | null
-          last_accessed_at?: string | null
-          metadata?: Json | null
-          name?: string | null
-          owner?: string | null
-          owner_id?: string | null
-          path_tokens?: string[] | null
-          updated_at?: string | null
-          user_metadata?: Json | null
-          version?: string | null
-        }
-        Update: {
-          bucket_id?: string | null
-          created_at?: string | null
-          id?: string | null
-          last_accessed_at?: string | null
-          metadata?: Json | null
-          name?: string | null
-          owner?: string | null
-          owner_id?: string | null
-          path_tokens?: string[] | null
-          updated_at?: string | null
-          user_metadata?: Json | null
-          version?: string | null
-        }
-        Relationships: []
-      }
       saved_student: {
         Row: {
           created_at: string
@@ -669,71 +619,12 @@ export type Database = {
           },
         ]
       }
-      studentprofile_backup_20260416_2001: {
-        Row: {
-          approvalStatus: Database["public"]["Enums"]["approval_status"] | null
-          approvedById: string | null
-          chapter_id: string | null
-          consentDate: string | null
-          consentRecruiterVisibility: boolean | null
-          createdAt: string | null
-          emailNotificationsEnabled: boolean | null
-          gender: string | null
-          graduation_year: number | null
-          isFilled: boolean | null
-          isRecruiterVisible: boolean | null
-          linkedinUrl: string | null
-          major: string | null
-          memberId: string | null
-          skills: string[] | null
-          updatedAt: string | null
-          userId: string | null
-        }
-        Insert: {
-          approvalStatus?: Database["public"]["Enums"]["approval_status"] | null
-          approvedById?: string | null
-          chapter_id?: string | null
-          consentDate?: string | null
-          consentRecruiterVisibility?: boolean | null
-          createdAt?: string | null
-          emailNotificationsEnabled?: boolean | null
-          gender?: string | null
-          graduation_year?: number | null
-          isFilled?: boolean | null
-          isRecruiterVisible?: boolean | null
-          linkedinUrl?: string | null
-          major?: string | null
-          memberId?: string | null
-          skills?: string[] | null
-          updatedAt?: string | null
-          userId?: string | null
-        }
-        Update: {
-          approvalStatus?: Database["public"]["Enums"]["approval_status"] | null
-          approvedById?: string | null
-          chapter_id?: string | null
-          consentDate?: string | null
-          consentRecruiterVisibility?: boolean | null
-          createdAt?: string | null
-          emailNotificationsEnabled?: boolean | null
-          gender?: string | null
-          graduation_year?: number | null
-          isFilled?: boolean | null
-          isRecruiterVisible?: boolean | null
-          linkedinUrl?: string | null
-          major?: string | null
-          memberId?: string | null
-          skills?: string[] | null
-          updatedAt?: string | null
-          userId?: string | null
-        }
-        Relationships: []
-      }
       user: {
         Row: {
           created_at: string
           deactivated_at: string | null
           email: string
+          gender: string | null
           id: string
           name: string | null
           phone: string | null
@@ -744,6 +635,7 @@ export type Database = {
           created_at?: string
           deactivated_at?: string | null
           email: string
+          gender?: string | null
           id: string
           name?: string | null
           phone?: string | null
@@ -754,44 +646,12 @@ export type Database = {
           created_at?: string
           deactivated_at?: string | null
           email?: string
+          gender?: string | null
           id?: string
           name?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["Role"]
           updated_at?: string
-        }
-        Relationships: []
-      }
-      user_backup_20260416_2001: {
-        Row: {
-          createdAt: string | null
-          deactivatedAt: string | null
-          email: string | null
-          id: string | null
-          name: string | null
-          phone: string | null
-          role: Database["public"]["Enums"]["Role"] | null
-          updatedAt: string | null
-        }
-        Insert: {
-          createdAt?: string | null
-          deactivatedAt?: string | null
-          email?: string | null
-          id?: string | null
-          name?: string | null
-          phone?: string | null
-          role?: Database["public"]["Enums"]["Role"] | null
-          updatedAt?: string | null
-        }
-        Update: {
-          createdAt?: string | null
-          deactivatedAt?: string | null
-          email?: string | null
-          id?: string | null
-          name?: string | null
-          phone?: string | null
-          role?: Database["public"]["Enums"]["Role"] | null
-          updatedAt?: string | null
         }
         Relationships: []
       }
@@ -2001,3 +1861,4 @@ export const Constants = {
     },
   },
 } as const
+
