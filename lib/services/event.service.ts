@@ -2,7 +2,7 @@ import { logger } from '@/lib/logger'
 import { randomUUID } from 'node:crypto';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/lib/database.generated';
-import { EventRow, EventRegistrationRow, RegistrationStatus } from '@/lib/types';
+import { EventRow, EventRegistrationRow, RegistrationStatus, EventWithDetails, EventChapterRow, RegistrationWithUser, UserRow, ChapterRow, StudentProfileRow } from '@/lib/types';
 
 /**
  * Service Layer: Event Domain
@@ -496,7 +496,7 @@ export const EventService = {
 
     if (error || !data) return [];
 
-    const userMap = new Map(users.map((u: { id: string; name?: string; email?: string }) => [u.id, u]));
+    const userMap = new Map(users.map((u: { id: string; name: string | null; email: string }) => [u.id, { name: u.name ?? undefined, email: u.email ?? undefined }]));
 
     return (data as Array<{ id: string; user_id: string; status: string; checked_in_at: string | null }>)
       .map((registration) => {
@@ -686,7 +686,7 @@ export const EventService = {
       .from('event')
       .select(EVENT_DATE_SELECT)
       .eq('id', reg.event_id)
-      .maybeSingle<Pick<EventRow, 'id' | 'startAt'>>();
+      .maybeSingle();
 
     if (event) {
       const startsAt = new Date(event.start_at).getTime();
@@ -851,9 +851,9 @@ export const EventService = {
   },
 
   // ───────────────────────────────────────────────────────────────
-  // getEventById
+  // getEventByIdWithDetails
   // ───────────────────────────────────────────────────────────────
-  async getEventById(
+  async getEventByIdWithDetails(
     supabase: SupabaseClient<Database>,
     id: string
   ): Promise<EventWithDetails | null> {
@@ -992,23 +992,25 @@ export const EventService = {
       return []
     }
 
-    return (data as unknown[]).map((row) => {
-      const event: EventRow | null = row.event_title ? {
-        id: row.event_id,
-        title: row.event_title,
-        description: row.event_description,
-        start_at: row.event_start_at,
-        end_at: row.event_end_at,
-        location: row.event_location,
-        meeting_url: row.event_meeting_url,
-        event_type: row.event_type,
-        capacity: row.event_capacity,
-        is_published: row.event_is_published,
-        chapter_id: row.event_chapter_id,
-        access_model: row.event_access_model,
-        created_by_id: null,
-        created_at: row.registered_at,
-        updated_at: row.registered_at,
+    return (data as unknown[]).map((row: unknown) => {
+      const r = row as Record<string, unknown>;
+      
+      const event: EventRow | null = r.event_title ? {
+        id: r.event_id as string,
+        title: r.event_title as string,
+        description: r.event_description as string | null,
+        start_at: r.event_start_at as string,
+        end_at: r.event_end_at as string,
+        location: r.event_location as string | null,
+        meeting_url: r.event_meeting_url as string | null,
+        event_type: r.event_type as "in_person" | "online" | "hybrid",
+        capacity: r.event_capacity as number | null,
+        is_published: r.event_is_published as boolean,
+        chapter_id: r.event_chapter_id as string | null,
+        access_model: r.event_access_model as string,
+        created_by_id: r.user_id as string,
+        created_at: r.registered_at as string,
+        updated_at: r.registered_at as string,
         cover_image: null,
         application_form_url: null,
         location_address: null,
@@ -1021,14 +1023,14 @@ export const EventService = {
       } : null
 
       return {
-        id: row.id,
-        event_id: row.event_id,
-        user_id: row.user_id,
-        registered_at: row.registered_at,
-        status: row.status,
-        qr_token: row.qr_token,
-        checked_in_at: row.checked_in_at,
-        checked_in_by_id: row.checked_in_by_id,
+        id: r.id as string,
+        event_id: r.event_id as string,
+        user_id: r.user_id as string,
+        registered_at: r.registered_at as string,
+        status: r.status as RegistrationStatus,
+        qr_token: r.qr_token as string | null,
+        checked_in_at: r.checked_in_at as string | null,
+        checked_in_by_id: r.checked_in_by_id as string | null,
         event: event,
       }
     })
@@ -1124,12 +1126,14 @@ export const EventService = {
       }
 
       const transformEventData = (event: unknown): EventWithDetails => {
-        const chapter = event.chapter_name ? {
-          id: event.chapter_id,
-          name: event.chapter_name,
-          university: event.chapter_university,
-          city: event.chapter_city,
-          region: event.chapter_region,
+        const e = event as Record<string, unknown>;
+        
+        const chapter = e.chapter_name ? {
+          id: e.chapter_id as string,
+          name: e.chapter_name as string,
+          university: e.chapter_university as string,
+          city: e.chapter_city as string,
+          region: e.chapter_region as string,
           created_at: null,
           updated_at: null,
           instagram_url: null,
@@ -1139,32 +1143,32 @@ export const EventService = {
         } : null
 
         return {
-          id: event.id,
-          title: event.title,
-          description: event.description,
-          cover_image: event.cover_image,
-          start_at: event.start_at,
-          end_at: event.end_at,
-          location: event.location,
-          meeting_url: event.meeting_url,
-          event_type: event.event_type,
-          capacity: event.capacity,
-          is_published: event.is_published,
-          access_model: event.access_model,
-          application_form_url: event.application_form_url,
-          chapter_id: event.chapter_id,
-          created_by_id: event.created_by_id,
-          created_at: event.created_at,
-          updated_at: event.updated_at,
-          location_address: null,
-          location_city: null,
-          location_latitude: null,
-          location_longitude: null,
-          location_name: null,
-          location_point: null,
-          location_region: null,
-          chapter: chapter as unknown as EventWithDetails['chapter'],
-          owner_chapter: chapter as unknown as EventWithDetails['owner_chapter'],
+          id: e.id as string,
+          title: e.title as string,
+          description: e.description as string | null,
+          cover_image: e.cover_image as string | null,
+          start_at: e.start_at as string,
+          end_at: e.end_at as string,
+          location: e.location as string | null,
+          meeting_url: e.meeting_url as string | null,
+          event_type: e.event_type as "in_person" | "online" | "hybrid",
+          capacity: e.capacity as number | null,
+          is_published: e.is_published as boolean,
+          access_model: e.access_model as string,
+          application_form_url: e.application_form_url as string | null,
+          chapter_id: e.chapter_id as string | null,
+          created_by_id: e.created_by_id as string,
+          created_at: e.created_at as string,
+          updated_at: e.updated_at as string,
+          location_address: e.location_address as string | null,
+          location_city: e.location_city as string | null,
+          location_latitude: e.location_latitude as number | null,
+          location_longitude: e.location_longitude as number | null,
+          location_name: e.location_name as string | null,
+          location_point: e.location_point as string | null,
+          location_region: e.location_region as string | null,
+          chapter: chapter as EventWithDetails['chapter'],
+          owner_chapter: chapter as EventWithDetails['owner_chapter'],
           event_chapter: [],
           collaborators: [],
           created_by: null,
