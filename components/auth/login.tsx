@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Building2, Users, Eye, EyeOff } from "lucide-react";
+import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import { Link, useRouter } from '@/i18n/routing';
 import { useState } from "react";
 import { GoogleButton } from "./google-button";
@@ -30,7 +30,6 @@ export function LoginForm({
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const t = useTranslations('auth');
-  const tCommon = useTranslations('common');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

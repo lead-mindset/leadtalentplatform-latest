@@ -8,7 +8,6 @@ import { useLocale } from 'next-intl';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -34,7 +33,6 @@ export function SignUpForm({
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const t = useTranslations('auth');
-  const tCommon = useTranslations('common');
   const locale = useLocale(); // This will get 'en' or 'es'
 
   const handleSignUp = async (e: React.FormEvent) => {

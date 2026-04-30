@@ -25,7 +25,7 @@ async function ProfileData() {
     id: user.id,
     full_name: user.name || '',
     phone: user.phone || '',
-    gender: (profileData?.gender || (user as any).gender) as any,
+    gender: profileData?.gender || (user.gender as string | undefined) || undefined,
     lead_chapter: profileData?.chapter_id || '',
     career: profileData?.major || '',
     graduation_year: profileData?.graduation_year || 0,

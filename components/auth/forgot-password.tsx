@@ -25,7 +25,6 @@ export function ForgotPasswordForm({
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const t = useTranslations('auth');
-  const tCommon = useTranslations('common');
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
