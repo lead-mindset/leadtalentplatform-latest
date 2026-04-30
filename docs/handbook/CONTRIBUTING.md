@@ -256,3 +256,43 @@ Creates a detailed plan in `.github/plans/`.
 ## 5. Communication
 *   **ADRs:** Major architectural decisions must be documented in `docs/adr/`.
 *   **Linear/GitHub:** Use the Project Board to track all tasks.
+
+## 6. Three-Environment Workflow
+
+We use a three-environment workflow for development, QA/staging, and production.
+
+| Environment | Branch | Supabase | Vercel URL | Purpose |
+|-------------|--------|----------|------------|---------|
+| Local | feature/* | Docker | localhost:3000 | Development |
+| QA/Staging | dev | QA Project | [project]-vercel.app | Integration testing |
+| Production | master | Prod Project | Official domain | Live |
+
+### Branch Strategy
+- `master` — Production branch (protected, requires PR)
+- `dev` — Integration/QA branch (deployed to Vercel QA)
+- `feature/*` — Feature branches (deployed as Vercel previews)
+- PRs target `dev` for integration testing
+
+### QA Testing Flow
+1. Create feature branch from `dev`
+2. Implement feature, push to trigger Vercel preview
+3. Test on Vercel preview with QA Supabase
+4. Merge to `dev` for QA team validation
+5. After QA approval, merge to `master`
+
+### Secrets & Environment Variables
+**Never commit secrets to Git.** Use environment variables:
+- Local: `.env.local` (not committed)
+- Vercel: Project → Settings → Environment Variables
+- GitHub: Repo → Settings → Secrets and variables → Actions
+
+### Seed Data for QA
+Run `pnpm run supabase:start` then:
+```bash
+psql -f supabase/seed-qa.sql
+```
+This creates test personas (see `supabase/seed-qa.sql`):
+- Admin: `admin@leadplatform.qa`
+- Editors: `editor-*@leadplatform.qa`
+- Members: `student-*@uni.edu`
+- Recruiters: `recruiter-*@company.com`
