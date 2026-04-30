@@ -6,6 +6,7 @@ import type {
 } from '@/lib/database.types'
 
 export type {
+  Database,
   Json,
   Tables,
   TablesInsert,

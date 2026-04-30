@@ -814,7 +814,7 @@ describe('EventService', () => {
         resolve({ data: [], error: null, count: 0 })
       )
 
-      const result = await EventService.getEventById(mockSupabase as unknown as SupabaseClient, 'evt-1')
+      const result = await EventService.getEventByIdWithDetails(mockSupabase as unknown as SupabaseClient, 'evt-1')
 
       expect(result).not.toBeNull()
       expect(result?.id).toBe('evt-1')
@@ -829,7 +829,7 @@ describe('EventService', () => {
         error: null,
       })
 
-      const result = await EventService.getEventById(mockSupabase as unknown as SupabaseClient, 'evt-missing')
+      const result = await EventService.getEventByIdWithDetails(mockSupabase as unknown as SupabaseClient, 'evt-missing')
 
       expect(result).toBeNull()
     })
