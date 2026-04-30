@@ -2,9 +2,9 @@ name: Validate
 
 on:
   push:
-    branches: [main, master]
+    branches: [master, dev]
   pull_request:
-    branches: [main, master]
+    branches: [master, dev]
 
 jobs:
   validate:
