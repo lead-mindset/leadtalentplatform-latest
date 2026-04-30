@@ -1,6 +1,5 @@
 import { requireRecruiter } from '@/lib/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Building, Mail, User, Phone } from 'lucide-react';
@@ -26,7 +25,7 @@ export default async function CompanySettingsPage() {
           <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
             <Building className="h-5 w-5 text-muted-foreground" />
             <div>
-              <p className="font-medium">{user.Company?.name}</p>
+              <p className="font-medium">{user.company?.name}</p>
               <p className="text-sm text-muted-foreground">Company Name</p>
             </div>
           </div>
@@ -43,7 +42,7 @@ export default async function CompanySettingsPage() {
             <Label htmlFor="name">Full Name</Label>
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 text-muted-foreground" />
-              <Input id="name" value={user.name} disabled />
+              <Input id="name" value={user.name ?? ''} disabled />
             </div>
           </div>
 

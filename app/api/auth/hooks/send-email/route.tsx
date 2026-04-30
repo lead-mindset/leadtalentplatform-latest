@@ -6,6 +6,25 @@ import ResetPasswordEmail from '@/emails/templates/ResetPasswordEmail';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+type SupabaseEmailUser = {
+  email: string
+  user_metadata?: {
+    locale?: 'en' | 'es'
+  }
+}
+
+type SupabaseEmailData = {
+  site_url: string
+  token_hash: string
+  redirect_to?: string | null
+  email_action_type?: 'signup' | 'recovery' | string
+}
+
+type SupabaseEmailWebhookPayload = {
+  user?: SupabaseEmailUser
+  email_data?: SupabaseEmailData
+}
+
 export async function POST(request: Request) {
   try {
     const payload = await request.text();
@@ -28,9 +47,9 @@ export async function POST(request: Request) {
 
     const wh = new Webhook(hookSecret);
 
-    let event;
+    let event: SupabaseEmailWebhookPayload;
     try {
-      event = wh.verify(payload, headers) as any;
+      event = wh.verify(payload, headers) as SupabaseEmailWebhookPayload;
     } catch (err) {
       console.error('Webhook verification failed:', err);
       return new Response(

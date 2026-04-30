@@ -9,8 +9,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { LogoutButton } from '@/components/logout-button'
-import { LogOut } from 'lucide-react'
+import { LogoutButton } from '@/components/auth/logout-button'
+import { Icons } from '@/components/ui/icons'
 import { getInitials } from '@/lib/utils'
 
 interface MobileUserBadgeProps {
@@ -24,8 +24,8 @@ export function MobileUserBadge({ name, memberId }: MobileUserBadgeProps) {
       <DropdownMenuTrigger asChild>
         <button className="flex items-center gap-2 outline-none">
           {memberId && (
-            <Badge variant="secondary" className="text-xs font-mono">
-              #{memberId}
+            <Badge variant="secondary" className="text-xs font-mono bg-primary/10 text-primary border-primary/20">
+              ID: {memberId}
             </Badge>
           )}
           <Avatar className="h-8 w-8 border border-border">
@@ -39,13 +39,16 @@ export function MobileUserBadge({ name, memberId }: MobileUserBadgeProps) {
         <DropdownMenuLabel>
           <p className="text-sm font-semibold">{name}</p>
           {memberId && (
-            <p className="text-xs font-mono text-muted-foreground mt-0.5">#{memberId}</p>
+            <div className="flex items-center gap-1 mt-1">
+              <span className="text-xs text-muted-foreground">Member ID:</span>
+              <span className="text-xs font-mono text-primary font-semibold">{memberId}</span>
+            </div>
           )}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <div className="flex items-center gap-2 cursor-pointer">
-            <LogOut className="h-4 w-4" />
+            <Icons.LogOut className="mr-2 h-4 w-4" />
             <LogoutButton />
           </div>
         </DropdownMenuItem>

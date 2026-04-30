@@ -3,9 +3,8 @@ import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { getLocale } from 'next-intl/server'
 import { privacyContent } from '@/lib/legal/privacy'
-import type { Metadata } from 'next'
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata() {
   const locale = await getLocale()
   const c = privacyContent[locale] ?? privacyContent.en
   return { title: c.meta.title, description: c.meta.description }

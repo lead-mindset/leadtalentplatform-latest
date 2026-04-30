@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Heart, Loader2 } from 'lucide-react'
 import { toggleSaveStudentAction } from '@/lib/actions/company/toggle-save'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 
 interface SaveStudentButtonProps {
   studentId: string
@@ -49,7 +50,7 @@ export function SaveStudentButton({
       {isPending ? (
         <Loader2 className="h-4 w-4 animate-spin" />
       ) : (
-        <Heart className={`h-4 w-4 ${isSaved ? 'fill-current' : ''}`} />
+        <Heart className={cn('h-4 w-4', isSaved && 'fill-current')} />
       )}
       {isSaved ? 'Saved' : 'Save Student'}
     </Button>

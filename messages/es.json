@@ -34,7 +34,9 @@
     "account": "Cuenta",
     "billing": "Facturación",
     "notifications": "Notificaciones",
-    "logout": "Cerrar sesión"
+    "logout": "Cerrar sesión",
+        "events": "Eventos"
+
   },
   "auth": {
     "email": "Correo electrónico",

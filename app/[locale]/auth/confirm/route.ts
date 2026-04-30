@@ -1,17 +1,17 @@
 import { createClient } from "@/lib/supabase/server";
 import { type EmailOtpType } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
-import { routing } from "@/i18n/routing";
+import { isValidLocale, routing } from "@/i18n/routing";
 
 const SITE_URL = process.env.NEXT_PUBLIC_FRONTEND_URL!
 
 export async function GET(request: NextRequest) {
-  const { searchParams, origin, pathname } = new URL(request.url);
+  const { searchParams, pathname } = new URL(request.url);
   const token_hash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
 
   const localeFromPath = pathname.split("/")[1];
-  const locale = routing.locales.includes(localeFromPath as any)
+  const locale = isValidLocale(localeFromPath)
     ? localeFromPath
     : routing.defaultLocale;
 
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
   }
 
   const { data: userData } = await supabase
-    .from("User")
+    .from("user")
     .select("role")
     .eq("id", user.id)
     .maybeSingle();
@@ -52,13 +52,13 @@ export async function GET(request: NextRequest) {
   const role = userData.role ?? "member";
 
   if (role === "member" || role === "editor") {
-    const { data: profile } = await supabase
-      .from("StudentProfile")
-      .select("isFilled")
-      .eq("userId", user.id)
-      .maybeSingle();
+const { data: profile } = await supabase
+      .from("student_profile")
+      .select("is_filled")
+      .eq("user_id", user.id)
+      .single()
 
-    if (!profile?.isFilled) {
+    if (!profile?.is_filled) {
       return NextResponse.redirect(`${SITE_URL}/${locale}/onboarding`);
     }
     return NextResponse.redirect(`${SITE_URL}/${locale}/student/profile`);

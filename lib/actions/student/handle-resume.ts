@@ -2,44 +2,41 @@
 
 import { requireUser } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
+import { StudentService } from '@/lib/services/student.service'
 
-export async function uploadResume(formData: FormData) {
-  const { supabase, user } = await requireUser();
+const MAX_RESUME_SIZE = 10 * 1024 * 1024
 
-  const file = formData.get('resume') as File | null;
-  if (!file) throw new Error('Resume file is required');
-  if (file.type !== 'application/pdf') throw new Error('Only PDF files are allowed');
+const resumeUploadSchema = z.object({
+  file: z.instanceof(File),
+})
 
-  const filePath = `${user.id}/${crypto.randomUUID()}.pdf`;
+type UploadResumeResult =
+  | { success: true; publicUrl: string }
+  | { success: false; error: string }
 
-  const { error: uploadError } = await supabase.storage
-    .from('resumes')
-    .upload(filePath, file, {
-      contentType: 'application/pdf',
-      upsert: true,
-    });
+export async function uploadResume(formData: FormData): Promise<UploadResumeResult> {
+  const { supabase, user } = await requireUser()
 
-  if (uploadError) throw new Error('Upload failed');
+  const parsed = resumeUploadSchema.safeParse({
+    file: formData.get('resume'),
+  })
+  if (!parsed.success) {
+    return { success: false, error: 'Resume file is required.' }
+  }
 
-  const { data: { publicUrl } } = supabase.storage
-    .from('resumes')
-    .getPublicUrl(filePath);
+  const file = parsed.data.file
+  if (file.type !== 'application/pdf') {
+    return { success: false, error: 'Only PDF files are allowed.' }
+  }
+  if (file.size > MAX_RESUME_SIZE) {
+    return { success: false, error: 'Resume must be smaller than 10MB.' }
+  }
 
-  const now = new Date().toISOString();
-
-  const { error: upsertError } = await supabase
-    .from('Resume')
-    .upsert({
-      studentId: user.id,
-      fileUrl: publicUrl,
-      fileName: file.name,
-      fileSize: file.size,
-      uploadedAt: now,
-    }, {
-      onConflict: 'studentId',
-    });
-
-  if (upsertError) throw new Error('Failed to save resume');
-
-  revalidatePath('/student/resume');
+  const result = await StudentService.saveResume(supabase, user.id, file)
+  if (result.success) {
+    revalidatePath('/student/resume')
+    revalidatePath('/student')
+  }
+  return result
 }

@@ -29,7 +29,7 @@ export default async function CompanyDashboardPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalStudents}</div>
+            <div className="text-2xl font-bold">{stats.total_students}</div>
             <p className="text-xs text-muted-foreground">Available to view</p>
           </CardContent>
         </Card>
@@ -40,7 +40,7 @@ export default async function CompanyDashboardPage() {
             <Heart className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.savedStudents}</div>
+            <div className="text-2xl font-bold">{stats.saved_students}</div>
             <p className="text-xs text-muted-foreground">In your collection</p>
           </CardContent>
         </Card>
@@ -51,7 +51,7 @@ export default async function CompanyDashboardPage() {
             <Building className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-lg font-bold">{user.Company?.name}</div>
+            <div className="text-lg font-bold">{user.company?.name}</div>
             <p className="text-xs text-muted-foreground">Your organization</p>
           </CardContent>
         </Card>
@@ -82,7 +82,7 @@ export default async function CompanyDashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Recently Saved</CardTitle>
-            <CardDescription>Students you've saved recently</CardDescription>
+            <CardDescription>Students you&apos;ve saved recently</CardDescription>
           </CardHeader>
           <CardContent>
             {recentlySaved.length === 0 ? (
@@ -98,13 +98,13 @@ export default async function CompanyDashboardPage() {
                 {recentlySaved.map((saved) => (
                   <div key={saved.id} className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-sm">{saved.Student.name}</p>
+                      <p className="font-medium text-sm">{saved.student.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {saved.Student.StudentProfile?.major || 'No major listed'}
+                        {saved.student.student_profile?.major || 'No major listed'}
                       </p>
                     </div>
                     <Button asChild size="sm" variant="ghost">
-                      <Link href={`/company/students/${saved.studentId}`}>View</Link>
+                      <Link href={`/company/students/${saved.student_id}`}>View</Link>
                     </Button>
                   </div>
                 ))}

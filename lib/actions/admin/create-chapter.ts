@@ -1,8 +1,9 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { requireAdmin } from '@/lib/auth'
+import { AdminService } from '@/lib/services/admin.service'
 import { z } from 'zod'
-import { requireUser, requireAdmin } from '@/lib/auth'
 import type { ChapterRow } from '@/lib/types'
 
 const ChapterSchema = z.object({
@@ -19,6 +20,10 @@ type CreateChapterResponse =
   | { success: true; chapter: ChapterRow }
   | { error: string }
 
+type GetChaptersResponse = 
+  | { chapters: ChapterRow[] }
+  | { error: string }
+
 export async function createChapter(formData: CreateChapterInput): Promise<CreateChapterResponse> {
   const { supabase } = await requireAdmin()
 
@@ -32,61 +37,33 @@ export async function createChapter(formData: CreateChapterInput): Promise<Creat
 
   const { id, name, university, city, region } = parsed.data
 
-  const { data: existing } = await supabase
-    .from('Chapter')
-    .select('id')
-    .eq('id', id)
-    .maybeSingle()
+  const result = await AdminService.createChapter(supabase, {
+    id,
+    name,
+    university,
+    city,
+    region,
+  })
 
-  if (existing) {
-    return { error: 'Chapter ID already exists' }
-  }
-
-  const now = new Date().toISOString()
-
-  const { data: chapter, error: insertError } = await supabase
-    .from('Chapter')
-    .insert({
-      id,
-      name,
-      university,
-      city: city || null,
-      region: region || null,
-      createdAt: now,
-      updatedAt: now,
-    })
-    .select()
-    .single<ChapterRow>()
-
-  if (insertError || !chapter) {
-    console.error('Failed to create chapter:', insertError)
-    return { error: 'Failed to create chapter' }
+  if (!result.success) {
+    return { error: result.error }
   }
 
   revalidatePath('/admin/chapters')
 
   return {
     success: true,
-    chapter,
+    chapter: result.chapter,
   }
 }
 
-type GetChaptersResponse = 
-  | { chapters: ChapterRow[] }
-  | { error: string }
-
 export async function getChapters(): Promise<GetChaptersResponse> {
-  const { supabase } = await requireUser()
+  const { supabase } = await requireAdmin()
 
-  const { data: chapters, error } = await supabase
-    .from('Chapter')
-    .select('*')
-    .order('name', { ascending: true })
-
-  if (error || !chapters) {
-    console.error('Failed to fetch chapters:', error)
-    return { error: 'Failed to fetch chapters' }
+  const result = await AdminService.getAllChapters(supabase)
+  if ('error' in result) {
+    return { error: result.error }
   }
 
-  return { chapters }
+  return { chapters: result.chapters }
 }

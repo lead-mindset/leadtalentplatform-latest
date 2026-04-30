@@ -40,6 +40,12 @@ export const SKILL_OPTIONS = [
   { value: 'fundraising', category: 'Soft Skills' },
 ] as const
 
+export const EVENT_TYPE_OPTIONS = [
+  { value: 'in_person', label: 'In Person' },
+  { value: 'online', label: 'Online' },
+  { value: 'hybrid', label: 'Hybrid' },
+] as const
+
 export const GENDER_VALUES = [
   "man",
   "woman",

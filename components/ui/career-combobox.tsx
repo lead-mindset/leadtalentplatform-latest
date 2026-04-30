@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Check, ChevronsUpDown, X } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { useTranslations } from 'next-intl'
 import { useTranslatedCareers } from '@/lib/use-translated-options'
@@ -78,7 +78,7 @@ export default function CareerCommandSelect({
             className="w-full justify-between"
           >
             {displayValue || t('selectCareerField')}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            <Icons.ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
 
@@ -117,9 +117,9 @@ export default function CareerCommandSelect({
                       value={option.value}
                       onSelect={handleSelect}
                     >
-                      <Check
+                      <Icons.CheckCircle2
                         className={`mr-2 h-4 w-4 ${
-                          value === option.value ? 'opacity-100' : 'opacity-0'
+                          value.includes(option.value) ? "opacity-100" : "opacity-0"
                         }`}
                       />
                       <span>{option.label}</span>
@@ -142,7 +142,7 @@ export default function CareerCommandSelect({
 
       {error && (
         <p className="flex items-center gap-1 text-sm text-destructive">
-          <X className="h-3 w-3" />
+          <Icons.X className="h-3 w-3" />
           {error}
         </p>
       )}

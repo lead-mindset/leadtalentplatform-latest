@@ -4,13 +4,13 @@ import { useForm, FormProvider, useFormContext } from 'react-hook-form';
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { X } from 'lucide-react';
+import { Icons } from '@/components/ui/icons';
 
 interface StepperProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
   initialStep?: number;
   onStepChange?: (step: number) => void;
-  onFinalStepCompleted?: (data: any) => void;
+  onFinalStepCompleted?: () => void | Promise<void>;
   stepCircleContainerClassName?: string;
   stepContainerClassName?: string;
   contentClassName?: string;
@@ -58,7 +58,7 @@ export default function Stepper({
   const updateStep = (newStep: number) => {
     setCurrentStep(newStep);
     if (newStep > totalSteps) {
-      onFinalStepCompleted({});
+      void onFinalStepCompleted();
     } else {
       onStepChange(newStep);
     }
@@ -72,7 +72,6 @@ export default function Stepper({
   };
 
   const handleNext = async () => {
-    // Validate before proceeding
     if (validateStep) {
       const isValid = await validateStep(currentStep);
       if (!isValid) return;
@@ -90,7 +89,6 @@ export default function Stepper({
   };
 
   const handleComplete = async () => {
-    // Validate final step before completing
     if (validateStep) {
       const isValid = await validateStep(currentStep);
       if (!isValid) return;
@@ -103,7 +101,6 @@ export default function Stepper({
   const handleStepClick = async (clicked: number) => {
     if (clicked === currentStep) return;
 
-    // If moving forward, validate all steps between current and target
     if (clicked > currentStep) {
       for (let step = currentStep; step < clicked; step++) {
         if (validateStep) {
@@ -129,7 +126,6 @@ export default function Stepper({
     >
       <div
         className={`mx-auto w-full max-w-md rounded-4xl shadow-xl ${stepCircleContainerClassName}`}
-        style={{ border: '1px solid #222' }}
       >
         <div className={`${stepContainerClassName} flex w-full items-center p-8`}>
           {stepsArray.map((_, index) => {
@@ -207,7 +203,6 @@ interface StepContentWrapperProps {
   children: ReactNode;
   className?: string;
 }
-
 
 function StepContentWrapper({
   isCompleted,
@@ -360,7 +355,6 @@ function StepIndicator({
   );
 }
 
-
 interface StepConnectorProps {
   isComplete: boolean;
 }
@@ -435,7 +429,7 @@ export function FormStepper({
   const updateStep = (newStep: number) => {
     setCurrentStep(newStep);
     if (newStep > totalSteps) {
-      onFinalStepCompleted({});
+      void onFinalStepCompleted();
     } else {
       onStepChange(newStep);
     }
@@ -572,8 +566,7 @@ export function FormStepper({
   );
 }
 
-
-interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface FormInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   label: string;
   name: string;
   error?: string;
@@ -605,10 +598,10 @@ export function FormInput({
       />
 
       {error && (
-        <p className="flex items-center gap-1 text-sm text-destructive">
-          <X className="h-3 w-3" />
+        <div className="flex items-center gap-1 text-sm text-destructive">
+          <Icons.X className="h-3 w-3" />
           {error}
-        </p>
+        </div>
       )}
     </div>
   )

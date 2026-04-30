@@ -11,19 +11,19 @@ import { STUDENT_NAV, CHAPTER_NAV } from '@/lib/nav-config'
 
 interface StudentNavigationProps {
   userRole: string
-  hasPendingApprovals: boolean
+  has_pending_approvals: boolean
 }
 
 export function StudentNavigation({ 
   userRole, 
-  hasPendingApprovals 
+  has_pending_approvals 
 }: StudentNavigationProps) {
   const isEditor = userRole === 'editor'
 
   return (
     <>
       <SidebarGroup>
-        <SidebarGroupLabel>My Profile</SidebarGroupLabel>
+        <SidebarGroupLabel className="text-sidebar-foreground font-medium">My Profile</SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
             {STUDENT_NAV.map((item) => (
@@ -38,14 +38,14 @@ export function StudentNavigation({
 
       {isEditor && (
         <SidebarGroup>
-          <SidebarGroupLabel>Chapter Management</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-sidebar-foreground font-medium">Chapter Management</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {CHAPTER_NAV.map((item) => (
                 <SidebarNavItem
                   key={item.id}
                   item={item}
-                  showPing={item.id === 'students' && hasPendingApprovals}
+                  showPing={item.id === 'overview' && has_pending_approvals}
                 />
               ))}
             </SidebarMenu>

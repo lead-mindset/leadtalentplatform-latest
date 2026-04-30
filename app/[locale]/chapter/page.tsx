@@ -2,19 +2,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { Suspense } from 'react'
-import {
-  Users,
-  UserCheck,
-  Clock,
-  TrendingUp,
-  ChevronRight,
-  CheckCircle2,
-} from 'lucide-react'
-import { requireUser } from '@/lib/auth'
+import { Icons } from '@/components/ui/icons'
+import { requireChapterMember } from '@/lib/auth'
 import type { MemberWithProfile, RecentActivityMember } from '@/lib/types'
 import { getChapterMembers, getMemberStats, getRecentChapterActivity } from '@/lib/actions/chapter/get-data'
+import { getChapterEvents } from '@/lib/actions/events/get-data'
 import MemberCard from './members/components/member-card'
-
+import { Breadcrumb } from '@/components/ui/breadcrumb'
+import { MainContainer } from '@/components/global/main-container'
 
 function StatCard({
   label,
@@ -31,18 +26,18 @@ function StatCard({
 }) {
   const iconClass =
     variant === 'warning'
-      ? 'text-[var(--chart-1)]'
+      ? 'text-warning'
       : variant === 'success'
-      ? 'text-[var(--chart-2)]'
+      ? 'text-success'
       : variant === 'info'
-      ? 'text-[var(--chart-3)]'
+      ? 'text-info'
       : 'text-muted-foreground'
 
   const valueClass =
     variant === 'warning'
-      ? 'text-[var(--chart-1)]'
+      ? 'text-warning'
       : variant === 'success'
-      ? 'text-[var(--chart-2)]'
+      ? 'text-success'
       : 'text-foreground'
 
   return (
@@ -63,19 +58,17 @@ function StatCard({
 
 function PendingInbox({
   members,
-  currentUserId,
   total,
 }: {
   members: MemberWithProfile[]
-  currentUserId: string
   total: number
 }) {
   if (members.length === 0) {
     return (
       <Card>
         <CardContent className="py-10 text-center">
-          <div className="mx-auto h-10 w-10 rounded-full bg-[var(--chart-2)]/10 flex items-center justify-center mb-3">
-            <CheckCircle2 className="h-5 w-5 text-[var(--chart-2)]" />
+          <div className="mx-auto h-10 w-10 rounded-full bg-success/10 flex items-center justify-center mb-3">
+            <Icons.CheckCircle2 className="h-4 w-4 text-success" />
           </div>
           <p className="font-medium text-foreground">All caught up</p>
           <p className="text-sm text-muted-foreground mt-1">
@@ -95,14 +88,14 @@ function PendingInbox({
         <MemberCard
           key={member.id}
           member={member}
-          currentUserId={currentUserId}
+
         />
       ))}
       {remaining > 0 && (
         <Button asChild variant="outline" className="w-full">
           <Link href="/chapter/members?status=pending">
             View {remaining} more pending member{remaining > 1 ? 's' : ''}
-            <ChevronRight className="ml-2 h-4 w-4" />
+            <Icons.ChevronRight className="ml-2 h-4 w-4" />
           </Link>
         </Button>
       )}
@@ -129,11 +122,11 @@ function RecentApprovals({ members }: { members: RecentActivityMember[] }) {
           <div className="min-w-0">
             <p className="text-sm font-medium truncate">{member.name || 'Unknown'}</p>
             <p className="text-xs text-muted-foreground truncate">
-              {member.StudentProfile.major}
+              {member.student_profile.major}
             </p>
           </div>
           <p className="text-xs text-muted-foreground ml-3 shrink-0">
-            {new Date(member.StudentProfile.updatedAt).toLocaleDateString(undefined, {
+            {new Date(member.student_profile.updated_at).toLocaleDateString(undefined, {
               month: 'short',
               day: 'numeric',
             })}
@@ -145,20 +138,14 @@ function RecentApprovals({ members }: { members: RecentActivityMember[] }) {
 }
 
 function QuickLinks({
-  stats,
+  pendingCount,
 }: {
-  stats: {
-    total: number
-    approved: number
-    rejected: number
-    incomplete: number
-  }
+  pendingCount: number
 }) {
   const links = [
-    { label: 'All members',        href: '/chapter/members',                    count: stats.total },
-    { label: 'Approved',           href: '/chapter/members?status=approved',    count: stats.approved },
-    { label: 'Rejected',           href: '/chapter/members?status=rejected',    count: stats.rejected },
-    { label: 'Incomplete profiles',href: '/chapter/members?status=incomplete',  count: stats.incomplete },
+    { label: 'Create Event', href: '/chapter/events/new' },
+    { label: 'Manage Members', href: `/chapter/members?status=${pendingCount > 0 ? 'pending' : 'active'}` },
+    { label: 'Open Check-in', href: '/chapter/checkin' },
   ]
 
   return (
@@ -169,26 +156,88 @@ function QuickLinks({
           href={link.href}
           className="flex items-center justify-between rounded-md px-2 py-2 text-sm hover:bg-accent transition-colors group"
         >
-          <span className="text-muted-foreground group-hover:text-foreground transition-colors">
-            {link.label}
-          </span>
-          <span className="font-medium tabular-nums text-foreground">{link.count}</span>
+          <span className="text-muted-foreground group-hover:text-foreground transition-colors">{link.label}</span>
+          <Icons.ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
         </Link>
       ))}
     </div>
   )
 }
 
+function EventOpsList({
+  events,
+}: {
+  events: Awaited<ReturnType<typeof getChapterEvents>>
+}) {
+  if (events.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-10 text-center text-sm text-muted-foreground">
+          No upcoming chapter events yet. Create your first one to start registrations.
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      {events.slice(0, 4).map((event) => {
+        const capacity = event.capacity
+        const registrations = event._count.registrations
+        const percentage = capacity && capacity > 0
+          ? Math.min(100, Math.round((registrations / capacity) * 100))
+          : null
+
+        return (
+          <Card key={event.id}>
+            <CardContent className="py-4 space-y-2">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-medium truncate">{event.title}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(event.start_at).toLocaleString(undefined, {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                </div>
+                <Button asChild size="sm" variant="outline">
+                  <Link href={`/chapter/events/${event.id}/checkin`}>Check-in</Link>
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {capacity === null
+                  ? `${registrations} registered`
+                  : `${registrations} / ${capacity} registered`}
+              </p>
+              {percentage !== null && (
+                <div className="h-2 rounded-full bg-muted overflow-hidden">
+                  <div className="h-full bg-primary" style={{ width: `${percentage}%` }} />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )
+      })}
+    </div>
+  )
+}
+
 async function ChapterContent() {
-  const { supabase, user } = await requireUser()
+  const { supabase, user, chapter_id } = await requireChapterMember()
 
   const { data: profileData } = await supabase
-    .from('StudentProfile')
-    .select(`chapterId, Chapter ( id, name, university )`)
-    .eq('userId', user.id)
+    .from('student_profile')
+    .select(`
+      chapter_id,
+      Chapter:chapter_id ( id, name, university )
+    `)
+    .eq('user_id', user.id)
     .maybeSingle()
 
-  if (!profileData?.chapterId || !profileData.Chapter) {
+  if (!profileData?.Chapter) {
     return (
       <Card className="max-w-md mx-auto mt-20">
         <CardHeader>
@@ -203,95 +252,120 @@ async function ChapterContent() {
     )
   }
 
-  const chapterId = profileData.chapterId
   const chapter = Array.isArray(profileData.Chapter)
     ? profileData.Chapter[0]
     : profileData.Chapter
 
-  const [allMembers, recentActivity] = await Promise.all([
-    getChapterMembers(chapterId),
-    getRecentChapterActivity(chapterId, 4),
+  const [allMembers, recentActivity, chapterEvents] = await Promise.all([
+    getChapterMembers(chapter_id),
+    getRecentChapterActivity(chapter_id, 4),
+    getChapterEvents(),
   ])
 
   const stats = getMemberStats(allMembers)
   const approvalRate =
     stats.total > 0 ? Math.round((stats.approved / stats.total) * 100) : 0
 
-  const pendingMembers = allMembers.filter(
-    m => m.StudentProfile?.isFilled && m.StudentProfile?.approvalStatus === 'pending'
+  const pending_members = allMembers.filter(
+    m => m.student_profile?.is_filled && m.student_profile?.approval_status === 'pending'
   )
+  const upcomingEventsCount = chapterEvents.filter((event) => new Date(event.end_at) >= new Date()).length
 
   return (
-    <div className="space-y-8">
+    <MainContainer className="py-8 space-y-8">
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb items={[{ label: 'Dashboard', href: '/chapter' }]} />
 
-      <div>
+      {/* Page Header with Clear Hierarchy */}
+      <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Chapter Overview</h1>
-        <p className="text-muted-foreground mt-1">
-          {chapter?.name} — {chapter?.university}
+        <p className="text-muted-foreground text-lg">
+          {chapter?.name} - {chapter?.university}
         </p>
       </div>
+
+      {stats.total === 0 && (
+        <Card>
+          <CardContent className="py-8 text-center space-y-3">
+            <p className="font-medium">Your chapter doesn&apos;t have members yet.</p>
+            <p className="text-sm text-muted-foreground">
+              Share your chapter signup guidance so students can complete onboarding and appear here.
+            </p>
+            <Button asChild variant="outline">
+              <Link href="/chapter/members">Manage Members</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           label="Total Members"
           value={stats.total}
           sub="In your chapter"
-          icon={Users}
+          icon={Icons.Users}
         />
         <StatCard
           label="Pending Approval"
           value={stats.pending}
           sub="Need your review"
-          icon={Clock}
+          icon={Icons.Clock}
           variant="warning"
         />
         <StatCard
-          label="Approved"
-          value={stats.approved}
-          sub={`${approvalRate}% approval rate`}
-          icon={UserCheck}
+          label="Upcoming Events"
+          value={upcomingEventsCount}
+          sub="Open for chapter operations"
+          icon={Icons.UserCheck}
           variant="success"
         />
         <StatCard
-          label="Visible to Recruiters"
-          value={stats.visibleToRecruiters}
-          sub="Active profiles"
-          icon={TrendingUp}
+          label="Approval Rate"
+          value={approvalRate}
+          sub="Approved members percentage"
+          icon={Icons.TrendingUp}
           variant="info"
         />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-
         <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-semibold">Pending Approvals</h2>
-              <p className="text-sm text-muted-foreground">
-                {stats.pending === 0
-                  ? 'Nothing to review right now'
-                  : `${stats.pending} member${stats.pending > 1 ? 's' : ''} waiting for your decision`}
-              </p>
-            </div>
-            {stats.pending > 3 && (
-              <Button asChild variant="outline" size="sm">
-                <Link href="/chapter/members?status=pending">
-                  View all
-                  <ChevronRight className="ml-1 h-4 w-4" />
-                </Link>
-              </Button>
-            )}
-          </div>
+          {stats.pending > 0 && (
+            <>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-base font-semibold">Pending Approvals</h2>
+                  <p className="text-sm text-muted-foreground">
+                    {stats.pending} member{stats.pending > 1 ? 's' : ''} waiting for your decision
+                  </p>
+                </div>
+                {stats.pending > 3 && (
+                  <Button asChild variant="outline" size="sm">
+                    <Link href="/chapter/members?status=pending">
+                      <span className="flex items-center">
+                        View all
+                        <Icons.ChevronRight className="ml-1 h-4 w-4" />
+                      </span>
+                    </Link>
+                  </Button>
+                )}
+              </div>
 
-          <PendingInbox
-            members={pendingMembers}
-            currentUserId={user.id}
-            total={stats.pending}
-          />
+              <PendingInbox
+                members={pending_members}
+                total={stats.pending}
+              />
+            </>
+          )}
+
+          <div className="space-y-2">
+            <h2 className="text-base font-semibold">Upcoming Events</h2>
+            <p className="text-sm text-muted-foreground">Track registration volume ahead of event day.</p>
+          </div>
+          <EventOpsList events={chapterEvents.filter((event) => new Date(event.end_at) >= new Date())} />
         </div>
 
         <div className="space-y-4">
-
           <Card>
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
@@ -308,19 +382,17 @@ async function ChapterContent() {
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold">Member Roster</CardTitle>
+              <CardTitle className="text-sm font-semibold">Quick Links</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <QuickLinks stats={stats} />
+              <QuickLinks pendingCount={stats.pending} />
             </CardContent>
           </Card>
-
         </div>
       </div>
-    </div>
+    </MainContainer>
   )
 }
-
 
 function Loading() {
   return (
@@ -370,7 +442,6 @@ function Loading() {
     </div>
   )
 }
-
 
 export default function ChapterOverviewPage() {
   return (

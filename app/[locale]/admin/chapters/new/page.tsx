@@ -14,7 +14,7 @@ async function AuthCheck() {
   if (!user) redirect('/auth/login')
 
   const { data: userData } = await supabase
-    .from('User')
+    .from('user')
     .select('role')
     .eq('id', user.id)
     .single()

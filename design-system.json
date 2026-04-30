@@ -1,0 +1,208 @@
+{
+  "meta": {
+    "name": "Design System",
+    "version": "1.0.0",
+    "description": "Design tokens extracted from codebase - Next.js 15, Tailwind CSS 4, shadcn/ui",
+    "framework": "tailwindcss",
+    "colorSpace": "oklch",
+    "theme": "shadcn/ui new-york"
+  },
+  "colors": {
+    "light": {
+      "background": "oklch(0.14 0.14 265)",
+      "foreground": "oklch(0.97 0.012 265)",
+      "card": "oklch(0.16 0.12 265)",
+      "cardForeground": "oklch(0.97 0.012 265)",
+      "popover": "oklch(0.17 0.12 266)",
+      "popoverForeground": "oklch(0.97 0.012 265)",
+      "primary": "oklch(0.60 0.22 2)",
+      "primaryForeground": "oklch(0.97 0.012 265)",
+      "secondary": "oklch(0.46 0.24 320)",
+      "secondaryForeground": "oklch(0.97 0.012 265)",
+      "muted": "oklch(0.19 0.10 265)",
+      "mutedForeground": "oklch(0.83 0.07 265)",
+      "accent": "oklch(0.24 0.12 270)",
+      "accentForeground": "oklch(0.97 0.012 265)",
+      "destructive": "oklch(0.54 0.26 22)",
+      "destructiveForeground": "oklch(0.97 0.012 265)",
+      "border": "color-mix(in oklab, oklch(1 0 265) 14%, oklch(0.08 0.14 265))",
+      "input": "oklch(0.20 0.11 265)",
+      "ring": "oklch(0.60 0.22 2 / 0.45)",
+      "chart1": "oklch(0.60 0.22 2)",
+      "chart2": "oklch(0.52 0.24 322)",
+      "chart3": "oklch(0.55 0.20 285)",
+      "chart4": "oklch(0.68 0.18 202)",
+      "chart5": "oklch(0.62 0.16 168)",
+      "sidebar": "oklch(0.13 0.14 265)",
+      "sidebarForeground": "oklch(0.97 0.012 265)",
+      "sidebarPrimary": "oklch(0.60 0.22 2)",
+      "sidebarPrimaryForeground": "oklch(0.97 0.012 265)",
+      "sidebarAccent": "oklch(0.22 0.12 270)",
+      "sidebarAccentForeground": "oklch(0.97 0.012 265)",
+      "sidebarBorder": "color-mix(in oklab, oklch(1 0 265) 12%, oklch(0.08 0.14 265))",
+      "sidebarRing": "oklch(0.60 0.22 2 / 0.45)",
+      "success": "oklch(0.68 0.18 158)",
+      "successForeground": "oklch(0.14 0.04 158)",
+      "successMuted": "oklch(0.24 0.09 158)",
+      "warning": "oklch(0.78 0.18 68)",
+      "warningForeground": "oklch(0.14 0.05 68)",
+      "warningMuted": "oklch(0.26 0.08 68)",
+      "info": "oklch(0.72 0.18 202)",
+      "infoForeground": "oklch(0.14 0.04 202)",
+      "infoMuted": "oklch(0.24 0.09 202)"
+    },
+    "dark": {
+      "background": "oklch(0.18 0.12 265)",
+      "foreground": "oklch(0.97 0.012 265)",
+      "card": "oklch(0.16 0.14 270)",
+      "cardForeground": "oklch(0.97 0.012 265)",
+      "popover": "oklch(0.17 0.12 266)",
+      "popoverForeground": "oklch(0.97 0.012 265)",
+      "primary": "oklch(0.60 0.22 2)",
+      "primaryForeground": "oklch(0.97 0.012 265)",
+      "secondary": "oklch(0.46 0.24 320)",
+      "secondaryForeground": "oklch(0.97 0.012 265)",
+      "muted": "oklch(0.23 0.11 265)",
+      "mutedForeground": "oklch(0.83 0.07 265)",
+      "accent": "oklch(0.30 0.13 275)",
+      "accentForeground": "oklch(0.97 0.012 265)",
+      "destructive": "oklch(0.54 0.26 22)",
+      "destructiveForeground": "oklch(0.97 0.012 265)",
+      "border": "color-mix(in oklab, oklch(1 0 265) 14%, oklch(0.08 0.14 265))",
+      "input": "oklch(0.22 0.11 265)",
+      "ring": "oklch(0.60 0.22 2 / 0.45)",
+      "chart1": "oklch(0.62 0.21 2)",
+      "chart2": "oklch(0.54 0.22 322)",
+      "chart3": "oklch(0.57 0.20 285)",
+      "chart4": "oklch(0.68 0.18 202)",
+      "chart5": "oklch(0.62 0.16 168)",
+      "sidebar": "oklch(0.22 0.115 266)",
+      "sidebarForeground": "oklch(0.97 0.012 265)",
+      "sidebarPrimary": "oklch(0.62 0.21 2)",
+      "sidebarPrimaryForeground": "oklch(0.97 0.012 265)",
+      "sidebarAccent": "oklch(0.27 0.134 271)",
+      "sidebarAccentForeground": "oklch(0.97 0.012 265)",
+      "sidebarBorder": "color-mix(in oklab, oklch(1 0 265) 12%, oklch(0.08 0.14 265))",
+      "sidebarRing": "oklch(0.60 0.22 2 / 0.45)",
+      "success": "oklch(0.62 0.17 158)",
+      "successForeground": "oklch(0.97 0.012 158)",
+      "successMuted": "oklch(0.28 0.08 158)",
+      "warning": "oklch(0.72 0.18 62)",
+      "warningForeground": "oklch(0.12 0.04 62)",
+      "warningMuted": "oklch(0.33 0.05 62)",
+      "info": "oklch(0.68 0.18 202)",
+      "infoForeground": "oklch(0.97 0.012 202)",
+      "infoMuted": "oklch(0.28 0.09 202)"
+    }
+  },
+  "spacing": {
+    "base": {
+      "radius": "1.5rem"
+    },
+    "derived": {
+      "sm": "calc(var(--radius) - 4px)",
+      "md": "calc(var(--radius) - 2px)",
+      "lg": "var(--radius)",
+      "xl": "calc(var(--radius) + 4px)",
+      "2xl": "calc(var(--radius) + 8px)",
+      "3xl": "calc(var(--radius) + 12px)",
+      "4xl": "calc(var(--radius) + 16px)"
+    }
+  },
+  "typography": {
+    "fontFamilies": {
+      "sans": "var(--font-open-sans)",
+      "serif": "var(--font-lora)",
+      "mono": "var(--font-geist-mono)",
+      "headings": "var(--font-raleway)"
+    },
+    "headings": {
+      "h1": {
+        "fontSize": "3rem",
+        "fontWeight": "800",
+        "letterSpacing": "-0.025em",
+        "lineHeight": "1.05"
+      },
+      "h2": {
+        "fontSize": "2.25rem",
+        "fontWeight": "700",
+        "letterSpacing": "-0.02em",
+        "lineHeight": "1.1"
+      },
+      "h3": {
+        "fontSize": "1.75rem",
+        "fontWeight": "600",
+        "letterSpacing": "-0.015em",
+        "lineHeight": "1.15"
+      },
+      "h4": {
+        "fontSize": "1.375rem",
+        "fontWeight": "500",
+        "letterSpacing": "-0.01em",
+        "lineHeight": "1.2"
+      },
+      "h5": {
+        "fontSize": "1.125rem",
+        "fontWeight": "400",
+        "letterSpacing": "-0.005em",
+        "lineHeight": "1.25"
+      },
+      "h6": {
+        "fontSize": "0.875rem",
+        "fontWeight": "400",
+        "letterSpacing": "0em",
+        "lineHeight": "1.3"
+      }
+    },
+    "body": {
+      "fontFamily": "var(--font-open-sans), sans-serif",
+      "fontSize": "base",
+      "lineHeight": "1.6"
+    }
+  },
+  "effects": {
+    "gradients": {
+      "body": "var(--gradient-body)",
+      "card": "var(--gradient-card)",
+      "popover": "var(--gradient-popover)",
+      "sidebar": "var(--gradient-sidebar)",
+      "input": "var(--gradient-input)",
+      "muted": "var(--gradient-muted)",
+      "successMuted": "var(--gradient-success-muted)",
+      "warningMuted": "var(--gradient-warning-muted)",
+      "infoMuted": "var(--gradient-info-muted)"
+    },
+    "grain": {
+      "url": "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23g)'/%3E%3C/svg%3E\")"
+    }
+  },
+  "shadcn": {
+    "style": "new-york",
+    "rsc": true,
+    "tsx": true,
+    "cssVariables": true,
+    "baseColor": "neutral",
+    "iconLibrary": "lucide",
+    "aliases": {
+      "components": "@/components",
+      "utils": "@/lib/utils",
+      "ui": "@/components/ui",
+      "lib": "@/lib",
+      "hooks": "@/hooks"
+    }
+  },
+  "tailwind": {
+    "version": "4.1.18",
+    "config": {
+      "css": "app/globals.css",
+      "baseColor": "neutral",
+      "cssVariables": true,
+      "prefix": ""
+    },
+    "imports": [
+      "tailwindcss",
+      "tw-animate-css",
+      "shadcn/tailwind.css"
+    ]
+  }
+}

@@ -1,4 +1,4 @@
-import { requireUserWithRole } from '@/lib/auth'
+import { requireChapterMember } from '@/lib/auth'
 import {
   Card,
   CardContent,
@@ -6,35 +6,29 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card'
-import MemberCard from './components/member-card'
 import { Users, AlertCircle } from 'lucide-react'
 import { MembersTabs } from './components/member-tabs'
 import type { MemberWithProfile } from '@/lib/types'
 import { getChapterMembers, getMemberStats } from '@/lib/actions/chapter/get-data'
+import { MembersList } from './components/members-list'
+import { Breadcrumb } from '@/components/ui/breadcrumb'
 
-export type MemberFilterStatus = 'all' | 'pending' | 'approved' | 'rejected' | 'incomplete'
+export type MemberFilterStatus = 'pending' | 'active' | 'rejected'
 
-export function filterMembers(
-  members: MemberWithProfile[],
-  status: MemberFilterStatus
-): MemberWithProfile[] {
+export function filterMembers(members: MemberWithProfile[], status: MemberFilterStatus): MemberWithProfile[] {
   switch (status) {
     case 'pending':
       return members.filter(
-        m => m.StudentProfile?.isFilled && m.StudentProfile?.approvalStatus === 'pending'
+        m => m.student_profile?.is_filled && m.student_profile?.approval_status === 'pending'
       )
-    case 'approved':
+    case 'active':
       return members.filter(
-        m => m.StudentProfile?.approvalStatus === 'approved'
+        m => m.student_profile?.approval_status === 'approved'
       )
     case 'rejected':
       return members.filter(
-        m => m.StudentProfile?.approvalStatus === 'rejected'
+        m => m.student_profile?.approval_status === 'rejected'
       )
-    case 'incomplete':
-      return members.filter(m => !m.StudentProfile?.isFilled)
-    default:
-      return members
   }
 }
 
@@ -43,27 +37,23 @@ export default async function ChapterMembersPage({
 }: {
   searchParams: Promise<{ status?: MemberFilterStatus }>
 }) {
-  const { status = 'all' } = await searchParams
+  const { status } = await searchParams
 
-  const validStatuses: MemberFilterStatus[] = ['all', 'pending', 'approved', 'rejected', 'incomplete']
-  const safeStatus: MemberFilterStatus = validStatuses.includes(status) ? status : 'all'
-
-  const { supabase, user } = await requireUserWithRole('editor')
+  const { supabase, user, chapter_id } = await requireChapterMember()
 
   const { data: profile } = await supabase
-    .from('StudentProfile')
+    .from('student_profile')
     .select(`
-      chapterId,
       Chapter (
         id,
         name,
         university
       )
     `)
-    .eq('userId', user.id)
+    .eq('user_id', user.id)
     .maybeSingle()
 
-  if (!profile?.chapterId || !profile.Chapter) {
+  if (!profile?.Chapter) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Card>
@@ -81,19 +71,23 @@ export default async function ChapterMembersPage({
     )
   }
 
-  const chapterId = profile.chapterId
-  const chapter = Array.isArray(profile.Chapter) ? profile.Chapter[0] : profile.Chapter
-
-  const allMembers = await getChapterMembers(chapterId)
+  const allMembers = await getChapterMembers(chapter_id)
   const stats = getMemberStats(allMembers)
+  const validStatuses: MemberFilterStatus[] = ['pending', 'active', 'rejected']
+  const defaultStatus: MemberFilterStatus = stats.pending > 0 ? 'pending' : 'active'
+  const safeStatus: MemberFilterStatus = status && validStatuses.includes(status) ? status : defaultStatus
   const displayMembers = filterMembers(allMembers, safeStatus)
 
   return (
-    <div className="space-y-6">
-      <div>
+    <div className="container max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+      <Breadcrumb items={[
+        { label: 'Dashboard', href: '/chapter' },
+        { label: 'Members' }
+      ]} />
+      <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Chapter Members</h1>
-        <p className="text-muted-foreground mt-2">
-          Manage members from {chapter?.name ?? 'Unknown Chapter'}
+        <p className="text-muted-foreground text-lg">
+          Review pending approvals and manage your member roster
         </p>
       </div>
 
@@ -103,42 +97,36 @@ export default async function ChapterMembersPage({
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">
+              Pending
+            </CardTitle>
+            <div className="text-2xl font-bold text-warning">{stats.pending}</div>
+          </CardHeader>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Active
+            </CardTitle>
+            <div className="text-2xl font-bold text-success">{stats.approved}</div>
+          </CardHeader>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Rejected
+            </CardTitle>
+            <div className="text-2xl font-bold text-destructive">{stats.rejected}</div>
+          </CardHeader>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Total Members
             </CardTitle>
             <div className="text-2xl font-bold">{stats.total}</div>
-          </CardHeader>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Pending Approval
-            </CardTitle>
-            <div className="text-2xl font-bold text-warning">
-              {stats.pending}
-            </div>
-          </CardHeader>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Approved
-            </CardTitle>
-            <div className="text-2xl font-bold text-success">
-              {stats.approved}
-            </div>
-          </CardHeader>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Incomplete
-            </CardTitle>
-            <div className="text-2xl font-bold text-muted-foreground">
-              {stats.incomplete}
-            </div>
           </CardHeader>
         </Card>
       </div>
@@ -153,15 +141,7 @@ export default async function ChapterMembersPage({
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4">
-          {displayMembers.map(member => (
-            <MemberCard
-              key={member.id}
-              member={member}
-              currentUserId={user.id}
-            />
-          ))}
-        </div>
+        <MembersList members={displayMembers} status={safeStatus} />
       )}
     </div>
   )

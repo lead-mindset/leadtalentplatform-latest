@@ -17,7 +17,7 @@ interface AdminNavigationProps {
 export function AdminNavigation({ stats }: AdminNavigationProps) {
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Administration</SidebarGroupLabel>
+      <SidebarGroupLabel className="text-sidebar-foreground font-medium">Administration</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
           {ADMIN_NAV.map((item) => (
@@ -26,14 +26,14 @@ export function AdminNavigation({ stats }: AdminNavigationProps) {
               item={item}
               exact={item.id === 'overview'}
               badge={
-                item.id === 'chapters' ? stats.totalChapters :
-                item.id === 'users' ? stats.totalUsers :
-                item.id === 'companies' ? stats.totalCompanies :
+                item.id === 'chapters' ? stats.total_chapters :
+                item.id === 'users' ? stats.total_users :
+                item.id === 'companies' ? stats.total_companies :
                 undefined
               }
               showPing={
-                (item.id === 'invites' && stats.pendingInvites > 0) ||
-                (item.id === 'users' && stats.pendingApprovals > 0)
+                (item.id === 'invites' && stats.pending_invites > 0) ||
+                (item.id === 'users' && stats.pending_approvals > 0)
               }
             />
           ))}

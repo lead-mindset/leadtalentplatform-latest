@@ -3,7 +3,7 @@
 import { useForm, FormProvider, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
-import { Upload, X, FileText, Loader2 } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 import { Checkbox } from '@/components/ui/checkbox'
 import { FormStepper, FormInput } from './ui/stepper'
 import { createFullMemberSchemaFrontend } from '@/lib/memberschema'
@@ -47,7 +47,7 @@ export default function Onboarding() {
       full_name: '',
       phone: '',
       career: '',
-      graduationYear: 0,
+      graduation_year: 0,
       skills: [],
       gender: undefined,
       lead_chapter: '',
@@ -63,7 +63,7 @@ export default function Onboarding() {
 
   const stepFields: Record<number, (keyof OnboardingValues)[]> = {
     1: ['full_name', 'phone', 'gender', 'lead_chapter'],
-    2: ['career', 'graduationYear', 'skills'],
+    2: ['career', 'graduation_year', 'skills'],
     3: ['linkedin_url', 'resume_pdf'],
     4: ['termsAccepted'],
   }
@@ -83,7 +83,7 @@ export default function Onboarding() {
       if (key === 'resume_pdf' && value instanceof File) {
         formData.append('resume', value)
       } else if (key === 'termsAccepted') {
-        // frontend-only, not sent to server
+
       } else if (Array.isArray(value) || typeof value === 'object') {
         formData.append(key, JSON.stringify(value))
       } else {
@@ -91,9 +91,15 @@ export default function Onboarding() {
       }
     })
 
-    const result = await submitOnboarding(formData)
-    if (result?.error) {
-      console.error(result.error)
+    try {
+      const result = await submitOnboarding(formData)
+      if (result?.error) {
+        console.error(result.error)
+      }
+      // Success redirects automatically, so no else needed
+    } catch (err) {
+      console.error(err)
+    } finally {
       setIsSubmitting(false)
     }
   }
@@ -116,7 +122,7 @@ export default function Onboarding() {
   const FieldError = ({ message }: { message?: string }) =>
     message ? (
       <p className="flex items-center gap-1 text-sm text-destructive mt-1">
-        <X className="h-3 w-3 shrink-0" />
+        <Icons.X className="h-3 w-3 shrink-0" />
         {message}
       </p>
     ) : null
@@ -154,7 +160,7 @@ export default function Onboarding() {
     <FormProvider {...methods}>
       <FormStepper validateStep={validateCurrentStep} onFinalStepCompleted={handleComplete}>
 
-        {/* ── Step 1: Personal info ─────────────────────────────────────────── */}
+        {}
         <div className="space-y-6">
           <StepHeader title={t('step1Title')} subtitle={t('step1Subtitle')} />
 
@@ -217,7 +223,7 @@ export default function Onboarding() {
           </div>
         </div>
 
-        {/* ── Step 2: Academic ──────────────────────────────────────────────── */}
+        {}
         <div className="space-y-6">
           <StepHeader title={t('step2Title')} subtitle={t('step2Subtitle')} />
 
@@ -236,10 +242,10 @@ export default function Onboarding() {
 
             <FormInput
               label={t('expectedGradYear')}
-              name="graduationYear"
+              name="graduation_year"
               type="number"
               validation={{ valueAsNumber: true }}
-              error={errors.graduationYear?.message}
+              error={errors.graduation_year?.message}
             />
 
             <Controller
@@ -263,7 +269,7 @@ export default function Onboarding() {
           </div>
         </div>
 
-        {/* ── Step 3: Professional ──────────────────────────────────────────── */}
+        {}
         <div className="space-y-6">
           <StepHeader title={t('step3Title')} subtitle={t('step3Subtitle')} />
 
@@ -293,8 +299,8 @@ export default function Onboarding() {
                         />
                         <div className="flex flex-col items-center gap-2">
                           {isUploading
-                            ? <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                            : <Upload className="h-8 w-8 text-muted-foreground" />
+                            ? <Icons.Loader2 className="h-8 w-8 animate-spin text-primary" />
+                            : <Icons.Upload className="h-4 w-4 mr-2" />
                           }
                           <p className="text-sm font-medium text-foreground">
                             {isUploading ? t('uploading') : t('clickToUpload')}
@@ -306,7 +312,7 @@ export default function Onboarding() {
                   ) : (
                     <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/40 p-3">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                        <FileText className="h-5 w-5 text-primary" />
+                        <Icons.FileText className="h-4 w-4 mr-2" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">{fileName}</p>
@@ -319,7 +325,7 @@ export default function Onboarding() {
                         aria-label="Remove file"
                         onClick={() => removeFile(field.onChange)}
                       >
-                        <X className="h-4 w-4" />
+                        <Icons.X className="h-4 w-4 mr-2" />
                       </Button>
                     </div>
                   )}
@@ -331,12 +337,12 @@ export default function Onboarding() {
           </div>
         </div>
 
-        {/* ── Step 4: Preferences + Terms ───────────────────────────────────── */}
+        {}
         <div className="space-y-6">
           <StepHeader title={t('step4Title')} subtitle={t('step4Subtitle')} />
 
           <div className="space-y-3">
-            {/* Recruiter visibility */}
+            {}
             <Controller
               control={control}
               name="consentRecruiterVisibility"
@@ -389,7 +395,7 @@ export default function Onboarding() {
                           <Link
                             href="/terms"
                             target="_blank"
-                            className="text-primary underline underline-offset-2 hover:opacity-80 transition-opacity"
+                            className="text-primary underline hover:opacity-80 transition-opacity underline-offset-2"
                           >
                             {t('termsLink')}
                           </Link>
@@ -397,7 +403,7 @@ export default function Onboarding() {
                           <Link
                             href="/privacy"
                             target="_blank"
-                            className="text-primary underline underline-offset-2 hover:opacity-80 transition-opacity"
+                            className="text-primary underline hover:opacity-80 transition-opacity underline-offset-2"
                           >
                             {t('privacyLink')}
                           </Link>

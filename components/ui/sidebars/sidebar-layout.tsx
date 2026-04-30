@@ -19,7 +19,7 @@ export function SidebarLayout({ sidebar, children, headerRight }: SidebarLayoutP
       {sidebar}
       
       <SidebarInset>
-        <header className="flex h-14 shrink-0 items-center justify-between border-b px-4 md:hidden">
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border/60 px-4 md:hidden">
           <SidebarTrigger />
           {headerRight && (
             <div className="flex items-center gap-2">

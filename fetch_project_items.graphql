@@ -1,0 +1,17 @@
+query {
+  user(login: "abigailbrionesa") {
+    projectV2(number: 2) {
+      items(first: 100) {
+        nodes {
+          id
+          content {
+            ... on Issue {
+              number
+              title
+            }
+          }
+        }
+      }
+    }
+  }
+}
