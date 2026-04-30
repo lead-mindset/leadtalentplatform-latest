@@ -177,6 +177,82 @@ Husky is automatically installed via `pnpm install`. If hooks aren't working:
 pnpm run prepare
 ```
 
-## 4. Communication
+## 4. AI-Assisted Development: The PIV Loop
+
+We use GitHub-native commands for AI-assisted development. The workflow follows a **PIV Loop**: Plan → Implement → Validate.
+
+### 4.1 Available Commands
+
+| Command | Purpose |
+|---------|---------|
+| `/prime` | Load codebase context + optional GitHub issue (#123) |
+| `/create-prd` | Generate PRD from conversation |
+| `/prd-interactive` | Step-by-step PRD creation via Q&A |
+| `/create-issues` | Generate GitHub Issues from PRD |
+| `/plan` | Create implementation plan with validation strategy |
+| `/implement` | Execute plan in fresh context |
+| `/validate` | Run lint, type check, tests |
+| `/review` | Code review (PR number, file, or folder) |
+| `/install` | Install deps and start dev server |
+
+### 4.2 Workflow Steps
+
+**Step 1: Start fresh session**
+```
+/prime
+```
+Loads codebase context into the agent.
+
+**Step 2: Create requirements**
+```
+/create-prd feature-name
+```
+Or for guided creation:
+```
+/prd-interactive
+```
+
+**Step 3: Generate issues**
+```
+/create-issues .github/PRDs/feature-name.prd.md
+```
+
+**Step 4: Plan implementation**
+```
+/plan add user authentication
+```
+Creates a detailed plan in `.github/plans/`.
+
+**Step 5: Implement**
+```
+/implement .github/plans/user-auth.plan.md
+```
+
+**Step 6: Validate**
+```
+/validate
+```
+
+**Step 7: Review**
+```
+/review src/auth/login.ts
+/review 45
+```
+
+### 4.3 Output Locations
+
+- **PRDs**: `.github/PRDs/{name}.prd.md`
+- **Plans**: `.github/plans/{name}.plan.md`
+- **Reviews**: `.github/reviews/{name}-review.md`
+
+### 4.4 Golden Rules
+
+1. **Commandify everything** - If you type something twice, make it a command
+2. **Reduce assumptions** - Questions before PRD, review before executing
+3. **Context is king** - Reset between planning and implementation
+4. **Git log is memory** - Commit frequently with descriptive messages
+5. **System evolution** - Every bug is a chance to improve the AI layer
+
+## 5. Communication
 *   **ADRs:** Major architectural decisions must be documented in `docs/adr/`.
 *   **Linear/GitHub:** Use the Project Board to track all tasks.
