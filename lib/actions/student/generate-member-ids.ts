@@ -13,9 +13,9 @@ export async function generateUniqueMemberId(supabase: SupabaseClient): Promise<
     const memberId = `LEAD-${randomNum}`
 
     const { data } = await supabase
-      .from('StudentProfile')
-      .select('memberId')
-      .eq('memberId', memberId)
+      .from('student_profile')
+      .select('member_id')
+      .eq('member_id', memberId)
       .maybeSingle()
 
     if (!data) return memberId

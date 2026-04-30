@@ -6,6 +6,12 @@ export const routing = defineRouting({
   defaultLocale: 'en'
 });
 
+export type Locale = (typeof routing.locales)[number]
+
+export function isValidLocale(locale: string): locale is Locale {
+  return routing.locales.includes(locale as Locale)
+}
+
 export const {Link, redirect, usePathname, useRouter} =
   createNavigation(routing);
 

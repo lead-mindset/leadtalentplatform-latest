@@ -2,10 +2,12 @@ import { Suspense } from 'react'
 import OnboardContent from './onboard-content'
 import { redirect } from 'next/navigation'
 import { validateInviteToken } from '@/lib/actions/company/handle-invite'
+import type { InviteValidationFailure } from '@/lib/actions/company/invite-shared'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { AlertCircle } from 'lucide-react'
+import { Link } from '@/i18n/routing'
 
 function OnboardLoading() {
   return (
@@ -53,14 +55,12 @@ async function OnboardLoader({
               </CardTitle>
             </div>
             <CardDescription className="text-foreground">
-              {result.error}
+              {(result as InviteValidationFailure).error}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild variant="default" className="w-full">
-              <a href="/auth/login">
-                Go to Login
-              </a>
+              <Link href="/auth/login">Go to Login</Link>
             </Button>
           </CardContent>
         </Card>

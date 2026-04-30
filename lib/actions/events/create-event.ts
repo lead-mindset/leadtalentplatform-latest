@@ -1,0 +1,106 @@
+'use server';
+
+import { z } from 'zod';
+import { revalidatePath } from 'next/cache';
+import { requireUser, requireChapterMember } from '@/lib/auth';
+import { EventService } from '@/lib/services/event.service';
+import type { EventRow } from '@/lib/types';
+
+const EventInputSchema = z
+  .object({
+    title: z.string().min(1),
+    description: z.string().optional(),
+    coverImage: z.string().url().optional().or(z.literal('')),
+    startAt: z.string().min(1),
+    endAt: z.string().min(1),
+    location: z.string().optional(),
+    meetingUrl: z.string().url().optional().or(z.literal('')),
+    eventType: z.enum(['in_person', 'online', 'hybrid']),
+    capacity: z.coerce.number().int().nonnegative().optional(),
+    chapter_id: z.string().optional().nullable(),
+    isPublished: z.coerce.boolean().optional(),
+    accessModel: z.enum(['open', 'application']).default('open'),
+    applicationFormUrl: z.string().url().nullable().optional(),
+    locationName: z.string().optional(),
+    locationAddress: z.string().optional(),
+    locationCity: z.string().optional(),
+    locationRegion: z.string().optional(),
+    locationLatitude: z.number().optional().nullable(),
+    locationLongitude: z.number().optional().nullable(),
+  })
+  .refine(
+    (data) => {
+      if (data.accessModel === 'application') {
+        return data.applicationFormUrl && data.applicationFormUrl.trim().length > 0;
+      }
+      return true;
+    },
+    {
+      message: 'Application form URL is required for application-gated events',
+      path: ['applicationFormUrl'],
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.eventType !== 'in_person') {
+        return data.meetingUrl && data.meetingUrl.trim().length > 0;
+      }
+      return true;
+    },
+    {
+      message: 'Meeting URL is required for online or hybrid events',
+      path: ['meetingUrl'],
+    }
+  )
+  .refine(
+    (data) => {
+      return new Date(data.endAt) > new Date(data.startAt);
+    },
+    {
+      message: 'End time must be after start time',
+      path: ['endAt'],
+    }
+  );
+
+export type CreateEventInput = z.infer<typeof EventInputSchema>;
+
+export type CreateEventResponse =
+  | { success: true; event: EventRow }
+  | { error: string };
+
+export async function createEvent(input: CreateEventInput): Promise<CreateEventResponse> {
+  const parsed = EventInputSchema.safeParse(input);
+  if (!parsed.success) return { error: 'Validation failed' };
+
+  const data = parsed.data;
+  const { supabase, user } = await requireUser();
+
+  try {
+    let targetChapterId: string | null = null;
+    let redirectPath = '/student';
+
+    if (user.role === 'admin') {
+      targetChapterId = data.chapter_id ?? null;
+      redirectPath = '/admin/events';
+    } else if (user.role === 'editor') {
+      const { chapter_id } = await requireChapterMember();
+      if (!chapter_id) return { error: 'No chapter assigned' };
+      targetChapterId = chapter_id;
+      redirectPath = '/chapter/events';
+    } else {
+      return { error: 'Insufficient permissions' };
+    }
+
+    const event = await EventService.createEvent(supabase, {
+      ...data,
+      chapter_id: targetChapterId,
+      createdById: user.id,
+    });
+
+    revalidatePath(redirectPath);
+    return { success: true, event };
+  } catch (err) {
+    console.error('[createEvent] error:', err);
+    return { error: err instanceof Error ? err.message : 'Failed to create event' };
+  }
+}

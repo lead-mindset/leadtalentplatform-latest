@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { LogOut, Bell, User } from "lucide-react";
-import { LogoutButton } from "@/components/logout-button";
+import { LogoutButton } from "@/components/auth/logout-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -14,9 +14,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useTranslations } from 'next-intl';
 import { getInitials } from "@/lib/utils";
+import type { AuthenticatedNavUser } from '@/lib/types';
 
 interface NavUserProps {
-  user: { name: string; email: string; avatar: string }
+  user: AuthenticatedNavUser
   memberId?: string | null
   onNavigate?: () => void
 }
@@ -29,7 +30,7 @@ export function NavUser({ user, memberId, onNavigate }: NavUserProps) {
       <DropdownMenuTrigger asChild>
         <button className="flex items-center gap-2 rounded-lg p-1 hover:bg-muted transition-colors">
           <Avatar className="h-8 w-8 rounded-lg">
-            <AvatarImage src={user.avatar} alt={user.name} />
+            <AvatarImage src={user.avatar ?? undefined} alt={user.name} />
             <AvatarFallback className="border border-border text-xs font-semibold">
               {getInitials(user.name)}
             </AvatarFallback>
@@ -47,7 +48,6 @@ export function NavUser({ user, memberId, onNavigate }: NavUserProps) {
 
       
 <DropdownMenuContent align="end" className="rounded-xl p-1.5">
-
 
   <DropdownMenuItem asChild>
     <Link href="/student/profile" onClick={onNavigate}>

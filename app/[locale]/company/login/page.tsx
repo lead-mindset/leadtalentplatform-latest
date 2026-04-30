@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useRouter } from '@/i18n/routing'
+import { useLocale } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -24,6 +25,7 @@ export default function CompanyLoginPage() {
   const [otpSent, setOtpSent] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+  const locale = useLocale()
 
   async function handleSendOTP(e: React.FormEvent) {
     e.preventDefault()
@@ -33,7 +35,7 @@ export default function CompanyLoginPage() {
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: {
-        emailRedirectTo: `${window.location.origin}/company/dashboard`,
+        emailRedirectTo: `${window.location.origin}/${locale}/company/dashboard`,
       },
     })
 
@@ -50,7 +52,7 @@ export default function CompanyLoginPage() {
     <div className="inline-flex h-10 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground w-full">
       <button
         onClick={() => router.push('/auth/login')}
-        className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-all hover:bg-accent hover:text-accent-foreground gap-2 flex-1"
+        className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-all hover:bg-accent hover:text-accent-foreground gap-2 flex-1"
       >
         <Users className="h-4 w-4" />
         Member Login
@@ -76,7 +78,7 @@ export default function CompanyLoginPage() {
                 <div className="space-y-2">
                   <CardTitle className="text-2xl">Check Your Email</CardTitle>
                   <CardDescription className="text-base">
-                    We've sent a secure login link to
+                    We&apos;ve sent a secure login link to
                   </CardDescription>
                   <p className="font-semibold text-foreground break-all">{email}</p>
                 </div>
@@ -87,7 +89,7 @@ export default function CompanyLoginPage() {
                     <ol className="space-y-1.5 ml-4 list-decimal text-sm text-muted-foreground">
                       <li>Check your inbox (and spam folder)</li>
                       <li>Click the login link in the email</li>
-                      <li>You'll be automatically signed in</li>
+                      <li>                    You&apos;ll be automatically signed in</li>
                     </ol>
                   </AlertDescription>
                 </Alert>
@@ -169,18 +171,18 @@ export default function CompanyLoginPage() {
               </Button>
             </form>
 
-            <Alert>
+            <Alert className='border bg-muted'>
               <Info className="h-4 w-4" />
               <AlertDescription>
                 <strong className="text-foreground">Passwordless login:</strong>{' '}
                 <span className="text-muted-foreground">
-                  We'll email you a secure magic link. No password needed!
+                  We&apos;ll email you a secure magic link. No password needed!
                 </span>
               </AlertDescription>
             </Alert>
 
-            <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
-              <p className="text-sm font-medium text-foreground">Don't have access yet?</p>
+            <div className="rounded-lg  bg-muted/50 p-4 space-y-2">
+              <p className="text-sm font-medium text-foreground">              Don&apos;t have access yet?</p>
               <p className="text-sm text-muted-foreground">
                 Company representatives can only join via invitation from a LEAD administrator.
               </p>

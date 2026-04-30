@@ -1,0 +1,16 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  "plugin": [
+    "superpowers@git+https://github.com/obra/superpowers.git",
+    "everything-opencode"
+  ],
+
+  "mcp": {
+    "supabase": {
+      "type": "remote",
+      "url": "https://mcp.supabase.com/mcp",
+      "enabled": true
+    }
+  }
+}

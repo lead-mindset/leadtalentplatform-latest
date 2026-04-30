@@ -1,6 +1,6 @@
 'use client'
 
-import { LogoutButton } from "../../logout-button"
+import { LogoutButton } from "@/components/auth/logout-button"
 import { Badge } from "../badge"
 import { Avatar, AvatarFallback } from "../avatar"
 import { getInitials } from "@/lib/utils"
@@ -45,7 +45,7 @@ export function MobileSidebarContent({ userName, userEmail, userRole, children }
         {children}
       </div>
 
-      <div className="p-4 border-t mt-auto">
+      <div className="p-4 border-t border-border/60 mt-auto">
         <LogoutButton className="w-full" />
       </div>
     </div>

@@ -15,6 +15,7 @@ import {
 import { Link } from '@/i18n/routing'
 import { notFound } from 'next/navigation'
 import { SaveStudentButton } from '../../_components/save-student-button'
+import NextLink from 'next/link'
 
 export default async function StudentProfilePage({
   params,
@@ -30,6 +31,7 @@ export default async function StudentProfilePage({
   ])
 
   if (!student) notFound()
+  const resolvedStudent = student ?? notFound()
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -44,23 +46,23 @@ export default async function StudentProfilePage({
 
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold mb-2">{student.name}</h1>
+          <h1 className="text-3xl font-bold mb-2">{resolvedStudent.name}</h1>
           <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
             <div className="flex items-center gap-1">
               <Mail className="h-4 w-4" />
-              <span className="text-sm">{student.email}</span>
+              <span className="text-sm">{resolvedStudent.email}</span>
             </div>
-            {student.phone && (
+            {resolvedStudent.phone && (
               <div className="flex items-center gap-1">
                 <Phone className="h-4 w-4" />
-                <span className="text-sm">{student.phone}</span>
+                <span className="text-sm">{resolvedStudent.phone}</span>
               </div>
             )}
           </div>
         </div>
         <SaveStudentButton
-          studentId={student.id}
-          studentName={student.name}
+          studentId={resolvedStudent.id}
+          studentName={resolvedStudent.name}
           initialSaved={saved}
         />
       </div>
@@ -71,37 +73,37 @@ export default async function StudentProfilePage({
             <CardTitle>Education</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {student.StudentProfile?.major && (
+            {resolvedStudent.student_profile?.major && (
               <div className="flex items-start gap-3">
                 <GraduationCap className="h-5 w-5 mt-0.5 text-muted-foreground" />
                 <div>
-                  <p className="font-medium">{student.StudentProfile.major}</p>
+                  <p className="font-medium">{resolvedStudent.student_profile.major}</p>
                   <p className="text-sm text-muted-foreground">Major</p>
                 </div>
               </div>
             )}
 
-            {student.StudentProfile?.graduationYear && (
+            {resolvedStudent.student_profile?.graduation_year && (
               <div className="flex items-start gap-3">
                 <Calendar className="h-5 w-5 mt-0.5 text-muted-foreground" />
                 <div>
                   <p className="font-medium">
-                    Class of {student.StudentProfile.graduationYear}
+                    Class of {resolvedStudent.student_profile.graduation_year}
                   </p>
                   <p className="text-sm text-muted-foreground">Expected Graduation</p>
                 </div>
               </div>
             )}
 
-            {student.Chapter && (
+            {resolvedStudent.chapter && (
               <div className="flex items-start gap-3">
                 <Building2 className="h-5 w-5 mt-0.5 text-muted-foreground" />
                 <div>
-                  <p className="font-medium">{student.Chapter.name}</p>
-                  <p className="text-sm text-muted-foreground">{student.Chapter.university}</p>
-                  {(student.Chapter.city || student.Chapter.region) && (
+                  <p className="font-medium">{resolvedStudent.chapter.name}</p>
+                  <p className="text-sm text-muted-foreground">{resolvedStudent.chapter.university}</p>
+                  {(resolvedStudent.chapter.city || resolvedStudent.chapter.region) && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      {[student.Chapter.city, student.Chapter.region]
+                      {[resolvedStudent.chapter.city, resolvedStudent.chapter.region]
                         .filter(Boolean)
                         .join(', ')}
                     </p>
@@ -118,9 +120,9 @@ export default async function StudentProfilePage({
             <CardDescription>Technical and professional skills</CardDescription>
           </CardHeader>
           <CardContent>
-            {student.StudentProfile?.skills && student.StudentProfile.skills.length > 0 ? (
+            {resolvedStudent.student_profile?.skills && resolvedStudent.student_profile.skills.length > 0 ? (
               <div className="flex flex-wrap gap-2">
-                {student.StudentProfile.skills.map((skill, i) => (
+                {resolvedStudent.student_profile.skills.map((skill: string, i: number) => (
                   <Badge key={i} variant="secondary">
                     {skill}
                   </Badge>
@@ -133,21 +135,21 @@ export default async function StudentProfilePage({
         </Card>
       </div>
 
-      {student.StudentProfile?.linkedinUrl && (
+      {resolvedStudent.student_profile?.linkedin_url && (
         <Card>
           <CardHeader>
             <CardTitle>Professional Links</CardTitle>
           </CardHeader>
           <CardContent>
             <Button asChild variant="outline" className="gap-2">
-              <a
-                href={student.StudentProfile.linkedinUrl}
+              <NextLink
+                href={resolvedStudent.student_profile.linkedin_url}
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 <Linkedin className="h-4 w-4" />
                 View LinkedIn Profile
-              </a>
+              </NextLink>
             </Button>
           </CardContent>
         </Card>
@@ -161,15 +163,15 @@ export default async function StudentProfilePage({
         <CardContent className="space-y-3">
           <div className="flex items-center gap-2">
             <Mail className="h-4 w-4 text-muted-foreground" />
-            <a href={`mailto:${student.email}`} className="text-sm hover:underline">
-              {student.email}
+            <a href={`mailto:${resolvedStudent.email}`} className="text-sm text-primary hover:underline">
+              {resolvedStudent.email}
             </a>
           </div>
-          {student.phone && (
+          {resolvedStudent.phone && (
             <div className="flex items-center gap-2">
               <Phone className="h-4 w-4 text-muted-foreground" />
-              <a href={`tel:${student.phone}`} className="text-sm hover:underline">
-                {student.phone}
+              <a href={`tel:${resolvedStudent.phone}`} className="text-sm text-primary hover:underline">
+                {resolvedStudent.phone}
               </a>
             </div>
           )}

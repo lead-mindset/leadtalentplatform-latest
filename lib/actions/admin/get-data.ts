@@ -1,623 +1,112 @@
 import { createClient } from '@/lib/supabase/server'
+import { AdminService } from '@/lib/services/admin.service'
 import type {
-  CompanyRaw,
-  Company,
-  RecruiterInvite,
-  RecruiterInviteRaw,
-  UserWithDetailsRaw,
-  UserWithDetails,
-  ChapterRow,
   ActivityItem,
-  ChapterMember,
+  ChapterRow,
+  Company,
   MemberWithProfile,
+  RecruiterInvite,
+  UserWithDetails,
+  UserWithDetailsRaw,
+  UserWithFullProfile,
 } from '@/lib/types'
+import type {
+  AdminDashboardStats,
+  ChapterActivityItem,
+  RecentJoinItem,
+  PendingRecruiterRequestItem,
+} from '@/lib/services/admin.service'
+
+export type {
+  AdminDashboardStats,
+  ChapterActivityItem,
+  RecentJoinItem,
+  PendingRecruiterRequestItem,
+} from '@/lib/services/admin.service'
+
+export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
+  const supabase = await createClient()
+  return AdminService.getAdminDashboardStats(supabase)
+}
+
+export async function getChapterActivityList(): Promise<ChapterActivityItem[]> {
+  const supabase = await createClient()
+  return AdminService.getChapterActivityList(supabase)
+}
+
+export async function getRecentJoins(limit = 10): Promise<RecentJoinItem[]> {
+  const supabase = await createClient()
+  return AdminService.getRecentJoins(supabase, limit)
+}
+
+export async function getPendingRecruiterRequests(): Promise<PendingRecruiterRequestItem[]> {
+  const supabase = await createClient()
+  return AdminService.getPendingRecruiterRequests(supabase)
+}
 
 export async function getSystemStats() {
   const supabase = await createClient()
-
-  const [
-    usersResult,
-    chaptersResult,
-    companiesResult,
-    totalProfilesResult,
-    completeProfilesResult,
-    pendingApprovalsResult,
-    visibleProfilesResult,
-    activeRecruitersResult,
-    pendingInvitesResult,
-  ] = await Promise.all([
-    supabase.from('User').select('*', { count: 'exact', head: true }),
-    supabase.from('Chapter').select('*', { count: 'exact', head: true }),
-    supabase.from('Company').select('*', { count: 'exact', head: true }),
-    supabase.from('StudentProfile').select('*', { count: 'exact', head: true }),
-    supabase.from('StudentProfile').select('*', { count: 'exact', head: true }).eq('isFilled', true),
-    supabase
-      .from('StudentProfile')
-      .select('*', { count: 'exact', head: true })
-      .eq('isFilled', true)
-      .eq('approvalStatus', 'pending'),
-    supabase.from('StudentProfile').select('*', { count: 'exact', head: true }).eq('isRecruiterVisible', true),
-    supabase
-      .from('RecruiterAccess')
-      .select('*', { count: 'exact', head: true })
-      .eq('isActive', true)
-      .is('revokedAt', null),
-    supabase
-      .from('RecruiterAccess')
-      .select('*', { count: 'exact', head: true })
-      .is('acceptedAt', null)
-      .is('revokedAt', null)
-      .gt('inviteExpiresAt', new Date().toISOString()),
-  ])
-
-  const results = [
-    usersResult, chaptersResult, companiesResult,
-    totalProfilesResult, completeProfilesResult, pendingApprovalsResult,
-    visibleProfilesResult, activeRecruitersResult, pendingInvitesResult,
-  ]
-  results.forEach((r, i) => {
-    if (r.error) console.error(`[getSystemStats] Query ${i} failed:`, r.error)
-  })
-
-  const totalProfiles = totalProfilesResult.count ?? 0
-  const completeProfiles = completeProfilesResult.count ?? 0
-  const completionRate = totalProfiles > 0
-    ? Math.round((completeProfiles / totalProfiles) * 100)
-    : 0
-
-  return {
-    totalUsers: usersResult.count ?? 0,
-    totalChapters: chaptersResult.count ?? 0,
-    totalCompanies: companiesResult.count ?? 0,
-    totalProfiles,
-    completeProfiles,
-    pendingApprovals: pendingApprovalsResult.count ?? 0,
-    visibleProfiles: visibleProfilesResult.count ?? 0,
-    activeRecruiters: activeRecruitersResult.count ?? 0,
-    pendingInvites: pendingInvitesResult.count ?? 0,
-    completionRate,
-  }
-}
-
-type RecentApprovalRaw = {
-  userId: string
-  updatedAt: string
-  User: { name: string | null; email: string } | { name: string | null; email: string }[] | null
-  ApprovedBy: { name: string | null } | { name: string | null }[] | null
-}
-
-type RecentInviteRaw = {
-  id: string
-  acceptedAt: string | null
-  recruiterEmail: string
-  Company: { name: string } | { name: string }[] | null
-  AcceptedBy: { name: string | null } | { name: string | null }[] | null
+  return AdminService.getSystemStats(supabase)
 }
 
 export async function getRecentActivity() {
   const supabase = await createClient()
-
-  const { data: recentApprovals } = await supabase
-    .from('StudentProfile')
-    .select(`
-      userId,
-      updatedAt,
-      User!StudentProfile_userId_fkey (
-        name,
-        email
-      ),
-      ApprovedBy:User!StudentProfile_approvedById_fkey (
-        name
-      )
-    `)
-    .not('approvedById', 'is', null)
-    .order('updatedAt', { ascending: false })
-    .limit(5)
-
-  const { data: recentInvites } = await supabase
-    .from('RecruiterAccess')
-    .select(`
-      id,
-      acceptedAt,
-      recruiterEmail,
-      Company (name),
-      AcceptedBy:User!RecruiterAccess_acceptedByUserId_fkey (
-        name
-      )
-    `)
-    .not('acceptedAt', 'is', null)
-    .order('acceptedAt', { ascending: false })
-    .limit(5)
-
-  return {
-    recentApprovals: (recentApprovals ?? []) as RecentApprovalRaw[],
-    recentInvites: (recentInvites ?? []) as RecentInviteRaw[],
-  }
+  return AdminService.getRecentActivity(supabase)
 }
 
-type ChapterWithCount = ChapterRow & {
-  _count: { users: number }
-}
-
-export async function getChapters(): Promise<ChapterWithCount[]> {
+export async function getChapters(): Promise<Array<ChapterRow & { _count: { users: number } }>> {
   const supabase = await createClient()
-
-  const { data: chapters, error } = await supabase
-    .from('Chapter')
-    .select('*')
-    .order('name', { ascending: true })
-
-  if (error || !chapters) {
-    console.error('Failed to fetch chapters:', error)
-    return []
-  }
-
-  const chaptersWithCounts = await Promise.all(
-    chapters.map(async (chapter) => {
-      const { count } = await supabase
-        .from('StudentProfile')
-        .select('*', { count: 'exact', head: true })
-        .eq('chapterId', chapter.id)
-
-      return {
-        ...chapter,
-        _count: { users: count ?? 0 },
-      }
-    })
-  )
-
-  return chaptersWithCounts
+  return AdminService.getChapters(supabase)
 }
 
-const ADMIN_PROFILE_SELECT = `
-  userId,
-  major,
-  graduationYear,
-  linkedinUrl,
-  skills,
-  consentRecruiterVisibility,
-  isRecruiterVisible,
-  approvedById,
-  approvalStatus,
-  isFilled,
-  updatedAt,
-  createdAt,
-  consentDate,
-  chapterId,
-  emailNotificationsEnabled,
-  gender,
-  User:User!StudentProfile_userId_fkey (
-    id,
-    email,
-    name,
-    phone,
-    role,
-    createdAt,
-    updatedAt
-  ),
-  Chapter:Chapter!StudentProfile_chapterId_fkey (
-    id,
-    name,
-    university,
-    city,
-    region,
-    createdAt,
-    updatedAt
-  )
-`
-
-function mapAdminProfile(profile: any): MemberWithProfile | null {
-  const user = Array.isArray(profile.User) ? profile.User[0] : profile.User
-  const chapter = Array.isArray(profile.Chapter) ? profile.Chapter[0] : profile.Chapter
-
-  if (!user) return null
-
-  return {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    phone: user.phone ?? null,
-    role: user.role,
-    createdAt: user.createdAt,
-    updatedAt: user.updatedAt,
-    StudentProfile: {
-      userId: profile.userId,
-      major: profile.major,
-      graduationYear: profile.graduationYear,
-      linkedinUrl: profile.linkedinUrl,
-      skills: profile.skills,
-      consentRecruiterVisibility: profile.consentRecruiterVisibility,
-      isRecruiterVisible: profile.isRecruiterVisible,
-      approvedById: profile.approvedById,
-      approvalStatus: profile.approvalStatus,
-      isFilled: profile.isFilled,
-      updatedAt: profile.updatedAt,
-      createdAt: profile.createdAt,
-      consentDate: profile.consentDate,
-      chapterId: profile.chapterId,
-      emailNotificationsEnabled: profile.emailNotificationsEnabled,
-      gender: profile.gender,
-    },
-    Chapter: chapter ?? null,
-  }
-}
-
-export async function getChapterMembers(chapterId: string): Promise<MemberWithProfile[]> {
+export async function getChapterMembers(chapter_id: string): Promise<MemberWithProfile[]> {
   const supabase = await createClient()
-
-  const { data, error } = await supabase
-    .from('StudentProfile')
-    .select(ADMIN_PROFILE_SELECT)
-    .eq('chapterId', chapterId)
-    .order('createdAt', { ascending: false })
-
-  if (error || !data) {
-    console.error('[admin/getChapterMembers] Error:', error)
-    return []
-  }
-
-  return data
-    .map(mapAdminProfile)
-    .filter((m): m is MemberWithProfile => m !== null)
+  return AdminService.getChapterMembers(supabase, chapter_id)
 }
 
-export async function getChapterMemberCount(chapterId: string): Promise<number> {
+export async function getChapterMemberCount(chapter_id: string): Promise<number> {
   const supabase = await createClient()
-
-  const { count } = await supabase
-    .from('StudentProfile')
-    .select('*', { count: 'exact', head: true })
-    .eq('chapterId', chapterId)
-
-  return count ?? 0
+  return AdminService.getChapterMemberCount(supabase, chapter_id)
 }
 
 export function normalizeUserWithDetails(
   users: UserWithDetailsRaw[]
 ): UserWithDetails[] {
-  return users.map(user => {
-    const studentProfile = user.StudentProfile
-    const chapter = studentProfile?.Chapter ?? null
-
-    return {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-      phone: user.phone,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-      Chapter: chapter,
-      StudentProfile: studentProfile
-        ? {
-            isFilled: studentProfile.isFilled,
-            approvedById: studentProfile.approvedById,
-            isRecruiterVisible: studentProfile.isRecruiterVisible,
-            approvalStatus: studentProfile.approvalStatus,
-          }
-        : null,
-    }
-  })
+  return AdminService.normalizeUserWithDetails(users)
 }
 
 export async function getUsers(): Promise<UserWithDetails[]> {
   const supabase = await createClient()
-
-  const { data: users, error: usersError } = await supabase
-    .from('User')
-    .select('id, email, name, role, phone, createdAt, updatedAt')
-    .order('createdAt', { ascending: false })
-
-  if (usersError || !users) {
-    console.error('Failed to fetch users:', usersError)
-    return []
-  }
-
-  const { data: profiles, error: profilesError } = await supabase
-    .from('StudentProfile')
-    .select(`
-      userId,
-      isFilled,
-      approvedById,
-      isRecruiterVisible,
-      approvalStatus,
-      chapterId,
-      Chapter (name, university)
-    `)
-
-  if (profilesError) {
-    console.error('Failed to fetch profiles:', profilesError)
-    return []
-  }
-
-  const rawUsers: UserWithDetailsRaw[] = users.map(user => {
-    const profile = profiles?.find(p => p.userId === user.id) ?? null
-
-    const chapter = profile?.Chapter
-      ? Array.isArray(profile.Chapter)
-        ? profile.Chapter[0]
-        : profile.Chapter
-      : null
-
-    return {
-      ...user,
-      StudentProfile: profile
-        ? {
-            isFilled: profile.isFilled,
-            approvedById: profile.approvedById,
-            isRecruiterVisible: profile.isRecruiterVisible,
-            approvalStatus: profile.approvalStatus,
-            chapterId: profile.chapterId,
-            Chapter: chapter,
-          }
-        : null,
-    }
-  })
-
-  return normalizeUserWithDetails(rawUsers)
+  return AdminService.getUsers(supabase)
 }
 
 export async function getActivityLog(): Promise<ActivityItem[]> {
   const supabase = await createClient()
-
-  const { data: approvals, error: approvalsError } = await supabase
-    .from('StudentProfile')
-    .select(`
-      userId,
-      updatedAt,
-      chapterId,
-      Student:User!StudentProfile_userId_fkey (
-        name,
-        email
-      ),
-      Chapter (name),
-      ApprovedBy:User!StudentProfile_approvedById_fkey (
-        name,
-        email
-      )
-    `)
-    .not('approvedById', 'is', null)
-    .order('updatedAt', { ascending: false })
-    .limit(20)
-
-  if (approvalsError) {
-    console.error('[getActivityLog] Approvals error:', approvalsError)
-  }
-
-  const { data: invites, error: invitesError } = await supabase
-    .from('RecruiterAccess')
-    .select(`
-      id,
-      grantedAt,
-      acceptedAt,
-      revokedAt,
-      recruiterEmail,
-      Company (name),
-      GrantedBy:User!RecruiterAccess_grantedById_fkey (
-        name,
-        email
-      ),
-      AcceptedBy:User!RecruiterAccess_acceptedByUserId_fkey (
-        name,
-        email
-      ),
-      RevokedBy:User!RecruiterAccess_revokedById_fkey (
-        name,
-        email
-      )
-    `)
-    .order('grantedAt', { ascending: false })
-    .limit(20)
-
-  if (invitesError) {
-    console.error('[getActivityLog] Invites error:', invitesError)
-  }
-
-  const activities: ActivityItem[] = []
-
-  if (approvals) {
-    approvals.forEach((approval: any) => {
-      const student = Array.isArray(approval.Student) ? approval.Student[0] : approval.Student
-      const approver = Array.isArray(approval.ApprovedBy) ? approval.ApprovedBy[0] : approval.ApprovedBy
-      const chapter = Array.isArray(approval.Chapter) ? approval.Chapter[0] : approval.Chapter
-
-      activities.push({
-        id: `approval-${approval.userId}`,
-        type: 'approval',
-        timestamp: approval.updatedAt,
-        actor: approver ?? null,
-        target: student ?? null,
-        chapter: chapter ?? null,
-      })
-    })
-  }
-
-  if (invites) {
-    invites.forEach((invite: any) => {
-      const company = Array.isArray(invite.Company) ? invite.Company[0] : invite.Company
-      const grantedBy = Array.isArray(invite.GrantedBy) ? invite.GrantedBy[0] : invite.GrantedBy
-      const acceptedBy = Array.isArray(invite.AcceptedBy) ? invite.AcceptedBy[0] : invite.AcceptedBy
-      const revokedBy = Array.isArray(invite.RevokedBy) ? invite.RevokedBy[0] : invite.RevokedBy
-
-      activities.push({
-        id: `invite-sent-${invite.id}`,
-        type: 'invite_sent',
-        timestamp: invite.grantedAt,
-        actor: grantedBy ?? null,
-        target: { name: null, email: invite.recruiterEmail },
-        company: company ?? null,
-      })
-
-      if (invite.acceptedAt) {
-        activities.push({
-          id: `invite-accepted-${invite.id}`,
-          type: 'invite_accepted',
-          timestamp: invite.acceptedAt,
-          actor: acceptedBy ?? null,
-          target: { name: null, email: invite.recruiterEmail },
-          company: company ?? null,
-        })
-      }
-
-      if (invite.revokedAt) {
-        activities.push({
-          id: `invite-revoked-${invite.id}`,
-          type: 'invite_revoked',
-          timestamp: invite.revokedAt,
-          actor: revokedBy ?? null,
-          target: { name: null, email: invite.recruiterEmail },
-          company: company ?? null,
-        })
-      }
-    })
-  }
-
-  activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-
-  return activities.slice(0, 50)
-}
-
-function normalizeRecruiterInvites(invites: RecruiterInviteRaw[]): RecruiterInvite[] {
-  return invites.map(invite => ({
-    ...invite,
-    Company: Array.isArray(invite.Company) ? (invite.Company[0] ?? null) : null,
-    GrantedBy: Array.isArray(invite.GrantedBy) ? (invite.GrantedBy[0] ?? null) : null,
-    AcceptedBy: Array.isArray(invite.AcceptedBy) ? (invite.AcceptedBy[0] ?? null) : null,
-  }))
+  return AdminService.getActivityLog(supabase)
 }
 
 export async function getCompanies(): Promise<Company[]> {
   const supabase = await createClient()
+  return AdminService.getCompanies(supabase)
+}
 
-  const { data: companies, error } = await supabase
-    .from('Company')
-    .select(`
-      id,
-      name,
-      createdat,
-      createdbyid,
-      CreatedBy:User!Company_createdbyid_fkey (
-        name,
-        email
-      )
-    `)
-    .order('createdat', { ascending: false })
-
-  if (error || !companies) {
-    console.error('Failed to fetch companies:', error)
-    return []
-  }
-
-  const companiesWithCounts = await Promise.all(
-    (companies as CompanyRaw[]).map(async (company) => {
-      const { count: activeCount } = await supabase
-        .from('RecruiterAccess')
-        .select('*', { count: 'exact', head: true })
-        .eq('companyId', company.id)
-        .eq('isActive', true)
-
-      const { count: pendingCount } = await supabase
-        .from('RecruiterAccess')
-        .select('*', { count: 'exact', head: true })
-        .eq('companyId', company.id)
-        .is('acceptedAt', null)
-        .is('revokedAt', null)
-        .gt('inviteExpiresAt', new Date().toISOString())
-
-      return {
-        ...company,
-        CreatedBy: company.CreatedBy[0] ?? null,
-        _count: {
-          activeRecruiters: activeCount ?? 0,
-          pendingInvites: pendingCount ?? 0,
-        },
-      }
-    })
-  )
-
-  return companiesWithCounts as Company[]
+export function normalizeRecruiterInvites(
+  invites: Parameters<typeof AdminService.normalizeRecruiterInvites>[0]
+): RecruiterInvite[] {
+  return AdminService.normalizeRecruiterInvites(invites)
 }
 
 export async function getInvites(): Promise<RecruiterInvite[]> {
   const supabase = await createClient()
-
-  const { data: invites, error } = await supabase
-    .from('RecruiterAccess')
-    .select(`
-      id,
-      recruiterEmail,
-      isActive,
-      grantedAt,
-      inviteExpiresAt,
-      acceptedAt,
-      revokedAt,
-      companyId,
-      Company (name),
-      GrantedBy:User!RecruiterAccess_grantedById_fkey (
-        name,
-        email
-      ),
-      AcceptedBy:User!RecruiterAccess_acceptedByUserId_fkey (
-        name,
-        email
-      )
-    `)
-    .order('grantedAt', { ascending: false })
-
-  if (error || !invites) {
-    console.error('Failed to fetch invites:', error)
-    return []
-  }
-
-  return normalizeRecruiterInvites(invites as RecruiterInviteRaw[])
+  return AdminService.getInvites(supabase)
 }
-
-import type { UserWithFullProfile } from '@/lib/types'
 
 export async function getUserById(id: string): Promise<UserWithFullProfile | null> {
   const supabase = await createClient()
-
-  const { data: user, error } = await supabase
-    .from('User')
-    .select(`
-      *,
-      StudentProfile!StudentProfile_userId_fkey (
-        *,
-        Chapter (*)
-      )
-    `)
-    .eq('id', id)
-    .single()
-
-  if (error || !user) {
-    console.error('getUserById error:', error)
-    return null
-  }
-
-  return {
-    ...user,
-    StudentProfile: user.StudentProfile
-      ? {
-          ...user.StudentProfile,
-          Chapter: user.StudentProfile.Chapter ?? null,
-        }
-      : null,
-  }
+  return AdminService.getUserById(supabase, id)
 }
 
 export async function getChapterById(id: string): Promise<ChapterRow | null> {
   const supabase = await createClient()
-
-  const { data: chapter, error } = await supabase
-    .from('Chapter')
-    .select('*')
-    .eq('id', id)
-    .single()
-
-  if (error) {
-    console.error('Failed to fetch chapter:', error)
-    return null
-  }
-
-  return chapter
+  return AdminService.getChapterById(supabase, id)
 }

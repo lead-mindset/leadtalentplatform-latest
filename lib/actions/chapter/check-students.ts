@@ -1,220 +1,174 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
+import { requireUser } from '@/lib/auth'
+import { ChapterService } from '@/lib/services/chapter.service'
+import { sendMemberApprovalEmail } from '@/lib/emails/send-email'
 
-export async function approveMember(userId: string, approverId: string) {
-  try {
-    const supabase = await createClient()
-    
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user || user.id !== approverId) {
-      return { success: false, error: 'Unauthorized' }
+// ───────────────────────────────────────────────────────────────
+// Zod schemas (input validation at the controller boundary)
+// ───────────────────────────────────────────────────────────────
+
+const UserIdSchema = z.string().trim().min(1, 'User ID is required')
+const UserIdsSchema = z.array(UserIdSchema).min(1, 'At least one member is required')
+
+// ───────────────────────────────────────────────────────────────
+// Auth helper (thin — delegates to requireUser, adds chapter guard)
+// ───────────────────────────────────────────────────────────────
+
+async function assertCanManageMember(
+  targetUserId?: string
+): Promise<
+  | { success: true; supabase: Awaited<ReturnType<typeof requireUser>>['supabase']; user: Awaited<ReturnType<typeof requireUser>>['user']; chapterId: string | null }
+  | { success: false; error: string }
+> {
+  const { supabase, user } = await requireUser()
+
+  if (user.role !== 'admin' && user.role !== 'editor') {
+    return { success: false, error: 'Only admins and editors can manage members' }
+  }
+
+  let chapterId: string | null = null
+
+  if (user.role === 'editor') {
+    chapterId = await ChapterService.getStudentChapterId(supabase, user.id)
+    if (!chapterId) {
+      return { success: false, error: 'No chapter assigned' }
     }
 
-    const { data: approver, error: approverError } = await supabase
-      .from('User')
-      .select('id, role')
-      .eq('id', approverId)
-      .single()
-
-    if (approverError || !approver) {
-      return { success: false, error: 'User not found' }
-    }
-
-    if (approver.role !== 'admin' && approver.role !== 'editor') {
-      return { success: false, error: 'Only admins and editors can approve members' }
-    }
-
-    if (approver.role === 'editor') {
-      const { data: approverProfile } = await supabase
-        .from('StudentProfile')
-        .select('chapterId')
-        .eq('userId', approverId)
-        .single()
-
-      const { data: memberProfile } = await supabase
-        .from('StudentProfile')
-        .select('chapterId')
-        .eq('userId', userId)
-        .single()
-
-      if (!approverProfile || !memberProfile || memberProfile.chapterId !== approverProfile.chapterId) {
+    // If a specific target user is provided, verify they're in the editor's chapter
+    if (targetUserId) {
+      const targetChapterId = await ChapterService.getStudentChapterId(supabase, targetUserId)
+      if (!targetChapterId || targetChapterId !== chapterId) {
         return { success: false, error: 'Member not in your chapter' }
       }
     }
+  }
 
-    const { data: profile } = await supabase
-      .from('StudentProfile')
-      .select('isFilled')
-      .eq('userId', userId)
-      .single()
+  return { success: true, supabase, user, chapterId }
+}
 
-    if (!profile?.isFilled) {
-      return { success: false, error: 'Cannot approve incomplete profile' }
+function revalidateMemberPaths(userId: string) {
+  revalidatePath('/chapter/members')
+  revalidatePath('/chapter')
+  revalidatePath('/admin/users')
+  revalidatePath(`/admin/users/${userId}`)
+  revalidatePath('/admin/chapters')
+}
+
+// ───────────────────────────────────────────────────────────────
+// Actions (thin controllers: auth + Zod validation + service call + revalidate)
+// ───────────────────────────────────────────────────────────────
+
+export async function approveMember(user_id: string) {
+  try {
+    const parsed = UserIdSchema.safeParse(user_id)
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0]?.message ?? 'Invalid user ID' }
     }
 
-    const { error: updateError } = await supabase
-      .from('StudentProfile')
-      .update({ 
-        approvedById: approverId,
-        approvalStatus: 'approved',
-        isRecruiterVisible: true,
-        updatedAt: new Date().toISOString()
-      })
-      .eq('userId', userId)
+    const auth = await assertCanManageMember(parsed.data)
+    if (!auth.success) return auth
 
-    if (updateError) {
-      console.error('[approveMember] Error:', updateError)
-      return { success: false, error: 'Failed to approve member' }
+    const result = await ChapterService.approveMember(auth.supabase, parsed.data, auth.user.id)
+    if (!result.success) {
+      return { success: false, error: result.error }
     }
 
-    revalidatePath('/chapter/members')
-    revalidatePath('/chapter')
-    revalidatePath('/admin/users')
-    revalidatePath(`/admin/users/${userId}`)
-    revalidatePath('/admin/chapters')
-    
-    return { success: true }
-  } catch (error) {
-    console.error('[approveMember] Unexpected error:', error)
+    revalidateMemberPaths(parsed.data)
+
+    // Send approval email (fire-and-forget)
+    const [userData, chapterName] = await Promise.all([
+      ChapterService.getUserBasicInfo(auth.supabase, parsed.data),
+      auth.chapterId ? ChapterService.getChapterName(auth.supabase, auth.chapterId) : Promise.resolve(null),
+    ])
+
+    if (userData?.email && chapterName) {
+      sendMemberApprovalEmail(
+        userData.email,
+        userData.name || userData.email.split('@')[0],
+        result.member_id,
+        chapterName
+      ).catch(() => {})
+    }
+
+    return { success: true, member_id: result.member_id }
+  } catch {
     return { success: false, error: 'An unexpected error occurred' }
   }
 }
 
-export async function rejectMember(userId: string, rejecterId: string) {
+export async function approveMembersBulk(user_ids: string[]) {
   try {
-    const supabase = await createClient()
-    
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user || user.id !== rejecterId) {
-      return { success: false, error: 'Unauthorized' }
+    const parsed = UserIdsSchema.safeParse(user_ids)
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0]?.message ?? 'Invalid member list' }
     }
 
-    const { data: rejecter, error: rejecterError } = await supabase
-      .from('User')
-      .select('id, role')
-      .eq('id', rejecterId)
-      .single()
+    const auth = await assertCanManageMember()
+    if (!auth.success) return auth
 
-    if (rejecterError || !rejecter) {
-      return { success: false, error: 'User not found' }
+    const result = await ChapterService.approveMembersBulk(
+      auth.supabase,
+      parsed.data,
+      auth.user.id,
+      auth.chapterId
+    )
+
+    // Revalidate for all approved members
+    for (const userId of parsed.data) {
+      revalidateMemberPaths(userId)
     }
 
-    if (rejecter.role !== 'admin' && rejecter.role !== 'editor') {
-      return { success: false, error: 'Only admins and editors can reject members' }
-    }
-
-    if (rejecter.role === 'editor') {
-      const { data: rejecterProfile } = await supabase
-        .from('StudentProfile')
-        .select('chapterId')
-        .eq('userId', rejecterId)
-        .single()
-
-      const { data: memberProfile } = await supabase
-        .from('StudentProfile')
-        .select('chapterId')
-        .eq('userId', userId)
-        .single()
-
-      if (!rejecterProfile || !memberProfile || memberProfile.chapterId !== rejecterProfile.chapterId) {
-        return { success: false, error: 'Member not in your chapter' }
-      }
-    }
-
-    const { error: updateError } = await supabase
-      .from('StudentProfile')
-      .update({ 
-        approvalStatus: 'rejected',
-        isRecruiterVisible: false,
-        updatedAt: new Date().toISOString()
-      })
-      .eq('userId', userId)
-
-    if (updateError) {
-      console.error('[rejectMember] Error:', updateError)
-      return { success: false, error: 'Failed to reject member' }
-    }
-
-    revalidatePath('/chapter/members')
-    revalidatePath('/chapter')
-    revalidatePath('/admin/users')
-    revalidatePath(`/admin/users/${userId}`)
-    revalidatePath('/admin/chapters')
-    
-    return { success: true }
-  } catch (error) {
-    console.error('[rejectMember] Unexpected error:', error)
+    return result
+  } catch {
     return { success: false, error: 'An unexpected error occurred' }
   }
 }
 
-export async function revokeApproval(userId: string, revokerId: string) {
+export async function rejectMember(user_id: string, _reason?: string) {
   try {
-    const supabase = await createClient()
-    
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user || user.id !== revokerId) {
-      return { success: false, error: 'Unauthorized' }
+    void _reason // reserved for future use (audit trail)
+
+    const parsed = UserIdSchema.safeParse(user_id)
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0]?.message ?? 'Invalid user ID' }
     }
 
-    const { data: revoker, error: revokerError } = await supabase
-      .from('User')
-      .select('id, role')
-      .eq('id', revokerId)
-      .single()
+    const auth = await assertCanManageMember(parsed.data)
+    if (!auth.success) return auth
 
-    if (revokerError || !revoker) {
-      return { success: false, error: 'User not found' }
+    const result = await ChapterService.rejectMember(auth.supabase, parsed.data)
+    if (!result.success) {
+      return { success: false, error: result.error }
     }
 
-    if (revoker.role !== 'admin' && revoker.role !== 'editor') {
-      return { success: false, error: 'Only admins and editors can revoke approval' }
-    }
-
-    if (revoker.role === 'editor') {
-      const { data: revokerProfile } = await supabase
-        .from('StudentProfile')
-        .select('chapterId')
-        .eq('userId', revokerId)
-        .single()
-
-      const { data: memberProfile } = await supabase
-        .from('StudentProfile')
-        .select('chapterId')
-        .eq('userId', userId)
-        .single()
-
-      if (!revokerProfile || !memberProfile || memberProfile.chapterId !== revokerProfile.chapterId) {
-        return { success: false, error: 'Member not in your chapter' }
-      }
-    }
-
-    const { error: updateError } = await supabase
-      .from('StudentProfile')
-      .update({ 
-        approvedById: null,
-        approvalStatus: 'pending',
-        isRecruiterVisible: false,
-        updatedAt: new Date().toISOString()
-      })
-      .eq('userId', userId)
-
-    if (updateError) {
-      console.error('[revokeApproval] Error:', updateError)
-      return { success: false, error: 'Failed to revoke approval' }
-    }
-
-    revalidatePath('/chapter/members')
-    revalidatePath('/chapter')
-    revalidatePath('/admin/users')
-    revalidatePath(`/admin/users/${userId}`)
-    revalidatePath('/admin/chapters')
-    
+    revalidateMemberPaths(parsed.data)
     return { success: true }
-  } catch (error) {
-    console.error('[revokeApproval] Unexpected error:', error)
+  } catch {
+    return { success: false, error: 'An unexpected error occurred' }
+  }
+}
+
+export async function revokeApproval(user_id: string) {
+  try {
+    const parsed = UserIdSchema.safeParse(user_id)
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0]?.message ?? 'Invalid user ID' }
+    }
+
+    const auth = await assertCanManageMember(parsed.data)
+    if (!auth.success) return auth
+
+    const result = await ChapterService.revokeApproval(auth.supabase, parsed.data)
+    if (!result.success) {
+      return { success: false, error: result.error }
+    }
+
+    revalidateMemberPaths(parsed.data)
+    return { success: true }
+  } catch {
     return { success: false, error: 'An unexpected error occurred' }
   }
 }

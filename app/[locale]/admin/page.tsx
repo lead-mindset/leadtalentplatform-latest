@@ -2,316 +2,161 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { Suspense } from 'react'
-import { getSystemStats, getRecentActivity } from '@/lib/actions/admin/get-data'
+import {
+  getAdminDashboardStats,
+  getChapterActivityList,
+  getRecentJoins,
+  getPendingRecruiterRequests,
+} from '@/lib/actions/admin/get-data'
 import {
   Users,
   Building2,
-  Building,
-  Mail,
   TrendingUp,
-  AlertCircle,
-  CheckCircle2,
-  Clock,
-  Activity,
-  ArrowUpRight,
+  CalendarDays,
+  Mail,
 } from 'lucide-react'
 
 async function AdminStats() {
-  const stats = await getSystemStats()
+  const stats = await getAdminDashboardStats()
 
   return (
     <>
-      {(stats.pendingApprovals > 0 || stats.pendingInvites > 0) && (
-        <div className="space-y-4">
-          {stats.pendingApprovals > 0 && (
-            <Card className="border-warning-muted bg-warning-muted">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <AlertCircle className="h-5 w-5 text-warning" />
-                    <div>
-                      <CardTitle className="text-foreground">
-                        Pending Profile Approvals
-                      </CardTitle>
-                      <CardDescription>
-                        {stats.pendingApprovals}{' '}
-                        {stats.pendingApprovals === 1 ? 'student needs' : 'students need'} chapter approval
-                      </CardDescription>
-                    </div>
-                  </div>
-                  <Button asChild>
-                    <Link href="/admin/users?role=members">Review Users</Link>
-                  </Button>
-                </div>
-              </CardHeader>
-            </Card>
-          )}
-
-          {stats.pendingInvites > 0 && (
-            <Card className="border-info-muted bg-info-muted">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Mail className="h-5 w-5 text-info" />
-                    <div>
-                      <CardTitle className="text-foreground">Pending Invites</CardTitle>
-                      <CardDescription>
-                        {stats.pendingInvites}{' '}
-                        {stats.pendingInvites === 1 ? 'recruiter invite is' : 'recruiter invites are'} pending
-                      </CardDescription>
-                    </div>
-                  </div>
-                  <Button asChild variant="outline">
-                    <Link href="/admin/invites">View Invites</Link>
-                  </Button>
-                </div>
-              </CardHeader>
-            </Card>
-          )}
-        </div>
-      )}
-
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+            <Users className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalUsers}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.completeProfiles} complete profiles
-            </p>
+            <div className="text-2xl font-bold">{stats.total_students}</div>
+            <p className="text-xs text-muted-foreground">Members with student role</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Chapters</CardTitle>
+            <CardTitle className="text-sm font-medium">Active Chapters</CardTitle>
             <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalChapters}</div>
-            <p className="text-xs text-muted-foreground">Active chapters</p>
+            <div className="text-2xl font-bold">{stats.active_chapters}</div>
+            <p className="text-xs text-muted-foreground">Chapters with members</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Companies</CardTitle>
-            <Building className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Events This Month</CardTitle>
+            <CalendarDays className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalCompanies}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.activeRecruiters} active recruiters
-            </p>
+            <div className="text-2xl font-bold">{stats.events_this_month}</div>
+            <p className="text-xs text-muted-foreground">Events starting this month</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Visible Profiles</CardTitle>
+            <CardTitle className="text-sm font-medium">Recruiter Opt-in Rate</CardTitle>
             <TrendingUp className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.visibleProfiles}</div>
-            <p className="text-xs text-muted-foreground">Recruiter-visible students</p>
+            <div className="text-2xl font-bold">{stats.recruiter_opt_in_rate}%</div>
+            <p className="text-xs text-muted-foreground">Approved and recruiter-visible</p>
           </CardContent>
         </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>Common administrative tasks</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Button asChild variant="outline" className="h-auto flex-col items-start p-4">
-            <Link href="/admin/chapters">
-              <Building2 className="h-5 w-5 mb-2 text-info" />
-              <span className="font-semibold">Manage Chapters</span>
-              <span className="text-xs text-muted-foreground">{stats.totalChapters} chapters</span>
-            </Link>
-          </Button>
-
-          <Button asChild variant="outline" className="h-auto flex-col items-start p-4">
-            <Link href="/admin/companies">
-              <Building className="h-5 w-5 mb-2 text-chart-3" />
-              <span className="font-semibold">Manage Companies</span>
-              <span className="text-xs text-muted-foreground">{stats.totalCompanies} companies</span>
-            </Link>
-          </Button>
-
-          <Button asChild variant="outline" className="h-auto flex-col items-start p-4">
-            <Link href="/admin/users">
-              <Users className="h-5 w-5 mb-2 text-success" />
-              <span className="font-semibold">Manage Users</span>
-              <span className="text-xs text-muted-foreground">{stats.totalUsers} users</span>
-            </Link>
-          </Button>
-
-          <Button asChild variant="outline" className="h-auto flex-col items-start p-4">
-            <Link href="/admin/invites">
-              <Mail className="h-5 w-5 mb-2 text-warning" />
-              <span className="font-semibold">Manage Invites</span>
-              <span className="text-xs text-muted-foreground">
-                {stats.pendingInvites} pending
-              </span>
-            </Link>
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>System Health</CardTitle>
-          <CardDescription>Platform-wide metrics</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium">Profile Completion Rate</span>
-              <span className="text-sm text-muted-foreground">{stats.completionRate}%</span>
-            </div>
-            <div className="h-2 bg-muted rounded-full overflow-hidden">
-              <div
-                className="h-full bg-info transition-all duration-500"
-                style={{ width: `${stats.completionRate}%` }}
-              />
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {stats.completeProfiles} of {stats.totalProfiles} profiles complete
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 pt-2">
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">Pending Approvals</p>
-              <p className="text-2xl font-bold text-warning">
-                {stats.pendingApprovals}
-              </p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">Active Recruiters</p>
-              <p className="text-2xl font-bold">{stats.activeRecruiters}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </>
   )
 }
 
-async function RecentActivity() {
-  const { recentApprovals, recentInvites } = await getRecentActivity()
+async function AdminInsights() {
+  const [chapterActivity, recentJoins, pendingRecruiterRequests] = await Promise.all([
+    getChapterActivityList(),
+    getRecentJoins(10),
+    getPendingRecruiterRequests(),
+  ])
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className="grid gap-4 lg:grid-cols-3">
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Recent Approvals</CardTitle>
-              <CardDescription>Latest student profile approvals</CardDescription>
-            </div>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </div>
+          <CardTitle>Chapter Activity</CardTitle>
+          <CardDescription>Member count, latest event, pending approvals</CardDescription>
         </CardHeader>
         <CardContent>
-          {recentApprovals.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <CheckCircle2 className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>No recent approvals</p>
-            </div>
+          {chapterActivity.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No chapter activity yet.</p>
           ) : (
             <div className="space-y-4">
-              {recentApprovals.map((approval) => {
-                const user = Array.isArray(approval.User) ? approval.User[0] : approval.User
-                return (
-                  <div
-                    key={approval.userId}
-                    className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0"
-                  >
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-success-muted shrink-0">
-                        <CheckCircle2 className="h-4 w-4 text-success" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium truncate">
-                          {user?.name || 'Unknown User'}
-                        </p>
-                      </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground shrink-0 ml-2">
-                      {new Date(approval.updatedAt).toLocaleDateString()}
-                    </p>
+              {chapterActivity.slice(0, 8).map((chapter) => (
+                <div key={chapter.id} className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
+                  <div>
+                    <p className="text-sm font-medium">{chapter.name}</p>
+                    <p className="text-xs text-muted-foreground">{chapter.member_count} members • {chapter.pending_approvals} pending</p>
                   </div>
-                )
-              })}
+                  <p className="text-xs text-muted-foreground">
+                    {chapter.last_event_at ? new Date(chapter.last_event_at).toLocaleDateString() : 'No events'}
+                  </p>
+                </div>
+              ))}
             </div>
           )}
-          <div className="mt-4 pt-4 border-t">
-            <Button asChild variant="ghost" className="w-full">
-              <Link href="/admin/activity">
-                View All Activity <ArrowUpRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Recent Invites</CardTitle>
-              <CardDescription>Latest recruiter acceptances</CardDescription>
-            </div>
-            <Mail className="h-4 w-4 text-muted-foreground" />
-          </div>
+          <CardTitle>Recent Joins</CardTitle>
+          <CardDescription>Last 10 users that created accounts</CardDescription>
         </CardHeader>
         <CardContent>
-          {recentInvites.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Mail className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>No recent invites</p>
-            </div>
+          {recentJoins.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No recent joins.</p>
           ) : (
             <div className="space-y-4">
-              {recentInvites.map((invite) => {
-                const company = Array.isArray(invite.Company) ? invite.Company[0] : invite.Company
-                return (
-                  <div
-                    key={invite.id}
-                    className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0"
-                  >
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted  shrink-0">
-                        <Mail className="h-4 w-4 text-info" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium truncate">{invite.recruiterEmail}</p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {company?.name || 'Unknown company'}
-                        </p>
-                      </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground shrink-0 ml-2">
-                      {invite.acceptedAt && new Date(invite.acceptedAt).toLocaleDateString()}
-                    </p>
+              {recentJoins.map((join) => (
+                <div key={join.id} className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
+                  <div>
+                    <p className="text-sm font-medium">{join.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{join.email}</p>
                   </div>
-                )
-              })}
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(join.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+              ))}
             </div>
           )}
-          <div className="mt-4 pt-4 border-t">
-            <Button asChild variant="ghost" className="w-full">
-              <Link href="/admin/invites">
-                View All Invites <ArrowUpRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Pending Recruiter Requests</CardTitle>
+          <CardDescription>Invites awaiting acceptance</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {pendingRecruiterRequests.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No pending recruiter requests.</p>
+          ) : (
+            <div className="space-y-4">
+              {pendingRecruiterRequests.map((request) => (
+                <div key={request.id} className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{request.recruiter_email}</p>
+                    <p className="text-xs text-muted-foreground truncate">{request.company_name ?? 'Unknown company'}</p>
+                  </div>
+                  <Button asChild variant="outline" size="sm">
+                    <Link href="/admin/invites">
+                      <Mail className="h-3.5 w-3.5 mr-1" />
+                      Open
+                    </Link>
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
@@ -344,7 +189,7 @@ export default function AdminOverviewPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Admin Overview</h1>
         <p className="text-muted-foreground mt-2">
-          System-wide statistics and recent activity
+          KPIs, chapter activity, recent joins, and recruiter request queue.
         </p>
       </div>
 
@@ -353,7 +198,7 @@ export default function AdminOverviewPage() {
       </Suspense>
 
       <Suspense fallback={<LoadingSkeleton />}>
-        <RecentActivity />
+        <AdminInsights />
       </Suspense>
     </div>
   )

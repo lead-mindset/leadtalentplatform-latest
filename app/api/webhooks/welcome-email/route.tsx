@@ -30,7 +30,6 @@ export async function POST(request: Request) {
 
   const appUrl = process.env.FRONTEND_URL;
 
-  // Role-based dashboard URL
   const role = record.role ?? 'member';
   const dashboardPath =
     role === 'admin' ? 'admin' :

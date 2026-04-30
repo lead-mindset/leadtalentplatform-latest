@@ -1,13 +1,14 @@
 "use client";
 
 import { Link } from '@/i18n/routing';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import DesktopNav from "./DesktopMenu";
 import MobileNav from "./MobMenu";
 import type { MenuItem } from "./MobMenu";
-import { LanguageSwitcher } from '@/components/language-switcher';
+import { LanguageSwitcher } from '@/components/navigation/language-switcher';
 import { getInitials } from '@/lib/utils';
 
 interface NavBarProps {
@@ -19,9 +20,9 @@ interface NavBarProps {
 
 export default function NavBar({ user, menuItems, memberId, signInLabel }: NavBarProps) {
   return (
-    <nav className="flex items-center h-16 px-6 border-b bg-background relative z-50">
+    <nav className="flex items-center h-16 px-6 border-b bg-background relative z-50 font-montserrat">
       <Link href="/" className="flex items-center font-bold gap-2 shrink-0">
-        <img src="/leadl2.svg" alt="LEAD" width={32} height={32} />
+        <Image src="/leadl2.svg" alt="LEAD" width={32} height={32} />
         <span className='max-sm:hidden'>LEAD Talent Platform</span>
       </Link>
 

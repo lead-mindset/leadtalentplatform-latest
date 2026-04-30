@@ -15,7 +15,7 @@ export default async function CompanyLayout({ children }: CompanyLayoutProps) {
     <SidebarLayout
       sidebar={
         <BaseSidebar
-          userName={user.name}
+          userName={user.name ?? 'Recruiter'}
           userEmail={user.email}
           userRole="recruiter"
         >

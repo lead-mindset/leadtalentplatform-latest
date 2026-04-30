@@ -35,6 +35,19 @@ export function SidebarNavItem({
       ? pathname === item.href
       : pathname.startsWith(item.href)
 
+  const pathnameWithoutLocale = pathname.replace(/^\/[a-z]{2}/, '') || '/'
+  const adjustedIsActive = exact
+    ? pathnameWithoutLocale === item.href
+    : item.href === '/' || 
+      item.href === '/chapter' || 
+      item.href === '/admin' || 
+      item.href === '/company' || 
+      item.href === '/student'
+      ? pathnameWithoutLocale === item.href
+      : pathnameWithoutLocale.startsWith(item.href)
+
+  
+  
   const handleClick = () => {
     onClick?.()
     
@@ -45,7 +58,7 @@ export function SidebarNavItem({
 
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton asChild isActive={isActive}>
+      <SidebarMenuButton asChild isActive={adjustedIsActive}>
         <Link 
           href={item.href} 
           className="relative"
@@ -56,7 +69,7 @@ export function SidebarNavItem({
           
           {badge !== undefined && badge > 0 && (
             <span 
-              className="ml-auto min-w-5 rounded-full bg-secondary px-1.5 py-0.5 text-xs font-medium tabular-nums"
+              className="ml-auto min-w-5 rounded-full bg-sidebar-accent px-1.5 py-0.5 text-xs font-medium tabular-nums text-sidebar-accent-foreground"
               aria-label={`${badge} items`}
             >
               {badge > 99 ? '99+' : badge}

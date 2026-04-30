@@ -6,7 +6,7 @@ import {
   SidebarContent, 
   SidebarFooter 
 } from '@/components/ui/sidebar'
-import { LogoutButton } from '@/components/logout-button'
+import { LogoutButton } from '@/components/auth/logout-button'
 import { SidebarUserHeader } from './sidebar-user-header'
 import type { ReactNode } from 'react'
 import type { Role } from '@/lib/types'
@@ -26,8 +26,8 @@ export function BaseSidebar({
   children 
 }: BaseSidebarProps) {
   return (
-    <Sidebar className="border-r">
-      <SidebarHeader className="border-b">
+    <Sidebar className="border-r border-border/60 bg-gradient-card">
+      <SidebarHeader className="border-b border-border/60">
         <SidebarUserHeader 
           name={userName}
           email={userEmail}
@@ -40,7 +40,7 @@ export function BaseSidebar({
         {children}
       </SidebarContent>
 
-      <SidebarFooter className="border-t p-4">
+      <SidebarFooter className="border-t border-border/60 p-4">
         <LogoutButton className="w-full" />
       </SidebarFooter>
     </Sidebar>

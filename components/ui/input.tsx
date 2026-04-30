@@ -1,22 +1,102 @@
-import * as React from "react";
+import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
+import { cn } from "@/lib/utils"
 
-import { cn } from "@/lib/utils";
+const inputVariants = cva(
+  "w-full rounded-2xl bg-secondary/30 text-foreground placeholder:text-muted-foreground ring-1 ring-border/40 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/50 hover:ring-border disabled:opacity-50 disabled:cursor-not-allowed selection:bg-primary selection:text-primary-foreground md-input",
+  {
+    variants: {
+      size: {
+        default: "h-12 px-4 text-sm",
+        sm: "h-10 px-3 text-sm",
+        lg: "h-14 px-5 text-base",
+      },
+      state: {
+        default: "",
+        error: "ring-destructive/50 focus:ring-destructive",
+        success: "ring-success/50 focus:ring-success",
+      },
+      variant: {
+        default: "",
+        filled: "md-input-filled",
+        outlined: "md-input",
+      },
+    },
+    defaultVariants: {
+      size: "default",
+      state: "default",
+      variant: "default",
+    },
+  }
+)
 
-const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, type, ...props }, ref) => {
+export interface InputProps
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size">,
+    VariantProps<typeof inputVariants> {
+  label?: string
+  helperText?: React.ReactNode
+  errorText?: React.ReactNode
+  iconLeft?: React.ReactNode
+  iconRight?: React.ReactNode
+}
+
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, size, state, label, helperText, errorText, iconLeft, iconRight, type, ...props }, ref) => {
+    const inputState = errorText ? "error" : state
+
+    if (!label && !helperText && !errorText && !iconLeft && !iconRight) {
+      return (
+        <input
+          type={type}
+          data-slot="input"
+          className={cn(inputVariants({ size, state: inputState }), className)}
+          ref={ref}
+          {...props}
+        />
+      )
+    }
+
     return (
-      <input
-        type={type}
-        className={cn(
-          "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-          className,
+      <div className="w-full space-y-2">
+        {label && (
+          <label className="block text-sm font-medium text-muted-foreground">
+            {label}
+          </label>
         )}
-        ref={ref}
-        {...props}
-      />
-    );
-  },
-);
-Input.displayName = "Input";
+        <div className="relative">
+          {iconLeft && (
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+              {iconLeft}
+            </div>
+          )}
+          <input
+            type={type}
+            ref={ref}
+            data-slot="input"
+            className={cn(
+              inputVariants({ size, state: inputState }),
+              iconLeft && "pl-11",
+              iconRight && "pr-11",
+              className
+            )}
+            {...props}
+          />
+          {iconRight && (
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+              {iconRight}
+            </div>
+          )}
+        </div>
+        {helperText && !errorText && (
+          <p className="text-xs text-muted-foreground">{helperText}</p>
+        )}
+        {errorText && (
+          <p className="text-xs text-destructive">{errorText}</p>
+        )}
+      </div>
+    )
+  }
+)
+Input.displayName = "Input"
 
-export { Input };
+export { Input, inputVariants }

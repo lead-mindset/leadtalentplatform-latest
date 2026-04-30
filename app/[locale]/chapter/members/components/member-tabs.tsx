@@ -8,21 +8,15 @@ export function MembersTabs({ currentStatus }: { currentStatus: MemberFilterStat
   const router = useRouter()
 
   const handleTabChange = (value: string) => {
-    if (value === 'all') {
-      router.push('/chapter/members')
-    } else {
-      router.push(`/chapter/members?status=${value}`)
-    }
+    router.push(`/chapter/members?status=${value}`)
   }
 
   return (
     <Tabs value={currentStatus} onValueChange={handleTabChange}>
-      <TabsList className="grid w-full grid-cols-5">
-        <TabsTrigger value="all">All</TabsTrigger>
+      <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="pending">Pending</TabsTrigger>
-        <TabsTrigger value="approved">Approved</TabsTrigger>
+        <TabsTrigger value="active">Active</TabsTrigger>
         <TabsTrigger value="rejected">Rejected</TabsTrigger>
-        <TabsTrigger value="incomplete">Incomplete</TabsTrigger>
       </TabsList>
     </Tabs>
   )

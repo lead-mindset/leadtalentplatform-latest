@@ -25,11 +25,12 @@ export default async function ChapterDetailPage({
   const chapter = await getChapterById(id)
 
   if (!chapter) notFound()
-  const members = await getChapterMembers(chapter.id)
-  const approvedMembers  = members.filter(m => m.StudentProfile?.approvalStatus === 'approved')
-  const pendingMembers   = members.filter(m => m.StudentProfile?.isFilled && m.StudentProfile?.approvalStatus === 'pending')
-  const rejectedMembers  = members.filter(m => m.StudentProfile?.approvalStatus === 'rejected')
-  const incompleteMembers = members.filter(m => !m.StudentProfile?.isFilled)
+  const resolvedChapter = chapter ?? notFound()
+  const members = await getChapterMembers(resolvedChapter.id)
+  const approved_members  = members.filter(m => m.student_profile?.approval_status === 'approved')
+  const pending_members   = members.filter(m => m.student_profile?.is_filled && m.student_profile?.approval_status === 'pending')
+  const rejected_members  = members.filter(m => m.student_profile?.approval_status === 'rejected')
+  const incomplete_members = members.filter(m => !m.student_profile?.is_filled)
 
   return (
     <div className="space-y-8">
@@ -44,8 +45,8 @@ export default async function ChapterDetailPage({
 
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{chapter.name}</h1>
-          <p className="text-muted-foreground mt-2">{chapter.university}</p>
+          <h1 className="text-3xl font-bold tracking-tight">{resolvedChapter.name}</h1>
+          <p className="text-muted-foreground mt-2">{resolvedChapter.university}</p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -60,22 +61,22 @@ export default async function ChapterDetailPage({
             </CardContent>
           </Card>
 
-          {(chapter.city || chapter.region) && (
+          {(resolvedChapter.city || resolvedChapter.region) && (
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Location</CardTitle>
                 <MapPin className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{chapter.city || chapter.region}</div>
+                <div className="text-2xl font-bold">{resolvedChapter.city || resolvedChapter.region}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {chapter.city && chapter.region ? chapter.region : 'Chapter location'}
+                  {resolvedChapter.city && resolvedChapter.region ? resolvedChapter.region : 'Chapter location'}
                 </p>
               </CardContent>
             </Card>
           )}
 
-          {chapter.createdAt && (
+          {resolvedChapter.created_at && (
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Created</CardTitle>
@@ -83,7 +84,7 @@ export default async function ChapterDetailPage({
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {new Date(chapter.createdAt).toLocaleDateString('en-US', {
+                  {new Date(resolvedChapter.created_at).toLocaleDateString('en-US', {
                     month: 'short',
                     year: 'numeric',
                   })}
@@ -103,12 +104,12 @@ export default async function ChapterDetailPage({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Chapter ID</p>
-                <p className="text-sm font-mono mt-1">{chapter.id}</p>
+                <p className="text-sm font-mono mt-1">{resolvedChapter.id}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Last Updated</p>
                 <p className="text-sm mt-1">
-                  {new Date(chapter.updatedAt).toLocaleDateString('en-US', {
+                  {new Date(resolvedChapter.updated_at).toLocaleDateString('en-US', {
                     month: 'long',
                     day: 'numeric',
                     year: 'numeric',
@@ -123,17 +124,17 @@ export default async function ChapterDetailPage({
         <div className="space-y-4">
           <h2 className="text-2xl font-bold">Members ({members.length})</h2>
 
-          {pendingMembers.length > 0 && (
+          {pending_members.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Clock className="h-5 w-5 text-warning" />
-                  Pending Approval ({pendingMembers.length})
+                  Pending Approval ({pending_members.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {pendingMembers.map((member) => (
+                  {pending_members.map((member) => (
                     <div
                       key={member.id}
                       className="flex items-center justify-between p-3 border rounded-lg"
@@ -171,17 +172,17 @@ export default async function ChapterDetailPage({
             </Card>
           )}
 
-          {approvedMembers.length > 0 && (
+          {approved_members.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-success" />
-                  Approved Members ({approvedMembers.length})
+                  Approved Members ({approved_members.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {approvedMembers.map((member) => (
+                  {approved_members.map((member) => (
                     <div
                       key={member.id}
                       className="flex items-center justify-between p-3 border rounded-lg"
@@ -195,7 +196,7 @@ export default async function ChapterDetailPage({
                           >
                             Approved
                           </Badge>
-                          {member.StudentProfile?.isRecruiterVisible && (
+                          {member.student_profile?.is_recruiter_visible && (
                             <Badge variant="secondary">Visible to Recruiters</Badge>
                           )}
                         </div>
@@ -222,17 +223,17 @@ export default async function ChapterDetailPage({
             </Card>
           )}
 
-          {rejectedMembers.length > 0 && (
+          {rejected_members.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <XCircle className="h-5 w-5 text-destructive" />
-                  Rejected ({rejectedMembers.length})
+                  Rejected ({rejected_members.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {rejectedMembers.map((member) => (
+                  {rejected_members.map((member) => (
                     <div
                       key={member.id}
                       className="flex items-center justify-between p-3 border rounded-lg"
@@ -267,17 +268,17 @@ export default async function ChapterDetailPage({
             </Card>
           )}
 
-          {incompleteMembers.length > 0 && (
+          {incomplete_members.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <XCircle className="h-5 w-5 text-muted-foreground" />
-                  Incomplete Profiles ({incompleteMembers.length})
+                  Incomplete Profiles ({incomplete_members.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {incompleteMembers.map((member) => (
+                  {incomplete_members.map((member) => (
                     <div
                       key={member.id}
                       className="flex items-center justify-between p-3 border rounded-lg bg-muted/30"
@@ -312,7 +313,7 @@ export default async function ChapterDetailPage({
                 <Users className="h-12 w-12 text-muted-foreground mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No members yet</h3>
                 <p className="text-sm text-muted-foreground">
-                  This chapter doesn't have any members yet
+                  This chapter doesn&apos;t have any members yet
                 </p>
               </CardContent>
             </Card>

@@ -1,4 +1,4 @@
-// components/ui/sidebars/mobile-header.tsx
+
 'use client'
 
 import { useState, ReactNode, createContext, useContext } from "react"

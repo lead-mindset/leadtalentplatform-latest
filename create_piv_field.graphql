@@ -1,0 +1,14 @@
+mutation {
+  createProjectV2Field(input: {projectId: "PVT_kwHOBDREHs4BWPVo", dataType: SINGLE_SELECT, name: "PIV Status", singleSelectOptions: [{name: "Plan Ready", color: BLUE, description: "Ready for planning"}, {name: "Implementing", color: GREEN, description: "Currently implementing"}, {name: "Validate", color: YELLOW, description: "Ready for validation"}, {name: "Review", color: PURPLE, description: "In review"}]}) {
+    projectV2Field {
+      ... on ProjectV2SingleSelectField {
+        id
+        name
+        options {
+          id
+          name
+        }
+      }
+    }
+  }
+}

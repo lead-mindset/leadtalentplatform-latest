@@ -8,9 +8,9 @@ import { InviteActions } from './components/invite-actions'
 import { getInvites, getCompanies } from '@/lib/actions/admin/get-data'
 
 function getInviteStatus(invite: RecruiterInvite): 'pending' | 'accepted' | 'expired' | 'revoked' {
-  if (invite.revokedAt) return 'revoked'
-  if (invite.acceptedAt) return 'accepted'
-  if (invite.inviteExpiresAt && new Date(invite.inviteExpiresAt) < new Date()) return 'expired'
+  if (invite.revoked_at) return 'revoked'
+  if (invite.accepted_at) return 'accepted'
+  if (invite.invite_expires_at && new Date(invite.invite_expires_at) < new Date()) return 'expired'
   return 'pending'
 }
 
@@ -171,14 +171,14 @@ async function InvitesList() {
                         <td className="p-3">
                           <div className="flex items-center gap-2">
                             <Mail className="h-4 w-4 text-muted-foreground" />
-                            <span className="font-medium">{invite.recruiterEmail}</span>
+                            <span className="font-medium">{invite.recruiter_email}</span>
                           </div>
                         </td>
                         <td className="p-3">
                           <div className="flex items-center gap-2">
                             <Building className="h-4 w-4 text-muted-foreground" />
                             <span className="text-sm">
-                              {invite.Company?.name || 'Unknown'}
+                              {invite.company?.name || 'Unknown'}
                             </span>
                           </div>
                         </td>
@@ -190,21 +190,21 @@ async function InvitesList() {
                         </td>
                         <td className="p-3">
                           <div className="text-sm">
-                            <p className="font-medium">{invite.GrantedBy?.name || 'Unknown'}</p>
+                            <p className="font-medium">{invite.granted_by?.name || 'Unknown'}</p>
                             <p className="text-muted-foreground text-xs">
-                              {invite.GrantedBy?.email}
+                              {invite.granted_by?.email}
                             </p>
                           </div>
                         </td>
                         <td className="p-3">
                           <span className="text-sm text-muted-foreground">
-                            {new Date(invite.grantedAt).toLocaleDateString()}
+                            {new Date(invite.granted_at).toLocaleDateString()}
                           </span>
                         </td>
                         <td className="p-3">
                           <span className="text-sm text-muted-foreground">
-                            {invite.inviteExpiresAt
-                              ? new Date(invite.inviteExpiresAt).toLocaleDateString()
+                            {invite.invite_expires_at
+                              ? new Date(invite.invite_expires_at).toLocaleDateString()
                               : 'Never'}
                           </span>
                         </td>

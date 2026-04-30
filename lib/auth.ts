@@ -1,11 +1,22 @@
 import { createClient } from './supabase/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
-import type { UserRow, EditorSidebarStats, AdminStats, CompanyRow } from './types'
-import type { RecruiterUser } from './types'
+import type {
+  AdminStats,
+  CompanyRow,
+  Database,
+  EditorSidebarStats,
+  RecruiterAccessRow,
+  RecruiterUser,
+  UserRow,
+} from './types'
+
+const USER_SELECT = 'id, email, name, role, phone, gender, created_at, updated_at, deactivated_at'
+const RECRUITER_ACCESS_SELECT =
+  'id, company_id, is_active, granted_by_id, accepted_by_user_id, granted_at, accepted_at, revoked_at, invite_expires_at, recruiter_email, invite_token, revoked_by_id'
 
 export async function assertAdmin(
-  supabase: SupabaseClient
+  supabase: SupabaseClient<Database>
 ): Promise<UserRow> {
   const { data: auth, error } = await supabase.auth.getUser()
 
@@ -14,8 +25,8 @@ export async function assertAdmin(
   }
 
   const { data: dbUser, error: dbError } = await supabase
-    .from('User')
-    .select('*')
+    .from('user')
+    .select(USER_SELECT)
     .eq('id', auth.user.id)
     .single<UserRow>()
 
@@ -30,19 +41,22 @@ export async function assertAdmin(
   return dbUser
 }
 
-export async function requireAdmin() {
+export async function requireAdmin(): Promise<{
+  supabase: SupabaseClient<Database>
+  user: UserRow
+}> {
   const supabase = await createClient()
 
   try {
     const user = await assertAdmin(supabase)
     return { supabase, user }
-  } catch (err) {
-    redirect('/auth/login')
+  } catch {
+    return redirect('/auth/login')
   }
 }
 
 export async function requireUser(): Promise<{ 
-  supabase: SupabaseClient; 
+  supabase: SupabaseClient<Database>; 
   user: UserRow 
 }> {
   const supabase = await createClient()
@@ -53,8 +67,8 @@ export async function requireUser(): Promise<{
   }
 
   const { data: userData, error } = await supabase
-    .from('User')
-    .select('id, email, name, role, phone, createdAt, updatedAt')
+    .from('user')
+    .select(USER_SELECT)
     .eq('id', authUser.id)
     .single<UserRow>()
 
@@ -66,7 +80,7 @@ export async function requireUser(): Promise<{
 }
 
 export async function requireUserWithRole(role: string): Promise<{
-  supabase: SupabaseClient
+  supabase: SupabaseClient<Database>
   user: UserRow
 }> {
   const { supabase, user } = await requireUser()
@@ -78,57 +92,130 @@ export async function requireUserWithRole(role: string): Promise<{
   return { supabase, user }
 }
 
+export async function requireChapterMember(): Promise<{
+  supabase: SupabaseClient<Database>
+  user: UserRow
+  chapter_id: string
+}> {
+  const { supabase, user } = await requireUser()
+ 
+  // Allow admin, editor, and member roles to access chapter resources
+  if (!['admin', 'editor', 'member'].includes(user.role)) {
+    redirect('/student')
+  }
+
+  const { data: profile, error } = await supabase
+    .from('student_profile')
+    .select('chapter_id')
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (error || !profile?.chapter_id) {
+    redirect('/chapter')
+  }
+
+  return {
+    supabase,
+    user,
+    chapter_id: profile.chapter_id,
+  }
+}
+
+export async function canUserAccessChapter(
+  supabase: SupabaseClient<Database>,
+  user: UserRow,
+  targetChapterId: string,
+  eventId?: string
+): Promise<boolean> {
+  // Admin can access any chapter
+  if (user.role === 'admin') {
+    return true
+  }
+
+  // Get user's own chapter
+  const { data: profile } = await supabase
+    .from('student_profile')
+    .select('chapter_id')
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  const userChapterId = profile?.chapter_id
+  if (!userChapterId) {
+    return false
+  }
+
+  // Check if user's chapter is the target chapter
+  if (userChapterId === targetChapterId) {
+    return true
+  }
+
+  // Check if user's chapter is a collaborator on event (editors only)
+  if (eventId && user.role === 'editor') {
+    const { data: collaboration } = await supabase
+      .from('event_chapter')
+      .select('id')
+      .eq('event_id', eventId)
+      .eq('chapter_id', userChapterId)
+      .maybeSingle()
+    
+    return collaboration !== null
+  }
+
+  return false
+}
+
+
 export async function getSidebarStatsForEditor(
-  supabase: SupabaseClient,
-  chapterId: string
+  supabase: SupabaseClient<Database>,
+  chapter_id: string
 ): Promise<EditorSidebarStats> {
-  const { count, error: countError } = await supabase
-    .from('StudentProfile')
-    .select('*', { count: 'exact', head: true })
-    .eq('chapterId', chapterId)
-    .eq('approvalStatus', 'pending')
-    .eq('isFilled', true)
+const { count, error: countError } = await supabase
+    .from('student_profile')
+    .select('user_id', { count: 'exact', head: true })
+    .eq('chapter_id', chapter_id)
+    .eq('approval_status', 'pending')
+    .eq('is_filled', true)
     .limit(1)
 
   if (countError) {
     console.error('Error fetching pending approvals:', countError)
-    return { hasPendingApprovals: false }
+    return { has_pending_approvals: false }
   }
 
-  return { hasPendingApprovals: (count ?? 0) > 0 }
+  return { has_pending_approvals: (count ?? 0) > 0 }
 }
 
 export async function getSidebarStatsForAdmin(
-  supabase: SupabaseClient
+  supabase: SupabaseClient<Database>
 ): Promise<AdminStats> {
   const now = new Date().toISOString()
   
   const [
     { count: pendingInvitesCount, error: e1 },
     { count: pendingApprovalsCount, error: e2 },
-    { count: totalUsers, error: e3 },
-    { count: totalChapters, error: e4 },
-    { count: totalCompanies, error: e5 }
+    { count: total_users, error: e3 },
+    { count: total_chapters, error: e4 },
+    { count: total_companies, error: e5 }
   ] = await Promise.all([
-    supabase.from('RecruiterAccess')
-      .select('*', { count: 'exact', head: true })
-      .is('acceptedAt', null)
-      .is('revokedAt', null)
-      .gt('inviteExpiresAt', now),
+supabase.from('recruiter_access')
+      .select('id', { count: 'exact', head: true })
+      .is('accepted_at', null)
+      .is('revoked_at', null)
+      .gt('invite_expires_at', now),
 
-    supabase.from('StudentProfile')
-      .select('*', { count: 'exact', head: true })
-      .eq('approvalStatus', 'pending')
-      .eq('isFilled', true),
+    supabase.from('student_profile')
+      .select('user_id', { count: 'exact', head: true })
+      .eq('approval_status', 'pending')
+      .eq('is_filled', true),
 
-    supabase.from('User')
-      .select('*', { count: 'exact', head: true }),
+    supabase.from('user')
+      .select('id', { count: 'exact', head: true }),
       
-    supabase.from('Chapter')
-      .select('*', { count: 'exact', head: true }),
+    supabase.from('chapter')
+      .select('id', { count: 'exact', head: true }),
       
-    supabase.from('Company')
-      .select('*', { count: 'exact', head: true })
+    supabase.from('company')
+      .select('id', { count: 'exact', head: true })
   ])
 
   if (e1 || e2 || e3 || e4 || e5) {
@@ -137,16 +224,16 @@ export async function getSidebarStatsForAdmin(
   }
 
   return {
-    pendingInvites: pendingInvitesCount ?? 0,
-    pendingApprovals: pendingApprovalsCount ?? 0,
-    totalUsers: totalUsers ?? 0,
-    totalChapters: totalChapters ?? 0,
-    totalCompanies: totalCompanies ?? 0
+    pending_invites: pendingInvitesCount ?? 0,
+    pending_approvals: pendingApprovalsCount ?? 0,
+    total_users: total_users ?? 0,
+    total_chapters: total_chapters ?? 0,
+    total_companies: total_companies ?? 0
   }
 }
 
 export async function requireRecruiter(): Promise<{
-  supabase: SupabaseClient;
+  supabase: SupabaseClient<Database>;
   user: RecruiterUser;
 }> {
   const supabase = await createClient()
@@ -157,8 +244,8 @@ export async function requireRecruiter(): Promise<{
   }
 
   const { data: userData, error } = await supabase
-    .from('User')
-    .select('id, email, name, role, phone, createdAt, updatedAt')
+    .from('user')
+    .select(USER_SELECT)
     .eq('id', authUser.id)
     .eq('role', 'recruiter')
     .single<UserRow>()
@@ -167,33 +254,19 @@ export async function requireRecruiter(): Promise<{
     redirect('/auth/login')
   }
 
-  type ActiveAccessRaw = {
-    id: string;
-    companyId: string;
-    isActive: boolean;
-    grantedById: string;
-    acceptedByUserId: string | null;
-    grantedAt: string;
-    acceptedAt: string | null;
-    revokedAt: string | null;
-    inviteExpiresAt: string | null;
-    recruiterEmail: string;
-    inviteToken: string;
-    revokedById: string | null;
-    Company: { id: string; name: string; createdat: string; createdbyid: string }[];
+  type ActiveAccessRaw = RecruiterAccessRow & {
+    Company: { id: string; name: string; created_at: string; created_by_id: string }[];
   }
 
   const { data: activeAccess, error: accessError } = await supabase
-    .from('RecruiterAccess')
+    .from('recruiter_access')
     .select(`
-      id, companyId, isActive, grantedById,
-      acceptedByUserId, grantedAt, acceptedAt, revokedAt,
-      inviteExpiresAt, recruiterEmail, inviteToken, revokedById,
-      Company!inner (id, name, createdat, createdbyid)
+      ${RECRUITER_ACCESS_SELECT},
+      Company!inner (id, name, created_at, created_by_id)
     `)
-    .eq('acceptedByUserId', authUser.id)
-    .eq('isActive', true)
-    .is('revokedAt', null)
+    .eq('accepted_by_user_id', authUser.id)
+    .eq('is_active', true)
+    .is('revoked_at', null)
     .maybeSingle<ActiveAccessRaw>()
 
   if (accessError || !activeAccess) {
@@ -201,20 +274,16 @@ export async function requireRecruiter(): Promise<{
   }
 
   const { data: allAccess } = await supabase
-    .from('RecruiterAccess')
-    .select(`
-      id, companyId, isActive, grantedById,
-      acceptedByUserId, grantedAt, acceptedAt, revokedAt,
-      inviteExpiresAt, recruiterEmail, inviteToken, revokedById
-    `)
-    .eq('acceptedByUserId', authUser.id)
+    .from('recruiter_access')
+    .select(RECRUITER_ACCESS_SELECT)
+    .eq('accepted_by_user_id', authUser.id)
 
   const company = activeAccess.Company?.[0] ?? null
   
   const user: RecruiterUser = {
     ...userData,
-    RecruiterAccess: allAccess ?? [],
-    Company: company as CompanyRow | null,
+    recruiter_access: allAccess ?? [],
+    company: company as CompanyRow | null,
   }
 
   return { supabase, user }

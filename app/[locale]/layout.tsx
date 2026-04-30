@@ -1,23 +1,23 @@
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
-import { Raleway, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { Suspense } from 'react';
-import DebugConsole from '@/components/debug-console'
+import { Raleway, Montserrat } from "next/font/google";
+import { GoogleMapsProvider } from "@/components/global/google-maps-provider";
 
-const ralewaySans = Raleway({
+const raleway = Raleway({
   subsets: ["latin"],
-  variable: "--font-raleway-sans",
+  variable: "--font-raleway",
 });
 
-const geistMono = Geist_Mono({
+const montserrat = Montserrat({
   subsets: ["latin"],
-  variable: "--font-geist-mono",
+  variable: "--font-montserrat",
 });
 
 const defaultUrl = process.env.FRONTEND_URL
@@ -43,7 +43,7 @@ async function LocaleContent({
 }) {
   const { locale } = await params;
 
-  if (!routing.locales.includes(locale as any)) {
+  if (!routing.locales.includes(locale as (typeof routing.locales)[number])) {
     notFound();
   }
 
@@ -69,7 +69,7 @@ export default function LocaleLayout({
   return (
     <html
       lang={routing.defaultLocale}
-      className={`${ralewaySans.variable} ${geistMono.variable}`}
+      className={` ${raleway.variable} ${montserrat.variable}`}
       suppressHydrationWarning
     >
       <body className="antialiased">
@@ -79,14 +79,13 @@ export default function LocaleLayout({
           enableSystem
           disableTransitionOnChange
         >
-            {process.env.NEXT_PUBLIC_DEBUG === 'true' && <DebugConsole />}
-
-          <Suspense fallback={null}>
-            <LocaleContent params={params}>
-              
-              {children}
-            </LocaleContent>
-          </Suspense>
+          <GoogleMapsProvider>
+            <Suspense fallback={null}>
+              <LocaleContent params={params}>
+                {children}
+              </LocaleContent>
+            </Suspense>
+          </GoogleMapsProvider>
         </ThemeProvider>
       </body>
     </html>

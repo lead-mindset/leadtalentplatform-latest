@@ -1,15 +1,18 @@
 import {
   LayoutDashboard,
   User,
-  BookOpen,
+  UserCheck,
   Users,
   Building,
   Building2,
   Mail,
   Activity,
   Heart,
-  Settings,
-  Sheet
+  Sheet,
+  CalendarDays,
+  ScanLine,
+  CalendarSearch,
+  QrCode,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -21,6 +24,18 @@ export interface NavItemConfig {
 }
 
 export const STUDENT_NAV: NavItemConfig[] = [
+  {
+    id: 'browse-events',
+    label: 'Browse Events',
+    href: '/events',
+    icon: CalendarSearch,
+  },
+  {
+    id: 'my-events',
+    label: 'My Events',
+    href: '/student/events',
+    icon: QrCode,
+  },
   {
     id: 'profile',
     label: 'Profile',
@@ -43,19 +58,29 @@ export const CHAPTER_NAV: NavItemConfig[] = [
     icon: LayoutDashboard,
   },
   {
-    id: 'students',
+    id: 'events',
+    label: 'Events',
+    href: '/chapter/events',
+    icon: CalendarDays,
+  },
+  {
+    id: 'checkin',
+    label: 'Check-in',
+    href: '/chapter/checkin',
+    icon: ScanLine,
+  },
+  {
+    id: 'members',
     label: 'Members',
     href: '/chapter/members',
-    icon: BookOpen,
+    icon: UserCheck,
   },
-  /* add settings later
   {
-    id: 'settings',
-    label: 'Settings',
-    href: '/chapter/settings',
-    icon: Settings,
+    id: 'my-profile',
+    label: 'My Profile',
+    href: '/student/profile',
+    icon: User,
   },
-  */
 ]
 
 export const ADMIN_NAV: NavItemConfig[] = [
@@ -64,6 +89,12 @@ export const ADMIN_NAV: NavItemConfig[] = [
     label: 'Overview',
     href: '/admin',
     icon: LayoutDashboard,
+  },
+  {
+    id: 'events',
+    label: 'Events',
+    href: '/admin/events',
+    icon: CalendarDays,
   },
   {
     id: 'chapters',

@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Auto-generate types after pulling changes
+echo "Checking for database schema changes..."
+if git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD | grep --quiet "supabase/migrations/"; then
+  echo "Database migrations detected. Regenerating types..."
+  npm run types:generate
+  echo "✓ Types updated successfully"
+fi

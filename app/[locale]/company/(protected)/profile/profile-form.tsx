@@ -15,18 +15,18 @@ interface ProfileFormProps {
     email: string
     name: string
     phone: string | null
-    createdAt: string
-    updatedAt: string
+    created_at: string
+    updated_at: string
   }
   company: {
     id: string
     name: string
-    createdat: string
-    createdbyid: string
+    created_at: string
+    created_by_id: string
   } | null
   accessInfo: {
-    accessId: string
-    acceptedAt: string | null
+    access_id: string
+    accepted_at: string | null
   } | null
 }
 
@@ -85,9 +85,9 @@ export default function ProfileForm({ user, company, accessInfo }: ProfileFormPr
               <div>
                 <p className="font-semibold">{company.name}</p>
                 <p className="text-sm text-muted-foreground">{user.email}</p>
-                {accessInfo?.acceptedAt && (
+                {accessInfo?.accepted_at && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    Access granted on {new Date(accessInfo.acceptedAt).toLocaleDateString('en-US', {
+                    Access granted on {new Date(accessInfo.accepted_at).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric'

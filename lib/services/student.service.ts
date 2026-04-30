@@ -1,0 +1,245 @@
+import { SupabaseClient } from '@supabase/supabase-js';
+import { Database } from '@/lib/database.generated';
+
+/**
+ * Service Layer: Student Domain
+ *
+ * All student profile operations — read, update, and resume upload —
+ * are encapsulated here to keep Server Actions thin and testable.
+ *
+ * Design decisions:
+ * - updateProfile performs a multi-table upsert (user + student_profile)
+ *   because profile data is split across two tables for role-based access.
+ * - Resume uploads go to Supabase Storage ('resumes' bucket) and metadata
+ *   is tracked in the `resume` table for recruiter visibility controls.
+ * - All methods accept a SupabaseClient instance to remain framework-agnostic
+ *   and enable easy mocking in unit tests.
+ */
+
+export type UpdateProfileParams = {
+  userId: string;
+  fullName: string;
+  phone: string;
+  career: string;
+  gender?: string;
+  graduation_year: number;
+  skills: string[];
+  linkedinUrl: string;
+  consentRecruiterVisibility: boolean;
+  emailNotificationsEnabled: boolean;
+  chapter_id: string;
+  resumePdf?: File;
+};
+
+export const StudentService = {
+  async getProfile(supabase: SupabaseClient<Database>, userId: string) {
+    const { data: profile, error } = await supabase
+      .from('student_profile')
+      .select(
+        'user_id, chapter_id, major, graduation_year, skills, linkedin_url, consent_recruiter_visibility, email_notifications_enabled, gender, member_id, approval_status'
+      )
+      .eq('user_id', userId)
+      .single();
+
+    if (error) throw new Error('Student profile not found');
+    return profile;
+  },
+
+  async updateProfile(supabase: SupabaseClient<Database>, params: UpdateProfileParams) {
+    const now = new Date().toISOString();
+
+    // 1. Update User Record
+    const { error: userError } = await supabase
+      .from('user')
+      .update({
+        name: params.fullName,
+        phone: params.phone,
+        gender: params.gender,
+        updated_at: now,
+      })
+      .eq('id', params.userId);
+
+    if (userError) throw userError;
+
+    // 2. Upsert Student Profile
+    const { error: profileError } = await supabase.from('student_profile').upsert(
+      {
+        user_id: params.userId,
+        major: params.career,
+        gender: params.gender,
+        graduation_year: params.graduation_year,
+        skills: params.skills,
+        linkedin_url: params.linkedinUrl,
+        consent_recruiter_visibility: params.consentRecruiterVisibility,
+        consent_date: params.consentRecruiterVisibility ? now : null,
+        email_notifications_enabled: params.emailNotificationsEnabled,
+        updated_at: now,
+        chapter_id: params.chapter_id,
+      },
+      { onConflict: 'user_id' }
+    );
+
+    if (profileError) throw profileError;
+
+    // 3. Handle Resume if provided
+    if (params.resumePdf) {
+      await this.uploadResume(supabase, params.userId, params.resumePdf);
+    }
+
+    return { success: true };
+  },
+
+  async getResume(supabase: SupabaseClient<Database>, userId: string) {
+    const { data: resume, error } = await supabase
+      .from('resume')
+      .select('student_id, file_url, file_name, file_size, uploaded_at')
+      .eq('student_id', userId)
+      .single();
+
+    if (error) return null;
+    return resume;
+  },
+
+  async uploadResume(supabase: SupabaseClient<Database>, userId: string, file: File) {
+    const now = new Date().toISOString();
+    const filePath = `${userId}/${crypto.randomUUID()}.pdf`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('resumes')
+      .upload(filePath, file, {
+        contentType: 'application/pdf',
+        upsert: true,
+      });
+
+    if (uploadError) throw uploadError;
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from('resumes').getPublicUrl(filePath);
+
+    const { error: dbError } = await supabase.from('resume').upsert(
+      {
+        student_id: userId,
+        file_url: publicUrl,
+        file_name: file.name,
+        file_size: file.size,
+        uploaded_at: now,
+      },
+      { onConflict: 'student_id' }
+    );
+
+    if (dbError) throw dbError;
+    return publicUrl;
+  },
+
+  async saveResume(
+    supabase: SupabaseClient<Database>,
+    userId: string,
+    file: File
+  ): Promise<{ success: true; publicUrl: string } | { success: false; error: string }> {
+    try {
+      const publicUrl = await this.uploadResume(supabase, userId, file);
+      return { success: true, publicUrl };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Upload failed';
+      return { success: false, error: message };
+    }
+  },
+
+  async submitOnboarding(
+    supabase: SupabaseClient<Database>,
+    params: {
+      userId: string
+      email: string
+      fullName: string
+      phone: string
+      career: string
+      gender: string
+      graduationYear: number
+      skills: string[]
+      linkedinUrl: string
+      consentRecruiterVisibility: boolean
+      emailNotificationsEnabled: boolean
+      leadChapter: string
+      resumePdf?: File | null
+      generateMemberId: (supabase: SupabaseClient<Database>) => Promise<string>
+    }
+  ): Promise<{ success: true } | { success: false; error: string }> {
+    const now = new Date().toISOString()
+
+    // Update User table
+    const { error: userError } = await supabase
+      .from('user')
+      .upsert({
+        id: params.userId,
+        email: params.email,
+        name: params.fullName,
+        phone: params.phone,
+        gender: params.gender,
+        updated_at: now,
+      })
+      .eq('id', params.userId)
+
+    if (userError) {
+      return { success: false, error: userError.message }
+    }
+
+    const { data: existingUser, error: existingUserError } = await supabase
+      .from('user')
+      .select('id')
+      .eq('id', params.userId)
+      .single()
+
+    if (existingUserError) {
+      return { success: false, error: existingUserError.message }
+    }
+
+    if (!existingUser) {
+      return { success: false, error: 'User row does not exist for StudentProfile insert' }
+    }
+
+    const { data: existingProfile, error: existingProfileError } = await supabase
+      .from('student_profile')
+      .select('member_id')
+      .eq('user_id', params.userId)
+      .maybeSingle()
+
+    if (existingProfileError) {
+      return { success: false, error: existingProfileError.message }
+    }
+
+    const memberId = existingProfile?.member_id ?? await params.generateMemberId(supabase)
+
+    const { error: profileError } = await supabase
+      .from('student_profile')
+      .upsert({
+        user_id: params.userId,
+        major: params.career,
+        gender: params.gender,
+        graduation_year: params.graduationYear,
+        linkedin_url: params.linkedinUrl,
+        skills: params.skills,
+        consent_recruiter_visibility: params.consentRecruiterVisibility,
+        consent_date: params.consentRecruiterVisibility ? now : null,
+        email_notifications_enabled: params.emailNotificationsEnabled,
+        updated_at: now,
+        is_filled: true,
+        chapter_id: params.leadChapter,
+        member_id: memberId,
+      })
+
+    if (profileError) {
+      return { success: false, error: profileError.message }
+    }
+
+    // Handle resume upload if provided
+    if (params.resumePdf) {
+      const resumeResult = await this.saveResume(supabase, params.userId, params.resumePdf)
+      if (!resumeResult.success) {
+        return { success: false, error: resumeResult.error }
+      }
+    }
+
+    return { success: true }
+  },
+};

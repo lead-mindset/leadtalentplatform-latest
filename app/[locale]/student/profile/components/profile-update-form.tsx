@@ -4,14 +4,15 @@ import { useForm, FormProvider, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useState, useEffect } from 'react'
-import { X, Loader2, Save } from 'lucide-react'
+import { X } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
+import { toast } from 'sonner'
 import { Checkbox } from "@/components/ui/checkbox"
 import { FormInput } from '@/components/ui/stepper'
 import { createProfileUpdateSchema, ProfileData } from '@/lib/memberschema'
 import { Button } from '@/components/ui/button'
 import CareerCommandSelect from '@/components/ui/career-combobox'
 import { useRouter } from 'next/navigation'
-import { getResume } from '@/lib/actions/student/profile'
 import { updateProfile } from '@/lib/actions/student/profile'
 import { useTranslations } from 'next-intl'
 import { useTranslatedSkills, useTranslatedChapters } from '@/lib/use-translated-options'
@@ -33,38 +34,22 @@ interface ProfileUpdateFormProps {
   initialData: ProfileData
 }
 
-export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProps) {
+export default function ProfileUpdateForm({
+  initialData,
+}: ProfileUpdateFormProps) {
   const t = useTranslations('profile')
   const tCommon = useTranslations('common')
-  const tOnboarding = useTranslations('onboarding')
+
   const tValidation = useTranslations()
   const translatedGender = useTranslatedGender()
   const translatedSkills = useTranslatedSkills()
   const translatedChapters = useTranslatedChapters()
 
-  const [fileName, setFileName] = useState('')
-  const [isUploading, setIsUploading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [resumeUrl, setResumeUrl] = useState<string | null>(null)
   const router = useRouter()
 
   const profileUpdateSchema = createProfileUpdateSchema(tValidation)
   type OnboardingValues = z.infer<typeof profileUpdateSchema>
-
-  useEffect(() => {
-    async function fetchResume() {
-      if (!initialData?.id) return
-
-      const data = await getResume(initialData.id)
-
-      if (data) {
-        setResumeUrl(data.fileUrl)
-        setFileName(data.fileName || '')
-      }
-    }
-
-    fetchResume()
-  }, [initialData?.id])
 
   const methods = useForm<OnboardingValues>({
     resolver: zodResolver(profileUpdateSchema),
@@ -73,8 +58,8 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
       full_name: initialData?.full_name || '',
       phone: initialData?.phone || '',
       career: initialData?.career || '',
-      gender: initialData?.gender ?? undefined,
-      graduationYear: initialData?.graduationYear || 0,
+      gender: initialData?.gender || undefined,
+      graduation_year: initialData?.graduation_year || 0,
       skills: initialData?.skills || [],
       lead_chapter: initialData?.lead_chapter || '',
       linkedin_url: initialData?.linkedin_url || '',
@@ -88,8 +73,25 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
   const {
     control,
     handleSubmit,
-    formState: { errors, isDirty },
+    reset,
+    formState: { errors },
   } = methods
+
+  useEffect(() => {
+    reset({
+      full_name: initialData?.full_name || '',
+      phone: initialData?.phone || '',
+      career: initialData?.career || '',
+      gender: initialData?.gender || undefined,
+      graduation_year: initialData?.graduation_year || 0,
+      skills: initialData?.skills || [],
+      lead_chapter: initialData?.lead_chapter || '',
+      linkedin_url: initialData?.linkedin_url || '',
+      resume_pdf: undefined,
+      consentRecruiterVisibility: initialData?.consentRecruiterVisibility || false,
+      emailNotificationsEnabled: initialData?.emailNotificationsEnabled ?? true,
+    })
+  }, [initialData, reset])
 
   const onSubmit: SubmitHandler<OnboardingValues> = async (data) => {
     setIsSaving(true)
@@ -101,7 +103,7 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
       formData.append("phone", data.phone)
       formData.append("lead_chapter", data.lead_chapter || "")
       formData.append("career", data.career)
-      formData.append("graduationYear", String(data.graduationYear || 0))
+      formData.append("graduation_year", String(data.graduation_year || 0))
       formData.append("skills", JSON.stringify(data.skills))
       formData.append("linkedin_url", data.linkedin_url || "")
       formData.append("consentRecruiterVisibility", String(data.consentRecruiterVisibility))
@@ -118,11 +120,11 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
         throw new Error(result.error ?? t('updateFailed'))
       }
 
-      alert(t('updateSuccess'))
+      toast.success(t('updateSuccess'))
       router.refresh()
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err)
-      alert(t('updateError'))
+      toast.error(err instanceof Error ? err.message : t('updateError'))
     } finally {
       setIsSaving(false)
     }
@@ -131,6 +133,26 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
   return (
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-12">
+        {initialData.approvalStatus === 'approved' && initialData.memberId ? (
+          <div className="rounded-lg bg-primary/5 border border-primary/10 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Icons.IdCard className="h-4 w-4 text-primary" />
+              <p className="text-sm text-muted-foreground">Your Member ID</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <code className="px-3 py-1.5 bg-background rounded-md border border-border text-lg font-mono font-semibold text-primary">
+                {initialData.memberId}
+              </code>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">This is your unique identifier as a LEAD member</p>
+          </div>
+        ) : initialData.approvalStatus === 'pending' && (
+          <div className="rounded-lg bg-muted p-4">
+            <p className="text-sm text-muted-foreground">
+              Member ID assigned after your application is reviewed.
+            </p>
+          </div>
+        )}
         <div className="space-y-6">
           <div className="space-y-3">
             <div className="flex items-center gap-3">
@@ -266,10 +288,10 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
 
             <FormInput
               label={t('academic.graduationYear')}
-              name="graduationYear"
+              name="graduation_year"
               type="number"
               validation={{ valueAsNumber: true }}
-              error={errors.graduationYear?.message}
+              error={errors.graduation_year?.message}
             />
 
             <Controller
@@ -422,12 +444,12 @@ export default function ProfileUpdateForm({ initialData }: ProfileUpdateFormProp
           >
             {isSaving ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Icons.Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {tCommon('loading')}
               </>
             ) : (
               <>
-                <Save className="mr-2 h-4 w-4" />
+                <Icons.Save className="mr-2 h-4 w-4" />
                 {tCommon('save')}
               </>
             )}

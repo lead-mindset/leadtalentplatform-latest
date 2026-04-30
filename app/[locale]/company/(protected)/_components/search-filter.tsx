@@ -20,7 +20,7 @@ interface SearchFilterProps {
 
 export interface FilterState {
   major?: string;
-  graduationYear?: string;
+  graduation_year?: string;
   chapter?: string;
   skills?: string[];
 }
@@ -105,9 +105,9 @@ export function SearchFilter({ onSearch, onFilterChange }: SearchFilterProps) {
           <div>
             <label className="text-sm font-medium mb-2 block">Graduation Year</label>
             <Select
-              value={filters.graduationYear}
+              value={filters.graduation_year}
               onValueChange={(value) => {
-                const newFilters = { ...filters, graduationYear: value };
+                const newFilters = { ...filters, graduation_year: value };
                 setFilters(newFilters);
                 onFilterChange?.(newFilters);
               }}
