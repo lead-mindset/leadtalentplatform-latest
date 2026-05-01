@@ -6,13 +6,14 @@ import { z } from 'zod'
 import { AdminService } from '@/lib/services/admin.service'
 
 
-export type {
-  ChapterSortKey,
-  ChaptersFilters,
-  ChaptersPagination,
-  ChapterListItem,
-  ChaptersListResponse,
-  ChapterFormInput,
+export {
+  type ChapterSortKey,
+  type ChaptersFilters,
+  type ChaptersPagination,
+  type ChapterListItem,
+  type ChaptersListResponse,
+  type ChapterFormInput,
+  type SortOrder,
 } from '@/lib/services/admin.service'
 
 type ActionResult = { success: true } | { success: false; error: string }
