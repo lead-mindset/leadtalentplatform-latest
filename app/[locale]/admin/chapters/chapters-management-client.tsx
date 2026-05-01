@@ -34,8 +34,8 @@ import {
   deleteChapter,
   removeEditor,
   updateChapter,
-  type ChapterListItem,
 } from '@/lib/actions/admin/chapters'
+import type { ChapterListItem } from '@/lib/services/admin.service'
 
 type AvailableEditor = {
   id: string

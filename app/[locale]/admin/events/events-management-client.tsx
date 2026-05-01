@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import type { AdminEventListItem } from '@/lib/actions/admin/events'
+import type { AdminEventListItem } from '@/lib/services/admin.service'
 
 type Props = {
   items: AdminEventListItem[]

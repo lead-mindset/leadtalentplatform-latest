@@ -3,21 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/auth'
 import { AdminService } from '@/lib/services/admin.service'
-import type {
-  ActionResult,
-  BulkAction,
-  UsersFilters,
-  UsersListResponse,
-  UsersPagination,
-} from '@/lib/services/admin.service'
 import type { Role } from '@/lib/types'
-
-export type {
-  AdminUserListItem,
-  ProfileStatusFilter,
-  SortOrder,
-  UserSortKey,
-} from '@/lib/services/admin.service'
 
 export async function getUsersList(
   filters: UsersFilters,

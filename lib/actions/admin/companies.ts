@@ -5,15 +5,6 @@ import { requireAdmin } from '@/lib/auth'
 import { z } from 'zod'
 import { AdminService } from '@/lib/services/admin.service'
 
-export type {
-  CompanySortKey,
-  CompaniesFilters,
-  CompaniesPagination,
-  CompanyListItem,
-  CompanyDetail,
-  CompaniesListResponse,
-} from '@/lib/services/admin.service'
-
 type ActionResult = { success: true } | { success: false; error: string }
 type InviteResult = ActionResult & { inviteLink?: string }
 

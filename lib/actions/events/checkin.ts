@@ -1,16 +1,8 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import {
-  EventService,
-  type CheckInCounter,
-  type CheckInCandidate,
-  type CheckInResponse,
-  type CheckInSearchResult,
-} from '@/lib/services/event.service'
+import { EventService } from '@/lib/services/event.service'
 import { assertCanManageEvent } from './access'
-
-export type { CheckInCounter, CheckInCandidate, CheckInResponse, CheckInSearchResult }
 
 async function assertEventAccess(eventId: string) {
   const access = await assertCanManageEvent(eventId)

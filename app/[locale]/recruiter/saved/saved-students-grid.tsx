@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { StudentCard } from '../browse/student-card'
-import type { TalentPoolStudent } from '@/lib/actions/recruiter/talent-pool'
+import type { TalentPoolStudent } from '@/lib/services/recruiter.service'
 
 type SavedStudentsGridProps = {
   initialStudents: TalentPoolStudent[]

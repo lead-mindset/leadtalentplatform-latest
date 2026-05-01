@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-export const dynamic = "force-dynamic";
 import { requireUser } from "@/lib/auth";
 import ProfileUpdateForm from "./components/profile-update-form";
 import type { ProfileData } from "@/lib/memberschema";
