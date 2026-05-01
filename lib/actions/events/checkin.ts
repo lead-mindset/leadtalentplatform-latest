@@ -10,7 +10,7 @@ import {
 } from '@/lib/services/event.service'
 import { assertCanManageEvent } from './access'
 
-export type { CheckInCounter, CheckInCandidate, CheckInResponse, CheckInSearchResult }
+export { type CheckInCounter, type CheckInCandidate, type CheckInResponse, type CheckInSearchResult }
 
 async function assertEventAccess(eventId: string) {
   const access = await assertCanManageEvent(eventId)
