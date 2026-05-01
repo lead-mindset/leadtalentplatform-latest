@@ -4,9 +4,6 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { RecruiterService } from '@/lib/services/recruiter.service'
 import { CompanyService } from '@/lib/services/company.service'
-import type { TalentPoolFilters, TalentPoolPagination, TalentPoolStudent } from '@/lib/services/recruiter.service'
-
-export type { TalentPoolFilters, TalentPoolPagination, TalentPoolStudent }
 
 export async function getTalentPool(filters: TalentPoolFilters, pagination?: TalentPoolPagination) {
   const supabase = await createClient()

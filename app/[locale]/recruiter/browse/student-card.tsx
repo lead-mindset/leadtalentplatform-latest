@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { RecruiterSaveStudentButton } from './recruiter-save-student-button'
-import type { TalentPoolStudent } from '@/lib/actions/recruiter/talent-pool'
+import type { TalentPoolStudent } from '@/lib/services/recruiter.service'
 import Link from 'next/link'
 
 type StudentCardProps = {

@@ -1,8 +1,6 @@
 import { getChapters } from '@/lib/actions/admin/get-data'
-import {
-  getUsersList,
-  type ProfileStatusFilter,
-} from '@/lib/actions/admin/users'
+import { getUsersList } from '@/lib/actions/admin/users'
+import type { ProfileStatusFilter } from '@/lib/services/admin.service'
 import type { Role } from '@/lib/types'
 import { UsersManagementClient } from './users-management-client'
 

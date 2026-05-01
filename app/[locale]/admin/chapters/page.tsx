@@ -2,9 +2,8 @@ import { ChaptersManagementClient } from './chapters-management-client'
 import {
   getAvailableEditors,
   getChaptersList,
-  type ChapterSortKey,
-  type SortOrder,
 } from '@/lib/actions/admin/chapters'
+import type { ChapterSortKey, SortOrder } from '@/lib/services/admin.service'
 
 type PageSearchParams = {
   search?: string
@@ -31,7 +30,13 @@ export default async function AdminChaptersPage({
 
   const list = await getChaptersList({ search }, { page, pageSize, sortBy, sortOrder })
   const availableEditorsEntries = await Promise.all(
-    list.items.map(async (chapter) => [chapter.id, await getAvailableEditors(chapter.id)] as const)
+    list.items.map(async (chapter) => [
+      chapter.id,
+      (await getAvailableEditors(chapter.id)).map(e => ({
+        ...e,
+        role: e.role as 'member' | 'editor'
+      }))
+    ] as const)
   )
   const availableEditorsByChapter = Object.fromEntries(availableEditorsEntries)
 

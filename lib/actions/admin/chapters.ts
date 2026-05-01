@@ -6,15 +6,6 @@ import { z } from 'zod'
 import { AdminService } from '@/lib/services/admin.service'
 
 
-export type {
-  ChapterSortKey,
-  ChaptersFilters,
-  ChaptersPagination,
-  ChapterListItem,
-  ChaptersListResponse,
-  ChapterFormInput,
-} from '@/lib/services/admin.service'
-
 type ActionResult = { success: true } | { success: false; error: string }
 
 const chapterFormSchema = z.object({

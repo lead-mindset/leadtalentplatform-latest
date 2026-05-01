@@ -11,8 +11,8 @@ import {
   generateInviteToken,
   resendInvite,
   revokeAccess,
-  type CompanyDetail,
 } from '@/lib/actions/admin/companies'
+import type { CompanyDetail } from '@/lib/services/admin.service'
 import { useRouter } from 'next/navigation'
 
 type Props = {

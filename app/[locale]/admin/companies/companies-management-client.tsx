@@ -31,8 +31,8 @@ import {
   createCompany,
   deleteCompany,
   updateCompany,
-  type CompanyListItem,
 } from '@/lib/actions/admin/companies'
+import type { CompanyListItem } from '@/lib/services/admin.service'
 
 type Props = {
   items: CompanyListItem[]

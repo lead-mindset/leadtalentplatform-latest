@@ -1,10 +1,6 @@
 import { getChapters } from '@/lib/actions/admin/get-data'
-import {
-  getAdminEventsList,
-  type AdminEventStatus,
-  type EventSortKey,
-  type SortOrder,
-} from '@/lib/actions/admin/events'
+import { getAdminEventsList } from '@/lib/actions/admin/events'
+import type { AdminEventStatus, EventSortKey, SortOrder } from '@/lib/services/admin.service'
 import { EventsManagementClient } from './events-management-client'
 
 type PageSearchParams = {

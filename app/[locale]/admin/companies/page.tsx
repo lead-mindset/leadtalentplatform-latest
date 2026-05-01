@@ -1,9 +1,6 @@
 import { CompaniesManagementClient } from './companies-management-client'
-import {
-  getCompaniesList,
-  type CompanySortKey,
-  type SortOrder,
-} from '@/lib/actions/admin/companies'
+import { getCompaniesList } from '@/lib/actions/admin/companies'
+import type { CompanySortKey, SortOrder } from '@/lib/services/admin.service'
 
 type PageSearchParams = {
   search?: string

@@ -2,25 +2,6 @@
 
 import { requireAdmin } from '@/lib/auth'
 import { AdminService } from '@/lib/services/admin.service'
-import type {
-  AdminEventListItem,
-  AdminEventStatus,
-  AdminEventsListResponse,
-  EventFilters,
-  EventPagination,
-  EventSortKey,
-  SortOrder,
-} from '@/lib/services/admin.service'
-
-export type {
-  AdminEventListItem,
-  AdminEventStatus,
-  AdminEventsListResponse,
-  EventFilters,
-  EventPagination,
-  EventSortKey,
-  SortOrder,
-}
 
 export async function getAdminEventsList(
   filters: EventFilters,
