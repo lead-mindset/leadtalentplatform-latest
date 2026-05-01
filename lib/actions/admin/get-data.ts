@@ -1,27 +1,27 @@
 import { createClient } from '@/lib/supabase/server'
 import { AdminService } from '@/lib/services/admin.service'
-import type {
-  ActivityItem,
-  ChapterRow,
-  Company,
-  MemberWithProfile,
-  RecruiterInvite,
-  UserWithDetails,
-  UserWithDetailsRaw,
-  UserWithFullProfile,
+import {
+  type ActivityItem,
+  type ChapterRow,
+  type Company,
+  type MemberWithProfile,
+  type RecruiterInvite,
+  type UserWithDetails,
+  type UserWithDetailsRaw,
+  type UserWithFullProfile,
 } from '@/lib/types'
-import type {
-  AdminDashboardStats,
-  ChapterActivityItem,
-  RecentJoinItem,
-  PendingRecruiterRequestItem,
+import {
+  type AdminDashboardStats,
+  type ChapterActivityItem,
+  type RecentJoinItem,
+  type PendingRecruiterRequestItem,
 } from '@/lib/services/admin.service'
 
-export type {
-  AdminDashboardStats,
-  ChapterActivityItem,
-  RecentJoinItem,
-  PendingRecruiterRequestItem,
+export {
+  type AdminDashboardStats,
+  type ChapterActivityItem,
+  type RecentJoinItem,
+  type PendingRecruiterRequestItem,
 } from '@/lib/services/admin.service'
 
 export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
