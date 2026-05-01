@@ -33,12 +33,12 @@ type Collaborator = {
   }
 }
 
-export function CollaboratorManager({ 
-  eventId, 
-  ownerChapterId, 
+export function CollaboratorManager({
+  eventId,
+  ownerChapterId,
   mode,
-  onCollaboratorsChange 
-}: { 
+  onCollaboratorsChange
+}: {
   eventId: string
   ownerChapterId: string | null
   mode: 'create' | 'edit'
@@ -55,19 +55,20 @@ export function CollaboratorManager({
     const loadData = async () => {
       try {
         const allChapters = await getAllChapters()
-        
+
         const filtered = allChapters.filter(c => c.id !== ownerChapterId)
         setAvailableChapters(filtered)
-        
+
         if (mode === 'create') {
           setCollaborators([])
         } else {
           const result = await getEventCollaborators(eventId, ownerChapterId || undefined)
-          
-          if (result.error) {
+
+          if ('error' in result) {
             console.error('Failed to load event collaborators:', result.error)
             setCollaborators([])
           } else {
+
             // Handle case where Supabase returns chapter as array or object
             const normalizedData = (result.data || [])
               .map((collab: Record<string, unknown>): Collaborator | null => {
@@ -119,7 +120,7 @@ export function CollaboratorManager({
         }
         const result = await addEventCollaborator(eventId, selectedChapterId)
 
-        if (result.error) {
+        if ('error' in result) {
           console.error('Failed to add collaborator:', result.error)
           toast.error(result.error)
           return
@@ -129,32 +130,32 @@ export function CollaboratorManager({
         const chapter = Array.isArray(result.data?.chapter) ? result.data.chapter[0] : result.data?.chapter
         const addedBy = Array.isArray(result.data?.added_by) ? result.data.added_by[0] : result.data?.added_by
 
-          if (!chapter || !addedBy || !result.data) {
-            return
-          }
+        if (!chapter || !addedBy || !result.data) {
+          return
+        }
 
-          const newCollaborator: Collaborator = {
-            id: result.data.id,
-            chapter_id: result.data.chapter_id,
-            chapter: {
-              id: chapter.id,
-              name: chapter.name,
-              university: chapter.university
-            },
-            addedAt: result.data.added_at,
-            addedBy: {
-              id: addedBy.id,
-              name: addedBy.name,
-              email: addedBy.email
-            },
-          }
+        const newCollaborator: Collaborator = {
+          id: result.data.id,
+          chapter_id: result.data.chapter_id,
+          chapter: {
+            id: chapter.id,
+            name: chapter.name,
+            university: chapter.university
+          },
+          addedAt: result.data.added_at,
+          addedBy: {
+            id: addedBy.id,
+            name: addedBy.name,
+            email: addedBy.email
+          },
+        }
 
-          setCollaborators(prev => {
-            const updated = [...prev, newCollaborator]
-            onCollaboratorsChange?.(updated.map(c => c.chapter_id))
-            return updated
-          })
-        
+        setCollaborators(prev => {
+          const updated = [...prev, newCollaborator]
+          onCollaboratorsChange?.(updated.map(c => c.chapter_id))
+          return updated
+        })
+
         toast.success(`${selectedChapter.name} added as collaborator`)
       } catch (error) {
         console.error('Error adding collaborator:', error)
@@ -182,9 +183,9 @@ export function CollaboratorManager({
         if (fullChapter) {
           setAvailableChapters([...availableChapters, fullChapter])
         }
-        
+
         onCollaboratorsChange?.(updatedCollaborators.map(c => c.chapter_id))
-        
+
         toast.success(`${collaborator.chapter.name} removed as collaborator`)
       } catch (error) {
         console.error('Error removing collaborator:', error)
@@ -207,7 +208,7 @@ export function CollaboratorManager({
   }
 
   const collaboratorCount = collaborators.length
-  
+
   return (
     <Card>
       <CardHeader>
@@ -250,112 +251,112 @@ export function CollaboratorManager({
           </TooltipProvider>
         </div>
       </CardHeader>
-      
+
       {isExpanded && (
         <CardContent className="space-y-4 border-t pt-4">
-        {mode === 'edit' && ownerChapterId ? (
-          <div className="space-y-2">
-            <div className="text-sm font-medium text-muted-foreground">Owner Chapter</div>
-            <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
-              <Crown className="h-4 w-4 text-primary" />
-              <div>
-                <div className="font-medium">Owner Chapter ID: {ownerChapterId}</div>
-                <div className="text-sm text-muted-foreground">
-                  This chapter owns the event
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <div className="text-sm font-medium text-muted-foreground">Owner Chapter</div>
-            <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
-              <Crown className="h-4 w-4 text-primary" />
-              <div>
-                <div className="font-medium">Your Chapter</div>
-                <div className="text-sm text-muted-foreground">
-                  This will be set as the owner chapter when you create the event
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {collaborators.length > 0 && (
-          <div className="space-y-2">
-            <div className="text-sm font-medium text-muted-foreground">Collaborating Chapters</div>
+          {mode === 'edit' && ownerChapterId ? (
             <div className="space-y-2">
-              {collaborators.map((collaborator) => (
-                <div key={collaborator.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <div className="font-medium">{collaborator.chapter.name}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {collaborator.chapter.university}
+              <div className="text-sm font-medium text-muted-foreground">Owner Chapter</div>
+              <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
+                <Crown className="h-4 w-4 text-primary" />
+                <div>
+                  <div className="font-medium">Owner Chapter ID: {ownerChapterId}</div>
+                  <div className="text-sm text-muted-foreground">
+                    This chapter owns the event
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-muted-foreground">Owner Chapter</div>
+              <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
+                <Crown className="h-4 w-4 text-primary" />
+                <div>
+                  <div className="font-medium">Your Chapter</div>
+                  <div className="text-sm text-muted-foreground">
+                    This will be set as the owner chapter when you create the event
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {collaborators.length > 0 && (
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-muted-foreground">Collaborating Chapters</div>
+              <div className="space-y-2">
+                {collaborators.map((collaborator) => (
+                  <div key={collaborator.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <div className="font-medium">{collaborator.chapter.name}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {collaborator.chapter.university}
+                        </div>
                       </div>
                     </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleRemoveCollaborator(collaborator)}
+                      disabled={isPending}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleRemoveCollaborator(collaborator)}
-                    disabled={isPending}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Add Collaborator */}
-        {availableChapters.length > 0 && (
-          <div className="space-y-2">
-            <div className="text-sm font-medium text-muted-foreground">
-              {mode === 'create' ? 'Add Collaborating Chapters' : 'Add Collaborator'}
+          {/* Add Collaborator */}
+          {availableChapters.length > 0 && (
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-muted-foreground">
+                {mode === 'create' ? 'Add Collaborating Chapters' : 'Add Collaborator'}
+              </div>
+              <div className="flex items-center gap-2">
+                <Select value={selectedChapterId} onValueChange={setSelectedChapterId}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder={mode === 'create' ? "Select chapters to collaborate" : "Select a chapter to add as collaborator"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableChapters.map((chapter) => (
+                      <SelectItem key={chapter.id} value={chapter.id}>
+                        <div>
+                          <div className="font-medium">{chapter.name}</div>
+                          <div className="text-sm text-muted-foreground">{chapter.university}</div>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  onClick={handleAddCollaborator}
+                  disabled={!selectedChapterId || isPending}
+                  size="sm"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add
+                </Button>
+              </div>
+              {mode === 'create' && (
+                <p className="text-xs text-muted-foreground">
+                  Select chapters that can co-manage this event with your chapter.
+                </p>
+              )}
             </div>
-            <div className="flex items-center gap-2">
-              <Select value={selectedChapterId} onValueChange={setSelectedChapterId}>
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder={mode === 'create' ? "Select chapters to collaborate" : "Select a chapter to add as collaborator"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableChapters.map((chapter) => (
-                    <SelectItem key={chapter.id} value={chapter.id}>
-                      <div>
-                        <div className="font-medium">{chapter.name}</div>
-                        <div className="text-sm text-muted-foreground">{chapter.university}</div>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                onClick={handleAddCollaborator}
-                disabled={!selectedChapterId || isPending}
-                size="sm"
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Add
-              </Button>
-            </div>
-            {mode === 'create' && (
-              <p className="text-xs text-muted-foreground">
-                Select chapters that can co-manage this event with your chapter.
-              </p>
-            )}
-          </div>
-        )}
+          )}
 
-        {availableChapters.length === 0 && collaborators.length === 0 && (
-          <div className="text-sm text-muted-foreground text-center py-4">
-            {mode === 'create' 
-              ? 'No other chapters available to collaborate with.'
-              : 'No other chapters available to collaborate with.'}
-          </div>
-        )}
+          {availableChapters.length === 0 && collaborators.length === 0 && (
+            <div className="text-sm text-muted-foreground text-center py-4">
+              {mode === 'create'
+                ? 'No other chapters available to collaborate with.'
+                : 'No other chapters available to collaborate with.'}
+            </div>
+          )}
         </CardContent>
       )}
     </Card>
