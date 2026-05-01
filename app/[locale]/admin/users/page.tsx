@@ -69,7 +69,7 @@ export default async function AdminUsersPage({
         chapterFilters={chapterFilters}
         approvalFilters={approvalFilters}
         search={search}
-        chapterOptions={chapters.map((chapter) => ({ id: chapter.id, name: chapter.name }))}
+        chapterOptions={chapters.map((chapter: any) => ({ id: chapter.id, name: chapter.name }))}
       />
     </div>
   )
