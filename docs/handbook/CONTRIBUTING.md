@@ -284,7 +284,23 @@ We use a three-environment workflow for development, QA/staging, and production.
 **Never commit secrets to Git.** Use environment variables:
 - Local: `.env.local` (not committed)
 - Vercel: Project → Settings → Environment Variables
-- GitHub: Repo → Settings → Secrets and variables → Actions
+- GitHub: Repo → Settings → Environments
+
+#### GitHub Environments
+We use two environments for secrets/variables:
+
+| Environment | Purpose | Secrets/Variables |
+|-------------|---------|-------------------|
+| **Preview** | QA/Staging (dev branch) | QA Supabase credentials |
+| **Production** | Live site (master branch) | Production Supabase credentials |
+
+**Preview Environment Variables:**
+- `QA_SUPABASE_PROJECT_REF` - QA project reference ID
+- `QA_DB_HOST` - QA database host
+
+**Preview Environment Secrets:**
+- `QA_SUPABASE_SERVICE_ROLE_KEY` - QA service role key
+- `QA_DB_PASSWORD` - QA database password
 
 ### Seed Data for QA
 Run `pnpm run supabase:start` then:
