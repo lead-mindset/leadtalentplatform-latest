@@ -485,3 +485,5 @@ Private - LEAD Organization
 ## Support
 
 For technical support or questions, contact the development team.
+#   V e r c e l   d e p l o y m e n t   t r i g g e r  
+ 
