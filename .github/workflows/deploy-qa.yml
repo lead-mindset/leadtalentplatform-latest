@@ -7,6 +7,7 @@ on:
 jobs:
   migrate:
     runs-on: ubuntu-latest
+    environment: leadqa
     steps:
       - name: Checkout
         uses: actions/checkout@v4
