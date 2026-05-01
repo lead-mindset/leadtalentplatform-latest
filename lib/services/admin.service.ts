@@ -1846,7 +1846,7 @@ export const AdminService = {
   async getAvailableEditors(
     supabase: SupabaseClient<Database>,
     chapter_id: string
-  ): Promise<{ id: string; name: string; email: string; role: string }[]> {
+  ): Promise<{ id: string; name: string; email: string; role: 'member' | 'editor' }[]> {
     const { data, error } = await supabase
       .from('student_profile')
       .select('user_id, user!student_profile_user_id_fkey(id, name, email, role)')
