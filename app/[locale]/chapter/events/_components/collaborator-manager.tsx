@@ -70,26 +70,27 @@ export function CollaboratorManager({
           } else {
 
             // Handle case where Supabase returns chapter as array or object
-            const normalizedData = (result.data || [])
-              .map((collab: Record<string, unknown>): Collaborator | null => {
-                const chapter = Array.isArray(collab.chapter) ? (collab.chapter as unknown[])[0] : collab.chapter
-                const addedBy = Array.isArray(collab.addedBy) ? (collab.addedBy as unknown[])[0] : collab.addedBy
+            const normalizedData = (result.data || [] as unknown[])
+              .map((collab): Collaborator | null => {
+                const collabRecord = collab as Record<string, unknown>
+                const chapter = Array.isArray(collabRecord.chapter) ? (collabRecord.chapter as unknown[])[0] : collabRecord.chapter
+                const addedBy = Array.isArray(collabRecord.addedBy) ? (collabRecord.addedBy as unknown[])[0] : collabRecord.addedBy
 
                 if (!chapter || !addedBy) return null
 
                 return {
-                  id: collab.id,
-                  chapter_id: collab.chapter_id,
+                  id: collabRecord.id as string,
+                  chapter_id: collabRecord.chapter_id as string,
                   chapter: {
-                    id: chapter.id,
-                    name: chapter.name,
-                    university: chapter.university
+                    id: (chapter as Record<string, unknown>).id as string,
+                    name: (chapter as Record<string, unknown>).name as string,
+                    university: (chapter as Record<string, unknown>).university as string
                   },
-                  addedAt: collab.addedAt,
+                  addedAt: collabRecord.added_at as string,
                   addedBy: {
-                    id: addedBy.id,
-                    name: addedBy.name,
-                    email: addedBy.email
+                    id: (addedBy as Record<string, unknown>).id as string,
+                    name: (addedBy as Record<string, unknown>).name as string,
+                    email: (addedBy as Record<string, unknown>).email as string
                   },
                 }
               })
@@ -127,26 +128,27 @@ export function CollaboratorManager({
         }
 
         // Handle case where Supabase returns chapter as array or object
-        const chapter = Array.isArray(result.data?.chapter) ? result.data.chapter[0] : result.data?.chapter
-        const addedBy = Array.isArray(result.data?.added_by) ? result.data.added_by[0] : result.data?.added_by
+        const data = result.data as Record<string, unknown> | null
+        const chapter = Array.isArray(data?.chapter) ? (data?.chapter as unknown[])[0] : data?.chapter
+        const addedBy = Array.isArray(data?.added_by) ? (data?.added_by as unknown[])[0] : data?.added_by
 
-        if (!chapter || !addedBy || !result.data) {
+        if (!chapter || !addedBy || !data) {
           return
         }
 
         const newCollaborator: Collaborator = {
-          id: result.data.id,
-          chapter_id: result.data.chapter_id,
+          id: data.id as string,
+          chapter_id: data.chapter_id as string,
           chapter: {
-            id: chapter.id,
-            name: chapter.name,
-            university: chapter.university
+            id: (chapter as Record<string, unknown>).id as string,
+            name: (chapter as Record<string, unknown>).name as string,
+            university: (chapter as Record<string, unknown>).university as string
           },
-          addedAt: result.data.added_at,
+          addedAt: data.added_at as string,
           addedBy: {
-            id: addedBy.id,
-            name: addedBy.name,
-            email: addedBy.email
+            id: (addedBy as Record<string, unknown>).id as string,
+            name: (addedBy as Record<string, unknown>).name as string,
+            email: (addedBy as Record<string, unknown>).email as string
           },
         }
 
@@ -168,9 +170,9 @@ export function CollaboratorManager({
     startTransition(async () => {
       try {
         // Remove collaborator using server action
-        const result = await removeEventCollaborator(collaborator.id)
+        const result = await removeEventCollaborator(collaborator.id) as { error?: string } | { success: boolean }
 
-        if (result.error) {
+        if ('error' in result && result.error) {
           console.error('Failed to remove collaborator:', result.error)
           toast.error(result.error)
           return
