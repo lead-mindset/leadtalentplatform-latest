@@ -8,12 +8,14 @@ import { Database } from '@/lib/database.generated';
  * are encapsulated here to keep Server Actions thin and testable.
  *
  * Design decisions:
- * - updateProfile performs a multi-table upsert (user + student_profile)
+ * - updateProfile performs a multi-table upsert (user + person_profile)
  *   because profile data is split across two tables for role-based access.
  * - Resume uploads go to Supabase Storage ('resumes' bucket) and metadata
  *   is tracked in the `resume` table for recruiter visibility controls.
  * - All methods accept a SupabaseClient instance to remain framework-agnostic
  *   and enable easy mocking in unit tests.
+ * - Uses person_profile table (migrated from student_profile in LEAD-002)
+ * - Creates chapter_membership entries for chapter association
  */
 
 export type UpdateProfileParams = {
@@ -34,15 +36,22 @@ export type UpdateProfileParams = {
 export const StudentService = {
   async getProfile(supabase: SupabaseClient<Database>, userId: string) {
     const { data: profile, error } = await supabase
-      .from('student_profile')
+      .from('person_profile')
       .select(
-        'user_id, chapter_id, major, graduation_year, skills, linkedin_url, consent_recruiter_visibility, email_notifications_enabled, gender, member_id, approval_status'
+        'user_id, university, major_or_interest, graduation_year, skills, linkedin_url, consent_recruiter_visibility, gender'
       )
       .eq('user_id', userId)
       .single();
 
     if (error) throw new Error('Student profile not found');
-    return profile;
+
+    const { data: membership } = await supabase
+      .from('chapter_membership')
+      .select('chapter_id, status, position, member_id, joined_at')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    return { ...profile, ...membership };
   },
 
   async updateProfile(supabase: SupabaseClient<Database>, params: UpdateProfileParams) {
@@ -61,27 +70,40 @@ export const StudentService = {
 
     if (userError) throw userError;
 
-    // 2. Upsert Student Profile
-    const { error: profileError } = await supabase.from('student_profile').upsert(
+    // 2. Upsert Person Profile
+    const { error: profileError } = await supabase.from('person_profile').upsert(
       {
         user_id: params.userId,
-        major: params.career,
+        university: params.career,
+        major_or_interest: params.career,
         gender: params.gender,
         graduation_year: params.graduation_year,
         skills: params.skills,
         linkedin_url: params.linkedinUrl,
         consent_recruiter_visibility: params.consentRecruiterVisibility,
         consent_date: params.consentRecruiterVisibility ? now : null,
-        email_notifications_enabled: params.emailNotificationsEnabled,
         updated_at: now,
-        chapter_id: params.chapter_id,
       },
       { onConflict: 'user_id' }
     );
 
     if (profileError) throw profileError;
 
-    // 3. Handle Resume if provided
+    // 3. Upsert Chapter Membership
+    const { error: membershipError } = await supabase.from('chapter_membership').upsert(
+      {
+        user_id: params.userId,
+        chapter_id: params.chapter_id,
+        position: 'member',
+        status: 'pending',
+        joined_at: now,
+      },
+      { onConflict: 'user_id,chapter_id' }
+    );
+
+    if (membershipError) throw membershipError;
+
+    // 4. Handle Resume if provided
     if (params.resumePdf) {
       await this.uploadResume(supabase, params.userId, params.resumePdf);
     }
@@ -198,38 +220,52 @@ export const StudentService = {
       return { success: false, error: 'User row does not exist for StudentProfile insert' }
     }
 
-    const { data: existingProfile, error: existingProfileError } = await supabase
-      .from('student_profile')
+    const { data: existingMembership, error: membershipError } = await supabase
+      .from('chapter_membership')
       .select('member_id')
       .eq('user_id', params.userId)
+      .eq('chapter_id', params.leadChapter)
       .maybeSingle()
 
-    if (existingProfileError) {
-      return { success: false, error: existingProfileError.message }
+    if (membershipError) {
+      return { success: false, error: membershipError.message }
     }
 
-    const memberId = existingProfile?.member_id ?? await params.generateMemberId(supabase)
+    const memberId = existingMembership?.member_id ?? await params.generateMemberId(supabase)
 
     const { error: profileError } = await supabase
-      .from('student_profile')
+      .from('person_profile')
       .upsert({
         user_id: params.userId,
-        major: params.career,
+        university: params.career,
+        major_or_interest: params.career,
         gender: params.gender,
         graduation_year: params.graduationYear,
         linkedin_url: params.linkedinUrl,
         skills: params.skills,
         consent_recruiter_visibility: params.consentRecruiterVisibility,
         consent_date: params.consentRecruiterVisibility ? now : null,
-        email_notifications_enabled: params.emailNotificationsEnabled,
         updated_at: now,
-        is_filled: true,
-        chapter_id: params.leadChapter,
-        member_id: memberId,
       })
 
     if (profileError) {
       return { success: false, error: profileError.message }
+    }
+
+    // Create chapter membership
+    const { error: chapterMembershipError } = await supabase
+      .from('chapter_membership')
+      .upsert({
+        user_id: params.userId,
+        chapter_id: params.leadChapter,
+        position: 'member',
+        status: 'pending',
+        member_id: memberId,
+        joined_at: now,
+      })
+
+    if (chapterMembershipError) {
+      return { success: false, error: chapterMembershipError.message }
     }
 
     // Handle resume upload if provided

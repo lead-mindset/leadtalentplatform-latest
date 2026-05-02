@@ -23,6 +23,7 @@ describe('StudentService', () => {
     insert?: ReturnType<typeof vi.fn>
     remove?: ReturnType<typeof vi.fn>
     list?: ReturnType<typeof vi.fn>
+    maybeSingle?: ReturnType<typeof vi.fn>
   }
 
   const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
@@ -32,11 +33,19 @@ describe('StudentService', () => {
         update: vi.fn().mockReturnThis(),
         eq: vi.fn(),
       },
-      student_profile: {
+      person_profile: {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         single: vi.fn(),
         upsert: vi.fn(),
+        maybeSingle: vi.fn(),
+      },
+      chapter_membership: {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn(),
+        upsert: vi.fn(),
+        maybeSingle: vi.fn(),
       },
       resume: {
         select: vi.fn().mockReturnThis(),
@@ -62,38 +71,45 @@ describe('StudentService', () => {
   // ───────────────────────────────────────────────────────────────
   // getProfile
   // ───────────────────────────────────────────────────────────────
-  describe('getProfile', () => {
+   describe('getProfile', () => {
     it('should return profile data on success', async () => {
       const mockProfile = {
         user_id: 'user-123',
-        chapter_id: 'chapter-1',
-        major: 'Computer Science',
+        major_or_interest: 'Computer Science',
         graduation_year: 2025,
         skills: ['TypeScript', 'React'],
         linkedin_url: 'https://linkedin.com/in/test',
         consent_recruiter_visibility: true,
-        email_notifications_enabled: true,
         gender: 'female',
+      };
+      const mockMembership = {
+        chapter_id: 'chapter-1',
+        status: 'approved',
         member_id: 'M123',
-        approval_status: 'approved',
       };
 
       const { mockSupabase, tableMocks } = buildMockSupabase();
-      tableMocks.student_profile.single.mockResolvedValue({ data: mockProfile, error: null });
+      tableMocks.person_profile.maybeSingle.mockResolvedValue({ data: mockProfile, error: null });
+      tableMocks.chapter_membership.maybeSingle.mockResolvedValue({ data: mockMembership, error: null });
 
       const result = await StudentService.getProfile(mockSupabase as unknown as SupabaseClient, 'user-123');
 
-      expect(result).toEqual(mockProfile);
-      expect(mockSupabase.from).toHaveBeenCalledWith('student_profile');
-      expect(tableMocks.student_profile.select).toHaveBeenCalledWith(
-        'user_id, chapter_id, major, graduation_year, skills, linkedin_url, consent_recruiter_visibility, email_notifications_enabled, gender, member_id, approval_status'
+      expect(result).toEqual({ ...mockProfile, ...mockMembership });
+      expect(mockSupabase.from).toHaveBeenCalledWith('person_profile');
+      expect(tableMocks.person_profile.select).toHaveBeenCalledWith(
+        'user_id, university, major_or_interest, graduation_year, skills, linkedin_url, consent_recruiter_visibility, gender'
       );
-      expect(tableMocks.student_profile.eq).toHaveBeenCalledWith('user_id', 'user-123');
+      expect(tableMocks.person_profile.eq).toHaveBeenCalledWith('user_id', 'user-123');
+      expect(mockSupabase.from).toHaveBeenCalledWith('chapter_membership');
+      expect(tableMocks.chapter_membership.select).toHaveBeenCalledWith(
+        'chapter_id, status, position, member_id, joined_at'
+      );
+      expect(tableMocks.chapter_membership.eq).toHaveBeenCalledWith('user_id', 'user-123');
     });
 
     it('should throw "Student profile not found" when Supabase returns an error', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase();
-      tableMocks.student_profile.single.mockResolvedValue({
+      tableMocks.person_profile.maybeSingle.mockResolvedValue({
         data: null,
         error: { message: 'Row not found' },
       });
@@ -104,6 +120,9 @@ describe('StudentService', () => {
     });
   });
 
+    
+  });
+
   // ───────────────────────────────────────────────────────────────
   // updateProfile
   // ───────────────────────────────────────────────────────────────
@@ -112,23 +131,24 @@ describe('StudentService', () => {
       userId: 'user-123',
       fullName: 'Jane Doe',
       phone: '+1234567890',
-      career: 'Computer Science',
+      major_or_interest: 'Computer Science',
       gender: 'female',
       graduation_year: 2025,
       skills: ['TypeScript', 'React'],
       linkedinUrl: 'https://linkedin.com/in/janedoe',
       consentRecruiterVisibility: true,
-      emailNotificationsEnabled: true,
       chapter_id: 'chapter-1',
     };
 
-    it('should update user table AND student_profile table', async () => {
+    it('should update user table AND person_profile table', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase();
 
       // 1. User update succeeds
       tableMocks.user.eq.mockResolvedValue({ error: null });
       // 2. Profile upsert succeeds
-      tableMocks.student_profile.upsert.mockResolvedValue({ error: null });
+      tableMocks.person_profile.upsert.mockResolvedValue({ error: null });
+      // 3. Membership upsert succeeds
+      tableMocks.chapter_membership.upsert.mockResolvedValue({ error: null });
 
       const result = await StudentService.updateProfile(mockSupabase as unknown as SupabaseClient, baseParams);
 
@@ -144,39 +164,27 @@ describe('StudentService', () => {
       );
       expect(tableMocks.user.eq).toHaveBeenCalledWith('id', 'user-123');
 
-      // Verify student_profile was upserted
-      expect(mockSupabase.from).toHaveBeenCalledWith('student_profile');
-      expect(tableMocks.student_profile.upsert).toHaveBeenCalledWith(
+      // Verify person_profile was upserted
+      expect(mockSupabase.from).toHaveBeenCalledWith('person_profile');
+      expect(tableMocks.person_profile.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
           user_id: 'user-123',
-          major: 'Computer Science',
+          major_or_interest: 'Computer Science',
           gender: 'female',
           graduation_year: 2025,
           skills: ['TypeScript', 'React'],
           linkedin_url: 'https://linkedin.com/in/janedoe',
           consent_recruiter_visibility: true,
-          email_notifications_enabled: true,
-          chapter_id: 'chapter-1',
         }),
         { onConflict: 'user_id' }
       );
-    });
 
-    it('should set consent_date to null when consentRecruiterVisibility is false', async () => {
-      const { mockSupabase, tableMocks } = buildMockSupabase();
-
-      tableMocks.user.eq.mockResolvedValue({ error: null });
-      tableMocks.student_profile.upsert.mockResolvedValue({ error: null });
-
-      await StudentService.updateProfile(mockSupabase as unknown as SupabaseClient, {
-        ...baseParams,
-        consentRecruiterVisibility: false,
-      });
-
-      expect(tableMocks.student_profile.upsert).toHaveBeenCalledWith(
+      // Verify chapter_membership was upserted
+      expect(mockSupabase.from).toHaveBeenCalledWith('chapter_membership');
+      expect(tableMocks.chapter_membership.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
-          consent_recruiter_visibility: false,
-          consent_date: null,
+          user_id: 'user-123',
+          chapter_id: 'chapter-1',
         }),
         { onConflict: 'user_id' }
       );
@@ -189,13 +197,13 @@ describe('StudentService', () => {
       tableMocks.user.eq.mockResolvedValue({ error: userError });
 
       await expect(StudentService.updateProfile(mockSupabase as unknown as SupabaseClient, baseParams)).rejects.toThrow(
-        'User update failed'
+        'User update fails'
       );
 
       // Verify user update was attempted
       expect(tableMocks.user.update).toHaveBeenCalled();
       // Verify profile upsert was NOT attempted
-      expect(tableMocks.student_profile.upsert).not.toHaveBeenCalled();
+      expect(tableMocks.person_profile.upsert).not.toHaveBeenCalled();
     });
 
     it('should throw when profile upsert fails', async () => {
@@ -204,7 +212,7 @@ describe('StudentService', () => {
       tableMocks.user.eq.mockResolvedValue({ error: null });
 
       const profileError = new Error('Profile upsert failed');
-      tableMocks.student_profile.upsert.mockResolvedValue({ error: profileError });
+      tableMocks.person_profile.upsert.mockResolvedValue({ error: profileError });
 
       await expect(StudentService.updateProfile(mockSupabase as unknown as SupabaseClient, baseParams)).rejects.toThrow(
         'Profile upsert failed'
@@ -217,7 +225,8 @@ describe('StudentService', () => {
       const { mockSupabase, tableMocks } = buildMockSupabase();
 
       tableMocks.user.eq.mockResolvedValue({ error: null });
-      tableMocks.student_profile.upsert.mockResolvedValue({ error: null });
+      tableMocks.person_profile.upsert.mockResolvedValue({ error: null });
+      tableMocks.chapter_membership.upsert.mockResolvedValue({ error: null });
       mockSupabase.storage.upload.mockResolvedValue({ error: null });
       tableMocks.resume.upsert.mockResolvedValue({ error: null });
 

@@ -2,7 +2,7 @@ import { logger } from '@/lib/logger'
 import { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.generated'
 import { generateUniqueMemberId } from '@/lib/utils/member-id'
-import type { ChapterRow, MemberWithProfile, StudentProfileRow, UserRow } from '@/lib/types'
+import type { ChapterRow, MemberWithProfile, PersonProfileRow, UserRow } from '@/lib/types'
 
 /**
  * Service Layer: Chapter Member Management
@@ -15,62 +15,56 @@ type ApprovalResult = { success: true; member_id: string } | { success: false; e
 
 const PROFILE_SELECT = `
   user_id,
-  major,
+  major_or_interest,
   graduation_year,
   linkedin_url,
   skills,
   consent_recruiter_visibility,
-  is_recruiter_visible,
-  approved_by_id,
-  approval_status,
-  is_filled,
   updated_at,
   created_at,
-  consent_date,
-  chapter_id,
-  email_notifications_enabled,
   gender,
-  member_id,
-  chapter:chapter!student_profile_chapter_id_fkey (
-    id,
-    name,
-    university,
-    city,
-    region,
-    created_at,
-    updated_at
+  chapter_membership!inner(
+    status,
+    member_id,
+    chapter_id,
+    chapter (
+      id,
+      name,
+      university,
+      city,
+      region,
+      created_at,
+      updated_at
+    )
   )
 `
 
 type ChapterProfileRow = Pick<
-  StudentProfileRow,
+  PersonProfileRow,
   | 'user_id'
-  | 'major'
+  | 'major_or_interest'
   | 'graduation_year'
   | 'linkedin_url'
   | 'skills'
   | 'consent_recruiter_visibility'
-  | 'is_recruiter_visible'
-  | 'approved_by_id'
-  | 'approval_status'
-  | 'is_filled'
   | 'updated_at'
   | 'created_at'
-  | 'consent_date'
-  | 'chapter_id'
-  | 'email_notifications_enabled'
   | 'gender'
-  | 'member_id'
 > & {
+  chapter_membership: {
+    status: string
+    member_id: string
+    chapter_id: string
+    chapter: ChapterRow | ChapterRow[] | null
+  }
   user:
     | Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'role' | 'created_at' | 'updated_at' | 'deactivated_at'>
     | Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'role' | 'created_at' | 'updated_at' | 'deactivated_at'>[]
-  chapter: ChapterRow | ChapterRow[] | null
 }
 
 function mapProfile(profile: ChapterProfileRow): MemberWithProfile | null {
   const user = Array.isArray(profile.user) ? profile.user[0] : profile.user
-  const chapter = Array.isArray(profile.chapter) ? profile.chapter[0] : profile.chapter
+  const chapter = Array.isArray(profile.chapter_membership.chapter) ? profile.chapter_membership.chapter[0] : profile.chapter_membership.chapter
 
   if (!user) return null
 
@@ -83,24 +77,21 @@ function mapProfile(profile: ChapterProfileRow): MemberWithProfile | null {
     created_at: user.created_at,
     updated_at: user.updated_at,
     deactivated_at: user.deactivated_at,
-    student_profile: {
+    person_profile: {
       user_id: profile.user_id,
-      major: profile.major,
+      major_or_interest: profile.major_or_interest,
       graduation_year: profile.graduation_year,
       linkedin_url: profile.linkedin_url,
       skills: profile.skills,
       consent_recruiter_visibility: profile.consent_recruiter_visibility,
-      is_recruiter_visible: profile.is_recruiter_visible,
-      approved_by_id: profile.approved_by_id,
-      approval_status: profile.approval_status,
-      is_filled: profile.is_filled,
       updated_at: profile.updated_at,
       created_at: profile.created_at,
-      consent_date: profile.consent_date,
-      chapter_id: profile.chapter_id,
-      email_notifications_enabled: profile.email_notifications_enabled,
       gender: profile.gender,
-      member_id: profile.member_id,
+    },
+    chapter_membership: {
+      status: profile.chapter_membership.status,
+      member_id: profile.chapter_membership.member_id,
+      chapter_id: profile.chapter_membership.chapter_id,
     },
     chapter: chapter ?? null,
   }
@@ -143,9 +134,9 @@ export const ChapterService = {
     chapter_id: string
   ): Promise<MemberWithProfile[]> {
     const { data, error } = await supabase
-      .from('student_profile')
+      .from('person_profile')
       .select(PROFILE_SELECT)
-      .eq('chapter_id', chapter_id)
+      .eq('chapter_membership.chapter_id', chapter_id)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -162,15 +153,15 @@ export const ChapterService = {
   },
 
   getMemberStats(members: MemberWithProfile[]) {
-    const incomplete = members.filter((member: MemberWithProfile) => !member.student_profile?.is_filled)
+    const incomplete = members.filter((member: MemberWithProfile) => !member.person_profile)
     const pending = members.filter(
-      (member: MemberWithProfile) => member.student_profile?.is_filled && member.student_profile?.approval_status === 'pending'
+      (member: MemberWithProfile) => member.person_profile && member.chapter_membership?.status === 'pending'
     )
     const approved = members.filter(
-      (member: MemberWithProfile) => member.student_profile?.approval_status === 'approved'
+      (member: MemberWithProfile) => member.chapter_membership?.status === 'approved'
     )
     const rejected = members.filter(
-      (member: MemberWithProfile) => member.student_profile?.approval_status === 'rejected'
+      (member: MemberWithProfile) => member.chapter_membership?.status === 'rejected'
     )
 
     return {
@@ -182,8 +173,8 @@ export const ChapterService = {
       pending_members: pending,
       approved_members: approved,
       rejected_members: rejected,
-      complete_profiles: members.filter((member: MemberWithProfile) => member.student_profile?.is_filled).length,
-      visible_to_recruiters: members.filter((member: MemberWithProfile) => member.student_profile?.is_recruiter_visible).length,
+      complete_profiles: members.filter((member: MemberWithProfile) => member.person_profile).length,
+      visible_to_recruiters: members.filter((member: MemberWithProfile) => member.person_profile?.consent_recruiter_visibility).length,
     }
   },
 
@@ -193,10 +184,10 @@ export const ChapterService = {
     limit: number = 5
   ): Promise<MemberWithProfile[]> {
     const { data, error } = await supabase
-      .from('student_profile')
+      .from('person_profile')
       .select(PROFILE_SELECT)
-      .eq('chapter_id', chapter_id)
-      .eq('approval_status', 'approved')
+      .eq('chapter_membership.chapter_id', chapter_id)
+      .eq('chapter_membership.status', 'approved')
       .order('updated_at', { ascending: false })
       .limit(limit)
 
@@ -221,19 +212,15 @@ export const ChapterService = {
     userId: string,
     approverId: string
   ): Promise<ApprovalResult> {
-    // 1. Verify profile is filled
+    // 1. Verify profile exists
     const { data: profile, error: profileError } = await supabase
-      .from('student_profile')
-      .select('is_filled, chapter_id')
+      .from('person_profile')
+      .select('user_id')
       .eq('user_id', userId)
       .single()
 
     if (profileError || !profile) {
       return { success: false, error: 'Profile not found' }
-    }
-
-    if (!profile.is_filled) {
-      return { success: false, error: 'Cannot approve incomplete profile' }
     }
 
     // 2. Generate unique member ID
@@ -244,14 +231,13 @@ export const ChapterService = {
       return { success: false, error: 'Could not generate a member ID — please try again.' }
     }
 
-    // 3. Update profile
+    // 3. Update chapter membership
     const { error: updateError } = await supabase
-      .from('student_profile')
+      .from('chapter_membership')
       .update({
         approved_by_id: approverId,
-        approval_status: 'approved',
+        status: 'approved',
         member_id: memberId,
-        is_recruiter_visible: true,
         updated_at: new Date().toISOString(),
       })
       .eq('user_id', userId)
@@ -282,8 +268,8 @@ export const ChapterService = {
     const uniqueUserIds = [...new Set(userIds)]
 
     const { data: candidates, error: candidatesError } = await supabase
-      .from('student_profile')
-      .select('user_id, chapter_id, is_filled')
+      .from('person_profile')
+      .select('user_id, chapter_membership!inner(chapter_id)')
       .in('user_id', uniqueUserIds)
 
     if (candidatesError || !candidates) {
@@ -291,8 +277,7 @@ export const ChapterService = {
     }
 
     const validUserIds = candidates
-      .filter((profile) => profile.is_filled)
-      .filter((profile) => !approverChapterId || profile.chapter_id === approverChapterId)
+      .filter((profile) => !approverChapterId || profile.chapter_membership.chapter_id === approverChapterId)
       .map((profile) => profile.user_id)
 
     if (validUserIds.length === 0) {
@@ -332,11 +317,10 @@ export const ChapterService = {
     userId: string
   ): Promise<{ success: boolean; error?: string }> {
     const { error: updateError } = await supabase
-      .from('student_profile')
+      .from('chapter_membership')
       .update({
-        approval_status: 'rejected',
+        status: 'rejected',
         member_id: null,
-        is_recruiter_visible: false,
         updated_at: new Date().toISOString(),
       })
       .eq('user_id', userId)
@@ -357,12 +341,11 @@ export const ChapterService = {
     userId: string
   ): Promise<{ success: boolean; error?: string }> {
     const { error: updateError } = await supabase
-      .from('student_profile')
+      .from('chapter_membership')
       .update({
         approved_by_id: null,
-        approval_status: 'pending',
+        status: 'pending',
         member_id: null,
-        is_recruiter_visible: false,
         updated_at: new Date().toISOString(),
       })
       .eq('user_id', userId)
@@ -381,17 +364,17 @@ export const ChapterService = {
     supabase: SupabaseClient<Database>,
     userId: string
   ): Promise<string | null> {
-    const { data: profile, error } = await supabase
-      .from('student_profile')
+    const { data: membership, error } = await supabase
+      .from('chapter_membership')
       .select('chapter_id')
       .eq('user_id', userId)
       .single()
 
-    if (error || !profile) {
+    if (error || !membership) {
       return null
     }
 
-    return profile.chapter_id ?? null
+    return membership.chapter_id ?? null
   },
 
   /**
