@@ -16,9 +16,15 @@ As LEAD Frontier scales with multiple developers working on database schema chan
 We will implement an **automated type generation system with git hooks**:
 
 ### 1. Standardized Type File Naming
-- **Old:** `lib/supabase.ts` (ambiguous, could be mistaken for hand-written code)
-- **New:** `lib/database.types.ts` (clearly indicates auto-generated database types)
-- **Rationale:** The `.types.ts` suffix is a common convention signaling "do not edit manually"
+We have **two** type files for different purposes:
+
+| File | Purpose |
+|------|---------|
+| `lib/database.generated.ts` | Auto-generated from Supabase (DO NOT EDIT) - contains all tables/rows |
+| `lib/database.types.ts` | Custom type augmentations (YOU CAN EDIT) - for aliases, custom types |
+
+- **Rationale:** Split allows custom types without being overwritten by regeneration
+- **Usage:** Import `database.generated.ts` for table types; augment in `database.types.ts` for custom needs
 
 ### 2. Automated Type Generation via Git Hooks
 We use **Husky** to automate type generation at critical points in the development workflow:

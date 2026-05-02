@@ -14,7 +14,7 @@ A multi-tenant talent platform connecting LEAD Americas student chapters, compan
 
 ## 📋 Project Documentation
 
-- **[LEAD Platform PRD (v2.0)](.agents/PRDs/PROJECT-SPECIFICATION-FINAL.md)** - Full product specification covering account model, events, membership, and editor workflows
+- **[LEAD Platform PRD (v2.0)](docs/PRODUCT-SPECIFICATION.md)** - Full product specification. **This is the source of truth for product decisions.**
 - **[CONTRIBUTING.md](docs/handbook/CONTRIBUTING.md)** - How to contribute, environment setup, vocabulary
 - **[TESTING.md](docs/handbook/TESTING.md)** - Testing guidelines and coverage requirements
 - **[DEFINITION_OF_DONE.md](docs/handbook/DEFINITION_OF_DONE.md)** - What makes a task complete

@@ -4,6 +4,14 @@ This file documents the project for both human developers and AI coding agents.
 
 ---
 
+## ⚠️ Source of Truth
+
+For **product decisions**, features, and scope: see [docs/PRODUCT-SPECIFICATION.md](./docs/PRODUCT-SPECIFICATION.md) (v2.0)
+
+This file covers **engineering** standards and patterns only.
+
+---
+
 ## Project Overview
 
 **Linke** - Student-recruiter platform connecting students with opportunities through events and chapters.
