@@ -12,6 +12,21 @@ A multi-tenant talent platform connecting LEAD Americas student chapters, compan
 >
 > As the organization enters a new stage of maturity, LEAD has evolved from student training into a **strategic talent pipeline builder**. Through Frontier, we bridge rigorous preparation with real-world opportunity — giving students professional visibility and connecting organizations with high-potential talent who bring strong mindset, values, and execution skills.
 
+## 📋 Project Documentation
+
+- **[LEAD Platform PRD (v2.0)](.agents/PRDs/PROJECT-SPECIFICATION-FINAL.md)** - Full product specification covering account model, events, membership, and editor workflows
+- **[CONTRIBUTING.md](docs/handbook/CONTRIBUTING.md)** - How to contribute, environment setup, vocabulary
+- **[TESTING.md](docs/handbook/TESTING.md)** - Testing guidelines and coverage requirements
+- **[DEFINITION_OF_DONE.md](docs/handbook/DEFINITION_OF_DONE.md)** - What makes a task complete
+- **[AGENTS.md](AGENTS.md)** - AI agent instructions and project context
+
+### Architecture Decision Records (ADRs)
+
+- **[001 - Service Layer Pattern](docs/adr/001-service-layer-pattern.md)** - Why we use services
+- **[002 - Database Type Generation](docs/adr/002-database-type-generation.md)** - How we generate types
+
+---
+
 ## Overview
 
 **LEAD Talent Platform (Frontier)** is a comprehensive web application built for **LEAD Americas** to bridge rigorous student preparation with real-world professional opportunity. The platform transforms students into serious professionals ready to engage with industry while providing companies access to verified, high-potential talent.
@@ -22,6 +37,26 @@ A multi-tenant talent platform connecting LEAD Americas student chapters, compan
 - **Chapter Editors** — Manage chapter events, approve members, check-in attendees via QR codes, and collaborate on multi-chapter events
 - **Recruiters** — Browse verified student talent, save candidates, download resumes, and build diverse talent pipelines
 - **Administrators** — Oversee the entire ecosystem, manage DNS, and review funding requests
+
+### User Roles (from database)
+
+| Role | Description |
+|------|-------------|
+| **member** | Default user - can register for events, apply to chapters |
+| **editor** | Chapter e-board - can create events, approve/reject chapter applicants, check-in attendees |
+| **admin** | Platform operator - full access to manage users, chapters, companies |
+| **recruiter** | Invite-only company user - can browse students, save candidates, download resumes |
+
+### Event Access Types (from database)
+
+| Type | Access | Registration Flow |
+|------|--------|-------------------|
+| **open** | Anyone can register | User registers → status = "registered" |
+| **application** | Apply + Editor approval | User applies → status = "pending_review" → Editor approves (→ "registered") or rejects (→ "rejected") |
+
+### Event Registration Status
+
+`registered` | `pending_review` | `rejected` | `cancelled` | `attended`
 
 **Key Platform Capabilities:**
 
@@ -485,5 +520,3 @@ Private - LEAD Organization
 ## Support
 
 For technical support or questions, contact the development team.
-#   V e r c e l   d e p l o y m e n t   t r i g g e r  
- 
