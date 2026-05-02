@@ -10,23 +10,41 @@
 !.yarn/releases
 !.yarn/versions
 
+# package manager lock files (using pnpm)
+package-lock.json
+yarn.lock
+
 # testing
 /coverage
 
 # next.js
 /.next/
 /out/
+.next/cache/
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store
 *.pem
+.turbo/
+.cache/
+.contentlayer/
+Thumbs.db
 
 # IDE
 .venv/
 .windsurf/
+.windsurf
+.windsurfrc
+.vscode/
+.idea/
+*.code-workspace
+*.swp
+*.swo
+*~
 
 # debug
 npm-debug.log*
@@ -42,6 +60,10 @@ yarn-error.log*
 
 # vercel
 .vercel
+
+# supabase local artifacts
+supabase/.branches/
+supabase/.temp/
 
 # remote opencode
 logs/
