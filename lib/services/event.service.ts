@@ -2,7 +2,7 @@ import { logger } from '@/lib/logger'
 import { randomUUID } from 'node:crypto';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/lib/database.generated';
-import { EventRow, EventRegistrationRow, RegistrationStatus, EventWithDetails, EventChapterRow, RegistrationWithUser, UserRow, ChapterRow, StudentProfileRow } from '@/lib/types';
+import { EventRow, EventRegistrationRow, RegistrationStatus, EventWithDetails, EventChapterRow, RegistrationWithUser, UserRow, ChapterRow, PersonProfileRow } from '@/lib/types';
 
 /**
  * Service Layer: Event Domain
@@ -1332,7 +1332,7 @@ export const EventService = {
           name,
           email,
           phone,
-          student_profile!user_id!inner ( major, graduation_year, linkedin_url )
+          person_profile!user_id!inner ( major_or_interest, graduation_year, linkedin_url )
         )
       `)
       .eq('event_id', eventId)
@@ -1348,7 +1348,7 @@ export const EventService = {
       const r = raw as Record<string, unknown>
       const u = Array.isArray(r.user) ? (r.user as unknown[])[0] : r.user
       const userRecord = u as Record<string, unknown> | null
-      const profile = Array.isArray(userRecord?.student_profile) ? (userRecord.student_profile as unknown[])[0] : userRecord?.student_profile
+      const profile = Array.isArray(userRecord?.person_profile) ? (userRecord.person_profile as unknown[])[0] : userRecord?.person_profile
       return {
         id: raw.id,
         event_id: raw.event_id,
@@ -1359,7 +1359,7 @@ export const EventService = {
         checked_in_at: raw.checked_in_at ?? null,
         checked_in_by_id: raw.checked_in_by_id ?? null,
         user: u ?? null,
-        student_profile: profile ?? null,
+        person_profile: profile ?? null,
       }
     }
 

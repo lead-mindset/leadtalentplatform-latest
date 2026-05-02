@@ -1,7 +1,7 @@
 import { logger } from '@/lib/logger'
 import { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.generated'
-import type { ChapterRow, StudentProfileRow, UserRow } from '@/lib/types'
+import type { ChapterRow, PersonProfileRow, UserRow } from '@/lib/types'
 
 export type TalentPoolFilters = {
   query?: string
@@ -27,26 +27,26 @@ export type TalentPoolStudent = {
 }
 
 type TalentPoolProfileRow = Pick<
-  StudentProfileRow,
-  'graduation_year' | 'major' | 'skills' | 'updated_at'
+  PersonProfileRow,
+  'graduation_year' | 'major_or_interest' | 'skills' | 'updated_at'
 > & {
   chapter: Pick<ChapterRow, 'name' | 'university'> | Pick<ChapterRow, 'name' | 'university'>[] | null
 }
 
 type TalentPoolRow = Pick<UserRow, 'id' | 'name' | 'email'> & {
-  student_profile: TalentPoolProfileRow | TalentPoolProfileRow[] | null
+  person_profile: TalentPoolProfileRow | TalentPoolProfileRow[] | null
 }
 
 type SavedTalentPoolRow = {
-  student: TalentPoolRow | TalentPoolRow[] | null
+  person: TalentPoolRow | TalentPoolRow[] | null
 }
 
-type TalentPoolFilterRow = Pick<StudentProfileRow, 'graduation_year'> & {
+type TalentPoolFilterRow = Pick<PersonProfileRow, 'graduation_year'> & {
   chapter: { id: string; name: string } | { id: string; name: string }[] | null
 }
 
 function mapTalentPoolRow(row: TalentPoolRow): TalentPoolStudent | null {
-  const profile = Array.isArray(row.student_profile) ? row.student_profile[0] : row.student_profile
+  const profile = Array.isArray(row.person_profile) ? row.person_profile[0] : row.person_profile
   if (!profile) return null
 
   const chapter = Array.isArray(profile.chapter) ? profile.chapter[0] : profile.chapter
@@ -62,7 +62,7 @@ function mapTalentPoolRow(row: TalentPoolRow): TalentPoolStudent | null {
         }
       : null,
     graduation_year: profile.graduation_year ?? null,
-    major: profile.major ?? null,
+    major: profile.major_or_interest ?? null,
     skills: Array.isArray(profile.skills) ? profile.skills : [],
     updated_at: profile.updated_at,
   }
@@ -89,17 +89,21 @@ export const RecruiterService = {
       .select(
         `
         id, name, email,
-        student_profile!user_id!inner (
-          graduation_year, major, skills, updated_at, chapter_id, is_recruiter_visible, approval_status,
-          chapter:chapter!student_profile_chapter_id_fkey (name, university)
+        person_profile!user_id!inner (
+          graduation_year, major_or_interest, skills, updated_at, consent_recruiter_visibility,
+          chapter_membership!user_id!inner (
+            status,
+            chapter_id,
+            chapter (name, university)
+          )
         )
         `,
         { count: 'exact' }
       )
       .eq('role', 'member')
-      .eq('student_profile.is_recruiter_visible', true)
-      .eq('student_profile.approval_status', 'approved')
-      .order('updated_at', { ascending: false, referencedTable: 'student_profile' })
+      .eq('person_profile.consent_recruiter_visibility', true)
+      .eq('person_profile.chapter_membership.status', 'approved')
+      .order('updated_at', { ascending: false, referencedTable: 'person_profile' })
       .range(from, to)
 
     if (filters.query?.trim()) {
@@ -107,15 +111,15 @@ export const RecruiterService = {
     }
 
     if (filters.graduation_year) {
-      query = query.eq('student_profile.graduation_year', filters.graduation_year)
+      query = query.eq('person_profile.graduation_year', filters.graduation_year)
     }
 
     if (filters.chapter_id) {
-      query = query.eq('student_profile.chapter_id', filters.chapter_id)
+      query = query.eq('person_profile.chapter_membership.chapter_id', filters.chapter_id)
     }
 
     if (filters.skills && filters.skills.length > 0) {
-      query = query.contains('student_profile.skills', filters.skills)
+      query = query.contains('person_profile.skills', filters.skills)
     }
 
     const { data, error, count } = await query
@@ -163,17 +167,21 @@ export const RecruiterService = {
         student_id,
         student:user!saved_student_student_id_fkey (
           id, name, email,
-          student_profile!user_id!inner (
-            graduation_year, major, skills, updated_at, chapter_id, is_recruiter_visible, approval_status,
-            chapter:chapter!student_profile_chapter_id_fkey (name, university)
+          person_profile!user_id!inner (
+            graduation_year, major_or_interest, skills, updated_at, consent_recruiter_visibility,
+            chapter_membership!user_id!inner (
+              status,
+              chapter_id,
+              chapter (name, university)
+            )
           )
         )
         `,
         { count: 'exact' }
       )
       .eq('recruiter_id', recruiterId)
-      .eq('student.student_profile.is_recruiter_visible', true)
-      .eq('student.student_profile.approval_status', 'approved')
+      .eq('student.person_profile.consent_recruiter_visibility', true)
+      .eq('student.person_profile.chapter_membership.status', 'approved')
       .order('saved_at', { ascending: false })
       .range(from, to)
 
@@ -182,15 +190,15 @@ export const RecruiterService = {
     }
 
     if (filters.graduation_year) {
-      query = query.eq('student.student_profile.graduation_year', filters.graduation_year)
+      query = query.eq('student.person_profile.graduation_year', filters.graduation_year)
     }
 
     if (filters.chapter_id) {
-      query = query.eq('student.student_profile.chapter_id', filters.chapter_id)
+      query = query.eq('student.person_profile.chapter_membership.chapter_id', filters.chapter_id)
     }
 
     if (filters.skills && filters.skills.length > 0) {
-      query = query.contains('student.student_profile.skills', filters.skills)
+      query = query.contains('student.person_profile.skills', filters.skills)
     }
 
     const { data, error, count } = await query
@@ -228,15 +236,19 @@ export const RecruiterService = {
 
   async getTalentPoolFilterOptions(supabase: SupabaseClient<Database>) {
     const { data, error } = await supabase
-      .from('student_profile')
+      .from('person_profile')
       .select(
         `
-        graduation_year, chapter_id,
-        chapter:chapter!student_profile_chapter_id_fkey (id, name)
+        graduation_year,
+        chapter_membership!inner (
+          chapter_id,
+          status,
+          chapter (id, name)
+        )
         `
       )
-      .eq('is_recruiter_visible', true)
-      .eq('approval_status', 'approved')
+      .eq('consent_recruiter_visibility', true)
+      .eq('chapter_membership.status', 'approved')
 
     if (error) {
       logger.error({ context: 'recruiter/talent-pool', error: error }, 'getTalentPoolFilterOptions error')
@@ -304,9 +316,13 @@ export const RecruiterService = {
       .select(
         `
         id, name, email,
-        student_profile!user_id!inner (
-          major, graduation_year, skills, linkedin_url, is_recruiter_visible, approval_status, chapter_id,
-          chapter:chapter!student_profile_chapter_id_fkey (name, university)
+        person_profile!user_id!inner (
+          major_or_interest, graduation_year, skills, linkedin_url, consent_recruiter_visibility,
+          chapter_membership!user_id!inner (
+            status,
+            chapter_id,
+            chapter (name, university)
+          )
         ),
         resume!left (
           file_name, file_url, uploaded_at
@@ -315,8 +331,8 @@ export const RecruiterService = {
       )
       .eq('id', studentId)
       .eq('role', 'member')
-      .eq('student_profile.is_recruiter_visible', true)
-      .eq('student_profile.approval_status', 'approved')
+      .eq('person_profile.consent_recruiter_visibility', true)
+      .eq('person_profile.chapter_membership.status', 'approved')
       .maybeSingle()
 
     if (error || !data) {
@@ -324,9 +340,9 @@ export const RecruiterService = {
       return null
     }
 
-    const profile = Array.isArray(data.student_profile) ? data.student_profile[0] : data.student_profile
+    const profile = Array.isArray(data.person_profile) ? data.person_profile[0] : data.person_profile
     if (!profile) return null
-    const chapter = Array.isArray(profile.chapter) ? profile.chapter[0] : profile.chapter
+    const chapter = Array.isArray(profile.chapter_membership.chapter) ? profile.chapter_membership.chapter[0] : profile.chapter_membership.chapter
     const resume = Array.isArray(data.resume) ? data.resume[0] : data.resume
 
     return {
@@ -335,7 +351,7 @@ export const RecruiterService = {
       email: data.email,
       chapter: chapter ? { name: chapter.name, university: chapter.university } : null,
       graduation_year: profile.graduation_year ?? null,
-      major: profile.major ?? null,
+      major: profile.major_or_interest ?? null,
       skills: Array.isArray(profile.skills) ? profile.skills : [],
       linkedin_url: profile.linkedin_url ?? null,
       resume: resume
