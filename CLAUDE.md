@@ -240,3 +240,38 @@ pnpm build
 - Can't find where code should go? → Check Service Layer Pattern
 - Need to add business logic? → Always in `lib/services/`
 - Want to understand existing code? → Start with services
+
+---
+
+## Supabase
+
+| Service | Port |
+|---------|------|
+| API | 54321 |
+| Studio | 54323 |
+
+**Generate types** (Windows):
+```bash
+npx supabase gen types typescript --linked > lib/database.types.ts
+```
+
+⚠️ **Windows gotchas:**
+- Never use PowerShell piping (`Get-Content | Out-File`) - corrupts output
+- Use direct `>` redirection only
+- If file shows "binary" error, delete and regenerate clean
+
+**MCP config** (`opencode.json`):
+```json
+{
+  "mcp": {
+    "supabase": {
+      "type": "remote",
+      "url": "http://127.0.0.1:54321/mcp"
+    }
+  }
+}
+```
+
+**Commands:** `pnpm supabase start` / `pnpm supabase stop` / `pnpm supabase db reset`
+
+**Quick query:** `docker exec <container-name> psql -U postgres -d postgres -c "SELECT ..."`
