@@ -1,5 +1,7 @@
 # Engineering Handbook: Contributing to LEAD Frontier
 
+> **Note:** For product requirements and feature scope, see [docs/PRODUCT-SPECIFICATION.md](../PRODUCT-SPECIFICATION.md) — this is the source of truth for product decisions. This handbook covers engineering standards and workflows only.
+
 Welcome! This document outlines the engineering standards and workflows for the LEAD Frontier platform. As we scale to support thousands of students and recruiters, maintaining high technical quality is our top priority.
 
 ## 1. Workflow: The Pull Request Process
