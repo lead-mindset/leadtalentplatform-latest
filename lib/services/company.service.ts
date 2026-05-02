@@ -4,10 +4,10 @@ import { Database } from '@/lib/database.generated'
 import type {
   ChapterRow,
   CompanyStats,
+  PersonProfileRow,
   SavedStudent,
   SavedStudentRow,
   StudentForRecruiter,
-  StudentProfileRow,
   UserRow,
 } from '@/lib/types'
 
@@ -17,11 +17,14 @@ import type {
 
 const STUDENT_SELECT = `
   id, email, name, phone, created_at,
-  student_profile!user_id!inner (
-    major, graduation_year, linkedin_url, skills,
-    is_recruiter_visible, is_filled, updated_at, chapter_id,
-    chapter:chapter!student_profile_chapter_id_fkey (
-      name, university, city, region
+  person_profile!user_id!inner (
+    major_or_interest, graduation_year, linkedin_url, skills,
+    consent_recruiter_visibility, updated_at,
+    chapter_membership!user_id!inner (
+      chapter_id,
+      chapter (
+        name, university, city, region
+      )
     )
   )
 `
@@ -31,14 +34,17 @@ const STUDENT_SELECT = `
 // ───────────────────────────────────────────────────────────────
 
 export type StudentProfileRecruiterRow = Pick<
-  StudentProfileRow,
-  'major' | 'graduation_year' | 'linkedin_url' | 'skills' | 'is_recruiter_visible' | 'is_filled' | 'updated_at' | 'chapter_id'
+  PersonProfileRow,
+  'major_or_interest' | 'graduation_year' | 'linkedin_url' | 'skills' | 'consent_recruiter_visibility' | 'updated_at'
 > & {
-  chapter: Pick<ChapterRow, 'name' | 'university' | 'city' | 'region'> | Pick<ChapterRow, 'name' | 'university' | 'city' | 'region'>[] | null
+  chapter_membership: {
+    chapter_id: string
+    chapter: Pick<ChapterRow, 'name' | 'university' | 'city' | 'region'> | Pick<ChapterRow, 'name' | 'university' | 'city' | 'region'>[] | null
+  }
 }
 
 export type RecruiterStudentRow = Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'created_at'> & {
-  student_profile: StudentProfileRecruiterRow | StudentProfileRecruiterRow[] | null
+  person_profile: StudentProfileRecruiterRow | StudentProfileRecruiterRow[] | null
 }
 
 export type SavedStudentWithUserRow = SavedStudentRow & {
@@ -72,15 +78,15 @@ export type AccessWithCompany = {
 // ───────────────────────────────────────────────────────────────
 
 function mapStudentRow(user: RecruiterStudentRow): StudentForRecruiter | null {
-  const profile = Array.isArray(user.student_profile)
-    ? user.student_profile[0]
-    : user.student_profile
+  const profile = Array.isArray(user.person_profile)
+    ? user.person_profile[0]
+    : user.person_profile
 
   if (!profile) return null
 
-  const chapter = Array.isArray(profile.chapter)
-    ? profile.chapter[0]
-    : profile.chapter
+  const chapter = Array.isArray(profile.chapter_membership.chapter)
+    ? profile.chapter_membership.chapter[0]
+    : profile.chapter_membership.chapter
 
   return {
     id: user.id,
@@ -89,15 +95,13 @@ function mapStudentRow(user: RecruiterStudentRow): StudentForRecruiter | null {
     phone: user.phone,
     created_at: user.created_at,
     chapter: chapter ?? null,
-    student_profile: {
-      major: profile.major,
+    person_profile: {
+      major_or_interest: profile.major_or_interest,
       graduation_year: profile.graduation_year,
       linkedin_url: profile.linkedin_url,
       skills: profile.skills,
-      is_recruiter_visible: profile.is_recruiter_visible,
-      is_filled: profile.is_filled,
+      consent_recruiter_visibility: profile.consent_recruiter_visibility,
       updated_at: profile.updated_at,
-      chapter_id: profile.chapter_id,
     },
   }
 }
@@ -118,8 +122,8 @@ export const CompanyService = {
       .from('user')
       .select(STUDENT_SELECT)
       .in('role', ['member', 'editor'])
-      .eq('student_profile.is_recruiter_visible', true)
-      .eq('student_profile.is_filled', true)
+      .eq('person_profile.consent_recruiter_visibility', true)
+      .eq('person_profile.chapter_membership.status', 'approved')
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -133,8 +137,7 @@ export const CompanyService = {
       .map(mapStudentRow)
       .filter((s): s is StudentForRecruiter =>
         s !== null &&
-        s.student_profile?.is_recruiter_visible === true &&
-        s.student_profile?.is_filled === true
+        s.person_profile?.consent_recruiter_visibility === true
       )
   },
 
@@ -150,8 +153,8 @@ export const CompanyService = {
       .select(STUDENT_SELECT)
       .eq('id', studentId)
       .in('role', ['member', 'editor'])
-      .eq('student_profile.is_recruiter_visible', true)
-      .eq('student_profile.is_filled', true)
+      .eq('person_profile.consent_recruiter_visibility', true)
+      .eq('person_profile.chapter_membership.status', 'approved')
       .single()
 
     if (error) {
@@ -165,8 +168,7 @@ export const CompanyService = {
 
     if (
       !student ||
-      student.student_profile?.is_recruiter_visible !== true ||
-      student.student_profile?.is_filled !== true
+      student.person_profile?.consent_recruiter_visibility !== true
     ) {
       return null
     }
@@ -187,11 +189,14 @@ export const CompanyService = {
         id, recruiter_id, student_id, saved_at, notes,
         student:user!saved_student_student_id_fkey (
           id, email, name, phone, created_at,
-          student_profile!user_id!inner (
-            major, graduation_year, linkedin_url, skills,
-            is_recruiter_visible, is_filled, updated_at, chapter_id,
-            chapter:chapter!student_profile_chapter_id_fkey (
-              name, university, city, region
+          person_profile!user_id!inner (
+            major_or_interest, graduation_year, linkedin_url, skills,
+            consent_recruiter_visibility, updated_at,
+            chapter_membership!user_id!inner (
+              chapter_id,
+              chapter (
+                name, university, city, region
+              )
             )
           )
         )
@@ -216,16 +221,16 @@ export const CompanyService = {
           return null
         }
 
-        const profile = studentData?.student_profile
-          ? Array.isArray(studentData.student_profile)
-            ? studentData.student_profile[0]
-            : studentData.student_profile
+        const profile = studentData?.person_profile
+          ? Array.isArray(studentData.person_profile)
+            ? studentData.person_profile[0]
+            : studentData.person_profile
           : null
 
-        const chapter = profile?.chapter
-          ? Array.isArray(profile.chapter)
-            ? profile.chapter[0]
-            : profile.chapter
+        const chapter = profile?.chapter_membership.chapter
+          ? Array.isArray(profile.chapter_membership.chapter)
+            ? profile.chapter_membership.chapter[0]
+            : profile.chapter_membership.chapter
           : null
 
         return {
@@ -241,16 +246,14 @@ export const CompanyService = {
             phone: studentData.phone,
             created_at: studentData.created_at,
             chapter: chapter ?? null,
-            student_profile: profile
+            person_profile: profile
               ? {
-                  major: profile.major,
+                  major_or_interest: profile.major_or_interest,
                   graduation_year: profile.graduation_year,
                   linkedin_url: profile.linkedin_url,
                   skills: profile.skills,
-                  is_recruiter_visible: profile.is_recruiter_visible,
-                  is_filled: profile.is_filled,
+                  consent_recruiter_visibility: profile.consent_recruiter_visibility,
                   updated_at: profile.updated_at,
-                  chapter_id: profile.chapter_id,
                 }
               : null,
           },
@@ -288,10 +291,10 @@ export const CompanyService = {
   ): Promise<CompanyStats> {
     const [{ count: total_students }, saved_students] = await Promise.all([
       supabase
-        .from('student_profile')
+        .from('person_profile')
         .select('user_id', { count: 'exact', head: true })
-        .eq('is_recruiter_visible', true)
-        .eq('is_filled', true),
+        .eq('consent_recruiter_visibility', true)
+        .eq('chapter_membership.status', 'approved'),
       this.getSavedStudents(supabase, userId),
     ])
 
@@ -319,8 +322,8 @@ export const CompanyService = {
       .from('user')
       .select(STUDENT_SELECT)
       .eq('role', 'member')
-      .eq('student_profile.is_recruiter_visible', true)
-      .eq('student_profile.is_filled', true)
+      .eq('person_profile.consent_recruiter_visibility', true)
+      .eq('person_profile.chapter_membership.status', 'approved')
       .order('created_at', { ascending: false })
 
     // Name/email search pushed to DB
@@ -331,15 +334,15 @@ export const CompanyService = {
     }
 
     if (filters.major) {
-      query = query.ilike('student_profile.major', `%${filters.major.trim()}%`)
+      query = query.ilike('person_profile.major_or_interest', `%${filters.major.trim()}%`)
     }
 
     if (filters.graduation_year) {
-      query = query.eq('student_profile.graduation_year', filters.graduation_year)
+      query = query.eq('person_profile.graduation_year', filters.graduation_year)
     }
 
     if (filters.chapter_id) {
-      query = query.eq('student_profile.chapter_id', filters.chapter_id)
+      query = query.eq('person_profile.chapter_membership.chapter_id', filters.chapter_id)
     }
 
     const { data, error } = await query
@@ -355,8 +358,7 @@ export const CompanyService = {
       .map(mapStudentRow)
       .filter((s): s is StudentForRecruiter =>
         s !== null &&
-        s.student_profile?.is_recruiter_visible === true &&
-        s.student_profile?.is_filled === true
+        s.person_profile?.consent_recruiter_visibility === true
       )
   },
 

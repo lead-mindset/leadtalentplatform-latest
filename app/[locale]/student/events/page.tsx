@@ -493,7 +493,7 @@ export default async function StudentEventsPage({
                         <span className="font-semibold">{activity.event?.title}</span>
                       </p>
                       <p className="text-[11px] text-muted-foreground mt-1.5 font-light uppercase tracking-wider">
-                        {(activity as unknown as { created_at?: string }).created_at ? formatRelativeTime((activity as unknown as { created_at?: string }).created_at) : 'Recently'}
+                        {(activity as unknown as { created_at?: string }).created_at ? formatRelativeTime((activity as unknown as { created_at: string }).created_at) : 'Recently'}
                       </p>
                     </div>
                   </div>

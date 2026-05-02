@@ -1,5 +1,7 @@
 # Engineering Handbook: Contributing to LEAD Frontier
 
+> **Note:** For product requirements and feature scope, see [docs/PRODUCT-SPECIFICATION.md](../PRODUCT-SPECIFICATION.md) — this is the source of truth for product decisions. This handbook covers engineering standards and workflows only.
+
 Welcome! This document outlines the engineering standards and workflows for the LEAD Frontier platform. As we scale to support thousands of students and recruiters, maintaining high technical quality is our top priority.
 
 ## 1. Workflow: The Pull Request Process
@@ -256,3 +258,59 @@ Creates a detailed plan in `.github/plans/`.
 ## 5. Communication
 *   **ADRs:** Major architectural decisions must be documented in `docs/adr/`.
 *   **Linear/GitHub:** Use the Project Board to track all tasks.
+
+## 6. Three-Environment Workflow
+
+We use a three-environment workflow for development, QA/staging, and production.
+
+| Environment | Branch | Supabase | Vercel URL | Purpose |
+|-------------|--------|----------|------------|---------|
+| Local | feature/* | Docker | localhost:3000 | Development |
+| QA/Staging | dev | QA Project | [project]-vercel.app | Integration testing |
+| Production | master | Prod Project | Official domain | Live |
+
+### Branch Strategy
+- `master` — Production branch (protected, requires PR)
+- `dev` — Integration/QA branch (deployed to Vercel QA)
+- `feature/*` — Feature branches (deployed as Vercel previews)
+- PRs target `dev` for integration testing
+
+### QA Testing Flow
+1. Create feature branch from `dev`
+2. Implement feature, push to trigger Vercel preview
+3. Test on Vercel preview with QA Supabase
+4. Merge to `dev` for QA team validation
+5. After QA approval, merge to `master`
+
+### Secrets & Environment Variables
+**Never commit secrets to Git.** Use environment variables:
+- Local: `.env.local` (not committed)
+- Vercel: Project → Settings → Environment Variables
+- GitHub: Repo → Settings → Environments
+
+#### GitHub Environments
+We use two environments for secrets/variables:
+
+| Environment | Purpose | Secrets/Variables |
+|-------------|---------|-------------------|
+| **Preview** | QA/Staging (dev branch) | QA Supabase credentials |
+| **Production** | Live site (master branch) | Production Supabase credentials |
+
+**Preview Environment Variables:**
+- `QA_SUPABASE_PROJECT_REF` - QA project reference ID
+- `QA_DB_HOST` - QA database host
+
+**Preview Environment Secrets:**
+- `QA_SUPABASE_SERVICE_ROLE_KEY` - QA service role key
+- `QA_DB_PASSWORD` - QA database password
+
+### Seed Data for QA
+Run `pnpm run supabase:start` then:
+```bash
+psql -f supabase/seed-qa.sql
+```
+This creates test personas (see `supabase/seed-qa.sql`):
+- Admin: `admin@leadplatform.qa`
+- Editors: `editor-*@leadplatform.qa`
+- Members: `student-*@uni.edu`
+- Recruiters: `recruiter-*@company.com`

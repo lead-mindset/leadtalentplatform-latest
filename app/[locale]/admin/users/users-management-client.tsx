@@ -158,7 +158,7 @@ export function UsersManagementClient({
         search,
         roles: roleFilters,
         chapter_ids: chapterFilters,
-        approval_statuses: approvalFilters,
+        chapter_statuses: approvalFilters,
       })
       downloadCsv(csv)
       toast.success('CSV exported.')
