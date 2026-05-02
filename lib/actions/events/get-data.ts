@@ -21,7 +21,7 @@ export async function getEventById(id: string): Promise<EventWithDetails | null>
   return EventService.getEventById(supabase, id)
 }
 
-export async function getMyRegistrations(): Promise<(EventRow & { event: EventRow | null })[]> {
+export async function getMyRegistrations(): Promise<Awaited<ReturnType<typeof EventService.getMyRegistrations>>> {
   const { supabase, user } = await requireUser()
   return EventService.getMyRegistrations(supabase, user.id)
 }

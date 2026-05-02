@@ -102,6 +102,29 @@ export type UserRow = Database["public"]["Tables"]["user"]["Row"];
 export type ChapterRow = Database["public"]["Tables"]["chapter"]["Row"];
 export type StudentProfileRow = Database["public"]["Tables"]["student_profile"]["Row"];
 
+// NEW: LEAD-002 schema types
+export type PersonProfileRow = {
+  user_id: string
+  university: string | null
+  major_or_interest: string | null
+  graduation_year: number | null
+  linkedin_url: string | null
+  skills: string[] | null
+  consent_recruiter_visibility: boolean
+  updated_at: string
+  created_at: string
+  gender: string | null
+}
+
+export type ChapterMembershipRow = {
+  id: string
+  user_id: string
+  chapter_id: string
+  position: string | null
+  status: 'pending' | 'approved' | 'rejected'
+  joined_at: string
+}
+
 export type CompanyRow = Database["public"]["Tables"]["company"]["Row"];
 
 export type RecruiterAccessRow = Database["public"]["Tables"]["recruiter_access"]["Row"];

@@ -1,0 +1,41 @@
+name: Deploy to QA
+
+on:
+  push:
+    branches: [dev]
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    environment: Preview
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 1
+
+      - name: Apply migrations to QA
+        run: |
+          supabase db push --project-ref ${{ vars.QA_SUPABASE_PROJECT_REF }}
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.QA_SUPABASE_SERVICE_ROLE_KEY }}
+        if: vars.QA_SUPABASE_PROJECT_REF != ''
+
+      - name: Seed QA data
+        run: |
+          PGPASSWORD=${{ secrets.QA_DB_PASSWORD }} psql -h ${{ vars.QA_DB_HOST }} -U postgres -d postgres -f supabase/seed-qa.sql
+        if: vars.QA_DB_HOST != ''
