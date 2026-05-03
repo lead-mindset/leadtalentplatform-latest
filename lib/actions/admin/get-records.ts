@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { AdminService } from '@/lib/services/admin.records'
+import { AdminService } from '@/lib/services/admin.service'
 import type {
   ActivityItem,
   ChapterRow,
@@ -12,7 +12,7 @@ import type {
 } from '@/lib/types'
 export async function getAdminDashboardStats() {
   const supabase = await createClient()
-  return AdminService.gerAdminDashboardStats( supabase)
+  return AdminService.getAdminDashboardStats(supabase)
 }
 export async function getChapterActivityList() {
   const supabase = await createClient()
@@ -38,11 +38,11 @@ export async function getChapters() {
   const supabase = await createClient()
   return AdminService.getChapters(supabase)
 }
-export async function getChapterMembers(chapter_ id: string) {
+export async function getChapterMembers(chapter_id: string) {
   const supabase = await createClient()
   return AdminService.getChapterMembers(supabase, chapter_id)
 }
-export async function getChapterMemberCount(chapter_ id: string) {
+export async function getChapterMemberCount(chapter_id: string) {
   const supabase = await createClient()
   return AdminService.getChapterMemberCount(supabase, chapter_id)
 }

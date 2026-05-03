@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { createBaseProfileSchema } from '@/lib/memberschema'
+import { createMemberProfileSchema } from '@/lib/memberschema'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
@@ -36,7 +36,7 @@ export async function submitOnboarding(formData: FormData) {
         }
 
         const t = await getTranslations()
-        const baseProfileSchema = createBaseProfileSchema(t)
+        const baseProfileSchema = createMemberProfileSchema(t)
 
         const resume = formData.get('resume') as File | null
 

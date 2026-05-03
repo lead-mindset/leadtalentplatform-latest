@@ -14,14 +14,6 @@ export function createBaseProfileSchema(t: Translator) {
       message: t('validation.selectGender'),
     }),
 
-    lead_chapter: z
-      .string({ message: t('validation.selectYourChapter') })
-      .min(1, t('validation.selectYourChapter'))
-      .refine(
-        (val) => LEAD_CHAPTER_VALUES.some((chapter) => chapter === val),
-        { message: t('validation.selectValidChapter') }
-      ),
-
     career: z.string().min(1, t('validation.careerRequired')),
 
     graduation_year: z.coerce
@@ -45,6 +37,20 @@ export function createBaseProfileSchema(t: Translator) {
   })
 }
 
+export const createBasicPersonProfileSchema = createBaseProfileSchema
+
+export function createMemberProfileSchema(t: Translator) {
+  return createBaseProfileSchema(t).extend({
+    lead_chapter: z
+      .string({ message: t('validation.selectYourChapter') })
+      .min(1, t('validation.selectYourChapter'))
+      .refine(
+        (val) => LEAD_CHAPTER_VALUES.some((chapter) => chapter === val),
+        { message: t('validation.selectValidChapter') }
+      ),
+  })
+}
+
 const resumeSchema = (t: Translator) =>
   z
     .custom<File>((file) => file instanceof File, { message: t('validation.uploadPdfFile') })
@@ -52,7 +58,7 @@ const resumeSchema = (t: Translator) =>
     .refine((file) => file.size <= 10 * 1024 * 1024, t('validation.pdfMaxSize'))
 
 export function createFullMemberSchemaFrontend(t: Translator) {
-  return createBaseProfileSchema(t).extend({
+  return createMemberProfileSchema(t).extend({
     resume_pdf: resumeSchema(t),
     termsAccepted: z.literal(true, {
       message: t('validation.termsRequired'),
@@ -61,10 +67,22 @@ export function createFullMemberSchemaFrontend(t: Translator) {
 }
 
 export function createProfileUpdateSchema(t: Translator) {
-  return createBaseProfileSchema(t).extend({
+  return createMemberProfileSchema(t).extend({
     resume_pdf: resumeSchema(t).optional(),
 
   })
+}
+
+export type BasicPersonProfileData = {
+  full_name: string
+  phone: string
+  gender?: 'man' | 'woman' | 'non_binary' | 'prefer_not_to_say'
+  career: string
+  graduation_year: number
+  skills: string[]
+  linkedin_url: string
+  consentRecruiterVisibility: boolean
+  emailNotificationsEnabled: boolean
 }
 
 export type ProfileData = {
