@@ -125,6 +125,10 @@ export type EventChapterInsert = Omit<EventChapterRow, 'id' | 'added_at'>;
 
 export type EventChapterUpdate = Partial<EventChapterInsert>;
 
+export type NewsletterSubscriptionRow = Database["public"]["Tables"]["newsletter_subscription"]["Row"];
+export type NewsletterSubscriptionInsert = Database["public"]["Tables"]["newsletter_subscription"]["Insert"];
+export type NewsletterSubscriptionUpdate = Database["public"]["Tables"]["newsletter_subscription"]["Update"];
+
 // ============================================================================
 // COMPOSITE TYPES - Used in queries with joins
 // ============================================================================

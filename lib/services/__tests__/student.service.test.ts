@@ -24,6 +24,7 @@ describe('StudentService', () => {
     remove?: ReturnType<typeof vi.fn>
     list?: ReturnType<typeof vi.fn>
     maybeSingle?: ReturnType<typeof vi.fn>
+    is?: ReturnType<typeof vi.fn>
   }
 
   const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
@@ -31,7 +32,10 @@ describe('StudentService', () => {
     const tableMocks: Record<string, TableMock> = {
       user: {
         update: vi.fn().mockReturnThis(),
-        eq: vi.fn(),
+        upsert: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn(),
       },
       person_profile: {
         select: vi.fn().mockReturnThis(),
@@ -46,6 +50,14 @@ describe('StudentService', () => {
         single: vi.fn(),
         upsert: vi.fn(),
         maybeSingle: vi.fn(),
+      },
+      newsletter_subscription: {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        is: vi.fn().mockReturnThis(),
+        maybeSingle: vi.fn(),
+        update: vi.fn().mockReturnThis(),
+        insert: vi.fn(),
       },
       resume: {
         select: vi.fn().mockReturnThis(),
@@ -147,6 +159,8 @@ describe('StudentService', () => {
       tableMocks.person_profile.upsert.mockResolvedValue({ error: null });
       // 3. Membership upsert succeeds
       tableMocks.chapter_membership.upsert.mockResolvedValue({ error: null });
+      tableMocks.newsletter_subscription.maybeSingle.mockResolvedValue({ data: null, error: null });
+      tableMocks.newsletter_subscription.insert.mockResolvedValue({ error: null });
 
       const result = await StudentService.updateProfile(mockSupabase as unknown as SupabaseClient, baseParams);
 
@@ -217,6 +231,55 @@ describe('StudentService', () => {
       );
     });
 
+    it('should create global and chapter newsletter subscriptions when opted in', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase();
+
+      tableMocks.user.eq.mockResolvedValue({ error: null });
+      tableMocks.person_profile.upsert.mockResolvedValue({ error: null });
+      tableMocks.chapter_membership.upsert.mockResolvedValue({ error: null });
+      tableMocks.newsletter_subscription.maybeSingle.mockResolvedValue({ data: null, error: null });
+      tableMocks.newsletter_subscription.insert.mockResolvedValue({ error: null });
+
+      const result = await StudentService.updateProfile(mockSupabase as unknown as SupabaseClient, baseParams);
+
+      expect(result).toEqual({ success: true });
+      expect(mockSupabase.from).toHaveBeenCalledWith('newsletter_subscription');
+      expect(tableMocks.newsletter_subscription.insert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          user_id: 'user-123',
+          scope: 'global',
+          chapter_id: null,
+          source: 'onboarding',
+          status: 'active',
+        })
+      );
+      expect(tableMocks.newsletter_subscription.insert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          user_id: 'user-123',
+          scope: 'chapter',
+          chapter_id: 'chapter-1',
+          source: 'onboarding',
+          status: 'active',
+        })
+      );
+    });
+
+    it('should skip newsletter subscriptions when opted out', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase();
+
+      tableMocks.user.eq.mockResolvedValue({ error: null });
+      tableMocks.person_profile.upsert.mockResolvedValue({ error: null });
+      tableMocks.chapter_membership.upsert.mockResolvedValue({ error: null });
+
+      const result = await StudentService.updateProfile(mockSupabase as unknown as SupabaseClient, {
+        ...baseParams,
+        emailNotificationsEnabled: false,
+      });
+
+      expect(result).toEqual({ success: true });
+      expect(tableMocks.newsletter_subscription.insert).not.toHaveBeenCalled();
+    });
+
     it('should upload resume when resumePdf is provided', async () => {
       const mockFile = new File(['pdf content'], 'resume.pdf', { type: 'application/pdf' });
 
@@ -225,6 +288,8 @@ describe('StudentService', () => {
       tableMocks.user.eq.mockResolvedValue({ error: null });
       tableMocks.person_profile.upsert.mockResolvedValue({ error: null });
       tableMocks.chapter_membership.upsert.mockResolvedValue({ error: null });
+      tableMocks.newsletter_subscription.maybeSingle.mockResolvedValue({ data: null, error: null });
+      tableMocks.newsletter_subscription.insert.mockResolvedValue({ error: null });
       mockSupabase.storage.upload.mockResolvedValue({ error: null });
       tableMocks.resume.upsert.mockResolvedValue({ error: null });
 
@@ -344,6 +409,55 @@ describe('StudentService', () => {
       await expect(
         StudentService.uploadResume(mockSupabase as unknown as SupabaseClient, 'user-123', mockFile)
       ).rejects.toThrow('Resume insert failed');
+    });
+  });
+
+  describe('submitOnboarding newsletter preferences', () => {
+    const baseParams = {
+      userId: 'user-123',
+      email: 'user@test.com',
+      fullName: 'Jane Doe',
+      phone: '+1234567890',
+      career: 'Computer Science',
+      gender: 'female',
+      graduationYear: 2025,
+      skills: ['TypeScript'],
+      linkedinUrl: 'https://linkedin.com/in/janedoe',
+      consentRecruiterVisibility: false,
+      emailNotificationsEnabled: true,
+      leadChapter: 'leaduni',
+      resumePdf: null,
+    };
+
+    it('creates global and chapter newsletter subscriptions during onboarding opt-in', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase();
+
+      tableMocks.user.single.mockResolvedValue({ data: { id: 'user-123' }, error: null });
+      tableMocks.person_profile.upsert.mockResolvedValue({ error: null });
+      tableMocks.chapter_membership.upsert.mockResolvedValue({ error: null });
+      tableMocks.newsletter_subscription.maybeSingle.mockResolvedValue({ data: null, error: null });
+      tableMocks.newsletter_subscription.insert.mockResolvedValue({ error: null });
+
+      const result = await StudentService.submitOnboarding(mockSupabase as unknown as SupabaseClient, baseParams);
+
+      expect(result).toEqual({ success: true });
+      expect(tableMocks.newsletter_subscription.insert).toHaveBeenCalledTimes(2);
+    });
+
+    it('does not create newsletter subscriptions during onboarding opt-out', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase();
+
+      tableMocks.user.single.mockResolvedValue({ data: { id: 'user-123' }, error: null });
+      tableMocks.person_profile.upsert.mockResolvedValue({ error: null });
+      tableMocks.chapter_membership.upsert.mockResolvedValue({ error: null });
+
+      const result = await StudentService.submitOnboarding(mockSupabase as unknown as SupabaseClient, {
+        ...baseParams,
+        emailNotificationsEnabled: false,
+      });
+
+      expect(result).toEqual({ success: true });
+      expect(tableMocks.newsletter_subscription.insert).not.toHaveBeenCalled();
     });
   });
 });

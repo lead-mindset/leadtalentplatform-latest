@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/lib/database.generated';
 import { EventRow, EventRegistrationRow, RegistrationStatus, EventWithDetails, EventChapterRow, RegistrationWithUser, UserRow, ChapterRow, PersonProfileRow } from '@/lib/types';
+import { NewsletterSubscriptionService } from '@/lib/services/newsletter-subscription.service';
 
 /**
  * Service Layer: Event Domain
@@ -79,6 +80,10 @@ export type CreateEventParams = {
   locationLongitude?: number | null;
   createdById: string;
 };
+
+type EventNewsletterOptions = {
+  subscribeToHostChapters?: boolean
+}
 
 export type EventValidationResult =
   | { ok: true; event: Pick<EventRow, 'id' | 'title' | 'is_published' | 'start_at'> }
@@ -227,7 +232,8 @@ export const EventService = {
   async applyForEvent(
     supabase: SupabaseClient<Database>,
     eventId: string,
-    userId: string
+    userId: string,
+    options: EventNewsletterOptions = {}
   ): Promise<ApplicationResult> {
     const now = new Date().toISOString();
 
@@ -250,6 +256,21 @@ export const EventService = {
       return { success: false, error: 'Could not submit application. Please try again.' };
     }
 
+    if (options.subscribeToHostChapters) {
+      const subscriptionResult = await NewsletterSubscriptionService.subscribeForEventRegistration(supabase, {
+        userId,
+        eventId,
+        source: 'event_registration',
+      })
+
+      if (!subscriptionResult.success) {
+        logger.error(
+          { context: 'applyForEvent.newsletter', error: subscriptionResult.error },
+          'Newsletter subscription failed'
+        )
+      }
+    }
+
     return { success: true, registration };
   },
 
@@ -259,7 +280,8 @@ export const EventService = {
   async registerForEvent(
     supabase: SupabaseClient<Database>,
     eventId: string,
-    userId: string
+    userId: string,
+    options: EventNewsletterOptions = {}
   ): Promise<RegistrationResult> {
     const now = new Date().toISOString();
 
@@ -300,6 +322,21 @@ export const EventService = {
         .single();
 
       if (!reviveError && revived) {
+        if (options.subscribeToHostChapters) {
+          const subscriptionResult = await NewsletterSubscriptionService.subscribeForEventRegistration(supabase, {
+            userId,
+            eventId,
+            source: 'event_registration',
+          })
+
+          if (!subscriptionResult.success) {
+            logger.error(
+              { context: 'registerForEvent.newsletter.revive', error: subscriptionResult.error },
+              'Newsletter subscription failed'
+            )
+          }
+        }
+
         return { success: true, registration: revived as EventRegistrationRow, action: 'revived' };
       }
       logger.error({ context: 'registerForEvent', error: reviveError }, 're-register after cancel failed');
@@ -361,6 +398,21 @@ export const EventService = {
             .single();
 
           if (!reviveError && revived) {
+            if (options.subscribeToHostChapters) {
+              const subscriptionResult = await NewsletterSubscriptionService.subscribeForEventRegistration(supabase, {
+                userId,
+                eventId,
+                source: 'event_registration',
+              })
+
+              if (!subscriptionResult.success) {
+                logger.error(
+                  { context: 'registerForEvent.newsletter.duplicateRevive', error: subscriptionResult.error },
+                  'Newsletter subscription failed'
+                )
+              }
+            }
+
             return {
               success: true,
               registration: revived as EventRegistrationRow,
@@ -373,6 +425,21 @@ export const EventService = {
 
       logger.error({ context: 'registerForEvent', error: error }, 'insert failed');
       return { success: false, error: 'Could not complete registration. Please try again.' };
+    }
+
+    if (options.subscribeToHostChapters) {
+      const subscriptionResult = await NewsletterSubscriptionService.subscribeForEventRegistration(supabase, {
+        userId,
+        eventId,
+        source: 'event_registration',
+      })
+
+      if (!subscriptionResult.success) {
+        logger.error(
+          { context: 'registerForEvent.newsletter.create', error: subscriptionResult.error },
+          'Newsletter subscription failed'
+        )
+      }
     }
 
     return { success: true, registration: registration as EventRegistrationRow, action: 'created' };

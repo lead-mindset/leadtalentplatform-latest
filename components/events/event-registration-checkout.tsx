@@ -6,6 +6,7 @@ import { Icons } from '@/components/ui/icons'
 import { registerForEvent, type RegisterForEventState } from '@/lib/actions/events/register'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Link } from '@/i18n/routing'
 import { CancelRegistrationDialog } from '@/components/events/cancel-registration-dialog'
 import { cn } from '@/lib/utils'
@@ -122,6 +123,18 @@ export function EventRegistrationCheckout({
         <form action={formAction} className="space-y-3">
           <input type="hidden" name="eventId" value={eventId} />
           {statusMessages}
+
+          <label className="flex items-start gap-3 rounded-lg border bg-muted/30 p-3 text-sm">
+            <Checkbox
+              name="subscribeToHostChapters"
+              value="true"
+              defaultChecked
+              className="mt-0.5"
+            />
+            <span className="text-muted-foreground">
+              Send me updates from the host and collaborator chapters for this event.
+            </span>
+          </label>
 
           <div className="hidden space-y-2 md:block">
             <SubmitButton disabled={registerDisabled} label="Register" />
