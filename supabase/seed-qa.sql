@@ -1,6 +1,13 @@
 -- QA Test Data for LEAD Talent Platform
 -- This file provides test personas for QA/staging environments
 -- Run: psql -f supabase/seed.sql
+--
+-- LEAD-010 note:
+-- This file is a legacy migration fixture because it still writes
+-- public.student_profile rows. Use it only when intentionally testing the
+-- student_profile -> person_profile/chapter_membership migration path.
+-- Routine QA personas should use supabase/seed.sql, which writes the layered
+-- account model directly.
 
 -- ============================================
 -- USERS (Test Personas)

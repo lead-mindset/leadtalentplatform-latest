@@ -32,7 +32,9 @@ type Props = {
   eventId: string
   eventTitle: string
   isLoggedIn: boolean
+  hasBasicProfile: boolean
   loginUrl: string
+  onboardingUrl: string
   registrationClosed: boolean
   isRegistered: boolean
   hadCancelledRegistration?: boolean
@@ -46,7 +48,9 @@ export function EventRegistrationCheckout({
   eventId,
   eventTitle,
   isLoggedIn,
+  hasBasicProfile,
   loginUrl,
+  onboardingUrl,
   registrationClosed,
   isRegistered,
   hadCancelledRegistration = false,
@@ -61,7 +65,7 @@ export function EventRegistrationCheckout({
   const isFull = capacity !== null && registeredCount >= capacity
   const showLowSpots = spotsLeft !== null && spotsLeft > 0 && spotsLeft <= 10 && !isRegistered
 
-  const registerDisabled = registrationClosed || isFull || isRegistered || !isLoggedIn
+  const registerDisabled = registrationClosed || isFull || isRegistered || !isLoggedIn || !hasBasicProfile
   const qrHref = `/student/events?event=${eventId}`
 
   const statusMessages =
@@ -103,6 +107,20 @@ export function EventRegistrationCheckout({
           <Button asChild className="w-full">
             <Link href={loginUrl}>Sign in</Link>
           </Button>
+        </div>
+      ) : !hasBasicProfile ? (
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Complete onboarding once, then use your profile to register for LEAD events.
+          </p>
+          <Button asChild className="w-full">
+            <Link href={onboardingUrl}>Complete onboarding</Link>
+          </Button>
+          {state?.requiresOnboarding && state.onboardingPath ? (
+            <p className="text-xs text-muted-foreground">
+              Your profile is still incomplete. Continue to onboarding to finish registration.
+            </p>
+          ) : null}
         </div>
       ) : isRegistered ? (
         <div className="space-y-3">

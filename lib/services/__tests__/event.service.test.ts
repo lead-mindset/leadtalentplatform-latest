@@ -113,6 +113,20 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
       _insertChain: insertChain,
       _deleteChain: deleteChain,
     },
+    event_application_question: {
+      select: vi.fn().mockReturnValue({
+        ...selectChain,
+        order: vi.fn().mockResolvedValue({ data: [], error: null }),
+      }),
+    },
+    event_application_answer: {
+      select: vi.fn().mockReturnValue(selectChain),
+      insert: vi.fn().mockReturnValue(insertChain),
+      delete: vi.fn().mockReturnValue(deleteChain),
+      _selectChain: selectChain,
+      _insertChain: insertChain,
+      _deleteChain: deleteChain,
+    },
     ...overrides,
   }
 

@@ -43,6 +43,27 @@ The public participant profile foundation is intentionally separate from chapter
 - Manual validation should use `participant@test.com` and confirm the account can complete/reuse `person_profile` without a `chapter_membership` row.
 - RLS validation should confirm authenticated users can insert/update/select only their own `person_profile`; admins may access all profiles.
 
+### Basic Onboarding Flow (LEAD-013)
+
+Basic onboarding is a thin action over the profile and newsletter services:
+
+- The action must validate form input with Zod, call `PersonProfileService.upsertBasicProfile()`, and never call `StudentService.submitOnboarding()`.
+- Resume upload, chapter application, `lead_chapter`, and `chapter_membership` writes are out of scope for this flow.
+- Global newsletter opt-in should call `NewsletterSubscriptionService.subscribeGlobal()` with `source='onboarding'`.
+- Selected chapter interests should call `NewsletterSubscriptionService.subscribeToChapters()` with `source='onboarding'`.
+- Manual validation should submit `/onboarding`, then confirm `person_profile` and `newsletter_subscription` rows exist while no new `chapter_membership` row is created.
+
+### Event Registration With Basic Profile (LEAD-014)
+
+Public event registration uses `person_profile` as the readiness gate:
+
+- Guests may browse public events, but registration and application CTAs must route them to sign in.
+- Authenticated users without `person_profile` must be routed to `/onboarding?next=/events/{eventId}` before open registration or application submission.
+- Authenticated users with `person_profile` can register for open events without `chapter_membership`.
+- Event registration tests must preserve capacity, duplicate-registration, cancelled reactivation, and application-event behavior.
+- Leaving the event newsletter checkbox checked should call `NewsletterSubscriptionService.subscribeForEventRegistration()` with `source='event_registration'`.
+- Helper tests should assert the registration preflight checks `person_profile` and never reads `chapter_membership`.
+
 ### Chapter Membership Flow (LEAD-006)
 
 Chapter affiliation is explicit and separate from basic profile data:
@@ -62,6 +83,63 @@ Newsletter consent is stored in `newsletter_subscription`, not profile tables:
 - Event registration should keep the host/collaborator chapter checkbox checked by default; leaving it checked should create or reactivate chapter subscription rows for the owner and collaborator chapters.
 - Unsubscribe behavior should set `status='unsubscribed'` and `unsubscribed_at`, preserving the row for future campaign planning filters.
 - Seed validation includes `participant@test.com` with an active global row, `member@test.com` with an active `leaduni` chapter row, and `alumni@test.com` with an unsubscribed global row.
+
+### Event Application Questions (LEAD-009)
+
+Application questions are first-party event data, not external form state:
+
+- Editors should define ordered `event_application_question` rows for application-based events.
+- Service tests must validate required answers, URL answers, select/checkbox options, and ordering.
+- Participant submissions must create `event_registration.status='pending_review'` and store answers in `event_application_answer` using `registration_id`.
+- Checkbox answers should use `answer_json`; text, URL, and single-select answers should use `answer_text`.
+- Manual validation should use `editor@test.com` to create one event with all V1 question types, then `participant@test.com` to submit answers and confirm the editor review screen displays them.
+- File upload and branching logic are not part of LEAD-009.
+
+### Legacy Student Profile Migration (LEAD-010)
+
+`student_profile` is a deprecated source table. LEAD-010 preserves its data in the layered model without making it the normal write path:
+
+- `student_profile.major` maps to `person_profile.major_or_interest`, not `person_profile.university`.
+- `person_profile.university` should remain null unless a reliable university source exists outside legacy `student_profile`.
+- `student_profile.chapter_id`, `approval_status`, `approved_by_id`, and `member_id` map to `chapter_membership`.
+- Approved or alumni memberships should have an active `lead_identity` unless the user already has a stronger founder/staff identity.
+- `consent_date` and `is_filled` have no direct target; keep them historical until `student_profile` is removed in a later cleanup.
+- `supabase/seed-qa.sql` is a legacy migration fixture. Routine QA should use `supabase/seed.sql`.
+
+After `pnpm supabase db reset`, run these checks against local Docker Supabase:
+
+```sql
+-- Every legacy profile has a layered person profile.
+select count(*) as missing_person_profiles
+from public.student_profile sp
+left join public.person_profile pp on pp.user_id = sp.user_id
+where pp.user_id is null;
+
+-- Reusable fields match the accepted mapping.
+select count(*) as profile_mismatches
+from public.student_profile sp
+join public.person_profile pp on pp.user_id = sp.user_id
+where pp.major_or_interest is distinct from sp.major
+  or pp.graduation_year is distinct from sp.graduation_year
+  or pp.linkedin_url is distinct from sp.linkedin_url
+  or pp.skills is distinct from sp.skills
+  or pp.gender is distinct from sp.gender;
+
+-- The old false major -> university mapping is gone.
+select count(*) as false_university_mappings
+from public.student_profile sp
+join public.person_profile pp on pp.user_id = sp.user_id
+where pp.university = sp.major;
+
+-- Every legacy chapter profile has a membership target.
+select count(*) as missing_memberships
+from public.student_profile sp
+left join public.chapter_membership cm
+  on cm.user_id = sp.user_id
+ and cm.chapter_id = sp.chapter_id
+where sp.chapter_id is not null
+  and cm.id is null;
+```
 
 ### Testing Concurrency (Event Registrations)
 When validating risk-prone flows like event registration (e.g., maximum capacity checks), you **must** write unit tests simulating concurrency.

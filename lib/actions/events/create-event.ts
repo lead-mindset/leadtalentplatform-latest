@@ -4,7 +4,16 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { requireUser, requireChapterMember } from '@/lib/auth';
 import { EventService } from '@/lib/services/event.service';
+import { EventApplicationService } from '@/lib/services/event-application.service';
 import type { EventRow } from '@/lib/types';
+
+const ApplicationQuestionSchema = z.object({
+  id: z.string().uuid().optional(),
+  questionText: z.string().min(1),
+  questionType: z.enum(['short_text', 'long_text', 'single_select', 'checkbox', 'url']),
+  options: z.array(z.string()).nullable().optional(),
+  isRequired: z.boolean().optional(),
+})
 
 const EventInputSchema = z
   .object({
@@ -21,6 +30,7 @@ const EventInputSchema = z
     isPublished: z.coerce.boolean().optional(),
     accessModel: z.enum(['open', 'application']).default('open'),
     applicationFormUrl: z.string().url().nullable().optional(),
+    applicationQuestions: z.array(ApplicationQuestionSchema).optional(),
     locationName: z.string().optional(),
     locationAddress: z.string().optional(),
     locationCity: z.string().optional(),
@@ -31,13 +41,16 @@ const EventInputSchema = z
   .refine(
     (data) => {
       if (data.accessModel === 'application') {
-        return data.applicationFormUrl && data.applicationFormUrl.trim().length > 0;
+        return (
+          Boolean(data.applicationFormUrl?.trim()) ||
+          Boolean(data.applicationQuestions?.length)
+        );
       }
       return true;
     },
     {
-      message: 'Application form URL is required for application-gated events',
-      path: ['applicationFormUrl'],
+      message: 'Application events need at least one question or an application form URL',
+      path: ['applicationQuestions'],
     }
   )
   .refine(
@@ -96,6 +109,15 @@ export async function createEvent(input: CreateEventInput): Promise<CreateEventR
       chapter_id: targetChapterId,
       createdById: user.id,
     });
+
+    if (data.accessModel === 'application') {
+      const questionsResult = await EventApplicationService.upsertQuestionsForEvent(supabase, {
+        eventId: event.id,
+        questions: data.applicationQuestions ?? [],
+      });
+
+      if (!questionsResult.success) return { error: questionsResult.error };
+    }
 
     revalidatePath(redirectPath);
     return { success: true, event };

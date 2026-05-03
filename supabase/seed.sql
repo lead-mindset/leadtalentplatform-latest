@@ -31,25 +31,47 @@ UPDATE public."user" SET name = 'Test Recruiter', role = 'recruiter' WHERE id = 
 UPDATE public."user" SET name = 'Test Alumni', role = 'member' WHERE id = '77777777-7777-7777-7777-777777777777';
 
 -- Insert Person Profiles (using user_id)
-INSERT INTO public.person_profile (id, user_id, is_recruiter_visible) VALUES
-  ('11111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', false),
-  ('22222222-2222-2222-2222-222222222222', '22222222-2222-2222-2222-222222222222', true),
-  ('33333333-3333-3333-3333-333333333333', '33333333-3333-3333-3333-333333333333', false),
-  ('44444444-4444-4444-4444-444444444444', '44444444-4444-4444-4444-444444444444', false),
-  ('55555555-5555-5555-5555-555555555555', '55555555-5555-5555-5555-555555555555', false),
-  ('66666666-6666-6666-6666-666666666666', '66666666-6666-6666-6666-666666666666', false),
-  ('77777777-7777-7777-7777-777777777777', '77777777-7777-7777-7777-777777777777', true);
+INSERT INTO public.person_profile (
+  id,
+  user_id,
+  university,
+  major_or_interest,
+  graduation_year,
+  linkedin_url,
+  portfolio_url,
+  skills,
+  gender,
+  is_recruiter_visible
+) VALUES
+  ('11111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'Universidad Nacional de Ingenieria', 'Data and public policy', 2028, 'https://linkedin.com/in/test-participant', 'https://test-participant.dev', ARRAY['Research', 'Events'], 'prefer_not_to_say', false),
+  ('22222222-2222-2222-2222-222222222222', '22222222-2222-2222-2222-222222222222', 'Universidad Nacional de Ingenieria', 'Industrial Engineering', 2027, 'https://linkedin.com/in/test-member', 'https://test-member.dev', ARRAY['Operations', 'Analytics'], 'woman', true),
+  ('33333333-3333-3333-3333-333333333333', '33333333-3333-3333-3333-333333333333', 'Universidad Nacional de Ingenieria', 'Software Engineering', 2026, 'https://linkedin.com/in/test-editor', 'https://test-editor.dev', ARRAY['Leadership', 'React', 'SQL'], 'man', false),
+  ('44444444-4444-4444-4444-444444444444', '44444444-4444-4444-4444-444444444444', 'LEAD Peru', 'Platform administration', null, 'https://linkedin.com/in/test-admin', null, ARRAY['Governance', 'Operations'], 'prefer_not_to_say', false),
+  ('55555555-5555-5555-5555-555555555555', '55555555-5555-5555-5555-555555555555', 'LEAD Peru', 'Program operations', null, 'https://linkedin.com/in/test-staff', null, ARRAY['Programs', 'Community'], 'prefer_not_to_say', false),
+  ('66666666-6666-6666-6666-666666666666', '66666666-6666-6666-6666-666666666666', 'Test Company', 'Recruiting', null, 'https://linkedin.com/in/test-recruiter', null, ARRAY['Hiring', 'Talent'], 'prefer_not_to_say', false),
+  ('77777777-7777-7777-7777-777777777777', '77777777-7777-7777-7777-777777777777', 'Universidad Nacional de Ingenieria', 'Finance', 2024, 'https://linkedin.com/in/test-alumni', 'https://test-alumni.dev', ARRAY['Finance', 'Mentorship'], 'woman', true);
 
--- Insert Chapter Memberships (using user_id instead of person_id, role is mapped to position in new schema)
-INSERT INTO public.chapter_membership (user_id, chapter_id, position, status) VALUES
-  ('22222222-2222-2222-2222-222222222222', 'leaduni', 'member', 'approved'),
-  ('33333333-3333-3333-3333-333333333333', 'leaduni', 'editor', 'approved'),
-  ('77777777-7777-7777-7777-777777777777', 'leaduni', 'member', 'alumni');
+-- Insert Chapter Memberships (using the layered membership model)
+INSERT INTO public.chapter_membership (
+  user_id,
+  chapter_id,
+  position,
+  status,
+  approved_by_id,
+  member_id,
+  joined_at
+) VALUES
+  ('22222222-2222-2222-2222-222222222222', 'leaduni', 'member', 'approved', '44444444-4444-4444-4444-444444444444', 'LEAD-UNI-0001', NOW() - INTERVAL '180 days'),
+  ('33333333-3333-3333-3333-333333333333', 'leaduni', 'editor', 'approved', '44444444-4444-4444-4444-444444444444', 'LEAD-UNI-0002', NOW() - INTERVAL '210 days'),
+  ('77777777-7777-7777-7777-777777777777', 'leaduni', 'member', 'alumni', '55555555-5555-5555-5555-555555555555', 'LEAD-UNI-0003', NOW() - INTERVAL '540 days');
 
--- Insert Lead Identities (Global Roles) (using user_id)
-INSERT INTO public.lead_identity (user_id, identity_type) VALUES
-  ('44444444-4444-4444-4444-444444444444', 'founder'),
-  ('55555555-5555-5555-5555-555555555555', 'staff');
+-- Insert Lead Identities (Global and membership-derived roles)
+INSERT INTO public.lead_identity (user_id, identity_type, chapter_id, issued_by_id, issued_at) VALUES
+  ('22222222-2222-2222-2222-222222222222', 'chapter_member', 'leaduni', '44444444-4444-4444-4444-444444444444', NOW() - INTERVAL '180 days'),
+  ('33333333-3333-3333-3333-333333333333', 'chapter_editor', 'leaduni', '44444444-4444-4444-4444-444444444444', NOW() - INTERVAL '210 days'),
+  ('44444444-4444-4444-4444-444444444444', 'founder', null, null, NOW() - INTERVAL '365 days'),
+  ('55555555-5555-5555-5555-555555555555', 'staff', null, '44444444-4444-4444-4444-444444444444', NOW() - INTERVAL '300 days'),
+  ('77777777-7777-7777-7777-777777777777', 'alumni', 'leaduni', '55555555-5555-5555-5555-555555555555', NOW() - INTERVAL '540 days');
 
 -- Insert accepted recruiter scope for recruiter persona.
 INSERT INTO public.company (id, name, created_by_id) VALUES

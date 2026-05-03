@@ -1,99 +1,48 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
-import { createMemberProfileSchema } from '@/lib/memberschema'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
-import { sendWelcomeEmail } from '@/lib/emails/send-email'
-import { StudentService } from '@/lib/services/student.service'
-import { ChapterService } from '@/lib/services/chapter.service'
-
-function parseSkills(rawValue: FormDataEntryValue | null): string[] {
-    if (typeof rawValue !== 'string' || !rawValue.trim()) {
-        return []
-    }
-
-    try {
-        const parsed = JSON.parse(rawValue)
-        return Array.isArray(parsed)
-            ? parsed.filter((skill): skill is string => typeof skill === 'string')
-            : []
-    } catch {
-        return []
-    }
-}
-
+import { createClient } from '@/lib/supabase/server'
+import {
+  parseBasicOnboardingFormData,
+  saveBasicOnboarding,
+} from '@/lib/actions/student/onboarding.helpers'
 
 export async function submitOnboarding(formData: FormData) {
-    try {
-        const supabase = await createClient()
-        const { data: { user } } = await supabase.auth.getUser()
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
-        if (!user?.id || !user?.email) {
-            return { error: 'Unauthorized' }
-        }
-
-        const t = await getTranslations()
-        const baseProfileSchema = createMemberProfileSchema(t)
-
-        const resume = formData.get('resume') as File | null
-
-        const profileData = {
-            full_name: formData.get('full_name')?.toString() || '',
-            phone: formData.get('phone')?.toString() || '',
-            career: formData.get('career')?.toString() || '',
-            lead_chapter: formData.get('lead_chapter')?.toString() || '',
-            gender: formData.get('gender')?.toString() || '',
-            graduation_year: Number(formData.get('graduation_year')) || 0,
-            skills: parseSkills(formData.get('skills')),
-            linkedin_url: formData.get('linkedin_url')?.toString() || '',
-            consentRecruiterVisibility: formData.get('consentRecruiterVisibility') === 'true',
-            emailNotificationsEnabled: formData.get('emailNotificationsEnabled') === 'true',
-        }
-
-        const parsed = baseProfileSchema.safeParse(profileData)
-        if (!parsed.success) {
-            return { error: "Validation failed", details: parsed.error }
-        }
-
-        const data = parsed.data
-
-        const result = await StudentService.submitOnboarding(supabase, {
-            userId: user.id,
-            email: user.email,
-            fullName: data.full_name,
-            phone: data.phone,
-            career: data.career,
-            gender: data.gender,
-            graduationYear: data.graduation_year,
-            skills: data.skills,
-            linkedinUrl: data.linkedin_url,
-            consentRecruiterVisibility: data.consentRecruiterVisibility,
-            emailNotificationsEnabled: data.emailNotificationsEnabled,
-            leadChapter: data.lead_chapter,
-            resumePdf: resume && resume.size > 0 ? resume : null,
-        })
-
-        if (!result.success) {
-            return { error: result.error }
-        }
-
-        const chapterName = await ChapterService.getChapterName(supabase, data.lead_chapter)
-
-        if (chapterName) {
-            void sendWelcomeEmail(
-                user.email,
-                data.full_name,
-                chapterName,
-                'es'
-            ).catch(err => console.error('Failed to send welcome email:', err))
-        }
-    } catch (error) {
-        console.error('Onboarding submission error:', error)
-        return { error: 'Internal server error' }
+    if (!user?.id || !user?.email) {
+      return { error: 'Unauthorized' }
     }
 
-    revalidatePath('/student')
-    redirect('/student')
+    const t = await getTranslations()
+    const parsed = parseBasicOnboardingFormData(formData, t)
+
+    if (!parsed.success) {
+      return { error: 'Validation failed', details: parsed.error.flatten() }
+    }
+
+    const result = await saveBasicOnboarding(supabase, {
+      userId: user.id,
+      email: user.email,
+      data: parsed.data,
+    })
+
+    if (!result.success) {
+      return { error: result.error }
+    }
+  } catch (error) {
+    console.error('Onboarding submission error:', error)
+    return { error: 'Internal server error' }
+  }
+
+  revalidatePath('/onboarding')
+  revalidatePath('/events')
+  revalidatePath('/student/profile')
+  redirect('/events')
 }

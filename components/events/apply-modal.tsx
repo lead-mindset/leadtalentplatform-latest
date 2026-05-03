@@ -12,13 +12,23 @@ import {
 } from '@/components/ui'
 import { Icons } from '@/components/ui/icons'
 import { Checkbox } from '@/components/ui/checkbox'
+import type { EventApplicationQuestionRow } from '@/lib/types'
+
+type ApplicationAnswerPayload = {
+  questionId: string
+  value: string | string[] | null
+}
 
 interface ApplyModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   eventTitle: string
   applicationFormUrl: string
-  onConfirm: (subscribeToHostChapters: boolean) => Promise<void>
+  questions?: EventApplicationQuestionRow[]
+  onConfirm: (
+    subscribeToHostChapters: boolean,
+    answers: ApplicationAnswerPayload[]
+  ) => Promise<void>
   isSubmitting?: boolean
 }
 
@@ -27,11 +37,14 @@ export function ApplyModal({
   onOpenChange,
   eventTitle,
   applicationFormUrl,
+  questions = [],
   onConfirm,
   isSubmitting = false,
 }: ApplyModalProps) {
   const [step, setStep] = useState<'form' | 'confirmation'>('form')
   const [subscribeToHostChapters, setSubscribeToHostChapters] = useState(true)
+  const [answers, setAnswers] = useState<Record<string, string | string[]>>({})
+  const hasNativeQuestions = questions.length > 0
 
   const handleOpenForm = () => {
     window.open(applicationFormUrl, '_blank')
@@ -39,11 +52,12 @@ export function ApplyModal({
   }
 
   const handleConfirm = async () => {
-    await onConfirm(subscribeToHostChapters)
+    await onConfirm(subscribeToHostChapters, buildAnswerPayload())
     onOpenChange(false)
     setTimeout(() => {
       setStep('form')
       setSubscribeToHostChapters(true)
+      setAnswers({})
     }, 300)
   }
 
@@ -52,7 +66,124 @@ export function ApplyModal({
     setTimeout(() => {
       setStep('form')
       setSubscribeToHostChapters(true)
+      setAnswers({})
     }, 300)
+  }
+
+  const buildAnswerPayload = (): ApplicationAnswerPayload[] =>
+    questions.map((question) => ({
+      questionId: question.id,
+      value: answers[question.id] ?? null,
+    }))
+
+  const updateAnswer = (questionId: string, value: string | string[]) => {
+    setAnswers((current) => ({ ...current, [questionId]: value }))
+  }
+
+  const toggleCheckboxAnswer = (questionId: string, option: string, checked: boolean) => {
+    setAnswers((current) => {
+      const selected = Array.isArray(current[questionId]) ? current[questionId] as string[] : []
+      return {
+        ...current,
+        [questionId]: checked
+          ? Array.from(new Set([...selected, option]))
+          : selected.filter((item) => item !== option),
+      }
+    })
+  }
+
+  if (hasNativeQuestions) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader className="pb-4">
+            <DialogTitle className="text-xl font-semibold">Apply to {eventTitle}</DialogTitle>
+            <DialogDescription>
+              Submit your application for editor review.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="max-h-[60vh] space-y-5 overflow-y-auto pr-1">
+            {questions.map((question) => (
+              <div key={question.id} className="space-y-2">
+                <label className="text-sm font-medium">
+                  {question.question_text}
+                  {question.is_required ? <span className="text-destructive"> *</span> : null}
+                </label>
+
+                {question.question_type === 'long_text' ? (
+                  <textarea
+                    value={(answers[question.id] as string | undefined) ?? ''}
+                    onChange={(event) => updateAnswer(question.id, event.target.value)}
+                    className="min-h-28 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  />
+                ) : question.question_type === 'single_select' ? (
+                  <select
+                    value={(answers[question.id] as string | undefined) ?? ''}
+                    onChange={(event) => updateAnswer(question.id, event.target.value)}
+                    className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                  >
+                    <option value="">Select an option</option>
+                    {(question.options ?? []).map((option) => (
+                      <option key={option} value={option}>{option}</option>
+                    ))}
+                  </select>
+                ) : question.question_type === 'checkbox' ? (
+                  <div className="space-y-2">
+                    {(question.options ?? []).map((option) => {
+                      const selected = Array.isArray(answers[question.id]) ? answers[question.id] as string[] : []
+                      return (
+                        <label key={option} className="flex items-center gap-2 rounded-md border bg-muted/30 p-3 text-sm">
+                          <Checkbox
+                            checked={selected.includes(option)}
+                            onCheckedChange={(checked) => toggleCheckboxAnswer(question.id, option, checked === true)}
+                          />
+                          {option}
+                        </label>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <input
+                    type={question.question_type === 'url' ? 'url' : 'text'}
+                    value={(answers[question.id] as string | undefined) ?? ''}
+                    onChange={(event) => updateAnswer(question.id, event.target.value)}
+                    className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  />
+                )}
+              </div>
+            ))}
+
+            <label className="flex items-start gap-3 rounded-lg border bg-muted/30 p-4">
+              <Checkbox
+                checked={subscribeToHostChapters}
+                onCheckedChange={(checked) => setSubscribeToHostChapters(checked === true)}
+                className="mt-0.5"
+              />
+              <span className="text-sm text-muted-foreground">
+                Send me updates from the host and collaborator chapters for this event.
+              </span>
+            </label>
+          </div>
+
+          <DialogFooter className="gap-3 sm:gap-0 pt-4">
+            <Button variant="outline" onClick={handleCancel} disabled={isSubmitting}>
+              Cancel
+            </Button>
+            <Button onClick={handleConfirm} disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Icons.Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Submitting
+                </>
+              ) : (
+                'Submit Application'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    )
   }
 
   return (

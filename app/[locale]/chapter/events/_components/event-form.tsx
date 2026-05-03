@@ -9,17 +9,57 @@ import { createEvent, type CreateEventInput } from '@/lib/actions/events/create-
 import { updateEvent, type UpdateEventInput } from '@/lib/actions/events/update-event'
 import { deleteEvent } from '@/lib/actions/events/delete-event'
 import { addEventCollaborators } from '@/lib/actions/events/add-event-collaborators'
-import type { EventRow, EventType, EventAccessModel, ChapterRow } from '@/lib/types'
+import type { EventRow, EventType, EventAccessModel, ChapterRow, EventApplicationQuestionRow, EventApplicationQuestionType } from '@/lib/types'
 import { EVENT_ACCESS_MODEL_OPTIONS } from '@/lib/constants'
 import { useRouter } from 'next/navigation'
 import { useLocale } from 'next-intl'
 import { uploadEventCover } from '@/lib/actions/events/upload-cover'
-import { ImagePlus, Check, ArrowRight, ArrowLeft, UploadCloud, MapPin, Video, MonitorSmartphone, Lightbulb, UserCheck, QrCode, Rocket, Save, Trash2 } from 'lucide-react'
+import { ImagePlus, Check, ArrowRight, ArrowLeft, UploadCloud, MapPin, Video, MonitorSmartphone, Lightbulb, UserCheck, QrCode, Rocket, Save, Trash2, Plus, GripVertical, ChevronUp, ChevronDown } from 'lucide-react'
 import { toast } from 'sonner'
 import { CollaboratorManager } from './collaborator-manager'
 import { LocationAutocomplete } from '@/components/events/location-autocomplete'
 
 type Mode = 'create' | 'edit'
+type EditableApplicationQuestion = {
+  id?: string
+  questionText: string
+  questionType: EventApplicationQuestionType
+  optionsText: string
+  isRequired: boolean
+}
+
+const questionTypeOptions: Array<{ value: EventApplicationQuestionType; label: string }> = [
+  { value: 'short_text', label: 'Short text' },
+  { value: 'long_text', label: 'Long text' },
+  { value: 'single_select', label: 'Single select' },
+  { value: 'checkbox', label: 'Checkbox' },
+  { value: 'url', label: 'URL' },
+]
+
+function toEditableQuestion(question: EventApplicationQuestionRow): EditableApplicationQuestion {
+  return {
+    id: question.id,
+    questionText: question.question_text,
+    questionType: question.question_type,
+    optionsText: question.options?.join('\n') ?? '',
+    isRequired: question.is_required,
+  }
+}
+
+function toQuestionPayload(question: EditableApplicationQuestion) {
+  const options = question.optionsText
+    .split('\n')
+    .map((option) => option.trim())
+    .filter(Boolean)
+
+  return {
+    id: question.id,
+    questionText: question.questionText.trim(),
+    questionType: question.questionType,
+    options: ['single_select', 'checkbox'].includes(question.questionType) ? options : null,
+    isRequired: question.isRequired,
+  }
+}
 
 function toDateTimeLocal(iso: string | null | undefined) {
   if (!iso) return ''
@@ -40,10 +80,12 @@ export function EventForm({
   mode,
   initial,
   editorChapter,
+  applicationQuestions = [],
 }: {
   mode: Mode
   initial?: EventRow | null
   editorChapter?: ChapterRow | null
+  applicationQuestions?: EventApplicationQuestionRow[]
 }) {
   const router = useRouter()
   const locale = useLocale()
@@ -90,6 +132,9 @@ export function EventForm({
   const [isPublished, setIsPublished] = useState(defaults.isPublished)
   const [accessModel, setAccessModel] = useState<EventAccessModel>(defaults.accessModel)
   const [applicationFormUrl, setApplicationFormUrl] = useState(defaults.applicationFormUrl)
+  const [applicationQuestionsState, setApplicationQuestionsState] = useState<EditableApplicationQuestion[]>(
+    applicationQuestions.map(toEditableQuestion)
+  )
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
   const [isAutoSaving, setIsAutoSaving] = useState(false)
   const [isDraggingCover, setIsDraggingCover] = useState(false)
@@ -116,7 +161,8 @@ export function EventForm({
       setAccessModel((initial.access_model ?? 'open') as EventAccessModel)
       setApplicationFormUrl(initial.application_form_url ?? '')
     }
-  }, [initial])
+    setApplicationQuestionsState(applicationQuestions.map(toEditableQuestion))
+  }, [initial, applicationQuestions])
 
   async function handleCoverFile(file: File | null) {
     if (!file) return
@@ -186,8 +232,28 @@ export function EventForm({
         isValid = false
       }
       if (accessModel === 'application' && !applicationFormUrl?.trim()) {
-        errors.application_form_url = 'Application form URL is required'
-        isValid = false
+        const hasQuestions = applicationQuestionsState.some((question) => question.questionText.trim())
+        if (!hasQuestions) {
+          errors.application_questions = 'Add at least one question or an external form URL'
+          isValid = false
+        }
+      }
+
+      if (accessModel === 'application') {
+        applicationQuestionsState.forEach((question, index) => {
+          if (!question.questionText.trim()) {
+            errors.application_questions = `Question ${index + 1} needs text`
+            isValid = false
+          }
+
+          if (
+            ['single_select', 'checkbox'].includes(question.questionType) &&
+            !question.optionsText.split('\n').some((option) => option.trim())
+          ) {
+            errors.application_questions = `Question ${index + 1} needs at least one option`
+            isValid = false
+          }
+        })
       }
     }
 
@@ -235,6 +301,10 @@ export function EventForm({
         isPublished: targetPublished,
         accessModel,
         applicationFormUrl: accessModel === 'application' ? applicationFormUrl : undefined,
+        applicationQuestions:
+          accessModel === 'application'
+            ? applicationQuestionsState.map(toQuestionPayload).filter((question) => question.questionText)
+            : undefined,
       }
 
       try {
@@ -293,6 +363,10 @@ export function EventForm({
         isPublished: false,
         accessModel,
         applicationFormUrl: accessModel === 'application' ? applicationFormUrl : null,
+        applicationQuestions:
+          accessModel === 'application'
+            ? applicationQuestionsState.map(toQuestionPayload).filter((question) => question.questionText)
+            : undefined,
       }
       const res = await updateEvent(payload as UpdateEventInput)
       if (!('error' in res)) {
@@ -302,7 +376,7 @@ export function EventForm({
     }, 30000)
 
     return () => window.clearInterval(interval)
-  }, [mode, isPublished, initial, title, description, coverImage, startAt, endAt, location, locationName, locationAddress, locationCity, locationRegion, meetingUrl, eventType, capacity, accessModel, applicationFormUrl])
+  }, [mode, isPublished, initial, title, description, coverImage, startAt, endAt, location, locationName, locationAddress, locationCity, locationRegion, meetingUrl, eventType, capacity, accessModel, applicationFormUrl, applicationQuestionsState])
 
   async function onDelete() {
     if (!initial?.id) return
@@ -314,6 +388,46 @@ export function EventForm({
         return
       }
       router.push(`/${locale}/chapter/events`)
+    })
+  }
+
+  function addApplicationQuestion() {
+    setApplicationQuestionsState((questions) => [
+      ...questions,
+      {
+        questionText: '',
+        questionType: 'short_text',
+        optionsText: '',
+        isRequired: true,
+      },
+    ])
+  }
+
+  function updateApplicationQuestion(
+    index: number,
+    updates: Partial<EditableApplicationQuestion>
+  ) {
+    setApplicationQuestionsState((questions) =>
+      questions.map((question, questionIndex) =>
+        questionIndex === index ? { ...question, ...updates } : question
+      )
+    )
+  }
+
+  function removeApplicationQuestion(index: number) {
+    setApplicationQuestionsState((questions) =>
+      questions.filter((_, questionIndex) => questionIndex !== index)
+    )
+  }
+
+  function moveApplicationQuestion(index: number, direction: -1 | 1) {
+    setApplicationQuestionsState((questions) => {
+      const next = [...questions]
+      const targetIndex = index + direction
+      if (targetIndex < 0 || targetIndex >= next.length) return questions
+      const [question] = next.splice(index, 1)
+      next.splice(targetIndex, 0, question)
+      return next
     })
   }
 
@@ -607,7 +721,7 @@ export function EventForm({
 
         {accessModel === 'application' && (
           <div className="mt-6 ml-10 p-5 rounded-xl bg-muted/50 border-l-4 border-l-primary animate-in fade-in slide-in-from-left-4">
-            <Label htmlFor="applicationFormUrl" className="text-sm font-semibold mb-2 block">Application Form URL *</Label>
+            <Label htmlFor="applicationFormUrl" className="text-sm font-semibold mb-2 block">External Form URL</Label>
             <Input
               id="applicationFormUrl"
               value={applicationFormUrl}
@@ -619,6 +733,88 @@ export function EventForm({
               Paste any form link — Google Forms, Typeform, etc. Students will be redirected here when they click &quot;Apply&quot;.
             </p>
             {fieldErrors.application_form_url && <p className="text-xs text-destructive mt-1">{fieldErrors.application_form_url}</p>}
+
+            <div className="mt-5 space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <Label className="text-sm font-semibold">Application Questions</Label>
+                <Button type="button" variant="outline" size="sm" onClick={addApplicationQuestion}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Question
+                </Button>
+              </div>
+
+              {applicationQuestionsState.length === 0 ? (
+                <div className="rounded-lg border border-dashed bg-background p-4 text-sm text-muted-foreground">
+                  Add native questions or provide an external form URL.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {applicationQuestionsState.map((question, index) => (
+                    <div key={question.id ?? index} className="rounded-lg border bg-background p-4 space-y-3">
+                      <div className="flex items-start gap-3">
+                        <GripVertical className="mt-3 h-4 w-4 text-muted-foreground" />
+                        <div className="grid flex-1 gap-3 md:grid-cols-[1fr_160px]">
+                          <Input
+                            value={question.questionText}
+                            onChange={(event) => updateApplicationQuestion(index, { questionText: event.target.value })}
+                            placeholder={`Question ${index + 1}`}
+                            className="bg-muted/40"
+                          />
+                          <select
+                            value={question.questionType}
+                            onChange={(event) => updateApplicationQuestion(index, {
+                              questionType: event.target.value as EventApplicationQuestionType,
+                              optionsText: ['single_select', 'checkbox'].includes(event.target.value)
+                                ? question.optionsText
+                                : '',
+                            })}
+                            className="h-10 rounded-md border border-input bg-muted/40 px-3 text-sm"
+                          >
+                            {questionTypeOptions.map((option) => (
+                              <option key={option.value} value={option.value}>{option.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button type="button" variant="ghost" size="icon" onClick={() => moveApplicationQuestion(index, -1)} disabled={index === 0}>
+                            <ChevronUp className="h-4 w-4" />
+                          </Button>
+                          <Button type="button" variant="ghost" size="icon" onClick={() => moveApplicationQuestion(index, 1)} disabled={index === applicationQuestionsState.length - 1}>
+                            <ChevronDown className="h-4 w-4" />
+                          </Button>
+                          <Button type="button" variant="ghost" size="icon" onClick={() => removeApplicationQuestion(index)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {['single_select', 'checkbox'].includes(question.questionType) ? (
+                        <textarea
+                          value={question.optionsText}
+                          onChange={(event) => updateApplicationQuestion(index, { optionsText: event.target.value })}
+                          placeholder="One option per line"
+                          className="min-h-20 w-full rounded-md border border-input bg-muted/40 px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                        />
+                      ) : null}
+
+                      <label className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+                        <input
+                          type="checkbox"
+                          checked={question.isRequired}
+                          onChange={(event) => updateApplicationQuestion(index, { isRequired: event.target.checked })}
+                          className="h-4 w-4 rounded border-border"
+                        />
+                        Required
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {fieldErrors.application_questions && (
+                <p className="text-xs text-destructive">{fieldErrors.application_questions}</p>
+              )}
+            </div>
           </div>
         )}
       </section>

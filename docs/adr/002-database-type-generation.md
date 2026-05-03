@@ -21,10 +21,10 @@ We have **two** type files for different purposes:
 | File | Purpose |
 |------|---------|
 | `lib/database.generated.ts` | Auto-generated from Supabase (DO NOT EDIT) - contains all tables/rows |
-| `lib/database.types.ts` | Custom type augmentations (YOU CAN EDIT) - for aliases, custom types |
+| `lib/types.ts` | Application-level aliases and composite UI types (YOU CAN EDIT) |
 
-- **Rationale:** Split allows custom types without being overwritten by regeneration
-- **Usage:** Import `database.generated.ts` for table types; augment in `database.types.ts` for custom needs
+- **Rationale:** Split allows custom aliases without being overwritten by regeneration
+- **Usage:** Import `database.generated.ts` for generated table types; add application aliases in `lib/types.ts`
 
 ### 2. Automated Type Generation via Git Hooks
 We use **Husky** to automate type generation at critical points in the development workflow:
@@ -62,9 +62,10 @@ Added convenience scripts to `package.json`:
 | `migration:new` | Create a new migration file |
 
 ### 4. Single Source of Truth
-- `lib/database.types.ts` is the **only** source for database types
-- All application code imports from `@/lib/database.types`
-- The file is marked in documentation as "auto-generated, do not edit"
+- `lib/database.generated.ts` is the **only generated source** for database schema types
+- Application-level aliases live in `lib/types.ts`
+- Services may import generated types from `@/lib/database.generated`; UI code can import aliases from `@/lib/types`
+- The generated file is marked in documentation as "auto-generated, do not edit"
 
 ## Implementation Details
 
@@ -72,8 +73,8 @@ Added convenience scripts to `package.json`:
 1. Developer creates migration: `pnpm run migration:new add_feature`
 2. Developer edits SQL in `supabase/migrations/`
 3. Developer applies migration: `pnpm run supabase:reset`
-4. Types auto-generate to `lib/database.types.ts`
-5. Developer imports types: `import { Tables } from '@/lib/database.types'`
+4. Types auto-generate to `lib/database.generated.ts`
+5. Developer imports generated types: `import { Tables } from '@/lib/database.generated'`
 
 ### Git Hook Installation
 - Husky installs automatically via `pnpm install`
@@ -89,9 +90,9 @@ To keep a team in sync, you have to move away from clicking buttons in a dashboa
 **The Workflow:**
 1. **Create the "Instruction":** Run `pnpm run migration:new add_feature`. An empty SQL file is created.
 2. **Write the Change:** Add the SQL to the new file (the "recipe").
-3. **Apply Locally:** Run `pnpm run supabase:reset`. The database runs the recipe, and the Husky hook automatically regenerates `database.types.ts`.
+3. **Apply Locally:** Run `pnpm run supabase:reset`. The database runs the recipe, and the Husky hook automatically regenerates `database.generated.ts`.
 4. **Share via GitHub:** Commit and push the `.sql` file.
-5. **Team Sync:** A teammate runs `git pull`. The Husky post-merge hook detects the new `.sql` file, automatically applies it to their local database, and regenerates their `database.types.ts`.
+5. **Team Sync:** A teammate runs `git pull`. The Husky post-merge hook detects the new `.sql` file and regenerates their `database.generated.ts`.
 
 **Why we do this:**
 Without this, database changes require manual out-of-band communication ("Hey, add this column in the dashboard"), leading to misaligned schemas, runtime crashes, and lost time. With this workflow, database changes travel through Git exactly like code changes, turning a confusing coordination problem into an invisible, automatic 0-second process.
@@ -114,7 +115,7 @@ Without this, database changes require manual out-of-band communication ("Hey, a
 
 ### Neutral
 - 📝 **Documentation Overhead:** Required updates to README and CONTRIBUTING.md
-- 📝 **Migration Path:** One-time effort to rename `supabase.ts` → `database.types.ts`
+- 📝 **Migration Path:** One-time effort to converge generated types on `database.generated.ts`
 
 ## Alternatives Considered
 

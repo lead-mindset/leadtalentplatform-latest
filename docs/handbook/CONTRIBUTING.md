@@ -67,7 +67,7 @@ To make sure your own local database has this new column, you run:
 ```bash
 pnpm run supabase:reset
 ```
-*What it looks like:* Your local database restarts, reads all your migration files in order, and now your local "Students" table has the new column. Because of the Husky hook you set up, your `database.types.ts` file also updates automatically to include `learning_style: string`.
+*What it looks like:* Your local database restarts, reads all your migration files in order, and now your local "Students" table has the new column. Because of the Husky hook you set up, your `database.generated.ts` file also updates automatically to include `learning_style: string`.
 
 **Step 4: You share the "Recipe" via GitHub**
 You commit that `.sql` file just like any other piece of code:
@@ -91,7 +91,7 @@ Without Sarah doing anything extra, her terminal will show a message like `Apply
 
 Now:
 - Her local database has the new column.
-- Her `database.types.ts` is automatically updated on her machine.
+- Her `database.generated.ts` is automatically updated on her machine.
 - She can start coding the frontend part of the "Learning Styles" feature immediately because her TypeScript is already aware of the change.
 
 **What it looks like if you DON'T do this**
@@ -111,13 +111,13 @@ The magic happens because of the folder structure. Since the migration files are
 | **New Way** (Best Practice) | `.sql` files in the `migrations/` folder |
 
 ### 2.4 Type Generation
-*   **Source of Truth:** `lib/database.types.ts` is auto-generated from Supabase schema.
-*   **Never Edit Manually:** Do not modify `lib/database.types.ts` directly.
+*   **Source of Truth:** `lib/database.generated.ts` is auto-generated from Supabase schema.
+*   **Never Edit Manually:** Do not modify `lib/database.generated.ts` directly.
 *   **Automatic Generation:** Types regenerate automatically via git hooks:
     *   After `git pull` (via `.husky/post-merge`)
     *   Before `git commit` (via `.husky/pre-commit` runs tests)
 *   **Manual Generation:** Run `pnpm run types:generate` after schema changes.
-*   **Import Path:** Always import types from `@/lib/database.types` (not the old `@/lib/supabase.ts`).
+*   **Import Path:** Import generated database types from `@/lib/database.generated`; use `@/lib/types` for application aliases.
 
 #### Type Generation Workflow
 
@@ -133,11 +133,11 @@ The magic happens because of the folder structure. Since the migration files are
    pnpm run supabase:reset
    ```
 
-4. **Types auto-generate** to `lib/database.types.ts`
+4. **Types auto-generate** to `lib/database.generated.ts`
 
 5. **Verify types in code:**
    ```typescript
-   import { Database, Tables } from '@/lib/database.types'
+   import { Database, Tables } from '@/lib/database.generated'
    
    type User = Tables<'user'>
    type Event = Tables<'event'>

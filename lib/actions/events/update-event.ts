@@ -5,10 +5,19 @@ import { revalidatePath } from 'next/cache'
 import { requireUser } from '@/lib/auth'
 import { requireChapterMember } from '@/lib/auth'
 import { EventService } from '@/lib/services/event.service'
+import { EventApplicationService } from '@/lib/services/event-application.service'
 import type { EventRow, EventType } from '@/lib/types'
 
 const EVENT_MUTATION_SELECT =
   'id, title, description, cover_image, start_at, end_at, location, meeting_url, event_type, capacity, is_published, chapter_id, created_by_id, created_at, updated_at, access_model, application_form_url, location_name, location_address, location_city, location_region, location_latitude, location_longitude'
+
+const ApplicationQuestionSchema = z.object({
+  id: z.string().uuid().optional(),
+  questionText: z.string().min(1),
+  questionType: z.enum(['short_text', 'long_text', 'single_select', 'checkbox', 'url']),
+  options: z.array(z.string()).nullable().optional(),
+  isRequired: z.boolean().optional(),
+})
 
 const UpdateEventSchema = z.object({
   id: z.string().uuid(),
@@ -25,13 +34,25 @@ const UpdateEventSchema = z.object({
   chapter_id: z.string().nullable().optional(),
   accessModel: z.enum(['open', 'application']).optional(),
   applicationFormUrl: z.string().url().nullable().optional(),
+  applicationQuestions: z.array(ApplicationQuestionSchema).optional(),
   locationName: z.string().nullable().optional(),
   locationAddress: z.string().nullable().optional(),
   locationCity: z.string().nullable().optional(),
   locationRegion: z.string().nullable().optional(),
   locationLatitude: z.number().nullable().optional(),
   locationLongitude: z.number().nullable().optional(),
-})
+}).refine(
+  (data) => {
+    if (data.accessModel === 'application') {
+      return Boolean(data.applicationFormUrl?.trim()) || Boolean(data.applicationQuestions?.length)
+    }
+    return true
+  },
+  {
+    message: 'Application events need at least one question or an application form URL',
+    path: ['applicationQuestions'],
+  }
+)
 
 export type UpdateEventInput = z.infer<typeof UpdateEventSchema>
 
@@ -97,6 +118,15 @@ export async function updateEvent(input: UpdateEventInput): Promise<UpdateEventR
 
   if (!event) {
     return { error: 'Failed to update event' }
+  }
+
+  if (d.accessModel === 'application') {
+    const questionsResult = await EventApplicationService.upsertQuestionsForEvent(supabase, {
+      eventId: event.id,
+      questions: d.applicationQuestions ?? [],
+    })
+
+    if (!questionsResult.success) return { error: questionsResult.error }
   }
 
   revalidatePath('/chapter/events')

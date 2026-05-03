@@ -221,6 +221,8 @@
     "fullNamePlaceholder": "John Doe",
     "phoneNumber": "Phone Number",
     "phonePlaceholder": "+1 (555) 123-4567",
+    "university": "University",
+    "universityPlaceholder": "Your university or organization",
     "leadChapter": "LEAD Chapter",
     "selectChapter": "Select your chapter",
     "majorCareerField": "Major / Career Field",
@@ -242,6 +244,8 @@
     "skillsExpertise": "Skills & Expertise",
     "selected": "selected",
     "linkedinProfile": "LinkedIn Profile",
+    "portfolioUrl": "Portfolio URL",
+    "portfolioPlaceholder": "https://your-site.com",
     "resumePdf": "Resume (PDF)",
     "clickToUpload": "Click to upload",
     "uploading": "Uploading...",
@@ -251,7 +255,10 @@
     "profileVisibilityDesc": "Connect with companies partnered with LEAD. You can change this anytime in settings.",
     "emailNotifications": "Email Notifications",
     "emailNotificationsLabel": "Keep me updated about LEAD",
-    "emailNotificationsDesc": "Receive emails about events, workshops, and opportunities from LEAD. You can change this anytime in settings."
+    "emailNotificationsDesc": "Receive emails about events, workshops, and opportunities from LEAD. You can change this anytime in settings.",
+    "chapterNewsletterInterests": "Chapter newsletter interests",
+    "chapterNewsletterInterestsDesc": "Choose chapters you want to hear from. This does not apply you for membership.",
+    "saving": "Saving your profile..."
   },
   "validation": {
     "nameRequired": "Name is required",

@@ -406,7 +406,7 @@ See `docs/handbook/TESTING.md` for full testing guidelines.
 After schema changes, regenerate types:
 
 ```bash
-pnpm exec supabase gen types typescript --local > lib/supabase.ts
+pnpm run types:generate
 ```
 
 ### Adding Translations
@@ -461,7 +461,7 @@ pnpm exec supabase gen types typescript --local > lib/supabase.ts
    pnpm run supabase:reset
    ```
 
-4. **Types auto-generate** to `lib/database.types.ts`
+4. **Types auto-generate** to `lib/database.generated.ts`
 
 ### Automatic Type Generation
 
@@ -488,7 +488,7 @@ const { data } = await supabase
 
 ### Important Notes
 
-- ❌ **Never edit** `lib/database.types.ts` manually (auto-generated)
+- ❌ **Never edit** `lib/database.generated.ts` manually (auto-generated)
 - ❌ **Never use** Supabase Dashboard for schema changes
 - ✅ **Always use** migrations for schema changes
 - ✅ Types are generated from **local** Supabase by default

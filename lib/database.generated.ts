@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -250,6 +250,7 @@ export type Database = {
       }
       event_application_answer: {
         Row: {
+          answer_json: Json | null
           answer_text: string | null
           created_at: string
           id: string
@@ -258,6 +259,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          answer_json?: Json | null
           answer_text?: string | null
           created_at?: string
           id?: string
@@ -266,6 +268,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          answer_json?: Json | null
           answer_text?: string | null
           created_at?: string
           id?: string
@@ -2208,3 +2211,4 @@ export const Constants = {
     },
   },
 } as const
+

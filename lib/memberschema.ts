@@ -4,6 +4,16 @@ import type { Translator } from './types'
 
 const MAX_YEAR = new Date().getFullYear() + 6
 
+const optionalUrl = (t: Translator) =>
+  z
+    .string()
+    .trim()
+    .optional()
+    .or(z.literal(''))
+    .refine((val) => !val || z.string().url().safeParse(val).success, {
+      message: t('validation.invalidUrl'),
+    })
+
 export function createBaseProfileSchema(t: Translator) {
   return z.object({
     full_name: z.string().min(1, t('validation.nameRequired')),
@@ -38,6 +48,23 @@ export function createBaseProfileSchema(t: Translator) {
 }
 
 export const createBasicPersonProfileSchema = createBaseProfileSchema
+
+export function createBasicOnboardingSchema(t: Translator) {
+  return createBaseProfileSchema(t).extend({
+    university: z.string().trim().optional().default(''),
+    portfolio_url: optionalUrl(t),
+    chapterNewsletterIds: z
+      .array(z.string())
+      .default([])
+      .refine(
+        (values) => values.every((value) => (LEAD_CHAPTER_VALUES as readonly string[]).includes(value)),
+        { message: t('validation.selectValidChapter') }
+      ),
+    termsAccepted: z.literal(true, {
+      message: t('validation.termsRequired'),
+    }),
+  })
+}
 
 export function createMemberProfileSchema(t: Translator) {
   return createBaseProfileSchema(t).extend({
@@ -77,10 +104,13 @@ export type BasicPersonProfileData = {
   full_name: string
   phone: string
   gender?: 'man' | 'woman' | 'non_binary' | 'prefer_not_to_say'
+  university?: string
   career: string
   graduation_year: number
   skills: string[]
   linkedin_url: string
+  portfolio_url?: string
+  chapterNewsletterIds?: string[]
   consentRecruiterVisibility: boolean
   emailNotificationsEnabled: boolean
 }

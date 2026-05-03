@@ -253,7 +253,7 @@ pnpm build
 
 **Generate types** (Windows):
 ```bash
-npx supabase gen types typescript --linked > lib/database.types.ts
+pnpm run types:generate
 ```
 
 ⚠️ **Windows gotchas:**

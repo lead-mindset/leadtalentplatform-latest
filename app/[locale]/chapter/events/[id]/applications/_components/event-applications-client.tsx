@@ -198,6 +198,7 @@ export function EventApplicationsClient({
                     graduation_year: application.student_profile?.graduation_year ?? 0,
                     linkedinUrl: application.student_profile?.linkedin_url ?? null,
                   },
+                  applicationAnswers: application.application_answers ?? [],
                 }}
                 isSelected={selectedApplications.has(application.id)}
                 onSelect={(id, selected) => {
@@ -240,6 +241,7 @@ export function EventApplicationsClient({
                     graduation_year: application.student_profile?.graduation_year ?? 0,
                     linkedinUrl: application.student_profile?.linkedin_url ?? null,
                   },
+                  applicationAnswers: application.application_answers ?? [],
                 }}
                 onApprove={handleApprove}
                 onReject={handleReject}
@@ -274,6 +276,7 @@ export function EventApplicationsClient({
                     graduation_year: application.student_profile?.graduation_year ?? 0,
                     linkedinUrl: application.student_profile?.linkedin_url ?? null,
                   },
+                  applicationAnswers: application.application_answers ?? [],
                 }}
                 onApprove={handleApprove}
                 onReject={handleReject}

@@ -215,6 +215,8 @@
     "fullNamePlaceholder": "Juan Pérez",
     "phoneNumber": "Número de Teléfono",
     "phonePlaceholder": "+51 999 999 999",
+    "university": "Universidad",
+    "universityPlaceholder": "Tu universidad u organización",
     "leadChapter": "Capítulo LEAD",
     "selectChapter": "Selecciona tu capítulo",
     "majorCareerField": "Carrera / Campo Profesional",
@@ -236,6 +238,8 @@
     "termsDesc": "Requerido para crear tu cuenta en LEAD.",
     "selected": "seleccionados",
     "linkedinProfile": "Perfil de LinkedIn",
+    "portfolioUrl": "URL de portafolio",
+    "portfolioPlaceholder": "https://tu-sitio.com",
     "resumePdf": "Currículum (PDF)",
     "clickToUpload": "Haz clic para subir",
     "uploading": "Subiendo...",
@@ -245,7 +249,10 @@
     "profileVisibilityDesc": "Conéctate con empresas asociadas con LEAD. Puedes cambiar esto en cualquier momento en la configuración.",
     "emailNotifications": "Notificaciones por Correo",
     "emailNotificationsLabel": "Mantenerme actualizado sobre LEAD",
-    "emailNotificationsDesc": "Recibe correos sobre eventos, talleres y oportunidades de LEAD. Puedes cambiar esto en cualquier momento en la configuración."
+    "emailNotificationsDesc": "Recibe correos sobre eventos, talleres y oportunidades de LEAD. Puedes cambiar esto en cualquier momento en la configuración.",
+    "chapterNewsletterInterests": "Intereses de boletines por capítulo",
+    "chapterNewsletterInterestsDesc": "Elige los capítulos de los que quieres recibir novedades. Esto no te postula a membresía.",
+    "saving": "Guardando tu perfil..."
   },
   "validation": {
     "nameRequired": "El nombre es requerido",
