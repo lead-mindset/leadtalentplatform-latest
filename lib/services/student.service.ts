@@ -38,7 +38,7 @@ export const StudentService = {
     const { data: profile, error } = await supabase
       .from('person_profile')
       .select(
-        'user_id, university, major_or_interest, graduation_year, skills, linkedin_url, consent_recruiter_visibility, gender'
+        'user_id, university, major_or_interest, graduation_year, skills, linkedin_url, is_recruiter_visible, gender'
       )
       .eq('user_id', userId)
       .single();
@@ -63,7 +63,6 @@ export const StudentService = {
       .update({
         name: params.fullName,
         phone: params.phone,
-        gender: params.gender,
         updated_at: now,
       })
       .eq('id', params.userId);
@@ -80,8 +79,7 @@ export const StudentService = {
         graduation_year: params.graduation_year,
         skills: params.skills,
         linkedin_url: params.linkedinUrl,
-        consent_recruiter_visibility: params.consentRecruiterVisibility,
-        consent_date: params.consentRecruiterVisibility ? now : null,
+        is_recruiter_visible: params.consentRecruiterVisibility,
         updated_at: now,
       },
       { onConflict: 'user_id' }
@@ -197,7 +195,6 @@ export const StudentService = {
         email: params.email,
         name: params.fullName,
         phone: params.phone,
-        gender: params.gender,
         updated_at: now,
       })
       .eq('id', params.userId)
@@ -243,8 +240,7 @@ export const StudentService = {
         graduation_year: params.graduationYear,
         linkedin_url: params.linkedinUrl,
         skills: params.skills,
-        consent_recruiter_visibility: params.consentRecruiterVisibility,
-        consent_date: params.consentRecruiterVisibility ? now : null,
+        is_recruiter_visible: params.consentRecruiterVisibility,
         updated_at: now,
       })
 

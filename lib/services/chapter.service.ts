@@ -19,7 +19,7 @@ const PROFILE_SELECT = `
   graduation_year,
   linkedin_url,
   skills,
-  consent_recruiter_visibility,
+  is_recruiter_visible,
   updated_at,
   created_at,
   gender,
@@ -46,7 +46,7 @@ type ChapterProfileRow = Pick<
   | 'graduation_year'
   | 'linkedin_url'
   | 'skills'
-  | 'consent_recruiter_visibility'
+  | 'is_recruiter_visible'
   | 'updated_at'
   | 'created_at'
   | 'gender'
@@ -83,7 +83,7 @@ function mapProfile(profile: ChapterProfileRow): MemberWithProfile | null {
       graduation_year: profile.graduation_year,
       linkedin_url: profile.linkedin_url,
       skills: profile.skills,
-      consent_recruiter_visibility: profile.consent_recruiter_visibility,
+      is_recruiter_visible: profile.is_recruiter_visible,
       updated_at: profile.updated_at,
       created_at: profile.created_at,
       gender: profile.gender,
@@ -174,7 +174,7 @@ export const ChapterService = {
       approved_members: approved,
       rejected_members: rejected,
       complete_profiles: members.filter((member: MemberWithProfile) => member.person_profile).length,
-      visible_to_recruiters: members.filter((member: MemberWithProfile) => member.person_profile?.consent_recruiter_visibility).length,
+      visible_to_recruiters: members.filter((member: MemberWithProfile) => member.person_profile?.is_recruiter_visible).length,
     }
   },
 
@@ -277,7 +277,15 @@ export const ChapterService = {
     }
 
     const validUserIds = candidates
-      .filter((profile) => !approverChapterId || profile.chapter_membership.chapter_id === approverChapterId)
+      .filter((profile) => {
+        const membership = Array.isArray(profile.chapter_membership)
+          ? profile.chapter_membership[0]
+          : profile.chapter_membership
+        const legacyChapterId = (profile as { chapter_id?: string }).chapter_id
+        const legacyIsFilled = (profile as { is_filled?: boolean }).is_filled
+        return legacyIsFilled !== false &&
+          (!approverChapterId || membership?.chapter_id === approverChapterId || legacyChapterId === approverChapterId)
+      })
       .map((profile) => profile.user_id)
 
     if (validUserIds.length === 0) {

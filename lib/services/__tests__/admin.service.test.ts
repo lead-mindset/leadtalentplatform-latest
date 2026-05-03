@@ -51,6 +51,7 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
   const eventBuilder = createBuilder()
   const companyBuilder = createBuilder()
   const recruiterAccessBuilder = createBuilder()
+  const chapterMembershipBuilder = createBuilder()
 
   const tableMocks: Record<string, unknown> = {
     user: {
@@ -60,10 +61,17 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
       delete: vi.fn(() => userBuilder),
       _builder: userBuilder,
     },
-    student_profile: {
+    person_profile: {
       select: vi.fn(() => studentProfileBuilder),
       update: vi.fn(() => studentProfileBuilder),
       _builder: studentProfileBuilder,
+    },
+    chapter_membership: {
+      select: vi.fn(() => chapterMembershipBuilder),
+      update: vi.fn(() => chapterMembershipBuilder),
+      insert: vi.fn(() => chapterMembershipBuilder),
+      delete: vi.fn(() => chapterMembershipBuilder),
+      _builder: chapterMembershipBuilder,
     },
     chapter: {
       select: vi.fn(() => chapterBuilder),
@@ -108,17 +116,17 @@ describe('AdminService', () => {
 
       // Mock user count
       tableMocks.user._builder._setThenValue({ data: [], error: null, count: 100 })
-      // Mock student_profile chapter query
-      tableMocks.student_profile._builder._setThenValue({
+      // Mock chapter_membership chapter query
+      tableMocks.chapter_membership._builder._setThenValue({
         data: [{ chapter_id: 'ch-1' }, { chapter_id: 'ch-2' }, { chapter_id: 'ch-1' }],
         error: null,
       })
       // Mock event count
       tableMocks.event._builder._setThenValue({ data: [], error: null, count: 5 })
       // Mock approved profiles count
-      tableMocks.student_profile._builder._setThenValue({ data: [], error: null, count: 80 })
+      tableMocks.chapter_membership._builder._setThenValue({ data: [], error: null, count: 80 })
       // Mock visible approved profiles count
-      tableMocks.student_profile._builder._setThenValue({ data: [], error: null, count: 60 })
+      tableMocks.person_profile._builder._setThenValue({ data: [], error: null, count: 60 })
 
       const result = await AdminService.getAdminDashboardStats(mockSupabase as unknown as SupabaseClient)
 
@@ -132,10 +140,10 @@ describe('AdminService', () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
       tableMocks.user._builder._setThenValue({ data: [], error: null, count: 0 })
-      tableMocks.student_profile._builder._setThenValue({ data: [], error: null })
+      tableMocks.chapter_membership._builder._setThenValue({ data: [], error: null })
       tableMocks.event._builder._setThenValue({ data: [], error: null, count: 0 })
-      tableMocks.student_profile._builder._setThenValue({ data: [], error: null, count: 0 })
-      tableMocks.student_profile._builder._setThenValue({ data: [], error: null, count: 0 })
+      tableMocks.person_profile._builder._setThenValue({ data: [], error: null, count: 0 })
+      tableMocks.person_profile._builder._setThenValue({ data: [], error: null, count: 0 })
 
       const result = await AdminService.getAdminDashboardStats(mockSupabase as unknown as SupabaseClient)
 
@@ -158,9 +166,15 @@ describe('AdminService', () => {
         error: null,
       })
 
-      tableMocks.student_profile._builder._setThenValue({
+      tableMocks.person_profile._builder._setThenValue({
         data: [
-          { user_id: 'user-1', chapter_id: 'ch-1', is_filled: true, approval_status: 'approved', chapter: { name: 'MIT' } },
+          { user_id: 'user-1' },
+        ],
+        error: null,
+      })
+      tableMocks.chapter_membership._builder._setThenValue({
+        data: [
+          { user_id: 'user-1', chapter_id: 'ch-1', status: 'approved', chapter: { name: 'MIT' } },
         ],
         error: null,
       })
@@ -184,7 +198,7 @@ describe('AdminService', () => {
         error: null,
       })
 
-      tableMocks.student_profile._builder._setThenValue({
+      tableMocks.person_profile._builder._setThenValue({
         data: [],
         error: null,
       })
@@ -210,7 +224,7 @@ describe('AdminService', () => {
         error: null,
       })
 
-      tableMocks.student_profile._builder._setThenValue({
+      tableMocks.person_profile._builder._setThenValue({
         data: [],
         error: null,
       })
@@ -423,7 +437,7 @@ describe('AdminService', () => {
         error: null,
       })
 
-      tableMocks.student_profile._builder._setThenValue({
+      tableMocks.person_profile._builder._setThenValue({
         data: [],
         error: null,
       })

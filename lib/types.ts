@@ -3,7 +3,7 @@ export type Role = "admin" | "editor" | "member" | "recruiter";
 import type { LucideIcon } from 'lucide-react';
 import type {
   Database,
-} from '@/lib/database.types'
+} from '@/lib/database.generated'
 
 export type {
   Database,
@@ -13,7 +13,7 @@ export type {
   TablesUpdate,
   Enums,
   CompositeTypes,
-} from '@/lib/database.types'
+} from '@/lib/database.generated'
 
 export type EventType = 'in_person' | 'online' | 'hybrid'
 export type EventAccessModel = 'open' | 'application'
@@ -102,28 +102,8 @@ export type UserRow = Database["public"]["Tables"]["user"]["Row"];
 export type ChapterRow = Database["public"]["Tables"]["chapter"]["Row"];
 export type StudentProfileRow = Database["public"]["Tables"]["student_profile"]["Row"];
 
-// NEW: LEAD-002 schema types
-export type PersonProfileRow = {
-  user_id: string
-  university: string | null
-  major_or_interest: string | null
-  graduation_year: number | null
-  linkedin_url: string | null
-  skills: string[] | null
-  consent_recruiter_visibility: boolean
-  updated_at: string
-  created_at: string
-  gender: string | null
-}
-
-export type ChapterMembershipRow = {
-  id: string
-  user_id: string
-  chapter_id: string
-  position: string | null
-  status: 'pending' | 'approved' | 'rejected'
-  joined_at: string
-}
+export type PersonProfileRow = Database["public"]["Tables"]["person_profile"]["Row"];
+export type ChapterMembershipRow = Database["public"]["Tables"]["chapter_membership"]["Row"];
 
 export type CompanyRow = Database["public"]["Tables"]["company"]["Row"];
 
@@ -154,12 +134,13 @@ export type UserWithChapter = UserRow & {
 };
 
 export type MemberWithProfile = UserRow & {
-  student_profile: StudentProfileRow | null;
+  person_profile: PersonProfileRow | null;
+  chapter_membership: Pick<ChapterMembershipRow, 'chapter_id' | 'status' | 'member_id'> | null;
   chapter: ChapterRow | null;
 };
 
-export type RecentActivityMember = Omit<MemberWithProfile, "student_profile"> & {
-  student_profile: StudentProfileRow // Non-nullable for recent activity
+export type RecentActivityMember = Omit<MemberWithProfile, "person_profile"> & {
+  person_profile: PersonProfileRow // Non-nullable for recent activity
 };
 
 export type RecruiterUser = UserRow & {

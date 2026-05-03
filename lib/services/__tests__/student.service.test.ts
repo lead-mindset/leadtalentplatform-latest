@@ -79,7 +79,7 @@ describe('StudentService', () => {
         graduation_year: 2025,
         skills: ['TypeScript', 'React'],
         linkedin_url: 'https://linkedin.com/in/test',
-        consent_recruiter_visibility: true,
+        is_recruiter_visible: true,
         gender: 'female',
       };
       const mockMembership = {
@@ -89,7 +89,7 @@ describe('StudentService', () => {
       };
 
       const { mockSupabase, tableMocks } = buildMockSupabase();
-      tableMocks.person_profile.maybeSingle.mockResolvedValue({ data: mockProfile, error: null });
+      tableMocks.person_profile.single.mockResolvedValue({ data: mockProfile, error: null });
       tableMocks.chapter_membership.maybeSingle.mockResolvedValue({ data: mockMembership, error: null });
 
       const result = await StudentService.getProfile(mockSupabase as unknown as SupabaseClient, 'user-123');
@@ -97,7 +97,7 @@ describe('StudentService', () => {
       expect(result).toEqual({ ...mockProfile, ...mockMembership });
       expect(mockSupabase.from).toHaveBeenCalledWith('person_profile');
       expect(tableMocks.person_profile.select).toHaveBeenCalledWith(
-        'user_id, university, major_or_interest, graduation_year, skills, linkedin_url, consent_recruiter_visibility, gender'
+        'user_id, university, major_or_interest, graduation_year, skills, linkedin_url, is_recruiter_visible, gender'
       );
       expect(tableMocks.person_profile.eq).toHaveBeenCalledWith('user_id', 'user-123');
       expect(mockSupabase.from).toHaveBeenCalledWith('chapter_membership');
@@ -109,7 +109,7 @@ describe('StudentService', () => {
 
     it('should throw "Student profile not found" when Supabase returns an error', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase();
-      tableMocks.person_profile.maybeSingle.mockResolvedValue({
+      tableMocks.person_profile.single.mockResolvedValue({
         data: null,
         error: { message: 'Row not found' },
       });
@@ -120,9 +120,6 @@ describe('StudentService', () => {
     });
   });
 
-    
-  });
-
   // ───────────────────────────────────────────────────────────────
   // updateProfile
   // ───────────────────────────────────────────────────────────────
@@ -131,12 +128,13 @@ describe('StudentService', () => {
       userId: 'user-123',
       fullName: 'Jane Doe',
       phone: '+1234567890',
-      major_or_interest: 'Computer Science',
+      career: 'Computer Science',
       gender: 'female',
       graduation_year: 2025,
       skills: ['TypeScript', 'React'],
       linkedinUrl: 'https://linkedin.com/in/janedoe',
       consentRecruiterVisibility: true,
+      emailNotificationsEnabled: true,
       chapter_id: 'chapter-1',
     };
 
@@ -174,7 +172,7 @@ describe('StudentService', () => {
           graduation_year: 2025,
           skills: ['TypeScript', 'React'],
           linkedin_url: 'https://linkedin.com/in/janedoe',
-          consent_recruiter_visibility: true,
+          is_recruiter_visible: true,
         }),
         { onConflict: 'user_id' }
       );
@@ -186,7 +184,7 @@ describe('StudentService', () => {
           user_id: 'user-123',
           chapter_id: 'chapter-1',
         }),
-        { onConflict: 'user_id' }
+        { onConflict: 'user_id,chapter_id' }
       );
     });
 
@@ -197,7 +195,7 @@ describe('StudentService', () => {
       tableMocks.user.eq.mockResolvedValue({ error: userError });
 
       await expect(StudentService.updateProfile(mockSupabase as unknown as SupabaseClient, baseParams)).rejects.toThrow(
-        'User update fails'
+        'User update failed'
       );
 
       // Verify user update was attempted
