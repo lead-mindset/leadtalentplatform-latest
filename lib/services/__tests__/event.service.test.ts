@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { EventService } from '../event.service'
 import { SupabaseClient } from '@supabase/supabase-js'
+import { NewsletterSubscriptionService } from '../newsletter-subscription.service'
 
 // ───────────────────────────────────────────────────────────────
 // Helper: Build a Supabase mock that routes `from(table)` calls
@@ -125,6 +126,7 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
 describe('EventService', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.restoreAllMocks()
   })
 
   // ───────────────────────────────────────────────────────────────
@@ -312,6 +314,65 @@ describe('EventService', () => {
       }
     })
 
+    it('should subscribe to event chapters after successful checked registration opt-in', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+      const mockRegistration = { id: 'reg-1', status: 'registered' }
+      const subscribeSpy = vi
+        .spyOn(NewsletterSubscriptionService, 'subscribeForEventRegistration')
+        .mockResolvedValue({ success: true })
+
+      tableMocks.event_registration._selectChain.maybeSingle.mockResolvedValueOnce({
+        data: null,
+        error: null,
+      })
+
+      tableMocks.event_registration._insertChain.single.mockResolvedValueOnce({
+        data: mockRegistration,
+        error: null,
+      })
+
+      const result = await EventService.registerForEvent(
+        mockSupabase as unknown as SupabaseClient,
+        'evt-1',
+        'user-1',
+        { subscribeToHostChapters: true }
+      )
+
+      expect(result.success).toBe(true)
+      expect(subscribeSpy).toHaveBeenCalledWith(mockSupabase, {
+        userId: 'user-1',
+        eventId: 'evt-1',
+        source: 'event_registration',
+      })
+    })
+
+    it('should not subscribe to event chapters when registration opt-in is unchecked', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+      const subscribeSpy = vi
+        .spyOn(NewsletterSubscriptionService, 'subscribeForEventRegistration')
+        .mockResolvedValue({ success: true })
+
+      tableMocks.event_registration._selectChain.maybeSingle.mockResolvedValueOnce({
+        data: null,
+        error: null,
+      })
+
+      tableMocks.event_registration._insertChain.single.mockResolvedValueOnce({
+        data: { id: 'reg-1', status: 'registered' },
+        error: null,
+      })
+
+      const result = await EventService.registerForEvent(
+        mockSupabase as unknown as SupabaseClient,
+        'evt-1',
+        'user-1',
+        { subscribeToHostChapters: false }
+      )
+
+      expect(result.success).toBe(true)
+      expect(subscribeSpy).not.toHaveBeenCalled()
+    })
+
     it('should return already active registration', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
@@ -369,6 +430,32 @@ describe('EventService', () => {
       if (!result.success) {
         expect(result.capacityExceeded).toBe(true)
       }
+    })
+
+    it('should subscribe to event chapters after successful application opt-in', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+      const subscribeSpy = vi
+        .spyOn(NewsletterSubscriptionService, 'subscribeForEventRegistration')
+        .mockResolvedValue({ success: true })
+
+      tableMocks.event_registration._insertChain.single.mockResolvedValueOnce({
+        data: { id: 'reg-1', status: 'pending_review' },
+        error: null,
+      })
+
+      const result = await EventService.applyForEvent(
+        mockSupabase as unknown as SupabaseClient,
+        'evt-1',
+        'user-1',
+        { subscribeToHostChapters: true }
+      )
+
+      expect(result.success).toBe(true)
+      expect(subscribeSpy).toHaveBeenCalledWith(mockSupabase, {
+        userId: 'user-1',
+        eventId: 'evt-1',
+        source: 'event_registration',
+      })
     })
 
     it('should handle duplicate key race condition', async () => {

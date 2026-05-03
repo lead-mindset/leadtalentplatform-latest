@@ -1,6 +1,7 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/lib/database.generated';
 import { ChapterMembershipService } from '@/lib/services/chapter-membership.service';
+import { NewsletterSubscriptionService } from '@/lib/services/newsletter-subscription.service';
 
 /**
  * Service Layer: Student Domain
@@ -96,7 +97,25 @@ export const StudentService = {
 
     if (!membershipResult.success) throw new Error(membershipResult.error);
 
-    // 4. Handle Resume if provided
+    // 4. Create newsletter preferences when explicitly opted in.
+    if (params.emailNotificationsEnabled) {
+      const globalResult = await NewsletterSubscriptionService.subscribeGlobal(supabase, {
+        userId: params.userId,
+        source: 'onboarding',
+      });
+
+      if (!globalResult.success) throw new Error(globalResult.error);
+
+      const chapterResult = await NewsletterSubscriptionService.subscribeToChapter(supabase, {
+        userId: params.userId,
+        chapterId: params.chapter_id,
+        source: 'onboarding',
+      });
+
+      if (!chapterResult.success) throw new Error(chapterResult.error);
+    }
+
+    // 5. Handle Resume if provided
     if (params.resumePdf) {
       await this.uploadResume(supabase, params.userId, params.resumePdf);
     }
@@ -236,6 +255,27 @@ export const StudentService = {
 
     if (!membershipResult.success) {
       return { success: false, error: membershipResult.error }
+    }
+
+    if (params.emailNotificationsEnabled) {
+      const globalNewsletterResult = await NewsletterSubscriptionService.subscribeGlobal(supabase, {
+        userId: params.userId,
+        source: 'onboarding',
+      })
+
+      if (!globalNewsletterResult.success) {
+        return { success: false, error: globalNewsletterResult.error }
+      }
+
+      const chapterNewsletterResult = await NewsletterSubscriptionService.subscribeToChapter(supabase, {
+        userId: params.userId,
+        chapterId: params.leadChapter,
+        source: 'onboarding',
+      })
+
+      if (!chapterNewsletterResult.success) {
+        return { success: false, error: chapterNewsletterResult.error }
+      }
     }
 
     // Handle resume upload if provided

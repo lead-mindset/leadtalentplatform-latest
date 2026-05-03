@@ -101,10 +101,10 @@ export function EventContent({
     }
   }
 
-  const handleApplyConfirm = async () => {
+  const handleApplyConfirm = async (subscribeToHostChapters: boolean) => {
     setIsSubmitting(true)
     try {
-      await applyForEvent(event.id)
+      await applyForEvent(event.id, subscribeToHostChapters)
       router.refresh()
       setShowApplyModal(false)
     } finally {

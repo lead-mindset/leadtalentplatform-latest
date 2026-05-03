@@ -74,3 +74,17 @@ INSERT INTO public.recruiter_access (
   '66666666-6666-6666-6666-666666666666',
   '88888888-8888-8888-8888-888888888888'
 );
+
+-- Insert Newsletter Subscription Personas
+INSERT INTO public.newsletter_subscription (
+  user_id,
+  scope,
+  chapter_id,
+  status,
+  source,
+  subscribed_at,
+  unsubscribed_at
+) VALUES
+  ('11111111-1111-1111-1111-111111111111', 'global', null, 'active', 'onboarding', NOW(), null),
+  ('22222222-2222-2222-2222-222222222222', 'chapter', 'leaduni', 'active', 'onboarding', NOW(), null),
+  ('77777777-7777-7777-7777-777777777777', 'global', null, 'unsubscribed', 'manual', NOW() - INTERVAL '30 days', NOW());

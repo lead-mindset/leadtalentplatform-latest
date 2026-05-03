@@ -11,13 +11,14 @@ import {
   DialogTitle,
 } from '@/components/ui'
 import { Icons } from '@/components/ui/icons'
+import { Checkbox } from '@/components/ui/checkbox'
 
 interface ApplyModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   eventTitle: string
   applicationFormUrl: string
-  onConfirm: () => Promise<void>
+  onConfirm: (subscribeToHostChapters: boolean) => Promise<void>
   isSubmitting?: boolean
 }
 
@@ -30,6 +31,7 @@ export function ApplyModal({
   isSubmitting = false,
 }: ApplyModalProps) {
   const [step, setStep] = useState<'form' | 'confirmation'>('form')
+  const [subscribeToHostChapters, setSubscribeToHostChapters] = useState(true)
 
   const handleOpenForm = () => {
     window.open(applicationFormUrl, '_blank')
@@ -37,10 +39,11 @@ export function ApplyModal({
   }
 
   const handleConfirm = async () => {
-    await onConfirm()
+    await onConfirm(subscribeToHostChapters)
     onOpenChange(false)
     setTimeout(() => {
       setStep('form')
+      setSubscribeToHostChapters(true)
     }, 300)
   }
 
@@ -48,6 +51,7 @@ export function ApplyModal({
     onOpenChange(false)
     setTimeout(() => {
       setStep('form')
+      setSubscribeToHostChapters(true)
     }, 300)
   }
 
@@ -181,6 +185,17 @@ export function ApplyModal({
                   </div>
                 </div>
               </div>
+
+              <label className="flex items-start gap-3 rounded-lg border bg-muted/30 p-4">
+                <Checkbox
+                  checked={subscribeToHostChapters}
+                  onCheckedChange={(checked) => setSubscribeToHostChapters(checked === true)}
+                  className="mt-0.5"
+                />
+                <span className="text-sm text-muted-foreground">
+                  Send me updates from the host and collaborator chapters for this event.
+                </span>
+              </label>
 
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">

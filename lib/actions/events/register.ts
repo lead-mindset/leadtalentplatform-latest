@@ -25,7 +25,8 @@ function redirectToStudentEventQr(eventId: string) {
 }
 
 export async function applyForEvent(
-  eventId: string
+  eventId: string,
+  subscribeToHostChapters = true
 ): Promise<{ success: true; registration: EventRegistrationRow } | { error: string }> {
   try {
     const { supabase, user } = await requireUser()
@@ -33,7 +34,9 @@ export async function applyForEvent(
       return { error: 'You need to sign in to apply.' }
     }
 
-    const result = await EventService.applyForEvent(supabase, eventId, user.id)
+    const result = await EventService.applyForEvent(supabase, eventId, user.id, {
+      subscribeToHostChapters,
+    })
     if (!result.success) {
       return { error: result.error }
     }
@@ -79,13 +82,16 @@ export async function registerForEvent(
     if (!eventId) {
       return { error: 'Missing event.' }
     }
+    const subscribeToHostChapters = formData.get('subscribeToHostChapters') !== null
 
     const validation = await EventService.validateEventForRegistration(supabase, eventId)
     if (!validation.ok) {
       return { error: validation.error }
     }
 
-    const result = await EventService.registerForEvent(supabase, eventId, user.id)
+    const result = await EventService.registerForEvent(supabase, eventId, user.id, {
+      subscribeToHostChapters,
+    })
     if (!result.success) {
       revalidateEventRegistrationPaths(eventId)
       return { error: result.error, capacityExceeded: result.capacityExceeded }

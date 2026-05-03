@@ -53,6 +53,16 @@ Chapter affiliation is explicit and separate from basic profile data:
 - Alumni should be represented as `chapter_membership.status='alumni'` with a valid position such as `member`; do not encode alumni as a position.
 - Manual validation should use `member@test.com`, `editor@test.com`, and `alumni@test.com` to confirm roster tabs, member IDs, positions, and pending approval counts come from `chapter_membership`.
 
+### Newsletter Subscription Flow (LEAD-008)
+
+Newsletter consent is stored in `newsletter_subscription`, not profile tables:
+
+- Global onboarding opt-in should create or reactivate one `scope='global'` row per user.
+- Chapter newsletter interests should create or reactivate `scope='chapter'` rows with a concrete `chapter_id`.
+- Event registration should keep the host/collaborator chapter checkbox checked by default; leaving it checked should create or reactivate chapter subscription rows for the owner and collaborator chapters.
+- Unsubscribe behavior should set `status='unsubscribed'` and `unsubscribed_at`, preserving the row for future campaign planning filters.
+- Seed validation includes `participant@test.com` with an active global row, `member@test.com` with an active `leaduni` chapter row, and `alumni@test.com` with an unsubscribed global row.
+
 ### Testing Concurrency (Event Registrations)
 When validating risk-prone flows like event registration (e.g., maximum capacity checks), you **must** write unit tests simulating concurrency.
 
