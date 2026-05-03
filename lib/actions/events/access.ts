@@ -1,7 +1,6 @@
 'use server'
 
-import { canUserAccessChapter, requireUser } from '@/lib/auth'
-import { EventService } from '@/lib/services/event.service'
+import { canUserManageEvent, requireUser } from '@/lib/auth'
 import type { EventRow, Role } from '@/lib/types'
 
 type EventManager = {
@@ -22,20 +21,9 @@ type EventAccessFailure = {
 export async function assertCanManageEvent(eventId: string): Promise<EventAccessSuccess | EventAccessFailure> {
   const { supabase, user } = await requireUser()
 
-  const event = await EventService.getEventById(supabase, eventId, 'id, chapter_id, capacity, title, access_model')
-
-  if (!event) {
-    return { error: 'Event not found' }
-  }
-
-  if (user.role !== 'editor' && user.role !== 'admin') {
-    return { error: 'Insufficient permissions' }
-  }
-
-  // Check if user can access this event (owner or collaborator)
-  const canAccess = await canUserAccessChapter(supabase, user, event.chapter_id ?? '', eventId)
-  if (!canAccess) {
-    return { error: 'Insufficient permissions' }
+  const access = await canUserManageEvent(supabase, user, eventId)
+  if (!access.allowed) {
+    return { error: access.error }
   }
 
   return {
@@ -44,6 +32,6 @@ export async function assertCanManageEvent(eventId: string): Promise<EventAccess
       id: user.id,
       role: user.role,
     },
-    event,
+    event: access.event,
   }
 }
