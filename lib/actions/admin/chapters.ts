@@ -40,7 +40,7 @@ export async function createChapter(
     return { success: false, error: 'Enter a valid chapter ID, name, and university.' }
   }
 
-  const { supabase } = await requireAdmin()
+  const { supabase, user } = await requireAdmin()
   const id = parsed.data.id.trim().toLowerCase().replace(/\s+/g, '-')
 
   const result = await AdminService.createChapter(supabase, {
@@ -57,7 +57,7 @@ export async function createChapter(
 
   if (parsed.data.editorIds?.length) {
     for (const userId of parsed.data.editorIds) {
-      await AdminService.assignEditor(supabase, userId, id)
+      await AdminService.assignEditor(supabase, userId, id, user.id)
     }
   }
 
@@ -107,8 +107,8 @@ export async function getAvailableEditors(chapter_id: string) {
 }
 
 export async function assignEditor(userId: string, chapter_id: string): Promise<ActionResult> {
-  const { supabase } = await requireAdmin()
-  const result = await AdminService.assignEditor(supabase, userId, chapter_id)
+  const { supabase, user } = await requireAdmin()
+  const result = await AdminService.assignEditor(supabase, userId, chapter_id, user.id)
   if (result.success) {
     revalidatePath('/admin/chapters')
   }

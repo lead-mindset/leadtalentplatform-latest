@@ -53,6 +53,7 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
   const companyBuilder = createBuilder()
   const recruiterAccessBuilder = createBuilder()
   const chapterMembershipBuilder = createBuilder()
+  const leadIdentityBuilder = createBuilder()
 
   const tableMocks: Record<string, unknown> = {
     user: {
@@ -92,6 +93,13 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
       insert: vi.fn(() => recruiterAccessBuilder),
       delete: vi.fn(() => recruiterAccessBuilder),
       _builder: recruiterAccessBuilder,
+    },
+    lead_identity: {
+      select: vi.fn(() => leadIdentityBuilder),
+      update: vi.fn(() => leadIdentityBuilder),
+      insert: vi.fn(() => leadIdentityBuilder),
+      delete: vi.fn(() => leadIdentityBuilder),
+      _builder: leadIdentityBuilder,
     },
     ...overrides,
   }
@@ -861,6 +869,67 @@ describe('AdminService', () => {
       }
 
       expect(result.error).toBe('Failed to fetch chapters')
+    })
+  })
+
+  describe('assignEditor', () => {
+    it('promotes an approved member and issues a primary chapter editor identity', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.chapter_membership._builder._setThenValue({
+        data: { user_id: 'user-1', chapter_id: 'leaduni', status: 'approved' },
+        error: null,
+      })
+      tableMocks.chapter_membership._builder._setThenValue({ data: null, error: null })
+      tableMocks.user._builder._setThenValue({ data: null, error: null })
+      tableMocks.chapter_membership._builder._setThenValue({
+        data: { user_id: 'user-1', chapter_id: 'leaduni', status: 'approved' },
+        error: null,
+      })
+      tableMocks.lead_identity._builder._setThenValue({ data: null, error: null })
+      tableMocks.lead_identity._builder._setThenValue({
+        data: {
+          id: 'identity-1',
+          user_id: 'user-1',
+          identity_type: 'chapter_editor',
+          chapter_id: 'leaduni',
+          is_primary: false,
+          issued_by_id: 'admin-1',
+          issued_at: '2026-05-03T00:00:00.000Z',
+          revoked_at: null,
+          status: 'active',
+          created_at: '2026-05-03T00:00:00.000Z',
+          updated_at: '2026-05-03T00:00:00.000Z',
+        },
+        error: null,
+      })
+      tableMocks.lead_identity._builder._setThenValue({
+        data: { id: 'identity-1', user_id: 'user-1', status: 'active' },
+        error: null,
+      })
+      tableMocks.lead_identity._builder._setThenValue({ data: null, error: null })
+      tableMocks.lead_identity._builder._setThenValue({ data: null, error: null })
+
+      const result = await AdminService.assignEditor(
+        mockSupabase as unknown as SupabaseClient,
+        'user-1',
+        'leaduni',
+        'admin-1'
+      )
+
+      expect(result.success).toBe(true)
+      expect(tableMocks.chapter_membership.update).toHaveBeenCalledWith(
+        expect.objectContaining({ position: 'editor' })
+      )
+      expect(tableMocks.user.update).toHaveBeenCalledWith({ role: 'editor' })
+      expect(tableMocks.lead_identity.insert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          user_id: 'user-1',
+          identity_type: 'chapter_editor',
+          chapter_id: 'leaduni',
+          issued_by_id: 'admin-1',
+        })
+      )
     })
   })
 })

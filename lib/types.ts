@@ -104,6 +104,9 @@ export type StudentProfileRow = Database["public"]["Tables"]["student_profile"][
 
 export type PersonProfileRow = Database["public"]["Tables"]["person_profile"]["Row"];
 export type ChapterMembershipRow = Database["public"]["Tables"]["chapter_membership"]["Row"];
+export type LeadIdentityRow = Database["public"]["Tables"]["lead_identity"]["Row"];
+export type IdentityType = Database["public"]["Enums"]["identity_type"];
+export type IdentityStatus = Database["public"]["Enums"]["identity_status"];
 
 export type CompanyRow = Database["public"]["Tables"]["company"]["Row"];
 

@@ -1,5 +1,6 @@
 import { logger } from '@/lib/logger'
 import { ChapterMembershipService } from '@/lib/services/chapter-membership.service'
+import { LeadIdentityService } from '@/lib/services/lead-identity.service'
 import { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.generated'
 import type {
@@ -1913,7 +1914,12 @@ export const AdminService = {
   // ───────────────────────────────────────────────────────────────
   // assignEditor
   // ───────────────────────────────────────────────────────────────
-  async assignEditor(supabase: SupabaseClient<Database>, userId: string, chapter_id: string): Promise<ActionResult> {
+  async assignEditor(
+    supabase: SupabaseClient<Database>,
+    userId: string,
+    chapter_id: string,
+    issuedById?: string
+  ): Promise<ActionResult> {
     const { data: membership } = await supabase
       .from('chapter_membership')
       .select('user_id, chapter_id, status')
@@ -1940,6 +1946,17 @@ export const AdminService = {
     if (error) {
       logger.error({ context: 'admin/chapters', error: error }, 'assignEditor error')
       return { success: false, error: 'Failed to assign editor.' }
+    }
+
+    const identityResult = await LeadIdentityService.issueChapterEditorIdentity(supabase, {
+      userId,
+      chapterId: chapter_id,
+      issuedById,
+      makePrimary: true,
+    })
+
+    if (!identityResult.success) {
+      return { success: false, error: identityResult.error }
     }
 
     return { success: true }
