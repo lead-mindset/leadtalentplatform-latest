@@ -10,6 +10,49 @@ We follow a **Service Layer Pattern** (see `docs/adr/001-service-layer-pattern.m
 - **Server Actions** are "thin controllers" — they only handle auth, Zod validation, and call services.
 - This separation makes tests fast, deterministic, and framework-agnostic.
 
+## Multi-Role Testing Strategy
+
+Due to the complex, multi-role nature of the platform (Participants, Members, Editors, Admins, Staff, Recruiters, and Alumni), tests should rely on **deterministic seed personas** rather than ad-hoc setups.
+
+### Seed Personas Matrix
+We maintain standard accounts in `supabase/seed.sql` pre-loaded with the necessary auth and schema structures:
+
+| Persona | Email | Required Tables / State |
+|---------|-------|-------------------------|
+| **Public Participant** | `participant@test.com` | `public.user.role='member'`, `person_profile` |
+| **Member** | `member@test.com` | `public.user.role='member'`, `person_profile`, `chapter_membership` (`position='member'`, `status='approved'`) |
+| **Editor** | `editor@test.com` | `public.user.role='editor'`, `person_profile`, `chapter_membership` (`position='editor'`, `status='approved'`) |
+| **Admin** | `admin@test.com` | `public.user.role='admin'`, `person_profile`, `lead_identity` (`identity_type='founder'`) |
+| **Staff** | `staff@test.com` | `public.user.role='admin'`, `person_profile`, `lead_identity` (`identity_type='staff'`) |
+| **Recruiter** | `recruiter@test.com` | `public.user.role='recruiter'`, `person_profile`, active accepted `recruiter_access` |
+| **Alumni** | `alumni@test.com` | `public.user.role='member'`, `person_profile`, `chapter_membership` (`position='alumni'`, `status='approved'`) |
+
+*(All seed accounts share the same password: `password123` for manual UI testing).*
+
+### Auth in Tests
+For unit testing service functions (`lib/services/`), **do not use real authentication**. Mock the Supabase Client as the correct user context.
+If testing server actions or E2E flows, utilize the standard seed credentials rather than relying on external providers like Google OAuth.
+
+### Testing Concurrency (Event Registrations)
+When validating risk-prone flows like event registration (e.g., maximum capacity checks), you **must** write unit tests simulating concurrency.
+
+Use `Promise.all()` to simulate simultaneous requests. Example:
+
+```typescript
+it('prevents registering over capacity via concurrent requests', async () => {
+  // Mock event capacity = 1
+  const registrations = Array(5).fill(null).map((_, i) =>
+    EventService.registerUser(mockSupabase, { eventId: '123', userId: `user-${i}` })
+      .catch(e => e) // Catch errors to prevent Promise.all from failing early
+  );
+
+  const results = await Promise.all(registrations);
+  const successes = results.filter(r => !(r instanceof Error));
+
+  expect(successes.length).toBe(1); // Only one should succeed
+});
+```
+
 ## Running Tests
 
 ```bash

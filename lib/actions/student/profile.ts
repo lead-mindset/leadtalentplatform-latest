@@ -37,7 +37,7 @@ export async function getProfileData() {
       graduation_year: profileData.graduation_year || 0,
       skills: profileData.skills || [],
       linkedin_url: profileData.linkedin_url || '',
-      consentRecruiterVisibility: profileData.consent_recruiter_visibility || false,
+      consentRecruiterVisibility: profileData.is_recruiter_visible || false,
       emailNotificationsEnabled: profileData.email_notifications_enabled ?? true,
     };
   } catch {

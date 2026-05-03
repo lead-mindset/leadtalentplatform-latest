@@ -11,7 +11,7 @@ async function ProfileData() {
   const { data: profileData, error: profileError } = await supabase
     .from("student_profile")
     .select(
-    "user_id, chapter_id, major, graduation_year, skills, linkedin_url, consent_recruiter_visibility, email_notifications_enabled, member_id, approval_status, gender"
+    "user_id, chapter_id, major, graduation_year, skills, linkedin_url, is_recruiter_visible, email_notifications_enabled, member_id, approval_status, gender"
     )
     .eq("user_id", user.id)
     .maybeSingle<StudentProfileRow>();
@@ -30,7 +30,7 @@ async function ProfileData() {
     graduation_year: profileData?.graduation_year || 0,
     skills: profileData?.skills || [],
     linkedin_url: profileData?.linkedin_url || '',
-    consentRecruiterVisibility: profileData?.consent_recruiter_visibility || false,
+    consentRecruiterVisibility: profileData?.is_recruiter_visible || false,
     emailNotificationsEnabled: profileData?.email_notifications_enabled ?? true,
     memberId: profileData?.member_id || null,
     approvalStatus: profileData?.approval_status || 'pending',

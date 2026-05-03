@@ -57,7 +57,7 @@ type AdminProfileSummaryRow = Pick<
   | 'graduation_year'
   | 'linkedin_url'
   | 'skills'
-  | 'consent_recruiter_visibility'
+  | 'is_recruiter_visible'
   | 'updated_at'
   | 'created_at'
   | 'gender'
@@ -383,7 +383,7 @@ const ADMIN_PROFILE_SELECT = `
   graduation_year,
   linkedin_url,
   skills,
-  consent_recruiter_visibility,
+  is_recruiter_visible,
   updated_at,
   created_at,
   gender,
@@ -441,7 +441,7 @@ function mapAdminProfile(profile: AdminProfileSummaryRow): MemberWithProfile | n
       graduation_year: profile.graduation_year,
       linkedin_url: profile.linkedin_url,
       skills,
-      consent_recruiter_visibility: profile.consent_recruiter_visibility,
+      is_recruiter_visible: profile.is_recruiter_visible,
       updated_at: profile.updated_at,
       created_at: profile.created_at,
       gender: profile.gender,
@@ -624,7 +624,7 @@ export const AdminService = {
       supabase
         .from('person_profile')
         .select('user_id', { count: 'exact', head: true })
-        .eq('consent_recruiter_visibility', true),
+        .eq('is_recruiter_visible', true),
     ])
 
     const chapter_idRows = (chapterMembersResult.data ?? []) as { chapter_id: string }[]
@@ -793,7 +793,7 @@ export const AdminService = {
       supabase
         .from('person_profile')
         .select('user_id', { count: 'exact', head: true })
-        .eq('consent_recruiter_visibility', true),
+        .eq('is_recruiter_visible', true),
       supabase
         .from('recruiter_access')
         .select('id', { count: 'exact', head: true })
@@ -969,7 +969,7 @@ export const AdminService = {
         person_profile: personProfile
           ? {
               is_filled: true, // Derived from existence of person_profile
-              consent_recruiter_visibility: personProfile.consent_recruiter_visibility,
+              is_recruiter_visible: personProfile.is_recruiter_visible,
             }
           : null,
         chapter_membership: chapterMembership
@@ -1000,7 +1000,7 @@ export const AdminService = {
       .from('person_profile')
       .select(`
         user_id,
-        consent_recruiter_visibility
+        is_recruiter_visible
       `)
       .in('user_id', userIds)
 
@@ -1288,7 +1288,7 @@ export const AdminService = {
         graduation_year,
         linkedin_url,
         skills,
-        consent_recruiter_visibility,
+        is_recruiter_visible,
         created_at,
         updated_at,
         gender

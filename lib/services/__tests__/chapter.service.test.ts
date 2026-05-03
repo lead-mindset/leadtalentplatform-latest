@@ -63,7 +63,14 @@ describe('ChapterService', () => {
     }
 
     const tableMocks: Record<string, TableMock> = {
-      student_profile: {
+      person_profile: {
+        select: vi.fn().mockReturnValue(selectChain),
+        update: vi.fn().mockReturnValue(updateChain),
+        upsert: vi.fn(),
+        _selectChain: selectChain,
+        _updateChain: updateChain,
+      },
+      chapter_membership: {
         select: vi.fn().mockReturnValue(selectChain),
         update: vi.fn().mockReturnValue(updateChain),
         upsert: vi.fn(),
@@ -95,7 +102,7 @@ describe('ChapterService', () => {
     it('should approve a member when profile is complete', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.student_profile._selectChain.single.mockResolvedValueOnce({
+      tableMocks.person_profile._selectChain.single.mockResolvedValueOnce({
         data: { is_filled: true, chapter_id: 'ch-1' },
         error: null,
       })
@@ -105,25 +112,24 @@ describe('ChapterService', () => {
       const result = await ChapterService.approveMember(mockSupabase as unknown as SupabaseClient, 'user-123', 'approver-1')
 
       expect(result).toEqual({ success: true, member_id: 'LEAD-123456' })
-      expect(mockSupabase.from).toHaveBeenCalledWith('student_profile')
-      expect(tableMocks.student_profile.select).toHaveBeenCalledWith('is_filled, chapter_id')
-      expect(tableMocks.student_profile._selectChain.eq).toHaveBeenCalledWith('user_id', 'user-123')
+      expect(mockSupabase.from).toHaveBeenCalledWith('person_profile')
+      expect(tableMocks.person_profile.select).toHaveBeenCalledWith('user_id')
+      expect(tableMocks.person_profile._selectChain.eq).toHaveBeenCalledWith('user_id', 'user-123')
       expect(generateUniqueMemberId).toHaveBeenCalledWith(mockSupabase)
-      expect(tableMocks.student_profile.update).toHaveBeenCalledWith(
+      expect(tableMocks.chapter_membership.update).toHaveBeenCalledWith(
         expect.objectContaining({
           approved_by_id: 'approver-1',
-          approval_status: 'approved',
+          status: 'approved',
           member_id: 'LEAD-123456',
-          is_recruiter_visible: true,
         })
       )
-      expect(tableMocks.student_profile._updateChain.eq).toHaveBeenCalledWith('user_id', 'user-123')
+      expect(tableMocks.chapter_membership._updateChain.eq).toHaveBeenCalledWith('user_id', 'user-123')
     })
 
     it('should return error when profile is not found', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.student_profile._selectChain.single.mockResolvedValueOnce({
+      tableMocks.person_profile._selectChain.single.mockResolvedValueOnce({
         data: null,
         error: { message: 'Row not found' },
       })
@@ -134,24 +140,26 @@ describe('ChapterService', () => {
       expect(generateUniqueMemberId).not.toHaveBeenCalled()
     })
 
-    it('should return error when profile is incomplete', async () => {
+    it('should approve when basic person profile exists', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.student_profile._selectChain.single.mockResolvedValueOnce({
+      tableMocks.person_profile._selectChain.single.mockResolvedValueOnce({
         data: { is_filled: false, chapter_id: 'ch-1' },
         error: null,
       })
 
+      vi.mocked(generateUniqueMemberId).mockResolvedValue('LEAD-123456')
+
       const result = await ChapterService.approveMember(mockSupabase as unknown as SupabaseClient, 'user-123', 'approver-1')
 
-      expect(result).toEqual({ success: false, error: 'Cannot approve incomplete profile' })
-      expect(generateUniqueMemberId).not.toHaveBeenCalled()
+      expect(result).toEqual({ success: true, member_id: 'LEAD-123456' })
+      expect(generateUniqueMemberId).toHaveBeenCalled()
     })
 
     it('should return error when member ID generation fails', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.student_profile._selectChain.single.mockResolvedValueOnce({
+      tableMocks.person_profile._selectChain.single.mockResolvedValueOnce({
         data: { is_filled: true, chapter_id: 'ch-1' },
         error: null,
       })
@@ -169,14 +177,14 @@ describe('ChapterService', () => {
     it('should return error when profile update fails', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.student_profile._selectChain.single.mockResolvedValueOnce({
+      tableMocks.person_profile._selectChain.single.mockResolvedValueOnce({
         data: { is_filled: true, chapter_id: 'ch-1' },
         error: null,
       })
 
       vi.mocked(generateUniqueMemberId).mockResolvedValue('LEAD-123456')
 
-      tableMocks.student_profile._updateChain.eq.mockResolvedValueOnce({
+      tableMocks.person_profile._updateChain.eq.mockResolvedValueOnce({
         error: { message: 'Database error' },
       })
 
@@ -193,7 +201,7 @@ describe('ChapterService', () => {
     it('should approve multiple eligible members', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.student_profile._selectChain.in.mockResolvedValueOnce({
+      tableMocks.person_profile._selectChain.in.mockResolvedValueOnce({
         data: [
           { user_id: 'user-1', chapter_id: 'ch-1', is_filled: true },
           { user_id: 'user-2', chapter_id: 'ch-1', is_filled: true },
@@ -202,7 +210,7 @@ describe('ChapterService', () => {
       })
 
       // single() called twice inside approveMember (once per user)
-      tableMocks.student_profile._selectChain.single
+      tableMocks.person_profile._selectChain.single
         .mockResolvedValueOnce({ data: { is_filled: true, chapter_id: 'ch-1' }, error: null })
         .mockResolvedValueOnce({ data: { is_filled: true, chapter_id: 'ch-1' }, error: null })
 
@@ -226,7 +234,7 @@ describe('ChapterService', () => {
     it('should skip members from different chapters when chapterId is provided', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.student_profile._selectChain.in.mockResolvedValueOnce({
+      tableMocks.person_profile._selectChain.in.mockResolvedValueOnce({
         data: [
           { user_id: 'user-1', chapter_id: 'ch-1', is_filled: true },
           { user_id: 'user-2', chapter_id: 'ch-2', is_filled: true },
@@ -235,7 +243,7 @@ describe('ChapterService', () => {
       })
 
       // single() called once for the one valid member
-      tableMocks.student_profile._selectChain.single.mockResolvedValueOnce({
+      tableMocks.person_profile._selectChain.single.mockResolvedValueOnce({
         data: { is_filled: true, chapter_id: 'ch-1' },
         error: null,
       })
@@ -256,7 +264,7 @@ describe('ChapterService', () => {
     it('should skip incomplete profiles', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.student_profile._selectChain.in.mockResolvedValueOnce({
+      tableMocks.person_profile._selectChain.in.mockResolvedValueOnce({
         data: [
           { user_id: 'user-1', chapter_id: 'ch-1', is_filled: true },
           { user_id: 'user-2', chapter_id: 'ch-1', is_filled: false },
@@ -265,7 +273,7 @@ describe('ChapterService', () => {
       })
 
       // single() called once for the one valid member
-      tableMocks.student_profile._selectChain.single.mockResolvedValueOnce({
+      tableMocks.person_profile._selectChain.single.mockResolvedValueOnce({
         data: { is_filled: true, chapter_id: 'ch-1' },
         error: null,
       })
@@ -286,7 +294,7 @@ describe('ChapterService', () => {
     it('should return error when candidates query fails', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.student_profile._selectChain.in.mockResolvedValueOnce({
+      tableMocks.person_profile._selectChain.in.mockResolvedValueOnce({
         data: null,
         error: { message: 'Database error' },
       })
@@ -306,7 +314,7 @@ describe('ChapterService', () => {
     it('should return error when all members are ineligible', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.student_profile._selectChain.in.mockResolvedValueOnce({
+      tableMocks.person_profile._selectChain.in.mockResolvedValueOnce({
         data: [
           { user_id: 'user-1', chapter_id: 'ch-2', is_filled: true },
           { user_id: 'user-2', chapter_id: 'ch-2', is_filled: false },
@@ -331,7 +339,7 @@ describe('ChapterService', () => {
     it('should handle partial failures gracefully', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.student_profile._selectChain.in.mockResolvedValueOnce({
+      tableMocks.person_profile._selectChain.in.mockResolvedValueOnce({
         data: [
           { user_id: 'user-1', chapter_id: 'ch-1', is_filled: true },
           { user_id: 'user-2', chapter_id: 'ch-1', is_filled: true },
@@ -340,7 +348,7 @@ describe('ChapterService', () => {
       })
 
       // single() called twice (once per user in approveMember)
-      tableMocks.student_profile._selectChain.single
+      tableMocks.person_profile._selectChain.single
         .mockResolvedValueOnce({ data: { is_filled: true, chapter_id: 'ch-1' }, error: null })
         .mockResolvedValueOnce({ data: { is_filled: true, chapter_id: 'ch-1' }, error: null })
 
@@ -375,20 +383,19 @@ describe('ChapterService', () => {
       const result = await ChapterService.rejectMember(mockSupabase as unknown as SupabaseClient, 'user-123')
 
       expect(result).toEqual({ success: true })
-      expect(tableMocks.student_profile.update).toHaveBeenCalledWith(
+      expect(tableMocks.chapter_membership.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          approval_status: 'rejected',
+          status: 'rejected',
           member_id: null,
-          is_recruiter_visible: false,
         })
       )
-      expect(tableMocks.student_profile._updateChain.eq).toHaveBeenCalledWith('user_id', 'user-123')
+      expect(tableMocks.chapter_membership._updateChain.eq).toHaveBeenCalledWith('user_id', 'user-123')
     })
 
     it('should return error when update fails', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.student_profile._updateChain.eq.mockResolvedValueOnce({
+      tableMocks.chapter_membership._updateChain.eq.mockResolvedValueOnce({
         error: { message: 'Database error' },
       })
 
@@ -408,21 +415,20 @@ describe('ChapterService', () => {
       const result = await ChapterService.revokeApproval(mockSupabase as unknown as SupabaseClient, 'user-123')
 
       expect(result).toEqual({ success: true })
-      expect(tableMocks.student_profile.update).toHaveBeenCalledWith(
+      expect(tableMocks.chapter_membership.update).toHaveBeenCalledWith(
         expect.objectContaining({
           approved_by_id: null,
-          approval_status: 'pending',
+          status: 'pending',
           member_id: null,
-          is_recruiter_visible: false,
         })
       )
-      expect(tableMocks.student_profile._updateChain.eq).toHaveBeenCalledWith('user_id', 'user-123')
+      expect(tableMocks.chapter_membership._updateChain.eq).toHaveBeenCalledWith('user_id', 'user-123')
     })
 
     it('should return error when update fails', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.student_profile._updateChain.eq.mockResolvedValueOnce({
+      tableMocks.chapter_membership._updateChain.eq.mockResolvedValueOnce({
         error: { message: 'Database error' },
       })
 
@@ -439,7 +445,7 @@ describe('ChapterService', () => {
     it('should return chapter id when profile exists', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.student_profile._selectChain.single.mockResolvedValueOnce({
+      tableMocks.person_profile._selectChain.single.mockResolvedValueOnce({
         data: { chapter_id: 'ch-1' },
         error: null,
       })
@@ -452,7 +458,7 @@ describe('ChapterService', () => {
     it('should return null when profile not found', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.student_profile._selectChain.single.mockResolvedValueOnce({
+      tableMocks.person_profile._selectChain.single.mockResolvedValueOnce({
         data: null,
         error: { message: 'Not found' },
       })

@@ -47,7 +47,7 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
       update: vi.fn(() => userBuilder),
       _builder: userBuilder,
     },
-    student_profile: {
+    person_profile: {
       select: vi.fn(() => studentProfileBuilder),
       _builder: studentProfileBuilder,
     },
@@ -90,16 +90,17 @@ describe('CompanyService', () => {
           name: 'Student',
           phone: null,
           created_at: '2024-01-01',
-          student_profile: {
-            major: 'CS',
+          person_profile: {
+            major_or_interest: 'CS',
             graduation_year: 2025,
             linkedin_url: null,
             skills: ['React'],
             is_recruiter_visible: true,
-            is_filled: true,
             updated_at: '2024-01-01',
-            chapter_id: 'ch-1',
-            chapter: { name: 'MIT', university: 'MIT', city: 'Cambridge', region: 'MA' },
+            chapter_membership: {
+              chapter_id: 'ch-1',
+              chapter: { name: 'MIT', university: 'MIT', city: 'Cambridge', region: 'MA' },
+            },
           },
         },
         error: null,
@@ -109,7 +110,7 @@ describe('CompanyService', () => {
 
       expect(result).not.toBeNull()
       expect(result?.name).toBe('Student')
-      expect(result?.student_profile?.is_recruiter_visible).toBe(true)
+      expect(result?.person_profile?.is_recruiter_visible).toBe(true)
     })
 
     it('should return null for invisible student', async () => {
@@ -122,16 +123,17 @@ describe('CompanyService', () => {
           name: 'Student',
           phone: null,
           created_at: '2024-01-01',
-          student_profile: {
-            major: 'CS',
+          person_profile: {
+            major_or_interest: 'CS',
             graduation_year: 2025,
             linkedin_url: null,
             skills: ['React'],
             is_recruiter_visible: false,
-            is_filled: true,
             updated_at: '2024-01-01',
-            chapter_id: 'ch-1',
-            chapter: { name: 'MIT', university: 'MIT', city: 'Cambridge', region: 'MA' },
+            chapter_membership: {
+              chapter_id: 'ch-1',
+              chapter: { name: 'MIT', university: 'MIT', city: 'Cambridge', region: 'MA' },
+            },
           },
         },
         error: null,
@@ -171,16 +173,17 @@ describe('CompanyService', () => {
           name: 'Student',
           phone: null,
           created_at: '2024-01-01',
-          student_profile: {
-            major: 'CS',
+          person_profile: {
+            major_or_interest: 'CS',
             graduation_year: 2025,
             linkedin_url: null,
             skills: ['React'],
             is_recruiter_visible: true,
-            is_filled: true,
             updated_at: '2024-01-01',
-            chapter_id: 'ch-1',
-            chapter: { name: 'MIT', university: 'MIT', city: 'Cambridge', region: 'MA' },
+            chapter_membership: {
+              chapter_id: 'ch-1',
+              chapter: { name: 'MIT', university: 'MIT', city: 'Cambridge', region: 'MA' },
+            },
           },
         },
         error: null,
@@ -215,16 +218,17 @@ describe('CompanyService', () => {
           name: 'Student',
           phone: null,
           created_at: '2024-01-01',
-          student_profile: {
-            major: 'CS',
+          person_profile: {
+            major_or_interest: 'CS',
             graduation_year: 2025,
             linkedin_url: null,
             skills: ['React'],
             is_recruiter_visible: true,
-            is_filled: true,
             updated_at: '2024-01-01',
-            chapter_id: 'ch-1',
-            chapter: { name: 'MIT', university: 'MIT', city: 'Cambridge', region: 'MA' },
+            chapter_membership: {
+              chapter_id: 'ch-1',
+              chapter: { name: 'MIT', university: 'MIT', city: 'Cambridge', region: 'MA' },
+            },
           },
         },
         error: null,

@@ -273,7 +273,7 @@ export default async function UserDetailPage({
 
                   <div className="flex items-center justify-between py-2">
                     <div className="flex items-center gap-2">
-                      {profile.consent_recruiter_visibility ? (
+                      {profile.is_recruiter_visible ? (
                         <CheckCircle2 className="h-4 w-4 text-[var(--success)]" />
                       ) : (
                         <XCircle className="h-4 w-4 text-muted-foreground" />
@@ -281,10 +281,10 @@ export default async function UserDetailPage({
                       <span className="text-sm">Consent Given</span>
                     </div>
                     <Badge
-                      variant={profile.consent_recruiter_visibility ? 'default' : 'secondary'}
+                      variant={profile.is_recruiter_visible ? 'default' : 'secondary'}
                       className="text-xs"
                     >
-                      {profile.consent_recruiter_visibility ? 'Yes' : 'No'}
+                      {profile.is_recruiter_visible ? 'Yes' : 'No'}
                     </Badge>
                   </div>
 

@@ -56,7 +56,7 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
       select: vi.fn(() => builder),
       _builder: builder,
     },
-    student_profile: {
+    person_profile: {
       select: vi.fn(() => builder),
       _builder: builder,
     },
@@ -85,12 +85,14 @@ describe('RecruiterService', () => {
             id: 'user-1',
             name: 'John',
             email: 'john@test.com',
-            student_profile: {
+            person_profile: {
               graduation_year: 2025,
-              major: 'CS',
+              major_or_interest: 'CS',
               skills: ['React'],
               updated_at: '2024-01-01',
-              chapter: { name: 'MIT', university: 'MIT' },
+              chapter_membership: {
+                chapter: { name: 'MIT', university: 'MIT' },
+              },
             },
           },
         ],
@@ -123,9 +125,9 @@ describe('RecruiterService', () => {
       })
 
       expect(tableMocks.user._builder.ilike).toHaveBeenCalledWith('name', '%john%')
-      expect(tableMocks.user._builder.eq).toHaveBeenCalledWith('student_profile.graduation_year', 2025)
-      expect(tableMocks.user._builder.eq).toHaveBeenCalledWith('student_profile.chapter_id', 'ch-1')
-      expect(tableMocks.user._builder.contains).toHaveBeenCalledWith('student_profile.skills', ['React'])
+      expect(tableMocks.user._builder.eq).toHaveBeenCalledWith('person_profile.graduation_year', 2025)
+      expect(tableMocks.user._builder.eq).toHaveBeenCalledWith('person_profile.chapter_membership.chapter_id', 'ch-1')
+      expect(tableMocks.user._builder.contains).toHaveBeenCalledWith('person_profile.skills', ['React'])
     })
 
     it('should handle errors gracefully', async () => {
@@ -156,12 +158,14 @@ describe('RecruiterService', () => {
               id: 'user-1',
               name: 'John',
               email: 'john@test.com',
-              student_profile: {
+              person_profile: {
                 graduation_year: 2025,
-                major: 'CS',
+                major_or_interest: 'CS',
                 skills: ['React'],
                 updated_at: '2024-01-01',
-                chapter: { name: 'MIT', university: 'MIT' },
+                chapter_membership: {
+                  chapter: { name: 'MIT', university: 'MIT' },
+                },
               },
             },
           },
@@ -181,11 +185,11 @@ describe('RecruiterService', () => {
     it('should return years and chapters', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.student_profile._builder._setThenValue({
+      tableMocks.person_profile._builder._setThenValue({
         data: [
-          { graduation_year: 2024, chapter: { id: 'ch-1', name: 'MIT' } },
-          { graduation_year: 2025, chapter: { id: 'ch-2', name: 'Stanford' } },
-          { graduation_year: 2024, chapter: { id: 'ch-1', name: 'MIT' } },
+          { graduation_year: 2024, chapter_membership: { chapter: { id: 'ch-1', name: 'MIT' } } },
+          { graduation_year: 2025, chapter_membership: { chapter: { id: 'ch-2', name: 'Stanford' } } },
+          { graduation_year: 2024, chapter_membership: { chapter: { id: 'ch-1', name: 'MIT' } } },
         ],
         error: null,
       })
@@ -201,7 +205,7 @@ describe('RecruiterService', () => {
     it('should handle errors gracefully', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.student_profile._builder._setThenValue({
+      tableMocks.person_profile._builder._setThenValue({
         data: null,
         error: { message: 'DB error' },
       })

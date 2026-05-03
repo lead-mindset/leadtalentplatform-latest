@@ -19,7 +19,7 @@ const STUDENT_SELECT = `
   id, email, name, phone, created_at,
   person_profile!user_id!inner (
     major_or_interest, graduation_year, linkedin_url, skills,
-    consent_recruiter_visibility, updated_at,
+    is_recruiter_visible, updated_at,
     chapter_membership!user_id!inner (
       chapter_id,
       chapter (
@@ -35,7 +35,7 @@ const STUDENT_SELECT = `
 
 export type StudentProfileRecruiterRow = Pick<
   PersonProfileRow,
-  'major_or_interest' | 'graduation_year' | 'linkedin_url' | 'skills' | 'consent_recruiter_visibility' | 'updated_at'
+  'major_or_interest' | 'graduation_year' | 'linkedin_url' | 'skills' | 'is_recruiter_visible' | 'updated_at'
 > & {
   chapter_membership: {
     chapter_id: string
@@ -100,7 +100,7 @@ function mapStudentRow(user: RecruiterStudentRow): StudentForRecruiter | null {
       graduation_year: profile.graduation_year,
       linkedin_url: profile.linkedin_url,
       skills: profile.skills,
-      consent_recruiter_visibility: profile.consent_recruiter_visibility,
+      is_recruiter_visible: profile.is_recruiter_visible,
       updated_at: profile.updated_at,
     },
   }
@@ -122,7 +122,7 @@ export const CompanyService = {
       .from('user')
       .select(STUDENT_SELECT)
       .in('role', ['member', 'editor'])
-      .eq('person_profile.consent_recruiter_visibility', true)
+      .eq('person_profile.is_recruiter_visible', true)
       .eq('person_profile.chapter_membership.status', 'approved')
       .order('created_at', { ascending: false })
 
@@ -137,7 +137,7 @@ export const CompanyService = {
       .map(mapStudentRow)
       .filter((s): s is StudentForRecruiter =>
         s !== null &&
-        s.person_profile?.consent_recruiter_visibility === true
+        s.person_profile?.is_recruiter_visible === true
       )
   },
 
@@ -153,7 +153,7 @@ export const CompanyService = {
       .select(STUDENT_SELECT)
       .eq('id', studentId)
       .in('role', ['member', 'editor'])
-      .eq('person_profile.consent_recruiter_visibility', true)
+      .eq('person_profile.is_recruiter_visible', true)
       .eq('person_profile.chapter_membership.status', 'approved')
       .single()
 
@@ -168,7 +168,7 @@ export const CompanyService = {
 
     if (
       !student ||
-      student.person_profile?.consent_recruiter_visibility !== true
+      student.person_profile?.is_recruiter_visible !== true
     ) {
       return null
     }
@@ -191,7 +191,7 @@ export const CompanyService = {
           id, email, name, phone, created_at,
           person_profile!user_id!inner (
             major_or_interest, graduation_year, linkedin_url, skills,
-            consent_recruiter_visibility, updated_at,
+            is_recruiter_visible, updated_at,
             chapter_membership!user_id!inner (
               chapter_id,
               chapter (
@@ -252,7 +252,7 @@ export const CompanyService = {
                   graduation_year: profile.graduation_year,
                   linkedin_url: profile.linkedin_url,
                   skills: profile.skills,
-                  consent_recruiter_visibility: profile.consent_recruiter_visibility,
+                  is_recruiter_visible: profile.is_recruiter_visible,
                   updated_at: profile.updated_at,
                 }
               : null,
@@ -293,7 +293,7 @@ export const CompanyService = {
       supabase
         .from('person_profile')
         .select('user_id', { count: 'exact', head: true })
-        .eq('consent_recruiter_visibility', true)
+        .eq('is_recruiter_visible', true)
         .eq('chapter_membership.status', 'approved'),
       this.getSavedStudents(supabase, userId),
     ])
@@ -322,7 +322,7 @@ export const CompanyService = {
       .from('user')
       .select(STUDENT_SELECT)
       .eq('role', 'member')
-      .eq('person_profile.consent_recruiter_visibility', true)
+      .eq('person_profile.is_recruiter_visible', true)
       .eq('person_profile.chapter_membership.status', 'approved')
       .order('created_at', { ascending: false })
 
@@ -358,7 +358,7 @@ export const CompanyService = {
       .map(mapStudentRow)
       .filter((s): s is StudentForRecruiter =>
         s !== null &&
-        s.person_profile?.consent_recruiter_visibility === true
+        s.person_profile?.is_recruiter_visible === true
       )
   },
 

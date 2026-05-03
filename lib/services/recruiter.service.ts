@@ -30,7 +30,9 @@ type TalentPoolProfileRow = Pick<
   PersonProfileRow,
   'graduation_year' | 'major_or_interest' | 'skills' | 'updated_at'
 > & {
-  chapter: Pick<ChapterRow, 'name' | 'university'> | Pick<ChapterRow, 'name' | 'university'>[] | null
+  chapter_membership: {
+    chapter: Pick<ChapterRow, 'name' | 'university'> | Pick<ChapterRow, 'name' | 'university'>[] | null
+  }
 }
 
 type TalentPoolRow = Pick<UserRow, 'id' | 'name' | 'email'> & {
@@ -42,14 +44,18 @@ type SavedTalentPoolRow = {
 }
 
 type TalentPoolFilterRow = Pick<PersonProfileRow, 'graduation_year'> & {
-  chapter: { id: string; name: string } | { id: string; name: string }[] | null
+  chapter_membership: {
+    chapter: { id: string; name: string } | { id: string; name: string }[] | null
+  }
 }
 
 function mapTalentPoolRow(row: TalentPoolRow): TalentPoolStudent | null {
   const profile = Array.isArray(row.person_profile) ? row.person_profile[0] : row.person_profile
   if (!profile) return null
 
-  const chapter = Array.isArray(profile.chapter) ? profile.chapter[0] : profile.chapter
+  const chapter = Array.isArray(profile.chapter_membership.chapter)
+    ? profile.chapter_membership.chapter[0]
+    : profile.chapter_membership.chapter
 
   return {
     id: row.id,
@@ -90,7 +96,7 @@ export const RecruiterService = {
         `
         id, name, email,
         person_profile!user_id!inner (
-          graduation_year, major_or_interest, skills, updated_at, consent_recruiter_visibility,
+          graduation_year, major_or_interest, skills, updated_at, is_recruiter_visible,
           chapter_membership!user_id!inner (
             status,
             chapter_id,
@@ -101,7 +107,7 @@ export const RecruiterService = {
         { count: 'exact' }
       )
       .eq('role', 'member')
-      .eq('person_profile.consent_recruiter_visibility', true)
+      .eq('person_profile.is_recruiter_visible', true)
       .eq('person_profile.chapter_membership.status', 'approved')
       .order('updated_at', { ascending: false, referencedTable: 'person_profile' })
       .range(from, to)
@@ -168,7 +174,7 @@ export const RecruiterService = {
         student:user!saved_student_student_id_fkey (
           id, name, email,
           person_profile!user_id!inner (
-            graduation_year, major_or_interest, skills, updated_at, consent_recruiter_visibility,
+            graduation_year, major_or_interest, skills, updated_at, is_recruiter_visible,
             chapter_membership!user_id!inner (
               status,
               chapter_id,
@@ -180,7 +186,7 @@ export const RecruiterService = {
         { count: 'exact' }
       )
       .eq('recruiter_id', recruiterId)
-      .eq('student.person_profile.consent_recruiter_visibility', true)
+      .eq('student.person_profile.is_recruiter_visible', true)
       .eq('student.person_profile.chapter_membership.status', 'approved')
       .order('saved_at', { ascending: false })
       .range(from, to)
@@ -247,7 +253,7 @@ export const RecruiterService = {
         )
         `
       )
-      .eq('consent_recruiter_visibility', true)
+      .eq('is_recruiter_visible', true)
       .eq('chapter_membership.status', 'approved')
 
     if (error) {
@@ -262,7 +268,9 @@ export const RecruiterService = {
 
     const chaptersById = new Map<string, { id: string; name: string }>()
     for (const row of filterRows) {
-      const chapter = Array.isArray(row.chapter) ? row.chapter[0] : row.chapter
+      const chapter = Array.isArray(row.chapter_membership.chapter)
+        ? row.chapter_membership.chapter[0]
+        : row.chapter_membership.chapter
       if (chapter?.id && chapter?.name && !chaptersById.has(chapter.id)) {
         chaptersById.set(chapter.id, { id: chapter.id, name: chapter.name })
       }
@@ -317,7 +325,7 @@ export const RecruiterService = {
         `
         id, name, email,
         person_profile!user_id!inner (
-          major_or_interest, graduation_year, skills, linkedin_url, consent_recruiter_visibility,
+          major_or_interest, graduation_year, skills, linkedin_url, is_recruiter_visible,
           chapter_membership!user_id!inner (
             status,
             chapter_id,
@@ -331,7 +339,7 @@ export const RecruiterService = {
       )
       .eq('id', studentId)
       .eq('role', 'member')
-      .eq('person_profile.consent_recruiter_visibility', true)
+      .eq('person_profile.is_recruiter_visible', true)
       .eq('person_profile.chapter_membership.status', 'approved')
       .maybeSingle()
 
