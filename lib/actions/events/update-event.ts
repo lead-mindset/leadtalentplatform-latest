@@ -2,14 +2,10 @@
 
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
-import { requireUser } from '@/lib/auth'
-import { requireChapterMember } from '@/lib/auth'
 import { EventService } from '@/lib/services/event.service'
 import { EventApplicationService } from '@/lib/services/event-application.service'
 import type { EventRow, EventType } from '@/lib/types'
-
-const EVENT_MUTATION_SELECT =
-  'id, title, description, cover_image, start_at, end_at, location, meeting_url, event_type, capacity, is_published, chapter_id, created_by_id, created_at, updated_at, access_model, application_form_url, location_name, location_address, location_city, location_region, location_latitude, location_longitude'
+import { assertCanManageEvent } from './access'
 
 const ApplicationQuestionSchema = z.object({
   id: z.string().uuid().optional(),
@@ -64,29 +60,9 @@ export async function updateEvent(input: UpdateEventInput): Promise<UpdateEventR
   const parsed = UpdateEventSchema.safeParse(input)
   if (!parsed.success) return { error: 'Validation failed' }
 
-  const { supabase, user } = await requireUser()
-  const { chapter_id } = await requireChapterMember()
-
-  if (!chapter_id) {
-    return { error: 'No chapter assigned' }
-  }
-
-  const existing = await EventService.getEventById(supabase, parsed.data.id, EVENT_MUTATION_SELECT)
-
-  if (!existing) {
-    return { error: 'Event not found' }
-  }
-
-  const isOwner = existing.chapter_id === chapter_id
-
-  let isCollaborator = false
-  if (!isOwner) {
-    isCollaborator = await EventService.checkEventCollaboration(supabase, existing.id, chapter_id)
-  }
-
-  if (!isOwner && !isCollaborator) {
-    return { error: 'Insufficient permissions' }
-  }
+  const access = await assertCanManageEvent(parsed.data.id)
+  if ('error' in access) return { error: access.error }
+  const { supabase, user, event: existing } = access
 
   if (user.role === 'editor' && parsed.data.chapter_id !== undefined && parsed.data.chapter_id !== existing.chapter_id) {
     return { error: 'Editors cannot change chapter' }

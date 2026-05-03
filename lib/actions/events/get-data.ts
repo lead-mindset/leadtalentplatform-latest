@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { requireAdmin, requireChapterMember, requireUser } from '@/lib/auth'
+import { requireAdmin, requireChapterEditor, requireUser } from '@/lib/auth'
 import { EventService } from '@/lib/services/event.service'
 import { assertCanManageEvent } from './access'
 import type {
@@ -27,13 +27,12 @@ export async function getMyRegistrations(): Promise<Awaited<ReturnType<typeof Ev
 }
 
 export async function getEditorChapterId(): Promise<string | null> {
-  const { chapter_id } = await requireChapterMember()
+  const { chapter_id } = await requireChapterEditor()
   return chapter_id
 }
 
 export async function getChapterEvents(): Promise<(EventWithDetails & { is_owned_by_chapter: boolean })[]> {
-  const { supabase } = await requireUser()
-  const { chapter_id } = await requireChapterMember()
+  const { supabase, chapter_id } = await requireChapterEditor()
 
   if (!chapter_id) {
     console.error('[getChapterEvents] No chapter assigned')

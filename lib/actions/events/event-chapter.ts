@@ -1,19 +1,15 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { EventService } from '@/lib/services/event.service'
+import { assertCanManageEvent } from './access'
 
 export async function addEventCollaborator(eventId: string, chapter_id: string) {
   try {
-    const authClient = await createClient()
-    const supabase = createAdminClient()
-
-    const { data: { user }, error: authError } = await authClient.auth.getUser()
-    if (authError || !user) {
-      return { error: 'Unauthorized - user not authenticated' }
-    }
+    const access = await assertCanManageEvent(eventId)
+    if ('error' in access) return access
+    const { supabase, user } = access
 
     const result = await EventService.addEventCollaborator(supabase, eventId, chapter_id, user.id)
     if ('error' in result) {
@@ -29,15 +25,22 @@ export async function addEventCollaborator(eventId: string, chapter_id: string) 
 
 export async function removeEventCollaborator(collaboratorId: string) {
   try {
-    const authClient = await createClient()
-    const supabase = createAdminClient()
+    const supabase = await createClient()
 
-    const { data: { user }, error: authError } = await authClient.auth.getUser()
-    if (authError || !user) {
-      return { error: 'Unauthorized - user not authenticated' }
+    const { data: collaborator, error: collaboratorError } = await supabase
+      .from('event_chapter')
+      .select('event_id')
+      .eq('id', collaboratorId)
+      .maybeSingle()
+
+    if (collaboratorError || !collaborator?.event_id) {
+      return { error: 'Collaborator not found' }
     }
 
-    const result = await EventService.removeEventCollaborator(supabase, collaboratorId)
+    const access = await assertCanManageEvent(collaborator.event_id)
+    if ('error' in access) return access
+
+    const result = await EventService.removeEventCollaborator(access.supabase, collaboratorId)
     if ('error' in result) {
       return result
     }
@@ -51,8 +54,10 @@ export async function removeEventCollaborator(collaboratorId: string) {
 
 export async function getEventCollaborators(eventId: string, ownerChapterId?: string) {
   try {
-    const supabase = createAdminClient()
-    return EventService.getEventCollaborators(supabase, eventId, ownerChapterId)
+    const access = await assertCanManageEvent(eventId)
+    if ('error' in access) return { ...access, data: [] }
+
+    return EventService.getEventCollaborators(access.supabase, eventId, ownerChapterId)
   } catch {
     return { error: 'Internal server error', data: [] }
   }

@@ -1,29 +1,17 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { requireUser } from '@/lib/auth'
-import { requireChapterMember } from '@/lib/auth'
 import { EventService } from '@/lib/services/event.service'
-// Note: EventRow type is defined in the service layer
+import { assertCanManageEvent } from './access'
 
 export type DeleteEventResponse =
   | { success: true }
   | { error: string }
 
 export async function deleteEvent(eventId: string): Promise<DeleteEventResponse> {
-  const { supabase, user } = await requireUser()
-
-  const event = await EventService.getEventById(supabase, eventId, 'id, chapter_id')
-
-  if (!event) return { error: 'Event not found' }
-
-  if (user.role === 'editor') {
-    const { chapter_id } = await requireChapterMember()
-    if (!chapter_id) return { error: 'No chapter assigned' }
-    if (event.chapter_id !== chapter_id) return { error: 'Insufficient permissions' }
-  } else if (user.role !== 'admin') {
-    return { error: 'Insufficient permissions' }
-  }
+  const access = await assertCanManageEvent(eventId)
+  if ('error' in access) return { error: access.error }
+  const { supabase } = access
 
   const result = await EventService.deleteEvent(supabase, eventId)
   if (!result.success) {

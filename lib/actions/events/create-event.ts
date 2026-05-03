@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
-import { requireUser, requireChapterMember } from '@/lib/auth';
+import { requireChapterEditor } from '@/lib/auth';
 import { EventService } from '@/lib/services/event.service';
 import { EventApplicationService } from '@/lib/services/event-application.service';
 import type { EventRow } from '@/lib/types';
@@ -86,7 +86,7 @@ export async function createEvent(input: CreateEventInput): Promise<CreateEventR
   if (!parsed.success) return { error: 'Validation failed' };
 
   const data = parsed.data;
-  const { supabase, user } = await requireUser();
+  const { supabase, user, chapter_id } = await requireChapterEditor();
 
   try {
     let targetChapterId: string | null = null;
@@ -95,13 +95,10 @@ export async function createEvent(input: CreateEventInput): Promise<CreateEventR
     if (user.role === 'admin') {
       targetChapterId = data.chapter_id ?? null;
       redirectPath = '/admin/events';
-    } else if (user.role === 'editor') {
-      const { chapter_id } = await requireChapterMember();
+    } else {
       if (!chapter_id) return { error: 'No chapter assigned' };
       targetChapterId = chapter_id;
       redirectPath = '/chapter/events';
-    } else {
-      return { error: 'Insufficient permissions' };
     }
 
     const event = await EventService.createEvent(supabase, {

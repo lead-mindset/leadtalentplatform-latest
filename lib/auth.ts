@@ -6,6 +6,7 @@ import type {
   CompanyRow,
   Database,
   EditorSidebarStats,
+  EventRow,
   RecruiterAccessRow,
   RecruiterUser,
   UserRow,
@@ -14,6 +15,14 @@ import type {
 const USER_SELECT = 'id, email, name, role, phone, gender, created_at, updated_at, deactivated_at'
 const RECRUITER_ACCESS_SELECT =
   'id, company_id, is_active, granted_by_id, accepted_by_user_id, granted_at, accepted_at, revoked_at, invite_expires_at, recruiter_email, invite_token, revoked_by_id'
+
+type ApprovedChapterMembership = {
+  chapter_id: string
+  position: string | null
+  member_id: string | null
+}
+
+type ManageableEvent = Pick<EventRow, 'id' | 'chapter_id' | 'capacity' | 'title' | 'access_model'>
 
 export async function assertAdmin(
   supabase: SupabaseClient<Database>
@@ -92,6 +101,28 @@ export async function requireUserWithRole(role: string): Promise<{
   return { supabase, user }
 }
 
+export async function getApprovedChapterMembership(
+  supabase: SupabaseClient<Database>,
+  userId: string
+): Promise<ApprovedChapterMembership | null> {
+  const { data: membership, error } = await supabase
+    .from('chapter_membership')
+    .select('chapter_id, position, member_id')
+    .eq('user_id', userId)
+    .eq('status', 'approved')
+    .maybeSingle()
+
+  if (error || !membership?.chapter_id) {
+    return null
+  }
+
+  return {
+    chapter_id: membership.chapter_id,
+    position: membership.position ?? null,
+    member_id: membership.member_id ?? null,
+  }
+}
+
 export async function requireChapterMember(): Promise<{
   supabase: SupabaseClient<Database>
   user: UserRow
@@ -104,14 +135,9 @@ export async function requireChapterMember(): Promise<{
     redirect('/student')
   }
 
-  const { data: membership, error } = await supabase
-    .from('chapter_membership')
-    .select('chapter_id')
-    .eq('user_id', user.id)
-    .eq('status', 'approved')
-    .maybeSingle()
+  const membership = await getApprovedChapterMembership(supabase, user.id)
 
-  if (error || !membership?.chapter_id) {
+  if (!membership?.chapter_id) {
     redirect('/chapter')
   }
 
@@ -119,6 +145,40 @@ export async function requireChapterMember(): Promise<{
     supabase,
     user,
     chapter_id: membership.chapter_id,
+  }
+}
+
+export async function requireChapterEditor(): Promise<{
+  supabase: SupabaseClient<Database>
+  user: UserRow
+  chapter_id: string | null
+  membership: ApprovedChapterMembership | null
+}> {
+  const { supabase, user } = await requireUser()
+
+  if (user.role === 'admin') {
+    return {
+      supabase,
+      user,
+      chapter_id: null,
+      membership: null,
+    }
+  }
+
+  if (user.role !== 'editor') {
+    redirect('/student')
+  }
+
+  const membership = await getApprovedChapterMembership(supabase, user.id)
+  if (!membership?.chapter_id) {
+    redirect('/chapter')
+  }
+
+  return {
+    supabase,
+    user,
+    chapter_id: membership.chapter_id,
+    membership,
   }
 }
 
@@ -133,14 +193,11 @@ export async function canUserAccessChapter(
     return true
   }
 
-  // Get user's approved chapter membership.
-  const { data: membership } = await supabase
-    .from('chapter_membership')
-    .select('chapter_id')
-    .eq('user_id', user.id)
-    .eq('status', 'approved')
-    .maybeSingle()
+  if (user.role !== 'editor') {
+    return false
+  }
 
+  const membership = await getApprovedChapterMembership(supabase, user.id)
   const userChapterId = membership?.chapter_id
   if (!userChapterId) {
     return false
@@ -164,6 +221,56 @@ export async function canUserAccessChapter(
   }
 
   return false
+}
+
+export async function canUserManageEvent(
+  supabase: SupabaseClient<Database>,
+  user: UserRow,
+  eventId: string
+): Promise<
+  | { allowed: true; event: ManageableEvent; chapter_id: string | null }
+  | { allowed: false; error: string; event?: ManageableEvent }
+> {
+  const { data: event, error } = await supabase
+    .from('event')
+    .select('id, chapter_id, capacity, title, access_model')
+    .eq('id', eventId)
+    .maybeSingle()
+
+  if (error || !event) {
+    return { allowed: false, error: 'Event not found' }
+  }
+
+  if (user.role === 'admin') {
+    return { allowed: true, event: event as ManageableEvent, chapter_id: null }
+  }
+
+  if (user.role !== 'editor') {
+    return { allowed: false, error: 'Insufficient permissions', event: event as ManageableEvent }
+  }
+
+  const membership = await getApprovedChapterMembership(supabase, user.id)
+  const chapterId = membership?.chapter_id
+  if (!chapterId) {
+    return { allowed: false, error: 'No approved editor chapter assigned', event: event as ManageableEvent }
+  }
+
+  if (event.chapter_id === chapterId) {
+    return { allowed: true, event: event as ManageableEvent, chapter_id: chapterId }
+  }
+
+  const { data: collaboration } = await supabase
+    .from('event_chapter')
+    .select('id')
+    .eq('event_id', eventId)
+    .eq('chapter_id', chapterId)
+    .maybeSingle()
+
+  if (collaboration) {
+    return { allowed: true, event: event as ManageableEvent, chapter_id: chapterId }
+  }
+
+  return { allowed: false, error: 'Insufficient permissions', event: event as ManageableEvent }
 }
 
 
