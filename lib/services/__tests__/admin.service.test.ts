@@ -17,6 +17,7 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
 
     const builder: Record<string, unknown> = {
       eq: vi.fn(() => builder),
+      match: vi.fn(() => builder),
       in: vi.fn(() => builder),
       or: vi.fn(() => builder),
       ilike: vi.fn(() => builder),
@@ -247,6 +248,7 @@ describe('AdminService', () => {
     it('should update user role successfully', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
+      tableMocks.chapter_membership._builder._setThenValue({ data: { user_id: 'user-1' }, error: null })
       tableMocks.user._builder._setThenValue({ data: null, error: null })
 
       const result = await AdminService.updateUserRole(mockSupabase as unknown as SupabaseClient, 'user-1', 'editor')
@@ -258,6 +260,7 @@ describe('AdminService', () => {
     it('should return error on update failure', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
+      tableMocks.chapter_membership._builder._setThenValue({ data: { user_id: 'user-1' }, error: null })
       tableMocks.user._builder._setThenValue({ data: null, error: { message: 'DB error' } })
 
       const result = await AdminService.updateUserRole(mockSupabase as unknown as SupabaseClient, 'user-1', 'editor')
@@ -274,6 +277,8 @@ describe('AdminService', () => {
     it('should deactivate user', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
+      tableMocks.chapter_membership._builder._setThenValue({ data: { user_id: 'user-1' }, error: null })
+      tableMocks.chapter_membership._builder._setThenValue({ data: { user_id: 'user-2' }, error: null })
       tableMocks.user._builder._setThenValue({ data: null, error: null })
 
       const result = await AdminService.deactivateUser(mockSupabase as unknown as SupabaseClient, 'user-1')

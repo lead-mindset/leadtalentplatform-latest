@@ -27,10 +27,11 @@ export default function MemberCard({
   onSelectChange?: (checked: boolean) => void
   showSelector?: boolean
 }) {
-  const profile = member.student_profile
+  const profile = member.person_profile
+  const membership = member.chapter_membership
 
-  const approval_status = profile?.approval_status
-  const isPending  = profile?.is_filled === true && approval_status === 'pending'
+  const approval_status = membership?.status
+  const isPending  = Boolean(profile) && approval_status === 'pending'
   const isApproved = approval_status === 'approved'
   const isRejected = approval_status === 'rejected'
 
@@ -85,7 +86,7 @@ export default function MemberCard({
                 Rejected
               </Badge>
             )}
-            {!profile?.is_filled && (
+            {!profile && (
               <Badge variant="outline" className="text-muted-foreground">
                 Incomplete
               </Badge>
@@ -94,7 +95,7 @@ export default function MemberCard({
         </div>
       </CardHeader>
 
-      {profile?.is_filled ? (
+      {profile ? (
         <CardContent className="space-y-4">
           <div className="grid gap-3 text-sm">
             {member.phone && (
@@ -104,10 +105,10 @@ export default function MemberCard({
               </div>
             )}
 
-            {profile.major && (
+            {profile.major_or_interest && (
               <div className="flex items-center gap-2 text-muted-foreground">
                 <GraduationCap className="h-4 w-4" />
-                {profile.major}
+                {profile.major_or_interest}
               </div>
             )}
 
@@ -159,13 +160,19 @@ export default function MemberCard({
                 <UserCheck className="h-4 w-4 text-success" />
                 Approved on {new Date(profile.updated_at).toLocaleDateString()}
               </div>
-              {profile.member_id && (
+              {membership?.member_id && (
                 <div className="flex items-center gap-2 text-sm">
                   <Icons.IdCard className="h-4 w-4 text-primary" />
                   <span className="font-medium text-muted-foreground">Member ID:</span>{' '}
                   <code className="px-2 py-1 bg-primary/5 border border-primary/10 rounded text-sm font-mono text-primary">
-                    {profile.member_id}
+                    {membership.member_id}
                   </code>
+                </div>
+              )}
+              {membership?.position && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <UserCheck className="h-4 w-4 text-primary" />
+                  Position: {membership.position.replaceAll('_', ' ')}
                 </div>
               )}
               <MemberActionButtons

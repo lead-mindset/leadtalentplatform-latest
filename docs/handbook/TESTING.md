@@ -25,7 +25,7 @@ We maintain standard accounts in `supabase/seed.sql` pre-loaded with the necessa
 | **Admin** | `admin@test.com` | `public.user.role='admin'`, `person_profile`, `lead_identity` (`identity_type='founder'`) |
 | **Staff** | `staff@test.com` | `public.user.role='admin'`, `person_profile`, `lead_identity` (`identity_type='staff'`) |
 | **Recruiter** | `recruiter@test.com` | `public.user.role='recruiter'`, `person_profile`, active accepted `recruiter_access` |
-| **Alumni** | `alumni@test.com` | `public.user.role='member'`, `person_profile`, `chapter_membership` (`position='alumni'`, `status='approved'`) |
+| **Alumni** | `alumni@test.com` | `public.user.role='member'`, `person_profile`, `chapter_membership` (`position='member'`, `status='alumni'`) |
 
 *(All seed accounts share the same password: `password123` for manual UI testing).*
 
@@ -42,6 +42,16 @@ The public participant profile foundation is intentionally separate from chapter
 - Returning-user flows should call `PersonProfileService.getBasicProfile()` and prefill reusable fields.
 - Manual validation should use `participant@test.com` and confirm the account can complete/reuse `person_profile` without a `chapter_membership` row.
 - RLS validation should confirm authenticated users can insert/update/select only their own `person_profile`; admins may access all profiles.
+
+### Chapter Membership Flow (LEAD-006)
+
+Chapter affiliation is explicit and separate from basic profile data:
+
+- Applying to a chapter must create or reuse a `chapter_membership` row with `status='pending'` and `position='member'`.
+- Approval must update the specific `(user_id, chapter_id)` membership row to `status='approved'`, assign `member_id`, set `approved_by_id`, and preserve one approved chapter membership per user.
+- Editor promotion must require an approved membership first; assigning a chapter editor should set membership `position='editor'`.
+- Alumni should be represented as `chapter_membership.status='alumni'` with a valid position such as `member`; do not encode alumni as a position.
+- Manual validation should use `member@test.com`, `editor@test.com`, and `alumni@test.com` to confirm roster tabs, member IDs, positions, and pending approval counts come from `chapter_membership`.
 
 ### Testing Concurrency (Event Registrations)
 When validating risk-prone flows like event registration (e.g., maximum capacity checks), you **must** write unit tests simulating concurrency.

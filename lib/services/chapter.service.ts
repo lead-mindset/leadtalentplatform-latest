@@ -1,14 +1,15 @@
-import { logger } from '@/lib/logger'
+﻿import { logger } from '@/lib/logger'
 import { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.generated'
 import { generateUniqueMemberId } from '@/lib/utils/member-id'
 import type { ChapterRow, MemberWithProfile, PersonProfileRow, UserRow } from '@/lib/types'
+import { ChapterMembershipService } from '@/lib/services/chapter-membership.service'
 
 /**
  * Service Layer: Chapter Member Management
  *
  * All member approval/rejection/revocation operations.
- * Keeps Server Actions thin — auth stays in actions, DB logic lives here.
+ * Keeps Server Actions thin â€” auth stays in actions, DB logic lives here.
  */
 
 type ApprovalResult = { success: true; member_id: string } | { success: false; error: string }
@@ -133,23 +134,8 @@ export const ChapterService = {
     supabase: SupabaseClient<Database>,
     chapter_id: string
   ): Promise<MemberWithProfile[]> {
-    const { data, error } = await supabase
-      .from('person_profile')
-      .select(PROFILE_SELECT)
-      .eq('chapter_membership.chapter_id', chapter_id)
-      .order('created_at', { ascending: false })
-
-    if (error) {
-      logger.error({ context: 'ChapterService.getChapterMembers', error: error }, 'Error')
-      return []
-    }
-
-    const rows = (data ?? []) as ChapterProfileRow[]
-
-    return rows
-      .map(mapProfile)
-      .filter((m): m is MemberWithProfile => m !== null)
-      .filter((member: MemberWithProfile) => member.role === 'member' || member.role === 'editor')
+    const members = await ChapterMembershipService.getChapterRoster(supabase, chapter_id)
+    return members.filter((member: MemberWithProfile) => member.role === 'member' || member.role === 'editor')
   },
 
   getMemberStats(members: MemberWithProfile[]) {
@@ -201,7 +187,7 @@ export const ChapterService = {
       .filter((m): m is MemberWithProfile => m !== null)
   },
 
-  // ───────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   /**
    * Approve a single member.
    * Validates profile is complete, generates a unique member ID,
@@ -210,7 +196,8 @@ export const ChapterService = {
   async approveMember(
     supabase: SupabaseClient<Database>,
     userId: string,
-    approverId: string
+    approverId: string,
+    chapterId?: string | null
   ): Promise<ApprovalResult> {
     // 1. Verify profile exists
     const { data: profile, error: profileError } = await supabase
@@ -224,29 +211,17 @@ export const ChapterService = {
     }
 
     // 2. Generate unique member ID
-    let memberId: string
-    try {
-      memberId = await generateUniqueMemberId(supabase)
-    } catch {
-      return { success: false, error: 'Could not generate a member ID — please try again.' }
+    const targetChapterId = chapterId ?? await this.getStudentChapterId(supabase, userId)
+    if (!targetChapterId) {
+      return { success: false, error: 'Membership application not found.' }
     }
 
-    // 3. Update chapter membership
-    const { error: updateError } = await supabase
-      .from('chapter_membership')
-      .update({
-        approved_by_id: approverId,
-        status: 'approved',
-        member_id: memberId,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('user_id', userId)
-
-    if (updateError) {
-      return { success: false, error: 'Failed to approve member' }
-    }
-
-    return { success: true, member_id: memberId }
+    return ChapterMembershipService.approveMembership(supabase, {
+      userId,
+      chapterId: targetChapterId,
+      approverId,
+      generateMemberId: generateUniqueMemberId,
+    })
   },
 
   /**
@@ -268,8 +243,8 @@ export const ChapterService = {
     const uniqueUserIds = [...new Set(userIds)]
 
     const { data: candidates, error: candidatesError } = await supabase
-      .from('person_profile')
-      .select('user_id, chapter_membership!inner(chapter_id)')
+      .from('chapter_membership')
+      .select('user_id, chapter_id, status')
       .in('user_id', uniqueUserIds)
 
     if (candidatesError || !candidates) {
@@ -277,16 +252,12 @@ export const ChapterService = {
     }
 
     const validUserIds = candidates
-      .filter((profile) => {
-        const membership = Array.isArray(profile.chapter_membership)
-          ? profile.chapter_membership[0]
-          : profile.chapter_membership
-        const legacyChapterId = (profile as { chapter_id?: string }).chapter_id
-        const legacyIsFilled = (profile as { is_filled?: boolean }).is_filled
-        return legacyIsFilled !== false &&
-          (!approverChapterId || membership?.chapter_id === approverChapterId || legacyChapterId === approverChapterId)
+      .filter((membership) => {
+        const legacyIsFilled = (membership as { is_filled?: boolean }).is_filled
+        return legacyIsFilled !== false && (membership.status ?? 'pending') === 'pending'
       })
-      .map((profile) => profile.user_id)
+      .filter((membership) => !approverChapterId || membership.chapter_id === approverChapterId)
+      .map((membership) => membership.user_id)
 
     if (validUserIds.length === 0) {
       return { success: false, count: 0, skipped: 0, errors: [{ user_id: '', error: 'No eligible members selected' }] }
@@ -296,7 +267,8 @@ export const ChapterService = {
     const errors: Array<{ user_id: string; error: string }> = []
 
     for (const user_id of validUserIds) {
-      const result = await this.approveMember(supabase, user_id, approverId)
+      const membership = candidates.find((candidate) => candidate.user_id === user_id)
+      const result = await this.approveMember(supabase, user_id, approverId, membership?.chapter_id)
       if (result.success) {
         results.push({ user_id, member_id: result.member_id })
       } else {
@@ -322,22 +294,18 @@ export const ChapterService = {
    */
   async rejectMember(
     supabase: SupabaseClient<Database>,
-    userId: string
+    userId: string,
+    chapterId?: string | null
   ): Promise<{ success: boolean; error?: string }> {
-    const { error: updateError } = await supabase
-      .from('chapter_membership')
-      .update({
-        status: 'rejected',
-        member_id: null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('user_id', userId)
-
-    if (updateError) {
-      return { success: false, error: 'Failed to reject member' }
+    const targetChapterId = chapterId ?? await this.getStudentChapterId(supabase, userId)
+    if (!targetChapterId) {
+      return { success: false, error: 'Membership application not found.' }
     }
 
-    return { success: true }
+    return ChapterMembershipService.rejectMembership(supabase, {
+      userId,
+      chapterId: targetChapterId,
+    })
   },
 
   /**
@@ -346,8 +314,14 @@ export const ChapterService = {
    */
   async revokeApproval(
     supabase: SupabaseClient<Database>,
-    userId: string
+    userId: string,
+    chapterId?: string | null
   ): Promise<{ success: boolean; error?: string }> {
+    const targetChapterId = chapterId ?? await this.getStudentChapterId(supabase, userId)
+    if (!targetChapterId) {
+      return { success: false, error: 'Membership application not found.' }
+    }
+
     const { error: updateError } = await supabase
       .from('chapter_membership')
       .update({
@@ -356,7 +330,7 @@ export const ChapterService = {
         member_id: null,
         updated_at: new Date().toISOString(),
       })
-      .eq('user_id', userId)
+      .match({ user_id: userId, chapter_id: targetChapterId })
 
     if (updateError) {
       return { success: false, error: 'Failed to revoke approval' }

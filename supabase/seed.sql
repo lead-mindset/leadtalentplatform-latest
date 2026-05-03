@@ -44,7 +44,7 @@ INSERT INTO public.person_profile (id, user_id, is_recruiter_visible) VALUES
 INSERT INTO public.chapter_membership (user_id, chapter_id, position, status) VALUES
   ('22222222-2222-2222-2222-222222222222', 'leaduni', 'member', 'approved'),
   ('33333333-3333-3333-3333-333333333333', 'leaduni', 'editor', 'approved'),
-  ('77777777-7777-7777-7777-777777777777', 'leaduni', 'alumni', 'approved');
+  ('77777777-7777-7777-7777-777777777777', 'leaduni', 'member', 'alumni');
 
 -- Insert Lead Identities (Global Roles) (using user_id)
 INSERT INTO public.lead_identity (user_id, identity_type) VALUES

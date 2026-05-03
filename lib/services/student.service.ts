@@ -1,5 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/lib/database.generated';
+import { ChapterMembershipService } from '@/lib/services/chapter-membership.service';
 
 /**
  * Service Layer: Student Domain
@@ -87,19 +88,13 @@ export const StudentService = {
 
     if (profileError) throw profileError;
 
-    // 3. Upsert Chapter Membership
-    const { error: membershipError } = await supabase.from('chapter_membership').upsert(
-      {
-        user_id: params.userId,
-        chapter_id: params.chapter_id,
-        position: 'member',
-        status: 'pending',
-        joined_at: now,
-      },
-      { onConflict: 'user_id,chapter_id' }
-    );
+    // 3. Create explicit chapter application
+    const membershipResult = await ChapterMembershipService.applyToChapter(supabase, {
+      userId: params.userId,
+      chapterId: params.chapter_id,
+    });
 
-    if (membershipError) throw membershipError;
+    if (!membershipResult.success) throw new Error(membershipResult.error);
 
     // 4. Handle Resume if provided
     if (params.resumePdf) {
@@ -182,7 +177,6 @@ export const StudentService = {
       emailNotificationsEnabled: boolean
       leadChapter: string
       resumePdf?: File | null
-      generateMemberId: (supabase: SupabaseClient<Database>) => Promise<string>
     }
   ): Promise<{ success: true } | { success: false; error: string }> {
     const now = new Date().toISOString()
@@ -217,19 +211,6 @@ export const StudentService = {
       return { success: false, error: 'User row does not exist for StudentProfile insert' }
     }
 
-    const { data: existingMembership, error: membershipError } = await supabase
-      .from('chapter_membership')
-      .select('member_id')
-      .eq('user_id', params.userId)
-      .eq('chapter_id', params.leadChapter)
-      .maybeSingle()
-
-    if (membershipError) {
-      return { success: false, error: membershipError.message }
-    }
-
-    const memberId = existingMembership?.member_id ?? await params.generateMemberId(supabase)
-
     const { error: profileError } = await supabase
       .from('person_profile')
       .upsert({
@@ -248,20 +229,13 @@ export const StudentService = {
       return { success: false, error: profileError.message }
     }
 
-    // Create chapter membership
-    const { error: chapterMembershipError } = await supabase
-      .from('chapter_membership')
-      .upsert({
-        user_id: params.userId,
-        chapter_id: params.leadChapter,
-        position: 'member',
-        status: 'pending',
-        member_id: memberId,
-        joined_at: now,
-      })
+    const membershipResult = await ChapterMembershipService.applyToChapter(supabase, {
+      userId: params.userId,
+      chapterId: params.leadChapter,
+    })
 
-    if (chapterMembershipError) {
-      return { success: false, error: chapterMembershipError.message }
+    if (!membershipResult.success) {
+      return { success: false, error: membershipResult.error }
     }
 
     // Handle resume upload if provided

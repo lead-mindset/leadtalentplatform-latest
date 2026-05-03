@@ -2021,7 +2021,12 @@ export type Database = {
         | "chapter_editor"
         | "chapter_member"
         | "alumni"
-      membership_status: "pending" | "approved" | "rejected" | "inactive"
+      membership_status:
+        | "pending"
+        | "approved"
+        | "rejected"
+        | "inactive"
+        | "alumni"
       newsletter_scope: "global" | "chapter"
       newsletter_status: "active" | "inactive" | "unsubscribed"
       OKRCategory: "inspire" | "unite" | "empower" | "elevate"
@@ -2181,7 +2186,13 @@ export const Constants = {
         "chapter_member",
         "alumni",
       ],
-      membership_status: ["pending", "approved", "rejected", "inactive"],
+      membership_status: [
+        "pending",
+        "approved",
+        "rejected",
+        "inactive",
+        "alumni",
+      ],
       newsletter_scope: ["global", "chapter"],
       newsletter_status: ["active", "inactive", "unsubscribed"],
       OKRCategory: ["inspire", "unite", "empower", "elevate"],

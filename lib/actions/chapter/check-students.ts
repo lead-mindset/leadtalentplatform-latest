@@ -20,7 +20,7 @@ const UserIdsSchema = z.array(UserIdSchema).min(1, 'At least one member is requi
 async function assertCanManageMember(
   targetUserId?: string
 ): Promise<
-  | { success: true; supabase: Awaited<ReturnType<typeof requireUser>>['supabase']; user: Awaited<ReturnType<typeof requireUser>>['user']; chapterId: string | null }
+  | { success: true; supabase: Awaited<ReturnType<typeof requireUser>>['supabase']; user: Awaited<ReturnType<typeof requireUser>>['user']; chapterId: string | null; targetChapterId: string | null }
   | { success: false; error: string }
 > {
   const { supabase, user } = await requireUser()
@@ -30,6 +30,11 @@ async function assertCanManageMember(
   }
 
   let chapterId: string | null = null
+  let targetChapterId: string | null = null
+
+  if (targetUserId) {
+    targetChapterId = await ChapterService.getStudentChapterId(supabase, targetUserId)
+  }
 
   if (user.role === 'editor') {
     chapterId = await ChapterService.getStudentChapterId(supabase, user.id)
@@ -39,14 +44,13 @@ async function assertCanManageMember(
 
     // If a specific target user is provided, verify they're in the editor's chapter
     if (targetUserId) {
-      const targetChapterId = await ChapterService.getStudentChapterId(supabase, targetUserId)
       if (!targetChapterId || targetChapterId !== chapterId) {
         return { success: false, error: 'Member not in your chapter' }
       }
     }
   }
 
-  return { success: true, supabase, user, chapterId }
+  return { success: true, supabase, user, chapterId, targetChapterId }
 }
 
 function revalidateMemberPaths(userId: string) {
@@ -71,7 +75,12 @@ export async function approveMember(user_id: string) {
     const auth = await assertCanManageMember(parsed.data)
     if (!auth.success) return auth
 
-    const result = await ChapterService.approveMember(auth.supabase, parsed.data, auth.user.id)
+    const result = await ChapterService.approveMember(
+      auth.supabase,
+      parsed.data,
+      auth.user.id,
+      auth.targetChapterId
+    )
     if (!result.success) {
       return { success: false, error: result.error }
     }
@@ -139,7 +148,7 @@ export async function rejectMember(user_id: string, _reason?: string) {
     const auth = await assertCanManageMember(parsed.data)
     if (!auth.success) return auth
 
-    const result = await ChapterService.rejectMember(auth.supabase, parsed.data)
+    const result = await ChapterService.rejectMember(auth.supabase, parsed.data, auth.targetChapterId)
     if (!result.success) {
       return { success: false, error: result.error }
     }
@@ -161,7 +170,7 @@ export async function revokeApproval(user_id: string) {
     const auth = await assertCanManageMember(parsed.data)
     if (!auth.success) return auth
 
-    const result = await ChapterService.revokeApproval(auth.supabase, parsed.data)
+    const result = await ChapterService.revokeApproval(auth.supabase, parsed.data, auth.targetChapterId)
     if (!result.success) {
       return { success: false, error: result.error }
     }
