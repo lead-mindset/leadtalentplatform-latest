@@ -15,6 +15,7 @@ This file covers **engineering** standards and patterns only.
 ## Project Overview
 
 **Linke** - Student-recruiter platform connecting students with opportunities through events and chapters.
+**GitHub Repo:** `abigailbrionesa/leadtalentplatform-latest`
 
 ### Tech Stack
 - **Framework:** Next.js 15 (App Router, React 19)
