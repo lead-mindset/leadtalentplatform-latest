@@ -210,15 +210,13 @@ export const ChapterService = {
       return { success: false, error: 'Profile not found' }
     }
 
-    // 2. Generate unique member ID
-    const targetChapterId = chapterId ?? await this.getStudentChapterId(supabase, userId)
-    if (!targetChapterId) {
+    if (!chapterId) {
       return { success: false, error: 'Membership application not found.' }
     }
 
     return ChapterMembershipService.approveMembership(supabase, {
       userId,
-      chapterId: targetChapterId,
+      chapterId,
       approverId,
       generateMemberId: generateUniqueMemberId,
     })
@@ -295,16 +293,17 @@ export const ChapterService = {
   async rejectMember(
     supabase: SupabaseClient<Database>,
     userId: string,
+    managerId: string,
     chapterId?: string | null
   ): Promise<{ success: boolean; error?: string }> {
-    const targetChapterId = chapterId ?? await this.getStudentChapterId(supabase, userId)
-    if (!targetChapterId) {
+    if (!chapterId) {
       return { success: false, error: 'Membership application not found.' }
     }
 
     return ChapterMembershipService.rejectMembership(supabase, {
       userId,
-      chapterId: targetChapterId,
+      chapterId,
+      managerId,
     })
   },
 
@@ -350,7 +349,26 @@ export const ChapterService = {
       .from('chapter_membership')
       .select('chapter_id')
       .eq('user_id', userId)
-      .single()
+      .eq('status', 'approved')
+      .maybeSingle()
+
+    if (error || !membership) {
+      return null
+    }
+
+    return membership.chapter_id ?? null
+  },
+
+  async getPendingMembershipChapterId(
+    supabase: SupabaseClient<Database>,
+    userId: string
+  ): Promise<string | null> {
+    const { data: membership, error } = await supabase
+      .from('chapter_membership')
+      .select('chapter_id')
+      .eq('user_id', userId)
+      .eq('status', 'pending')
+      .maybeSingle()
 
     if (error || !membership) {
       return null

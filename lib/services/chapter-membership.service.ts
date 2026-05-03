@@ -34,8 +34,11 @@ type MembershipTarget = {
 
 type ApproveMembershipParams = MembershipTarget & {
   approverId: string
-  position?: MembershipPosition
   generateMemberId: (supabase: SupabaseClient<Database>) => Promise<string>
+}
+
+type RejectMembershipParams = MembershipTarget & {
+  managerId: string
 }
 
 type EditorEligibilityParams = {
@@ -99,6 +102,14 @@ const ROSTER_SELECT = `
   )
 `
 
+const CHAPTER_MANAGER_POSITIONS: MembershipPosition[] = [
+  'editor',
+  'president',
+  'vice_president',
+  'secretary',
+  'treasurer',
+]
+
 function first<T>(value: T | T[] | null): T | null {
   if (Array.isArray(value)) return value[0] ?? null
   return value
@@ -138,22 +149,107 @@ function friendlyMembershipError(error: { code?: string; message?: string } | nu
   return error?.message ?? 'Failed to update chapter membership.'
 }
 
+async function hasPersonProfile(
+  supabase: SupabaseClient<Database>,
+  userId: string
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('person_profile')
+    .select('user_id')
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  return !error && Boolean(data)
+}
+
+async function canManageChapter(
+  supabase: SupabaseClient<Database>,
+  params: { managerId: string; chapterId: string }
+): Promise<boolean> {
+  const { data: manager, error: managerError } = await supabase
+    .from('user')
+    .select('id, role')
+    .eq('id', params.managerId)
+    .maybeSingle()
+
+  if (managerError || !manager) return false
+  if (manager.role === 'admin') return true
+  if (manager.role !== 'editor') return false
+
+  const { data: membership, error: membershipError } = await supabase
+    .from('chapter_membership')
+    .select('user_id')
+    .match({
+      user_id: params.managerId,
+      chapter_id: params.chapterId,
+      status: 'approved',
+    })
+    .in('position', CHAPTER_MANAGER_POSITIONS)
+    .maybeSingle()
+
+  return !membershipError && Boolean(membership)
+}
+
 export const ChapterMembershipService = {
   async applyToChapter(
     supabase: SupabaseClient<Database>,
     params: ApplyToChapterParams
   ): Promise<ActionResult> {
+    const profileExists = await hasPersonProfile(supabase, params.userId)
+    if (!profileExists) {
+      return { success: false, error: 'Basic profile must be completed before applying to a chapter.' }
+    }
+
+    const { data: existingMembership, error: existingError } = await supabase
+      .from('chapter_membership')
+      .select('user_id, chapter_id, status')
+      .match({ user_id: params.userId, chapter_id: params.chapterId })
+      .maybeSingle()
+
+    if (existingError) {
+      return { success: false, error: friendlyMembershipError(existingError) }
+    }
+
+    if (existingMembership?.status === 'pending') {
+      return { success: true }
+    }
+
+    if (existingMembership?.status === 'approved') {
+      return { success: false, error: 'User already has an active approved chapter membership.' }
+    }
+
+    if (existingMembership?.status === 'alumni') {
+      return { success: false, error: 'Alumni memberships cannot be reapplied through this flow.' }
+    }
+
     const now = new Date().toISOString()
-    const { error } = await supabase.from('chapter_membership').upsert(
-      {
+
+    if (existingMembership?.status === 'rejected') {
+      const { error } = await supabase
+        .from('chapter_membership')
+        .update({
+          status: 'pending',
+          position: params.position ?? 'member',
+          member_id: null,
+          approved_by_id: null,
+          updated_at: now,
+        })
+        .match({ user_id: params.userId, chapter_id: params.chapterId })
+
+      if (error) {
+        return { success: false, error: friendlyMembershipError(error) }
+      }
+
+      return { success: true }
+    }
+
+    const { error } = await supabase.from('chapter_membership').insert({
         user_id: params.userId,
         chapter_id: params.chapterId,
         status: 'pending',
         position: params.position ?? 'member',
         updated_at: now,
-      },
-      { onConflict: 'user_id,chapter_id' }
-    )
+      })
 
     if (error) {
       return { success: false, error: friendlyMembershipError(error) }
@@ -196,6 +292,15 @@ export const ChapterMembershipService = {
     supabase: SupabaseClient<Database>,
     params: ApproveMembershipParams
   ): Promise<ApprovalResult> {
+    const canManage = await canManageChapter(supabase, {
+      managerId: params.approverId,
+      chapterId: params.chapterId,
+    })
+
+    if (!canManage) {
+      return { success: false, error: 'Only admins and same-chapter editors can approve memberships.' }
+    }
+
     const { data: membership, error: membershipError } = await supabase
       .from('chapter_membership')
       .select('id, status, member_id')
@@ -227,7 +332,7 @@ export const ChapterMembershipService = {
       .update({
         approved_by_id: params.approverId,
         status: 'approved',
-        position: params.position ?? 'member',
+        position: 'member',
         member_id: memberId,
         joined_at: now,
         updated_at: now,
@@ -243,11 +348,35 @@ export const ChapterMembershipService = {
 
   async rejectMembership(
     supabase: SupabaseClient<Database>,
-    params: MembershipTarget
+    params: RejectMembershipParams
   ): Promise<ActionResult> {
+    const canManage = await canManageChapter(supabase, {
+      managerId: params.managerId,
+      chapterId: params.chapterId,
+    })
+
+    if (!canManage) {
+      return { success: false, error: 'Only admins and same-chapter editors can reject memberships.' }
+    }
+
+    const { data: membership, error: membershipError } = await supabase
+      .from('chapter_membership')
+      .select('id, status')
+      .match({ user_id: params.userId, chapter_id: params.chapterId })
+      .maybeSingle()
+
+    if (membershipError || !membership) {
+      return { success: false, error: 'Membership application not found.' }
+    }
+
+    if (membership.status !== 'pending') {
+      return { success: false, error: 'Only pending memberships can be rejected.' }
+    }
+
     const { error } = await supabase
       .from('chapter_membership')
       .update({
+        approved_by_id: null,
         status: 'rejected',
         member_id: null,
         updated_at: new Date().toISOString(),

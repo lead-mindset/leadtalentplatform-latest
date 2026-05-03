@@ -25,6 +25,7 @@ describe('StudentService', () => {
     list?: ReturnType<typeof vi.fn>
     maybeSingle?: ReturnType<typeof vi.fn>
     is?: ReturnType<typeof vi.fn>
+    match?: ReturnType<typeof vi.fn>
   }
 
   const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
@@ -42,14 +43,16 @@ describe('StudentService', () => {
         eq: vi.fn().mockReturnThis(),
         single: vi.fn(),
         upsert: vi.fn(),
-        maybeSingle: vi.fn(),
+        maybeSingle: vi.fn().mockResolvedValue({ data: { user_id: 'user-123' }, error: null }),
       },
       chapter_membership: {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
+        match: vi.fn().mockReturnThis(),
         single: vi.fn(),
         upsert: vi.fn(),
-        maybeSingle: vi.fn(),
+        insert: vi.fn().mockResolvedValue({ error: null }),
+        maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
       },
       newsletter_subscription: {
         select: vi.fn().mockReturnThis(),
@@ -191,14 +194,13 @@ describe('StudentService', () => {
         { onConflict: 'user_id' }
       );
 
-      // Verify chapter_membership was upserted
+      // Verify chapter_membership application was inserted
       expect(mockSupabase.from).toHaveBeenCalledWith('chapter_membership');
-      expect(tableMocks.chapter_membership.upsert).toHaveBeenCalledWith(
+      expect(tableMocks.chapter_membership.insert).toHaveBeenCalledWith(
         expect.objectContaining({
           user_id: 'user-123',
           chapter_id: 'chapter-1',
-        }),
-        { onConflict: 'user_id,chapter_id' }
+        })
       );
     });
 

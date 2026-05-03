@@ -115,6 +115,9 @@ describe('ChapterService', () => {
         data: { is_filled: true, chapter_id: 'ch-1' },
         error: null,
       })
+      tableMocks.chapter_membership._selectChain.maybeSingle
+        .mockResolvedValueOnce({ data: { id: 'approver-1', role: 'admin' }, error: null })
+        .mockResolvedValueOnce({ data: { id: 'membership-1', status: 'pending', member_id: null }, error: null })
 
       vi.mocked(generateUniqueMemberId).mockResolvedValue('LEAD-123456')
 
@@ -159,6 +162,9 @@ describe('ChapterService', () => {
         data: { is_filled: false, chapter_id: 'ch-1' },
         error: null,
       })
+      tableMocks.chapter_membership._selectChain.maybeSingle
+        .mockResolvedValueOnce({ data: { id: 'approver-1', role: 'admin' }, error: null })
+        .mockResolvedValueOnce({ data: { id: 'membership-1', status: 'pending', member_id: null }, error: null })
 
       vi.mocked(generateUniqueMemberId).mockResolvedValue('LEAD-123456')
 
@@ -175,6 +181,9 @@ describe('ChapterService', () => {
         data: { is_filled: true, chapter_id: 'ch-1' },
         error: null,
       })
+      tableMocks.chapter_membership._selectChain.maybeSingle
+        .mockResolvedValueOnce({ data: { id: 'approver-1', role: 'admin' }, error: null })
+        .mockResolvedValueOnce({ data: { id: 'membership-1', status: 'pending', member_id: null }, error: null })
 
       vi.mocked(generateUniqueMemberId).mockRejectedValue(new Error('Too many collisions'))
 
@@ -193,6 +202,9 @@ describe('ChapterService', () => {
         data: { is_filled: true, chapter_id: 'ch-1' },
         error: null,
       })
+      tableMocks.chapter_membership._selectChain.maybeSingle
+        .mockResolvedValueOnce({ data: { id: 'approver-1', role: 'admin' }, error: null })
+        .mockResolvedValueOnce({ data: { id: 'membership-1', status: 'pending', member_id: null }, error: null })
 
       vi.mocked(generateUniqueMemberId).mockResolvedValue('LEAD-123456')
 
@@ -225,6 +237,11 @@ describe('ChapterService', () => {
       tableMocks.person_profile._selectChain.single
         .mockResolvedValueOnce({ data: { is_filled: true, chapter_id: 'ch-1' }, error: null })
         .mockResolvedValueOnce({ data: { is_filled: true, chapter_id: 'ch-1' }, error: null })
+      tableMocks.chapter_membership._selectChain.maybeSingle
+        .mockResolvedValueOnce({ data: { id: 'approver-1', role: 'admin' }, error: null })
+        .mockResolvedValueOnce({ data: { id: 'membership-1', status: 'pending', member_id: null }, error: null })
+        .mockResolvedValueOnce({ data: { id: 'approver-1', role: 'admin' }, error: null })
+        .mockResolvedValueOnce({ data: { id: 'membership-2', status: 'pending', member_id: null }, error: null })
 
       vi.mocked(generateUniqueMemberId)
         .mockResolvedValueOnce('LEAD-111111')
@@ -259,6 +276,9 @@ describe('ChapterService', () => {
         data: { is_filled: true, chapter_id: 'ch-1' },
         error: null,
       })
+      tableMocks.chapter_membership._selectChain.maybeSingle
+        .mockResolvedValueOnce({ data: { id: 'approver-1', role: 'admin' }, error: null })
+        .mockResolvedValueOnce({ data: { id: 'membership-1', status: 'pending', member_id: null }, error: null })
 
       vi.mocked(generateUniqueMemberId).mockResolvedValueOnce('LEAD-111111')
 
@@ -289,6 +309,9 @@ describe('ChapterService', () => {
         data: { is_filled: true, chapter_id: 'ch-1' },
         error: null,
       })
+      tableMocks.chapter_membership._selectChain.maybeSingle
+        .mockResolvedValueOnce({ data: { id: 'approver-1', role: 'admin' }, error: null })
+        .mockResolvedValueOnce({ data: { id: 'membership-1', status: 'pending', member_id: null }, error: null })
 
       vi.mocked(generateUniqueMemberId).mockResolvedValueOnce('LEAD-111111')
 
@@ -363,6 +386,11 @@ describe('ChapterService', () => {
       tableMocks.person_profile._selectChain.single
         .mockResolvedValueOnce({ data: { is_filled: true, chapter_id: 'ch-1' }, error: null })
         .mockResolvedValueOnce({ data: { is_filled: true, chapter_id: 'ch-1' }, error: null })
+      tableMocks.chapter_membership._selectChain.maybeSingle
+        .mockResolvedValueOnce({ data: { id: 'approver-1', role: 'admin' }, error: null })
+        .mockResolvedValueOnce({ data: { id: 'membership-1', status: 'pending', member_id: null }, error: null })
+        .mockResolvedValueOnce({ data: { id: 'approver-1', role: 'admin' }, error: null })
+        .mockResolvedValueOnce({ data: { id: 'membership-2', status: 'pending', member_id: null }, error: null })
 
       vi.mocked(generateUniqueMemberId)
         .mockResolvedValueOnce('LEAD-111111')
@@ -392,7 +420,11 @@ describe('ChapterService', () => {
     it('should reject a member successfully', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      const result = await ChapterService.rejectMember(mockSupabase as unknown as SupabaseClient, 'user-123', 'ch-1')
+      tableMocks.chapter_membership._selectChain.maybeSingle
+        .mockResolvedValueOnce({ data: { id: 'approver-1', role: 'admin' }, error: null })
+        .mockResolvedValueOnce({ data: { id: 'membership-1', status: 'pending' }, error: null })
+
+      const result = await ChapterService.rejectMember(mockSupabase as unknown as SupabaseClient, 'user-123', 'approver-1', 'ch-1')
 
       expect(result).toEqual({ success: true })
       expect(tableMocks.chapter_membership.update).toHaveBeenCalledWith(
@@ -414,7 +446,11 @@ describe('ChapterService', () => {
         error: { message: 'Database error' },
       })
 
-      const result = await ChapterService.rejectMember(mockSupabase as unknown as SupabaseClient, 'user-123', 'ch-1')
+      tableMocks.chapter_membership._selectChain.maybeSingle
+        .mockResolvedValueOnce({ data: { id: 'approver-1', role: 'admin' }, error: null })
+        .mockResolvedValueOnce({ data: { id: 'membership-1', status: 'pending' }, error: null })
+
+      const result = await ChapterService.rejectMember(mockSupabase as unknown as SupabaseClient, 'user-123', 'approver-1', 'ch-1')
 
       expect(result).toEqual({ success: false, error: 'Database error' })
     })
@@ -463,7 +499,7 @@ describe('ChapterService', () => {
     it('should return chapter id when profile exists', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.person_profile._selectChain.single.mockResolvedValueOnce({
+      tableMocks.chapter_membership._selectChain.maybeSingle.mockResolvedValueOnce({
         data: { chapter_id: 'ch-1' },
         error: null,
       })
@@ -476,7 +512,7 @@ describe('ChapterService', () => {
     it('should return null when profile not found', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.person_profile._selectChain.single.mockResolvedValueOnce({
+      tableMocks.chapter_membership._selectChain.maybeSingle.mockResolvedValueOnce({
         data: null,
         error: { message: 'Not found' },
       })
