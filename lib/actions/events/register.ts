@@ -3,15 +3,24 @@
 import { isRedirectError } from 'next/dist/client/components/redirect-error'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
 import { requireUser } from '@/lib/auth'
 import { EventService } from '@/lib/services/event.service'
 import { sendApplicationReceivedEmail } from '@/lib/emails/send-email'
 import type { EventRegistrationRow } from '@/lib/types'
+import { getEventRegistrationPreflight } from '@/lib/actions/events/register.helpers'
+
+const ApplicationAnswerSchema = z.object({
+  questionId: z.string().uuid(),
+  value: z.union([z.string(), z.array(z.string())]).nullable().optional(),
+})
 
 export type RegisterForEventState = {
   error?: string
   /** True when the DB capacity trigger rejected the insert */
   capacityExceeded?: boolean
+  requiresOnboarding?: boolean
+  onboardingPath?: string
 }
 
 function revalidateEventRegistrationPaths(eventId: string) {
@@ -26,16 +35,38 @@ function redirectToStudentEventQr(eventId: string) {
 
 export async function applyForEvent(
   eventId: string,
-  subscribeToHostChapters = true
-): Promise<{ success: true; registration: EventRegistrationRow } | { error: string }> {
+  subscribeToHostChapters = true,
+  applicationAnswers: unknown[] = []
+): Promise<
+  | { success: true; registration: EventRegistrationRow }
+  | { error: string; requiresOnboarding?: boolean; onboardingPath?: string }
+> {
   try {
+    const parsedAnswers = z.array(ApplicationAnswerSchema).safeParse(applicationAnswers)
+    if (!parsedAnswers.success) {
+      return { error: 'Application answers are invalid.' }
+    }
+
     const { supabase, user } = await requireUser()
     if (!user) {
       return { error: 'You need to sign in to apply.' }
     }
 
+    const preflight = await getEventRegistrationPreflight(supabase, { userId: user.id, eventId })
+    if (!preflight.ok) {
+      return {
+        error: preflight.error,
+        requiresOnboarding: true,
+        onboardingPath: preflight.onboardingPath,
+      }
+    }
+
     const result = await EventService.applyForEvent(supabase, eventId, user.id, {
       subscribeToHostChapters,
+      applicationAnswers: parsedAnswers.data.map((answer) => ({
+        questionId: answer.questionId,
+        value: answer.value ?? null,
+      })),
     })
     if (!result.success) {
       return { error: result.error }
@@ -83,6 +114,15 @@ export async function registerForEvent(
       return { error: 'Missing event.' }
     }
     const subscribeToHostChapters = formData.get('subscribeToHostChapters') !== null
+
+    const preflight = await getEventRegistrationPreflight(supabase, { userId: user.id, eventId })
+    if (!preflight.ok) {
+      return {
+        error: preflight.error,
+        requiresOnboarding: true,
+        onboardingPath: preflight.onboardingPath,
+      }
+    }
 
     const validation = await EventService.validateEventForRegistration(supabase, eventId)
     if (!validation.ok) {

@@ -30,6 +30,15 @@ interface ApplicationReviewCardProps {
       graduation_year: number
       linkedinUrl?: string | null
     }
+    applicationAnswers?: Array<{
+      id: string
+      answer_text: string | null
+      answer_json: unknown
+      event_application_question: {
+        question_text: string
+        question_type: string
+      } | null
+    }>
   }
   isSelected?: boolean
   onSelect?: (id: string, selected: boolean) => void
@@ -75,6 +84,7 @@ export function ApplicationReviewCard({
   const isPending = application.status === 'pending_review'
   const isApproved = application.status === 'registered'
   const isRejected = application.status === 'rejected'
+  const applicationAnswers = application.applicationAnswers ?? []
 
   return (
     <>
@@ -137,6 +147,25 @@ export function ApplicationReviewCard({
                 <Icons.ExternalLink className="h-4 w-4" />
               </a>
             )}
+
+            {applicationAnswers.length > 0 ? (
+              <div className="mt-3 space-y-3 rounded-md border bg-muted/30 p-3">
+                {applicationAnswers.map((answer) => {
+                  const value = Array.isArray(answer.answer_json)
+                    ? answer.answer_json.join(', ')
+                    : answer.answer_text
+
+                  return (
+                    <div key={answer.id} className="space-y-1">
+                      <p className="text-xs font-medium text-muted-foreground">
+                        {answer.event_application_question?.question_text ?? 'Application question'}
+                      </p>
+                      <p className="text-sm text-foreground">{value || 'No answer provided'}</p>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : null}
 
             <p className="text-xs text-muted-foreground">
               Applied: {new Date(application.registeredAt).toLocaleDateString()}

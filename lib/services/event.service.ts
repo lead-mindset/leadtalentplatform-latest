@@ -4,6 +4,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/lib/database.generated';
 import { EventRow, EventRegistrationRow, RegistrationStatus, EventWithDetails, EventChapterRow, RegistrationWithUser, UserRow, ChapterRow, PersonProfileRow } from '@/lib/types';
 import { NewsletterSubscriptionService } from '@/lib/services/newsletter-subscription.service';
+import { EventApplicationAnswerInput, EventApplicationService } from '@/lib/services/event-application.service';
 
 /**
  * Service Layer: Event Domain
@@ -83,6 +84,7 @@ export type CreateEventParams = {
 
 type EventNewsletterOptions = {
   subscribeToHostChapters?: boolean
+  applicationAnswers?: EventApplicationAnswerInput[]
 }
 
 export type EventValidationResult =
@@ -236,6 +238,18 @@ export const EventService = {
     options: EventNewsletterOptions = {}
   ): Promise<ApplicationResult> {
     const now = new Date().toISOString();
+    const questions = await EventApplicationService.getQuestionsForEvent(supabase, eventId);
+
+    if (questions.length > 0) {
+      const answerValidation = EventApplicationService.validateAnswers(
+        questions,
+        options.applicationAnswers ?? []
+      );
+
+      if (!answerValidation.success) {
+        return { success: false, error: answerValidation.error };
+      }
+    }
 
     const { data: registration, error } = await supabase
       .from('event_registration')
@@ -254,6 +268,19 @@ export const EventService = {
     if (error || !registration) {
       logger.error({ context: 'applyForEvent', error: error }, 'Error');
       return { success: false, error: 'Could not submit application. Please try again.' };
+    }
+
+    if (questions.length > 0) {
+      const answerResult = await EventApplicationService.saveAnswersForRegistration(supabase, {
+        registrationId: registration.id,
+        questions,
+        answers: options.applicationAnswers ?? [],
+      });
+
+      if (!answerResult.success) {
+        await supabase.from('event_registration').delete().eq('id', registration.id);
+        return { success: false, error: answerResult.error };
+      }
     }
 
     if (options.subscribeToHostChapters) {
@@ -1416,23 +1443,40 @@ export const EventService = {
       const u = Array.isArray(r.user) ? (r.user as unknown[])[0] : r.user
       const userRecord = u as Record<string, unknown> | null
       const profile = Array.isArray(userRecord?.person_profile) ? (userRecord.person_profile as unknown[])[0] : userRecord?.person_profile
+      const profileRecord = profile as Record<string, unknown> | null
       return {
-        id: raw.id,
-        event_id: raw.event_id,
-        user_id: raw.user_id,
-        registered_at: raw.registered_at,
-        status: raw.status,
-        qr_token: raw.qr_token,
-        checked_in_at: raw.checked_in_at ?? null,
-        checked_in_by_id: raw.checked_in_by_id ?? null,
-        user: u ?? null,
-        person_profile: profile ?? null,
+        id: String(r.id),
+        event_id: String(r.event_id),
+        user_id: String(r.user_id),
+        registered_at: String(r.registered_at),
+        status: r.status as RegistrationStatus,
+        qr_token: (r.qr_token as string | null) ?? null,
+        checked_in_at: (r.checked_in_at as string | null) ?? null,
+        checked_in_by_id: (r.checked_in_by_id as string | null) ?? null,
+        user: u as RegistrationWithUser['user'],
+        student_profile: profileRecord
+          ? {
+              major: String(profileRecord.major_or_interest ?? ''),
+              graduation_year: Number(profileRecord.graduation_year ?? 0),
+              linkedin_url: (profileRecord.linkedin_url as string | null) ?? null,
+            }
+          : null,
       }
     }
 
-    return (data as unknown[])
+    const registrations = (data as unknown[])
       .map(mapRegistration)
       .filter((r): r is RegistrationWithUser => r !== null)
+
+    const answers = await EventApplicationService.getAnswersForRegistrations(
+      supabase,
+      registrations.map((registration) => registration.id)
+    )
+
+    return registrations.map((registration) => ({
+      ...registration,
+      application_answers: answers.filter((answer) => answer.registration_id === registration.id),
+    }))
   },
 
   // ───────────────────────────────────────────────────────────────

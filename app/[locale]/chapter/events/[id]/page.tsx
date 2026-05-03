@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import type { EventRow, ChapterRow } from '@/lib/types'
+import type { EventRow, ChapterRow, EventApplicationQuestionRow } from '@/lib/types'
 import { EventForm } from '../_components/event-form'
 
 export default async function ChapterEventDetailPage({
@@ -35,6 +35,12 @@ export default async function ChapterEventDetailPage({
     .eq('id', id)
     .maybeSingle<EventRow>()
 
+  const { data: applicationQuestions } = await supabase
+    .from('event_application_question')
+    .select('*')
+    .eq('event_id', id)
+    .order('sort_order', { ascending: true })
+
   return (
     <div className="p-4 max-w-3xl mx-auto space-y-6">
       <div className="flex items-center justify-between gap-3">
@@ -59,7 +65,12 @@ export default async function ChapterEventDetailPage({
           <CardTitle>{event?.title ?? 'Event'}</CardTitle>
         </CardHeader>
         <CardContent>
-          <EventForm mode="edit" initial={event ?? null} editorChapter={editorChapter} />
+          <EventForm
+            mode="edit"
+            initial={event ?? null}
+            editorChapter={editorChapter}
+            applicationQuestions={(applicationQuestions ?? []) as EventApplicationQuestionRow[]}
+          />
         </CardContent>
       </Card>
     </div>

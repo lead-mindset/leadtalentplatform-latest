@@ -1,20 +1,22 @@
 'use client'
 
-import { useForm, FormProvider, Controller } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import type { ReactNode } from 'react'
 import { useState } from 'react'
-import { Icons } from '@/components/ui/icons'
-import { Checkbox } from '@/components/ui/checkbox'
-import { FormStepper, FormInput } from './ui/stepper'
-import { createFullMemberSchemaFrontend } from '@/lib/memberschema'
-import { Button } from './ui/button'
-import { useRouter } from 'next/navigation'
-import CareerCommandSelect from './ui/career-combobox'
-import { submitOnboarding } from '@/lib/actions/student/onboarding'
-import z from 'zod'
+import { Controller, FormProvider, useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations } from 'next-intl'
-import { useTranslatedSkills, useTranslatedChapters, useTranslatedGender } from '@/lib/use-translated-options'
+import z from 'zod'
+import { submitOnboarding } from '@/lib/actions/student/onboarding'
+import { createBasicOnboardingSchema } from '@/lib/memberschema'
+import {
+  useTranslatedChapters,
+  useTranslatedGender,
+  useTranslatedSkills,
+} from '@/lib/use-translated-options'
+import CareerCommandSelect from './ui/career-combobox'
 import { SkillsCombobox } from './ui/skills-combobox'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Icons } from '@/components/ui/icons'
 import {
   Select,
   SelectContent,
@@ -23,9 +25,15 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Link } from '@/i18n/routing'
+import { FormInput, FormStepper } from './ui/stepper'
 
-export default function Onboarding() {
-  const router = useRouter()
+type BasicOnboardingValues = z.input<ReturnType<typeof createBasicOnboardingSchema>>
+
+type OnboardingProps = {
+  initialValues?: Partial<BasicOnboardingValues>
+}
+
+export default function Onboarding({ initialValues }: OnboardingProps) {
   const t = useTranslations('onboarding')
   const tValidation = useTranslations()
 
@@ -33,38 +41,41 @@ export default function Onboarding() {
   const translatedChapters = useTranslatedChapters()
   const translatedGender = useTranslatedGender()
 
-  const [fileName, setFileName] = useState('')
-  const [isUploading, setIsUploading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const fullMemberSchema = createFullMemberSchemaFrontend(tValidation)
-  type OnboardingValues = z.infer<typeof fullMemberSchema>
+  const basicOnboardingSchema = createBasicOnboardingSchema(tValidation)
 
-  const methods = useForm<OnboardingValues>({
-    resolver: zodResolver(fullMemberSchema),
+  const methods = useForm<BasicOnboardingValues>({
+    resolver: zodResolver(basicOnboardingSchema),
     mode: 'onChange',
     defaultValues: {
-      full_name: '',
-      phone: '',
-      career: '',
-      graduation_year: 0,
-      skills: [],
-      gender: undefined,
-      lead_chapter: '',
-      linkedin_url: '',
-      resume_pdf: undefined,
-      consentRecruiterVisibility: false,
-      emailNotificationsEnabled: true,
-      termsAccepted: undefined,
+      full_name: initialValues?.full_name ?? '',
+      phone: initialValues?.phone ?? '',
+      university: initialValues?.university ?? '',
+      career: initialValues?.career ?? '',
+      graduation_year: initialValues?.graduation_year ?? 0,
+      skills: initialValues?.skills ?? [],
+      gender: initialValues?.gender,
+      linkedin_url: initialValues?.linkedin_url ?? '',
+      portfolio_url: initialValues?.portfolio_url ?? '',
+      chapterNewsletterIds: initialValues?.chapterNewsletterIds ?? [],
+      consentRecruiterVisibility: initialValues?.consentRecruiterVisibility ?? false,
+      emailNotificationsEnabled: initialValues?.emailNotificationsEnabled ?? true,
+      termsAccepted: initialValues?.termsAccepted,
     },
   })
 
-  const { trigger, getValues, control, formState: { errors } } = methods
+  const {
+    control,
+    formState: { errors },
+    getValues,
+    trigger,
+  } = methods
 
-  const stepFields: Record<number, (keyof OnboardingValues)[]> = {
-    1: ['full_name', 'phone', 'gender', 'lead_chapter'],
-    2: ['career', 'graduation_year', 'skills'],
-    3: ['linkedin_url', 'resume_pdf'],
+  const stepFields: Record<number, (keyof BasicOnboardingValues)[]> = {
+    1: ['full_name', 'phone', 'gender'],
+    2: ['university', 'career', 'graduation_year', 'skills', 'linkedin_url', 'portfolio_url'],
+    3: ['consentRecruiterVisibility', 'emailNotificationsEnabled', 'chapterNewsletterIds'],
     4: ['termsAccepted'],
   }
 
@@ -80,11 +91,7 @@ export default function Onboarding() {
     const formData = new FormData()
     Object.entries(data).forEach(([key, value]) => {
       if (value === undefined || value === null) return
-      if (key === 'resume_pdf' && value instanceof File) {
-        formData.append('resume', value)
-      } else if (key === 'termsAccepted') {
-
-      } else if (Array.isArray(value) || typeof value === 'object') {
+      if (Array.isArray(value)) {
         formData.append(key, JSON.stringify(value))
       } else {
         formData.append(key, String(value))
@@ -93,64 +100,48 @@ export default function Onboarding() {
 
     try {
       const result = await submitOnboarding(formData)
-      if (result?.error) {
-        console.error(result.error)
-      }
-      // Success redirects automatically, so no else needed
-    } catch (err) {
-      console.error(err)
+      if (result?.error) console.error(result.error, result.details)
+    } catch (error) {
+      console.error(error)
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  const handleFileChange = (onChange: any) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setIsUploading(true)
-    setTimeout(() => {
-      setFileName(file.name)
-      onChange(file)
-      setIsUploading(false)
-    }, 500)
-  }
-
-  const removeFile = (onChange: any) => {
-    setFileName('')
-    onChange(undefined)
-  }
   const FieldError = ({ message }: { message?: string }) =>
     message ? (
-      <p className="flex items-center gap-1 text-sm text-destructive mt-1">
+      <p className="mt-1 flex items-center gap-1 text-sm text-destructive">
         <Icons.X className="h-3 w-3 shrink-0" />
         {message}
       </p>
     ) : null
+
   const StepHeader = ({ title, subtitle }: { title: string; subtitle: string }) => (
-    <div className="space-y-1.5 pb-2 border-b border-border">
+    <div className="space-y-1.5 border-b border-border pb-2">
       <h2 className="text-2xl font-bold tracking-tight text-foreground">{title}</h2>
       <p className="text-sm text-muted-foreground">{subtitle}</p>
     </div>
   )
+
   const PrefCard = ({
     checked,
+    description,
     onCheckedChange,
     title,
-    description,
   }: {
     checked: boolean
-    onCheckedChange: (v: boolean) => void
-    title: React.ReactNode
     description: string
+    onCheckedChange: (value: boolean) => void
+    title: ReactNode
   }) => (
     <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-muted/40 p-4 transition-colors hover:bg-muted">
       <Checkbox
         checked={checked}
-        onCheckedChange={(v) => onCheckedChange(Boolean(v))}
+        onCheckedChange={(value) => onCheckedChange(Boolean(value))}
         className="mt-0.5"
       />
       <div className="flex-1 space-y-0.5">
-        <p className="text-sm font-medium text-foreground leading-snug">{title}</p>
+        <p className="text-sm font-medium leading-snug text-foreground">{title}</p>
         <p className="text-xs text-muted-foreground">{description}</p>
       </div>
     </label>
@@ -159,8 +150,6 @@ export default function Onboarding() {
   return (
     <FormProvider {...methods}>
       <FormStepper validateStep={validateCurrentStep} onFinalStepCompleted={handleComplete}>
-
-        {}
         <div className="space-y-6">
           <StepHeader title={t('step1Title')} subtitle={t('step1Subtitle')} />
 
@@ -190,8 +179,10 @@ export default function Onboarding() {
                       <SelectValue placeholder={t('selectGender')} />
                     </SelectTrigger>
                     <SelectContent>
-                      {translatedGender.map((o) => (
-                        <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                      {translatedGender.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -199,35 +190,20 @@ export default function Onboarding() {
                 </div>
               )}
             />
-
-            <Controller
-              control={control}
-              name="lead_chapter"
-              render={({ field }) => (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">{t('leadChapter')}</label>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder={t('selectChapter')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {translatedChapters.map((o) => (
-                        <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FieldError message={errors.lead_chapter?.message} />
-                </div>
-              )}
-            />
           </div>
         </div>
 
-        {}
         <div className="space-y-6">
           <StepHeader title={t('step2Title')} subtitle={t('step2Subtitle')} />
 
           <div className="space-y-4">
+            <FormInput
+              label={t('university')}
+              name="university"
+              placeholder={t('universityPlaceholder')}
+              error={errors.university?.message}
+            />
+
             <Controller
               control={control}
               name="career"
@@ -266,14 +242,7 @@ export default function Onboarding() {
                 />
               )}
             />
-          </div>
-        </div>
 
-        {}
-        <div className="space-y-6">
-          <StepHeader title={t('step3Title')} subtitle={t('step3Subtitle')} />
-
-          <div className="space-y-4">
             <FormInput
               label={t('linkedinProfile')}
               name="linkedin_url"
@@ -281,68 +250,20 @@ export default function Onboarding() {
               error={errors.linkedin_url?.message}
             />
 
-            <Controller
-              control={control}
-              name="resume_pdf"
-              render={({ field }) => (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">{t('resumePdf')}</label>
-
-                  {!fileName ? (
-                    <label className="cursor-pointer block">
-                      <div className="rounded-lg border-2 border-dashed border-border p-8 text-center transition-colors hover:border-primary/50 hover:bg-muted/40">
-                        <input
-                          type="file"
-                          accept="application/pdf"
-                          className="hidden"
-                          onChange={handleFileChange(field.onChange)}
-                        />
-                        <div className="flex flex-col items-center gap-2">
-                          {isUploading
-                            ? <Icons.Loader2 className="h-8 w-8 animate-spin text-primary" />
-                            : <Icons.Upload className="h-4 w-4 mr-2" />
-                          }
-                          <p className="text-sm font-medium text-foreground">
-                            {isUploading ? t('uploading') : t('clickToUpload')}
-                          </p>
-                          <p className="text-xs text-muted-foreground">{t('pdfUpTo10MB')}</p>
-                        </div>
-                      </div>
-                    </label>
-                  ) : (
-                    <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/40 p-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                        <Icons.FileText className="h-4 w-4 mr-2" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{fileName}</p>
-                        <p className="text-xs text-muted-foreground">{t('readyToUpload')}</p>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        aria-label="Remove file"
-                        onClick={() => removeFile(field.onChange)}
-                      >
-                        <Icons.X className="h-4 w-4 mr-2" />
-                      </Button>
-                    </div>
-                  )}
-
-                  <FieldError message={errors.resume_pdf?.message} />
-                </div>
-              )}
+            <FormInput
+              label={t('portfolioUrl')}
+              name="portfolio_url"
+              type="url"
+              placeholder={t('portfolioPlaceholder')}
+              error={errors.portfolio_url?.message}
             />
           </div>
         </div>
 
-        {}
         <div className="space-y-6">
-          <StepHeader title={t('step4Title')} subtitle={t('step4Subtitle')} />
+          <StepHeader title={t('step3Title')} subtitle={t('step3Subtitle')} />
 
           <div className="space-y-3">
-            {}
             <Controller
               control={control}
               name="consentRecruiterVisibility"
@@ -369,56 +290,101 @@ export default function Onboarding() {
               )}
             />
 
-            <div className="pt-3 border-t border-border space-y-2">
-              <Controller
-                control={control}
-                name="termsAccepted"
-                render={({ field }) => (
-                  <>
-                    <label
-                      className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors hover:bg-muted ${
-                        errors.termsAccepted
-                          ? 'border-destructive bg-destructive/5'
-                          : 'border-border bg-muted/40'
-                      }`}
-                    >
-                      <Checkbox
-                        checked={field.value === true}
-                        onCheckedChange={(checked) =>
-                          field.onChange(checked === true ? true : undefined)
-                        }
-                        className="mt-0.5"
-                      />
-                      <div className="flex-1 space-y-0.5">
-                        <p className="text-sm font-medium text-foreground leading-snug">
-                          {t('termsLabel')}{' '}
-                          <Link
-                            href="/terms"
-                            target="_blank"
-                            className="text-primary underline hover:opacity-80 transition-opacity underline-offset-2"
-                          >
-                            {t('termsLink')}
-                          </Link>
-                          {' '}&amp;{' '}
-                          <Link
-                            href="/privacy"
-                            target="_blank"
-                            className="text-primary underline hover:opacity-80 transition-opacity underline-offset-2"
-                          >
-                            {t('privacyLink')}
-                          </Link>
-                        </p>
-                        <p className="text-xs text-muted-foreground">{t('termsDesc')}</p>
-                      </div>
-                    </label>
-                    <FieldError message={errors.termsAccepted?.message} />
-                  </>
-                )}
-              />
-            </div>
+            <Controller
+              control={control}
+              name="chapterNewsletterIds"
+              render={({ field }) => (
+                <div className="space-y-2 rounded-lg border border-border bg-muted/40 p-4">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      {t('chapterNewsletterInterests')}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {t('chapterNewsletterInterestsDesc')}
+                    </p>
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {translatedChapters.map((option) => {
+                      const selectedChapterIds = field.value ?? []
+                      const selected = selectedChapterIds.includes(option.value)
+                      return (
+                        <label
+                          key={option.value}
+                          className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-background"
+                        >
+                          <Checkbox
+                            checked={selected}
+                            onCheckedChange={(value) => {
+                              field.onChange(
+                                value
+                                  ? [...selectedChapterIds, option.value]
+                                  : selectedChapterIds.filter((id) => id !== option.value)
+                              )
+                            }}
+                          />
+                          <span>{option.label}</span>
+                        </label>
+                      )
+                    })}
+                  </div>
+                  <FieldError message={errors.chapterNewsletterIds?.message} />
+                </div>
+              )}
+            />
           </div>
         </div>
 
+        <div className="space-y-6">
+          <StepHeader title={t('step4Title')} subtitle={t('step4Subtitle')} />
+
+          <Controller
+            control={control}
+            name="termsAccepted"
+            render={({ field }) => (
+              <>
+                <label
+                  className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors hover:bg-muted ${
+                    errors.termsAccepted
+                      ? 'border-destructive bg-destructive/5'
+                      : 'border-border bg-muted/40'
+                  }`}
+                >
+                  <Checkbox
+                    checked={field.value === true}
+                    onCheckedChange={(checked) => field.onChange(checked === true ? true : undefined)}
+                    className="mt-0.5"
+                  />
+                  <div className="flex-1 space-y-0.5">
+                    <p className="text-sm font-medium leading-snug text-foreground">
+                      {t('termsLabel')}{' '}
+                      <Link
+                        href="/terms"
+                        target="_blank"
+                        className="text-primary underline underline-offset-2 transition-opacity hover:opacity-80"
+                      >
+                        {t('termsLink')}
+                      </Link>
+                      {' '}and{' '}
+                      <Link
+                        href="/privacy"
+                        target="_blank"
+                        className="text-primary underline underline-offset-2 transition-opacity hover:opacity-80"
+                      >
+                        {t('privacyLink')}
+                      </Link>
+                    </p>
+                    <p className="text-xs text-muted-foreground">{t('termsDesc')}</p>
+                  </div>
+                </label>
+                <FieldError message={errors.termsAccepted?.message} />
+              </>
+            )}
+          />
+
+          {isSubmitting ? (
+            <p className="text-sm text-muted-foreground">{t('saving')}</p>
+          ) : null}
+        </div>
       </FormStepper>
     </FormProvider>
   )

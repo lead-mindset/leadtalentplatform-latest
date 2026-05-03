@@ -114,6 +114,13 @@ export type ResumeRow = Database["public"]["Tables"]["resume"]["Row"];
 export type ResumeDownloadLogRow = Database["public"]["Tables"]["resume_download_log"]["Row"];
 
 export type EventRegistrationRow = Database["public"]["Tables"]["event_registration"]["Row"];
+export type EventApplicationQuestionRow = Database["public"]["Tables"]["event_application_question"]["Row"];
+export type EventApplicationQuestionInsert = Database["public"]["Tables"]["event_application_question"]["Insert"];
+export type EventApplicationQuestionUpdate = Database["public"]["Tables"]["event_application_question"]["Update"];
+export type EventApplicationAnswerRow = Database["public"]["Tables"]["event_application_answer"]["Row"];
+export type EventApplicationAnswerInsert = Database["public"]["Tables"]["event_application_answer"]["Insert"];
+export type EventApplicationAnswerUpdate = Database["public"]["Tables"]["event_application_answer"]["Update"];
+export type EventApplicationQuestionType = Database["public"]["Enums"]["question_type"];
 
 export type SavedStudentRow = Database["public"]["Tables"]["saved_student"]["Row"];
 
@@ -212,6 +219,14 @@ export type RegistrationWithUserRaw = EventRegistrationRow & {
 export type RegistrationWithUser = EventRegistrationRow & {
   user: Pick<UserRow, 'id' | 'name' | 'email' | 'phone'> | null
   student_profile: Pick<StudentProfileRow, 'major' | 'graduation_year' | 'linkedin_url'> | null
+  application_answers?: Array<
+    EventApplicationAnswerRow & {
+      event_application_question: Pick<
+        EventApplicationQuestionRow,
+        'id' | 'question_text' | 'question_type' | 'options' | 'sort_order'
+      > | null
+    }
+  >
 }
 
 // ============================================================================

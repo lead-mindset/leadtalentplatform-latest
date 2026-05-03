@@ -80,7 +80,7 @@ export const PersonProfileService = {
       portfolioUrl: profile.portfolio_url,
       skills: Array.isArray(profile.skills) ? profile.skills : [],
       gender: profile.gender,
-      isRecruiterVisible: profile.is_recruiter_visible,
+      isRecruiterVisible: profile.is_recruiter_visible ?? false,
     }
   },
 

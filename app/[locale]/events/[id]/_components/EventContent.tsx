@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { EventRegistrationCheckout } from '@/components/events/event-registration-checkout'
 import { ApplyModal } from '@/components/events/apply-modal'
 import { applyForEvent } from '@/lib/actions/events/register'
-import type { EventWithDetails } from '@/lib/types'
+import type { EventApplicationQuestionRow, EventWithDetails } from '@/lib/types'
 import { MainContainer } from '@/components/global/main-container'
 
 type MyRegistration = {
@@ -62,11 +62,17 @@ function getEventStatus(start_at: string, end_at: string): { status: string; mes
 export function EventContent({
   event,
   myRegistration,
+  applicationQuestions,
   isLoggedIn,
+  hasBasicProfile,
+  onboardingUrl,
 }: {
   event: EventWithDetails | null
   myRegistration: MyRegistration
+  applicationQuestions: EventApplicationQuestionRow[]
   isLoggedIn: boolean
+  hasBasicProfile: boolean
+  onboardingUrl: string
 }) {
   const router = useRouter()
   const [showApplyModal, setShowApplyModal] = useState(false)
@@ -96,15 +102,32 @@ export function EventContent({
   const isCancelled = myRegistration?.status === 'cancelled'
 
   const handlePrimaryAction = () => {
+    if (!isLoggedIn) {
+      router.push(`/auth/login?next=/events/${event.id}`)
+      return
+    }
+    if (!hasBasicProfile) {
+      router.push(onboardingUrl)
+      return
+    }
     if (isApplicationRequired) {
       setShowApplyModal(true)
     }
   }
 
-  const handleApplyConfirm = async (subscribeToHostChapters: boolean) => {
+  const handleApplyConfirm = async (
+    subscribeToHostChapters: boolean,
+    applicationAnswers: Array<{ questionId: string; value: string | string[] | null }>
+  ) => {
     setIsSubmitting(true)
     try {
-      await applyForEvent(event.id, subscribeToHostChapters)
+      const result = await applyForEvent(event.id, subscribeToHostChapters, applicationAnswers)
+      if ('error' in result) {
+        if (result.requiresOnboarding && result.onboardingPath) {
+          router.push(result.onboardingPath)
+        }
+        return
+      }
       router.refresh()
       setShowApplyModal(false)
     } finally {
@@ -245,7 +268,9 @@ export function EventContent({
                     eventId={event.id}
                     eventTitle={event.title}
                     isLoggedIn={isLoggedIn}
+                    hasBasicProfile={hasBasicProfile}
                     loginUrl={`/auth/login?next=/events/${event.id}`}
+                    onboardingUrl={onboardingUrl}
                     registrationClosed={registrationClosed}
                     isRegistered={isRegistered}
                     hadCancelledRegistration={isCancelled}
@@ -319,6 +344,7 @@ export function EventContent({
           onOpenChange={setShowApplyModal}
           eventTitle={event.title}
           applicationFormUrl={event.application_form_url || ''}
+          questions={applicationQuestions}
           onConfirm={handleApplyConfirm}
           isSubmitting={isSubmitting}
         />
