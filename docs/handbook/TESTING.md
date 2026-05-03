@@ -33,6 +33,16 @@ We maintain standard accounts in `supabase/seed.sql` pre-loaded with the necessa
 For unit testing service functions (`lib/services/`), **do not use real authentication**. Mock the Supabase Client as the correct user context.
 If testing server actions or E2E flows, utilize the standard seed credentials rather than relying on external providers like Google OAuth.
 
+### Basic Person Profile Flow (LEAD-005)
+
+The public participant profile foundation is intentionally separate from chapter membership:
+
+- `PersonProfileService.upsertBasicProfile()` must update `public.user` contact fields and upsert `person_profile`.
+- Basic profile tests must assert `chapter_membership` is not required and not written.
+- Returning-user flows should call `PersonProfileService.getBasicProfile()` and prefill reusable fields.
+- Manual validation should use `participant@test.com` and confirm the account can complete/reuse `person_profile` without a `chapter_membership` row.
+- RLS validation should confirm authenticated users can insert/update/select only their own `person_profile`; admins may access all profiles.
+
 ### Testing Concurrency (Event Registrations)
 When validating risk-prone flows like event registration (e.g., maximum capacity checks), you **must** write unit tests simulating concurrency.
 
@@ -97,7 +107,7 @@ it('should create an event', async () => {
 | Validation edge cases | Empty strings, nulls, boundary values |
 | Error handling | Supabase returns error → service throws meaningful message |
 | Security logic | HTML sanitization strips `<script>` tags |
-| Multi-step workflows | `updateProfile` updates `user` **and** `student_profile` |
+| Multi-step workflows | `upsertBasicProfile` updates `user` **and** `person_profile` without `chapter_membership` |
 
 ### What NOT to Test
 

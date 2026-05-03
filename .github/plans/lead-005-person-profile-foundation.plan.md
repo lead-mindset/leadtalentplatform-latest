@@ -91,6 +91,17 @@ Service tests should mock Supabase table chains directly and assert table names,
 
 ## Tasks
 
+## Progress
+
+- [x] Task 1: Verify And Patch RLS For Profile Creation
+- [x] Task 2: Create Basic Person Profile Service
+- [x] Task 3: Add Service Tests
+- [x] Task 4: Split Basic Profile Validation From Member Validation
+- [x] Task 5: Add Thin Person Profile Actions
+- [x] Task 6: Keep Member Onboarding Chapter-Specific
+- [x] Task 7: Fix The Touched Profile Read Path
+- [x] Task 8: Document The Manual Flow
+
 ### Task 1: Verify And Patch RLS For Profile Creation
 
 - **Files**: `supabase/migrations/20260503000000_define_rls_new_account_model.sql`, new forward migration if needed
@@ -167,10 +178,10 @@ Service tests should mock Supabase table chains directly and assert table names,
 
 ## Acceptance Criteria Mapping
 
-- [ ] Authenticated basic onboarding creates or updates `person_profile`
-- [ ] Returning user can load and reuse profile fields
-- [ ] User without chapter membership can complete `person_profile`
-- [ ] RLS only allows own profile management unless admin
+- [x] Authenticated basic onboarding creates or updates `person_profile`
+- [x] Returning user can load and reuse profile fields
+- [x] User without chapter membership can complete `person_profile`
+- [x] RLS only allows own profile management unless admin
 
 ## Validation
 
