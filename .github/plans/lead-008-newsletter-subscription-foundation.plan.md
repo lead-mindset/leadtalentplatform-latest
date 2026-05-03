@@ -141,7 +141,7 @@ Event registration tests already cover create, revive, duplicate, and capacity b
 - [x] Task 5: Wire Event Registration Chapter Subscriptions
 - [x] Task 6: Cover Application Event Opt-In Path Or Explicitly Defer
 - [x] Task 7: Update Seed And Testing Docs
-- [ ] Task 8: Final Validation And GitHub Updates
+- [x] Task 8: Final Validation And GitHub Updates
 
 ### Task 1: Add Newsletter Database Invariants
 
