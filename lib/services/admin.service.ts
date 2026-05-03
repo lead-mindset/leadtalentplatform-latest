@@ -1,4 +1,5 @@
 import { logger } from '@/lib/logger'
+import { ChapterMembershipService } from '@/lib/services/chapter-membership.service'
 import { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.generated'
 import type {
@@ -1532,6 +1533,11 @@ export const AdminService = {
   // updateUserRole
   // ───────────────────────────────────────────────────────────────
   async updateUserRole(supabase: SupabaseClient<Database>, userId: string, newRole: Role): Promise<ActionResult> {
+    if (newRole === 'editor') {
+      const eligibility = await ChapterMembershipService.ensureCanBecomeEditor(supabase, { userId })
+      if (!eligibility.success) return eligibility
+    }
+
     const { error } = await supabase.from('user').update({ role: newRole }).eq('id', userId)
     if (error) {
       return { success: false, error: 'Failed to update user role.' }
@@ -1573,6 +1579,13 @@ export const AdminService = {
     }
 
     if (action.type === 'change_role') {
+      if (action.role === 'editor') {
+        for (const userId of userIds) {
+          const eligibility = await ChapterMembershipService.ensureCanBecomeEditor(supabase, { userId })
+          if (!eligibility.success) return eligibility
+        }
+      }
+
       const { error } = await supabase.from('user').update({ role: action.role }).in('id', userIds)
       if (error) {
         return { success: false, error: 'Failed to update roles.' }
@@ -1903,12 +1916,24 @@ export const AdminService = {
   async assignEditor(supabase: SupabaseClient<Database>, userId: string, chapter_id: string): Promise<ActionResult> {
     const { data: membership } = await supabase
       .from('chapter_membership')
-      .select('user_id, chapter_id')
+      .select('user_id, chapter_id, status')
       .eq('user_id', userId)
+      .eq('chapter_id', chapter_id)
       .maybeSingle()
 
-    if (!membership || membership.chapter_id !== chapter_id) {
-      return { success: false, error: 'User must be a member of this chapter.' }
+    if (!membership || membership.status !== 'approved') {
+      return { success: false, error: 'User must have an approved membership in this chapter.' }
+    }
+
+    const { error: membershipError } = await supabase
+      .from('chapter_membership')
+      .update({ position: 'editor', updated_at: new Date().toISOString() })
+      .eq('user_id', userId)
+      .eq('chapter_id', chapter_id)
+
+    if (membershipError) {
+      logger.error({ context: 'admin/chapters', error: membershipError }, 'assignEditor membership error')
+      return { success: false, error: 'Failed to assign editor.' }
     }
 
     const { error } = await supabase.from('user').update({ role: 'editor' }).eq('id', userId)

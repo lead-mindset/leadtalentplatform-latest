@@ -135,7 +135,10 @@ export type UserWithChapter = UserRow & {
 
 export type MemberWithProfile = UserRow & {
   person_profile: PersonProfileRow | null;
-  chapter_membership: Pick<ChapterMembershipRow, 'chapter_id' | 'status' | 'member_id'> | null;
+  chapter_membership: Pick<
+    ChapterMembershipRow,
+    'chapter_id' | 'status' | 'position' | 'member_id' | 'joined_at'
+  > | null;
   chapter: ChapterRow | null;
 };
 

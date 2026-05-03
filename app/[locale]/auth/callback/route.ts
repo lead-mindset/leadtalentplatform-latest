@@ -63,12 +63,12 @@ export async function GET(
 
   if (role === 'member' || role === 'editor') {
 const { data: profile } = await supabase
-      .from('student_profile')
-      .select('is_filled')
+      .from('person_profile')
+      .select('user_id')
       .eq('user_id', user.id)
-      .single()
+      .maybeSingle()
 
-    if (!profile?.is_filled) {
+    if (!profile) {
       return NextResponse.redirect(`${SITE_URL}/${locale}/onboarding`)
     }
     return NextResponse.redirect(`${SITE_URL}/${locale}/student/profile`)

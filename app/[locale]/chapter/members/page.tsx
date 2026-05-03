@@ -19,15 +19,15 @@ export function filterMembers(members: MemberWithProfile[], status: MemberFilter
   switch (status) {
     case 'pending':
       return members.filter(
-        m => m.student_profile?.is_filled && m.student_profile?.approval_status === 'pending'
+        m => m.person_profile && m.chapter_membership?.status === 'pending'
       )
     case 'active':
       return members.filter(
-        m => m.student_profile?.approval_status === 'approved'
+        m => m.chapter_membership?.status === 'approved'
       )
     case 'rejected':
       return members.filter(
-        m => m.student_profile?.approval_status === 'rejected'
+        m => m.chapter_membership?.status === 'rejected'
       )
   }
 }
@@ -39,21 +39,15 @@ export default async function ChapterMembersPage({
 }) {
   const { status } = await searchParams
 
-  const { supabase, user, chapter_id } = await requireChapterMember()
+  const { supabase, chapter_id } = await requireChapterMember()
 
-  const { data: profile } = await supabase
-    .from('student_profile')
-    .select(`
-      Chapter (
-        id,
-        name,
-        university
-      )
-    `)
-    .eq('user_id', user.id)
+  const { data: chapter } = await supabase
+    .from('chapter')
+    .select('id, name, university')
+    .eq('id', chapter_id)
     .maybeSingle()
 
-  if (!profile?.Chapter) {
+  if (!chapter) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Card>

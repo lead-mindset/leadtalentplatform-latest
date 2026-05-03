@@ -104,20 +104,21 @@ export async function requireChapterMember(): Promise<{
     redirect('/student')
   }
 
-  const { data: profile, error } = await supabase
-    .from('student_profile')
+  const { data: membership, error } = await supabase
+    .from('chapter_membership')
     .select('chapter_id')
     .eq('user_id', user.id)
+    .eq('status', 'approved')
     .maybeSingle()
 
-  if (error || !profile?.chapter_id) {
+  if (error || !membership?.chapter_id) {
     redirect('/chapter')
   }
 
   return {
     supabase,
     user,
-    chapter_id: profile.chapter_id,
+    chapter_id: membership.chapter_id,
   }
 }
 
@@ -132,14 +133,15 @@ export async function canUserAccessChapter(
     return true
   }
 
-  // Get user's own chapter
-  const { data: profile } = await supabase
-    .from('student_profile')
+  // Get user's approved chapter membership.
+  const { data: membership } = await supabase
+    .from('chapter_membership')
     .select('chapter_id')
     .eq('user_id', user.id)
+    .eq('status', 'approved')
     .maybeSingle()
 
-  const userChapterId = profile?.chapter_id
+  const userChapterId = membership?.chapter_id
   if (!userChapterId) {
     return false
   }
@@ -170,11 +172,10 @@ export async function getSidebarStatsForEditor(
   chapter_id: string
 ): Promise<EditorSidebarStats> {
 const { count, error: countError } = await supabase
-    .from('student_profile')
+    .from('chapter_membership')
     .select('user_id', { count: 'exact', head: true })
     .eq('chapter_id', chapter_id)
-    .eq('approval_status', 'pending')
-    .eq('is_filled', true)
+    .eq('status', 'pending')
     .limit(1)
 
   if (countError) {
@@ -203,10 +204,9 @@ supabase.from('recruiter_access')
       .is('revoked_at', null)
       .gt('invite_expires_at', now),
 
-    supabase.from('student_profile')
+    supabase.from('chapter_membership')
       .select('user_id', { count: 'exact', head: true })
-      .eq('approval_status', 'pending')
-      .eq('is_filled', true),
+      .eq('status', 'pending'),
 
     supabase.from('user')
       .select('id', { count: 'exact', head: true }),

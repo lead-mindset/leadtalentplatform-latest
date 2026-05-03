@@ -12,9 +12,11 @@ export default async function ChapterLayout({ children }: ChapterLayoutProps) {
   const { supabase, user, chapter_id } = await requireChapterMember()
 
   const { data: profile } = await supabase
-    .from('student_profile')
+    .from('chapter_membership')
     .select('member_id')
     .eq('user_id', user.id)
+    .eq('chapter_id', chapter_id)
+    .eq('status', 'approved')
     .maybeSingle()
 
   const { has_pending_approvals } = await getSidebarStatsForEditor(

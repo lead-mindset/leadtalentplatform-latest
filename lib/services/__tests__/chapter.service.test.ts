@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+﻿import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { ChapterService } from '../chapter.service'
 import { SupabaseClient } from '@supabase/supabase-js'
 
-// ───────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Mock generateUniqueMemberId
-// ───────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 vi.mock('@/lib/utils/member-id', () => ({
   generateUniqueMemberId: vi.fn(),
 }))
@@ -28,17 +28,20 @@ describe('ChapterService', () => {
     vi.mocked(generateUniqueMemberId).mockReset()
   })
 
-  // ───────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Helper: Build a Supabase mock that routes `from(table)` calls
-  // ───────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   interface MockSelectChain {
     eq: ReturnType<typeof vi.fn>
     in: ReturnType<typeof vi.fn>
+    match: ReturnType<typeof vi.fn>
     single: ReturnType<typeof vi.fn>
+    maybeSingle: ReturnType<typeof vi.fn>
   }
 
   interface MockUpdateChain {
     eq: ReturnType<typeof vi.fn>
+    match: ReturnType<typeof vi.fn>
   }
 
   interface TableMock {
@@ -54,12 +57,18 @@ describe('ChapterService', () => {
     const selectChain: MockSelectChain = {
       eq: vi.fn().mockReturnThis(),
       in: vi.fn().mockResolvedValue({ data: [], error: null }),
+      match: vi.fn().mockReturnThis(),
       single: vi.fn(),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: { id: 'membership-1', status: 'pending', member_id: null },
+        error: null,
+      }),
     }
 
     // Chain for update queries: .update().eq()
     const updateChain: MockUpdateChain = {
       eq: vi.fn().mockResolvedValue({ error: null }),
+      match: vi.fn().mockResolvedValue({ error: null }),
     }
 
     const tableMocks: Record<string, TableMock> = {
@@ -95,9 +104,9 @@ describe('ChapterService', () => {
     return { mockSupabase, tableMocks }
   }
 
-  // ───────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // approveMember
-  // ───────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   describe('approveMember', () => {
     it('should approve a member when profile is complete', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
@@ -109,7 +118,7 @@ describe('ChapterService', () => {
 
       vi.mocked(generateUniqueMemberId).mockResolvedValue('LEAD-123456')
 
-      const result = await ChapterService.approveMember(mockSupabase as unknown as SupabaseClient, 'user-123', 'approver-1')
+      const result = await ChapterService.approveMember(mockSupabase as unknown as SupabaseClient, 'user-123', 'approver-1', 'ch-1')
 
       expect(result).toEqual({ success: true, member_id: 'LEAD-123456' })
       expect(mockSupabase.from).toHaveBeenCalledWith('person_profile')
@@ -123,7 +132,10 @@ describe('ChapterService', () => {
           member_id: 'LEAD-123456',
         })
       )
-      expect(tableMocks.chapter_membership._updateChain.eq).toHaveBeenCalledWith('user_id', 'user-123')
+      expect(tableMocks.chapter_membership._updateChain.match).toHaveBeenCalledWith({
+        user_id: 'user-123',
+        chapter_id: 'ch-1',
+      })
     })
 
     it('should return error when profile is not found', async () => {
@@ -134,7 +146,7 @@ describe('ChapterService', () => {
         error: { message: 'Row not found' },
       })
 
-      const result = await ChapterService.approveMember(mockSupabase as unknown as SupabaseClient, 'user-123', 'approver-1')
+      const result = await ChapterService.approveMember(mockSupabase as unknown as SupabaseClient, 'user-123', 'approver-1', 'ch-1')
 
       expect(result).toEqual({ success: false, error: 'Profile not found' })
       expect(generateUniqueMemberId).not.toHaveBeenCalled()
@@ -150,7 +162,7 @@ describe('ChapterService', () => {
 
       vi.mocked(generateUniqueMemberId).mockResolvedValue('LEAD-123456')
 
-      const result = await ChapterService.approveMember(mockSupabase as unknown as SupabaseClient, 'user-123', 'approver-1')
+      const result = await ChapterService.approveMember(mockSupabase as unknown as SupabaseClient, 'user-123', 'approver-1', 'ch-1')
 
       expect(result).toEqual({ success: true, member_id: 'LEAD-123456' })
       expect(generateUniqueMemberId).toHaveBeenCalled()
@@ -166,11 +178,11 @@ describe('ChapterService', () => {
 
       vi.mocked(generateUniqueMemberId).mockRejectedValue(new Error('Too many collisions'))
 
-      const result = await ChapterService.approveMember(mockSupabase as unknown as SupabaseClient, 'user-123', 'approver-1')
+      const result = await ChapterService.approveMember(mockSupabase as unknown as SupabaseClient, 'user-123', 'approver-1', 'ch-1')
 
       expect(result).toEqual({
         success: false,
-        error: 'Could not generate a member ID — please try again.',
+        error: 'Could not generate a member ID - please try again.',
       })
     })
 
@@ -184,19 +196,19 @@ describe('ChapterService', () => {
 
       vi.mocked(generateUniqueMemberId).mockResolvedValue('LEAD-123456')
 
-      tableMocks.person_profile._updateChain.eq.mockResolvedValueOnce({
+      tableMocks.chapter_membership._updateChain.match.mockResolvedValueOnce({
         error: { message: 'Database error' },
       })
 
-      const result = await ChapterService.approveMember(mockSupabase as unknown as SupabaseClient, 'user-123', 'approver-1')
+      const result = await ChapterService.approveMember(mockSupabase as unknown as SupabaseClient, 'user-123', 'approver-1', 'ch-1')
 
-      expect(result).toEqual({ success: false, error: 'Failed to approve member' })
+      expect(result).toEqual({ success: false, error: 'Database error' })
     })
   })
 
-  // ───────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // approveMembersBulk
-  // ───────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   describe('approveMembersBulk', () => {
     it('should approve multiple eligible members', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
@@ -368,19 +380,19 @@ describe('ChapterService', () => {
       expect(result.skipped).toBe(1)
       expect(result.errors).toHaveLength(1)
       expect(result.errors![0].error).toBe(
-        'Could not generate a member ID — please try again.'
+        'Could not generate a member ID - please try again.'
       )
     })
   })
 
-  // ───────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // rejectMember
-  // ───────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   describe('rejectMember', () => {
     it('should reject a member successfully', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      const result = await ChapterService.rejectMember(mockSupabase as unknown as SupabaseClient, 'user-123')
+      const result = await ChapterService.rejectMember(mockSupabase as unknown as SupabaseClient, 'user-123', 'ch-1')
 
       expect(result).toEqual({ success: true })
       expect(tableMocks.chapter_membership.update).toHaveBeenCalledWith(
@@ -389,30 +401,33 @@ describe('ChapterService', () => {
           member_id: null,
         })
       )
-      expect(tableMocks.chapter_membership._updateChain.eq).toHaveBeenCalledWith('user_id', 'user-123')
+      expect(tableMocks.chapter_membership._updateChain.match).toHaveBeenCalledWith({
+        user_id: 'user-123',
+        chapter_id: 'ch-1',
+      })
     })
 
     it('should return error when update fails', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.chapter_membership._updateChain.eq.mockResolvedValueOnce({
+      tableMocks.chapter_membership._updateChain.match.mockResolvedValueOnce({
         error: { message: 'Database error' },
       })
 
-      const result = await ChapterService.rejectMember(mockSupabase as unknown as SupabaseClient, 'user-123')
+      const result = await ChapterService.rejectMember(mockSupabase as unknown as SupabaseClient, 'user-123', 'ch-1')
 
-      expect(result).toEqual({ success: false, error: 'Failed to reject member' })
+      expect(result).toEqual({ success: false, error: 'Database error' })
     })
   })
 
-  // ───────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // revokeApproval
-  // ───────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   describe('revokeApproval', () => {
     it('should revoke approval successfully', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      const result = await ChapterService.revokeApproval(mockSupabase as unknown as SupabaseClient, 'user-123')
+      const result = await ChapterService.revokeApproval(mockSupabase as unknown as SupabaseClient, 'user-123', 'ch-1')
 
       expect(result).toEqual({ success: true })
       expect(tableMocks.chapter_membership.update).toHaveBeenCalledWith(
@@ -422,25 +437,28 @@ describe('ChapterService', () => {
           member_id: null,
         })
       )
-      expect(tableMocks.chapter_membership._updateChain.eq).toHaveBeenCalledWith('user_id', 'user-123')
+      expect(tableMocks.chapter_membership._updateChain.match).toHaveBeenCalledWith({
+        user_id: 'user-123',
+        chapter_id: 'ch-1',
+      })
     })
 
     it('should return error when update fails', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.chapter_membership._updateChain.eq.mockResolvedValueOnce({
+      tableMocks.chapter_membership._updateChain.match.mockResolvedValueOnce({
         error: { message: 'Database error' },
       })
 
-      const result = await ChapterService.revokeApproval(mockSupabase as unknown as SupabaseClient, 'user-123')
+      const result = await ChapterService.revokeApproval(mockSupabase as unknown as SupabaseClient, 'user-123', 'ch-1')
 
       expect(result).toEqual({ success: false, error: 'Failed to revoke approval' })
     })
   })
 
-  // ───────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // getStudentChapterId
-  // ───────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   describe('getStudentChapterId', () => {
     it('should return chapter id when profile exists', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
@@ -469,9 +487,9 @@ describe('ChapterService', () => {
     })
   })
 
-  // ───────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // getUserBasicInfo
-  // ───────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   describe('getUserBasicInfo', () => {
     it('should return user info when found', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
@@ -502,9 +520,9 @@ describe('ChapterService', () => {
     })
   })
 
-  // ───────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // getChapterName
-  // ───────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   describe('getChapterName', () => {
     it('should return chapter name when found', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()

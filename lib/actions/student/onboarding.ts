@@ -5,7 +5,6 @@ import { createMemberProfileSchema } from '@/lib/memberschema'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
-import { generateUniqueMemberId } from '@/lib/utils/member-id'
 import { sendWelcomeEmail } from '@/lib/emails/send-email'
 import { StudentService } from '@/lib/services/student.service'
 import { ChapterService } from '@/lib/services/chapter.service'
@@ -74,7 +73,6 @@ export async function submitOnboarding(formData: FormData) {
             emailNotificationsEnabled: data.emailNotificationsEnabled,
             leadChapter: data.lead_chapter,
             resumePdf: resume && resume.size > 0 ? resume : null,
-            generateMemberId: generateUniqueMemberId,
         })
 
         if (!result.success) {
