@@ -32,22 +32,21 @@ async function assertCanManageMember(
   let chapterId: string | null = null
   let targetChapterId: string | null = null
 
-  if (targetUserId) {
-    targetChapterId = await ChapterService.getStudentChapterId(supabase, targetUserId)
-  }
-
   if (user.role === 'editor') {
     chapterId = await ChapterService.getStudentChapterId(supabase, user.id)
     if (!chapterId) {
       return { success: false, error: 'No chapter assigned' }
     }
 
-    // If a specific target user is provided, verify they're in the editor's chapter
     if (targetUserId) {
-      if (!targetChapterId || targetChapterId !== chapterId) {
-        return { success: false, error: 'Member not in your chapter' }
-      }
+      targetChapterId = chapterId
     }
+  } else if (targetUserId) {
+    targetChapterId = await ChapterService.getPendingMembershipChapterId(supabase, targetUserId)
+  }
+
+  if (targetUserId && !targetChapterId) {
+    return { success: false, error: 'Membership application not found.' }
   }
 
   return { success: true, supabase, user, chapterId, targetChapterId }
@@ -90,7 +89,7 @@ export async function approveMember(user_id: string) {
     // Send approval email (fire-and-forget)
     const [userData, chapterName] = await Promise.all([
       ChapterService.getUserBasicInfo(auth.supabase, parsed.data),
-      auth.chapterId ? ChapterService.getChapterName(auth.supabase, auth.chapterId) : Promise.resolve(null),
+      auth.targetChapterId ? ChapterService.getChapterName(auth.supabase, auth.targetChapterId) : Promise.resolve(null),
     ])
 
     if (userData?.email && chapterName) {
@@ -148,7 +147,12 @@ export async function rejectMember(user_id: string, _reason?: string) {
     const auth = await assertCanManageMember(parsed.data)
     if (!auth.success) return auth
 
-    const result = await ChapterService.rejectMember(auth.supabase, parsed.data, auth.targetChapterId)
+    const result = await ChapterService.rejectMember(
+      auth.supabase,
+      parsed.data,
+      auth.user.id,
+      auth.targetChapterId
+    )
     if (!result.success) {
       return { success: false, error: result.error }
     }
