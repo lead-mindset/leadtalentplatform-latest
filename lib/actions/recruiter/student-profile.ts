@@ -2,6 +2,7 @@
 
 import { requireRecruiter } from '@/lib/auth'
 import { RecruiterService } from '@/lib/services/recruiter.service'
+import { CompanyService } from '@/lib/services/company.service'
 
 export async function getStudentProfileForRecruiter(studentId: string) {
   const { supabase } = await requireRecruiter()
@@ -10,18 +11,5 @@ export async function getStudentProfileForRecruiter(studentId: string) {
 
 export async function downloadResume(studentId: string) {
   const { supabase, user } = await requireRecruiter()
-  const student = await RecruiterService.getStudentProfile(supabase, studentId)
-
-  if (!student?.resume?.file_url) {
-    return { success: false, error: 'Resume not available.' }
-  }
-
-  const result = await RecruiterService.downloadResume(
-    supabase,
-    user.id,
-    studentId,
-    student.resume.file_url
-  )
-
-  return result
+  return CompanyService.createResumeDownloadUrl(supabase, user.id, studentId)
 }
