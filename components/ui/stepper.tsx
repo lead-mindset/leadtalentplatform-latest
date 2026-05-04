@@ -1,6 +1,6 @@
 import React, { useState, Children, useRef, useLayoutEffect, HTMLAttributes, ReactNode } from 'react';
 import { motion, AnimatePresence, Variants } from 'motion/react';
-import { useForm, FormProvider, useFormContext } from 'react-hook-form';
+import { useFormContext } from 'react-hook-form';
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -19,6 +19,7 @@ interface StepperProps extends HTMLAttributes<HTMLDivElement> {
   nextButtonProps?: React.ButtonHTMLAttributes<HTMLButtonElement>;
   backButtonText?: string;
   nextButtonText?: string;
+  completeButtonText?: string;
   disableStepIndicators?: boolean;
   renderStepIndicator?: (props: {
     step: number;
@@ -42,6 +43,7 @@ export default function Stepper({
   nextButtonProps = {},
   backButtonText = 'Back',
   nextButtonText = 'Continue',
+  completeButtonText = 'Complete',
   disableStepIndicators = false,
   renderStepIndicator,
   validateStep,
@@ -185,7 +187,7 @@ export default function Stepper({
                 onClick={isLastStep ? handleComplete : handleNext}
                 {...nextButtonProps}
               >
-                {isLastStep ? "Complete" : nextButtonText}
+                {isLastStep ? completeButtonText : nextButtonText}
               </Button>
             </div>
           </div>
@@ -212,8 +214,6 @@ function StepContentWrapper({
   className = '',
 }: StepContentWrapperProps) {
   const [height, setHeight] = useState<number | 'auto'>(0)
-  const containerRef = useRef<HTMLDivElement>(null)
-
   return (
     <motion.div
       animate={{ height: isCompleted ? 0 : height }}
@@ -378,7 +378,7 @@ function StepConnector({ isComplete }: StepConnectorProps) {
   );
 }
 
-interface CheckIconProps extends React.SVGProps<SVGSVGElement> { }
+type CheckIconProps = React.SVGProps<SVGSVGElement>
 
 function CheckIcon(props: CheckIconProps) {
   return (
@@ -413,6 +413,7 @@ export function FormStepper({
   nextButtonProps = {},
   backButtonText = 'Back',
   nextButtonText = 'Continue',
+  completeButtonText = 'Complete',
   disableStepIndicators = false,
   renderStepIndicator,
   validateStep,
@@ -556,7 +557,7 @@ export function FormStepper({
                 onClick={isLastStep ? handleComplete : handleNext}
                 {...nextButtonProps}
               >
-                {isLastStep ? "Complete" : nextButtonText}
+                {isLastStep ? completeButtonText : nextButtonText}
               </Button>
             </div>
           </div>
