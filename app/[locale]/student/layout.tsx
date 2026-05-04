@@ -18,15 +18,16 @@ export default async function StudentLayout({
 
   const { supabase, user } = await requireUser()
 
-  const { data: profile } = await supabase
-    .from('student_profile')
+  const { data: membership } = await supabase
+    .from('chapter_membership')
     .select('member_id, chapter_id')
     .eq('user_id', user.id)
-    .single()
+    .eq('status', 'approved')
+    .maybeSingle()
 
   let has_pending_approvals = false
-  if (user.role === 'editor' && profile?.chapter_id) {
-    const stats = await getSidebarStatsForEditor(supabase, profile.chapter_id)
+  if (user.role === 'editor' && membership?.chapter_id) {
+    const stats = await getSidebarStatsForEditor(supabase, membership.chapter_id)
     has_pending_approvals = stats.has_pending_approvals
   }
 
@@ -35,7 +36,7 @@ export default async function StudentLayout({
       headerRight={
         <MobileUserBadge
           name={user.name ?? 'Student'}
-          memberId={profile?.member_id ?? undefined}
+          memberId={membership?.member_id ?? undefined}
         />
       }
       sidebar={
@@ -43,7 +44,7 @@ export default async function StudentLayout({
           userName={user.name ?? 'Student'}
           userEmail={user.email}
           userRole={user.role}
-          memberId={profile?.member_id ?? undefined}
+          memberId={membership?.member_id ?? undefined}
         >
           <StudentNavigation
             userRole={user.role}

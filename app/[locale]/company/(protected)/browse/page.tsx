@@ -35,20 +35,20 @@ const studentFilters = {
 
   const majors = [...new Set(
     students
-      .map(s => s.student_profile?.major)
+      .map(s => s.person_profile?.major_or_interest)
       .filter((m): m is string => Boolean(m))
   )].sort()
 
   const years = [...new Set(
     students
-      .map(s => s.student_profile?.graduation_year)
+      .map(s => s.person_profile?.graduation_year)
       .filter((y): y is number => Boolean(y))
   )].sort()
 
   const chapters = [...new Map(
     students
       .map((student): [string, string] | null => {
-        const chapterId = student.student_profile?.chapter_id
+        const chapterId = student.person_profile?.chapter_id
         const chapterName = student.chapter?.name
         return chapterId && chapterName ? [chapterId, chapterName] : null
       })

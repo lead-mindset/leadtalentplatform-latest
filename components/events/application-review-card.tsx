@@ -25,8 +25,8 @@ interface ApplicationReviewCardProps {
       name: string
       email: string
     }
-    StudentProfile: {
-      major: string
+    ApplicantProfile: {
+      majorOrInterest: string
       graduation_year: number
       linkedinUrl?: string | null
     }
@@ -128,17 +128,17 @@ export function ApplicationReviewCard({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Icons.GraduationCap className="h-4 w-4" />
-                <span>Major: {application.StudentProfile.major}</span>
+                <span>Major: {application.ApplicantProfile.majorOrInterest}</span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Icons.Calendar className="h-4 w-4" />
-                <span>Graduation: {application.StudentProfile.graduation_year}</span>
+                <span>Graduation: {application.ApplicantProfile.graduation_year}</span>
               </div>
             </div>
 
-            {application.StudentProfile.linkedinUrl && (
+            {application.ApplicantProfile.linkedinUrl && (
               <a
-                href={application.StudentProfile.linkedinUrl}
+                href={application.ApplicantProfile.linkedinUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-sm text-primary underline hover:underline"

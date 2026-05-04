@@ -227,7 +227,7 @@ export const StudentService = {
     }
 
     if (!existingUser) {
-      return { success: false, error: 'User row does not exist for StudentProfile insert' }
+      return { success: false, error: 'User row does not exist for profile update' }
     }
 
     const { error: profileError } = await supabase

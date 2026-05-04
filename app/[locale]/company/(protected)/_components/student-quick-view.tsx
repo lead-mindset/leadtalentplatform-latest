@@ -26,12 +26,12 @@ export function StudentQuickView({ student }: StudentQuickViewProps) {
         )}
       </CardHeader>
       <CardContent className="space-y-4">
-        {student.student_profile?.major && (
+        {student.person_profile?.major_or_interest && (
           <div className="flex items-center gap-2">
             <GraduationCap className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">{student.student_profile.major}</span>
-            {student.student_profile.graduation_year && (
-              <Badge variant="secondary">Class of {student.student_profile.graduation_year}</Badge>
+            <span className="text-sm font-medium">{student.person_profile.major_or_interest}</span>
+            {student.person_profile.graduation_year && (
+              <Badge variant="secondary">Class of {student.person_profile.graduation_year}</Badge>
             )}
           </div>
         )}
@@ -46,11 +46,11 @@ export function StudentQuickView({ student }: StudentQuickViewProps) {
           </div>
         )}
 
-        {student.student_profile?.skills && student.student_profile.skills.length > 0 && (
+        {student.person_profile?.skills && student.person_profile.skills.length > 0 && (
           <div>
             <p className="text-sm font-medium mb-2">Skills</p>
             <div className="flex flex-wrap gap-1">
-              {student.student_profile.skills.map((skill: string, i: number) => (
+              {student.person_profile.skills.map((skill: string, i: number) => (
                 <Badge key={i} variant="outline">
                   {skill}
                 </Badge>
@@ -59,9 +59,9 @@ export function StudentQuickView({ student }: StudentQuickViewProps) {
           </div>
         )}
 
-{student.student_profile?.linkedin_url && (
+{student.person_profile?.linkedin_url && (
           <Button asChild variant="outline" size="sm" className="w-full gap-2">
-            <Link href={student.student_profile.linkedin_url} target="_blank" rel="noopener noreferrer">
+            <Link href={student.person_profile.linkedin_url} target="_blank" rel="noopener noreferrer">
               <Linkedin className="h-4 w-4" />
               View LinkedIn
             </Link>

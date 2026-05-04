@@ -100,7 +100,7 @@ export default async function CompanyDashboardPage() {
                     <div>
                       <p className="font-medium text-sm">{saved.student.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {saved.student.student_profile?.major || 'No major listed'}
+                        {saved.student.person_profile?.major_or_interest || 'No major listed'}
                       </p>
                     </div>
                     <Button asChild size="sm" variant="ghost">

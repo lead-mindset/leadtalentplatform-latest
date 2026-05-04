@@ -206,7 +206,7 @@ export const ChapterService = {
   /**
    * Approve a single member.
    * Validates profile is complete, generates a unique member ID,
-   * and updates the student_profile row.
+   * and updates the chapter_membership row.
    */
   async approveMember(
     supabase: SupabaseClient<Database>,
@@ -264,12 +264,27 @@ export const ChapterService = {
       return { success: false, count: 0, skipped: 0, errors: [{ user_id: '', error: 'Failed to load selected members' }] }
     }
 
-    const validUserIds = candidates
-      .filter((membership) => {
-        const legacyIsFilled = (membership as { is_filled?: boolean }).is_filled
-        return legacyIsFilled !== false && (membership.status ?? 'pending') === 'pending'
-      })
+    const eligibleCandidates = candidates
+      .filter((membership) => (membership.status ?? 'pending') === 'pending')
       .filter((membership) => !approverChapterId || membership.chapter_id === approverChapterId)
+
+    if (eligibleCandidates.length === 0) {
+      return { success: false, count: 0, skipped: 0, errors: [{ user_id: '', error: 'No eligible members selected' }] }
+    }
+
+    const eligibleUserIds = eligibleCandidates.map((membership) => membership.user_id)
+    const { data: profiles, error: profilesError } = await supabase
+      .from('person_profile')
+      .select('user_id')
+      .in('user_id', eligibleUserIds)
+
+    if (profilesError || !profiles) {
+      return { success: false, count: 0, skipped: 0, errors: [{ user_id: '', error: 'Failed to load selected profiles' }] }
+    }
+
+    const profileUserIds = new Set(profiles.map((profile) => profile.user_id))
+    const validUserIds = eligibleCandidates
+      .filter((membership) => profileUserIds.has(membership.user_id))
       .map((membership) => membership.user_id)
 
     if (validUserIds.length === 0) {
@@ -303,7 +318,7 @@ export const ChapterService = {
 
   /**
    * Reject a member.
-   * Sets approval_status to 'rejected' and clears member_id / visibility.
+   * Sets membership status to 'rejected' and clears member_id / visibility.
    */
   async rejectMember(
     supabase: SupabaseClient<Database>,
@@ -324,7 +339,7 @@ export const ChapterService = {
 
   /**
    * Revoke approval.
-   * Resets approval_status to 'pending' and clears member_id / visibility.
+   * Resets membership status to 'pending' and clears member_id / visibility.
    */
   async revokeApproval(
     supabase: SupabaseClient<Database>,

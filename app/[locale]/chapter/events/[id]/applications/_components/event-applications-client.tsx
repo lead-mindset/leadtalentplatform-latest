@@ -38,7 +38,7 @@ export function EventApplicationsClient({
   const applications = useMemo(
     () =>
       initialApplications.filter(
-        (application) => application.user && application.student_profile
+        (application) => application.user && application.person_profile
       ),
     [initialApplications]
   )
@@ -193,10 +193,10 @@ export function EventApplicationsClient({
                     name: application.user?.name ?? 'Unknown attendee',
                     email: application.user?.email ?? '',
                   },
-                  StudentProfile: {
-                    major: application.student_profile?.major ?? 'Unknown major',
-                    graduation_year: application.student_profile?.graduation_year ?? 0,
-                    linkedinUrl: application.student_profile?.linkedin_url ?? null,
+                  ApplicantProfile: {
+                    majorOrInterest: application.person_profile?.major_or_interest ?? 'Unknown major',
+                    graduation_year: application.person_profile?.graduation_year ?? 0,
+                    linkedinUrl: application.person_profile?.linkedin_url ?? null,
                   },
                   applicationAnswers: application.application_answers ?? [],
                 }}
@@ -236,10 +236,10 @@ export function EventApplicationsClient({
                     name: application.user?.name ?? 'Unknown attendee',
                     email: application.user?.email ?? '',
                   },
-                  StudentProfile: {
-                    major: application.student_profile?.major ?? 'Unknown major',
-                    graduation_year: application.student_profile?.graduation_year ?? 0,
-                    linkedinUrl: application.student_profile?.linkedin_url ?? null,
+                  ApplicantProfile: {
+                    majorOrInterest: application.person_profile?.major_or_interest ?? 'Unknown major',
+                    graduation_year: application.person_profile?.graduation_year ?? 0,
+                    linkedinUrl: application.person_profile?.linkedin_url ?? null,
                   },
                   applicationAnswers: application.application_answers ?? [],
                 }}
@@ -271,10 +271,10 @@ export function EventApplicationsClient({
                     name: application.user?.name ?? 'Unknown attendee',
                     email: application.user?.email ?? '',
                   },
-                  StudentProfile: {
-                    major: application.student_profile?.major ?? 'Unknown major',
-                    graduation_year: application.student_profile?.graduation_year ?? 0,
-                    linkedinUrl: application.student_profile?.linkedin_url ?? null,
+                  ApplicantProfile: {
+                    majorOrInterest: application.person_profile?.major_or_interest ?? 'Unknown major',
+                    graduation_year: application.person_profile?.graduation_year ?? 0,
+                    linkedinUrl: application.person_profile?.linkedin_url ?? null,
                   },
                   applicationAnswers: application.application_answers ?? [],
                 }}

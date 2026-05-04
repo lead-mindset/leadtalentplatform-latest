@@ -2,7 +2,7 @@ import { logger } from '@/lib/logger'
 import { randomUUID } from 'node:crypto';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/lib/database.generated';
-import { EventRow, EventRegistrationRow, RegistrationStatus, EventWithDetails, EventChapterRow, RegistrationWithUser, UserRow, ChapterRow, PersonProfileRow } from '@/lib/types';
+import { EventRow, EventRegistrationRow, RegistrationStatus, EventWithDetails, EventChapterRow, RegistrationWithUser, UserRow, ChapterRow } from '@/lib/types';
 import { NewsletterSubscriptionService } from '@/lib/services/newsletter-subscription.service';
 import { EventApplicationAnswerInput, EventApplicationService } from '@/lib/services/event-application.service';
 
@@ -1457,9 +1457,9 @@ export const EventService = {
         checked_in_at: (r.checked_in_at as string | null) ?? null,
         checked_in_by_id: (r.checked_in_by_id as string | null) ?? null,
         user: u as RegistrationWithUser['user'],
-        student_profile: profileRecord
+        person_profile: profileRecord
           ? {
-              major: String(profileRecord.major_or_interest ?? ''),
+              major_or_interest: String(profileRecord.major_or_interest ?? ''),
               graduation_year: Number(profileRecord.graduation_year ?? 0),
               linkedin_url: (profileRecord.linkedin_url as string | null) ?? null,
             }

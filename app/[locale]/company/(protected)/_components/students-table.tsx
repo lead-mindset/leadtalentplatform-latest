@@ -89,14 +89,14 @@ export function StudentsTable({ students, savedStudentIds = [] }: StudentsTableP
                 <div className="flex items-center gap-2">
                   <GraduationCap className="h-4 w-4 text-muted-foreground shrink-0" />
                   <span className="text-sm">
-                    {student.student_profile?.major || 'Not specified'}
+                    {student.person_profile?.major_or_interest || 'Not specified'}
                   </span>
                 </div>
               </TableCell>
               <TableCell className="p-3">
                 <span className="text-sm">
-                  {student.student_profile?.graduation_year
-                    ? `Class of ${student.student_profile.graduation_year}`
+                  {student.person_profile?.graduation_year
+                    ? `Class of ${student.person_profile.graduation_year}`
                     : 'N/A'}
                 </span>
               </TableCell>
@@ -115,14 +115,14 @@ export function StudentsTable({ students, savedStudentIds = [] }: StudentsTableP
               </TableCell>
               <TableCell className="p-3">
                 <div className="flex flex-wrap gap-1">
-                  {student.student_profile?.skills?.slice(0, 3).map((skill: string, i: number) => (
+                  {student.person_profile?.skills?.slice(0, 3).map((skill: string, i: number) => (
                     <Badge key={i} variant="secondary" className="text-xs">
                       {skill}
                     </Badge>
                   ))}
-                  {(student.student_profile?.skills?.length || 0) > 3 && (
+                  {(student.person_profile?.skills?.length || 0) > 3 && (
                     <Badge variant="outline" className="text-xs">
-                      +{(student.student_profile?.skills?.length || 0) - 3}
+                      +{(student.person_profile?.skills?.length || 0) - 3}
                     </Badge>
                   )}
                 </div>
