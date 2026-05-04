@@ -436,6 +436,27 @@ export const CompanyService = {
   // Profile actions
   // ───────────────────────────────────────────────────────────────
 
+  async getTalentResumeMetadata(
+    supabase: SupabaseClient<Database>,
+    studentId: string
+  ): Promise<{ file_name: string | null; uploaded_at: string | null } | null> {
+    const student = await this.getStudentById(supabase, studentId)
+    if (!student) return null
+
+    const { data: resume, error } = await supabase
+      .from('resume')
+      .select('file_name, uploaded_at')
+      .eq('student_id', studentId)
+      .maybeSingle<{ file_name: string | null; uploaded_at: string | null }>()
+
+    if (error) {
+      logger.error({ context: 'getTalentResumeMetadata', error }, 'Resume metadata fetch error')
+      return null
+    }
+
+    return resume ?? null
+  },
+
   async createResumeDownloadUrl(
     supabase: SupabaseClient<Database>,
     recruiterId: string,

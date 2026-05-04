@@ -88,3 +88,10 @@ export async function isStudentSaved(
 ): Promise<boolean> {
   return CompanyService.isStudentSaved(supabase, userId, studentId)
 }
+
+export async function getTalentResumeMetadata(
+  supabase: SupabaseClient<Database>,
+  studentId: string
+): Promise<{ file_name: string | null; uploaded_at: string | null } | null> {
+  return CompanyService.getTalentResumeMetadata(supabase, studentId)
+}
