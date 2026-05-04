@@ -25,10 +25,11 @@ interface ApplyModalProps {
   eventTitle: string
   applicationFormUrl: string
   questions?: EventApplicationQuestionRow[]
+  submissionError?: string | null
   onConfirm: (
     subscribeToHostChapters: boolean,
     answers: ApplicationAnswerPayload[]
-  ) => Promise<void>
+  ) => Promise<boolean | void>
   isSubmitting?: boolean
 }
 
@@ -38,13 +39,61 @@ export function ApplyModal({
   eventTitle,
   applicationFormUrl,
   questions = [],
+  submissionError = null,
   onConfirm,
   isSubmitting = false,
 }: ApplyModalProps) {
   const [step, setStep] = useState<'form' | 'confirmation'>('form')
   const [subscribeToHostChapters, setSubscribeToHostChapters] = useState(true)
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({})
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const hasNativeQuestions = questions.length > 0
+
+  const resetFormState = () => {
+    setStep('form')
+    setSubscribeToHostChapters(true)
+    setAnswers({})
+    setFieldErrors({})
+  }
+
+  const isAnswerPresent = (value: string | string[] | undefined): boolean => {
+    if (Array.isArray(value)) return value.length > 0
+    return typeof value === 'string' && value.trim().length > 0
+  }
+
+  const isValidUrl = (value: string): boolean => {
+    try {
+      const parsed = new URL(value)
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+    } catch {
+      return false
+    }
+  }
+
+  const validateNativeAnswers = (): boolean => {
+    const nextErrors: Record<string, string> = {}
+
+    for (const question of questions) {
+      const value = answers[question.id]
+
+      if (question.is_required && !isAnswerPresent(value)) {
+        nextErrors[question.id] = 'This question is required.'
+        continue
+      }
+
+      if (
+        question.question_type === 'url' &&
+        typeof value === 'string' &&
+        value.trim() &&
+        !isValidUrl(value.trim())
+      ) {
+        nextErrors[question.id] = 'Enter a valid http or https URL.'
+      }
+    }
+
+    setFieldErrors(nextErrors)
+    return Object.keys(nextErrors).length === 0
+  }
 
   const handleOpenForm = () => {
     window.open(applicationFormUrl, '_blank')
@@ -52,22 +101,18 @@ export function ApplyModal({
   }
 
   const handleConfirm = async () => {
-    await onConfirm(subscribeToHostChapters, buildAnswerPayload())
+    if (hasNativeQuestions && !validateNativeAnswers()) return
+
+    const confirmed = await onConfirm(subscribeToHostChapters, buildAnswerPayload())
+    if (confirmed === false) return
+
     onOpenChange(false)
-    setTimeout(() => {
-      setStep('form')
-      setSubscribeToHostChapters(true)
-      setAnswers({})
-    }, 300)
+    setTimeout(resetFormState, 300)
   }
 
   const handleCancel = () => {
     onOpenChange(false)
-    setTimeout(() => {
-      setStep('form')
-      setSubscribeToHostChapters(true)
-      setAnswers({})
-    }, 300)
+    setTimeout(resetFormState, 300)
   }
 
   const buildAnswerPayload = (): ApplicationAnswerPayload[] =>
@@ -78,6 +123,12 @@ export function ApplyModal({
 
   const updateAnswer = (questionId: string, value: string | string[]) => {
     setAnswers((current) => ({ ...current, [questionId]: value }))
+    setFieldErrors((current) => {
+      if (!current[questionId]) return current
+      const next = { ...current }
+      delete next[questionId]
+      return next
+    })
   }
 
   const toggleCheckboxAnswer = (questionId: string, option: string, checked: boolean) => {
@@ -89,6 +140,12 @@ export function ApplyModal({
           ? Array.from(new Set([...selected, option]))
           : selected.filter((item) => item !== option),
       }
+    })
+    setFieldErrors((current) => {
+      if (!current[questionId]) return current
+      const next = { ...current }
+      delete next[questionId]
+      return next
     })
   }
 
@@ -115,13 +172,19 @@ export function ApplyModal({
                   <textarea
                     value={(answers[question.id] as string | undefined) ?? ''}
                     onChange={(event) => updateAnswer(question.id, event.target.value)}
-                    className="min-h-28 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    aria-invalid={Boolean(fieldErrors[question.id])}
+                    className={`min-h-28 w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                      fieldErrors[question.id] ? 'border-destructive' : 'border-input'
+                    }`}
                   />
                 ) : question.question_type === 'single_select' ? (
                   <select
                     value={(answers[question.id] as string | undefined) ?? ''}
                     onChange={(event) => updateAnswer(question.id, event.target.value)}
-                    className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                    aria-invalid={Boolean(fieldErrors[question.id])}
+                    className={`h-10 w-full rounded-md border bg-background px-3 text-sm ${
+                      fieldErrors[question.id] ? 'border-destructive' : 'border-input'
+                    }`}
                   >
                     <option value="">Select an option</option>
                     {(question.options ?? []).map((option) => (
@@ -137,6 +200,7 @@ export function ApplyModal({
                           <Checkbox
                             checked={selected.includes(option)}
                             onCheckedChange={(checked) => toggleCheckboxAnswer(question.id, option, checked === true)}
+                            aria-invalid={Boolean(fieldErrors[question.id])}
                           />
                           {option}
                         </label>
@@ -148,11 +212,24 @@ export function ApplyModal({
                     type={question.question_type === 'url' ? 'url' : 'text'}
                     value={(answers[question.id] as string | undefined) ?? ''}
                     onChange={(event) => updateAnswer(question.id, event.target.value)}
-                    className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    aria-invalid={Boolean(fieldErrors[question.id])}
+                    className={`h-10 w-full rounded-md border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                      fieldErrors[question.id] ? 'border-destructive' : 'border-input'
+                    }`}
                   />
                 )}
+
+                {fieldErrors[question.id] ? (
+                  <p className="text-xs text-destructive">{fieldErrors[question.id]}</p>
+                ) : null}
               </div>
             ))}
+
+            {submissionError ? (
+              <div className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {submissionError}
+              </div>
+            ) : null}
 
             <label className="flex items-start gap-3 rounded-lg border bg-muted/30 p-4">
               <Checkbox

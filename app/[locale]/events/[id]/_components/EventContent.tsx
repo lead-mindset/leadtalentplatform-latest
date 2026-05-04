@@ -77,6 +77,7 @@ export function EventContent({
   const router = useRouter()
   const [showApplyModal, setShowApplyModal] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [applicationError, setApplicationError] = useState<string | null>(null)
 
   if (!event) {
     return (
@@ -111,6 +112,7 @@ export function EventContent({
       return
     }
     if (isApplicationRequired) {
+      setApplicationError(null)
       setShowApplyModal(true)
     }
   }
@@ -118,18 +120,21 @@ export function EventContent({
   const handleApplyConfirm = async (
     subscribeToHostChapters: boolean,
     applicationAnswers: Array<{ questionId: string; value: string | string[] | null }>
-  ) => {
+  ): Promise<boolean> => {
     setIsSubmitting(true)
+    setApplicationError(null)
     try {
       const result = await applyForEvent(event.id, subscribeToHostChapters, applicationAnswers)
       if ('error' in result) {
         if (result.requiresOnboarding && result.onboardingPath) {
           router.push(result.onboardingPath)
         }
-        return
+        setApplicationError(result.error)
+        return false
       }
       router.refresh()
       setShowApplyModal(false)
+      return true
     } finally {
       setIsSubmitting(false)
     }
@@ -345,6 +350,7 @@ export function EventContent({
           eventTitle={event.title}
           applicationFormUrl={event.application_form_url || ''}
           questions={applicationQuestions}
+          submissionError={applicationError}
           onConfirm={handleApplyConfirm}
           isSubmitting={isSubmitting}
         />
