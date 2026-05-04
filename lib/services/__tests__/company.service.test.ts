@@ -95,6 +95,12 @@ describe('CompanyService', () => {
     vi.clearAllMocks()
   })
 
+  it('does not expose legacy company invite activation', () => {
+    const serviceMethods = CompanyService as Record<string, unknown>
+
+    expect(serviceMethods.acceptInvite).toBeUndefined()
+  })
+
   // ───────────────────────────────────────────────────────────────
   // getStudentById
   // ───────────────────────────────────────────────────────────────

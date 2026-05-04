@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { canUserAccessChapter, canUserManageEvent, getApprovedChapterMembership, resolveRecruiterAccess } from './auth'
+import {
+  COMPANY_ACCESS_HELP_PATH,
+  canUserAccessChapter,
+  canUserManageEvent,
+  getApprovedChapterMembership,
+  resolveRecruiterAccess,
+} from './auth'
 import type { UserRow } from './types'
 
 type TableMock = {
@@ -237,6 +243,10 @@ describe('auth chapter and event access helpers', () => {
 })
 
 describe('auth recruiter access helpers', () => {
+  it('uses a company access help path for signed-in representatives without active access', () => {
+    expect(COMPANY_ACCESS_HELP_PATH).toBe('/company/onboard?access=missing')
+  })
+
   it('resolves active accepted recruiter access without profile or membership tables', async () => {
     const { mockSupabase, tableMocks } = buildMockSupabase()
     tableMocks.recruiter_access.maybeSingle.mockResolvedValue({
