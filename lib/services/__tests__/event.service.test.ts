@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { EventService } from '../event.service'
 import { SupabaseClient } from '@supabase/supabase-js'
 import { NewsletterSubscriptionService } from '../newsletter-subscription.service'
+import { EventApplicationService } from '../event-application.service'
 
 // ───────────────────────────────────────────────────────────────
 // Helper: Build a Supabase mock that routes `from(table)` calls
@@ -96,6 +97,7 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
       _selectChain: selectChain,
       _updateChain: updateChain,
       _insertChain: insertChain,
+      _deleteChain: deleteChain,
     },
     user: {
       select: vi.fn().mockReturnValue(selectChain),
@@ -282,6 +284,135 @@ describe('EventService', () => {
       if (result.success) {
         expect(result.registration.status).toBe('pending_review')
       }
+    })
+
+    it('should persist native application answers against the created registration', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+      const questions = [
+        {
+          id: 'question-1',
+          event_id: 'evt-1',
+          question_text: 'Why do you want to attend?',
+          question_type: 'short_text' as const,
+          options: null,
+          is_required: true,
+          sort_order: 0,
+          created_at: '2026-05-03T00:00:00.000Z',
+          updated_at: '2026-05-03T00:00:00.000Z',
+        },
+      ]
+      const getQuestionsSpy = vi
+        .spyOn(EventApplicationService, 'getQuestionsForEvent')
+        .mockResolvedValue(questions)
+      const saveAnswersSpy = vi
+        .spyOn(EventApplicationService, 'saveAnswersForRegistration')
+        .mockResolvedValue({ success: true })
+
+      tableMocks.event_registration._insertChain.single.mockResolvedValueOnce({
+        data: { id: 'reg-1', status: 'pending_review' },
+        error: null,
+      })
+
+      const result = await EventService.applyForEvent(
+        mockSupabase as unknown as SupabaseClient,
+        'evt-1',
+        'user-1',
+        {
+          applicationAnswers: [
+            { questionId: 'question-1', value: 'I want to learn from operators.' },
+          ],
+        }
+      )
+
+      expect(result.success).toBe(true)
+      expect(getQuestionsSpy).toHaveBeenCalledWith(mockSupabase, 'evt-1')
+      expect(saveAnswersSpy).toHaveBeenCalledWith(mockSupabase, {
+        registrationId: 'reg-1',
+        questions,
+        answers: [{ questionId: 'question-1', value: 'I want to learn from operators.' }],
+      })
+      expect(tableMocks.event_registration.insert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event_id: 'evt-1',
+          user_id: 'user-1',
+          status: 'pending_review',
+        })
+      )
+    })
+
+    it('should reject applications with missing required native answers before inserting', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+      vi.spyOn(EventApplicationService, 'getQuestionsForEvent').mockResolvedValue([
+        {
+          id: 'question-1',
+          event_id: 'evt-1',
+          question_text: 'Why do you want to attend?',
+          question_type: 'short_text',
+          options: null,
+          is_required: true,
+          sort_order: 0,
+          created_at: '2026-05-03T00:00:00.000Z',
+          updated_at: '2026-05-03T00:00:00.000Z',
+        },
+      ])
+
+      const result = await EventService.applyForEvent(
+        mockSupabase as unknown as SupabaseClient,
+        'evt-1',
+        'user-1',
+        { applicationAnswers: [] }
+      )
+
+      expect(result).toEqual({
+        success: false,
+        error: '"Why do you want to attend?" is required.',
+      })
+      expect(tableMocks.event_registration.insert).not.toHaveBeenCalled()
+    })
+
+    it('should roll back the pending registration when native answer persistence fails', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+      const questions = [
+        {
+          id: 'question-1',
+          event_id: 'evt-1',
+          question_text: 'Why do you want to attend?',
+          question_type: 'short_text' as const,
+          options: null,
+          is_required: true,
+          sort_order: 0,
+          created_at: '2026-05-03T00:00:00.000Z',
+          updated_at: '2026-05-03T00:00:00.000Z',
+        },
+      ]
+      vi.spyOn(EventApplicationService, 'getQuestionsForEvent').mockResolvedValue(questions)
+      vi.spyOn(EventApplicationService, 'saveAnswersForRegistration').mockResolvedValue({
+        success: false,
+        error: 'Could not save application answers.',
+      })
+
+      tableMocks.event_registration._insertChain.single.mockResolvedValueOnce({
+        data: { id: 'reg-1', status: 'pending_review' },
+        error: null,
+      })
+
+      const result = await EventService.applyForEvent(
+        mockSupabase as unknown as SupabaseClient,
+        'evt-1',
+        'user-1',
+        {
+          applicationAnswers: [
+            { questionId: 'question-1', value: 'I want to learn from operators.' },
+          ],
+        }
+      )
+
+      expect(result).toEqual({
+        success: false,
+        error: 'Could not save application answers.',
+      })
+      expect(tableMocks.event_registration.delete).toHaveBeenCalled()
+      expect(tableMocks.event_registration._deleteChain?.eq).toHaveBeenCalledWith('id', 'reg-1')
     })
 
     it('should return error on insert failure', async () => {

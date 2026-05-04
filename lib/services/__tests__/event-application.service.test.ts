@@ -147,6 +147,25 @@ describe('EventApplicationService', () => {
     ).toEqual({ success: false, error: '"Portfolio" must be a valid URL.' })
   })
 
+  it('requires at least one checkbox option for required checkbox answers', () => {
+    const result = EventApplicationService.validateAnswers(
+      [
+        question({
+          question_text: 'Topics',
+          question_type: 'checkbox',
+          options: ['Mentoring', 'Workshops'],
+          is_required: true,
+        }),
+      ],
+      [{ questionId: 'question-1', value: [] }]
+    )
+
+    expect(result).toEqual({
+      success: false,
+      error: '"Topics" is required.',
+    })
+  })
+
   it('stores answers against registration_id and never user_id', async () => {
     const { mockSupabase, tableMocks } = buildMockSupabase()
     const answers: EventApplicationAnswerInput[] = [
