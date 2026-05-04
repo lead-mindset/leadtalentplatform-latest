@@ -20,7 +20,7 @@ export function GoogleInviteSignInButton({ token }: { token: string }) {
 
   return (
     <Button className="w-full" onClick={signIn}>
-      Continue with Google
+      Continue with Google to accept access
     </Button>
   )
 }

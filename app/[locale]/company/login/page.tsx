@@ -89,7 +89,7 @@ export default function CompanyLoginPage() {
                     <ol className="space-y-1.5 ml-4 list-decimal text-sm text-muted-foreground">
                       <li>Check your inbox (and spam folder)</li>
                       <li>Click the login link in the email</li>
-                      <li>                    You&apos;ll be automatically signed in</li>
+                    <li>You&apos;ll be automatically signed in</li>
                     </ol>
                   </AlertDescription>
                 </Alert>
@@ -123,7 +123,7 @@ export default function CompanyLoginPage() {
           <CardHeader className="space-y-2">
             <CardTitle className="text-2xl">Company Portal</CardTitle>
             <CardDescription className="text-base">
-              Sign in to access student profiles for your company
+              Sign in to access visible LEAD profiles for your company
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -176,13 +176,13 @@ export default function CompanyLoginPage() {
               <AlertDescription>
                 <strong className="text-foreground">Passwordless login:</strong>{' '}
                 <span className="text-muted-foreground">
-                  We&apos;ll email you a secure magic link. No password needed!
+                  We&apos;ll email you a secure magic link. No password needed.
                 </span>
               </AlertDescription>
             </Alert>
 
             <div className="rounded-lg  bg-muted/50 p-4 space-y-2">
-              <p className="text-sm font-medium text-foreground">              Don&apos;t have access yet?</p>
+              <p className="text-sm font-medium text-foreground">Don&apos;t have access yet?</p>
               <p className="text-sm text-muted-foreground">
                 Company representatives can only join via invitation from a LEAD administrator.
               </p>
