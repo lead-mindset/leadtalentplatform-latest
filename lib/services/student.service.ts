@@ -126,7 +126,7 @@ export const StudentService = {
   async getResume(supabase: SupabaseClient<Database>, userId: string) {
     const { data: resume, error } = await supabase
       .from('resume')
-      .select('student_id, file_url, file_name, file_size, uploaded_at')
+      .select('id, student_id, file_url, file_name, file_size, uploaded_at')
       .eq('student_id', userId)
       .single();
 

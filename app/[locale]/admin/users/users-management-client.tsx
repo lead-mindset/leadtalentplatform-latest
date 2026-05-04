@@ -35,9 +35,11 @@ import {
   exportUsersCSV,
   reactivateUser,
   updateUserRole,
-  type AdminUserListItem,
-  type ProfileStatusFilter,
 } from '@/lib/actions/admin/users'
+import type {
+  AdminUserListItem,
+  ProfileStatusFilter,
+} from '@/lib/services/admin.service'
 import { getRoleColor } from '@/lib/options'
 import type { Role } from '@/lib/types'
 

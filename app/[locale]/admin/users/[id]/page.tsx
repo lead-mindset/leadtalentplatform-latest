@@ -49,12 +49,16 @@ export default async function UserDetailPage({
     currentUserData &&
     (currentUserData.role === 'admin' || currentUserData.role === 'editor')
 
-  const profile = resolvedUser.student_profile
-  // approvalStatus is the single source of truth
-  const approval_status = profile?.approval_status ?? 'pending'
+  const profile = resolvedUser.person_profile
+  const membership = resolvedUser.chapter_membership
+  const approval_status = membership?.status ?? 'pending'
+  const actionableStatus =
+    approval_status === 'pending' || approval_status === 'approved' || approval_status === 'rejected'
+      ? approval_status
+      : null
 
   const getStatusConfig = () => {
-    if (!profile?.is_filled) {
+    if (!profile) {
       return {
         label: 'Incomplete Profile',
         icon: Clock,
@@ -71,7 +75,7 @@ export default async function UserDetailPage({
           icon: CheckCircle2,
           colorClass: 'text-[var(--success)]',
           bgClass: 'bg-[var(--success-muted)]',
-          description: profile.is_recruiter_visible
+        description: profile.is_recruiter_visible
             ? 'Approved and visible to recruiters'
             : 'Approved but not visible to recruiters',
         }
@@ -170,7 +174,7 @@ export default async function UserDetailPage({
           </div>
         </div>
 
-        {canApprove && profile?.is_filled && currentUser && (
+        {canApprove && profile && actionableStatus && currentUser && (
           <Card className="border-primary/20 bg-primary/5">
             <CardHeader>
               <div className="flex items-center gap-2">
@@ -178,9 +182,9 @@ export default async function UserDetailPage({
                 <CardTitle>Admin Actions</CardTitle>
               </div>
               <CardDescription>
-                {approval_status === 'approved'
+                {actionableStatus === 'approved'
                   ? 'This member is approved. You can revoke approval if needed.'
-                  : approval_status === 'rejected'
+                  : actionableStatus === 'rejected'
                   ? 'This profile was rejected. You can reconsider and approve.'
                   : "Review this member's profile and approve or reject."}
               </CardDescription>
@@ -189,7 +193,7 @@ export default async function UserDetailPage({
               <MemberActionButtons
                 userId={resolvedUser.id}
                 userName={resolvedUser.name ?? resolvedUser.email}
-                currentState={approval_status}
+                currentState={actionableStatus}
               />
             </CardContent>
           </Card>
@@ -209,18 +213,18 @@ export default async function UserDetailPage({
                   <div className="grid sm:grid-cols-2 gap-6">
                     <div className="space-y-1">
                       <div className="text-sm text-muted-foreground">Major</div>
-                      <div className="font-medium">{profile.major}</div>
+                      <div className="font-medium">{profile.major_or_interest}</div>
                     </div>
                     <div className="space-y-1">
                       <div className="text-sm text-muted-foreground">Graduation Year</div>
                       <div className="font-medium">{profile.graduation_year}</div>
                     </div>
-                    {profile.chapter && (
+                    {membership?.chapter && (
                       <div className="sm:col-span-2 space-y-1">
                         <div className="text-sm text-muted-foreground">Chapter</div>
-                        <div className="font-medium">{profile.chapter.name}</div>
+                        <div className="font-medium">{membership.chapter.name}</div>
                         <div className="text-sm text-muted-foreground">
-                          {profile.chapter.university}
+                          {membership.chapter.university}
                         </div>
                       </div>
                     )}
@@ -292,7 +296,7 @@ export default async function UserDetailPage({
 
                   <div className="flex items-center justify-between py-2">
                     <div className="flex items-center gap-2">
-                      {profile.is_filled ? (
+                      {profile ? (
                         <CheckCircle2 className="h-4 w-4 text-[var(--success)]" />
                       ) : (
                         <Clock className="h-4 w-4 text-[var(--warning)]" />
@@ -300,10 +304,10 @@ export default async function UserDetailPage({
                       <span className="text-sm">Profile Complete</span>
                     </div>
                     <Badge
-                      variant={profile.is_filled ? 'default' : 'secondary'}
+                      variant={profile ? 'default' : 'secondary'}
                       className="text-xs"
                     >
-                      {profile.is_filled ? 'Yes' : 'No'}
+                      {profile ? 'Yes' : 'No'}
                     </Badge>
                   </div>
                 </CardContent>

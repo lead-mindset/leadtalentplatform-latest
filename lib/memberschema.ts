@@ -128,5 +128,5 @@ export type ProfileData = {
   consentRecruiterVisibility: boolean
   emailNotificationsEnabled: boolean
   memberId?: string | null
-  approvalStatus?: 'pending' | 'approved' | 'rejected'
+  approvalStatus?: 'pending' | 'approved' | 'rejected' | 'alumni' | 'inactive'
 }

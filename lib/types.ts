@@ -175,11 +175,11 @@ export type EventWithDetailsRaw = EventRow & {
 }
 
 export type UserWithDetailsRaw = UserRow & {
-  student_profile: {
-    is_filled: boolean
-    approved_by_id: string | null
+  person_profile: {
     is_recruiter_visible: boolean
-    approval_status: 'pending' | 'approved' | 'rejected' | null
+  } | null
+  chapter_membership: {
+    status: ChapterMembershipRow['status']
     chapter_id: string
     chapter: Pick<ChapterRow, 'name' | 'university'> | Pick<ChapterRow, 'name' | 'university'>[] | null
   } | null
@@ -187,11 +187,12 @@ export type UserWithDetailsRaw = UserRow & {
 
 export type UserWithDetails = UserRow & {
   chapter: Pick<ChapterRow, 'name' | 'university'> | null
-  student_profile: {
+  person_profile: {
     is_filled: boolean
-    approved_by_id: string | null
     is_recruiter_visible: boolean
-    approval_status: 'pending' | 'approved' | 'rejected' | null
+  } | null
+  chapter_membership: {
+    status: ChapterMembershipRow['status']
   } | null
 }
 
@@ -281,6 +282,18 @@ export type Company = {
   _count?: { active_recruiters: number; pending_invites: number };
 };
 
+export type RecruiterVisibleProfile = Pick<
+  PersonProfileRow,
+  | 'major_or_interest'
+  | 'graduation_year'
+  | 'linkedin_url'
+  | 'skills'
+  | 'is_recruiter_visible'
+  | 'updated_at'
+> & {
+  chapter_id: string | null
+}
+
 export type StudentForRecruiterRaw = {
   id: string;
   email: string;
@@ -288,7 +301,7 @@ export type StudentForRecruiterRaw = {
   phone: string | null;
   created_at: string;
   chapter: Pick<ChapterRow, "name" | "university" | "city" | "region">[];
-  student_profile: Pick<StudentProfileRow, "major" | "graduation_year" | "linkedin_url" | "skills" | "is_recruiter_visible" | "is_filled" | "updated_at" | "chapter_id">[];
+  person_profile: RecruiterVisibleProfile[];
 };
 
 export type StudentForRecruiter = {
@@ -298,7 +311,12 @@ export type StudentForRecruiter = {
   phone: string | null;
   created_at: string;
   chapter: Pick<ChapterRow, "name" | "university" | "city" | "region"> | null;
-  student_profile: Pick<StudentProfileRow, "major" | "graduation_year" | "linkedin_url" | "skills" | "is_recruiter_visible" | "is_filled" | "updated_at" | "chapter_id"> | null;
+  person_profile: RecruiterVisibleProfile | null;
+  /**
+   * Transitional alias for recruiter UI screens that still render the legacy name.
+   * New code should read person_profile.
+   */
+  student_profile: (RecruiterVisibleProfile & { major: string | null }) | null;
 };
 
 export type SavedStudent = {
@@ -315,7 +333,11 @@ export type SavedStudent = {
 // ============================================================================
 
 export type UserWithFullProfile = UserRow & {
-  student_profile: (StudentProfileRow & {
+  person_profile: PersonProfileRow | null
+  chapter_membership: (Pick<
+    ChapterMembershipRow,
+    'chapter_id' | 'status' | 'position' | 'member_id' | 'joined_at'
+  > & {
     chapter: ChapterRow | null
   }) | null
 }

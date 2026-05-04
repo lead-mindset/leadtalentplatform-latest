@@ -283,7 +283,7 @@ export const ChapterMembershipService = {
 
     if (error) return []
 
-    return ((data ?? []) as MembershipWithJoins[])
+    return ((data ?? []) as unknown as MembershipWithJoins[])
       .map(mapRosterRow)
       .filter((member): member is MemberWithProfile => member !== null)
   },

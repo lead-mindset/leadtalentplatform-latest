@@ -1,7 +1,7 @@
 import type { EventRow, ChapterRow, UserRow } from '@/lib/types'
 
 interface UserChapter extends ChapterRow {
-  role: 'admin' | 'editor' | 'member'
+  role?: 'admin' | 'editor' | 'member'
 }
 
 export function canEditLocation(

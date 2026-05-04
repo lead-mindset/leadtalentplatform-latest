@@ -13,7 +13,15 @@ export async function getCurrentUserResume() {
 
   try {
     const resume = await StudentService.getResume(supabase, user.id);
-    return resume;
+    if (!resume) return null;
+
+    return {
+      id: resume.id,
+      fileName: resume.file_name,
+      fileSize: resume.file_size,
+      fileUrl: resume.file_url,
+      uploadedAt: resume.uploaded_at,
+    };
   } catch (error) {
     console.error('Resume fetch error:', error);
     return null;
@@ -33,12 +41,12 @@ export async function getProfileData() {
       phone: user.phone || '',
       gender: profileData.gender ?? undefined,
       lead_chapter: profileData.chapter_id || '',
-      career: profileData.major || '',
+      career: profileData.major_or_interest || '',
       graduation_year: profileData.graduation_year || 0,
       skills: profileData.skills || [],
       linkedin_url: profileData.linkedin_url || '',
       consentRecruiterVisibility: profileData.is_recruiter_visible || false,
-      emailNotificationsEnabled: profileData.email_notifications_enabled ?? true,
+      emailNotificationsEnabled: true,
     };
   } catch {
     throw new Error('User profile not found');

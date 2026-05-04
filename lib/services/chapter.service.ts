@@ -2,7 +2,7 @@
 import { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.generated'
 import { generateUniqueMemberId } from '@/lib/utils/member-id'
-import type { ChapterRow, MemberWithProfile, PersonProfileRow, UserRow } from '@/lib/types'
+import type { ChapterMembershipRow, ChapterRow, MemberWithProfile, PersonProfileRow, UserRow } from '@/lib/types'
 import { ChapterMembershipService } from '@/lib/services/chapter-membership.service'
 
 /**
@@ -15,10 +15,13 @@ import { ChapterMembershipService } from '@/lib/services/chapter-membership.serv
 type ApprovalResult = { success: true; member_id: string } | { success: false; error: string }
 
 const PROFILE_SELECT = `
+  id,
   user_id,
+  university,
   major_or_interest,
   graduation_year,
   linkedin_url,
+  portfolio_url,
   skills,
   is_recruiter_visible,
   updated_at,
@@ -26,7 +29,9 @@ const PROFILE_SELECT = `
   gender,
   chapter_membership!inner(
     status,
+    position,
     member_id,
+    joined_at,
     chapter_id,
     chapter (
       id,
@@ -42,10 +47,13 @@ const PROFILE_SELECT = `
 
 type ChapterProfileRow = Pick<
   PersonProfileRow,
+  | 'id'
   | 'user_id'
+  | 'university'
   | 'major_or_interest'
   | 'graduation_year'
   | 'linkedin_url'
+  | 'portfolio_url'
   | 'skills'
   | 'is_recruiter_visible'
   | 'updated_at'
@@ -53,8 +61,10 @@ type ChapterProfileRow = Pick<
   | 'gender'
 > & {
   chapter_membership: {
-    status: string
-    member_id: string
+    status: ChapterMembershipRow['status']
+    position: string | null
+    member_id: string | null
+    joined_at: string | null
     chapter_id: string
     chapter: ChapterRow | ChapterRow[] | null
   }
@@ -79,10 +89,13 @@ function mapProfile(profile: ChapterProfileRow): MemberWithProfile | null {
     updated_at: user.updated_at,
     deactivated_at: user.deactivated_at,
     person_profile: {
+      id: profile.id,
       user_id: profile.user_id,
+      university: profile.university,
       major_or_interest: profile.major_or_interest,
       graduation_year: profile.graduation_year,
       linkedin_url: profile.linkedin_url,
+      portfolio_url: profile.portfolio_url,
       skills: profile.skills,
       is_recruiter_visible: profile.is_recruiter_visible,
       updated_at: profile.updated_at,
@@ -91,7 +104,9 @@ function mapProfile(profile: ChapterProfileRow): MemberWithProfile | null {
     },
     chapter_membership: {
       status: profile.chapter_membership.status,
+      position: profile.chapter_membership.position,
       member_id: profile.chapter_membership.member_id,
+      joined_at: profile.chapter_membership.joined_at,
       chapter_id: profile.chapter_membership.chapter_id,
     },
     chapter: chapter ?? null,
@@ -182,7 +197,7 @@ export const ChapterService = {
       return []
     }
 
-    return (data as ChapterProfileRow[])
+    return (data as unknown as ChapterProfileRow[])
       .map(mapProfile)
       .filter((m): m is MemberWithProfile => m !== null)
   },
