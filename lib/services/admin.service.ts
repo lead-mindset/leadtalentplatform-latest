@@ -28,10 +28,10 @@ import type {
 // ───────────────────────────────────────────────────────────────
 
 type AdminUserByIdRow = UserRow & {
-  person_profile: (PersonProfileRow & {
-    chapter: ChapterRow | ChapterRow[] | null
+  person_profile?: (PersonProfileRow & {
+    chapter?: ChapterRow | ChapterRow[] | null
   }) | null
-  chapter_membership: (ChapterMembershipRow & {
+  chapter_membership?: (ChapterMembershipRow & {
     chapter: ChapterRow | ChapterRow[] | null
   }) | null
 }
@@ -1302,15 +1302,26 @@ export const AdminService = {
     const { data: user, error } = await supabase
       .from('user')
       .select(`
-      id,
-      email,
-      name,
-      phone,
-      role,
-      created_at,
-      updated_at,
-      deactivated_at,
-      person_profile!inner (
+        id,
+        email,
+        name,
+        phone,
+        role,
+        created_at,
+        updated_at,
+        deactivated_at
+      `)
+      .eq('id', id)
+      .single()
+
+    if (error || !user) {
+      logger.error({ context: 'getUserById', error }, 'Failed to fetch user')
+      return null
+    }
+
+    const { data: personProfile, error: profileError } = await supabase
+      .from('person_profile')
+      .select(`
         id,
         user_id,
         university,
@@ -1323,36 +1334,47 @@ export const AdminService = {
         created_at,
         updated_at,
         gender
-      ),
-      chapter_membership!inner (
-        status,
-        chapter_id,
-        chapter!inner (id, name, university, city, region, created_at, updated_at)
-      )
-    `)
-      .eq('id', id)
-      .single()
+      `)
+      .eq('user_id', id)
+      .maybeSingle()
 
-    if (error || !user) {
-      logger.error({ context: 'getUserById', error }, 'Failed to fetch user')
-      return null
+    if (profileError) {
+      logger.error({ context: 'getUserById/profile', error: profileError }, 'Failed to fetch user profile')
+    }
+
+    const { data: chapterMembership, error: membershipError } = await supabase
+      .from('chapter_membership')
+      .select(`
+        chapter_id,
+        status,
+        position,
+        member_id,
+        joined_at,
+        chapter (id, name, university, city, region, created_at, updated_at)
+      `)
+      .eq('user_id', id)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (membershipError) {
+      logger.error({ context: 'getUserById/membership', error: membershipError }, 'Failed to fetch user membership')
     }
 
     const userRow = user as unknown as AdminUserByIdRow
-    const personProfile = Array.isArray(userRow.person_profile) ? userRow.person_profile[0] : userRow.person_profile
-    const chapterMembership = Array.isArray(userRow.chapter_membership)
-      ? userRow.chapter_membership[0]
-      : userRow.chapter_membership
+    const membershipRow = Array.isArray(chapterMembership)
+      ? chapterMembership[0]
+      : chapterMembership
 
     const result = {
       ...userRow,
-      person_profile: personProfile,
-      chapter_membership: chapterMembership
+      person_profile: profileError ? null : personProfile,
+      chapter_membership: membershipError ? null : membershipRow
         ? {
-          ...chapterMembership,
-          chapter: Array.isArray(chapterMembership.chapter)
-            ? (chapterMembership.chapter[0] ?? null)
-            : (chapterMembership.chapter ?? null),
+          ...membershipRow,
+          chapter: Array.isArray(membershipRow.chapter)
+            ? (membershipRow.chapter[0] ?? null)
+            : (membershipRow.chapter ?? null),
         }
         : null,
     }

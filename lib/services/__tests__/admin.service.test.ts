@@ -252,6 +252,92 @@ describe('AdminService', () => {
   // ───────────────────────────────────────────────────────────────
   // updateUserRole
   // ───────────────────────────────────────────────────────────────
+  describe('getUserById', () => {
+    const baseUser = {
+      id: 'user-1',
+      email: 'user@test.com',
+      name: 'Test User',
+      phone: null,
+      role: 'member',
+      created_at: '2026-05-01T00:00:00.000Z',
+      updated_at: '2026-05-02T00:00:00.000Z',
+      deactivated_at: null,
+    }
+
+    const baseProfile = {
+      id: 'profile-1',
+      user_id: 'user-1',
+      university: 'Universidad Nacional de Ingenieria',
+      major_or_interest: 'Engineering',
+      graduation_year: 2027,
+      linkedin_url: null,
+      portfolio_url: null,
+      skills: ['leadership'],
+      is_recruiter_visible: true,
+      created_at: '2026-05-01T00:00:00.000Z',
+      updated_at: '2026-05-02T00:00:00.000Z',
+      gender: null,
+    }
+
+    const baseMembership = {
+      user_id: 'user-1',
+      chapter_id: 'leaduni',
+      status: 'approved',
+      position: 'member',
+      member_id: 'LEAD-001',
+      joined_at: '2026-05-02T00:00:00.000Z',
+      chapter: {
+        id: 'leaduni',
+        name: 'LEAD UNI',
+        university: 'Universidad Nacional de Ingenieria',
+        city: 'Lima',
+        region: 'Lima',
+        created_at: '2026-05-01T00:00:00.000Z',
+        updated_at: '2026-05-02T00:00:00.000Z',
+      },
+    }
+
+    it('returns a user detail row when person_profile is missing', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.user._builder._setThenValue({ data: baseUser, error: null })
+      tableMocks.person_profile._builder._setThenValue({ data: null, error: null })
+      tableMocks.chapter_membership._builder._setThenValue({ data: baseMembership, error: null })
+
+      const result = await AdminService.getUserById(mockSupabase as unknown as SupabaseClient, 'user-1')
+
+      expect(result?.id).toBe('user-1')
+      expect(result?.person_profile).toBeNull()
+      expect(result?.chapter_membership?.chapter_id).toBe('leaduni')
+    })
+
+    it('returns a user detail row when chapter_membership is missing', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.user._builder._setThenValue({ data: baseUser, error: null })
+      tableMocks.person_profile._builder._setThenValue({ data: baseProfile, error: null })
+      tableMocks.chapter_membership._builder._setThenValue({ data: null, error: null })
+
+      const result = await AdminService.getUserById(mockSupabase as unknown as SupabaseClient, 'user-1')
+
+      expect(result?.id).toBe('user-1')
+      expect(result?.person_profile?.id).toBe('profile-1')
+      expect(result?.chapter_membership).toBeNull()
+    })
+
+    it('returns null when the base user query fails', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.user._builder._setThenValue({ data: null, error: { message: 'DB error' } })
+
+      const result = await AdminService.getUserById(mockSupabase as unknown as SupabaseClient, 'user-1')
+
+      expect(result).toBeNull()
+      expect(tableMocks.person_profile.select).not.toHaveBeenCalled()
+      expect(tableMocks.chapter_membership.select).not.toHaveBeenCalled()
+    })
+  })
+
   describe('updateUserRole', () => {
     it('should update user role successfully', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
@@ -263,6 +349,18 @@ describe('AdminService', () => {
 
       expect(result.success).toBe(true)
       expect(tableMocks.user.update).toHaveBeenCalledWith({ role: 'editor' })
+    })
+
+    it('should reject editor promotion without approved membership', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.chapter_membership._builder._setThenValue({ data: null, error: null })
+
+      const result = await AdminService.updateUserRole(mockSupabase as unknown as SupabaseClient, 'user-1', 'editor')
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('User must have an approved chapter membership before becoming an editor.')
+      expect(tableMocks.user.update).not.toHaveBeenCalled()
     })
 
     it('should return error on update failure', async () => {
@@ -873,6 +971,28 @@ describe('AdminService', () => {
   })
 
   describe('assignEditor', () => {
+    it('rejects editor assignment without approved chapter membership', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.chapter_membership._builder._setThenValue({
+        data: { user_id: 'user-1', chapter_id: 'leaduni', status: 'pending' },
+        error: null,
+      })
+
+      const result = await AdminService.assignEditor(
+        mockSupabase as unknown as SupabaseClient,
+        'user-1',
+        'leaduni',
+        'admin-1'
+      )
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('User must have an approved membership in this chapter.')
+      expect(tableMocks.chapter_membership.update).not.toHaveBeenCalled()
+      expect(tableMocks.user.update).not.toHaveBeenCalled()
+      expect(tableMocks.lead_identity.insert).not.toHaveBeenCalled()
+    })
+
     it('promotes an approved member and issues a primary chapter editor identity', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
