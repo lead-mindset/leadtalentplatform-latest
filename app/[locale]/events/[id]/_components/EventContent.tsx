@@ -3,60 +3,156 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Calendar, MapPin, ArrowRight, Building } from 'lucide-react'
-import { Card, CardContent } from '@/components/ui/card'
+import {
+  ArrowLeft,
+  ArrowRight,
+  Building2,
+  CalendarDays,
+  Clock,
+  MapPin,
+  Monitor,
+  Users,
+} from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { EventRegistrationCheckout } from '@/components/events/event-registration-checkout'
 import { ApplyModal } from '@/components/events/apply-modal'
 import { applyForEvent } from '@/lib/actions/events/register'
+import { Link } from '@/i18n/routing'
 import type { EventApplicationQuestionRow, EventWithDetails } from '@/lib/types'
 import { MainContainer } from '@/components/global/main-container'
 
 type MyRegistration = {
   id: string
   status: 'registered' | 'pending_review' | 'rejected' | 'cancelled' | 'attended'
-  checkedInAt: string | null
+  checked_in_at: string | null
 } | null
 
-function formatDateTime(value: string) {
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return value
-  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-  return `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()}`
+type TimingStatus = {
+  label: string
+  message: string
+  variant: 'success' | 'info' | 'live' | 'outline'
+  isRegistrationClosed: boolean
 }
 
-function getMonthShort(value: string) {
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return 'M'
-  const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
-  return months[d.getMonth()]
+function formatDate(value: string) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+
+  return date.toLocaleDateString(undefined, {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
 }
 
-function getDayNum(value: string) {
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return '00'
-  return d.getDate().toString()
+function formatTime(value: string) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+
+  return date.toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+  })
 }
 
-function formatTimeOnly(value: string) {
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return value
-  return `${d.getHours() % 12 || 12}:${d.getMinutes().toString().padStart(2, '0')} ${d.getHours() >= 12 ? 'PM' : 'AM'}`
+function getEventTypeLabel(eventType: EventWithDetails['event_type']) {
+  if (eventType === 'online') return 'Online'
+  if (eventType === 'hybrid') return 'Hybrid'
+  return 'In person'
 }
 
-function getEventStatus(start_at: string, end_at: string): { status: string; message: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' } {
+function getEventTiming(event: EventWithDetails, isApplicationRequired: boolean): TimingStatus {
   const now = Date.now()
-  const start = new Date(start_at).getTime()
-  const end = new Date(end_at).getTime()
-  
-  if (now < start) {
-    return { status: 'Registration Open', message: 'Registration is open for this upcoming event.', variant: 'default' }
-  } else if (now >= start && now <= end) {
-    return { status: 'Live Now', message: 'This event is currently in progress.', variant: 'secondary' }
-  } else {
-    return { status: 'Past Event', message: 'This event has concluded.', variant: 'outline' }
+  const start = new Date(event.start_at).getTime()
+  const end = new Date(event.end_at).getTime()
+
+  if (!Number.isFinite(start) || !Number.isFinite(end)) {
+    return {
+      label: 'Date pending',
+      message: 'The event schedule is not available yet.',
+      variant: 'outline',
+      isRegistrationClosed: true,
+    }
   }
+
+  if (now >= start && now <= end) {
+    return {
+      label: 'Live now',
+      message: 'This event is currently in progress.',
+      variant: 'live',
+      isRegistrationClosed: true,
+    }
+  }
+
+  if (now > end) {
+    return {
+      label: 'Past event',
+      message: 'This event has concluded.',
+      variant: 'outline',
+      isRegistrationClosed: true,
+    }
+  }
+
+  return {
+    label: isApplicationRequired ? 'Application required' : 'Open registration',
+    message: isApplicationRequired
+      ? 'Submit an application for editor review before you can attend.'
+      : 'Registration is open for this upcoming event.',
+    variant: isApplicationRequired ? 'info' : 'success',
+    isRegistrationClosed: false,
+  }
+}
+
+function getLocationLabel(event: EventWithDetails) {
+  if (event.event_type === 'online') return 'Online'
+  return event.location_name || event.location || event.location_city || 'Location pending'
+}
+
+function getAvailability(event: EventWithDetails) {
+  if (event.capacity === null) {
+    return {
+      label: 'Open capacity',
+      variant: 'secondary' as const,
+    }
+  }
+
+  const remaining = Math.max(0, event.capacity - event._count.registrations)
+  if (remaining === 0) {
+    return {
+      label: 'Full',
+      variant: 'destructive' as const,
+    }
+  }
+
+  return {
+    label: remaining === 1 ? '1 spot left' : `${remaining} spots left`,
+    variant: remaining <= 10 ? 'warning' as const : 'secondary' as const,
+  }
+}
+
+function getRegistrationBadge(myRegistration: MyRegistration) {
+  if (!myRegistration) return null
+
+  if (myRegistration.status === 'registered') {
+    return { label: 'Registered', variant: 'success' as const }
+  }
+  if (myRegistration.status === 'pending_review') {
+    return { label: 'Under review', variant: 'warning' as const }
+  }
+  if (myRegistration.status === 'rejected') {
+    return { label: 'Not selected', variant: 'destructive' as const }
+  }
+  if (myRegistration.status === 'cancelled') {
+    return { label: 'Cancelled', variant: 'outline' as const }
+  }
+  if (myRegistration.status === 'attended') {
+    return { label: 'Attended', variant: 'success' as const }
+  }
+
+  return null
 }
 
 export function EventContent({
@@ -82,24 +178,35 @@ export function EventContent({
   if (!event) {
     return (
       <main className="min-h-screen bg-background">
-        <div className="mx-auto max-w-3xl px-4 sm:px-6 pb-16 pt-28">
-          <Card>
-            <CardContent className="py-10 text-center text-muted-foreground">
-              Event not found.
+        <MainContainer className="pb-20 pt-12">
+          <Card className="mx-auto max-w-xl">
+            <CardContent className="flex flex-col items-center gap-3 px-6 py-12 text-center">
+              <CalendarDays className="h-10 w-10 text-muted-foreground" />
+              <div>
+                <h1 className="text-lg font-semibold">Event not found</h1>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  This event may have been removed or is no longer public.
+                </p>
+              </div>
+              <Button asChild variant="outline">
+                <Link href="/events">Back to events</Link>
+              </Button>
             </CardContent>
           </Card>
-        </div>
+        </MainContainer>
       </main>
     )
   }
 
-  const eventStatus = getEventStatus(event.start_at, event.end_at)
-  const registrationClosed = eventStatus.status !== 'Registration Open'
-
   const isApplicationRequired = event.access_model === 'application'
+  const timing = getEventTiming(event, isApplicationRequired)
+  const registrationClosed = timing.isRegistrationClosed
+  const availability = getAvailability(event)
+  const registrationBadge = getRegistrationBadge(myRegistration)
+
   const isPending = myRegistration?.status === 'pending_review'
   const isRejected = myRegistration?.status === 'rejected'
-  const isRegistered = myRegistration?.status === 'registered'
+  const isRegistered = myRegistration?.status === 'registered' || myRegistration?.status === 'attended'
   const isCancelled = myRegistration?.status === 'cancelled'
 
   const handlePrimaryAction = () => {
@@ -141,134 +248,179 @@ export function EventContent({
   }
 
   const registeredCount = event._count.registrations
-  const ownerChapterLabel = event.chapter ? event.chapter.name : 'Global'
+  const ownerChapterLabel = event.chapter?.name ?? event.owner_chapter?.name ?? 'LEAD'
   const collaborators = event.event_chapter
     ?.map((ec: { chapter: { id: string; name: string } | null }) => ec.chapter)
     .filter((chapter): chapter is { id: string; name: string } => Boolean(chapter)) ?? []
 
-  const heroImageSrc = event.cover_image || "https://lh3.googleusercontent.com/aida-public/AB6AXuCPkIXdCnOC4xM_keP1HVTc8Nn_asHtEtsE3T3mkN8Dr3QDObO6BA_ppVqlJIOjEtv0dKqF4KMU1-fhBVeeVu3IXJeHu8VndjHef3GU9_jWWTgMaM292D6UJYbE5a_U0cvkFDiDGhTFm8THZlrg838_CIZKgIu5YgUAX7YVP9gXTVeR__XeheoSuPRYMbn2NDMzbAW30OW15MOIUgace6VZNCZ51xoLDKKL7SXJmeoAjaoD8u32pDMrs3HiE7HRqw5Cps0fVyH8KRJU"
+  const heroImageSrc =
+    event.cover_image ||
+    'https://lh3.googleusercontent.com/aida-public/AB6AXuCPkIXdCnOC4xM_keP1HVTc8Nn_asHtEtsE3T3mkN8Dr3QDObO6BA_ppVqlJIOjEtv0dKqF4KMU1-fhBVeeVu3IXJeHu8VndjHef3GU9_jWWTgMaM292D6UJYbE5a_U0cvkFDiDGhTFm8THZlrg838_CIZKgIu5YgUAX7YVP9gXTVeR__XeheoSuPRYMbn2NDMzbAW30OW15MOIUgace6VZNCZ51xoLDKKL7SXJmeoAjaoD8u32pDMrs3HiE7HRqw5Cps0fVyH8KRJU'
 
   return (
-    <MainContainer className="pt-12 pb-24 bg-background flex-1 overflow-x-hidden">
-      
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
+    <main className="min-h-screen bg-background">
+      <MainContainer className="space-y-8 pb-24 pt-8 md:pt-12">
+        <Button asChild variant="ghost" className="w-fit px-0 text-muted-foreground hover:text-foreground">
+          <Link href="/events">
+            <ArrowLeft className="h-4 w-4" />
+            Back to events
+          </Link>
+        </Button>
 
-        <div className="lg:col-span-4 space-y-8">
-
-          <div className="w-full aspect-square relative rounded-3xl overflow-hidden shadow-2xl border border-border/50 bg-muted">
-            {event.cover_image ? (
-              <Image 
-                src={heroImageSrc} 
-                alt={event.title || 'Event Cover'} 
-                fill 
-                className="object-cover"
-                priority
-              />
-            ) : (
-              <img 
-                src={heroImageSrc} 
-                alt="Event Hero Fallback" 
-                className="absolute inset-0 w-full h-full object-cover" 
-              />
-            )}
-          </div>
-
-          <div>
-            <h3 className="text-sm font-bold text-muted-foreground mb-4 pl-2">Hosted By</h3>
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
-                  <Building className="text-primary w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-base font-bold text-foreground leading-tight">{ownerChapterLabel}</p>
-                </div>
+        <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start">
+          <div className="space-y-8">
+            <div className="space-y-5">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant={timing.variant}>{timing.label}</Badge>
+                <Badge variant="outline">{getEventTypeLabel(event.event_type)}</Badge>
+                <Badge variant={availability.variant}>{availability.label}</Badge>
+                {registrationBadge ? (
+                  <Badge variant={registrationBadge.variant}>{registrationBadge.label}</Badge>
+                ) : null}
               </div>
 
-              {collaborators.map((chapter) => (
-                <div key={chapter.id} className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center border border-secondary/20 shrink-0">
-                    <Building className="text-secondary w-5 h-5" />
+              <div className="space-y-3">
+                <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-5xl">
+                  {event.title || 'Untitled event'}
+                </h1>
+                <p className="max-w-3xl text-base text-muted-foreground md:text-lg">
+                  {timing.message}
+                </p>
+              </div>
+            </div>
+
+            <Card className="overflow-hidden">
+              <div className="grid gap-0 md:grid-cols-[18rem_1fr]">
+                <div className="relative min-h-64 bg-muted md:min-h-full">
+                  <Image
+                    src={heroImageSrc}
+                    alt={event.cover_image ? event.title || 'Event cover' : ''}
+                    fill
+                    className="object-cover"
+                    priority
+                  />
+                </div>
+
+                <CardContent className="space-y-5 p-5 md:p-6">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="flex gap-3">
+                      <CalendarDays className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium">{formatDate(event.start_at)}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {formatTime(event.start_at)} - {formatTime(event.end_at)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      {event.event_type === 'online' ? (
+                        <Monitor className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+                      ) : (
+                        <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+                      )}
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">{getLocationLabel(event)}</p>
+                        <p className="truncate text-sm text-muted-foreground">
+                          {event.location_address || event.location_city || event.meeting_url || 'Details available from the host'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <Building2 className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">{ownerChapterLabel}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {collaborators.length > 0
+                            ? `${collaborators.length} collaborator${collaborators.length === 1 ? '' : 's'}`
+                            : 'Host chapter'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <Users className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium">
+                          {registeredCount} registered
+                          {event.capacity !== null ? ` / ${event.capacity}` : ''}
+                        </p>
+                        <p className="text-sm text-muted-foreground">{availability.label}</p>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-base font-bold text-foreground leading-tight">{chapter.name}</p>
+                </CardContent>
+              </div>
+            </Card>
+
+            <section className="space-y-3">
+              <h2 className="text-xl font-semibold tracking-tight">About this event</h2>
+              <div className="prose prose-sm max-w-none text-muted-foreground dark:prose-invert md:prose-base">
+                {event.description ? (
+                  <p className="whitespace-pre-wrap">{event.description}</p>
+                ) : (
+                  <p>No description is available for this event yet.</p>
+                )}
+              </div>
+            </section>
+
+            <section className="space-y-3">
+              <h2 className="text-xl font-semibold tracking-tight">Hosted by</h2>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Card>
+                  <CardContent className="flex items-center gap-3 p-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                      <Building2 className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{ownerChapterLabel}</p>
+                      <p className="text-sm text-muted-foreground">Host chapter</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {collaborators.map((chapter) => (
+                  <Card key={chapter.id}>
+                    <CardContent className="flex items-center gap-3 p-4">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                        <Building2 className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">{chapter.name}</p>
+                        <p className="text-sm text-muted-foreground">Collaborator</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </section>
+          </div>
+
+          <aside className="space-y-4 lg:sticky lg:top-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between gap-3 text-lg">
+                  Registration
+                  <Badge variant={timing.variant}>{timing.label}</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="rounded-lg border bg-muted/30 p-4">
+                  <div className="flex items-start gap-3">
+                    <Clock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-medium">{timing.message}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {isApplicationRequired
+                          ? 'Application answers are reviewed before registration is confirmed.'
+                          : 'Registration creates your QR code for check-in.'}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
-            
-            <div className="mt-8 flex flex-col gap-3 pl-2">
-              <button className="text-sm text-muted-foreground hover:text-foreground text-left font-medium transition-colors flex items-center gap-2">
-                Contact the Host
-              </button>
-              <button className="text-sm text-muted-foreground hover:text-foreground text-left font-medium transition-colors flex items-center gap-2">
-                Report Event
-              </button>
-            </div>
-          </div>
-        </div>
 
-        <div className="lg:col-span-8 space-y-10 lg:pt-4">
-
-          <div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter text-foreground mb-4">
-              {event.title || 'Untitled Event'}
-            </h1>
-          </div>
-
-          <div className="flex flex-col gap-6">
-
-            <div className="flex items-start gap-4">
-              <div className="bg-card border border-border p-2 rounded-xl text-center min-w-[3.5rem] shadow-sm flex flex-col items-center justify-center shrink-0">
-                <div className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">{getMonthShort(event.start_at)}</div>
-                <div className="text-lg font-black text-foreground">{getDayNum(event.start_at)}</div>
-              </div>
-              <div className="flex flex-col justify-center py-1">
-                <div className="font-bold text-lg text-foreground leading-tight">{formatDateTime(event.start_at)}</div>
-                <div className="text-sm text-muted-foreground mt-0.5">
-                  {formatTimeOnly(event.start_at)} - {formatTimeOnly(event.end_at)}
-                </div>
-              </div>
-            </div>
-
-            {event.location && (
-              <div className="flex items-start gap-4">
-                <div className="p-2 shrink-0 min-w-[3.5rem] flex justify-center">
-                  <MapPin className="text-muted-foreground w-6 h-6" />
-                </div>
-                <div className="flex flex-col justify-center py-1">
-                  <div className="font-bold text-lg text-foreground leading-tight">{event.location}</div>
-                  <div className="text-sm text-muted-foreground mt-0.5">
-                    {event.location_address || 'Address details unavailable'}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="bg-card/40 backdrop-blur-md border border-border rounded-[1.5rem] p-6 shadow-sm">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-sm font-bold text-foreground">Registration</h3>
-            </div>
-            
-            <div className="bg-muted/30 border border-border rounded-xl p-4 flex items-center gap-4 mb-6">
-              {eventStatus.status === 'Registration Open' ? (
-                <div className="bg-primary/20 p-2 rounded-lg"><Calendar className="text-primary w-5 h-5" /></div>
-              ) : (
-                <div className="bg-muted-foreground/20 p-2 rounded-lg"><Calendar className="text-muted-foreground w-5 h-5" /></div>
-              )}
-              <div>
-                <p className="font-bold text-sm">{eventStatus.status}</p>
-                <p className="text-xs text-muted-foreground">{eventStatus.message}</p>
-              </div>
-            </div>
-
-            <div>
-              {!isApplicationRequired ? (
-                <>
-                  {eventStatus.status === 'Registration Open' && (
-                    <p className="text-sm font-medium mb-4 text-foreground">Welcome! To join the event, please register below.</p>
-                  )}
+                {!isApplicationRequired ? (
                   <EventRegistrationCheckout
                     eventId={event.id}
                     eventTitle={event.title}
@@ -281,80 +433,77 @@ export function EventContent({
                     hadCancelledRegistration={isCancelled}
                     canCancel={
                       myRegistration?.status === 'registered' &&
-                      !myRegistration.checkedInAt &&
+                      !myRegistration.checked_in_at &&
                       !registrationClosed
                     }
                     registrationId={myRegistration?.id ?? null}
                     capacity={event.capacity}
                     registeredCount={registeredCount}
                   />
-                </>
-              ) : (
-                <div className="space-y-4">
-                  {isPending ? (
-                    <div className="rounded-xl border bg-muted p-4 text-center">
-                      <p className="text-sm text-foreground">
-                        Your application is under review. You&apos;ll receive an email when a decision is made.
+                ) : (
+                  <div className="space-y-3">
+                    {isPending ? (
+                      <div className="rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm">
+                        Your application is under review. You will receive an email when a decision is made.
+                      </div>
+                    ) : null}
+
+                    {isRejected ? (
+                      <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+                        You were not selected for this event.
+                      </div>
+                    ) : null}
+
+                    {isRegistered ? (
+                      <div className="space-y-3">
+                        <div className="rounded-lg border border-success/30 bg-success/10 p-4 text-sm">
+                          You are registered for this event. Check your email or student events page for QR details.
+                        </div>
+                        <Button asChild className="w-full">
+                          <Link href={`/student/events?event=${event.id}`}>View my QR code</Link>
+                        </Button>
+                      </div>
+                    ) : isPending || isRejected ? null : (
+                      <Button
+                        size="lg"
+                        onClick={handlePrimaryAction}
+                        disabled={isSubmitting || registrationClosed}
+                        className="w-full"
+                      >
+                        {isSubmitting ? 'Processing...' : isLoggedIn ? 'Apply now' : 'Sign in to apply'}
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    )}
+
+                    {!isLoggedIn ? (
+                      <p className="text-xs text-muted-foreground">
+                        You will be sent to sign in before applying.
                       </p>
-                    </div>
-                  ) : null}
-
-                  {isRejected ? (
-                    <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-center">
-                      <p className="text-sm font-medium text-destructive">Not selected for this event.</p>
-                    </div>
-                  ) : null}
-
-                  {isRegistered ? (
-                    <div className="rounded-xl border border-primary/20 bg-primary/10 p-4 text-center">
-                      <p className="text-sm font-medium text-foreground">
-                        You&apos;re registered for this event. Check your email for QR code details.
+                    ) : !hasBasicProfile ? (
+                      <p className="text-xs text-muted-foreground">
+                        Complete onboarding once before applying to LEAD events.
                       </p>
-                    </div>
-                  ) : isPending ? (
-                    null
-                  ) : (
-                    <Button
-                      size="lg"
-                      onClick={handlePrimaryAction}
-                      disabled={isSubmitting || registrationClosed}
-                      className="w-full py-6 rounded-xl font-bold text-lg shadow-[0_0_20px_rgba(var(--primary),0.2)] hover:scale-[1.02] transition-transform"
-                    >
-                      {isSubmitting ? 'Processing...' : 'Apply Now'}
-                      <ArrowRight className="ml-2 w-5 h-5" />
-                    </Button>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
+                    ) : null}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </aside>
+        </section>
 
-          <div className="pt-6">
-            <h3 className="text-base font-bold text-foreground mb-4">About Event</h3>
-            <div className="text-muted-foreground leading-relaxed md:text-lg space-y-4">
-              {event.description ? (
-                <p className="whitespace-pre-wrap">{event.description}</p>
-              ) : (
-                <p>No description available for this event.</p>
-              )}
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      {isApplicationRequired ? (
-        <ApplyModal
-          open={showApplyModal}
-          onOpenChange={setShowApplyModal}
-          eventTitle={event.title}
-          applicationFormUrl={event.application_form_url || ''}
-          questions={applicationQuestions}
-          submissionError={applicationError}
-          onConfirm={handleApplyConfirm}
-          isSubmitting={isSubmitting}
-        />
-      ) : null}
-    </MainContainer>
+        {isApplicationRequired ? (
+          <ApplyModal
+            open={showApplyModal}
+            onOpenChange={setShowApplyModal}
+            eventTitle={event.title}
+            applicationFormUrl={event.application_form_url || ''}
+            questions={applicationQuestions}
+            submissionError={applicationError}
+            onConfirm={handleApplyConfirm}
+            isSubmitting={isSubmitting}
+          />
+        ) : null}
+      </MainContainer>
+    </main>
   )
 }

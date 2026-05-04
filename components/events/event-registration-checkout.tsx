@@ -124,7 +124,7 @@ export function EventRegistrationCheckout({
         </div>
       ) : isRegistered ? (
         <div className="space-y-3">
-          <Badge variant="secondary" className="w-fit gap-1.5 pl-2">
+          <Badge variant="success" className="w-fit gap-1.5 pl-2">
             <Icons.CheckCircle2 className="h-4 w-4" />
             Registered
           </Badge>
