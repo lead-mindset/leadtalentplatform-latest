@@ -16,6 +16,8 @@ interface MockBuilder {
   limit: ReturnType<typeof vi.fn>
   order: ReturnType<typeof vi.fn>
   range: ReturnType<typeof vi.fn>
+  update: ReturnType<typeof vi.fn>
+  insert: ReturnType<typeof vi.fn>
   maybeSingle: ReturnType<typeof vi.fn>
   single: ReturnType<typeof vi.fn>
   then: ReturnType<typeof vi.fn>
@@ -28,7 +30,13 @@ interface TableMock {
 }
 
 const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
+  const valueQueue: unknown[] = []
   let builderThenValue: unknown = { data: [], error: null }
+
+  const shiftValue = () => {
+    if (valueQueue.length > 0) return valueQueue.shift()!
+    return builderThenValue
+  }
 
   const builder: MockBuilder = {
     eq: vi.fn(() => builder),
@@ -39,10 +47,13 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
     limit: vi.fn(() => builder),
     order: vi.fn(() => builder),
     range: vi.fn(() => builder),
-    maybeSingle: vi.fn(() => Promise.resolve(builderThenValue)),
-    single: vi.fn(() => Promise.resolve(builderThenValue)),
-    then: vi.fn((resolve: (value: unknown) => unknown) => resolve(builderThenValue)),
+    update: vi.fn(() => builder),
+    insert: vi.fn(() => builder),
+    maybeSingle: vi.fn(() => Promise.resolve(shiftValue())),
+    single: vi.fn(() => Promise.resolve(shiftValue())),
+    then: vi.fn((resolve: (value: unknown) => unknown) => resolve(shiftValue())),
     _setThenValue: (value: unknown) => {
+      valueQueue.push(value)
       builderThenValue = value
     },
   }
@@ -50,6 +61,8 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
   const tableMocks: Record<string, TableMock> = {
     user: {
       select: vi.fn(() => builder),
+      update: vi.fn(() => builder),
+      insert: vi.fn(() => builder),
       _builder: builder,
     },
     saved_student: {
@@ -58,6 +71,11 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
     },
     person_profile: {
       select: vi.fn(() => builder),
+      _builder: builder,
+    },
+    recruiter_access: {
+      select: vi.fn(() => builder),
+      update: vi.fn(() => builder),
       _builder: builder,
     },
     ...overrides,
@@ -250,6 +268,226 @@ describe('RecruiterService', () => {
       const result = await RecruiterService.getSavedStatus(mockSupabase as unknown as SupabaseClient, 'recruiter-1', ['user-1'])
 
       expect(result).toEqual([])
+    })
+  })
+
+  describe('invite validation and acceptance', () => {
+    const future = new Date(Date.now() + 86400000).toISOString()
+
+    it('validates active invite tokens', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.recruiter_access._builder._setThenValue({
+        data: {
+          id: 'access-1',
+          recruiter_email: 'recruiter@test.com',
+          accepted_at: null,
+          accepted_by_user_id: null,
+          invite_expires_at: future,
+          revoked_at: null,
+          company_id: 'company-1',
+        },
+        error: null,
+      })
+
+      const result = await RecruiterService.validateInviteToken(mockSupabase as unknown as SupabaseClient, 'token-1')
+
+      expect(result.valid).toBe(true)
+      if (result.valid) {
+        expect(result.access.recruiter_email).toBe('recruiter@test.com')
+      }
+    })
+
+    it('rejects expired invite tokens', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.recruiter_access._builder._setThenValue({
+        data: {
+          id: 'access-1',
+          recruiter_email: 'recruiter@test.com',
+          accepted_at: null,
+          accepted_by_user_id: null,
+          invite_expires_at: new Date(Date.now() - 86400000).toISOString(),
+          revoked_at: null,
+          company_id: 'company-1',
+        },
+        error: null,
+      })
+
+      const result = await RecruiterService.validateInviteToken(mockSupabase as unknown as SupabaseClient, 'token-1')
+
+      expect(result).toMatchObject({ valid: false, code: 'expired' })
+    })
+
+    it('accepts an invite and promotes an existing user to recruiter', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.recruiter_access._builder._setThenValue({
+        data: {
+          id: 'access-1',
+          recruiter_email: 'recruiter@test.com',
+          accepted_at: null,
+          accepted_by_user_id: null,
+          invite_expires_at: future,
+          revoked_at: null,
+          company_id: 'company-1',
+        },
+        error: null,
+      })
+      tableMocks.recruiter_access._builder._setThenValue({ data: null, error: null })
+      tableMocks.user._builder._setThenValue({ data: { id: 'user-1' }, error: null })
+      tableMocks.user._builder._setThenValue({ data: null, error: null })
+
+      const result = await RecruiterService.acceptInvite(
+        mockSupabase as unknown as SupabaseClient,
+        'user-1',
+        'token-1',
+        'recruiter@test.com',
+        'Recruiter User'
+      )
+
+      expect(result.success).toBe(true)
+      expect(tableMocks.recruiter_access.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          accepted_by_user_id: 'user-1',
+          is_active: true,
+        })
+      )
+      expect(tableMocks.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({ role: 'recruiter' })
+      )
+    })
+
+    it('creates a public recruiter user when invite acceptance has no existing user row', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.recruiter_access._builder._setThenValue({
+        data: {
+          id: 'access-1',
+          recruiter_email: 'recruiter@test.com',
+          accepted_at: null,
+          accepted_by_user_id: null,
+          invite_expires_at: future,
+          revoked_at: null,
+          company_id: 'company-1',
+        },
+        error: null,
+      })
+      tableMocks.recruiter_access._builder._setThenValue({ data: null, error: null })
+      tableMocks.user._builder._setThenValue({ data: null, error: null })
+      tableMocks.user._builder._setThenValue({ data: null, error: null })
+
+      const result = await RecruiterService.acceptInvite(
+        mockSupabase as unknown as SupabaseClient,
+        'user-1',
+        'token-1',
+        'recruiter@test.com',
+        'Recruiter User'
+      )
+
+      expect(result.success).toBe(true)
+      expect(tableMocks.user.insert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'user-1',
+          email: 'recruiter@test.com',
+          role: 'recruiter',
+        })
+      )
+    })
+
+    it('does not activate access when the signed-in email does not match the invite', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.recruiter_access._builder._setThenValue({
+        data: {
+          id: 'access-1',
+          recruiter_email: 'recruiter@test.com',
+          accepted_at: null,
+          accepted_by_user_id: null,
+          invite_expires_at: future,
+          revoked_at: null,
+          company_id: 'company-1',
+        },
+        error: null,
+      })
+
+      const result = await RecruiterService.acceptInvite(
+        mockSupabase as unknown as SupabaseClient,
+        'user-1',
+        'token-1',
+        'other@test.com',
+        'Other User'
+      )
+
+      expect(result.success).toBe(false)
+      expect(tableMocks.recruiter_access.update).not.toHaveBeenCalled()
+      expect(tableMocks.user.update).not.toHaveBeenCalled()
+      expect(tableMocks.user.insert).not.toHaveBeenCalled()
+    })
+
+    it('keeps already accepted invites idempotent for the same user only', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.recruiter_access._builder._setThenValue({
+        data: {
+          id: 'access-1',
+          recruiter_email: 'recruiter@test.com',
+          accepted_at: '2026-05-03T00:00:00.000Z',
+          accepted_by_user_id: 'user-1',
+          invite_expires_at: future,
+          revoked_at: null,
+          company_id: 'company-1',
+        },
+        error: null,
+      })
+      tableMocks.user._builder._setThenValue({ data: { id: 'user-1' }, error: null })
+      tableMocks.user._builder._setThenValue({ data: null, error: null })
+
+      const result = await RecruiterService.acceptInvite(
+        mockSupabase as unknown as SupabaseClient,
+        'user-1',
+        'token-1',
+        'recruiter@test.com',
+        'Recruiter User'
+      )
+
+      expect(result.success).toBe(true)
+      expect(tableMocks.recruiter_access.update).not.toHaveBeenCalled()
+      expect(tableMocks.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({ role: 'recruiter' })
+      )
+    })
+
+    it('rejects already accepted invites for another signed-in user', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.recruiter_access._builder._setThenValue({
+        data: {
+          id: 'access-1',
+          recruiter_email: 'recruiter@test.com',
+          accepted_at: '2026-05-03T00:00:00.000Z',
+          accepted_by_user_id: 'user-2',
+          invite_expires_at: future,
+          revoked_at: null,
+          company_id: 'company-1',
+        },
+        error: null,
+      })
+
+      const result = await RecruiterService.acceptInvite(
+        mockSupabase as unknown as SupabaseClient,
+        'user-1',
+        'token-1',
+        'recruiter@test.com',
+        'Recruiter User'
+      )
+
+      expect(result).toEqual({
+        success: false,
+        error: 'This invite has already been accepted by another account.',
+      })
+      expect(tableMocks.user.update).not.toHaveBeenCalled()
+      expect(tableMocks.user.insert).not.toHaveBeenCalled()
     })
   })
 })

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { canUserAccessChapter, canUserManageEvent, getApprovedChapterMembership } from './auth'
+import { canUserAccessChapter, canUserManageEvent, getApprovedChapterMembership, resolveRecruiterAccess } from './auth'
 import type { UserRow } from './types'
 
 type TableMock = {
@@ -22,6 +22,11 @@ function buildMockSupabase(overrides: Partial<Record<string, Partial<TableMock>>
       maybeSingle: vi.fn(),
     },
     event_chapter: {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn(),
+    },
+    recruiter_access: {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       maybeSingle: vi.fn(),
@@ -228,5 +233,81 @@ describe('auth chapter and event access helpers', () => {
 
     expect(result).toBe(false)
     expect(mockSupabase.from).not.toHaveBeenCalledWith('chapter_membership')
+  })
+})
+
+describe('auth recruiter access helpers', () => {
+  it('resolves active accepted recruiter access without profile or membership tables', async () => {
+    const { mockSupabase, tableMocks } = buildMockSupabase()
+    tableMocks.recruiter_access.maybeSingle.mockResolvedValue({
+      data: {
+        id: 'access-1',
+        company_id: 'company-1',
+        is_active: true,
+        granted_by_id: 'admin-1',
+        accepted_by_user_id: 'recruiter-1',
+        granted_at: '2026-05-03T00:00:00.000Z',
+        accepted_at: '2026-05-03T00:00:00.000Z',
+        revoked_at: null,
+        invite_expires_at: null,
+        recruiter_email: 'recruiter@test.com',
+        invite_token: 'token-1',
+        revoked_by_id: null,
+        Company: [{ id: 'company-1', name: 'Acme', created_at: '2026-05-03T00:00:00.000Z', created_by_id: 'admin-1' }],
+      },
+      error: null,
+    })
+
+    const result = await resolveRecruiterAccess(mockSupabase, 'recruiter-1')
+
+    expect(result).toMatchObject({
+      allowed: true,
+      company: { id: 'company-1', name: 'Acme' },
+    })
+    expect(mockSupabase.from).not.toHaveBeenCalledWith('person_profile')
+    expect(mockSupabase.from).not.toHaveBeenCalledWith('chapter_membership')
+  })
+
+  it('denies missing recruiter access', async () => {
+    const { mockSupabase, tableMocks } = buildMockSupabase()
+    tableMocks.recruiter_access.maybeSingle.mockResolvedValue({ data: null, error: null })
+
+    const result = await resolveRecruiterAccess(mockSupabase, 'recruiter-1')
+
+    expect(result).toEqual({ allowed: false, reason: 'missing' })
+  })
+
+  it('denies revoked recruiter access', async () => {
+    const { mockSupabase, tableMocks } = buildMockSupabase()
+    tableMocks.recruiter_access.maybeSingle.mockResolvedValue({
+      data: {
+        id: 'access-1',
+        is_active: true,
+        revoked_at: '2026-05-03T00:00:00.000Z',
+        Company: [],
+      },
+      error: null,
+    })
+
+    const result = await resolveRecruiterAccess(mockSupabase, 'recruiter-1')
+
+    expect(result).toEqual({ allowed: false, reason: 'revoked' })
+  })
+
+  it('denies inactive recruiter access', async () => {
+    const { mockSupabase, tableMocks } = buildMockSupabase()
+    tableMocks.recruiter_access.maybeSingle.mockResolvedValue({
+      data: {
+        id: 'access-1',
+        is_active: false,
+        revoked_at: null,
+        Company: [],
+      },
+      error: null,
+    })
+
+    const result = await resolveRecruiterAccess(mockSupabase, 'recruiter-1')
+
+    expect(result).toEqual({ allowed: false, reason: 'inactive' })
   })
 })

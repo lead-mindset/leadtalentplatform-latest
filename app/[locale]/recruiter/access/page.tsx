@@ -94,5 +94,5 @@ export default async function RecruiterAccessPage({
     )
   }
 
-  redirect('/recruiter/browse')
+  redirect('/company/dashboard')
 }
