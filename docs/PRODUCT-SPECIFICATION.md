@@ -288,6 +288,7 @@ Campaign rules for future implementation:
 - Admins can send global, chapter, and demographic campaigns.
 - Editors can send campaigns only for their own chapter.
 - Demographic campaigns use filters from `person_profile`, `chapter_membership`, and event attendance.
+- Campaign implementation must follow ADR 003 so consent, audience segmentation, and send history remain separate.
 
 ### Recruiter Access
 
