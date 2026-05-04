@@ -1202,6 +1202,109 @@ describe('EventService', () => {
   // ───────────────────────────────────────────────────────────────
   // getAllEventsAdmin
   // ───────────────────────────────────────────────────────────────
+  describe('getChapterEvents', () => {
+    const eventRow = (overrides: Record<string, unknown>) => ({
+      id: 'evt-1',
+      title: 'Chapter Event',
+      description: null,
+      cover_image: null,
+      start_at: new Date(Date.now() + 86400000).toISOString(),
+      end_at: new Date(Date.now() + 90000000).toISOString(),
+      location: null,
+      meeting_url: null,
+      event_type: 'in_person',
+      capacity: 50,
+      is_published: true,
+      access_model: 'open',
+      application_form_url: null,
+      chapter_id: 'leaduni',
+      created_by_id: 'editor-1',
+      created_at: '2026-05-03T00:00:00.000Z',
+      updated_at: '2026-05-03T00:00:00.000Z',
+      chapter_name: 'LEAD UNI',
+      chapter_university: 'Universidad Nacional de Ingenieria',
+      chapter_city: 'Lima',
+      chapter_region: 'Lima',
+      ...overrides,
+    })
+
+    it('returns owned and collaborated chapter events with ownership markers', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+      tableMocks.event_with_chapter._selectChain.then
+        .mockImplementationOnce((resolve: (value: unknown) => unknown) =>
+          resolve({
+            data: [eventRow({ id: 'owned-1', title: 'Owned Event', chapter_id: 'leaduni' })],
+            error: null,
+          })
+        )
+        .mockImplementationOnce((resolve: (value: unknown) => unknown) =>
+          resolve({
+            data: [{ event_id: 'collab-1' }],
+            error: null,
+          })
+        )
+        .mockImplementationOnce((resolve: (value: unknown) => unknown) =>
+          resolve({
+            data: [
+              eventRow({
+                id: 'collab-1',
+                title: 'Collaborated Event',
+                chapter_id: 'leadpucp',
+                chapter_name: 'LEAD PUCP',
+              }),
+            ],
+            error: null,
+          })
+        )
+
+      const result = await EventService.getChapterEvents(
+        mockSupabase as unknown as SupabaseClient,
+        'leaduni'
+      )
+
+      expect(result).toHaveLength(2)
+      expect(result.map((event) => event.id)).toEqual(['owned-1', 'collab-1'])
+      expect(result.find((event) => event.id === 'owned-1')?.is_owned_by_chapter).toBe(true)
+      expect(result.find((event) => event.id === 'collab-1')?.is_owned_by_chapter).toBe(false)
+      expect(tableMocks.event_chapter._selectChain.eq).toHaveBeenCalledWith('chapter_id', 'leaduni')
+      expect(tableMocks.event_with_chapter._selectChain.in).toHaveBeenCalledWith('id', ['collab-1'])
+    })
+
+    it('dedupes an event that appears as both owned and collaborated', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+      tableMocks.event_with_chapter._selectChain.then
+        .mockImplementationOnce((resolve: (value: unknown) => unknown) =>
+          resolve({
+            data: [eventRow({ id: 'evt-1', title: 'Shared Event', chapter_id: 'leaduni' })],
+            error: null,
+          })
+        )
+        .mockImplementationOnce((resolve: (value: unknown) => unknown) =>
+          resolve({
+            data: [{ event_id: 'evt-1' }],
+            error: null,
+          })
+        )
+        .mockImplementationOnce((resolve: (value: unknown) => unknown) =>
+          resolve({
+            data: [eventRow({ id: 'evt-1', title: 'Shared Event', chapter_id: 'leaduni' })],
+            error: null,
+          })
+        )
+
+      const result = await EventService.getChapterEvents(
+        mockSupabase as unknown as SupabaseClient,
+        'leaduni'
+      )
+
+      expect(result).toHaveLength(1)
+      expect(result[0]).toMatchObject({
+        id: 'evt-1',
+        is_owned_by_chapter: true,
+      })
+    })
+  })
+
   describe('getAllEventsAdmin', () => {
     it('should return all events with mapped details', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
