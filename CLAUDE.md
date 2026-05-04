@@ -1,4 +1,4 @@
-# Linke - Engineering Guide
+# LEAD Talent Platform - Engineering Guide
 
 This file documents the project for both human developers and AI coding agents.
 
@@ -14,7 +14,7 @@ This file covers **engineering** standards and patterns only.
 
 ## Project Overview
 
-**Linke** - Student-recruiter platform connecting students with opportunities through events and chapters.
+**LEAD Talent Platform** - Platform for LEAD Americas public participants, chapter members/editors, admins/staff, alumni, and invite-only recruiters.
 **GitHub Repo:** `abigailbrionesa/leadtalentplatform-latest`
 
 ### Tech Stack
@@ -60,6 +60,20 @@ linke/
 
 ## Key Patterns
 
+### Canonical Account Model
+
+Use the layered account model from `docs/PRODUCT-SPECIFICATION.md` and `docs/handbook/TESTING.md`:
+
+| Table | Owns | Rule |
+|-------|------|------|
+| `public.user` | Auth-linked app user, global role, name, email, phone | Contact data lives here; `user.role` is not chapter position. |
+| `person_profile` | Reusable basic profile, onboarding fields, recruiter visibility | Does not imply chapter membership. |
+| `chapter_membership` | Chapter application, approval status, alumni state, member ID, position | Chapter permissions come from approved membership unless admin bypass applies. |
+| `lead_identity` | Official LEAD identity display/issuance | Use for member/editor/staff/founder/alumni identity; admin is not a public identity type. |
+| `recruiter_access` | Invite/scoped recruiter access | Recruiters do not require chapter membership. |
+
+`student_profile` is deprecated. Do not add new live app, service, action, or UI dependencies on it. Generated types, historical migrations, QA fixtures, and migration validation docs may reference it only as a legacy source.
+
 ### Service Layer Pattern (MANDATORY)
 
 All business logic MUST live in `lib/services/`:
@@ -102,6 +116,13 @@ export async function getStudentAction(id: string) {
 ---
 
 ## Development Workflow
+
+### PIV Planning and Implementation
+
+- `/plan` inspects the current codebase and creates `.github/plans/{kebab-case}.plan.md`.
+- Fresh-session `/implement` reads the plan first, verifies tasks exist, executes in order, updates the plan, validates, and updates GitHub.
+- Foundation/stabilization issues come before dependent feature PIVs.
+- Repeated agent mistakes, stale schema assumptions, workflow gaps, or recurring validation failures should create/update a `phase:system-evolution` GitHub issue.
 
 ### 1. Branch Naming
 ```

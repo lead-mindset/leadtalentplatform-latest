@@ -48,7 +48,7 @@ If GitHub Discussion numbers are provided:
 
 ### Step 1: Analyze the Codebase
 
-1. Read `CLAUDE.md` and `CODEBASE-GUIDE.md` for project conventions
+1. Read `CLAUDE.md`, `AGENTS.md`, and `CODEBASE-GUIDE.md` for project conventions, including the canonical account model.
 2. Study the feature slice (e.g., `src/features/polls/`)
 3. Study the app routes (`src/app/`)
 4. Check recent commits with `git log --oneline -5`
