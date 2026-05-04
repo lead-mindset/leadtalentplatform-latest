@@ -637,6 +637,7 @@ export const CompanyService = {
         .from('user')
         .update({
           name: params.name,
+          role: 'recruiter',
           updated_at: new Date().toISOString(),
         })
         .eq('id', userId)

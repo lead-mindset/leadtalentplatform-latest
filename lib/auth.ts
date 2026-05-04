@@ -24,6 +24,14 @@ type ApprovedChapterMembership = {
 
 type ManageableEvent = Pick<EventRow, 'id' | 'chapter_id' | 'capacity' | 'title' | 'access_model'>
 
+type ActiveRecruiterAccessRaw = RecruiterAccessRow & {
+  Company: { id: string; name: string; created_at: string; created_by_id: string }[];
+}
+
+export type RecruiterAccessResolution =
+  | { allowed: true; access: ActiveRecruiterAccessRaw; company: CompanyRow | null }
+  | { allowed: false; reason: 'missing' | 'inactive' | 'revoked' | 'error' }
+
 export async function assertAdmin(
   supabase: SupabaseClient<Database>
 ): Promise<UserRow> {
@@ -361,22 +369,9 @@ export async function requireRecruiter(): Promise<{
     redirect('/auth/login')
   }
 
-  type ActiveAccessRaw = RecruiterAccessRow & {
-    Company: { id: string; name: string; created_at: string; created_by_id: string }[];
-  }
+  const accessResolution = await resolveRecruiterAccess(supabase, authUser.id)
 
-  const { data: activeAccess, error: accessError } = await supabase
-    .from('recruiter_access')
-    .select(`
-      ${RECRUITER_ACCESS_SELECT},
-      Company!inner (id, name, created_at, created_by_id)
-    `)
-    .eq('accepted_by_user_id', authUser.id)
-    .eq('is_active', true)
-    .is('revoked_at', null)
-    .maybeSingle<ActiveAccessRaw>()
-
-  if (accessError || !activeAccess) {
+  if (!accessResolution.allowed) {
     redirect('/company/onboard')
   }
 
@@ -385,13 +380,49 @@ export async function requireRecruiter(): Promise<{
     .select(RECRUITER_ACCESS_SELECT)
     .eq('accepted_by_user_id', authUser.id)
 
-  const company = activeAccess.Company?.[0] ?? null
-  
   const user: RecruiterUser = {
     ...userData,
     recruiter_access: allAccess ?? [],
-    company: company as CompanyRow | null,
+    company: accessResolution.company,
   }
 
   return { supabase, user }
+}
+
+export async function resolveRecruiterAccess(
+  supabase: SupabaseClient<Database>,
+  userId: string
+): Promise<RecruiterAccessResolution> {
+  const { data: access, error } = await supabase
+    .from('recruiter_access')
+    .select(`
+      ${RECRUITER_ACCESS_SELECT},
+      Company!inner (id, name, created_at, created_by_id)
+    `)
+    .eq('accepted_by_user_id', userId)
+    .maybeSingle<ActiveRecruiterAccessRaw>()
+
+  if (error) {
+    return { allowed: false, reason: 'error' }
+  }
+
+  if (!access) {
+    return { allowed: false, reason: 'missing' }
+  }
+
+  if (access.revoked_at) {
+    return { allowed: false, reason: 'revoked' }
+  }
+
+  if (!access.is_active) {
+    return { allowed: false, reason: 'inactive' }
+  }
+
+  const company = access.Company?.[0] ?? null
+
+  return {
+    allowed: true,
+    access,
+    company: company as CompanyRow | null,
+  }
 }

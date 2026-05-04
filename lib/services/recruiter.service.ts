@@ -35,6 +35,16 @@ type TalentPoolProfileRow = Pick<
   }
 }
 
+type InviteAcceptanceAccess = {
+  id: string
+  recruiter_email: string
+  accepted_at: string | null
+  accepted_by_user_id: string | null
+  invite_expires_at: string | null
+  revoked_at: string | null
+  company_id: string
+}
+
 type TalentPoolRow = Pick<UserRow, 'id' | 'name' | 'email'> & {
   person_profile: TalentPoolProfileRow | TalentPoolProfileRow[] | null
 }
@@ -418,15 +428,7 @@ export const RecruiterService = {
   ): Promise<
     | {
         valid: true
-        access: {
-          id: string
-          recruiter_email: string
-          accepted_at: string | null
-          accepted_by_user_id: string | null
-          invite_expires_at: string | null
-          revoked_at: string | null
-          company_id: string
-        }
+        access: InviteAcceptanceAccess
       }
     | { valid: false; error: string; code: 'invalid' | 'expired' | 'revoked' }
   > {
@@ -502,24 +504,29 @@ export const RecruiterService = {
       }
     }
 
-    if (validation.access.accepted_at) {
-      return { success: true }
-    }
-
     const now = new Date().toISOString()
 
-    const { error: updateInviteError } = await supabase
-      .from('recruiter_access')
-      .update({
-        accepted_at: now,
-        accepted_by_user_id: userId,
-        is_active: true,
-      })
-      .eq('id', validation.access.id)
+    if (validation.access.accepted_at && validation.access.accepted_by_user_id !== userId) {
+      return {
+        success: false,
+        error: 'This invite has already been accepted by another account.',
+      }
+    }
 
-    if (updateInviteError) {
-      logger.error({ context: 'RecruiterService.acceptInvite', error: updateInviteError }, 'update error')
-      return { success: false, error: 'Failed to accept invite.' }
+    if (!validation.access.accepted_at) {
+      const { error: updateInviteError } = await supabase
+        .from('recruiter_access')
+        .update({
+          accepted_at: now,
+          accepted_by_user_id: userId,
+          is_active: true,
+        })
+        .eq('id', validation.access.id)
+
+      if (updateInviteError) {
+        logger.error({ context: 'RecruiterService.acceptInvite', error: updateInviteError }, 'update error')
+        return { success: false, error: 'Failed to accept invite.' }
+      }
     }
 
     const { data: existingUser, error: existingUserError } = await supabase

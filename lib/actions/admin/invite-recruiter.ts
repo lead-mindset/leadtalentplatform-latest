@@ -19,7 +19,7 @@ const transporter = nodemailer.createTransport({
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000'
 
 function generateInviteLink(token: string): string {
-  return `${FRONTEND_URL}/company/onboard?inviteToken=${token}`
+  return `${FRONTEND_URL}/recruiter/access?token=${token}`
 }
 
 function getErrorMessage(error: unknown): string {

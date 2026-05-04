@@ -363,6 +363,8 @@ describe('CompanyService', () => {
       if (result.success) {
         expect(result.data.company?.name).toBe('Acme Inc')
       }
+      expect(mockSupabase.from).not.toHaveBeenCalledWith('person_profile')
+      expect(mockSupabase.from).not.toHaveBeenCalledWith('chapter_membership')
     })
 
     it('should return error when access fails', async () => {

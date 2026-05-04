@@ -43,6 +43,17 @@ Admin access is controlled by `public.user.role`, not by `lead_identity`:
 - Local `admin@test.com` should have `public.user.role='admin'` plus a founder identity.
 - Local `staff@test.com` should have `public.user.role='admin'` plus a staff identity.
 
+### Recruiter Invite Access Flow (LEAD-022)
+
+Recruiter access is invite-only and independent from student onboarding:
+
+- Accepting a valid recruiter invite must set or preserve `public.user.role='recruiter'`.
+- Accepted access must set `recruiter_access.accepted_at`, `accepted_by_user_id`, and `is_active=true`.
+- Company routes should authorize recruiters from `public.user.role='recruiter'` plus active, non-revoked `recruiter_access`.
+- Recruiters must not need `person_profile` or `chapter_membership` to use `/company/*` pages.
+- Revoked, expired, missing, or inactive access should land in the company onboarding/help state, not student onboarding.
+- Manual validation should use `recruiter@test.com` and confirm active accepted access reaches `/company/dashboard`.
+
 ### Basic Person Profile Flow (LEAD-005)
 
 The public participant profile foundation is intentionally separate from chapter membership:
