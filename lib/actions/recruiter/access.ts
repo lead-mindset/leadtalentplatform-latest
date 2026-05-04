@@ -7,7 +7,7 @@ import { RecruiterService } from '@/lib/services/recruiter.service'
 
 const inviteAcceptanceSchema = z.object({
   token: z.string().trim().min(1),
-  user_id: z.string().trim().min(1),
+  userId: z.string().trim().min(1),
 })
 
 type AcceptInviteResult =
@@ -42,7 +42,7 @@ export async function acceptInvite(token: string, userId: string): Promise<Accep
 
   const supabase = await createClient()
   const { data: auth } = await supabase.auth.getUser()
-  if (!auth.user || auth.user.id !== parsed.data.user_id) {
+  if (!auth.user || auth.user.id !== parsed.data.userId) {
     return { success: false, error: 'Authentication required.' }
   }
 
@@ -51,7 +51,7 @@ export async function acceptInvite(token: string, userId: string): Promise<Accep
 
   const result = await RecruiterService.acceptInvite(
     supabase,
-    parsed.data.user_id,
+    parsed.data.userId,
     parsed.data.token,
     authEmail,
     authName

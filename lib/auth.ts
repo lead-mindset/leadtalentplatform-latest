@@ -31,7 +31,7 @@ type ActiveRecruiterAccessRaw = RecruiterAccessRow & {
 
 export type RecruiterAccessResolution =
   | { allowed: true; access: ActiveRecruiterAccessRaw; company: CompanyRow | null }
-  | { allowed: false; reason: 'missing' | 'inactive' | 'revoked' | 'error' }
+  | { allowed: false; reason: 'missing' | 'inactive' | 'revoked' | 'expired' | 'error' }
 
 export async function assertAdmin(
   supabase: SupabaseClient<Database>
@@ -373,7 +373,7 @@ export async function requireRecruiter(): Promise<{
   const accessResolution = await resolveRecruiterAccess(supabase, authUser.id)
 
   if (!accessResolution.allowed) {
-    redirect(COMPANY_ACCESS_HELP_PATH)
+    redirect(`/company/onboard?access=${accessResolution.reason}`)
   }
 
   const { data: allAccess } = await supabase
@@ -417,6 +417,10 @@ export async function resolveRecruiterAccess(
 
   if (!access.is_active) {
     return { allowed: false, reason: 'inactive' }
+  }
+
+  if (access.invite_expires_at && new Date(access.invite_expires_at) <= new Date()) {
+    return { allowed: false, reason: 'expired' }
   }
 
   const company = access.Company?.[0] ?? null
