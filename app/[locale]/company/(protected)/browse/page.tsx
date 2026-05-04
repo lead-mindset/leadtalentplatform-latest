@@ -58,9 +58,9 @@ const studentFilters = {
   return (
     <MainContainer className="space-y-6 py-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Browse Students</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Browse Talent</h1>
         <p className="text-muted-foreground mt-1">
-          {filtered.length} student{filtered.length !== 1 ? 's' : ''} available
+          {filtered.length} profile{filtered.length !== 1 ? 's' : ''} available
         </p>
       </div>
 

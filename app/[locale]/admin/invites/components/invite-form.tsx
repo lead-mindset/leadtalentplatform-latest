@@ -58,22 +58,22 @@ export function InviteForm({ companies }: InviteFormProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Send Recruiter Invitation</CardTitle>
+        <CardTitle>Send Company Representative Invitation</CardTitle>
         <CardDescription>
-          Invite a recruiter to access student profiles for a specific company
+          Invite a company representative to access visible talent profiles for a specific company
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Recruiter Email *</Label>
+            <Label htmlFor="email">Company Representative Email *</Label>
             <div className="flex items-center gap-2">
               <Mail className="h-4 w-4 text-muted-foreground" />
               <Input
                 id="email"
                 name="email"
                 type="email"
-                placeholder="recruiter@company.com"
+                placeholder="representative@company.com"
                 required
                 disabled={isSubmitting}
               />

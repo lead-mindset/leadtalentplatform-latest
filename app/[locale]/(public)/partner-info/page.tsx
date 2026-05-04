@@ -33,7 +33,7 @@ export default function PartnerInfo() {
                 <Users className="h-5 w-5 text-primary" />
                 <CardTitle>Student visibility</CardTitle>
                 <CardDescription>
-                  Recruiters only browse profiles from students who have explicitly opted in.
+                  Company representatives only browse profiles from students who have explicitly opted in.
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -43,7 +43,7 @@ export default function PartnerInfo() {
                 <BriefcaseBusiness className="h-5 w-5 text-primary" />
                 <CardTitle>Company workflows</CardTitle>
                 <CardDescription>
-                  Invite teammates, save prospects, and manage recruiting access centrally.
+                  Invite teammates, save prospects, and manage company access centrally.
                 </CardDescription>
               </CardHeader>
             </Card>

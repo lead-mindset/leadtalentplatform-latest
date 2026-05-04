@@ -31,7 +31,7 @@ export default async function AdminCompaniesPage({
       <div>
         <h1 className="text-4xl font-bold tracking-tight">Companies Management</h1>
         <p className="text-muted-foreground mt-2">
-          Manage companies, recruiter access, and invite token generation.
+          Manage companies, company representative access, and invite token generation.
         </p>
       </div>
       <CompaniesManagementClient

@@ -9,7 +9,7 @@ import { Footer } from "./_components/footer";
 
 export const metadata = {
   title: 'LEAD Talent Platform',
-  description: 'Connect with LEAD events, student talent, and recruiter opportunities.',
+  description: 'Connect with LEAD events, student talent, and partner company opportunities.',
 }
 
 export default function MarketingHomePage() {

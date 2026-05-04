@@ -85,8 +85,8 @@ export default async function UserDetailPage({
           colorClass: 'text-[var(--success)]',
           bgClass: 'bg-[var(--success-muted)]',
         description: profile.is_recruiter_visible
-            ? 'Approved and visible to recruiters'
-            : 'Approved but not visible to recruiters',
+            ? 'Approved and visible to partner companies'
+            : 'Approved but not visible to partner companies',
         }
       case 'rejected':
         return {
@@ -280,7 +280,7 @@ export default async function UserDetailPage({
                       ) : (
                         <EyeOff className="h-4 w-4 text-muted-foreground" />
                       )}
-                      <span className="text-sm">Recruiter Visible</span>
+                      <span className="text-sm">Partner Company Visible</span>
                     </div>
                     <Badge
                       variant={profile.is_recruiter_visible ? 'default' : 'secondary'}

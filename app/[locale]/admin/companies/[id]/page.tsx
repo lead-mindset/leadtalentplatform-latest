@@ -35,7 +35,7 @@ export default async function CompanyManagePage({
 
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
-          <CardHeader><CardTitle className="text-sm">Active Recruiters</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-sm">Active Representatives</CardTitle></CardHeader>
           <CardContent className="text-2xl font-bold">{stats.active_recruiters}</CardContent>
         </Card>
         <Card>

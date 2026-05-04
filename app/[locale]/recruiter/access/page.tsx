@@ -19,7 +19,7 @@ export default async function RecruiterAccessPage({
         <Card className="w-full max-w-lg">
           <CardHeader>
             <CardTitle>Invite Link Issue</CardTitle>
-            <CardDescription>Recruiter access is invite-only.</CardDescription>
+            <CardDescription>Company representative access is invite-only.</CardDescription>
           </CardHeader>
           <CardContent>
             <Alert variant="destructive">
@@ -41,7 +41,7 @@ export default async function RecruiterAccessPage({
       <div className="min-h-screen flex items-center justify-center p-4">
         <Card className="w-full max-w-lg">
           <CardHeader>
-            <CardTitle>Recruiter Access</CardTitle>
+            <CardTitle>Company Access</CardTitle>
             <CardDescription>
               This invite was sent to <span className="font-medium">{validation.access.recruiter_email}</span>.
             </CardDescription>

@@ -41,7 +41,7 @@ export function UserTabs({ currentRole }: UserTabsProps) {
         </TabsTrigger>
         <TabsTrigger value="recruiters" className="flex items-center gap-2">
           <Briefcase className="h-4 w-4" />
-          <span className="hidden sm:inline">Recruiters</span>
+          <span className="hidden sm:inline">Company Reps</span>
         </TabsTrigger>
         <TabsTrigger value="admins" className="flex items-center gap-2">
           <Shield className="h-4 w-4" />

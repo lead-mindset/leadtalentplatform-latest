@@ -57,12 +57,12 @@ async function AdminStats() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Recruiter Opt-in Rate</CardTitle>
+            <CardTitle className="text-sm font-medium">Company Visibility Opt-in Rate</CardTitle>
             <TrendingUp className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.recruiter_opt_in_rate}%</div>
-            <p className="text-xs text-muted-foreground">Approved and recruiter-visible</p>
+            <p className="text-xs text-muted-foreground">Approved and visible to partner companies</p>
           </CardContent>
         </Card>
       </div>
@@ -133,12 +133,12 @@ async function AdminInsights() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Pending Recruiter Requests</CardTitle>
+          <CardTitle>Pending Company Access Invites</CardTitle>
           <CardDescription>Invites awaiting acceptance</CardDescription>
         </CardHeader>
         <CardContent>
           {pendingRecruiterRequests.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No pending recruiter requests.</p>
+            <p className="text-sm text-muted-foreground">No pending company access invites.</p>
           ) : (
             <div className="space-y-4">
               {pendingRecruiterRequests.map((request) => (
@@ -189,7 +189,7 @@ export default function AdminOverviewPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Admin Overview</h1>
         <p className="text-muted-foreground mt-2">
-          KPIs, chapter activity, recent joins, and recruiter request queue.
+          KPIs, chapter activity, recent joins, and company access invite queue.
         </p>
       </div>
 

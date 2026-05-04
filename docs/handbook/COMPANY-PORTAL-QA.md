@@ -64,7 +64,7 @@ This checklist does not replace service tests. It is a smoke-level manual pass o
 
 - [ ] Sign in as a company representative with active accepted access.
   - Expected: login succeeds and reaches `/company/dashboard`.
-- [ ] Sign in as a recruiter-role user without active accepted `recruiter_access`.
+- [ ] Sign in as a company representative test user without active accepted `recruiter_access`.
   - Expected: user lands on `/company/onboard?access=missing` or equivalent company access/help state.
   - Expected: user is not routed to `/onboarding`.
 - [ ] Local/staging only: set accepted access `is_active = false`, then sign in.

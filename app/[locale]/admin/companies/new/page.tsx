@@ -58,7 +58,7 @@ export default function AdminCreateCompanyPage() {
         <CardHeader>
           <CardTitle>Company Information</CardTitle>
           <CardDescription>
-            Enter the details for the new company. This company will be able to invite recruiters.
+            Enter the details for the new company. This company will be able to invite company representatives.
           </CardDescription>
         </CardHeader>
         <CardContent>

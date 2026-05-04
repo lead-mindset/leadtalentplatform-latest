@@ -197,7 +197,7 @@ export default async function ChapterDetailPage({
                             Approved
                           </Badge>
                           {member.person_profile?.is_recruiter_visible && (
-                            <Badge variant="secondary">Visible to Recruiters</Badge>
+                            <Badge variant="secondary">Visible to Partner Companies</Badge>
                           )}
                         </div>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
