@@ -3,8 +3,10 @@ import { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.generated'
 import type {
   ChapterRow,
+  CompanyRow,
   CompanyStats,
   PersonProfileRow,
+  RecruiterAccessRow,
   SavedStudent,
   SavedStudentRow,
   StudentForRecruiter,
@@ -96,6 +98,17 @@ function mapStudentRow(user: RecruiterStudentRow): StudentForRecruiter | null {
     created_at: user.created_at,
     chapter: chapter ?? null,
     person_profile: {
+      chapter_id: profile.chapter_membership.chapter_id,
+      major_or_interest: profile.major_or_interest,
+      graduation_year: profile.graduation_year,
+      linkedin_url: profile.linkedin_url,
+      skills: profile.skills,
+      is_recruiter_visible: profile.is_recruiter_visible,
+      updated_at: profile.updated_at,
+    },
+    student_profile: {
+      chapter_id: profile.chapter_membership.chapter_id,
+      major: profile.major_or_interest,
       major_or_interest: profile.major_or_interest,
       graduation_year: profile.graduation_year,
       linkedin_url: profile.linkedin_url,
@@ -131,7 +144,7 @@ export const CompanyService = {
       return []
     }
 
-    const rows = (data ?? []) as RecruiterStudentRow[]
+    const rows = (data ?? []) as unknown as RecruiterStudentRow[]
 
     return rows
       .map(mapStudentRow)
@@ -164,7 +177,7 @@ export const CompanyService = {
 
     if (!data) return null
 
-    const student = mapStudentRow(data)
+    const student = mapStudentRow(data as unknown as RecruiterStudentRow)
 
     if (
       !student ||
@@ -211,7 +224,7 @@ export const CompanyService = {
 
     if (!data) return []
 
-    return (data as SavedStudentWithUserRow[])
+    return (data as unknown as SavedStudentWithUserRow[])
       .map((saved) => {
         const studentData = Array.isArray(saved.student)
           ? saved.student[0]
@@ -352,7 +365,7 @@ export const CompanyService = {
       return []
     }
 
-    const rows = (data ?? []) as RecruiterStudentRow[]
+    const rows = (data ?? []) as unknown as RecruiterStudentRow[]
 
     return rows
       .map(mapStudentRow)
