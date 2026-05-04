@@ -1,30 +1,101 @@
 import { notFound } from 'next/navigation'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { Link } from '@/i18n/routing'
+import type { ReactNode } from 'react'
+import type { LucideIcon } from 'lucide-react'
 import {
   ArrowLeft,
-  Mail,
-  Phone,
-  GraduationCap,
-  Linkedin,
+  BriefcaseBusiness,
+  Building2,
   CheckCircle2,
-  XCircle,
   Clock,
   Eye,
   EyeOff,
+  GraduationCap,
+  IdCard,
+  Linkedin,
+  Mail,
+  Phone,
   Shield,
-  AlertCircle,
+  UserRound,
+  XCircle,
 } from 'lucide-react'
-import { getUserById } from '@/lib/actions/admin/get-data'
+import { Link } from '@/i18n/routing'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
+import { getCompanyAccessForUser, getUserById } from '@/lib/actions/admin/get-data'
 import { createClient } from '@/lib/supabase/server'
 import { AdminService } from '@/lib/services/admin.service'
 import { LeadIdentityService } from '@/lib/services/lead-identity.service'
 import { MemberActionButtons } from '@/app/[locale]/chapter/members/components/member-actions'
 import { LeadIdentityManager } from '@/app/[locale]/admin/users/[id]/_components/lead-identity-manager'
+import { RoleManagementPanel } from '@/app/[locale]/admin/users/[id]/_components/role-management-panel'
 import { getRoleColor } from '@/lib/options'
+
+function formatDate(value: string | null | undefined) {
+  if (!value) return 'Not set'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return 'Not set'
+  return date.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+}
+
+function EmptyState({
+  icon: Icon,
+  title,
+  description,
+}: {
+  icon: LucideIcon
+  title: string
+  description: string
+}) {
+  return (
+    <div className="rounded-lg border border-dashed p-5">
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted">
+          <Icon className="h-5 w-5 text-muted-foreground" />
+        </div>
+        <div>
+          <p className="font-medium">{title}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function InfoRow({
+  label,
+  value,
+}: {
+  label: string
+  value: ReactNode
+}) {
+  return (
+    <div className="space-y-1">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+      <div className="text-sm font-medium">{value}</div>
+    </div>
+  )
+}
+
+function membershipVariant(status?: string | null) {
+  if (status === 'approved') return 'success'
+  if (status === 'pending') return 'warning'
+  if (status === 'rejected') return 'destructive'
+  if (status === 'alumni') return 'info'
+  return 'outline'
+}
+
+function companyAccessVariant(status: string) {
+  if (status === 'active') return 'success'
+  if (status === 'pending') return 'warning'
+  if (status === 'revoked') return 'destructive'
+  return 'outline'
+}
 
 export default async function UserDetailPage({
   params,
@@ -35,7 +106,9 @@ export default async function UserDetailPage({
   const user = await getUserById(id)
 
   if (!user) notFound()
-  const resolvedUser = user ?? notFound()
+  const resolvedUser = user
+  const profile = resolvedUser.person_profile
+  const membership = resolvedUser.chapter_membership
 
   const supabase = await createClient()
   const { data: { user: currentUser } } = await supabase.auth.getUser()
@@ -52,327 +125,306 @@ export default async function UserDetailPage({
     currentUserData &&
     (currentUserData.role === 'admin' || currentUserData.role === 'editor')
 
-  const profile = resolvedUser.person_profile
-  const membership = resolvedUser.chapter_membership
-  const [identityResult, chaptersResult] = await Promise.all([
+  const [identityResult, chaptersResult, companyAccess] = await Promise.all([
     LeadIdentityService.getActiveIdentities(supabase, resolvedUser.id),
     AdminService.getAllChapters(supabase),
+    getCompanyAccessForUser(resolvedUser.id, resolvedUser.email),
   ])
   const identities = identityResult.success ? identityResult.identities : []
   const chapters = 'chapters' in chaptersResult ? chaptersResult.chapters : []
-  const approval_status = membership?.status ?? 'pending'
+  const primaryIdentity = identities.find((identity) => identity.is_primary)
+
+  const approvalStatus = membership?.status ?? null
   const actionableStatus =
-    approval_status === 'pending' || approval_status === 'approved' || approval_status === 'rejected'
-      ? approval_status
+    approvalStatus === 'pending' || approvalStatus === 'approved' || approvalStatus === 'rejected'
+      ? approvalStatus
       : null
 
-  const getStatusConfig = () => {
-    if (!profile) {
-      return {
-        label: 'Incomplete Profile',
-        icon: Clock,
-        colorClass: 'text-muted-foreground',
-        bgClass: 'bg-muted',
-        description: 'Member needs to complete their profile',
-      }
-    }
-
-    switch (approval_status) {
-      case 'approved':
-        return {
-          label: 'Approved',
-          icon: CheckCircle2,
-          colorClass: 'text-[var(--success)]',
-          bgClass: 'bg-[var(--success-muted)]',
-        description: profile.is_recruiter_visible
-            ? 'Approved and visible to partner companies'
-            : 'Approved but not visible to partner companies',
-        }
-      case 'rejected':
-        return {
-          label: 'Rejected',
-          icon: XCircle,
-          colorClass: 'text-destructive',
-          bgClass: 'bg-destructive/10',
-          description: 'Profile was reviewed and rejecte',
-        }
-      case 'pending':
-      default:
-        return {
-          label: 'Pending Approval',
-          icon: AlertCircle,
-          colorClass: 'text-[var(--warning)]',
-          bgClass: 'bg-[var(--warning-muted)]',
-          description: 'Awaiting chapter editor or admin review',
-        }
-    }
-  }
-
-  const statusConfig = getStatusConfig()
-  const StatusIcon = statusConfig.icon
-
   return (
-    <div className="min-h-screen">
-      <div className="border-b bg-card/50">
-        <div className="container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <Button variant="ghost" size="sm" asChild>
+    <div className="space-y-8">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="space-y-3">
+          <Button variant="ghost" size="sm" asChild className="w-fit px-0">
             <Link href="/admin/users" className="gap-2">
               <ArrowLeft className="h-4 w-4" />
-              Back to Users
+              Back to users
             </Link>
           </Button>
-        </div>
-      </div>
-
-      <div className="container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
-          <div className="space-y-3 flex-1">
-            <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-4xl font-bold tracking-tight">{resolvedUser.name}</h1>
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-3xl font-bold tracking-tight">{resolvedUser.name ?? 'Unnamed user'}</h1>
               <Badge className={getRoleColor(resolvedUser.role)} variant="outline">
                 {resolvedUser.role}
               </Badge>
+              {resolvedUser.deactivated_at && <Badge variant="destructive">Deactivated</Badge>}
             </div>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 text-muted-foreground">
-              <a
-                href={`mailto:${resolvedUser.email}`}
-                className="flex items-center gap-2 hover:text-foreground transition-colors"
-              >
+            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+              <a href={`mailto:${resolvedUser.email}`} className="inline-flex items-center gap-2 hover:text-foreground">
                 <Mail className="h-4 w-4" />
-                <span className="text-sm">{resolvedUser.email}</span>
+                {resolvedUser.email}
               </a>
               {resolvedUser.phone && (
-                <>
-                  <span className="hidden sm:block">•</span>
-                  <a
-                    href={`tel:${resolvedUser.phone}`}
-                    className="flex items-center gap-2 hover:text-foreground transition-colors"
-                  >
-                    <Phone className="h-4 w-4" />
-                    <span className="text-sm">{resolvedUser.phone}</span>
-                  </a>
-                </>
+                <a href={`tel:${resolvedUser.phone}`} className="inline-flex items-center gap-2 hover:text-foreground">
+                  <Phone className="h-4 w-4" />
+                  {resolvedUser.phone}
+                </a>
               )}
-            </div>
-            {profile?.linkedin_url && (
-              <a
-                href={profile.linkedin_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-sm text-[var(--info)] hover:underline"
-              >
-                <Linkedin className="h-4 w-4" />
-                LinkedIn Profile
-              </a>
-            )}
-          </div>
-
-          <div className={`${statusConfig.bgClass} rounded-lg p-4 min-w-[240px]`}>
-            <div className="flex items-start gap-3">
-              <StatusIcon className={`h-5 w-5 ${statusConfig.colorClass} mt-0.5`} />
-              <div className="space-y-1">
-                <div className={`font-semibold ${statusConfig.colorClass}`}>
-                  {statusConfig.label}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {statusConfig.description}
-                </div>
-              </div>
+              {profile?.linkedin_url && (
+                <a
+                  href={profile.linkedin_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 hover:text-foreground"
+                >
+                  <Linkedin className="h-4 w-4" />
+                  LinkedIn
+                </a>
+              )}
             </div>
           </div>
         </div>
 
-        <LeadIdentityManager
-          userId={resolvedUser.id}
-          userRole={resolvedUser.role}
-          identities={identities}
-          chapters={chapters}
-          defaultChapterId={membership?.chapter_id}
-        />
+        <div className="grid gap-2 sm:grid-cols-3 lg:min-w-[32rem]">
+          <div className="rounded-lg border bg-card p-3">
+            <p className="text-xs text-muted-foreground">Profile</p>
+            <p className="mt-2 font-semibold">{profile ? 'Present' : 'Missing'}</p>
+          </div>
+          <div className="rounded-lg border bg-card p-3">
+            <p className="text-xs text-muted-foreground">Membership</p>
+            <p className="mt-2 font-semibold">{membership?.status ?? 'None'}</p>
+          </div>
+          <div className="rounded-lg border bg-card p-3">
+            <p className="text-xs text-muted-foreground">Primary identity</p>
+            <p className="mt-2 truncate font-semibold">{primaryIdentity?.identity_type ?? 'None'}</p>
+          </div>
+        </div>
+      </div>
 
-        {canApprove && profile && actionableStatus && currentUser && (
-          <Card className="border-primary/20 bg-primary/5">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_24rem]">
+        <div className="space-y-4">
+          <Card>
             <CardHeader>
-              <div className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-primary" />
-                <CardTitle>Admin Actions</CardTitle>
-              </div>
-              <CardDescription>
-                {actionableStatus === 'approved'
-                  ? 'This member is approved. You can revoke approval if needed.'
-                  : actionableStatus === 'rejected'
-                  ? 'This profile was rejected. You can reconsider and approve.'
-                  : "Review this member's profile and approve or reject."}
-              </CardDescription>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <UserRound className="h-4 w-4" />
+                Person Profile
+              </CardTitle>
+              <CardDescription>Reusable participant data. This does not imply chapter membership.</CardDescription>
             </CardHeader>
             <CardContent>
-              <MemberActionButtons
-                userId={resolvedUser.id}
-                userName={resolvedUser.name ?? resolvedUser.email}
-                currentState={actionableStatus}
+              {profile ? (
+                <div className="grid gap-5 md:grid-cols-2">
+                  <InfoRow label="University" value={profile.university ?? 'Not set'} />
+                  <InfoRow label="Major or interest" value={profile.major_or_interest ?? 'Not set'} />
+                  <InfoRow label="Graduation year" value={profile.graduation_year ?? 'Not set'} />
+                  <InfoRow label="Gender" value={profile.gender ?? 'Not set'} />
+                  <InfoRow
+                    label="Company visibility"
+                    value={
+                      <span className="inline-flex items-center gap-2">
+                        {profile.is_recruiter_visible ? (
+                          <Eye className="h-4 w-4 text-success" />
+                        ) : (
+                          <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        )}
+                        {profile.is_recruiter_visible ? 'Visible to company representatives' : 'Not visible'}
+                      </span>
+                    }
+                  />
+                  <InfoRow
+                    label="Portfolio"
+                    value={
+                      profile.portfolio_url ? (
+                        <a href={profile.portfolio_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                          Open portfolio
+                        </a>
+                      ) : (
+                        'Not set'
+                      )
+                    }
+                  />
+                  {profile.skills && profile.skills.length > 0 && (
+                    <div className="space-y-2 md:col-span-2">
+                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Skills</p>
+                      <div className="flex flex-wrap gap-2">
+                        {profile.skills.map((skill) => (
+                          <Badge key={skill} variant="secondary">{skill}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <EmptyState
+                  icon={UserRound}
+                  title="No person profile yet"
+                  description="This user has not completed reusable profile details. They can still have an account without chapter membership."
+                />
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Building2 className="h-4 w-4" />
+                Chapter Membership
+              </CardTitle>
+              <CardDescription>Chapter participation is explicit and reviewable.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {membership ? (
+                <div className="grid gap-5 md:grid-cols-2">
+                  <InfoRow
+                    label="Status"
+                    value={<Badge variant={membershipVariant(membership.status)}>{membership.status}</Badge>}
+                  />
+                  <InfoRow label="Position" value={membership.position ?? 'member'} />
+                  <InfoRow label="Member ID" value={membership.member_id ?? 'Not issued'} />
+                  <InfoRow label="Joined" value={formatDate(membership.joined_at)} />
+                  <div className="space-y-1 md:col-span-2">
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Chapter</p>
+                    <p className="font-medium">{membership.chapter?.name ?? 'Unknown chapter'}</p>
+                    <p className="text-sm text-muted-foreground">{membership.chapter?.university ?? 'University not set'}</p>
+                  </div>
+                </div>
+              ) : (
+                <EmptyState
+                  icon={GraduationCap}
+                  title="No chapter membership"
+                  description="This is normal for public participants, company representatives, staff, or users who have not applied to a chapter."
+                />
+              )}
+            </CardContent>
+          </Card>
+
+          <LeadIdentityManager
+            userId={resolvedUser.id}
+            userRole={resolvedUser.role}
+            identities={identities}
+            chapters={chapters}
+            defaultChapterId={membership?.chapter_id}
+          />
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <BriefcaseBusiness className="h-4 w-4" />
+                Company Access
+              </CardTitle>
+              <CardDescription>Company representative access records connected to this account or email.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {companyAccess.length > 0 ? (
+                <div className="divide-y">
+                  {companyAccess.map((access) => (
+                    <div key={access.id} className="flex flex-col gap-3 py-3 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">{access.company_name ?? 'Unknown company'}</p>
+                        <p className="truncate text-sm text-muted-foreground">{access.recruiter_email}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Granted {formatDate(access.granted_at)}
+                          {access.accepted_at ? ` · Accepted ${formatDate(access.accepted_at)}` : ''}
+                        </p>
+                      </div>
+                      <Badge variant={companyAccessVariant(access.status)}>{access.status}</Badge>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  icon={BriefcaseBusiness}
+                  title="No company access"
+                  description="No company representative access is connected to this user or email."
+                />
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <aside className="space-y-4">
+          <RoleManagementPanel
+            userId={resolvedUser.id}
+            userEmail={resolvedUser.email}
+            currentRole={resolvedUser.role}
+            membershipStatus={membership?.status}
+            membershipPosition={membership?.position}
+            chapterName={membership?.chapter?.name}
+          />
+
+          {canApprove && profile && actionableStatus && currentUser && (
+            <Card className="border-primary/20 bg-primary/5">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Shield className="h-4 w-4 text-primary" />
+                  Membership Review
+                </CardTitle>
+                <CardDescription>
+                  {actionableStatus === 'approved'
+                    ? 'This membership is approved. Revoke approval only when chapter status should change.'
+                    : actionableStatus === 'rejected'
+                      ? 'This membership was rejected. You can reconsider and approve it.'
+                      : 'Review this chapter membership application.'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <MemberActionButtons
+                  userId={resolvedUser.id}
+                  userName={resolvedUser.name ?? resolvedUser.email}
+                  currentState={actionableStatus}
+                />
+              </CardContent>
+            </Card>
+          )}
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <IdCard className="h-4 w-4" />
+                Account Record
+              </CardTitle>
+              <CardDescription>Immutable-ish account metadata from the auth-facing user record.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <InfoRow label="Created" value={formatDate(resolvedUser.created_at)} />
+              <Separator />
+              <InfoRow label="Updated" value={formatDate(resolvedUser.updated_at)} />
+              <Separator />
+              <InfoRow
+                label="State"
+                value={
+                  resolvedUser.deactivated_at ? (
+                    <span className="inline-flex items-center gap-2 text-destructive">
+                      <XCircle className="h-4 w-4" />
+                      Deactivated {formatDate(resolvedUser.deactivated_at)}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-2 text-success">
+                      <CheckCircle2 className="h-4 w-4" />
+                      Active
+                    </span>
+                  )
+                }
+              />
+              <Separator />
+              <InfoRow
+                label="Onboarding"
+                value={
+                  profile ? (
+                    <span className="inline-flex items-center gap-2 text-success">
+                      <CheckCircle2 className="h-4 w-4" />
+                      Basic profile present
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-2 text-muted-foreground">
+                      <Clock className="h-4 w-4" />
+                      Not completed
+                    </span>
+                  )
+                }
               />
             </CardContent>
           </Card>
-        )}
-
-        {profile ? (
-          <div className="grid lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <GraduationCap className="h-5 w-5 text-primary" />
-                    Academic Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid sm:grid-cols-2 gap-6">
-                    <div className="space-y-1">
-                      <div className="text-sm text-muted-foreground">Major</div>
-                      <div className="font-medium">{profile.major_or_interest}</div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="text-sm text-muted-foreground">Graduation Year</div>
-                      <div className="font-medium">{profile.graduation_year}</div>
-                    </div>
-                    {membership?.chapter && (
-                      <div className="sm:col-span-2 space-y-1">
-                        <div className="text-sm text-muted-foreground">Chapter</div>
-                        <div className="font-medium">{membership.chapter.name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {membership.chapter.university}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {profile.skills && profile.skills.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Skills & Expertise</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-2">
-                      {profile.skills.map((skill: string, index: number) => (
-                        <Badge key={index} variant="secondary" className="text-sm">
-                          {skill}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Visibility Settings</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between py-2">
-                    <div className="flex items-center gap-2">
-                      {profile.is_recruiter_visible ? (
-                        <Eye className="h-4 w-4 text-[var(--success)]" />
-                      ) : (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
-                      )}
-                      <span className="text-sm">Partner Company Visible</span>
-                    </div>
-                    <Badge
-                      variant={profile.is_recruiter_visible ? 'default' : 'secondary'}
-                      className="text-xs"
-                    >
-                      {profile.is_recruiter_visible ? 'Yes' : 'No'}
-                    </Badge>
-                  </div>
-
-                  <Separator />
-
-                  <div className="flex items-center justify-between py-2">
-                    <div className="flex items-center gap-2">
-                      {profile.is_recruiter_visible ? (
-                        <CheckCircle2 className="h-4 w-4 text-[var(--success)]" />
-                      ) : (
-                        <XCircle className="h-4 w-4 text-muted-foreground" />
-                      )}
-                      <span className="text-sm">Consent Given</span>
-                    </div>
-                    <Badge
-                      variant={profile.is_recruiter_visible ? 'default' : 'secondary'}
-                      className="text-xs"
-                    >
-                      {profile.is_recruiter_visible ? 'Yes' : 'No'}
-                    </Badge>
-                  </div>
-
-                  <Separator />
-
-                  <div className="flex items-center justify-between py-2">
-                    <div className="flex items-center gap-2">
-                      {profile ? (
-                        <CheckCircle2 className="h-4 w-4 text-[var(--success)]" />
-                      ) : (
-                        <Clock className="h-4 w-4 text-[var(--warning)]" />
-                      )}
-                      <span className="text-sm">Profile Complete</span>
-                    </div>
-                    <Badge
-                      variant={profile ? 'default' : 'secondary'}
-                      className="text-xs"
-                    >
-                      {profile ? 'Yes' : 'No'}
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Account Details</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="space-y-1">
-                    <div className="text-xs text-muted-foreground">Member Since</div>
-                    <div className="text-sm font-medium">
-                      {new Date(resolvedUser.created_at).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                      })}
-                    </div>
-                  </div>
-                  <Separator />
-                  <div className="space-y-1">
-                    <div className="text-xs text-muted-foreground">Last Updated</div>
-                    <div className="text-sm font-medium">
-                      {new Date(resolvedUser.updated_at).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                      })}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        ) : (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <div className="rounded-full bg-muted p-3 mb-4">
-                <XCircle className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">No Basic Profile</h3>
-              <p className="text-sm text-muted-foreground text-center max-w-sm">
-                This user hasn&apos;t completed a basic person profile yet.
-              </p>
-            </CardContent>
-          </Card>
-        )}
+        </aside>
       </div>
     </div>
   )
