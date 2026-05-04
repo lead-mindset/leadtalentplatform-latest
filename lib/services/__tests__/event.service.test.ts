@@ -694,6 +694,34 @@ describe('EventService', () => {
         expect(result.status).toBe('ready')
         expect(result.registrationId).toBe('reg-1')
       }
+      expect(mockSupabase.from).toHaveBeenCalledWith('user')
+      expect(mockSupabase.from).not.toHaveBeenCalledWith('student_profile')
+      expect(mockSupabase.from).not.toHaveBeenCalledWith('chapter_membership')
+    })
+
+    it('should reject pending-review QR candidates before check-in', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.event_registration._selectChain.maybeSingle.mockResolvedValueOnce({
+        data: {
+          id: 'reg-1',
+          event_id: 'evt-1',
+          user_id: 'user-1',
+          checked_in_at: null,
+          checked_in_by_id: null,
+          status: 'pending_review',
+        },
+        error: null,
+      })
+
+      tableMocks.user._selectChain.maybeSingle.mockResolvedValueOnce({
+        data: { id: 'user-1', name: 'John', email: 'john@test.com' },
+        error: null,
+      })
+
+      const result = await EventService.resolveCheckInCandidate(mockSupabase as unknown as SupabaseClient, 'evt-1', 'token-1')
+
+      expect(result).toEqual({ ok: false, error: 'Not registered for this event' })
     })
 
     it('should return already_checked_in for checked-in attendee', async () => {
@@ -778,6 +806,10 @@ describe('EventService', () => {
 
       expect(result).toHaveLength(1)
       expect(result[0].name).toBe('John Doe')
+      expect(tableMocks.event_registration._selectChain.in).toHaveBeenCalledWith('status', ['registered', 'attended'])
+      expect(tableMocks.event_registration._selectChain.in).toHaveBeenCalledWith('user_id', ['user-1'])
+      expect(mockSupabase.from).not.toHaveBeenCalledWith('student_profile')
+      expect(mockSupabase.from).not.toHaveBeenCalledWith('chapter_membership')
     })
   })
 
@@ -826,6 +858,14 @@ describe('EventService', () => {
         expect(result.state).toBe('success')
         expect(result.message).toBe('Checked in successfully')
       }
+      expect(tableMocks.event_registration.update).toHaveBeenCalledWith({
+        status: 'attended',
+        checked_in_at: expect.any(String),
+        checked_in_by_id: 'checker-1',
+      })
+      expect(mockSupabase.from).toHaveBeenCalledWith('user')
+      expect(mockSupabase.from).not.toHaveBeenCalledWith('student_profile')
+      expect(mockSupabase.from).not.toHaveBeenCalledWith('chapter_membership')
     })
 
     it('should return already_checked_in for attended registration', async () => {
@@ -903,6 +943,39 @@ describe('EventService', () => {
         expect(result.error).toBe('Not registered for this event')
       }
     })
+
+    it.each(['pending_review', 'rejected', 'cancelled'] as const)(
+      'should not check in %s registrations',
+      async (status) => {
+        const { mockSupabase, tableMocks } = buildMockSupabase()
+
+        tableMocks.event_registration._selectChain.maybeSingle.mockResolvedValueOnce({
+          data: {
+            id: 'reg-1',
+            event_id: 'evt-1',
+            user_id: 'user-1',
+            status,
+            checked_in_at: null,
+          },
+          error: null,
+        })
+
+        tableMocks.user._selectChain.maybeSingle.mockResolvedValueOnce({
+          data: { id: 'user-1', name: 'John', email: 'john@test.com' },
+          error: null,
+        })
+
+        const result = await EventService.checkInAttendee(
+          mockSupabase as unknown as SupabaseClient,
+          'reg-1',
+          'evt-1',
+          'checker-1'
+        )
+
+        expect(result).toEqual({ error: 'Not registered for this event' })
+        expect(tableMocks.event_registration.update).not.toHaveBeenCalled()
+      }
+    )
 
     it('should return error on update failure', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()

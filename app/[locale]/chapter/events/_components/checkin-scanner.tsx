@@ -275,7 +275,6 @@ export function CheckinScanner({
       if (searchTimeoutRef.current) window.clearTimeout(searchTimeoutRef.current)
       void stopCamera()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
 
