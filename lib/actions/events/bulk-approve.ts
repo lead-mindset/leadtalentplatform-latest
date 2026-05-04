@@ -30,7 +30,7 @@ export async function bulkApproveApplications(eventId: string, applicationIds: s
     if (registration.applicant?.email && registration.event?.title) {
       void sendApplicationApprovedEmail(
         registration.applicant.email,
-        registration.applicant.name,
+        registration.applicant.name ?? 'Student',
         registration.event.title,
         new Date(registration.event.start_at).toLocaleString(),
         registration.event.location,

@@ -2,6 +2,12 @@
 
 import { revalidatePath } from 'next/cache'
 import { EventService } from '@/lib/services/event.service'
+import type {
+  CheckInCandidate,
+  CheckInCounter,
+  CheckInResponse,
+  CheckInSearchResult,
+} from '@/lib/services/event.service'
 import { assertCanManageEvent } from './access'
 
 async function assertEventAccess(eventId: string) {

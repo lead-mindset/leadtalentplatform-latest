@@ -18,7 +18,7 @@ export async function getPublishedEvents(): Promise<EventWithDetails[]> {
 
 export async function getEventById(id: string): Promise<EventWithDetails | null> {
   const supabase = await createClient()
-  return EventService.getEventById(supabase, id)
+  return EventService.getEventByIdWithDetails(supabase, id)
 }
 
 export async function getMyRegistrations(): Promise<Awaited<ReturnType<typeof EventService.getMyRegistrations>>> {

@@ -9,8 +9,8 @@ import {
   getCheckInCounter,
   resolveCheckInCandidate,
   searchAttendeesForCheckIn,
-  type CheckInSearchResult,
 } from '@/lib/actions/events/checkin'
+import type { CheckInSearchResult } from '@/lib/services/event.service'
 import { Badge } from '@/components/ui/badge'
 import { CheckCircle2, XCircle, AlertCircle, Loader2 } from 'lucide-react'
 

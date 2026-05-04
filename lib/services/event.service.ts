@@ -26,6 +26,19 @@ const EVENT_MUTATION_SELECT =
 const EVENT_REGISTRATION_LOOKUP_SELECT =
   'id, title, is_published, start_at';
 
+type EventWithChapterViewRow = Database['public']['Views']['event_with_chapter']['Row']
+
+type EventAdminJoinedRow = EventRow & {
+  owner_chapter: Pick<ChapterRow, 'id' | 'name' | 'university'> | Pick<ChapterRow, 'id' | 'name' | 'university'>[] | null
+  collaborators:
+    | (EventChapterRow & {
+        chapter: Pick<ChapterRow, 'id' | 'name' | 'university' | 'city' | 'region'> | Pick<ChapterRow, 'id' | 'name' | 'university' | 'city' | 'region'>[] | null
+      })[]
+    | null
+  created_by: Pick<UserRow, 'id' | 'name' | 'email'> | Pick<UserRow, 'id' | 'name' | 'email'>[] | null
+  event_registration: { id: string; status: string }[] | null
+}
+
 function sanitizeRichTextHtml(input: string): string {
   return input
     .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
@@ -871,8 +884,8 @@ export const EventService = {
       return []
     }
 
-    const eventRows = data as unknown[]
-    const eventIds = eventRows.map((event) => event.id)
+    const eventRows = data as EventWithChapterViewRow[]
+    const eventIds = eventRows.map((event) => event.id).filter((id): id is string => Boolean(id))
 
     const { data: registrations, error: registrationsError } = await supabase
       .from('event_registration')
@@ -906,23 +919,23 @@ export const EventService = {
         } : null
 
         return {
-          id: event.id,
-          title: event.title,
+          id: event.id ?? '',
+          title: event.title ?? '',
           description: event.description,
           cover_image: event.cover_image,
-          start_at: event.start_at,
-          end_at: event.end_at,
+          start_at: event.start_at ?? '',
+          end_at: event.end_at ?? '',
           location: event.location,
           meeting_url: event.meeting_url,
-          event_type: event.event_type,
+          event_type: event.event_type ?? 'in_person',
           capacity: event.capacity,
-          is_published: event.is_published,
-          access_model: event.access_model,
+          is_published: event.is_published ?? false,
+          access_model: event.access_model ?? 'open',
           application_form_url: event.application_form_url,
           chapter_id: event.chapter_id,
-          created_by_id: event.created_by_id,
-          created_at: event.created_at,
-          updated_at: event.updated_at,
+          created_by_id: event.created_by_id ?? '',
+          created_at: event.created_at ?? '',
+          updated_at: event.updated_at ?? '',
           location_address: null,
           location_city: null,
           location_latitude: null,
@@ -936,12 +949,11 @@ export const EventService = {
           collaborators: [],
           created_by: null,
           _count: {
-            registrations: countsByEventId.get(event.id) ?? 0,
+            registrations: event.id ? countsByEventId.get(event.id) ?? 0 : 0,
             chapters: 0,
           },
-        }
+        } as EventWithDetails
       })
-      .filter((e): e is EventWithDetails => e !== null)
   },
 
   // ───────────────────────────────────────────────────────────────
@@ -996,7 +1008,7 @@ export const EventService = {
       logger.error({ context: 'getEventById', error: countError }, 'Registration count error')
     }
 
-    const event = data as unknown
+    const event = data as EventWithChapterViewRow
     const chapter = event.chapter_name ? {
       id: event.chapter_id,
       name: event.chapter_name,
@@ -1012,23 +1024,23 @@ export const EventService = {
     } : null
 
     return {
-      id: event.id,
-      title: event.title,
+      id: event.id ?? '',
+      title: event.title ?? '',
       description: event.description,
       cover_image: event.cover_image,
-      start_at: event.start_at,
-      end_at: event.end_at,
+      start_at: event.start_at ?? '',
+      end_at: event.end_at ?? '',
       location: event.location,
       meeting_url: event.meeting_url,
-      event_type: event.event_type,
+      event_type: event.event_type ?? 'in_person',
       capacity: event.capacity,
-      is_published: event.is_published,
-      access_model: event.access_model,
+      is_published: event.is_published ?? false,
+      access_model: event.access_model ?? 'open',
       application_form_url: event.application_form_url,
       chapter_id: event.chapter_id,
-      created_by_id: event.created_by_id,
-      created_at: event.created_at,
-      updated_at: event.updated_at,
+      created_by_id: event.created_by_id ?? '',
+      created_at: event.created_at ?? '',
+      updated_at: event.updated_at ?? '',
       location_address: null,
       location_city: null,
       location_latitude: null,
@@ -1179,7 +1191,7 @@ export const EventService = {
         logger.error({ context: 'getChapterEvents', error: ecError }, 'event_chapter lookup error')
       }
 
-      let collaboratedEvents: unknown[] = []
+      let collaboratedEvents: EventWithChapterViewRow[] = []
 
       if (eventChapterRecords && eventChapterRecords.length > 0) {
         const eventIds = eventChapterRecords.map((r: unknown) => (r as Record<string, unknown>).event_id as string)
@@ -1216,12 +1228,10 @@ export const EventService = {
           logger.error({ context: 'getChapterEvents', error: collabError }, 'Collaborated events error')
         }
 
-        collaboratedEvents = collabData || []
+        collaboratedEvents = (collabData || []) as EventWithChapterViewRow[]
       }
 
-      const transformEventData = (event: unknown): EventWithDetails => {
-        const e = event as Record<string, unknown>;
-        
+      const transformEventData = (e: EventWithChapterViewRow): EventWithDetails => {
         const chapter = e.chapter_name ? {
           id: e.chapter_id as string,
           name: e.chapter_name as string,
@@ -1254,13 +1264,13 @@ export const EventService = {
           created_by_id: e.created_by_id as string,
           created_at: e.created_at as string,
           updated_at: e.updated_at as string,
-          location_address: e.location_address as string | null,
-          location_city: e.location_city as string | null,
-          location_latitude: e.location_latitude as number | null,
-          location_longitude: e.location_longitude as number | null,
-          location_name: e.location_name as string | null,
-          location_point: e.location_point as string | null,
-          location_region: e.location_region as string | null,
+          location_address: null,
+          location_city: null,
+          location_latitude: null,
+          location_longitude: null,
+          location_name: null,
+          location_point: null,
+          location_region: null,
           chapter: chapter as EventWithDetails['chapter'],
           owner_chapter: chapter as EventWithDetails['owner_chapter'],
           event_chapter: [],
@@ -1273,9 +1283,9 @@ export const EventService = {
         }
       }
 
-      const allEvents = [...(ownedEvents || []), ...collaboratedEvents]
-      const uniqueEvents = allEvents.reduce((acc: unknown[], event: unknown) => {
-        if (!acc.find((e) => e.id === event.id)) acc.push(event)
+      const allEvents = [...((ownedEvents || []) as EventWithChapterViewRow[]), ...collaboratedEvents]
+      const uniqueEvents = allEvents.reduce((acc: EventWithChapterViewRow[], event: EventWithChapterViewRow) => {
+        if (!acc.find((existing) => existing.id === event.id)) acc.push(event)
         return acc
       }, [])
 
@@ -1328,28 +1338,21 @@ export const EventService = {
       event_registration:event_registration!event_registration_event_id_fkey ( id, status )
     `
 
-    function mapEvent(raw: unknown, registeredCount = 0): EventWithDetails | null {
-      if (!raw || typeof raw !== 'object') return null
-      const r = raw as Record<string, unknown>
+    function mapEvent(raw: EventAdminJoinedRow, registeredCount = 0): EventWithDetails | null {
+      const owner_chapter = Array.isArray(raw.owner_chapter) ? raw.owner_chapter[0] : raw.owner_chapter
+      const createdBy = Array.isArray(raw.created_by) ? raw.created_by[0] : raw.created_by
 
-      const owner_chapter = (r.owner_chapter as Record<string, unknown> | null) ?? null
-      const createdBy = (r.created_by as Record<string, unknown> | null) ?? null
-
-      const collaborators = ((r.collaborators as unknown[]) ?? [])
-        .map((c: unknown) => {
-          const collab = c as Record<string, unknown>
-          const chapter = (collab.chapter as Record<string, unknown> | null) ?? null
+      const collaborators = (raw.collaborators ?? [])
+        .map((collab) => {
+          const chapter = Array.isArray(collab.chapter) ? collab.chapter[0] : collab.chapter
+          if (!chapter) return null
           return {
-            id: String(collab.id),
-            event_id: String(collab.event_id),
-            chapter_id: String(collab.chapter_id),
-            added_at: String(collab.added_at),
-            added_by_id: String(collab.added_by_id),
-            chapter: chapter,
-            name: (chapter?.name as string) ?? 'Unknown Chapter',
+            ...collab,
+            chapter,
+            name: chapter.name,
           }
         })
-        .filter((c) => c.chapter)
+        .filter((collaborator) => collaborator !== null) as EventWithDetails['collaborators']
 
       return {
         id: raw.id,
@@ -1377,8 +1380,8 @@ export const EventService = {
         location_point: null,
         location_region: null,
         chapter: owner_chapter,
-        owner_chapter: owner_chapter,
-        event_chapter: collaborators,
+        owner_chapter,
+        event_chapter: collaborators as unknown as EventWithDetails['event_chapter'],
         collaborators,
         created_by: createdBy,
         _count: {
@@ -1398,7 +1401,7 @@ export const EventService = {
       return []
     }
 
-    return (data as unknown[])
+    return (data as unknown as EventAdminJoinedRow[])
       .map(event => mapEvent(event, 0))
       .filter((e): e is EventWithDetails => e !== null)
   },
