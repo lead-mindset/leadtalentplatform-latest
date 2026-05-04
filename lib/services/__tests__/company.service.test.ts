@@ -40,6 +40,14 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
   const studentProfileBuilder = createBuilder()
   const savedStudentBuilder = createBuilder()
   const recruiterAccessBuilder = createBuilder()
+  const resumeBuilder = createBuilder()
+  const resumeDownloadLogBuilder = createBuilder()
+  const storageBucket = {
+    createSignedUrl: vi.fn().mockResolvedValue({
+      data: { signedUrl: 'https://example.com/signed-resume.pdf' },
+      error: null,
+    }),
+  }
 
   const tableMocks: Record<string, unknown> = {
     user: {
@@ -61,11 +69,22 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
       select: vi.fn(() => recruiterAccessBuilder),
       _builder: recruiterAccessBuilder,
     },
+    resume: {
+      select: vi.fn(() => resumeBuilder),
+      _builder: resumeBuilder,
+    },
+    resume_download_log: {
+      insert: vi.fn(() => resumeDownloadLogBuilder),
+      _builder: resumeDownloadLogBuilder,
+    },
     ...overrides,
   }
 
   const mockSupabase = {
     from: vi.fn().mockImplementation((table: string) => tableMocks[table]),
+    storage: {
+      from: vi.fn(() => storageBucket),
+    },
   } as unknown as SupabaseClient
 
   return { mockSupabase, tableMocks }
@@ -99,6 +118,7 @@ describe('CompanyService', () => {
             updated_at: '2024-01-01',
             chapter_membership: {
               chapter_id: 'ch-1',
+              status: 'approved',
               chapter: { name: 'MIT', university: 'MIT', city: 'Cambridge', region: 'MA' },
             },
           },
@@ -111,6 +131,8 @@ describe('CompanyService', () => {
       expect(result).not.toBeNull()
       expect(result?.name).toBe('Student')
       expect(result?.person_profile?.is_recruiter_visible).toBe(true)
+      expect(tableMocks.user._builder.in).not.toHaveBeenCalled()
+      expect(tableMocks.user._builder.eq).toHaveBeenCalledWith('person_profile.chapter_membership.status', 'approved')
     })
 
     it('should return null for invisible student', async () => {
@@ -132,6 +154,39 @@ describe('CompanyService', () => {
             updated_at: '2024-01-01',
             chapter_membership: {
               chapter_id: 'ch-1',
+              status: 'approved',
+              chapter: { name: 'MIT', university: 'MIT', city: 'Cambridge', region: 'MA' },
+            },
+          },
+        },
+        error: null,
+      })
+
+      const result = await CompanyService.getStudentById(mockSupabase as unknown as SupabaseClient, 'student-1')
+
+      expect(result).toBeNull()
+    })
+
+    it('should return null for non-approved membership even if profile is recruiter visible', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.user._builder._setThenValue({
+        data: {
+          id: 'student-1',
+          email: 'student@test.com',
+          name: 'Student',
+          phone: null,
+          created_at: '2024-01-01',
+          person_profile: {
+            major_or_interest: 'CS',
+            graduation_year: 2025,
+            linkedin_url: null,
+            skills: ['React'],
+            is_recruiter_visible: true,
+            updated_at: '2024-01-01',
+            chapter_membership: {
+              chapter_id: 'ch-1',
+              status: 'pending',
               chapter: { name: 'MIT', university: 'MIT', city: 'Cambridge', region: 'MA' },
             },
           },
@@ -165,6 +220,12 @@ describe('CompanyService', () => {
     it('should save a student when not already saved', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
+      // saved_student check returns null (not saved)
+      tableMocks.saved_student._builder._setThenValue({
+        data: null,
+        error: null,
+      })
+
       // getStudentById returns a valid student
       tableMocks.user._builder._setThenValue({
         data: {
@@ -182,16 +243,11 @@ describe('CompanyService', () => {
             updated_at: '2024-01-01',
             chapter_membership: {
               chapter_id: 'ch-1',
+              status: 'approved',
               chapter: { name: 'MIT', university: 'MIT', city: 'Cambridge', region: 'MA' },
             },
           },
         },
-        error: null,
-      })
-
-      // saved_student check returns null (not saved)
-      tableMocks.saved_student._builder._setThenValue({
-        data: null,
         error: null,
       })
 
@@ -209,30 +265,6 @@ describe('CompanyService', () => {
 
     it('should unsave a student when already saved', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
-
-      // getStudentById returns a valid student
-      tableMocks.user._builder._setThenValue({
-        data: {
-          id: 'student-1',
-          email: 'student@test.com',
-          name: 'Student',
-          phone: null,
-          created_at: '2024-01-01',
-          person_profile: {
-            major_or_interest: 'CS',
-            graduation_year: 2025,
-            linkedin_url: null,
-            skills: ['React'],
-            is_recruiter_visible: true,
-            updated_at: '2024-01-01',
-            chapter_membership: {
-              chapter_id: 'ch-1',
-              chapter: { name: 'MIT', university: 'MIT', city: 'Cambridge', region: 'MA' },
-            },
-          },
-        },
-        error: null,
-      })
 
       // saved_student check returns existing record
       tableMocks.saved_student._builder._setThenValue({
@@ -255,6 +287,12 @@ describe('CompanyService', () => {
     it('should return error for non-visible student', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
+      // saved_student check returns null (not saved)
+      tableMocks.saved_student._builder._setThenValue({
+        data: null,
+        error: null,
+      })
+
       // getStudentById returns null (invisible)
       tableMocks.user._builder._setThenValue({
         data: null,
@@ -265,7 +303,118 @@ describe('CompanyService', () => {
 
       expect(result.success).toBe(false)
       expect(result.isSaved).toBe(false)
-      expect(result.error).toBe('Student is not available to recruiters.')
+      expect(result.error).toBe('Profile not found or unavailable.')
+    })
+
+    it('should allow unsaving an owned saved row even when current visibility is unavailable', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.saved_student._builder._setThenValue({
+        data: { id: 'saved-1' },
+        error: null,
+      })
+
+      tableMocks.saved_student._builder._setThenValue({
+        data: null,
+        error: null,
+      })
+
+      const result = await CompanyService.toggleSaveStudent(mockSupabase as unknown as SupabaseClient, 'recruiter-1', 'student-1')
+
+      expect(result.success).toBe(true)
+      expect(result.isSaved).toBe(false)
+      expect(tableMocks.user.select).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('searchStudents', () => {
+    it('should use visibility and approved membership filters without app-role eligibility', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.user._builder._setThenValue({
+        data: [],
+        error: null,
+      })
+
+      await CompanyService.searchStudents(mockSupabase as unknown as SupabaseClient, {})
+
+      expect(tableMocks.user._builder.eq).toHaveBeenCalledWith('person_profile.is_recruiter_visible', true)
+      expect(tableMocks.user._builder.eq).toHaveBeenCalledWith('person_profile.chapter_membership.status', 'approved')
+      expect(tableMocks.user._builder.eq).not.toHaveBeenCalledWith('role', 'member')
+      expect(tableMocks.user._builder.in).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('getSavedStudents', () => {
+    it('should only return saved profiles that still pass current visibility rules', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.saved_student._builder._setThenValue({
+        data: [
+          {
+            id: 'saved-1',
+            recruiter_id: 'recruiter-1',
+            student_id: 'student-1',
+            saved_at: '2024-01-01',
+            notes: null,
+            student: {
+              id: 'student-1',
+              email: 'student@test.com',
+              name: 'Student',
+              phone: null,
+              created_at: '2024-01-01',
+              person_profile: {
+                major_or_interest: 'CS',
+                graduation_year: 2025,
+                linkedin_url: null,
+                skills: ['React'],
+                is_recruiter_visible: true,
+                updated_at: '2024-01-01',
+                chapter_membership: {
+                  chapter_id: 'ch-1',
+                  status: 'approved',
+                  chapter: { name: 'MIT', university: 'MIT', city: 'Cambridge', region: 'MA' },
+                },
+              },
+            },
+          },
+          {
+            id: 'saved-2',
+            recruiter_id: 'recruiter-1',
+            student_id: 'student-2',
+            saved_at: '2024-01-02',
+            notes: null,
+            student: {
+              id: 'student-2',
+              email: 'hidden@test.com',
+              name: 'Hidden',
+              phone: null,
+              created_at: '2024-01-01',
+              person_profile: {
+                major_or_interest: 'CS',
+                graduation_year: 2025,
+                linkedin_url: null,
+                skills: ['React'],
+                is_recruiter_visible: false,
+                updated_at: '2024-01-01',
+                chapter_membership: {
+                  chapter_id: 'ch-1',
+                  status: 'approved',
+                  chapter: { name: 'MIT', university: 'MIT', city: 'Cambridge', region: 'MA' },
+                },
+              },
+            },
+          },
+        ],
+        error: null,
+      })
+
+      const result = await CompanyService.getSavedStudents(mockSupabase as unknown as SupabaseClient, 'recruiter-1')
+
+      expect(result).toHaveLength(1)
+      expect(result[0].student_id).toBe('student-1')
+      expect(tableMocks.saved_student._builder.eq).toHaveBeenCalledWith('student.person_profile.is_recruiter_visible', true)
+      expect(tableMocks.saved_student._builder.eq).toHaveBeenCalledWith('student.person_profile.chapter_membership.status', 'approved')
     })
   })
 
@@ -303,6 +452,88 @@ describe('CompanyService', () => {
   // ───────────────────────────────────────────────────────────────
   // updateProfile
   // ───────────────────────────────────────────────────────────────
+  describe('createResumeDownloadUrl', () => {
+    it('should deny resume download before storage access when candidate is unavailable', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.user._builder._setThenValue({
+        data: null,
+        error: null,
+      })
+
+      const result = await CompanyService.createResumeDownloadUrl(
+        mockSupabase as unknown as SupabaseClient,
+        'recruiter-1',
+        'student-1'
+      )
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error).toBe('Profile not found or unavailable.')
+      }
+      expect(mockSupabase.storage.from).not.toHaveBeenCalled()
+      expect(tableMocks.resume_download_log.insert).not.toHaveBeenCalled()
+    })
+
+    it('should create a signed resume URL and log only after current visibility passes', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.user._builder._setThenValue({
+        data: {
+          id: 'student-1',
+          email: 'student@test.com',
+          name: 'Student',
+          phone: null,
+          created_at: '2024-01-01',
+          person_profile: {
+            major_or_interest: 'CS',
+            graduation_year: 2025,
+            linkedin_url: null,
+            skills: ['React'],
+            is_recruiter_visible: true,
+            updated_at: '2024-01-01',
+            chapter_membership: {
+              chapter_id: 'ch-1',
+              status: 'approved',
+              chapter: { name: 'MIT', university: 'MIT', city: 'Cambridge', region: 'MA' },
+            },
+          },
+        },
+        error: null,
+      })
+
+      tableMocks.resume._builder._setThenValue({
+        data: {
+          file_url: 'https://example.supabase.co/storage/v1/object/public/resumes/student-1/resume.pdf',
+        },
+        error: null,
+      })
+
+      tableMocks.resume_download_log._builder._setThenValue({
+        data: null,
+        error: null,
+      })
+
+      const result = await CompanyService.createResumeDownloadUrl(
+        mockSupabase as unknown as SupabaseClient,
+        'recruiter-1',
+        'student-1'
+      )
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.url).toBe('https://example.com/signed-resume.pdf')
+      }
+      expect(mockSupabase.storage.from).toHaveBeenCalledWith('resumes')
+      expect(tableMocks.resume_download_log.insert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          recruiter_id: 'recruiter-1',
+          student_id: 'student-1',
+        })
+      )
+    })
+  })
+
   describe('updateProfile', () => {
     it('should update name and phone', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
