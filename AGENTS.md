@@ -32,6 +32,19 @@ export const getUserById = async (id: string) => {
 }
 ```
 
+## Canonical Account Model
+Use the layered account model from `docs/PRODUCT-SPECIFICATION.md` and `docs/handbook/TESTING.md`.
+
+| Table | Owns | Rules |
+| :--- | :--- | :--- |
+| `public.user` | Auth-linked app user, global role, name, email, phone | Keep universal contact data here. Do not treat `user.role` as chapter position. |
+| `person_profile` | Reusable basic profile fields, recruiter visibility | Required for onboarding/event registration; does not imply chapter membership. |
+| `chapter_membership` | Chapter application, approval status, alumni state, member ID, chapter position | Chapter permissions come from approved membership unless admin bypass applies. |
+| `lead_identity` | Official LEAD identity display and issuance | Use for member/editor/staff/founder/alumni identity; do not make admin a public identity type. |
+| `recruiter_access` | Invite/scoped recruiter access | Recruiters are not chapter members by default and do not require chapter membership. |
+
+`student_profile` is deprecated. Do not add new live app, service, action, or UI dependencies on it. Generated types, historical migrations, QA fixtures, and migration validation docs may reference it only as a legacy source.
+
 ## Data Flow Philosophy
 **Vertical slices only:** Implement a complete feature end-to-end: DB → Service → Action → UI.
 
@@ -47,6 +60,12 @@ export const getUserById = async (id: string) => {
 - Avoid duplicating fetching logic
 
 ## Developer Workflow
+
+### PIV Planning and Implementation
+- `/plan` must inspect the current codebase and create `.github/plans/{kebab-case}.plan.md`.
+- Fresh-session `/implement` must read the linked plan first, verify tasks exist, execute tasks in order, update the plan, run validation, and update GitHub.
+- Foundation and stabilization issues must be handled before dependent feature PIVs.
+- If repeated mistakes, stale schema assumptions, workflow gaps, or recurring validation failures appear, create or update a `phase:system-evolution` GitHub issue instead of hiding the rule inside feature work.
 
 ### Branching
 Never edit `main`. Always branch:

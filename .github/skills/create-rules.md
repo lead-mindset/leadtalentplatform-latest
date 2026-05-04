@@ -77,6 +77,8 @@ Create `CLAUDE.md` with:
 5. **Patterns** — Conventions to follow
 6. **Key Files** — Important files to know
 
+For this repo, also include a **Canonical Account Model** section covering `public.user`, `person_profile`, `chapter_membership`, `lead_identity`, `recruiter_access`, and the rule that `student_profile` is legacy/migration-only.
+
 **Optional Sections:**
 - Architecture (complex apps)
 - API endpoints (backends)
