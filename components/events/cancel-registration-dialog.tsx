@@ -15,12 +15,14 @@ import { cancelRegistration } from '@/lib/actions/events/cancel-registration'
 
 type Props = {
   registrationId: string
+  eventId?: string
   eventTitle: string
   triggerClassName?: string
 }
 
 export function CancelRegistrationDialog({
   registrationId,
+  eventId,
   eventTitle,
   triggerClassName,
 }: Props) {
@@ -35,13 +37,15 @@ export function CancelRegistrationDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Cancel registration?</AlertDialogTitle>
           <AlertDialogDescription>
-            Cancel your registration for {eventTitle}? Your spot will open up for others.
+            This will cancel your registration for {eventTitle}. Your QR code will stop being valid
+            and your spot may open for another participant.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel type="button">Keep my spot</AlertDialogCancel>
           <form action={cancelRegistration} className="inline">
             <input type="hidden" name="registrationId" value={registrationId} />
+            {eventId ? <input type="hidden" name="eventId" value={eventId} /> : null}
             <Button type="submit" variant="destructive">
               Cancel registration
             </Button>
