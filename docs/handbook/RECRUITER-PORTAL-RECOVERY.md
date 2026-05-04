@@ -100,6 +100,7 @@ LEAD-027 should create these independently shippable follow-ups:
 4. `Task: Add company representative manual QA checklist`
    - GitHub: #72
    - Cover invite accept, company login without access, dashboard, browse, save, profile, resume download, revoked/expired invite, and hidden/unapproved talent.
+   - Checklist: `docs/handbook/COMPANY-PORTAL-QA.md`.
 
 5. `Task: Rename user-facing recruiter language to company representative`
    - GitHub: #73
