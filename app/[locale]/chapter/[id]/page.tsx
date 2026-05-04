@@ -69,25 +69,41 @@ export default async function ChapterDetailPage({ params }: ChapterDetailPagePro
     .limit(6)
 
   // ── Fetch chapter members (e-board / approved) ──
-  const { data: members } = await supabase
-    .from('student_profile')
+  const { data: memberships } = await supabase
+    .from('chapter_membership')
     .select(`
       user_id,
-      major,
       member_id,
       user:user_id ( name, email )
     `)
     .eq('chapter_id', chapter.id)
-    .eq('approval_status', 'approved')
-    .eq('is_filled', true)
+    .eq('status', 'approved')
     .limit(50)
+
+  const membershipRows = memberships ?? []
+  const memberUserIds = membershipRows.map((member) => member.user_id)
+  const { data: profiles } = memberUserIds.length > 0
+    ? await supabase
+        .from('person_profile')
+        .select('user_id, major_or_interest')
+        .in('user_id', memberUserIds)
+    : { data: [] }
+
+  const profileByUserId = new Map(
+    (profiles ?? []).map((profile) => [profile.user_id, profile])
+  )
+
+  const members = membershipRows.map((member) => ({
+    ...member,
+    major: profileByUserId.get(member.user_id)?.major_or_interest ?? 'Member',
+  }))
 
   // ── Fetch member count ──
   const { count: member_count } = await supabase
-    .from('student_profile')
+    .from('chapter_membership')
     .select('*', { count: 'exact', head: true })
     .eq('chapter_id', chapter.id)
-    .eq('approval_status', 'approved')
+    .eq('status', 'approved')
 
   // ── Fetch past events count ──
   const { count: pastEventsCount } = await supabase
@@ -105,7 +121,7 @@ export default async function ChapterDetailPage({ params }: ChapterDetailPagePro
       <ChapterPortalContent
         chapter={JSON.parse(JSON.stringify(chapter))}
         events={JSON.parse(JSON.stringify(events || []))}
-        members={JSON.parse(JSON.stringify(members || []))}
+        members={JSON.parse(JSON.stringify(members))}
         member_count={member_count ?? 0}
         pastEventsCount={pastEventsCount ?? 0}
       />

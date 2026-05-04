@@ -3,24 +3,22 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/server'
 import { EventForm } from '../_components/event-form'
+import { requireChapterEditor } from '@/lib/auth'
 import type { ChapterRow } from '@/lib/types'
 
 export default async function NewChapterEventPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { chapter_id } = await requireChapterEditor()
   
   let editorChapter: ChapterRow | null = null
-  if (user) {
-    const { data: profile } = await supabase
-      .from('student_profile')
-      .select('chapter_id, chapter:Chapter(id, name, university, city, region, created_at, updated_at)')
-      .eq('user_id', user.id)
-      .single()
-    
-    if (profile?.chapter) {
-      // Type assertion to handle Supabase query result
-      editorChapter = profile.chapter as unknown as ChapterRow
-    }
+  if (chapter_id) {
+    const { data: chapter } = await supabase
+      .from('chapter')
+      .select('id, name, university, city, region, created_at, updated_at, instagram_url, latitude, longitude, location_point')
+      .eq('id', chapter_id)
+      .maybeSingle()
+
+    editorChapter = chapter
   }
   return (
     <div className="container max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-8">

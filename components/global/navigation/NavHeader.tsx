@@ -14,21 +14,22 @@ export default async function NavHeader() {
 
   if (authUser) {
     const { data: dbUser } = await supabase
-      .from("User")
+      .from("user")
       .select("role")
       .eq("id", authUser.id)
       .single();
 
     role = dbUser?.role ?? null;
 
-    if ((role as string) === 'student') {
-      const { data: profile } = await supabase
-        .from("StudentProfile")
-        .select("memberId")
-        .eq("userId", authUser.id)
-        .single();
+    if (role === 'member' || role === 'editor') {
+      const { data: membership } = await supabase
+        .from("chapter_membership")
+        .select("member_id")
+        .eq("user_id", authUser.id)
+        .eq("status", "approved")
+        .maybeSingle();
 
-      memberId = profile?.memberId ?? null;
+      memberId = membership?.member_id ?? null;
     }
   }
 

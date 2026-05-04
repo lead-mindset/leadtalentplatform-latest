@@ -73,22 +73,22 @@ export default async function StudentProfilePage({
             <CardTitle>Education</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {resolvedStudent.student_profile?.major && (
+            {resolvedStudent.person_profile?.major_or_interest && (
               <div className="flex items-start gap-3">
                 <GraduationCap className="h-5 w-5 mt-0.5 text-muted-foreground" />
                 <div>
-                  <p className="font-medium">{resolvedStudent.student_profile.major}</p>
+                  <p className="font-medium">{resolvedStudent.person_profile.major_or_interest}</p>
                   <p className="text-sm text-muted-foreground">Major</p>
                 </div>
               </div>
             )}
 
-            {resolvedStudent.student_profile?.graduation_year && (
+            {resolvedStudent.person_profile?.graduation_year && (
               <div className="flex items-start gap-3">
                 <Calendar className="h-5 w-5 mt-0.5 text-muted-foreground" />
                 <div>
                   <p className="font-medium">
-                    Class of {resolvedStudent.student_profile.graduation_year}
+                    Class of {resolvedStudent.person_profile.graduation_year}
                   </p>
                   <p className="text-sm text-muted-foreground">Expected Graduation</p>
                 </div>
@@ -120,9 +120,9 @@ export default async function StudentProfilePage({
             <CardDescription>Technical and professional skills</CardDescription>
           </CardHeader>
           <CardContent>
-            {resolvedStudent.student_profile?.skills && resolvedStudent.student_profile.skills.length > 0 ? (
+            {resolvedStudent.person_profile?.skills && resolvedStudent.person_profile.skills.length > 0 ? (
               <div className="flex flex-wrap gap-2">
-                {resolvedStudent.student_profile.skills.map((skill: string, i: number) => (
+                {resolvedStudent.person_profile.skills.map((skill: string, i: number) => (
                   <Badge key={i} variant="secondary">
                     {skill}
                   </Badge>
@@ -135,7 +135,7 @@ export default async function StudentProfilePage({
         </Card>
       </div>
 
-      {resolvedStudent.student_profile?.linkedin_url && (
+      {resolvedStudent.person_profile?.linkedin_url && (
         <Card>
           <CardHeader>
             <CardTitle>Professional Links</CardTitle>
@@ -143,7 +143,7 @@ export default async function StudentProfilePage({
           <CardContent>
             <Button asChild variant="outline" className="gap-2">
               <NextLink
-                href={resolvedStudent.student_profile.linkedin_url}
+                href={resolvedStudent.person_profile.linkedin_url}
                 target="_blank"
                 rel="noopener noreferrer"
               >

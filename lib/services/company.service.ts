@@ -35,7 +35,7 @@ const STUDENT_SELECT = `
 // Types
 // ───────────────────────────────────────────────────────────────
 
-export type StudentProfileRecruiterRow = Pick<
+export type RecruiterProfileRow = Pick<
   PersonProfileRow,
   'major_or_interest' | 'graduation_year' | 'linkedin_url' | 'skills' | 'is_recruiter_visible' | 'updated_at'
 > & {
@@ -46,7 +46,7 @@ export type StudentProfileRecruiterRow = Pick<
 }
 
 export type RecruiterStudentRow = Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'created_at'> & {
-  person_profile: StudentProfileRecruiterRow | StudentProfileRecruiterRow[] | null
+  person_profile: RecruiterProfileRow | RecruiterProfileRow[] | null
 }
 
 export type SavedStudentWithUserRow = SavedStudentRow & {
@@ -99,16 +99,6 @@ function mapStudentRow(user: RecruiterStudentRow): StudentForRecruiter | null {
     chapter: chapter ?? null,
     person_profile: {
       chapter_id: profile.chapter_membership.chapter_id,
-      major_or_interest: profile.major_or_interest,
-      graduation_year: profile.graduation_year,
-      linkedin_url: profile.linkedin_url,
-      skills: profile.skills,
-      is_recruiter_visible: profile.is_recruiter_visible,
-      updated_at: profile.updated_at,
-    },
-    student_profile: {
-      chapter_id: profile.chapter_membership.chapter_id,
-      major: profile.major_or_interest,
       major_or_interest: profile.major_or_interest,
       graduation_year: profile.graduation_year,
       linkedin_url: profile.linkedin_url,
@@ -225,7 +215,7 @@ export const CompanyService = {
     if (!data) return []
 
     return (data as unknown as SavedStudentWithUserRow[])
-      .map((saved) => {
+      .map((saved): SavedStudent | null => {
         const studentData = Array.isArray(saved.student)
           ? saved.student[0]
           : saved.student
@@ -261,6 +251,7 @@ export const CompanyService = {
             chapter: chapter ?? null,
             person_profile: profile
               ? {
+                  chapter_id: profile.chapter_membership.chapter_id,
                   major_or_interest: profile.major_or_interest,
                   graduation_year: profile.graduation_year,
                   linkedin_url: profile.linkedin_url,

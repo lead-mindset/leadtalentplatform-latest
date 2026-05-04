@@ -100,7 +100,6 @@ export type ApprovalStatus = 'pending' | 'approved' | 'rejected'
 
 export type UserRow = Database["public"]["Tables"]["user"]["Row"];
 export type ChapterRow = Database["public"]["Tables"]["chapter"]["Row"];
-export type StudentProfileRow = Database["public"]["Tables"]["student_profile"]["Row"];
 
 export type PersonProfileRow = Database["public"]["Tables"]["person_profile"]["Row"];
 export type ChapterMembershipRow = Database["public"]["Tables"]["chapter_membership"]["Row"];
@@ -217,12 +216,12 @@ export type EventWithDetails = EventRow & {
 
 export type RegistrationWithUserRaw = EventRegistrationRow & {
   user: Pick<UserRow, 'id' | 'name' | 'email' | 'phone'>[]
-  student_profile: Pick<StudentProfileRow, 'major' | 'graduation_year' | 'linkedin_url'>[]
+  person_profile: Pick<PersonProfileRow, 'major_or_interest' | 'graduation_year' | 'linkedin_url'>[]
 }
 
 export type RegistrationWithUser = EventRegistrationRow & {
   user: Pick<UserRow, 'id' | 'name' | 'email' | 'phone'> | null
-  student_profile: Pick<StudentProfileRow, 'major' | 'graduation_year' | 'linkedin_url'> | null
+  person_profile: Pick<PersonProfileRow, 'major_or_interest' | 'graduation_year' | 'linkedin_url'> | null
   application_answers?: Array<
     EventApplicationAnswerRow & {
       event_application_question: Pick<
@@ -312,11 +311,6 @@ export type StudentForRecruiter = {
   created_at: string;
   chapter: Pick<ChapterRow, "name" | "university" | "city" | "region"> | null;
   person_profile: RecruiterVisibleProfile | null;
-  /**
-   * Transitional alias for recruiter UI screens that still render the legacy name.
-   * New code should read person_profile.
-   */
-  student_profile: (RecruiterVisibleProfile & { major: string | null }) | null;
 };
 
 export type SavedStudent = {
@@ -428,7 +422,8 @@ export type SidebarLayoutProps = {
 }
 
 export type ChapterMember = UserRow & {
-  student_profile: Pick<StudentProfileRow, 'user_id' | 'is_filled' | 'approved_by_id' | 'is_recruiter_visible' | 'chapter_id' | 'updated_at'> | null
+  person_profile: Pick<PersonProfileRow, 'user_id' | 'is_recruiter_visible' | 'updated_at'> | null
+  chapter_membership: Pick<ChapterMembershipRow, 'chapter_id' | 'status' | 'member_id' | 'approved_by_id'> | null
   chapter: Pick<ChapterRow, 'name' | 'university'> | null
 }
 

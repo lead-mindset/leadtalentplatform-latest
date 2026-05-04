@@ -225,10 +225,17 @@ describe('ChapterService', () => {
     it('should approve multiple eligible members', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
+      tableMocks.chapter_membership._selectChain.in.mockResolvedValueOnce({
+        data: [
+          { user_id: 'user-1', chapter_id: 'ch-1', status: 'pending' },
+          { user_id: 'user-2', chapter_id: 'ch-1', status: 'pending' },
+        ],
+        error: null,
+      })
       tableMocks.person_profile._selectChain.in.mockResolvedValueOnce({
         data: [
-          { user_id: 'user-1', chapter_id: 'ch-1', is_filled: true },
-          { user_id: 'user-2', chapter_id: 'ch-1', is_filled: true },
+          { user_id: 'user-1' },
+          { user_id: 'user-2' },
         ],
         error: null,
       })
@@ -263,10 +270,16 @@ describe('ChapterService', () => {
     it('should skip members from different chapters when chapterId is provided', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
+      tableMocks.chapter_membership._selectChain.in.mockResolvedValueOnce({
+        data: [
+          { user_id: 'user-1', chapter_id: 'ch-1', status: 'pending' },
+          { user_id: 'user-2', chapter_id: 'ch-2', status: 'pending' },
+        ],
+        error: null,
+      })
       tableMocks.person_profile._selectChain.in.mockResolvedValueOnce({
         data: [
-          { user_id: 'user-1', chapter_id: 'ch-1', is_filled: true },
-          { user_id: 'user-2', chapter_id: 'ch-2', is_filled: true },
+          { user_id: 'user-1' },
         ],
         error: null,
       })
@@ -296,10 +309,16 @@ describe('ChapterService', () => {
     it('should skip incomplete profiles', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
+      tableMocks.chapter_membership._selectChain.in.mockResolvedValueOnce({
+        data: [
+          { user_id: 'user-1', chapter_id: 'ch-1', status: 'pending' },
+          { user_id: 'user-2', chapter_id: 'ch-1', status: 'pending' },
+        ],
+        error: null,
+      })
       tableMocks.person_profile._selectChain.in.mockResolvedValueOnce({
         data: [
-          { user_id: 'user-1', chapter_id: 'ch-1', is_filled: true },
-          { user_id: 'user-2', chapter_id: 'ch-1', is_filled: false },
+          { user_id: 'user-1' },
         ],
         error: null,
       })
@@ -329,7 +348,7 @@ describe('ChapterService', () => {
     it('should return error when candidates query fails', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.person_profile._selectChain.in.mockResolvedValueOnce({
+      tableMocks.chapter_membership._selectChain.in.mockResolvedValueOnce({
         data: null,
         error: { message: 'Database error' },
       })
@@ -349,10 +368,10 @@ describe('ChapterService', () => {
     it('should return error when all members are ineligible', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.person_profile._selectChain.in.mockResolvedValueOnce({
+      tableMocks.chapter_membership._selectChain.in.mockResolvedValueOnce({
         data: [
-          { user_id: 'user-1', chapter_id: 'ch-2', is_filled: true },
-          { user_id: 'user-2', chapter_id: 'ch-2', is_filled: false },
+          { user_id: 'user-1', chapter_id: 'ch-2', status: 'pending' },
+          { user_id: 'user-2', chapter_id: 'ch-2', status: 'pending' },
         ],
         error: null,
       })
@@ -374,10 +393,17 @@ describe('ChapterService', () => {
     it('should handle partial failures gracefully', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
+      tableMocks.chapter_membership._selectChain.in.mockResolvedValueOnce({
+        data: [
+          { user_id: 'user-1', chapter_id: 'ch-1', status: 'pending' },
+          { user_id: 'user-2', chapter_id: 'ch-1', status: 'pending' },
+        ],
+        error: null,
+      })
       tableMocks.person_profile._selectChain.in.mockResolvedValueOnce({
         data: [
-          { user_id: 'user-1', chapter_id: 'ch-1', is_filled: true },
-          { user_id: 'user-2', chapter_id: 'ch-1', is_filled: true },
+          { user_id: 'user-1' },
+          { user_id: 'user-2' },
         ],
         error: null,
       })
