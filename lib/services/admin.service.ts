@@ -52,6 +52,20 @@ type PendingRecruiterAccessRow = Pick<
   company: { name: string } | { name: string }[] | null
 }
 
+type AdminUserCompanyAccessRow = Pick<
+  RecruiterAccessRow,
+  | 'id'
+  | 'recruiter_email'
+  | 'granted_at'
+  | 'invite_expires_at'
+  | 'accepted_at'
+  | 'accepted_by_user_id'
+  | 'revoked_at'
+  | 'is_active'
+> & {
+  company: { name: string } | { name: string }[] | null
+}
+
 type AdminChapterCountRow = ChapterRow
 
 type AdminProfileSummaryRow = Pick<
@@ -182,6 +196,16 @@ export type PendingRecruiterRequestItem = {
   recruiter_email: string
   company_name: string | null
   granted_at: string
+  invite_expires_at: string | null
+}
+
+export type AdminUserCompanyAccessItem = {
+  id: string
+  recruiter_email: string
+  company_name: string | null
+  status: 'active' | 'pending' | 'expired' | 'revoked'
+  granted_at: string
+  accepted_at: string | null
   invite_expires_at: string | null
 }
 
@@ -790,6 +814,56 @@ export const AdminService = {
         company_name: company?.name ?? null,
         granted_at: item.granted_at,
         invite_expires_at: item.invite_expires_at ?? null,
+      }
+    })
+  },
+
+  async getCompanyAccessForUser(
+    supabase: SupabaseClient<Database>,
+    params: { userId: string; email: string }
+  ): Promise<AdminUserCompanyAccessItem[]> {
+    const now = new Date().toISOString()
+    const { data, error } = await supabase
+      .from('recruiter_access')
+      .select(`
+        id,
+        recruiter_email,
+        granted_at,
+        invite_expires_at,
+        accepted_at,
+        accepted_by_user_id,
+        revoked_at,
+        is_active,
+        company(name)
+      `)
+      .or(`accepted_by_user_id.eq.${params.userId},recruiter_email.eq.${params.email}`)
+      .order('granted_at', { ascending: false })
+
+    if (error || !data) {
+      logger.error({ context: 'getCompanyAccessForUser', error }, 'Failed')
+      return []
+    }
+
+    return (data as AdminUserCompanyAccessRow[]).map((item) => {
+      const company = Array.isArray(item.company) ? item.company[0] : item.company
+      const isExpired = Boolean(item.invite_expires_at && item.invite_expires_at < now)
+      const status =
+        item.revoked_at
+          ? 'revoked'
+          : item.accepted_at && item.is_active
+            ? 'active'
+            : isExpired
+              ? 'expired'
+              : 'pending'
+
+      return {
+        id: item.id,
+        recruiter_email: item.recruiter_email,
+        company_name: company?.name ?? null,
+        status,
+        granted_at: item.granted_at,
+        accepted_at: item.accepted_at,
+        invite_expires_at: item.invite_expires_at,
       }
     })
   },

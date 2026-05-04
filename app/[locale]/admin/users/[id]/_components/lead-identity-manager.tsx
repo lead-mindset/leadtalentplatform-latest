@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -12,6 +13,16 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { issueLeadIdentity, revokeLeadIdentity, setPrimaryLeadIdentity } from '@/lib/actions/admin/identities'
 import type { ChapterRow, IdentityType, LeadIdentityRow } from '@/lib/types'
 import { ShieldCheck, Star, Trash2 } from 'lucide-react'
@@ -51,8 +62,14 @@ export function LeadIdentityManager({
   chapters,
   defaultChapterId,
 }: Props) {
+  const router = useRouter()
   const [identityType, setIdentityType] = useState<PublicIdentityType>('chapter_member')
   const [chapterId, setChapterId] = useState(defaultChapterId ?? chapters[0]?.id ?? '')
+  const [confirmState, setConfirmState] = useState<{
+    title: string
+    description: string
+    action: () => void
+  } | null>(null)
   const [isPending, startTransition] = useTransition()
 
   const selectedIdentityType = useMemo(
@@ -80,6 +97,7 @@ export function LeadIdentityManager({
       }
 
       toast.success('LEAD identity issued.')
+      router.refresh()
     })
   }
 
@@ -93,6 +111,8 @@ export function LeadIdentityManager({
       }
 
       toast.success('Primary identity updated.')
+      setConfirmState(null)
+      router.refresh()
     })
   }
 
@@ -106,6 +126,8 @@ export function LeadIdentityManager({
       }
 
       toast.success('LEAD identity revoked.')
+      setConfirmState(null)
+      router.refresh()
     })
   }
 
@@ -119,7 +141,7 @@ export function LeadIdentityManager({
           LEAD Identities
         </CardTitle>
         <CardDescription>
-          App role controls access. LEAD identity controls public status and display.
+          Public LEAD status and display. This is separate from the account authorization role.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
@@ -164,7 +186,13 @@ export function LeadIdentityManager({
                         size="sm"
                         variant="outline"
                         disabled={isPending}
-                        onClick={() => setPrimary(identity.id)}
+                        onClick={() =>
+                          setConfirmState({
+                            title: 'Set primary LEAD identity?',
+                            description: `${formatIdentityType(identity.identity_type)} will become the identity shown first on display surfaces.`,
+                            action: () => setPrimary(identity.id),
+                          })
+                        }
                       >
                         <Star className="h-4 w-4" />
                         Set primary
@@ -174,7 +202,13 @@ export function LeadIdentityManager({
                       size="sm"
                       variant="outline"
                       disabled={isPending}
-                      onClick={() => revoke(identity.id)}
+                      onClick={() =>
+                        setConfirmState({
+                          title: 'Revoke this LEAD identity?',
+                          description: `${formatIdentityType(identity.identity_type)} will no longer be active for this user. This does not change their account role.`,
+                          action: () => revoke(identity.id),
+                        })
+                      }
                     >
                       <Trash2 className="h-4 w-4" />
                       Revoke
@@ -185,8 +219,8 @@ export function LeadIdentityManager({
             })}
           </div>
         ) : (
-          <div className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
-            No active LEAD identities have been issued for this user.
+          <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+            No active LEAD identity has been issued. This is okay for users who should not have a public LEAD status yet.
           </div>
         )}
 
@@ -238,8 +272,22 @@ export function LeadIdentityManager({
             Issue
           </Button>
         </div>
+
+        <AlertDialog open={Boolean(confirmState)} onOpenChange={(open) => !open && setConfirmState(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{confirmState?.title}</AlertDialogTitle>
+              <AlertDialogDescription>{confirmState?.description}</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmState?.action} disabled={isPending}>
+                Confirm
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardContent>
     </Card>
   )
 }
-

@@ -31,6 +31,11 @@ export async function getPendingRecruiterRequests() {
   return AdminService.getPendingRecruiterRequests(supabase)
 }
 
+export async function getCompanyAccessForUser(userId: string, email: string) {
+  const supabase = await createClient()
+  return AdminService.getCompanyAccessForUser(supabase, { userId, email })
+}
+
 export async function getSystemStats() {
   const supabase = await createClient()
   return AdminService.getSystemStats(supabase)
