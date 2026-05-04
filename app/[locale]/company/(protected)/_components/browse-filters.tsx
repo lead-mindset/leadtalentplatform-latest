@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Search, X } from 'lucide-react'
-import { useCallback, useTransition } from 'react'
+import { useCallback, useRef, useTransition } from 'react'
 
 interface BrowseFiltersProps {
   majors: string[]
@@ -36,6 +36,7 @@ export function BrowseFilters({
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
+  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const updateParam = useCallback(
     (key: string, value: string | undefined) => {
@@ -67,20 +68,22 @@ export function BrowseFilters({
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by name, email, or skill..."
+            placeholder="Search profiles by name, email, or skill..."
             defaultValue={currentFilters.q ?? ''}
             className="pl-10"
             onChange={e => {
               const val = e.target.value
-              const timeout = setTimeout(() => updateParam('q', val || undefined), 300)
-              return () => clearTimeout(timeout)
+              if (searchTimeout.current) {
+                clearTimeout(searchTimeout.current)
+              }
+              searchTimeout.current = setTimeout(() => updateParam('q', val || undefined), 300)
             }}
           />
         </div>
         {activeCount > 0 && (
           <Button variant="ghost" onClick={clearAll} className="gap-2 shrink-0">
             <X className="h-4 w-4" />
-            Clear
+            Clear filters
             <Badge variant="secondary">{activeCount}</Badge>
           </Button>
         )}
@@ -92,11 +95,11 @@ export function BrowseFilters({
           onValueChange={val => updateParam('major', val)}
           disabled={isPending}
         >
-          <SelectTrigger className="w-50">
-            <SelectValue placeholder="All majors" />
+          <SelectTrigger className="w-[12.5rem]">
+            <SelectValue placeholder="All focus areas" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All majors</SelectItem>
+            <SelectItem value="all">All focus areas</SelectItem>
             {majors.map(major => (
               <SelectItem key={major} value={major}>
                 {major}
@@ -110,7 +113,7 @@ export function BrowseFilters({
           onValueChange={val => updateParam('year', val)}
           disabled={isPending}
         >
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-[10rem]">
             <SelectValue placeholder="All years" />
           </SelectTrigger>
           <SelectContent>
@@ -128,7 +131,7 @@ export function BrowseFilters({
           onValueChange={val => updateParam('chapter', val)}
           disabled={isPending}
         >
-          <SelectTrigger className="w-50">
+          <SelectTrigger className="w-[12.5rem]">
             <SelectValue placeholder="All chapters" />
           </SelectTrigger>
           <SelectContent>

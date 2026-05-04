@@ -1,10 +1,11 @@
 import { getSavedStudents } from '@/lib/actions/company/get-data';
 import { requireRecruiter } from '@/lib/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Heart } from 'lucide-react';
+import { Heart, Users } from 'lucide-react';
 import { StudentsTable } from '../_components/students-table';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { MainContainer } from '@/components/global/main-container';
 
 export default async function SavedStudentsPage() {
   const { supabase, user } = await requireRecruiter();
@@ -14,32 +15,44 @@ export default async function SavedStudentsPage() {
   const savedStudentIds = students.map((s) => s.id);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Saved Talent</h1>
-        <p className="text-muted-foreground">
-          Profiles you&apos;ve saved for future reference
-        </p>
+    <MainContainer className="space-y-5 py-8">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p className="text-sm font-medium text-muted-foreground">Company portal</p>
+          <h1 className="text-3xl font-bold tracking-tight">Saved Talent</h1>
+          <p className="mt-1 text-muted-foreground">
+            Keep promising visible profiles in one place for follow-up.
+          </p>
+        </div>
+        <div className="rounded-lg border bg-card px-4 py-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Heart className="h-4 w-4" />
+            Saved profiles
+          </div>
+          <p className="mt-1 text-2xl font-semibold">{saved_students.length}</p>
+        </div>
       </div>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <div>
-            <CardTitle>Your Collection</CardTitle>
-            <CardDescription>{saved_students.length} saved profile{saved_students.length !== 1 ? 's' : ''}</CardDescription>
+            <CardTitle>Your Saved Talent</CardTitle>
+            <CardDescription>
+              {saved_students.length} saved profile{saved_students.length !== 1 ? 's' : ''} available to your company.
+            </CardDescription>
           </div>
           <Heart className="h-5 w-5 text-red-500" />
         </CardHeader>
         <CardContent>
           {saved_students.length === 0 ? (
             <div className="text-center py-12">
-              <Heart className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground mb-2">No saved talent yet</p>
+              <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <p className="font-medium mb-2">No saved talent yet</p>
               <p className="text-sm text-muted-foreground mb-4">
-                Save profiles while browsing to build your collection
+                Save profiles while browsing to build a focused follow-up list.
               </p>
               <Button asChild>
-                <Link href="/company">Browse Talent</Link>
+                <Link href="/company/browse">Browse Talent</Link>
               </Button>
             </div>
           ) : (
@@ -47,6 +60,6 @@ export default async function SavedStudentsPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </MainContainer>
   );
 }

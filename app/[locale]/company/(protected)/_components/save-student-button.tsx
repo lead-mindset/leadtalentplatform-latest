@@ -52,7 +52,7 @@ export function SaveStudentButton({
       ) : (
         <Heart className={cn('h-4 w-4', isSaved && 'fill-current')} />
       )}
-      {isSaved ? 'Saved' : 'Save Student'}
+      {isSaved ? 'Saved' : 'Save Profile'}
     </Button>
   )
 }
