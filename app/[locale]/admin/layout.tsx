@@ -1,6 +1,7 @@
 import { SidebarLayout } from '@/components/ui/sidebars/sidebar-layout'
 import { BaseSidebar } from '@/components/ui/sidebars/base-sidebar'
 import { AdminNavigation } from '@/components/ui/sidebars/admin-sidebar'
+import { Badge } from '@/components/ui/badge'
 import { requireAdmin, getSidebarStatsForAdmin } from '@/lib/auth'
 import type { ReactNode } from 'react'
 
@@ -14,6 +15,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
   
   return (
     <SidebarLayout
+      headerRight={<Badge variant="outline">Admin</Badge>}
       sidebar={
         <BaseSidebar
           userName={user.name ?? 'Admin'}

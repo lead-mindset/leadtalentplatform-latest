@@ -2,8 +2,9 @@
 
 import { useEffect } from 'react'
 import { Link } from '@/i18n/routing'
-import { Button } from '@/components/ui/button'
 import { AlertCircle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 
 export default function AdminError({
   error,
@@ -17,20 +18,26 @@ export default function AdminError({
   }, [error])
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-8">
-      <div className="text-center space-y-4">
-        <AlertCircle className="h-16 w-16 text-destructive mx-auto" />
-        <h2 className="text-2xl font-bold">Something went wrong</h2>
-        <p className="text-muted-foreground max-w-md">
-          We encountered an error loading this page. Please try again.
-        </p>
-        <div className="flex gap-4 justify-center">
-          <Button onClick={() => reset()}>Try again</Button>
-          <Button variant="outline" asChild>
-            <Link href="/admin">Back to Admin</Link>
-          </Button>
-        </div>
-      </div>
+    <div className="flex min-h-[60vh] items-center justify-center">
+      <Card className="w-full max-w-2xl">
+        <CardContent className="space-y-5 py-10 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+            <AlertCircle className="h-5 w-5 text-destructive" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold">Admin data did not load</h2>
+            <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+              Retry the admin surface, or return to the overview and choose a management section again.
+            </p>
+          </div>
+          <div className="flex flex-col justify-center gap-2 sm:flex-row">
+            <Button onClick={() => reset()}>Retry</Button>
+            <Button variant="outline" asChild>
+              <Link href="/admin">Admin overview</Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
