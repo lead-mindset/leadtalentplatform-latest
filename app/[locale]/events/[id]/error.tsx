@@ -1,6 +1,8 @@
 'use client'
 
+import { AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 
 type ErrorProps = {
   error: Error
@@ -9,16 +11,23 @@ type ErrorProps = {
 
 export default function Error({ reset }: ErrorProps) {
   return (
-    <div className="space-y-4 rounded-lg border bg-card p-6">
-      <div>
-        <h2 className="text-lg font-semibold">Unable to load this event</h2>
-        <p className="text-sm text-muted-foreground">
-          Refresh the page or try again.
-        </p>
-      </div>
-      <Button onClick={reset} variant="outline">
-        Retry
-      </Button>
+    <div className="min-h-screen bg-background px-4 py-12">
+      <Card className="mx-auto max-w-xl">
+        <CardContent className="flex flex-col items-center gap-4 px-6 py-12 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+            <AlertCircle className="h-6 w-6 text-destructive" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold">Unable to load this event</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Refresh the page or try again in a moment.
+            </p>
+          </div>
+          <Button onClick={reset} variant="outline">
+            Retry
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   )
 }
