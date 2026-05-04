@@ -64,8 +64,9 @@ export async function saveStudent(studentId: string) {
     return { success: false, error: result.error ?? 'Failed to save student.' }
   }
 
-  revalidatePath('/recruiter/browse')
   revalidatePath('/company/browse')
+  revalidatePath('/company/saved')
+  revalidatePath(`/company/students/${studentId}`)
   return { success: true }
 }
 
@@ -82,7 +83,8 @@ export async function unsaveStudent(studentId: string) {
     return { success: false, error: result.error ?? 'Failed to remove saved student.' }
   }
 
-  revalidatePath('/recruiter/browse')
   revalidatePath('/company/browse')
+  revalidatePath('/company/saved')
+  revalidatePath(`/company/students/${studentId}`)
   return { success: true }
 }
