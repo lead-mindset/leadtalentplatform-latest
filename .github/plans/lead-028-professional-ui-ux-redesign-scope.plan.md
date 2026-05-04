@@ -424,4 +424,3 @@ Avoid component-only issues such as "redesign cards" or "redesign buttons." Pref
 ## Recommended Next Step
 
 Review this scope with the product owner. After approval, create focused follow-up issues from the roadmap, starting with Phase 1 design foundations and Phase 2 student/event MVP experience.
-

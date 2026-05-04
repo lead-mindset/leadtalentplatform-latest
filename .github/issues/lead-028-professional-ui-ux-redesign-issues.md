@@ -16,8 +16,8 @@ Parent issue: #29 `LEAD-028: Create Professional UI/UX Redesign Scope`
 
 ### 1. Task: Define LEAD app shell, page anatomy, and responsive state patterns
 
-**Type:** Technical / Design Foundation  
-**Complexity:** Medium  
+**Type:** Technical / Design Foundation
+**Complexity:** Medium
 **Labels:** `LEAD`, `design`, `frontend`, `architecture`, `phase:active-piv-loop`, `piv-status:plan-ready`
 
 **Description**
@@ -41,8 +41,8 @@ Define the shared UI rules that future redesign work should follow before page-l
 
 ### 2. Task: Redesign public event discovery and event detail flow
 
-**Type:** Enhancement  
-**Complexity:** Medium  
+**Type:** Enhancement
+**Complexity:** Medium
 **Labels:** `LEAD`, `frontend`, `design`, `events`, `student`, `phase:active-piv-loop`, `piv-status:plan-ready`
 
 **Description**
@@ -66,8 +66,8 @@ Redesign public event discovery and event detail so students quickly understand 
 
 ### 3. Task: Redesign basic onboarding and profile completion flow
 
-**Type:** Enhancement  
-**Complexity:** Medium  
+**Type:** Enhancement
+**Complexity:** Medium
 **Labels:** `LEAD`, `frontend`, `design`, `onboarding`, `student`, `phase:active-piv-loop`, `piv-status:plan-ready`
 
 **Description**
@@ -91,8 +91,8 @@ Redesign the basic onboarding flow so it feels like joining the LEAD community w
 
 ### 4. Task: Redesign student event registration, status, and QR flow
 
-**Type:** Enhancement  
-**Complexity:** Medium  
+**Type:** Enhancement
+**Complexity:** Medium
 **Labels:** `LEAD`, `frontend`, `design`, `events`, `student`, `qr`, `phase:active-piv-loop`, `piv-status:plan-ready`
 
 **Description**
@@ -116,8 +116,8 @@ Redesign the student-owned event journey after registration/application so statu
 
 ### 5. Task: Redesign chapter editor dashboard and event management
 
-**Type:** Enhancement  
-**Complexity:** Medium  
+**Type:** Enhancement
+**Complexity:** Medium
 **Labels:** `LEAD`, `frontend`, `design`, `chapter`, `editor`, `events`, `phase:active-piv-loop`, `piv-status:plan-ready`
 
 **Description**
@@ -141,8 +141,8 @@ Redesign the chapter editor dashboard and event management surfaces around pendi
 
 ### 6. Task: Redesign event application review workflow
 
-**Type:** Enhancement  
-**Complexity:** Medium  
+**Type:** Enhancement
+**Complexity:** Medium
 **Labels:** `LEAD`, `frontend`, `design`, `events`, `editor`, `phase:active-piv-loop`, `piv-status:plan-ready`
 
 **Description**
@@ -166,8 +166,8 @@ Redesign event application review so editors can compare applicant context, answ
 
 ### 7. Task: Redesign chapter member roster and approval workflow
 
-**Type:** Enhancement  
-**Complexity:** Medium  
+**Type:** Enhancement
+**Complexity:** Medium
 **Labels:** `LEAD`, `frontend`, `design`, `chapter`, `editor`, `phase:active-piv-loop`, `piv-status:plan-ready`
 
 **Description**
@@ -191,8 +191,8 @@ Redesign the chapter roster and approval workflow around chapter_membership stat
 
 ### 8. Task: Redesign event check-in operator flow
 
-**Type:** Enhancement  
-**Complexity:** Medium  
+**Type:** Enhancement
+**Complexity:** Medium
 **Labels:** `LEAD`, `frontend`, `design`, `events`, `editor`, `qr`, `phase:active-piv-loop`, `piv-status:plan-ready`
 
 **Description**
@@ -216,8 +216,8 @@ Redesign the editor check-in workflow for fast scanning, attendee status clarity
 
 ### 9. Task: Redesign admin shell and overview
 
-**Type:** Enhancement  
-**Complexity:** Medium  
+**Type:** Enhancement
+**Complexity:** Medium
 **Labels:** `LEAD`, `frontend`, `design`, `admin`, `phase:active-piv-loop`, `piv-status:plan-ready`
 
 **Description**
@@ -240,8 +240,8 @@ Redesign the admin shell and overview as a calm operational back-office surface 
 
 ### 10. Task: Redesign admin user detail, role, membership, and identity management
 
-**Type:** Enhancement  
-**Complexity:** Medium  
+**Type:** Enhancement
+**Complexity:** Medium
 **Labels:** `LEAD`, `frontend`, `design`, `admin`, `identity`, `phase:active-piv-loop`, `piv-status:plan-ready`
 
 **Description**
@@ -265,8 +265,8 @@ Redesign admin user detail so account role, person profile, chapter membership, 
 
 ### 11. Task: Redesign admin chapter, company, and event management tables
 
-**Type:** Enhancement  
-**Complexity:** Medium  
+**Type:** Enhancement
+**Complexity:** Medium
 **Labels:** `LEAD`, `frontend`, `design`, `admin`, `chapter`, `events`, `phase:active-piv-loop`, `piv-status:plan-ready`
 
 **Description**
@@ -289,8 +289,8 @@ Redesign admin management tables for chapters, companies, and events with consis
 
 ### 12. Task: Redesign company browse and saved talent workflow
 
-**Type:** Enhancement  
-**Complexity:** Medium  
+**Type:** Enhancement
+**Complexity:** Medium
 **Labels:** `LEAD`, `frontend`, `design`, `recruiter`, `phase:active-piv-loop`, `piv-status:plan-ready`
 
 **Description**
@@ -314,8 +314,8 @@ Redesign company representative browse and saved talent workflows after core stu
 
 ### 13. Task: Redesign company profile detail and resume access
 
-**Type:** Enhancement  
-**Complexity:** Medium  
+**Type:** Enhancement
+**Complexity:** Medium
 **Labels:** `LEAD`, `frontend`, `design`, `recruiter`, `phase:active-piv-loop`, `piv-status:plan-ready`
 
 **Description**
@@ -338,8 +338,8 @@ Redesign company representative profile detail so profile trust, resume access, 
 
 ### 14. Task: Redesign company access and invite help states
 
-**Type:** Enhancement  
-**Complexity:** Small  
+**Type:** Enhancement
+**Complexity:** Small
 **Labels:** `LEAD`, `frontend`, `design`, `recruiter`, `routing`, `phase:active-piv-loop`, `piv-status:plan-ready`
 
 **Description**
