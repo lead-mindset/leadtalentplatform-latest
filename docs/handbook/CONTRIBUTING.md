@@ -234,6 +234,7 @@ Creates a detailed plan in `.github/plans/`.
 ```
 /validate
 ```
+Record linked issue, plan artifact, validation commands/results, migration notes, UI evidence, and any System Evolution follow-up in `.github/pull_request_template.md` before requesting review.
 
 **Step 7: Review**
 ```
