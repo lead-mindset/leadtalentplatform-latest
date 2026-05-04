@@ -27,10 +27,10 @@ export default async function ChapterDetailPage({
   if (!chapter) notFound()
   const resolvedChapter = chapter ?? notFound()
   const members = await getChapterMembers(resolvedChapter.id)
-  const approved_members  = members.filter(m => m.student_profile?.approval_status === 'approved')
-  const pending_members   = members.filter(m => m.student_profile?.is_filled && m.student_profile?.approval_status === 'pending')
-  const rejected_members  = members.filter(m => m.student_profile?.approval_status === 'rejected')
-  const incomplete_members = members.filter(m => !m.student_profile?.is_filled)
+  const approved_members  = members.filter(m => m.chapter_membership?.status === 'approved')
+  const pending_members   = members.filter(m => m.person_profile && m.chapter_membership?.status === 'pending')
+  const rejected_members  = members.filter(m => m.chapter_membership?.status === 'rejected')
+  const incomplete_members = members.filter(m => !m.person_profile)
 
   return (
     <div className="space-y-8">
@@ -196,7 +196,7 @@ export default async function ChapterDetailPage({
                           >
                             Approved
                           </Badge>
-                          {member.student_profile?.is_recruiter_visible && (
+                          {member.person_profile?.is_recruiter_visible && (
                             <Badge variant="secondary">Visible to Recruiters</Badge>
                           )}
                         </div>

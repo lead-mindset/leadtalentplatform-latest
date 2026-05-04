@@ -122,11 +122,11 @@ function RecentApprovals({ members }: { members: RecentActivityMember[] }) {
           <div className="min-w-0">
             <p className="text-sm font-medium truncate">{member.name || 'Unknown'}</p>
             <p className="text-xs text-muted-foreground truncate">
-              {member.student_profile.major}
+              {member.person_profile.major_or_interest ?? 'No major listed'}
             </p>
           </div>
           <p className="text-xs text-muted-foreground ml-3 shrink-0">
-            {new Date(member.student_profile.updated_at).toLocaleDateString(undefined, {
+            {new Date(member.person_profile.updated_at).toLocaleDateString(undefined, {
               month: 'short',
               day: 'numeric',
             })}
@@ -228,16 +228,13 @@ function EventOpsList({
 async function ChapterContent() {
   const { supabase, user, chapter_id } = await requireChapterMember()
 
-  const { data: profileData } = await supabase
-    .from('student_profile')
-    .select(`
-      chapter_id,
-      Chapter:chapter_id ( id, name, university )
-    `)
-    .eq('user_id', user.id)
+  const { data: chapter } = await supabase
+    .from('chapter')
+    .select('id, name, university')
+    .eq('id', chapter_id)
     .maybeSingle()
 
-  if (!profileData?.Chapter) {
+  if (!chapter) {
     return (
       <Card className="max-w-md mx-auto mt-20">
         <CardHeader>
@@ -252,10 +249,6 @@ async function ChapterContent() {
     )
   }
 
-  const chapter = Array.isArray(profileData.Chapter)
-    ? profileData.Chapter[0]
-    : profileData.Chapter
-
   const [allMembers, recentActivity, chapterEvents] = await Promise.all([
     getChapterMembers(chapter_id),
     getRecentChapterActivity(chapter_id, 4),
@@ -267,7 +260,7 @@ async function ChapterContent() {
     stats.total > 0 ? Math.round((stats.approved / stats.total) * 100) : 0
 
   const pending_members = allMembers.filter(
-    m => m.student_profile?.is_filled && m.student_profile?.approval_status === 'pending'
+    m => m.person_profile && m.chapter_membership?.status === 'pending'
   )
   const upcomingEventsCount = chapterEvents.filter((event) => new Date(event.end_at) >= new Date()).length
 

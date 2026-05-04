@@ -9,6 +9,8 @@ import type {
   ChapterRow,
   Company,
   CompanyRaw,
+  CompanyRow,
+  EventRow,
   MemberWithProfile,
   PersonProfileRow,
   RecruiterAccessRow,
@@ -54,24 +56,29 @@ type AdminChapterCountRow = ChapterRow
 
 type AdminProfileSummaryRow = Pick<
   PersonProfileRow,
+  | 'id'
   | 'user_id'
+  | 'university'
   | 'major_or_interest'
   | 'graduation_year'
   | 'linkedin_url'
+  | 'portfolio_url'
   | 'skills'
   | 'is_recruiter_visible'
   | 'updated_at'
   | 'created_at'
   | 'gender'
-> & Pick<ChapterMembershipRow, 'status'> & {
+> & {
   user:
     | Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'role' | 'created_at' | 'updated_at' | 'deactivated_at'>
     | Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'role' | 'created_at' | 'updated_at' | 'deactivated_at'>[]
     | null
-  chapter:
-    | Pick<ChapterRow, 'id' | 'name' | 'university' | 'city' | 'region' | 'created_at' | 'updated_at' | 'instagram_url' | 'latitude' | 'longitude' | 'location_point'>
-    | Pick<ChapterRow, 'id' | 'name' | 'university' | 'city' | 'region' | 'created_at' | 'updated_at' | 'instagram_url' | 'latitude' | 'longitude' | 'location_point'>[]
-    | null
+  chapter_membership: Pick<ChapterMembershipRow, 'chapter_id' | 'status' | 'position' | 'member_id' | 'joined_at'> & {
+    chapter:
+      | Pick<ChapterRow, 'id' | 'name' | 'university' | 'city' | 'region' | 'created_at' | 'updated_at' | 'instagram_url' | 'latitude' | 'longitude' | 'location_point'>
+      | Pick<ChapterRow, 'id' | 'name' | 'university' | 'city' | 'region' | 'created_at' | 'updated_at' | 'instagram_url' | 'latitude' | 'longitude' | 'location_point'>[]
+      | null
+  }
 }
 
 
@@ -380,10 +387,13 @@ export type InviteResult = { success: true; inviteLink?: string } | { success: f
 const CHAPTER_SELECT = 'id, name, university, city, region, created_at, updated_at, instagram_url, latitude, longitude, location_point'
 
 const ADMIN_PROFILE_SELECT = `
+  id,
   user_id,
+  university,
   major_or_interest,
   graduation_year,
   linkedin_url,
+  portfolio_url,
   skills,
   is_recruiter_visible,
   updated_at,
@@ -399,18 +409,25 @@ const ADMIN_PROFILE_SELECT = `
     updated_at,
     deactivated_at
   ),
-  chapter:chapter!chapter_membership_chapter_id_fkey (
-    id,
-    name,
-    university,
-    city,
-    region,
-    created_at,
-    updated_at,
-    instagram_url,
-    latitude,
-    longitude,
-    location_point
+  chapter_membership!inner (
+    chapter_id,
+    status,
+    position,
+    member_id,
+    joined_at,
+    chapter (
+      id,
+      name,
+      university,
+      city,
+      region,
+      created_at,
+      updated_at,
+      instagram_url,
+      latitude,
+      longitude,
+      location_point
+    )
   )
 `
 
@@ -420,7 +437,9 @@ const ADMIN_PROFILE_SELECT = `
 
 function mapAdminProfile(profile: AdminProfileSummaryRow): MemberWithProfile | null {
   const user = Array.isArray(profile.user) ? profile.user[0] : profile.user
-  const chapter = Array.isArray(profile.chapter) ? profile.chapter[0] : profile.chapter
+  const chapter = Array.isArray(profile.chapter_membership.chapter)
+    ? profile.chapter_membership.chapter[0]
+    : profile.chapter_membership.chapter
 
   if (!user) return null
   const skillsValue = profile.skills
@@ -438,10 +457,13 @@ function mapAdminProfile(profile: AdminProfileSummaryRow): MemberWithProfile | n
     updated_at: user.updated_at,
     deactivated_at: user.deactivated_at ?? null,
     person_profile: {
+      id: profile.id,
       user_id: profile.user_id,
+      university: profile.university,
       major_or_interest: profile.major_or_interest,
       graduation_year: profile.graduation_year,
       linkedin_url: profile.linkedin_url,
+      portfolio_url: profile.portfolio_url,
       skills,
       is_recruiter_visible: profile.is_recruiter_visible,
       updated_at: profile.updated_at,
@@ -449,7 +471,11 @@ function mapAdminProfile(profile: AdminProfileSummaryRow): MemberWithProfile | n
       gender: profile.gender,
     },
     chapter_membership: {
-      status: profile.status,
+      chapter_id: profile.chapter_membership.chapter_id,
+      status: profile.chapter_membership.status,
+      position: profile.chapter_membership.position,
+      member_id: profile.chapter_membership.member_id,
+      joined_at: profile.chapter_membership.joined_at,
     },
     chapter: chapter ?? null,
   }
@@ -880,8 +906,8 @@ export const AdminService = {
       .limit(5)
 
     return {
-      recentApprovals: (recentApprovals ?? []) as RecentApprovalRaw[],
-      recentInvites: (recentInvites ?? []) as RecentInviteRaw[],
+      recentApprovals: (recentApprovals ?? []) as unknown as RecentApprovalRaw[],
+      recentInvites: (recentInvites ?? []) as unknown as RecentInviteRaw[],
     }
   },
 
@@ -931,7 +957,7 @@ export const AdminService = {
       return []
     }
 
-    return (data as AdminProfileSummaryRow[])
+    return (data as unknown as AdminProfileSummaryRow[])
       .map(mapAdminProfile)
       .filter((m): m is MemberWithProfile => m !== null)
   },
@@ -1108,7 +1134,7 @@ export const AdminService = {
     const activities: ActivityItem[] = []
 
     if (approvals) {
-      ; (approvals as ActivityApprovalRow[]).forEach((approval: ActivityApprovalRow) => {
+      ; (approvals as unknown as ActivityApprovalRow[]).forEach((approval: ActivityApprovalRow) => {
         const student = Array.isArray(approval.student) ? approval.student[0] : approval.student
         const approver = Array.isArray(approval.approved_by) ? approval.approved_by[0] : approval.approved_by
         const chapter = Array.isArray(approval.chapter) ? approval.chapter[0] : approval.chapter
@@ -1193,7 +1219,7 @@ export const AdminService = {
     }
 
     const companiesWithCounts = await Promise.all(
-      (companies as CompanyRaw[]).map(async (company: CompanyRaw) => {
+      (companies as unknown as CompanyRaw[]).map(async (company: CompanyRaw) => {
         const { count: activeCount } = await supabase
           .from('recruiter_access')
           .select('id', { count: 'exact', head: true })
@@ -1285,10 +1311,13 @@ export const AdminService = {
       updated_at,
       deactivated_at,
       person_profile!inner (
+        id,
         user_id,
+        university,
         major_or_interest,
         graduation_year,
         linkedin_url,
+        portfolio_url,
         skills,
         is_recruiter_visible,
         created_at,
@@ -1464,7 +1493,7 @@ export const AdminService = {
       return []
     }
 
-    const typedMemberships = (memberships ?? []) as AdminUsersProfileRow[]
+    const typedMemberships = (memberships ?? []) as unknown as AdminUsersProfileRow[]
     const profileMap = new Map<string, AdminUsersProfileSummary>(
       typedMemberships.map((membership) => [
         membership.user_id,
@@ -1649,7 +1678,7 @@ export const AdminService = {
   ): Promise<AdminEventsListResponse> {
     let query = supabase
       .from('event')
-      .select('id, title, start_at, end_at, is_published, chapter_id, capacity, chapter(name, university), event_chapter(id, chapter(name, university)), event_registration(id, status)')
+      .select('id, title, start_at, end_at, is_published, chapter_id, capacity, chapter(id, name, university), event_chapter(id, chapter(id, name, university)), event_registration(id, status)')
 
     const search = filters.search?.trim()
     if (search) {
@@ -1730,7 +1759,8 @@ export const AdminService = {
       return { items: [], total: 0, page: 1, pageSize: pagination.pageSize }
     }
 
-    const chapterRows = chapters as ChapterListRow[]
+    type ChapterListRow = Pick<ChapterRow, 'id' | 'name' | 'university' | 'city' | 'region'>
+    const chapterRows = chapters as unknown as ChapterListRow[]
     const chapter_ids = chapterRows.map((chapter: ChapterListRow) => chapter.id)
     if (chapter_ids.length === 0) {
       return { items: [], total: 0, page: 1, pageSize: pagination.pageSize }
@@ -1750,7 +1780,7 @@ export const AdminService = {
         .gt('end_at', now),
     ])
 
-    type ChapterMembershipRow = Pick<ChapterMembershipRow, 'chapter_id' | 'user_id'> & {
+    type ChapterMembershipListRow = Pick<ChapterMembershipRow, 'chapter_id' | 'user_id'> & {
       user:
         | Pick<UserRow, 'name' | 'email' | 'role'>
         | Pick<UserRow, 'name' | 'email' | 'role'>[]
@@ -1758,11 +1788,11 @@ export const AdminService = {
     }
     type ChapterEventRow = Pick<EventRow, 'id' | 'chapter_id'>
 
-    const membershipRows = (memberships ?? []) as unknown as ChapterMembershipRow[]
+    const membershipRows = (memberships ?? []) as unknown as ChapterMembershipListRow[]
     const eventRows = (events ?? []) as unknown as ChapterEventRow[]
 
-    const membershipByChapter = new Map<string, ChapterMembershipRow[]>()
-    membershipRows.forEach((membership: ChapterMembershipRow) => {
+    const membershipByChapter = new Map<string, ChapterMembershipListRow[]>()
+    membershipRows.forEach((membership: ChapterMembershipListRow) => {
       const list = membershipByChapter.get(membership.chapter_id) ?? []
       list.push(membership)
       membershipByChapter.set(membership.chapter_id, list)
@@ -1777,11 +1807,11 @@ export const AdminService = {
     const rows: ChapterListItem[] = chapterRows.map((chapter: ChapterListRow) => {
       const chapterMemberships = membershipByChapter.get(chapter.id) ?? []
       const editors = chapterMemberships
-        .filter((membership: ChapterMembershipRow) => {
+        .filter((membership: ChapterMembershipListRow) => {
           const user = Array.isArray(membership.user) ? membership.user[0] : membership.user
           return user?.role === 'editor'
         })
-        .map((membership: ChapterMembershipRow) => {
+        .map((membership: ChapterMembershipListRow) => {
           const user = Array.isArray(membership.user) ? membership.user[0] : membership.user
           return {
             id: membership.user_id,
@@ -2047,7 +2077,7 @@ export const AdminService = {
       'id' | 'company_id' | 'is_active' | 'accepted_at' | 'revoked_at' | 'invite_expires_at'
     >
 
-    const companyRows = companies as CompanyListRow[]
+    const companyRows = companies as unknown as CompanyListRow[]
     const ids = companyRows.map((company: CompanyListRow) => company.id)
     const { data: accessRows } = await supabase
       .from('recruiter_access')
