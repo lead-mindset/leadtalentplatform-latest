@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
+import { cn } from '@/lib/utils'
 
 interface ApplicationReviewCardProps {
   application: {
@@ -46,6 +47,30 @@ interface ApplicationReviewCardProps {
   onReject: (id: string, internalNote?: string) => Promise<void>
   isProcessing?: boolean
   showCheckbox?: boolean
+}
+
+function answerValue(answer: NonNullable<ApplicationReviewCardProps['application']['applicationAnswers']>[number]) {
+  if (Array.isArray(answer.answer_json)) {
+    return answer.answer_json.join(', ')
+  }
+
+  if (answer.answer_json && typeof answer.answer_json === 'object') {
+    return JSON.stringify(answer.answer_json)
+  }
+
+  return answer.answer_text || 'No answer provided'
+}
+
+function statusConfig(status: ApplicationReviewCardProps['application']['status']) {
+  if (status === 'registered') {
+    return { label: 'Approved', variant: 'success' as const }
+  }
+
+  if (status === 'rejected') {
+    return { label: 'Rejected', variant: 'destructive' as const }
+  }
+
+  return { label: 'Pending review', variant: 'warning' as const }
 }
 
 export function ApplicationReviewCard({
@@ -82,105 +107,113 @@ export function ApplicationReviewCard({
   }
 
   const isPending = application.status === 'pending_review'
-  const isApproved = application.status === 'registered'
-  const isRejected = application.status === 'rejected'
+  const status = statusConfig(application.status)
   const applicationAnswers = application.applicationAnswers ?? []
 
   return (
     <>
-      <div className={`
-        rounded-lg border bg-card p-4 transition-all
-        ${isSelected ? 'border-primary ring-2 ring-primary/20' : 'hover:border-primary/50'}
-        ${!isPending ? 'opacity-75' : ''}
-      `}>
-        <div className="flex items-start gap-4">
-          {showCheckbox && isPending && (
-            <div className="pt-1">
+      <article
+        className={cn(
+          'rounded-lg border bg-card p-4 transition-colors',
+          isSelected ? 'border-primary ring-2 ring-primary/20' : 'hover:border-primary/40',
+          !isPending && 'bg-card/70'
+        )}
+      >
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)_auto]">
+          <div className="flex min-w-0 gap-3">
+            {showCheckbox && isPending ? (
               <Checkbox
+                className="mt-1"
                 checked={isSelected}
                 onCheckedChange={(checked) => onSelect?.(application.id, checked as boolean)}
-                disabled={!isPending || isProcessing}
+                disabled={isProcessing}
+                aria-label={`Select ${application.User.name}`}
               />
-            </div>
-          )}
+            ) : null}
 
-          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <Icons.User className="h-4 w-4 text-primary" />
-          </div>
-
-          <div className="flex-1 space-y-2">
-            <div className="flex items-start justify-between flex-wrap gap-2">
-              <div>
-                <h3 className="font-semibold">{application.User.name}</h3>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mt-0.5">
-                  <Icons.Mail className="h-4 w-4" />
-                  <span>{application.User.email}</span>
+            <div className="min-w-0 space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Icons.User className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="truncate font-semibold">{application.User.name}</h3>
+                  <p className="mt-0.5 break-all text-sm text-muted-foreground">
+                    {application.User.email}
+                  </p>
                 </div>
               </div>
 
-              <Badge variant={isPending ? 'outline' : isApproved ? 'secondary' : 'destructive'}>
-                {isPending && 'Pending Review'}
-                {isApproved && 'Approved'}
-                {isRejected && 'Rejected'}
+              <div className="flex flex-wrap gap-2">
+                <Badge variant={status.variant}>{status.label}</Badge>
+                <Badge variant="outline">
+                  Applied {new Date(application.registeredAt).toLocaleDateString(undefined, {
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </Badge>
+              </div>
+
+              <div className="grid gap-2 text-sm">
+                <p className="flex min-w-0 items-center gap-2 text-muted-foreground">
+                  <Icons.GraduationCap className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{application.ApplicantProfile.majorOrInterest}</span>
+                </p>
+                <p className="flex items-center gap-2 text-muted-foreground">
+                  <Icons.Calendar className="h-4 w-4 shrink-0" />
+                  <span>Graduation {application.ApplicantProfile.graduation_year || 'not listed'}</span>
+                </p>
+                {application.ApplicantProfile.linkedinUrl ? (
+                  <a
+                    href={application.ApplicantProfile.linkedinUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-w-0 items-center gap-1 text-sm text-primary underline underline-offset-4"
+                  >
+                    <span className="truncate">LinkedIn profile</span>
+                    <Icons.ExternalLink className="h-4 w-4 shrink-0" />
+                  </a>
+                ) : null}
+              </div>
+            </div>
+          </div>
+
+          <div className="min-w-0 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <h4 className="text-sm font-semibold">Application answers</h4>
+              <Badge variant="neutral" size="sm">
+                {applicationAnswers.length} answer{applicationAnswers.length === 1 ? '' : 's'}
               </Badge>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Icons.GraduationCap className="h-4 w-4" />
-                <span>Major: {application.ApplicantProfile.majorOrInterest}</span>
-              </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Icons.Calendar className="h-4 w-4" />
-                <span>Graduation: {application.ApplicantProfile.graduation_year}</span>
-              </div>
-            </div>
-
-            {application.ApplicantProfile.linkedinUrl && (
-              <a
-                href={application.ApplicantProfile.linkedinUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-sm text-primary underline hover:underline"
-              >
-                LinkedIn Profile
-                <Icons.ExternalLink className="h-4 w-4" />
-              </a>
-            )}
-
             {applicationAnswers.length > 0 ? (
-              <div className="mt-3 space-y-3 rounded-md border bg-muted/30 p-3">
-                {applicationAnswers.map((answer) => {
-                  const value = Array.isArray(answer.answer_json)
-                    ? answer.answer_json.join(', ')
-                    : answer.answer_text
-
-                  return (
-                    <div key={answer.id} className="space-y-1">
-                      <p className="text-xs font-medium text-muted-foreground">
-                        {answer.event_application_question?.question_text ?? 'Application question'}
-                      </p>
-                      <p className="text-sm text-foreground">{value || 'No answer provided'}</p>
-                    </div>
-                  )
-                })}
+              <div className="grid gap-3">
+                {applicationAnswers.map((answer) => (
+                  <div key={answer.id} className="rounded-lg border bg-background p-3">
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      {answer.event_application_question?.question_text ?? 'Application question'}
+                    </p>
+                    <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-foreground">
+                      {answerValue(answer)}
+                    </p>
+                  </div>
+                ))}
               </div>
-            ) : null}
-
-            <p className="text-xs text-muted-foreground">
-              Applied: {new Date(application.registeredAt).toLocaleDateString()}
-            </p>
+            ) : (
+              <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+                No native application answers were submitted for this registration.
+              </p>
+            )}
           </div>
 
-          {isPending && (
-            <div className="flex gap-2">
+          {isPending ? (
+            <div className="flex gap-2 lg:flex-col">
               <Button
                 size="sm"
-                variant="default"
                 onClick={handleApprove}
                 disabled={isActionPending || isProcessing}
               >
-                <Icons.CheckCircle2 className="h-4 w-4 text-success" />
+                <Icons.CheckCircle2 className="mr-2 h-4 w-4" />
                 Approve
               </Button>
               <Button
@@ -189,40 +222,40 @@ export function ApplicationReviewCard({
                 onClick={() => setShowRejectDialog(true)}
                 disabled={isActionPending || isProcessing}
               >
-                <Icons.XCircle className="h-4 w-4 text-destructive" />
+                <Icons.XCircle className="mr-2 h-4 w-4" />
                 Reject
               </Button>
             </div>
-          )}
+          ) : null}
         </div>
-      </div>
+      </article>
 
       <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reject Application</DialogTitle>
+            <DialogTitle>Reject application?</DialogTitle>
             <DialogDescription>
-              Reject {application.User.name}'s application for this event.
+              Reject {application.User.name}&apos;s application for this event.
               {!showCheckbox && (
-                <span className="block mt-2 text-sm text-muted-foreground">
-                  Note: The student will be notified via email, but the reason is internal only (not shared with the student in v1).
+                <span className="mt-2 block text-sm text-muted-foreground">
+                  The applicant will be notified by email. The optional note stays internal for v1.
                 </span>
               )}
             </DialogDescription>
           </DialogHeader>
 
           <div className="py-4">
-            <label className="text-sm font-medium mb-2 block">
-              Internal Note (optional)
+            <label className="mb-2 block text-sm font-medium">
+              Internal note (optional)
             </label>
             <Textarea
-              placeholder="Add any internal notes about this decision..."
+              placeholder="Add internal context for this decision..."
               value={rejectNote}
               onChange={(e) => setRejectNote(e.target.value)}
               rows={3}
             />
-            <p className="text-xs text-muted-foreground mt-2">
-              This note is only visible to editors, not shared with the student.
+            <p className="mt-2 text-xs text-muted-foreground">
+              This note is only visible to editors, not shared with the applicant.
             </p>
           </div>
 
@@ -231,7 +264,7 @@ export function ApplicationReviewCard({
               Cancel
             </Button>
             <Button variant="destructive" onClick={handleReject} disabled={isActionPending}>
-              {isActionPending ? 'Processing...' : 'Confirm Rejection'}
+              {isActionPending ? 'Processing...' : 'Reject application'}
             </Button>
           </DialogFooter>
         </DialogContent>

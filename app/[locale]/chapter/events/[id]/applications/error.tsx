@@ -1,6 +1,9 @@
 'use client'
 
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Icons } from '@/components/ui/icons'
 
 type ErrorProps = {
   error: Error
@@ -9,16 +12,24 @@ type ErrorProps = {
 
 export default function Error({ reset }: ErrorProps) {
   return (
-    <div className="space-y-4 rounded-lg border bg-card p-6">
-      <div>
-        <h2 className="text-lg font-semibold">Unable to load applications</h2>
-        <p className="text-sm text-muted-foreground">
-          Refresh the page or try again.
-        </p>
-      </div>
-      <Button onClick={reset} variant="outline">
-        Retry
-      </Button>
+    <div className="container mx-auto max-w-4xl px-4 py-8 sm:px-6">
+      <Card>
+        <CardContent className="py-12 text-center">
+          <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+            <Icons.AlertCircle className="h-5 w-5 text-destructive" />
+          </div>
+          <h2 className="text-xl font-semibold">Unable to load applications</h2>
+          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+            Refresh this review queue or return to chapter events.
+          </p>
+          <div className="mt-6 flex flex-col justify-center gap-2 sm:flex-row">
+            <Button onClick={reset}>Retry</Button>
+            <Button asChild variant="outline">
+              <Link href="/chapter/events">Chapter events</Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
