@@ -46,7 +46,7 @@ export function MemberActionButtons({
     try {
       const result = await rejectMember(userId, rejectReason || undefined)
       if (result.success) {
-        toast.success(`${userName}'s profile has been rejected`)
+        toast.success(`${userName}'s chapter application was rejected`)
         setShowRejectReason(false)
         setRejectReason('')
         router.refresh()
@@ -65,7 +65,7 @@ export function MemberActionButtons({
     try {
       const result = await revokeApproval(userId)
       if (result.success) {
-        toast.success(`${userName}'s approval has been revoked`)
+        toast.success(`${userName} was moved back to pending review`)
         router.refresh()
       } else {
         toast.error(result.error || 'Failed to revoke approval')
@@ -108,9 +108,12 @@ export function MemberActionButtons({
             <Textarea
               value={rejectReason}
               onChange={(event) => setRejectReason(event.target.value)}
-              placeholder="Optional reason (visible to editors only)"
+              placeholder="Optional internal note for editors"
               rows={3}
             />
+            <p className="text-xs text-muted-foreground">
+              This note stays internal. The applicant can re-enter review if moved back to pending later.
+            </p>
             <Button
               onClick={handleReject}
               disabled={isLoading}
@@ -143,7 +146,7 @@ export function MemberActionButtons({
         ) : (
           <RotateCcw className="mr-2 h-4 w-4" />
         )}
-        Move back to Pending
+        Move back to pending review
       </Button>
     )
   }
@@ -160,7 +163,7 @@ export function MemberActionButtons({
       ) : (
         <XCircle className="mr-2 h-4 w-4" />
       )}
-      Revoke Approval
+      Move back to pending review
     </Button>
   )
 }
