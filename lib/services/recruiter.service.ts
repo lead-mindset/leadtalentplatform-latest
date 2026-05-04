@@ -28,7 +28,7 @@ export type TalentPoolStudent = {
 
 type TalentPoolProfileRow = Pick<
   PersonProfileRow,
-  'graduation_year' | 'major_or_interest' | 'skills' | 'updated_at'
+  'graduation_year' | 'major_or_interest' | 'skills' | 'updated_at' | 'linkedin_url'
 > & {
   chapter_membership: {
     chapter: Pick<ChapterRow, 'name' | 'university'> | Pick<ChapterRow, 'name' | 'university'>[] | null
@@ -40,7 +40,7 @@ type TalentPoolRow = Pick<UserRow, 'id' | 'name' | 'email'> & {
 }
 
 type SavedTalentPoolRow = {
-  person: TalentPoolRow | TalentPoolRow[] | null
+  student: TalentPoolRow | TalentPoolRow[] | null
 }
 
 type TalentPoolFilterRow = Pick<PersonProfileRow, 'graduation_year'> & {
@@ -141,7 +141,7 @@ export const RecruiterService = {
       }
     }
 
-    const students = ((data ?? []) as TalentPoolRow[])
+    const students = ((data ?? []) as unknown as TalentPoolRow[])
       .map(mapTalentPoolRow)
       .filter((student): student is TalentPoolStudent => student !== null)
 
@@ -220,7 +220,7 @@ export const RecruiterService = {
       }
     }
 
-    const students = ((data ?? []) as SavedTalentPoolRow[])
+    const students = ((data ?? []) as unknown as SavedTalentPoolRow[])
       .map((row) => {
         const user = Array.isArray(row.student) ? row.student[0] : row.student
         return user ? mapTalentPoolRow(user) : null
@@ -261,7 +261,7 @@ export const RecruiterService = {
       return { years: [] as number[], chapters: [] as Array<{ id: string; name: string }> }
     }
 
-    const filterRows = (data ?? []) as TalentPoolFilterRow[]
+    const filterRows = (data ?? []) as unknown as TalentPoolFilterRow[]
     const years = Array.from(
       new Set(filterRows.map((row) => row.graduation_year).filter((year): year is number => !!year))
     ).sort((a, b) => a - b)
@@ -348,15 +348,18 @@ export const RecruiterService = {
       return null
     }
 
-    const profile = Array.isArray(data.person_profile) ? data.person_profile[0] : data.person_profile
+    const student = data as unknown as TalentPoolRow & {
+      resume: { file_name: string; file_url: string; uploaded_at: string } | { file_name: string; file_url: string; uploaded_at: string }[] | null
+    }
+    const profile = Array.isArray(student.person_profile) ? student.person_profile[0] : student.person_profile
     if (!profile) return null
     const chapter = Array.isArray(profile.chapter_membership.chapter) ? profile.chapter_membership.chapter[0] : profile.chapter_membership.chapter
-    const resume = Array.isArray(data.resume) ? data.resume[0] : data.resume
+    const resume = Array.isArray(student.resume) ? student.resume[0] : student.resume
 
     return {
-      id: data.id,
-      name: data.name,
-      email: data.email,
+      id: student.id,
+      name: student.name ?? '',
+      email: student.email,
       chapter: chapter ? { name: chapter.name, university: chapter.university } : null,
       graduation_year: profile.graduation_year ?? null,
       major: profile.major_or_interest ?? null,

@@ -47,8 +47,12 @@ const studentFilters = {
 
   const chapters = [...new Map(
     students
-      .filter(s => s.student_profile?.chapter_id && s.chapter)
-      .map(s => [s.student_profile!.chapter_id, s.chapter!.name])
+      .map((student): [string, string] | null => {
+        const chapterId = student.student_profile?.chapter_id
+        const chapterName = student.chapter?.name
+        return chapterId && chapterName ? [chapterId, chapterName] : null
+      })
+      .filter((chapter): chapter is [string, string] => chapter !== null)
   ).entries()]
 
   return (
