@@ -35,8 +35,8 @@ export default function MemberApprovalEmail({
       features: [
         'Registrarte para eventos y talleres de tu capítulo',
         'Obtener códigos QR para el check-in en eventos',
-        'Optar por visibilidad de reclutador para oportunidades laborales',
-        'Subir tu currículum para que los reclutadores te descubran',
+        'Optar por visibilidad ante empresas aliadas para oportunidades laborales',
+        'Subir tu currículum para que las empresas aliadas te descubran',
       ],
       button: 'Ir a mi Dashboard',
       closing: 'Estamos emocionados de tenerte como parte de la comunidad LEAD.',
@@ -54,8 +54,8 @@ export default function MemberApprovalEmail({
       features: [
         'Register for chapter events and workshops',
         'Get QR codes for event check-ins',
-        'Opt into recruiter visibility for job opportunities',
-        'Upload your resume for recruiters to discover',
+        'Opt into partner company visibility for job opportunities',
+        'Upload your resume for partner companies to discover',
       ],
       button: 'Go to My Dashboard',
       closing: 'We are thrilled to have you as part of the LEAD community.',

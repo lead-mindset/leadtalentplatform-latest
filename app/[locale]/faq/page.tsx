@@ -191,12 +191,12 @@ export default function FAQPage() {
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Can recruiters see my profile?</CardTitle>
+                <CardTitle className="text-lg">Can partner companies see my profile?</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Yes, you can choose to make your profile visible to recruiters from our partner 
-                  companies. This increases your chances of being discovered for opportunities that 
+                  Yes, you can choose to make your profile visible to company representatives from our partner
+                  companies. This increases your chances of being discovered for opportunities that
                   match your skills and interests.
                 </p>
               </CardContent>

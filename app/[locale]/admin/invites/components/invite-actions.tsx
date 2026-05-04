@@ -78,10 +78,10 @@ export function InviteActions({ inviteId, status }: InviteActionsProps) {
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Revoke Recruiter Access</AlertDialogTitle>
+            <AlertDialogTitle>Revoke Company Representative Access</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to revoke this recruiter&apos;s access? They will
-              immediately lose access to student profiles. This action cannot be undone.
+              Are you sure you want to revoke this company representative&apos;s access? They will
+              immediately lose access to visible talent profiles. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -124,7 +124,7 @@ export function InviteActions({ inviteId, status }: InviteActionsProps) {
             <AlertDialogTitle>Revoke Invitation</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to revoke this invitation? The link will no longer
-              work and the recruiter will not be able to access the platform.
+              work and the company representative will not be able to access the platform.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

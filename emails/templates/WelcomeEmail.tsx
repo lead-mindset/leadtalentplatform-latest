@@ -48,12 +48,12 @@ const roleFeatures: Record<Role, Record<'en' | 'es', { icon: string; text: strin
     es: [
       { icon: '⚙️', text: 'Gestiona usuarios y capítulos desde el panel de administración' },
       { icon: '✅', text: 'Aprueba perfiles de estudiantes' },
-      { icon: '👥', text: 'Supervisa el acceso de reclutadores' },
+      { icon: '👥', text: 'Supervisa el acceso de representantes de empresas' },
     ],
     en: [
       { icon: '⚙️', text: 'Manage users and chapters from the admin panel' },
       { icon: '✅', text: 'Approve student profiles' },
-      { icon: '👥', text: 'Oversee recruiter access' },
+      { icon: '👥', text: 'Oversee company representative access' },
     ],
   },
 }
@@ -71,7 +71,7 @@ export default function WelcomeEmail({
       greeting: name ? `¡Hola, ${name}!` : '¡Hola!',
       intro: {
         member: 'Tu cuenta en LEAD Mindset ya está activa. Nos emociona tenerte como parte de nuestra comunidad global de líderes comprometidos con el crecimiento continuo.',
-        recruiter: 'Tu acceso como reclutador en LEAD Mindset ya está activo. Estamos felices de tenerte con nosotros.',
+        recruiter: 'Tu acceso como representante de empresa en LEAD Mindset ya está activo. Estamos felices de tenerte con nosotros.',
         admin: 'Tu cuenta de administrador en LEAD Mindset ya está activa. Tienes acceso completo a la plataforma.',
       }[role],
       listTitle: 'Ahora tienes acceso a:',
@@ -87,7 +87,7 @@ export default function WelcomeEmail({
       greeting: name ? `Hi, ${name}!` : 'Hi!',
       intro: {
         member: 'Your LEAD Mindset account is now active. We are thrilled to have you as part of our global community of leaders committed to continuous growth.',
-        recruiter: 'Your recruiter access to LEAD Mindset is now active. We are glad to have you on board.',
+        recruiter: 'Your company representative access to LEAD Mindset is now active. We are glad to have you on board.',
         admin: 'Your admin account on LEAD Mindset is now active. You have full access to the platform.',
       }[role],
       listTitle: 'You now have access to:',

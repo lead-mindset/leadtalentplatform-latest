@@ -137,13 +137,13 @@ export const COMPANY_NAV: NavItemConfig[] = [
   },
   {
     id: 'browse',
-    label: 'Browse Students',
+    label: 'Browse Talent',
     href: '/company/browse',
     icon: Users,
   },
   {
     id: 'saved',
-    label: 'Saved Students',
+    label: 'Saved Talent',
     href: '/company/saved',
     icon: Heart,
   },
@@ -155,4 +155,3 @@ export const COMPANY_NAV: NavItemConfig[] = [
   },
   // Settings removed — page doesn't exist yet
 ]
- 

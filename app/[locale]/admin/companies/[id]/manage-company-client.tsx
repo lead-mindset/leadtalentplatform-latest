@@ -41,8 +41,8 @@ export function ManageCompanyClient({ company }: Props) {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="space-y-2">
-            <Label>Recruiter Email</Label>
-            <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="recruiter@company.com" />
+            <Label>Company Representative Email</Label>
+            <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="representative@company.com" />
           </div>
           <div className="space-y-2">
             <Label>Expiry</Label>
@@ -85,11 +85,11 @@ export function ManageCompanyClient({ company }: Props) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Active Recruiters ({active.length})</CardTitle>
+          <CardTitle>Active Representatives ({active.length})</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           {active.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No active recruiters.</p>
+            <p className="text-sm text-muted-foreground">No active company representatives.</p>
           ) : (
             active.map((row) => (
               <div key={row.id} className="flex items-center justify-between border rounded p-2">

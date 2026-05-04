@@ -25,7 +25,7 @@ export default async function StudentResumePage() {
                 Resume Management
               </h1>
               <p className="fluid-body text-muted-foreground max-w-2xl">
-                Showcase your potential to global recruiters with your latest professional profile.
+                Showcase your potential to partner companies with your latest professional profile.
               </p>
             </div>
 

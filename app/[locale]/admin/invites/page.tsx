@@ -132,7 +132,7 @@ async function InvitesList() {
       <Card>
         <CardHeader>
           <CardTitle>All Invites</CardTitle>
-          <CardDescription>Recruiter invitations across all companies</CardDescription>
+          <CardDescription>Company representative invitations across all companies</CardDescription>
         </CardHeader>
         <CardContent>
           {invites.length === 0 ? (
@@ -275,9 +275,9 @@ export default function AdminInvitesPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Recruiter Invites</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Company Representative Invites</h1>
         <p className="text-muted-foreground mt-2">
-          Invite and manage recruiter access across all companies
+          Invite and manage company representative access across all companies
         </p>
       </div>
       <Suspense fallback={<LoadingSkeleton />}>

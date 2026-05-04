@@ -12,7 +12,7 @@ We follow a **Service Layer Pattern** (see `docs/adr/001-service-layer-pattern.m
 
 ## Multi-Role Testing Strategy
 
-Due to the complex, multi-role nature of the platform (Participants, Members, Editors, Admins, Staff, Recruiters, and Alumni), tests should rely on **deterministic seed personas** rather than ad-hoc setups.
+Due to the complex, multi-role nature of the platform (Participants, Members, Editors, Admins, Staff, Company Representatives, and Alumni), tests should rely on **deterministic seed personas** rather than ad-hoc setups.
 
 ### Seed Personas Matrix
 We maintain standard accounts in `supabase/seed.sql` pre-loaded with the necessary auth and schema structures:
@@ -24,7 +24,7 @@ We maintain standard accounts in `supabase/seed.sql` pre-loaded with the necessa
 | **Editor** | `editor@test.com` | `public.user.role='editor'`, `person_profile`, `chapter_membership` (`position='editor'`, `status='approved'`) |
 | **Admin** | `admin@test.com` | `public.user.role='admin'`, `person_profile`, `lead_identity` (`identity_type='founder'`) |
 | **Staff** | `staff@test.com` | `public.user.role='admin'`, `person_profile`, `lead_identity` (`identity_type='staff'`) |
-| **Recruiter** | `recruiter@test.com` | `public.user.role='recruiter'`, `person_profile`, active accepted `recruiter_access` |
+| **Company Representative** | `recruiter@test.com` | `public.user.role='recruiter'`, `person_profile`, active accepted `recruiter_access` |
 | **Alumni** | `alumni@test.com` | `public.user.role='member'`, `person_profile`, `chapter_membership` (`position='member'`, `status='alumni'`) |
 
 *(All seed accounts share the same password: `password123` for manual UI testing).*
@@ -43,14 +43,14 @@ Admin access is controlled by `public.user.role`, not by `lead_identity`:
 - Local `admin@test.com` should have `public.user.role='admin'` plus a founder identity.
 - Local `staff@test.com` should have `public.user.role='admin'` plus a staff identity.
 
-### Recruiter Invite Access Flow (LEAD-022)
+### Company Representative Invite Access Flow (LEAD-022)
 
-Recruiter access is invite-only and independent from student onboarding:
+Company representative access is invite-only and independent from student onboarding:
 
-- Accepting a valid recruiter invite must set or preserve `public.user.role='recruiter'`.
+- Accepting a valid company representative invite must set or preserve `public.user.role='recruiter'`.
 - Accepted access must set `recruiter_access.accepted_at`, `accepted_by_user_id`, and `is_active=true`.
-- Company routes should authorize recruiters from `public.user.role='recruiter'` plus active, non-revoked `recruiter_access`.
-- Recruiters must not need `person_profile` or `chapter_membership` to use `/company/*` pages.
+- Company routes should authorize company representatives from `public.user.role='recruiter'` plus active, non-revoked `recruiter_access`.
+- Company representatives must not need `person_profile` or `chapter_membership` to use `/company/*` pages.
 - Revoked, expired, missing, or inactive access should land in the company onboarding/help state, not student onboarding.
 - Manual validation should use `recruiter@test.com` and confirm active accepted access reaches `/company/dashboard`.
 

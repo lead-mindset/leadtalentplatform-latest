@@ -18,14 +18,14 @@ export default async function CompanyDashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold mb-2">Recruiter Dashboard</h1>
+        <h1 className="text-3xl font-bold mb-2">Company Portal</h1>
         <p className="text-muted-foreground">Welcome back, {user.name}</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+            <CardTitle className="text-sm font-medium">Available Talent</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -36,7 +36,7 @@ export default async function CompanyDashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Saved Students</CardTitle>
+            <CardTitle className="text-sm font-medium">Saved Talent</CardTitle>
             <Heart className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
@@ -67,13 +67,13 @@ export default async function CompanyDashboardPage() {
             <Button asChild className="w-full justify-start">
               <Link href="/company/browse">
                 <Users className="mr-2 h-4 w-4" />
-                Browse All Students
+                Browse Talent
               </Link>
             </Button>
             <Button asChild variant="outline" className="w-full justify-start">
               <Link href="/company/saved">
                 <Heart className="mr-2 h-4 w-4" />
-                View Saved Students
+                View Saved Talent
               </Link>
             </Button>
           </CardContent>
@@ -82,13 +82,13 @@ export default async function CompanyDashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Recently Saved</CardTitle>
-            <CardDescription>Students you&apos;ve saved recently</CardDescription>
+            <CardDescription>Profiles you&apos;ve saved recently</CardDescription>
           </CardHeader>
           <CardContent>
             {recentlySaved.length === 0 ? (
               <div className="text-center py-8">
                 <Heart className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">No saved students yet</p>
+                <p className="text-sm text-muted-foreground">No saved talent yet</p>
                 <Button asChild variant="link" size="sm" className="mt-2">
                   <Link href="/company/browse">Start browsing</Link>
                 </Button>

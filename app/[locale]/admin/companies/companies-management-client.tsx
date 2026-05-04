@@ -111,7 +111,7 @@ export function CompaniesManagementClient({
                     ['name', 'Company Name'],
                     ['createdat', 'Created At'],
                     ['created_by_name', 'Created By'],
-                    ['active_recruiters', 'Active Recruiters'],
+                    ['active_recruiters', 'Active Representatives'],
                     ['pending_invites', 'Pending Invites'],
                   ].map(([key, label]) => (
                     <TableHead key={key} className="text-left p-2">
@@ -271,7 +271,7 @@ export function CompaniesManagementClient({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete company?</AlertDialogTitle>
             <AlertDialogDescription>
-              {deleteOpen?.name} will be deleted only if it has no active recruiters and no pending invites.
+              {deleteOpen?.name} will be deleted only if it has no active company representatives and no pending invites.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
