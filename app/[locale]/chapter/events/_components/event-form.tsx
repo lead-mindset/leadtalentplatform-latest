@@ -204,7 +204,7 @@ export function EventForm({
       if (description.length > 2000) { errors.description = 'Description must be less than 2000 characters'; isValid = false }
       if (coverImage && !coverImage.startsWith('http')) { errors.cover_image = 'Invalid image URL'; isValid = false }
     }
-    
+
     if (checkLogistics) {
       if (!startAt) { errors.start_at = 'Start date and time are required'; isValid = false }
       if (!endAt) { errors.end_at = 'End date and time are required'; isValid = false }
@@ -225,7 +225,7 @@ export function EventForm({
         if (!meetingUrl?.trim()) { errors.meeting_url = 'Meeting URL is required for hybrid events'; isValid = false }
       }
     }
-    
+
     if (checkAccess) {
       if (capacity && (isNaN(Number(capacity)) || Number(capacity) <= 0)) {
         errors.capacity = 'Capacity must be a valid number greater than 0'
@@ -282,7 +282,7 @@ export function EventForm({
     }
 
     setError(null)
-    
+
     startTransition(async () => {
       const payload = {
         title,
@@ -317,7 +317,7 @@ export function EventForm({
           toast.error(res.error)
           return
         }
-        
+
         if (mode === 'edit' && pendingCollaboratorIds.length > 0) {
           const collaboratorResult = await addEventCollaborators(res.event.id, pendingCollaboratorIds)
           if ('error' in collaboratorResult) {
@@ -457,7 +457,7 @@ export function EventForm({
   }
 
   // --- RENDER FUNCTIONS FOR UI SECTIONS ---
-  
+
   const renderBasics = () => (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <section className="bg-card border rounded-lg p-6 md:p-8 space-y-8 shadow-sm">
@@ -470,15 +470,15 @@ export function EventForm({
         <div className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="title" className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">Event Title</Label>
-            <Input 
-              id="title" 
-              value={title} 
+            <Input
+              id="title"
+              value={title}
               onChange={(e) => {
                 setTitle(e.target.value)
                 if (fieldErrors.title) {
                   setFieldErrors(prev => ({ ...prev, title: '' }))
                 }
-              }} 
+              }}
               placeholder="e.g. LATAM Tech Summit 2026"
               className={`h-12 px-4 text-lg bg-muted/50 border-transparent focus-visible:ring-primary focus-visible:bg-background transition-all rounded-xl ${fieldErrors.title ? 'border-destructive focus-visible:ring-destructive' : ''}`}
             />
@@ -527,7 +527,7 @@ export function EventForm({
             className="sr-only"
             onChange={async (event) => handleCoverFile(event.target.files?.[0] ?? null)}
           />
-          
+
           {coverImage ? (
             <>
               <Image
@@ -556,7 +556,7 @@ export function EventForm({
         </div>
         {coverError && <p className="text-sm text-destructive mt-2">{coverError}</p>}
         {fieldErrors.cover_image && <p className="text-sm text-destructive mt-2">{fieldErrors.cover_image}</p>}
-        
+
         <div className="mt-4 space-y-2">
           <Label htmlFor="coverImageUrl" className="text-sm text-muted-foreground">Or paste image URL</Label>
           <Input
@@ -663,7 +663,7 @@ export function EventForm({
               className={`h-12 w-full bg-muted/50 border-transparent focus-visible:bg-background ${fieldErrors.location ? 'border-destructive' : ''}`}
             />
             {fieldErrors.location && <p className="text-xs text-destructive ml-1">{fieldErrors.location}</p>}
-            
+
             {(locationCity || locationRegion) && (
               <div className="flex gap-2 ml-1 mt-2 text-xs text-muted-foreground bg-muted/30 px-3 py-2 rounded-lg border inline-flex items-center">
                 <span>📍 Parsed Data:</span>
@@ -727,7 +727,7 @@ export function EventForm({
               <div>
                 <span className={`block font-semibold ${accessModel === option.value ? 'text-primary' : 'text-foreground'}`}>{option.label}</span>
                 <span className="text-sm text-muted-foreground mt-1 block leading-relaxed">
-                  {option.value === 'open' 
+                  {option.value === 'open'
                     ? 'First-come, first-served. Students register instantly and receive their QR code immediately.'
                     : 'Members must apply. Admins review and approve entries manually.'
                   }
@@ -869,10 +869,10 @@ export function EventForm({
             </div>
             <h2 className="text-xl font-bold">Collaborating Chapters</h2>
           </div>
-          <CollaboratorManager 
-            eventId={initial.id} 
-            ownerChapterId={editorChapter?.id || null} 
-            mode={mode} 
+          <CollaboratorManager
+            eventId={initial.id}
+            ownerChapterId={editorChapter?.id || null}
+            mode={mode}
             onCollaboratorsChange={setPendingCollaboratorIds}
           />
         </section>
@@ -884,7 +884,7 @@ export function EventForm({
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
       <section className="bg-card border rounded-lg p-6 md:p-8 space-y-8 shadow-sm">
         <h2 className="text-2xl font-bold mb-6 border-b pb-4">Event Summary</h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-6">
             <div className="space-y-1">
@@ -942,7 +942,7 @@ export function EventForm({
         </div>
 
         <div className="mt-8 pt-8 border-t space-y-4">
-          <Button 
+          <Button
             className="w-full py-6 text-lg font-semibold"
             onClick={() => submitEvent(true)}
             disabled={isPending}
@@ -964,12 +964,12 @@ export function EventForm({
   )
 
   // --- MAIN RENDER ---
-  
+
   if (mode === 'edit') {
     return (
       <div className="w-full max-w-4xl mx-auto space-y-8 pb-32">
         {renderErrorSummary()}
-        
+
         {/* Render all sections cleanly on one page for quick editing */}
         <div className="space-y-12">
           {renderBasics()}
@@ -993,19 +993,19 @@ export function EventForm({
                 {isAutoSaving ? 'Auto-saving...' : lastSavedAt ? `Last saved at ${lastSavedAt}` : 'All changes saved.'}
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3 w-full sm:w-auto">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="flex-1 sm:flex-none font-semibold"
-                onClick={() => submitEvent(false)} 
+                onClick={() => submitEvent(false)}
                 disabled={isPending}
               >
                 Save Draft
               </Button>
-              <Button 
+              <Button
                 className="flex-1 sm:flex-none font-semibold"
-                onClick={() => submitEvent(true)} 
+                onClick={() => submitEvent(true)}
                 disabled={isPending}
               >
                 <Save className="w-4 h-4 mr-2" /> Save & Publish
@@ -1026,7 +1026,7 @@ export function EventForm({
             <React.Fragment key={s.num}>
               <div className="flex flex-col items-center gap-2 relative z-10">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 ${
-                  step === s.num ? 'bg-primary text-primary-foreground ring-4 ring-primary/20 shadow-lg' : 
+                  step === s.num ? 'bg-primary text-primary-foreground ring-4 ring-primary/20 shadow-lg' :
                   step > s.num ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
                 }`}>
                   {step > s.num ? <Check className="w-5 h-5" /> : s.num}
@@ -1056,19 +1056,19 @@ export function EventForm({
 
           {/* Form Navigation for Create Mode */}
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-6 border-t mt-8">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="lg"
-              className={step === 1 ? 'invisible' : ''} 
+              className={step === 1 ? 'invisible' : ''}
               onClick={handleBack}
             >
               <ArrowLeft className="w-4 h-4 mr-2" /> Back
             </Button>
-            
+
             {step < 4 ? (
-              <Button 
+              <Button
                 size="lg"
-                className="min-w-[140px]" 
+                className="min-w-[140px]"
                 onClick={handleNext}
               >
                 Next <ArrowRight className="w-4 h-4 ml-2" />
@@ -1091,7 +1091,7 @@ export function EventForm({
                 </div>
                 <h3 className="font-bold text-lg">Editor Tips</h3>
               </div>
-              
+
               <ul className="space-y-6">
                 {step === 1 && (
                   <>
