@@ -7,6 +7,7 @@ import { RegistrationStatus } from '@/lib/types'
 
 interface RegistrationStatusBadgeProps {
   status: RegistrationStatus
+  checkedIn?: boolean
   showIcon?: boolean
   size?: 'sm' | 'md'
 }
@@ -14,8 +15,8 @@ interface RegistrationStatusBadgeProps {
 const statusConfig = {
   pending_review: {
     icon: Icons.Clock,
-    label: 'Under Review',
-    variant: 'secondary',
+    label: 'Pending review',
+    variant: 'warning',
   },
   registered: {
     icon: Icons.CheckCircle2,
@@ -41,17 +42,24 @@ const statusConfig = {
   RegistrationStatus,
   {
     label: string
-    variant: 'secondary' | 'outline' | 'destructive' | 'success'
+    variant: 'secondary' | 'outline' | 'destructive' | 'success' | 'warning'
     icon: typeof Icons.Clock
   }
 >
 
 export function RegistrationStatusBadge({
   status,
+  checkedIn = false,
   showIcon = true,
   size = 'md',
 }: RegistrationStatusBadgeProps) {
-  const config = statusConfig[status]
+  const config = checkedIn
+    ? {
+        icon: Icons.CheckCircle2,
+        label: 'Checked in',
+        variant: 'success' as const,
+      }
+    : statusConfig[status]
   const Icon = config.icon
 
   return (

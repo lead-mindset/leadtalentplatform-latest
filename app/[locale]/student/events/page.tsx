@@ -1,8 +1,10 @@
 import QRCode from 'qrcode'
 import Image from 'next/image'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-
+import type { ReactNode } from 'react'
+import { QrCode } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { getMyRegistrations } from '@/lib/actions/events/get-data'
 import { CancelRegistrationDialog } from '@/components/events/cancel-registration-dialog'
@@ -17,13 +19,14 @@ type RegistrationWithEvent = Awaited<ReturnType<typeof getMyRegistrations>>[numb
 
 type EventRegistrationCardProps = {
   registration: RegistrationWithEvent
-  showQr: boolean
   qrDataUrl: string | null
+  showQr?: boolean
 }
 
 function formatDateTime(value: string) {
   const d = new Date(value)
   if (Number.isNaN(d.getTime())) return value
+
   return d.toLocaleString(undefined, {
     weekday: 'short',
     month: 'short',
@@ -34,90 +37,276 @@ function formatDateTime(value: string) {
   })
 }
 
-function formatRelativeTime(value: string) {
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return value
-  const now = new Date()
-  const diffInSeconds = Math.floor((now.getTime() - d.getTime()) / 1000)
-  
-  if (diffInSeconds < 60) return 'Just now'
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`
-  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`
-  return d.toLocaleDateString()
+function isFutureEvent(registration: RegistrationWithEvent) {
+  if (!registration.event?.start_at) return false
+  return new Date(registration.event.start_at) > new Date()
+}
+
+function isCheckedIn(registration: RegistrationWithEvent) {
+  return Boolean(registration.checked_in_at) || registration.status === 'attended'
+}
+
+function getRegistrationMessage(registration: RegistrationWithEvent, qrDataUrl: string | null) {
+  if (isCheckedIn(registration)) {
+    return {
+      title: 'Checked in',
+      body: 'You are marked present for this event.',
+      variant: 'success' as const,
+    }
+  }
+
+  if (registration.status === 'registered') {
+    return qrDataUrl
+      ? {
+          title: 'QR ready',
+          body: 'Show this code at check-in. Keep your brightness up when you arrive.',
+          variant: 'success' as const,
+        }
+      : {
+          title: 'Registration confirmed',
+          body: 'You are registered. QR details will appear here when available.',
+          variant: 'info' as const,
+        }
+  }
+
+  if (registration.status === 'pending_review') {
+    return {
+      title: 'Application submitted',
+      body: 'Editors will email you after review.',
+      variant: 'warning' as const,
+    }
+  }
+
+  if (registration.status === 'rejected') {
+    return {
+      title: 'Not selected',
+      body: 'You were not selected for this event.',
+      variant: 'destructive' as const,
+    }
+  }
+
+  return {
+    title: 'Cancelled',
+    body: 'This registration is inactive.',
+    variant: 'neutral' as const,
+  }
+}
+
+function EventMeta({ registration }: { registration: RegistrationWithEvent }) {
+  const event = registration.event
+
+  return (
+    <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+      {event?.start_at ? (
+        <span className="flex items-start gap-2">
+          <Icons.Calendar className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          <span>{formatDateTime(event.start_at)}</span>
+        </span>
+      ) : null}
+      {event?.location ? (
+        <span className="flex items-start gap-2">
+          <Icons.MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          <span className="break-words">{event.location}</span>
+        </span>
+      ) : null}
+    </div>
+  )
+}
+
+function QrPanel({ qrDataUrl }: { qrDataUrl: string }) {
+  return (
+    <div className="rounded-lg border border-border bg-white p-3 text-center shadow-sm">
+      <div className="mx-auto flex aspect-square w-full max-w-[15rem] items-center justify-center">
+        <Image
+          src={qrDataUrl}
+          alt="Event check-in QR code"
+          width={240}
+          height={240}
+          className="h-auto w-full max-w-[15rem]"
+          unoptimized
+        />
+      </div>
+      <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-[#111827]">
+        Ready for check-in
+      </p>
+    </div>
+  )
 }
 
 function EventRegistrationCard({
   registration,
-  showQr,
   qrDataUrl,
+  showQr = false,
 }: EventRegistrationCardProps) {
   const event = registration.event
-  const isRejected = registration.status === 'rejected'
-  const isPending = registration.status === 'pending_review'
+  const message = getRegistrationMessage(registration, qrDataUrl)
+  const canCancel = registration.status === 'registered' && !registration.checked_in_at
+  const canShowQr = showQr && registration.status === 'registered' && Boolean(qrDataUrl)
 
   return (
-    <Card className="overflow-hidden group hover:shadow-md transition-all md-card" variant="md">
-      <CardHeader className="space-y-2">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1">
-            <CardTitle className="text-base group-hover:text-primary transition-colors">{event?.title ?? 'Event'}</CardTitle>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {event?.start_at ? formatDateTime(event.start_at) : ''}
-            </p>
-            {event?.location ? (
-              <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-                <Icons.MapPin className="h-4 w-4" />
-                <span>{event.location}</span>
-              </div>
-            ) : null}
+    <Card
+      id={`event-reg-${registration.event_id}`}
+      className="scroll-mt-24 overflow-hidden rounded-lg"
+    >
+      <CardHeader className="gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 space-y-2">
+            <CardTitle className="break-words text-lg leading-6">
+              {event?.title ?? 'Event'}
+            </CardTitle>
+            <EventMeta registration={registration} />
           </div>
-          <RegistrationStatusBadge status={registration.status as RegistrationStatus} />
+          <RegistrationStatusBadge
+            status={registration.status as RegistrationStatus}
+            checkedIn={isCheckedIn(registration)}
+          />
         </div>
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {showQr && registration.status === 'registered' && qrDataUrl ? (
-          <div className="border-t pt-4">
-            <div className="flex items-center justify-center rounded-xl border bg-background p-4">
-              <Image
-                src={qrDataUrl}
-                alt="Event check-in QR code"
-                width={240}
-                height={240}
-                className="h-auto w-auto max-w-full"
-                unoptimized
-              />
-            </div>
+        <div className="rounded-lg border border-border bg-muted/30 p-3">
+          <div className="flex items-start gap-3">
+            <Badge variant={message.variant} size="sm" className="mt-0.5 shrink-0">
+              {message.title}
+            </Badge>
+            <p className="text-sm leading-6 text-muted-foreground">{message.body}</p>
           </div>
-        ) : null}
+        </div>
 
-        {isPending ? (
-          <div className="rounded-lg border p-3 bg-muted/30">
-            <p className="text-sm">
-              Your application is under review. You&apos;ll receive an email when a decision is made.
-            </p>
-          </div>
-        ) : null}
+        {canShowQr && qrDataUrl ? <QrPanel qrDataUrl={qrDataUrl} /> : null}
 
-        {isRejected ? (
-          <div className="rounded-lg border bg-muted/60 p-3">
-            <p className="text-sm text-muted-foreground">Not selected for this event.</p>
-          </div>
-        ) : null}
-
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <Button asChild variant="outline" className="w-full sm:flex-1">
             <Link href={`/events/${registration.event_id}`}>Event details</Link>
           </Button>
-          {registration.status === 'registered' && !registration.checked_in_at ? (
+          {canCancel ? (
             <CancelRegistrationDialog
               registrationId={registration.id}
+              eventId={registration.event_id}
               eventTitle={event?.title ?? 'this event'}
               triggerClassName="w-full sm:flex-1"
             />
           ) : null}
         </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function EmptyState() {
+  return (
+    <Card className="rounded-lg border-dashed">
+      <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
+        <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <Icons.Calendar className="h-6 w-6" />
+        </span>
+        <div className="space-y-1">
+          <h2 className="text-lg font-semibold">No event registrations yet</h2>
+          <p className="max-w-md text-sm text-muted-foreground">
+            Browse public events and register or apply when something fits your goals.
+          </p>
+        </div>
+        <Button asChild>
+          <Link href="/events">Browse events</Link>
+        </Button>
+      </CardContent>
+    </Card>
+  )
+}
+
+function TabEmptyState({
+  description,
+  icon,
+  title,
+}: {
+  description: string
+  icon: ReactNode
+  title: string
+}) {
+  return (
+    <Card className="rounded-lg border-dashed">
+      <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
+        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+          {icon}
+        </span>
+        <div className="space-y-1">
+          <p className="font-medium text-foreground">{title}</p>
+          <p className="max-w-md text-sm text-muted-foreground">{description}</p>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function CurrentTicket({
+  registration,
+  qrDataUrl,
+}: {
+  registration: RegistrationWithEvent
+  qrDataUrl: string | null
+}) {
+  const message = getRegistrationMessage(registration, qrDataUrl)
+  const canCancel = registration.status === 'registered' && !registration.checked_in_at
+
+  return (
+    <Card className="rounded-lg">
+      <CardHeader className="gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-2">
+            <Badge variant="outline">Current ticket</Badge>
+            <CardTitle className="break-words text-2xl leading-8">
+              {registration.event?.title ?? 'Your next event'}
+            </CardTitle>
+            <CardDescription>
+              Keep this ready on your phone when you arrive.
+            </CardDescription>
+          </div>
+          <RegistrationStatusBadge
+            status={registration.status as RegistrationStatus}
+            checkedIn={isCheckedIn(registration)}
+          />
+        </div>
+      </CardHeader>
+
+      <CardContent className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
+        <div className="space-y-5">
+          <EventMeta registration={registration} />
+
+          <div className="rounded-lg border border-border bg-muted/30 p-4">
+            <div className="flex items-start gap-3">
+              <Badge variant={message.variant} size="sm" className="mt-0.5 shrink-0">
+                {message.title}
+              </Badge>
+              <p className="text-sm leading-6 text-muted-foreground">{message.body}</p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button asChild className="w-full sm:w-auto">
+              <Link href={`/events/${registration.event_id}`}>Event details</Link>
+            </Button>
+            {canCancel ? (
+              <CancelRegistrationDialog
+                registrationId={registration.id}
+                eventId={registration.event_id}
+                eventTitle={registration.event?.title ?? 'this event'}
+                triggerClassName="w-full sm:w-auto"
+              />
+            ) : null}
+          </div>
+        </div>
+
+        {qrDataUrl ? (
+          <QrPanel qrDataUrl={qrDataUrl} />
+        ) : (
+          <div className="flex min-h-64 flex-col items-center justify-center rounded-lg border border-dashed border-border bg-muted/30 p-6 text-center">
+            <QrCode className="mb-3 h-8 w-8 text-muted-foreground" />
+            <p className="text-sm font-medium text-foreground">QR not available yet</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Confirmed registrations show a QR code here.
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
@@ -139,7 +328,7 @@ export default async function StudentEventsPage({
 
       const qrDataUrl = await QRCode.toDataURL(registration.qr_token, {
         margin: 1,
-        width: 240
+        width: 240,
       })
 
       return [registration.id, qrDataUrl] as const
@@ -147,369 +336,191 @@ export default async function StudentEventsPage({
   )
 
   const qrByRegistrationId = new Map(qrEntries)
-
-  const upcomingRegistrations = registrations.filter(
+  const activeRegistrations = registrations.filter(
     (registration) =>
       (registration.status === 'registered' || registration.status === 'attended') &&
-      registration.event?.start_at &&
-      new Date(registration.event.start_at) > new Date()
+      isFutureEvent(registration)
   )
-
-  const pendingRegistrations = registrations.filter(
-    (registration) => registration.status === 'pending_review'
+  const activeRegistrationIds = new Set(activeRegistrations.map((registration) => registration.id))
+  const applicationRegistrations = registrations.filter(
+    (registration) => registration.status === 'pending_review' || registration.status === 'rejected'
   )
-
-  const pastRegistrations = registrations.filter(
+  const historyRegistrations = registrations.filter(
     (registration) =>
-      (registration.status === 'attended' || registration.status === 'rejected') &&
-      registration.event?.start_at &&
-      new Date(registration.event.start_at) < new Date()
+      !activeRegistrationIds.has(registration.id) &&
+      registration.status !== 'pending_review' &&
+      registration.status !== 'rejected' &&
+      registration.status !== 'cancelled' &&
+      (registration.status === 'attended' ||
+        (registration.event?.start_at && new Date(registration.event.start_at) <= new Date()))
   )
-
   const cancelledRegistrations = registrations.filter(
     (registration) => registration.status === 'cancelled'
   )
-  
-  const recentActivity = [...registrations]
-    .sort((a, b) => {
-      const dateA = (a as unknown as { created_at?: string }).created_at ? new Date((a as unknown as { created_at?: string }).created_at!) : new Date(a.event?.start_at || 0)
-      const dateB = (b as unknown as { created_at?: string }).created_at ? new Date((b as unknown as { created_at?: string }).created_at!) : new Date(b.event?.start_at || 0)
-      return dateB.getTime() - dateA.getTime()
-    })
-    .slice(0, 5)
-
-  const nextEventRegistration = upcomingRegistrations.length > 0 ? upcomingRegistrations[0] : null;
-  const remainingUpcomingRegistrations = upcomingRegistrations.slice(1);
+  const currentTicket = activeRegistrations[0] ?? null
+  const visibleActiveRegistrations = activeRegistrations.filter(
+    (registration) => registration.id !== currentTicket?.id
+  )
 
   return (
-    <MainContainer className="py-8 space-y-12 pb-32">
+    <MainContainer maxWidth="7xl" className="space-y-8 py-6 pb-24 sm:py-8">
       <ScrollToHighlightedEvent eventId={highlightEventId} />
 
-      {/* Hero Section */}
-      <header className="mb-10 text-center lg:text-left">
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground font-headline mb-4">My Events</h1>
-        <p className="text-muted-foreground text-lg font-light max-w-3xl lg:mx-0 mx-auto">
-          Ready to participate? Manage your registrations and access QR codes for event check-in.
-        </p>
+      <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">My Events</h1>
+          <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+            Track registrations, application decisions, and QR check-in codes in one place.
+          </p>
+        </div>
+        <Button asChild>
+          <Link href="/events">Browse events</Link>
+        </Button>
       </header>
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
-        {/* Left Content */}
-        <div className="col-span-1 xl:col-span-8 space-y-8">
-          
-          {/* Bento Card: Discover New Events */}
-          <Link href="/events" className="block">
-            <section className="bg-card/50 rounded-xl p-8 border-2 border-dashed border-muted-foreground/20 flex flex-col items-center justify-center text-center group cursor-pointer hover:bg-muted/50 transition-colors">
-              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <Icons.Compass className="w-10 h-10 text-primary" />
-              </div>
-              <h2 className="text-2xl font-headline font-bold mb-2">Discover New Events</h2>
-              <p className="text-muted-foreground mb-6 max-w-sm">
-                Browse our catalog of upcoming workshops, recruitment fairs, and mixers to boost your career.
-              </p>
-              <div className="flex gap-4">
-                <span className="px-4 py-2 bg-background rounded-full text-xs font-medium text-muted-foreground border uppercase tracking-wider">Workshops</span>
-                <span className="px-4 py-2 bg-background rounded-full text-xs font-medium text-muted-foreground border uppercase tracking-wider">Networking</span>
-              </div>
-            </section>
-          </Link>
+      {registrations.length === 0 ? (
+        <EmptyState />
+      ) : (
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
+          <section className="space-y-6">
+            {currentTicket ? (
+              <CurrentTicket
+                registration={currentTicket}
+                qrDataUrl={qrByRegistrationId.get(currentTicket.id) ?? null}
+              />
+            ) : (
+              <Card className="rounded-lg border-dashed">
+                <CardContent className="flex flex-col gap-4 py-8 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="space-y-1">
+                    <h2 className="text-lg font-semibold">No active ticket right now</h2>
+                    <p className="text-sm text-muted-foreground">
+                      Registered upcoming events with QR codes will appear here first.
+                    </p>
+                  </div>
+                  <Button asChild variant="outline">
+                    <Link href="/events">Find an event</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
 
-          {/* Primary Action Event Card */}
-          {nextEventRegistration && (
-            <div className="group relative rounded-2xl overflow-hidden shadow-2xl border bg-card transition-all hover:shadow-primary/10">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-background to-background opacity-80 mix-blend-overlay"></div>
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent"></div>
-              
-              <div className="relative p-8 sm:p-10 flex flex-col md:flex-row gap-8 justify-between items-start md:items-center">
-                <div className="space-y-5 flex-1">
-                  <span className="inline-block px-3 py-1 bg-primary/10 text-primary text-[10px] font-bold tracking-[0.2em] uppercase rounded-full border border-primary/20 backdrop-blur-md">
-                    Next Up
-                  </span>
-                  <div>
-                    <h2 className="text-3xl sm:text-4xl font-bold font-headline mb-3 text-foreground group-hover:text-primary transition-colors">
-                      {nextEventRegistration.event?.title}
-                    </h2>
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 text-muted-foreground text-sm font-medium">
-                      {nextEventRegistration.event?.start_at && (
-                        <span className="flex items-center gap-2">
-                          <Icons.Calendar className="w-4 h-4 text-primary" />
-                          {formatDateTime(nextEventRegistration.event.start_at)}
-                        </span>
-                      )}
-                      {nextEventRegistration.event?.location && (
-                        <span className="flex items-center gap-2">
-                          <Icons.MapPin className="w-4 h-4 text-primary" />
-                          {nextEventRegistration.event.location}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="pt-2 flex flex-col sm:flex-row gap-3">
-                    <Button asChild className="rounded-full px-8 shadow-lg font-bold tracking-wide">
-                      <Link href={`/events/${nextEventRegistration.event_id}`}>View Details</Link>
-                    </Button>
-                    {!nextEventRegistration.checked_in_at && (
-                      <CancelRegistrationDialog
-                        registrationId={nextEventRegistration.id}
-                        eventTitle={nextEventRegistration.event?.title ?? 'this event'}
-                        triggerClassName="rounded-full"
+            <Tabs defaultValue="active" className="space-y-4">
+              <TabsList className="flex w-full justify-start overflow-x-auto">
+                <TabsTrigger value="active">Active ({visibleActiveRegistrations.length})</TabsTrigger>
+                <TabsTrigger value="applications">
+                  Applications ({applicationRegistrations.length})
+                </TabsTrigger>
+                <TabsTrigger value="history">History ({historyRegistrations.length})</TabsTrigger>
+                {cancelledRegistrations.length > 0 ? (
+                  <TabsTrigger value="cancelled">
+                    Cancelled ({cancelledRegistrations.length})
+                  </TabsTrigger>
+                ) : null}
+              </TabsList>
+
+              <TabsContent value="active" className="space-y-4">
+                {visibleActiveRegistrations.length === 0 ? (
+                  <TabEmptyState
+                    icon={<Icons.Ticket className="h-5 w-5" />}
+                    title="No other active tickets"
+                    description="Your next ticket is shown above. Additional upcoming registrations will appear here."
+                  />
+                ) : (
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    {visibleActiveRegistrations.map((registration) => (
+                      <EventRegistrationCard
+                        key={registration.id}
+                        registration={registration}
+                        qrDataUrl={qrByRegistrationId.get(registration.id) ?? null}
+                        showQr
                       />
-                    )}
-                  </div>
-                </div>
-                
-                {qrByRegistrationId.get(nextEventRegistration.id) && (
-                  <div className="shrink-0 bg-white p-4 rounded-2xl shadow-xl md:rotate-2 group-hover:rotate-0 group-hover:scale-105 transition-all duration-500 mx-auto md:mx-0">
-                    <Image
-                      src={qrByRegistrationId.get(nextEventRegistration.id)!}
-                      alt="Event check-in QR code"
-                      width={180}
-                      height={180}
-                      className="w-40 h-40 md:w-48 md:h-48"
-                      unoptimized
-                    />
-                    <p className="text-center text-[10px] font-bold text-[#02041a] uppercase tracking-widest mt-3">Ready to Scan</p>
+                    ))}
                   </div>
                 )}
-              </div>
-            </div>
-          )}
-
-          {/* Streamlined Stats Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Card className="group transition-all hover:bg-muted/50 border-muted/60 bg-card/50 backdrop-blur-sm">
-              <CardContent className="p-6 flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-4">Total Registered</p>
-                  <div className="flex items-baseline gap-3">
-                    <span className="text-4xl font-headline font-bold text-foreground">{registrations.length}</span>
-                  </div>
-                </div>
-                <Icons.Ticket className="w-10 h-10 text-muted-foreground/20 group-hover:text-primary/40 transition-colors" />
-              </CardContent>
-            </Card>
-            
-            <Card className="group transition-all hover:bg-muted/50 border-muted/60 bg-card/50 backdrop-blur-sm">
-              <CardContent className="p-6 flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-4">Upcoming</p>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-4xl font-headline font-bold text-success">{upcomingRegistrations.length}</span>
-                  </div>
-                </div>
-                <Icons.Calendar className="w-10 h-10 text-muted-foreground/20 group-hover:text-success/40 transition-colors" />
-              </CardContent>
-            </Card>
-          </div>
-
-          <Tabs defaultValue="upcoming" className="space-y-6">
-            <TabsList className="bg-muted/50 w-full sm:w-auto overflow-x-auto flex justify-start rounded-full p-1">
-              <TabsTrigger value="upcoming" className="rounded-full px-6">Upcoming ({remainingUpcomingRegistrations.length})</TabsTrigger>
-              <TabsTrigger value="pending" className="rounded-full px-6">Pending ({pendingRegistrations.length})</TabsTrigger>
-              <TabsTrigger value="past" className="rounded-full px-6">Past ({pastRegistrations.length})</TabsTrigger>
-              {cancelledRegistrations.length > 0 && (
-                <TabsTrigger value="cancelled" className="rounded-full px-6">Cancelled ({cancelledRegistrations.length})</TabsTrigger>
-              )}
-            </TabsList>
-
-            <TabsContent value="upcoming" className="space-y-4">
-              {remainingUpcomingRegistrations.length === 0 ? (
-                <Card className="bg-muted/30 border-dashed">
-                  <CardContent className="py-12 text-center text-muted-foreground">
-                    <Icons.Calendar className="mx-auto mb-4 h-12 w-12 opacity-50 text-primary" />
-                    <p className="text-lg font-medium text-foreground">No other upcoming events</p>
-                    <p className="mt-2 text-sm">You haven&apos;t registered for any other upcoming events yet.</p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="grid gap-4 md:grid-cols-2">
-                  {remainingUpcomingRegistrations.map((registration) => (
-                    <div key={registration.id} id={`event-reg-${registration.event_id}`} className="scroll-mt-24">
-                      <EventRegistrationCard
-                        registration={registration}
-                        showQr
-                        qrDataUrl={qrByRegistrationId.get(registration.id) ?? null}
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="pending" className="space-y-4">
-              {pendingRegistrations.length === 0 ? (
-                <Card className="bg-muted/30 border-dashed">
-                  <CardContent className="py-12 text-center text-muted-foreground">
-                    <Icons.Clock className="mx-auto mb-4 h-12 w-12 opacity-50 text-warning" />
-                    <p className="text-lg font-medium text-foreground">No pending applications</p>
-                    <p className="mt-2 text-sm">Your applications will appear here while editors review them.</p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="grid gap-4 md:grid-cols-2">
-                  {pendingRegistrations.map((registration) => (
-                    <EventRegistrationCard
-                      key={registration.id}
-                      registration={registration}
-                      showQr={false}
-                      qrDataUrl={null}
-                    />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="past" className="space-y-4">
-              {pastRegistrations.length === 0 ? (
-                <Card className="bg-muted/30 border-dashed">
-                  <CardContent className="py-12 text-center text-muted-foreground">
-                    <Icons.Calendar className="mx-auto mb-4 h-12 w-12 opacity-50" />
-                    <p className="text-lg font-medium text-foreground">No past events</p>
-                    <p className="mt-2 text-sm">Events you&apos;ve attended will appear here.</p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="grid gap-4 md:grid-cols-2">
-                  {pastRegistrations.map((registration) => (
-                    <EventRegistrationCard
-                      key={registration.id}
-                      registration={registration}
-                      showQr={registration.status === 'attended'}
-                      qrDataUrl={qrByRegistrationId.get(registration.id) ?? null}
-                    />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-
-            {cancelledRegistrations.length > 0 && (
-              <TabsContent value="cancelled" className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  {cancelledRegistrations.map((registration) => (
-                    <EventRegistrationCard
-                      key={registration.id}
-                      registration={registration}
-                      showQr={false}
-                      qrDataUrl={null}
-                    />
-                  ))}
-                </div>
               </TabsContent>
-            )}
-          </Tabs>
-        </div>
 
-        {/* Right Content */}
-        <div className="col-span-1 xl:col-span-4 space-y-8">
-          
-          {/* Pro-Tips Section */}
-          <section className="bg-card rounded-xl p-6 border-l-4 border-primary shadow-lg shadow-primary/5">
-            <div className="flex items-center gap-3 mb-6">
-              <Icons.Lightbulb className="text-primary w-6 h-6" />
-              <h3 className="font-headline font-bold text-lg">Pro-Tips</h3>
-            </div>
-            <ul className="space-y-4">
-              <li className="flex gap-3">
-                <Icons.CheckCircle2 className="text-primary w-5 h-5 shrink-0" />
-                <span className="text-sm text-foreground">Have your QR code ready for a seamless check-in.</span>
-              </li>
-              <li className="flex gap-3">
-                <Icons.CheckCircle2 className="text-primary w-5 h-5 shrink-0" />
-                <span className="text-sm text-foreground">Arrive 15 minutes early to secure good seating.</span>
-              </li>
-              <li className="flex gap-3">
-                <Icons.CheckCircle2 className="text-primary w-5 h-5 shrink-0" />
-                <span className="text-sm text-foreground">Network with peers and speakers after the session.</span>
-              </li>
-              <li className="flex gap-3">
-                <Icons.CheckCircle2 className="text-primary w-5 h-5 shrink-0" />
-                <span className="text-sm text-foreground">Keep your profile updated for tailored event suggestions.</span>
-              </li>
-            </ul>
-          </section>
-
-          {/* Quick Resources Section */}
-          <section className="bg-card rounded-xl p-6 border">
-            <div className="flex items-center gap-3 mb-6">
-              <Icons.BookOpen className="text-primary w-6 h-6" />
-              <h3 className="font-headline font-bold text-lg">Quick Resources</h3>
-            </div>
-            <div className="space-y-3">
-              <Link className="flex items-center justify-between p-4 bg-muted/50 hover:bg-muted transition-colors rounded-xl group" href="/events">
-                <div className="flex items-center gap-3">
-                  <Icons.Calendar className="text-muted-foreground group-hover:text-primary w-5 h-5" />
-                  <span className="text-sm font-semibold">Event Calendar</span>
-                </div>
-                <Icons.ExternalLink className="text-muted-foreground text-sm w-4 h-4" />
-              </Link>
-              <Link className="flex items-center justify-between p-4 bg-muted/50 hover:bg-muted transition-colors rounded-xl group" href="#">
-                <div className="flex items-center gap-3">
-                  <Icons.Map className="text-muted-foreground group-hover:text-primary w-5 h-5" />
-                  <span className="text-sm font-semibold">Campus Map</span>
-                </div>
-                <Icons.ExternalLink className="text-muted-foreground text-sm w-4 h-4" />
-              </Link>
-            </div>
-          </section>
-
-          {/* Motivational Card */}
-          <section className="bg-gradient-to-br from-primary to-primary/60 rounded-xl p-6 text-white shadow-xl shadow-primary/20">
-            <div className="flex items-start gap-4">
-              <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm shrink-0">
-                <Icons.TrendingUp className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h4 className="font-headline font-bold mb-2">Build Your Network</h4>
-                <p className="text-sm text-white/90 leading-relaxed">
-                  Attending events increases your professional connections by <span className="font-bold text-white">40%</span>. Join the next event and expand your horizon.
-                </p>
-              </div>
-            </div>
-          </section>
-
-          {/* Recent Activity Timeline */}
-          <Card className="bg-card/50 backdrop-blur-sm border-muted/60 p-6 sm:p-8 space-y-8">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-headline font-bold text-foreground">Recent Activity</h3>
-              <Button variant="ghost" size="sm" className="text-[10px] font-bold text-muted-foreground hover:text-primary tracking-widest uppercase h-auto py-1">
-                Overview
-              </Button>
-            </div>
-            
-            {recentActivity.length > 0 ? (
-              <div className="relative space-y-8 pl-6 border-l border-border/50">
-                {recentActivity.map((activity, idx) => (
-                  <div key={activity.id} className="relative group">
-                    <span className={`absolute -left-[29px] top-1 w-2.5 h-2.5 rounded-full ring-4 ring-background z-10 ${
-                      idx === 0 ? 'bg-primary ring-primary/20' : 'bg-muted-foreground/30'
-                    }`}></span>
-                    <div>
-                      <p className="text-sm text-foreground font-medium group-hover:text-primary transition-colors">
-                        {activity.status === 'registered' ? 'Registered for ' : 
-                         activity.status === 'pending_review' ? 'Applied to ' :
-                         activity.status === 'cancelled' ? 'Cancelled ' :
-                         activity.status === 'rejected' ? 'Not selected for ' :
-                         activity.status === 'attended' ? 'Attended ' : 'Updated '} 
-                        <span className="font-semibold">{activity.event?.title}</span>
-                      </p>
-                      <p className="text-[11px] text-muted-foreground mt-1.5 font-light uppercase tracking-wider">
-                        {(activity as unknown as { created_at?: string }).created_at ? formatRelativeTime((activity as unknown as { created_at: string }).created_at) : 'Recently'}
-                      </p>
-                    </div>
+              <TabsContent value="applications" className="space-y-4">
+                {applicationRegistrations.length === 0 ? (
+                  <TabEmptyState
+                    icon={<Icons.Clock className="h-5 w-5" />}
+                    title="No applications waiting"
+                    description="Application-based events will show here while they are reviewed."
+                  />
+                ) : (
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    {applicationRegistrations.map((registration) => (
+                      <EventRegistrationCard
+                        key={registration.id}
+                        registration={registration}
+                        qrDataUrl={null}
+                      />
+                    ))}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground text-center py-4">No recent activity.</p>
-            )}
-            
-            <Button variant="outline" className="w-full rounded-full text-[11px] font-bold tracking-widest text-muted-foreground hover:text-foreground transition-all uppercase">
-              View All Actions
-            </Button>
-          </Card>
-          
+                )}
+              </TabsContent>
+
+              <TabsContent value="history" className="space-y-4">
+                {historyRegistrations.length === 0 ? (
+                  <TabEmptyState
+                    icon={<Icons.Calendar className="h-5 w-5" />}
+                    title="No event history yet"
+                    description="Past attended events and completed registrations will appear here."
+                  />
+                ) : (
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    {historyRegistrations.map((registration) => (
+                      <EventRegistrationCard
+                        key={registration.id}
+                        registration={registration}
+                        qrDataUrl={null}
+                      />
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              {cancelledRegistrations.length > 0 ? (
+                <TabsContent value="cancelled" className="space-y-4">
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    {cancelledRegistrations.map((registration) => (
+                      <EventRegistrationCard
+                        key={registration.id}
+                        registration={registration}
+                        qrDataUrl={null}
+                      />
+                    ))}
+                  </div>
+                </TabsContent>
+              ) : null}
+            </Tabs>
+          </section>
+
+          <aside className="space-y-4">
+            <Card className="rounded-lg">
+              <CardHeader>
+                <CardTitle className="text-base">Check-in basics</CardTitle>
+                <CardDescription>Simple things that make event entry smoother.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3 text-sm leading-6 text-muted-foreground">
+                  <li className="flex gap-3">
+                    <Icons.CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <span>Use the current ticket QR when you arrive.</span>
+                  </li>
+                  <li className="flex gap-3">
+                    <Icons.CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <span>Pending applications do not have QR codes until approved.</span>
+                  </li>
+                  <li className="flex gap-3">
+                    <Icons.CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <span>Cancelled or rejected registrations are inactive.</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+          </aside>
         </div>
-      </div>
+      )}
     </MainContainer>
   )
 }
