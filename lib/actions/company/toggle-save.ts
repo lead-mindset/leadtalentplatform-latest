@@ -19,8 +19,6 @@ export async function toggleSaveStudentAction(
   revalidatePath('/company/browse')
   revalidatePath('/company/saved')
   revalidatePath(`/company/students/${studentId}`)
-  revalidatePath('/recruiter/browse')
-  revalidatePath('/recruiter/saved')
 
   return result
 }
