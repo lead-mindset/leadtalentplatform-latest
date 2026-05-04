@@ -12,7 +12,16 @@ import {
 } from '@/lib/actions/events/checkin'
 import type { CheckInSearchResult } from '@/lib/services/event.service'
 import { Badge } from '@/components/ui/badge'
-import { CheckCircle2, XCircle, AlertCircle, Loader2 } from 'lucide-react'
+import {
+  AlertCircle,
+  Camera,
+  CheckCircle2,
+  Keyboard,
+  Loader2,
+  Search,
+  ShieldCheck,
+  XCircle,
+} from 'lucide-react'
 
 type ScanStatus = 'idle' | 'scanning' | 'success' | 'error' | 'neutral'
 
@@ -224,7 +233,7 @@ export function CheckinScanner({
       if (result.state === 'already_checked_in') {
         showStatus('neutral', `${result.attendee.name} was already checked in`)
       } else {
-        showStatus('success', `✓ ${result.attendee.name} checked in`)
+        showStatus('success', `${result.attendee.name} checked in`)
       }
       setPendingCandidate(null)
     } finally {
@@ -283,68 +292,89 @@ export function CheckinScanner({
     : 0
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-
+    <div className="space-y-4">
       <Card>
-        <CardContent className="pt-5 pb-4 space-y-3">
-          <div className="flex items-end justify-between">
-            <p className="text-3xl font-bold tabular-nums">
-              {counter.checkedIn}
-              <span className="text-lg font-normal text-muted-foreground"> / {counter.total}</span>
-            </p>
-            <p className="text-sm text-muted-foreground mb-1">{percentage}% checked in</p>
+        <CardContent className="space-y-4 py-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Live check-in</p>
+              <p className="mt-2 text-4xl font-semibold tracking-tight tabular-nums">
+                {counter.checkedIn}
+                <span className="text-xl font-normal text-muted-foreground"> / {counter.total}</span>
+              </p>
+            </div>
+            <Badge variant={percentage === 100 && counter.total > 0 ? 'success' : 'outline'}>
+              {percentage}% attended
+            </Badge>
           </div>
-          <div className="h-2.5 rounded-full bg-muted overflow-hidden">
+          <div className="h-3 overflow-hidden rounded-full bg-muted">
             <div
               className="h-full bg-primary transition-all duration-500"
               style={{ width: `${percentage}%` }}
             />
           </div>
-          {wakeLockNote && (
-            <p className="text-xs text-muted-foreground">{wakeLockNote}</p>
-          )}
+          <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+            <span className="rounded-full bg-muted px-2.5 py-1">Registered: {counter.total}</span>
+            <span className="rounded-full bg-muted px-2.5 py-1">Attended: {counter.checkedIn}</span>
+            {wakeLockNote && <span className="rounded-full bg-muted px-2.5 py-1">{wakeLockNote}</span>}
+          </div>
         </CardContent>
       </Card>
 
       {status && (
-        <div className={`flex items-start gap-2 rounded-md border px-3 py-2.5 text-sm font-medium
-          ${status.type === 'success' ? 'border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-300' : ''}
+        <div className={`flex items-start gap-3 rounded-lg border px-4 py-3 text-sm font-medium
+          ${status.type === 'success' ? 'border-success/40 bg-success/10 text-success' : ''}
           ${status.type === 'error' ? 'border-destructive/40 bg-destructive/10 text-destructive' : ''}
           ${status.type === 'neutral' ? 'border-border bg-muted text-foreground' : ''}
         `}>
-          {status.type === 'success' && <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" />}
-          {status.type === 'error' && <XCircle className="h-4 w-4 mt-0.5 shrink-0" />}
-          {status.type === 'neutral' && <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />}
-          <span>{status.text}</span>
+          {status.type === 'success' && <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />}
+          {status.type === 'error' && <XCircle className="mt-0.5 h-4 w-4 shrink-0" />}
+          {status.type === 'neutral' && <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />}
+          <div className="space-y-1">
+            <p>{status.text}</p>
+            {status.type === 'error' && (
+              <p className="font-normal text-muted-foreground">
+                Check that the attendee is registered for this event and not pending, rejected, cancelled, or already checked in.
+              </p>
+            )}
+          </div>
         </div>
       )}
 
       {pendingCandidate && (
-        <Card className="border-primary">
+        <Card className="border-primary/60 bg-primary/5">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Confirm check-in</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <p className="font-semibold text-lg">{pendingCandidate.attendee.name}</p>
-              <p className="text-sm text-muted-foreground">{pendingCandidate.attendee.email}</p>
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                <ShieldCheck className="h-5 w-5" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Confirm attendee</CardTitle>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Verify the name before marking this registration as attended.
+                </p>
+              </div>
             </div>
-            <div className="flex gap-2">
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-lg border bg-card p-4">
+              <p className="text-lg font-semibold">{pendingCandidate.attendee.name}</p>
+              <p className="mt-1 break-all text-sm text-muted-foreground">{pendingCandidate.attendee.email}</p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
               <Button
                 variant="outline"
-                className="flex-1"
                 onClick={cancelPendingCheckIn}
                 disabled={isConfirming}
               >
                 Cancel
               </Button>
               <Button
-                className="flex-1"
                 onClick={() => void commitCheckIn()}
                 disabled={isConfirming}
               >
                 {isConfirming
-                  ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Checking in…</>
+                  ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Checking in...</>
                   : 'Confirm check-in'
                 }
               </Button>
@@ -353,109 +383,148 @@ export function CheckinScanner({
         </Card>
       )}
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle>Search attendee</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="relative">
-            <Input
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Name or email…"
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="off"
-            />
-            {isSearching && (
-              <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
-            )}
-          </div>
-
-          {searchQuery.trim().length >= 2 && !isSearching && searchResults.length === 0 && (
-            <p className="text-sm text-muted-foreground">No attendees found for &quot;{searchQuery}&quot;</p>
-          )}
-
-          {searchResults.length > 0 && (
-            <div className="space-y-2">
-              {searchResults.map((result) => (
-                <div
-                  key={result.registrationId}
-                  className="rounded-md border p-3 flex items-center justify-between gap-3"
-                >
-                  <div className="min-w-0">
-                    <p className="font-medium truncate">{result.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">{result.email}</p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Badge variant={result.status === 'attended' ? 'secondary' : 'outline'}>
-                      {result.status === 'attended' ? 'Attended' : 'Registered'}
-                    </Badge>
-                    <Button
-                      size="sm"
-                      variant={result.status === 'attended' ? 'ghost' : 'default'}
-                      onClick={() => prepareFromSearchResult(result)}
-                      disabled={isPending}
-                    >
-                      {result.status === 'attended' ? 'View' : 'Check in'}
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {hasBarcodeDetector && (
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(18rem,0.75fr)]">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle>Scan QR code</CardTitle>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                <Search className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Find attendee</CardTitle>
+                <p className="mt-1 text-sm text-muted-foreground">Best fallback when a QR code is unavailable.</p>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            {scanStatus === 'scanning' && (
-              <div className="rounded-xl overflow-hidden border bg-muted">
-                <video ref={videoRef} className="w-full h-auto" playsInline muted />
+            <div className="relative">
+              <Input
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+                placeholder="Search name or email"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                className="h-11 pr-10"
+              />
+              {isSearching && (
+                <Loader2 className="absolute right-3 top-3.5 h-4 w-4 animate-spin text-muted-foreground" />
+              )}
+            </div>
+
+            {searchQuery.trim().length >= 2 && !isSearching && searchResults.length === 0 && (
+              <p className="rounded-lg border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+                No registered attendee found for &quot;{searchQuery}&quot;.
+              </p>
+            )}
+
+            {searchResults.length > 0 && (
+              <div className="space-y-2">
+                {searchResults.map((result) => (
+                  <div
+                    key={result.registrationId}
+                    className="rounded-lg border p-3"
+                  >
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">{result.name}</p>
+                        <p className="truncate text-xs text-muted-foreground">{result.email}</p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <Badge variant={result.status === 'attended' ? 'success' : 'outline'}>
+                          {result.status === 'attended' ? 'Attended' : 'Registered'}
+                        </Badge>
+                        <Button
+                          size="sm"
+                          variant={result.status === 'attended' ? 'outline' : 'default'}
+                          onClick={() => prepareFromSearchResult(result)}
+                          disabled={isPending}
+                        >
+                          {result.status === 'attended' ? 'View' : 'Check in'}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={scanStatus === 'scanning' ? stopCamera : startCamera}
-              disabled={isPending}
-            >
-              {scanStatus === 'scanning' ? 'Stop camera' : 'Start camera'}
-            </Button>
           </CardContent>
         </Card>
-      )}
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle>Paste QR token</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <Input
-            value={qrToken}
-            onChange={(e) => setQrToken(e.target.value)}
-            placeholder="Paste token here…"
-            autoComplete="off"
-          />
-          <Button
-            type="button"
-            className="w-full"
-            onClick={() => void prepareFromToken(qrToken)}
-            disabled={isPending || !qrToken.trim()}
-          >
-            {isPending
-              ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Looking up…</>
-              : 'Look up attendee'
-            }
-          </Button>
-        </CardContent>
-      </Card>
+        <div className="space-y-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                  <Camera className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Scan QR code</CardTitle>
+                  <p className="mt-1 text-sm text-muted-foreground">Use the rear camera when supported.</p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {scanStatus === 'scanning' && (
+                <div className="overflow-hidden rounded-xl border bg-muted">
+                  <video ref={videoRef} className="aspect-video w-full object-cover" playsInline muted />
+                </div>
+              )}
+              {!hasBarcodeDetector && (
+                <p className="rounded-lg border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+                  Camera scanning is unavailable in this browser. Use attendee search or paste the QR token.
+                </p>
+              )}
+              {hasBarcodeDetector && (
+                <Button
+                  type="button"
+                  variant={scanStatus === 'scanning' ? 'destructive' : 'default'}
+                  className="w-full"
+                  onClick={scanStatus === 'scanning' ? stopCamera : startCamera}
+                  disabled={isPending}
+                >
+                  {scanStatus === 'scanning' ? 'Stop camera' : 'Start camera'}
+                </Button>
+              )}
+            </CardContent>
+          </Card>
 
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                  <Keyboard className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Paste QR token</CardTitle>
+                  <p className="mt-1 text-sm text-muted-foreground">Fallback for screenshots or copied pass links.</p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Input
+                value={qrToken}
+                onChange={(e) => setQrToken(e.target.value)}
+                placeholder="Paste token"
+                autoComplete="off"
+                className="h-11"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => void prepareFromToken(qrToken)}
+                disabled={isPending || !qrToken.trim()}
+              >
+                {isPending
+                  ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Looking up...</>
+                  : 'Look up attendee'
+                }
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   )
 }
