@@ -43,9 +43,9 @@ export default async function AdminChaptersPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-4xl font-bold tracking-tight">Chapters Management</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Chapters</h1>
         <p className="text-muted-foreground mt-2">
-          Manage chapter metadata, editor assignments, and safe deletion checks.
+          Manage chapter metadata, editor assignments, membership counts, and safe deletion checks.
         </p>
       </div>
       <ChaptersManagementClient
