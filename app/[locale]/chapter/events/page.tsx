@@ -5,75 +5,110 @@ import { getChapterEvents } from '@/lib/actions/events/get-data'
 import { EventsTable } from './_components/events-table'
 import { Icons } from '@/components/ui/icons'
 import { Breadcrumb } from '@/components/ui/breadcrumb'
+import { MainContainer } from '@/components/global/main-container'
+import type { ElementType } from 'react'
+
+function StatBlock({
+  label,
+  value,
+  helper,
+  icon: Icon,
+}: {
+  label: string
+  value: number
+  helper: string
+  icon: ElementType
+}) {
+  return (
+    <div className="rounded-lg border bg-card p-4">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-medium text-muted-foreground">{label}</p>
+        <Icon className="h-4 w-4 text-muted-foreground" />
+      </div>
+      <p className="mt-3 text-2xl font-semibold tracking-tight">{value}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{helper}</p>
+    </div>
+  )
+}
 
 export default async function ChapterEventsPage() {
   const events = await getChapterEvents()
+  const now = new Date()
+  const activeEvents = events.filter(event => event.is_published && new Date(event.end_at) >= now)
+  const draftEvents = events.filter(event => !event.is_published && new Date(event.end_at) >= now)
+  const pendingApplications = events.reduce(
+    (total, event) => total + (event._count?.pending_applications ?? 0),
+    0
+  )
+  const upcomingCheckins = events.filter(event => event.is_published && new Date(event.start_at) >= now).length
 
   return (
-    <div className="container max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8">
-      <Breadcrumb items={[
-        { label: 'Dashboard', href: '/chapter' },
-        { label: 'Events' }
-      ]} />
+    <MainContainer className="py-8 space-y-8">
+      <Breadcrumb
+        items={[
+          { label: 'Dashboard', href: '/chapter' },
+          { label: 'Events' },
+        ]}
+      />
 
-      {/* Page Header with Clear Hierarchy */}
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+      <div className="space-y-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-2">
             <h1 className="text-3xl font-bold tracking-tight">Chapter Events</h1>
-            <p className="text-muted-foreground text-lg">Create and manage your chapter&apos;s events</p>
+            <p className="max-w-2xl text-muted-foreground">
+              Manage owned and collaborative events scoped to your chapter.
+            </p>
           </div>
-          <Button asChild size="lg" className="shrink-0">
+          <Button asChild className="shrink-0">
             <Link href="/chapter/events/new">
               <Icons.Plus className="mr-2 h-4 w-4" />
-              Create New Event
+              Create event
             </Link>
           </Button>
         </div>
-        
-        {/* Quick Stats Bar */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-card rounded-lg p-4 border border-border/60">
-            <div className="text-2xl font-bold text-foreground">{events.length}</div>
-            <div className="text-sm text-muted-foreground">Total Events</div>
-          </div>
-          <div className="bg-card rounded-lg p-4 border border-border/60">
-            <div className="text-2xl font-bold text-success">
-              {events.filter(e => e.is_published).length}
-            </div>
-            <div className="text-sm text-muted-foreground">Published</div>
-          </div>
-          <div className="bg-card rounded-lg p-4 border border-border/60">
-            <div className="text-2xl font-bold text-warning">
-              {events.filter(e => !e.is_published && new Date(e.end_at) >= new Date()).length}
-            </div>
-            <div className="text-sm text-muted-foreground">Drafts</div>
-          </div>
-          <div className="bg-card rounded-lg p-4 border border-border/60">
-            <div className="text-2xl font-bold text-muted-foreground">
-              {events.filter(e => new Date(e.end_at) < new Date()).length}
-            </div>
-            <div className="text-sm text-muted-foreground">Past Events</div>
-          </div>
+
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <StatBlock
+            label="Active"
+            value={activeEvents.length}
+            helper="Published and not ended"
+            icon={Icons.Calendar}
+          />
+          <StatBlock
+            label="Drafts"
+            value={draftEvents.length}
+            helper="Need review before publishing"
+            icon={Icons.Edit}
+          />
+          <StatBlock
+            label="Applications"
+            value={pendingApplications}
+            helper="Pending event decisions"
+            icon={Icons.FileText}
+          />
+          <StatBlock
+            label="Check-in"
+            value={upcomingCheckins}
+            helper="Upcoming published events"
+            icon={Icons.Ticket}
+          />
         </div>
       </div>
 
       {events.length === 0 ? (
-        <Card className="border-dashed border-2 border-border/40">
+        <Card className="border-dashed">
           <CardContent className="py-16 text-center">
-            <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-              <Icons.Calendar className="h-8 w-8 text-primary" />
+            <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+              <Icons.Calendar className="h-5 w-5 text-primary" />
             </div>
-            <h3 className="text-xl font-semibold text-foreground mb-2">
-              No events yet
-            </h3>
-            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Your chapter hasn&apos;t hosted any events. Create your first event to start engaging with your community.
+            <h2 className="text-xl font-semibold">No events yet</h2>
+            <p className="mx-auto mt-2 mb-6 max-w-md text-sm text-muted-foreground">
+              Create the first chapter event when your team is ready to collect registrations or applications.
             </p>
-            <Button asChild size="lg">
+            <Button asChild>
               <Link href="/chapter/events/new">
                 <Icons.Plus className="mr-2 h-4 w-4" />
-                Create Your First Event
+                Create event
               </Link>
             </Button>
           </CardContent>
@@ -81,7 +116,7 @@ export default async function ChapterEventsPage() {
       ) : (
         <EventsTable events={events} />
       )}
-    </div>
+    </MainContainer>
   )
 }
 

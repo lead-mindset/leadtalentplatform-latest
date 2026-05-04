@@ -1,10 +1,12 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/server'
 import { EventForm } from '../_components/event-form'
 import { requireChapterEditor } from '@/lib/auth'
 import type { ChapterRow } from '@/lib/types'
+import { Breadcrumb } from '@/components/ui/breadcrumb'
+import { MainContainer } from '@/components/global/main-container'
+import { Icons } from '@/components/ui/icons'
 
 export default async function NewChapterEventPage() {
   const supabase = await createClient()
@@ -21,27 +23,32 @@ export default async function NewChapterEventPage() {
     editorChapter = chapter
   }
   return (
-    <div className="container max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-8">
-      {/* Page Header with Clear Hierarchy */}
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+    <MainContainer className="py-8 space-y-8">
+      <Breadcrumb
+        items={[
+          { label: 'Dashboard', href: '/chapter' },
+          { label: 'Events', href: '/chapter/events' },
+          { label: 'New event' },
+        ]}
+      />
+
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">New Event</h1>
-          <p className="text-muted-foreground text-lg">Create a draft event for your chapter</p>
+          <p className="max-w-2xl text-muted-foreground">
+            Create a draft event, then publish when details, registration, and applications are ready.
+          </p>
         </div>
         <Button asChild variant="outline">
-          <Link href="/chapter/events">Back</Link>
+          <Link href="/chapter/events">
+            <Icons.ArrowLeft className="mr-2 h-4 w-4" />
+            Events
+          </Link>
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Event details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <EventForm mode="create" editorChapter={editorChapter} />
-        </CardContent>
-      </Card>
-    </div>
+      <EventForm mode="create" editorChapter={editorChapter} />
+    </MainContainer>
   )
 }
 

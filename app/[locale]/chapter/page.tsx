@@ -203,9 +203,16 @@ function EventOpsList({
                     })}
                   </p>
                 </div>
-                <Button asChild size="sm" variant="outline">
-                  <Link href={`/chapter/events/${event.id}/checkin`}>Check-in</Link>
-                </Button>
+                <div className="flex shrink-0 gap-2">
+                  <Button asChild size="sm" variant="outline">
+                    <Link href={`/chapter/events/${event.id}`}>Manage</Link>
+                  </Button>
+                  {event.is_published && (
+                    <Button asChild size="sm" variant="outline">
+                      <Link href={`/chapter/events/${event.id}/checkin`}>Check-in</Link>
+                    </Button>
+                  )}
+                </div>
               </div>
               <p className="text-xs text-muted-foreground">
                 {capacity === null
@@ -226,7 +233,7 @@ function EventOpsList({
 }
 
 async function ChapterContent() {
-  const { supabase, user, chapter_id } = await requireChapterMember()
+  const { supabase, chapter_id } = await requireChapterMember()
 
   const { data: chapter } = await supabase
     .from('chapter')
@@ -269,12 +276,24 @@ async function ChapterContent() {
       {/* Breadcrumb Navigation */}
       <Breadcrumb items={[{ label: 'Dashboard', href: '/chapter' }]} />
 
-      {/* Page Header with Clear Hierarchy */}
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Chapter Overview</h1>
-        <p className="text-muted-foreground text-lg">
-          {chapter?.name} - {chapter?.university}
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">Chapter Overview</h1>
+          <p className="max-w-2xl text-muted-foreground">
+            {chapter?.name} - {chapter?.university}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild>
+            <Link href="/chapter/events/new">
+              <Icons.Plus className="mr-2 h-4 w-4" />
+              Create event
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/chapter/events">Manage events</Link>
+          </Button>
+        </div>
       </div>
 
       {stats.total === 0 && (
@@ -293,7 +312,7 @@ async function ChapterContent() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          label="Total Members"
+          label="Members"
           value={stats.total}
           sub="In your chapter"
           icon={Icons.Users}
@@ -308,7 +327,7 @@ async function ChapterContent() {
         <StatCard
           label="Upcoming Events"
           value={upcomingEventsCount}
-          sub="Open for chapter operations"
+          sub="Ready for event operations"
           icon={Icons.UserCheck}
           variant="success"
         />

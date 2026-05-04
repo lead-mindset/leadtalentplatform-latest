@@ -437,12 +437,30 @@ export function EventForm({
     { num: 3, title: 'Access' },
     { num: 4, title: 'Review' },
   ]
+  const fieldErrorEntries = Object.entries(fieldErrors).filter(([, message]) => message)
+
+  const renderErrorSummary = () => {
+    if (!error && fieldErrorEntries.length === 0) return null
+
+    return (
+      <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        {error && <p className="font-medium">{error}</p>}
+        {fieldErrorEntries.length > 0 && (
+          <ul className={error ? 'mt-2 list-disc space-y-1 pl-5' : 'list-disc space-y-1 pl-5'}>
+            {fieldErrorEntries.slice(0, 4).map(([field, message]) => (
+              <li key={field}>{message}</li>
+            ))}
+          </ul>
+        )}
+      </div>
+    )
+  }
 
   // --- RENDER FUNCTIONS FOR UI SECTIONS ---
   
   const renderBasics = () => (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <section className="bg-card border rounded-2xl p-6 md:p-8 space-y-8 shadow-sm">
+      <section className="bg-card border rounded-lg p-6 md:p-8 space-y-8 shadow-sm">
         <div className="flex items-center gap-3 mb-2">
           <div className="p-2 bg-primary/10 rounded-lg text-primary">
             <Lightbulb className="w-5 h-5" />
@@ -475,7 +493,7 @@ export function EventForm({
                 className="w-full min-h-32 bg-transparent border-none px-4 py-4 text-foreground outline-none resize-y placeholder:text-muted-foreground"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Tell the frontier what to expect..."
+                placeholder="Describe what participants should expect..."
               />
             </div>
             {fieldErrors.description && <p className="text-sm text-destructive">{fieldErrors.description}</p>}
@@ -483,7 +501,7 @@ export function EventForm({
         </div>
       </section>
 
-      <section className="bg-card border rounded-2xl p-6 md:p-8 shadow-sm">
+      <section className="bg-card border rounded-lg p-6 md:p-8 shadow-sm">
         <Label className="text-sm font-semibold tracking-wide text-muted-foreground uppercase mb-4 block">Event Cover Image</Label>
         <div
           onDragOver={(event) => {
@@ -499,7 +517,7 @@ export function EventForm({
             setIsDraggingCover(false)
             await handleCoverFile(event.dataTransfer.files[0] ?? null)
           }}
-          className={`relative w-full aspect-[21/9] rounded-2xl overflow-hidden border-2 border-dashed flex flex-col items-center justify-center gap-4 transition-all cursor-pointer group ${isDraggingCover ? 'border-primary bg-primary/5' : 'border-border bg-muted/30 hover:bg-muted/60'}`}
+          className={`relative w-full aspect-[21/9] rounded-lg overflow-hidden border-2 border-dashed flex flex-col items-center justify-center gap-4 transition-all cursor-pointer group ${isDraggingCover ? 'border-primary bg-primary/5' : 'border-border bg-muted/30 hover:bg-muted/60'}`}
           onClick={() => !coverImage && fileInputRef.current?.click()}
         >
           <input
@@ -555,7 +573,7 @@ export function EventForm({
 
   const renderLogistics = () => (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <section className="bg-card border rounded-2xl p-6 md:p-8 space-y-6 shadow-sm">
+      <section className="bg-card border rounded-lg p-6 md:p-8 space-y-6 shadow-sm">
         <div className="flex items-center gap-3 mb-2">
           <div className="p-2 bg-primary/10 rounded-lg text-primary">
             <UserCheck className="w-5 h-5" />
@@ -584,7 +602,7 @@ export function EventForm({
         </div>
       </section>
 
-      <section className="bg-card border rounded-2xl p-6 md:p-8 space-y-6 shadow-sm">
+      <section className="bg-card border rounded-lg p-6 md:p-8 space-y-6 shadow-sm">
         <div className="flex items-center gap-3 mb-2">
           <div className="p-2 bg-primary/10 rounded-lg text-primary">
             <Video className="w-5 h-5" />
@@ -618,7 +636,7 @@ export function EventForm({
       </section>
 
       {(eventType === 'in_person' || eventType === 'hybrid') && (
-        <section className="bg-card border rounded-2xl p-6 md:p-8 space-y-6 shadow-sm animate-in fade-in zoom-in-95">
+        <section className="bg-card border rounded-lg p-6 md:p-8 space-y-6 shadow-sm animate-in fade-in zoom-in-95">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-primary/10 rounded-lg text-primary">
               <MapPin className="w-5 h-5" />
@@ -659,7 +677,7 @@ export function EventForm({
       )}
 
       {(eventType === 'online' || eventType === 'hybrid') && (
-        <section className="bg-card border rounded-2xl p-6 md:p-8 space-y-6 shadow-sm animate-in fade-in zoom-in-95">
+        <section className="bg-card border rounded-lg p-6 md:p-8 space-y-6 shadow-sm animate-in fade-in zoom-in-95">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-primary/10 rounded-lg text-primary">
               <Video className="w-5 h-5" />
@@ -686,7 +704,7 @@ export function EventForm({
 
   const renderAccess = () => (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <section className="bg-card border rounded-2xl p-6 md:p-8 space-y-6 shadow-sm">
+      <section className="bg-card border rounded-lg p-6 md:p-8 space-y-6 shadow-sm">
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 bg-primary/10 rounded-lg text-primary">
             <QrCode className="w-5 h-5" />
@@ -819,7 +837,7 @@ export function EventForm({
         )}
       </section>
 
-      <section className="bg-card border rounded-2xl p-6 md:p-8 shadow-sm">
+      <section className="bg-card border rounded-lg p-6 md:p-8 shadow-sm">
         <div className="flex items-center gap-3 mb-4">
           <div className="p-2 bg-primary/10 rounded-lg text-primary">
             <UserCheck className="w-5 h-5" />
@@ -844,7 +862,7 @@ export function EventForm({
       </section>
 
       {mode === 'edit' && initial?.id && (
-        <section className="bg-card border rounded-2xl p-6 md:p-8 shadow-sm">
+        <section className="bg-card border rounded-lg p-6 md:p-8 shadow-sm">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 bg-primary/10 rounded-lg text-primary">
               <MapPin className="w-5 h-5" />
@@ -864,7 +882,7 @@ export function EventForm({
 
   const renderReview = () => (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <section className="bg-card border rounded-2xl p-6 md:p-8 space-y-8 shadow-sm">
+      <section className="bg-card border rounded-lg p-6 md:p-8 space-y-8 shadow-sm">
         <h2 className="text-2xl font-bold mb-6 border-b pb-4">Event Summary</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -925,7 +943,7 @@ export function EventForm({
 
         <div className="mt-8 pt-8 border-t space-y-4">
           <Button 
-            className="w-full bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90 py-6 text-lg font-bold shadow-lg transition-transform hover:scale-[1.01]"
+            className="w-full py-6 text-lg font-semibold"
             onClick={() => submitEvent(true)}
             disabled={isPending}
           >
@@ -950,11 +968,7 @@ export function EventForm({
   if (mode === 'edit') {
     return (
       <div className="w-full max-w-4xl mx-auto space-y-8 pb-32">
-        {error && (
-          <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive font-medium shadow-sm">
-            {error}
-          </div>
-        )}
+        {renderErrorSummary()}
         
         {/* Render all sections cleanly on one page for quick editing */}
         <div className="space-y-12">
@@ -964,7 +978,7 @@ export function EventForm({
         </div>
 
         {/* Sticky Bottom Bar for Edit Mode */}
-        <div className="sticky bottom-6 mt-12 p-4 bg-card/95 backdrop-blur-md border rounded-2xl z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
+        <div className="sticky bottom-6 z-50 mt-12 rounded-lg border bg-card/95 p-4 shadow-lg backdrop-blur-md">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <Button
@@ -990,7 +1004,7 @@ export function EventForm({
                 Save Draft
               </Button>
               <Button 
-                className="flex-1 sm:flex-none bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-md font-semibold"
+                className="flex-1 sm:flex-none font-semibold"
                 onClick={() => submitEvent(true)} 
                 disabled={isPending}
               >
@@ -1012,7 +1026,7 @@ export function EventForm({
             <React.Fragment key={s.num}>
               <div className="flex flex-col items-center gap-2 relative z-10">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 ${
-                  step === s.num ? 'bg-gradient-to-r from-primary to-accent text-primary-foreground ring-4 ring-primary/20 scale-110 shadow-lg' : 
+                  step === s.num ? 'bg-primary text-primary-foreground ring-4 ring-primary/20 shadow-lg' : 
                   step > s.num ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
                 }`}>
                   {step > s.num ? <Check className="w-5 h-5" /> : s.num}
@@ -1031,11 +1045,7 @@ export function EventForm({
         </div>
       </div>
 
-      {error && (
-        <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive font-medium shadow-sm">
-          {error}
-        </div>
-      )}
+      {renderErrorSummary()}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8">
@@ -1058,7 +1068,7 @@ export function EventForm({
             {step < 4 ? (
               <Button 
                 size="lg"
-                className="bg-gradient-to-r from-primary to-accent text-primary-foreground min-w-[140px] shadow-md hover:scale-105 transition-all" 
+                className="min-w-[140px]" 
                 onClick={handleNext}
               >
                 Next <ArrowRight className="w-4 h-4 ml-2" />
@@ -1071,26 +1081,26 @@ export function EventForm({
           </div>
         </div>
 
-        {/* Right Sidebar Pro-Tips */}
+        {/* Right Sidebar Tips */}
         <aside className="lg:col-span-4 hidden lg:block">
           <div className="sticky top-24 space-y-6">
-            <div className="bg-card/80 backdrop-blur-xl border border-primary/10 rounded-2xl p-6 shadow-sm">
+            <div className="rounded-lg border bg-card p-6 shadow-sm">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground shadow-sm">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <Lightbulb className="w-5 h-5" />
                 </div>
-                <h3 className="font-bold text-lg">Editor Pro-Tips</h3>
+                <h3 className="font-bold text-lg">Editor Tips</h3>
               </div>
               
               <ul className="space-y-6">
                 {step === 1 && (
                   <>
                     <li className="space-y-1">
-                      <p className="font-semibold text-sm flex items-center gap-2"><span className="text-primary">✨</span> Catchy Titles</p>
+                      <p className="font-semibold text-sm">Clear titles</p>
                       <p className="text-xs text-muted-foreground leading-relaxed">Keep titles under 50 characters. Use action verbs to attract the right talent.</p>
                     </li>
                     <li className="space-y-1">
-                      <p className="font-semibold text-sm flex items-center gap-2"><span className="text-primary">🖼️</span> Visual Impact</p>
+                      <p className="font-semibold text-sm">Visual impact</p>
                       <p className="text-xs text-muted-foreground leading-relaxed">High-contrast cover images perform 40% better. Avoid text-heavy graphics.</p>
                     </li>
                   </>
@@ -1098,11 +1108,11 @@ export function EventForm({
                 {step === 2 && (
                   <>
                     <li className="space-y-1">
-                      <p className="font-semibold text-sm flex items-center gap-2"><span className="text-primary">🕒</span> Timezone Check</p>
+                      <p className="font-semibold text-sm">Timezone check</p>
                       <p className="text-xs text-muted-foreground leading-relaxed">Most LEAD events are cross-border. Ensure your timezone is clear in the description.</p>
                     </li>
                     <li className="space-y-1">
-                      <p className="font-semibold text-sm flex items-center gap-2"><span className="text-primary">💻</span> Hybrid is Best</p>
+                      <p className="font-semibold text-sm">Hybrid access</p>
                       <p className="text-xs text-muted-foreground leading-relaxed">Providing a virtual link increases participation for regional chapters.</p>
                     </li>
                   </>
@@ -1110,11 +1120,11 @@ export function EventForm({
                 {step === 3 && (
                   <>
                     <li className="space-y-1">
-                      <p className="font-semibold text-sm flex items-center gap-2"><span className="text-primary">🚪</span> Open vs. Closed</p>
+                      <p className="font-semibold text-sm">Open vs. application</p>
                       <p className="text-xs text-muted-foreground leading-relaxed">Open enrollment leads to higher turnout, but application models ensure higher attendee quality.</p>
                     </li>
                     <li className="space-y-1">
-                      <p className="font-semibold text-sm flex items-center gap-2"><span className="text-primary">📊</span> Capacity Buffers</p>
+                      <p className="font-semibold text-sm">Capacity buffers</p>
                       <p className="text-xs text-muted-foreground leading-relaxed">Set capacity slightly lower than venue limit to ensure comfortable networking space.</p>
                     </li>
                   </>
@@ -1122,7 +1132,7 @@ export function EventForm({
                 {step === 4 && (
                   <>
                     <li className="space-y-1">
-                      <p className="font-semibold text-sm flex items-center gap-2"><span className="text-primary">👀</span> Final Check</p>
+                      <p className="font-semibold text-sm">Final check</p>
                       <p className="text-xs text-muted-foreground leading-relaxed">Review all details carefully. Once published, members will receive immediate notifications.</p>
                     </li>
                   </>

@@ -1,10 +1,14 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { requireChapterEditor } from '@/lib/auth'
 import type { EventRow, ChapterRow, EventApplicationQuestionRow } from '@/lib/types'
 import { EventForm } from '../_components/event-form'
+import { Badge } from '@/components/ui/badge'
+import { Breadcrumb } from '@/components/ui/breadcrumb'
+import { MainContainer } from '@/components/global/main-container'
+import { Icons } from '@/components/ui/icons'
 
 export default async function ChapterEventDetailPage({
   params,
@@ -38,39 +42,71 @@ export default async function ChapterEventDetailPage({
     .eq('event_id', id)
     .order('sort_order', { ascending: true })
 
-  return (
-    <div className="p-4 max-w-3xl mx-auto space-y-6">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Edit Event</h1>
-          <p className="text-muted-foreground mt-1">Update details and publishing status.</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button asChild variant="outline">
-            <Link href={`/${locale}/chapter/events`}>Back</Link>
-          </Button>
-          {event?.id && (
-            <Button asChild variant="outline">
-              <Link href={`/${locale}/chapter/events/${event.id}/checkin`}>Check-in</Link>
+  if (!event) {
+    return (
+      <MainContainer className="py-8">
+        <Card>
+          <CardContent className="py-12 text-center">
+            <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+              <Icons.Calendar className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <h1 className="text-xl font-semibold">Event not found</h1>
+            <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+              This event may have been removed or your chapter may not have access to manage it.
+            </p>
+            <Button asChild className="mt-6">
+              <Link href={`/${locale}/chapter/events`}>Back to events</Link>
             </Button>
-          )}
+          </CardContent>
+        </Card>
+      </MainContainer>
+    )
+  }
+
+  return (
+    <MainContainer className="py-8 space-y-8">
+      <Breadcrumb
+        items={[
+          { label: 'Dashboard', href: `/${locale}/chapter` },
+          { label: 'Events', href: `/${locale}/chapter/events` },
+          { label: 'Edit event' },
+        ]}
+      />
+
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-3xl font-bold tracking-tight">Edit Event</h1>
+            <Badge variant={event.is_published ? 'success' : 'outline'}>
+              {event.is_published ? 'Published' : 'Draft'}
+            </Badge>
+          </div>
+          <p className="max-w-2xl text-muted-foreground">
+            {event.title}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline">
+            <Link href={`/${locale}/chapter/events`}>
+              <Icons.ArrowLeft className="mr-2 h-4 w-4" />
+              Events
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href={`/${locale}/chapter/events/${event.id}/checkin`}>
+              Check-in
+            </Link>
+          </Button>
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{event?.title ?? 'Event'}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <EventForm
-            mode="edit"
-            initial={event ?? null}
-            editorChapter={editorChapter}
-            applicationQuestions={(applicationQuestions ?? []) as EventApplicationQuestionRow[]}
-          />
-        </CardContent>
-      </Card>
-    </div>
+      <EventForm
+        mode="edit"
+        initial={event}
+        editorChapter={editorChapter}
+        applicationQuestions={(applicationQuestions ?? []) as EventApplicationQuestionRow[]}
+      />
+    </MainContainer>
   )
 }
 
