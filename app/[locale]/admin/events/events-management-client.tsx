@@ -2,11 +2,9 @@
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Card, CardContent } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -15,6 +13,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import type { AdminEventListItem } from '@/lib/services/admin.service'
 
 type Props = {
@@ -30,12 +30,28 @@ type Props = {
   chapterOptions: { id: string; name: string }[]
 }
 
+const STATUS_OPTIONS = ['published', 'draft', 'upcoming', 'past']
+const SORT_COLUMNS: Array<[string, string]> = [
+  ['title', 'Title'],
+  ['startAt', 'Start'],
+  ['chapters', 'Chapters'],
+  ['status', 'Status'],
+  ['registrations', 'Registrations'],
+]
+
 function getStatus(item: AdminEventListItem) {
   const now = Date.now()
   if (new Date(item.end_at).getTime() < now) return 'past'
   if (!item.is_published) return 'draft'
   if (new Date(item.start_at).getTime() > now) return 'upcoming'
   return 'published'
+}
+
+function statusVariant(status: string) {
+  if (status === 'published') return 'success'
+  if (status === 'upcoming') return 'info'
+  if (status === 'draft') return 'warning'
+  return 'outline'
 }
 
 export function EventsManagementClient({
@@ -56,8 +72,20 @@ export function EventsManagementClient({
 
   const updateParam = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString())
-    params.set(key, value)
+    if (value) params.set(key, value)
+    else params.delete(key)
     if (key !== 'page') params.set('page', '1')
+    router.push(`${pathname}?${params.toString()}`)
+  }
+
+  const resetFilters = () => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete('search')
+    params.delete('chapter')
+    params.delete('status')
+    params.delete('sortBy')
+    params.delete('sortOrder')
+    params.set('page', '1')
     router.push(`${pathname}?${params.toString()}`)
   }
 
@@ -80,119 +108,111 @@ export function EventsManagementClient({
   }
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
+  const hasFilters = Boolean(search || chapterFilters.length || statusFilters.length)
 
   return (
     <div className="space-y-4">
       <Card>
-        <CardContent className="pt-6 flex flex-wrap gap-2">
-          <Input
-            className="max-w-sm"
-            defaultValue={search}
-            placeholder="Search event title"
-            onChange={(e) => updateParam('search', e.target.value)}
-          />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">Chapters ({chapterFilters.length || 'all'})</Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              <DropdownMenuLabel>Filter chapters</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {chapterOptions.map((chapter) => (
-                <DropdownMenuCheckboxItem
-                  key={chapter.id}
-                  checked={chapterFilters.includes(chapter.id)}
-                  onCheckedChange={() => toggleMulti('chapter', chapter.id, chapterFilters)}
-                >
-                  {chapter.name}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">Status ({statusFilters.length || 'all'})</Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              <DropdownMenuLabel>Filter status</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {['published', 'draft', 'upcoming', 'past'].map((status) => (
-                <DropdownMenuCheckboxItem
-                  key={status}
-                  checked={statusFilters.includes(status)}
-                  onCheckedChange={() => toggleMulti('status', status, statusFilters)}
-                >
-                  {status}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button asChild className="ml-auto">
-            <Link href="/admin/events/new">New Event</Link>
-          </Button>
+        <CardHeader>
+          <CardTitle>Filters</CardTitle>
+          <CardDescription>Search event titles and filter by chapter or lifecycle state.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex flex-col gap-2 md:flex-row">
+            <Input
+              className="md:w-80"
+              defaultValue={search}
+              placeholder="Search event title"
+              onChange={(event) => updateParam('search', event.target.value)}
+            />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">Chapters ({chapterFilters.length || 'all'})</Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuLabel>Filter chapters</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {chapterOptions.map((chapter) => (
+                  <DropdownMenuCheckboxItem
+                    key={chapter.id}
+                    checked={chapterFilters.includes(chapter.id)}
+                    onCheckedChange={() => toggleMulti('chapter', chapter.id, chapterFilters)}
+                  >
+                    {chapter.name}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">Status ({statusFilters.length || 'all'})</Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuLabel>Filter status</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {STATUS_OPTIONS.map((status) => (
+                  <DropdownMenuCheckboxItem
+                    key={status}
+                    checked={statusFilters.includes(status)}
+                    onCheckedChange={() => toggleMulti('status', status, statusFilters)}
+                  >
+                    {status}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={resetFilters}>Reset</Button>
+            <Button asChild><Link href="/admin/events/new">New event</Link></Button>
+          </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardContent className="pt-6">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                  {[
-                    ['title', 'Title'],
-                    ['startAt', 'Start Date'],
-                    ['chapters', 'Chapters'],
-                    ['status', 'Status'],
-                    ['registrations', 'Registrations'],
-                  ].map(([key, label]) => (
-                    <TableHead key={key} className="text-left p-2">
-                      <button
-                        className="rounded-sm hover:underline"
-                        onClick={() => toggleSort(key)}
-                      >
-                        {label}
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  {SORT_COLUMNS.map(([key, label]) => (
+                    <TableHead key={key} className="whitespace-nowrap">
+                      <button className="rounded-sm hover:underline" onClick={() => toggleSort(key)}>
+                        {label}{sortBy === key ? ` ${sortOrder === 'asc' ? 'up' : 'down'}` : ''}
                       </button>
                     </TableHead>
                   ))}
-                <TableHead className="text-left p-2">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+                  <TableHead className="w-[12rem]">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {items.map((event) => {
                   const status = getStatus(event)
                   return (
-                    <TableRow key={event.id}>
-                      <TableCell className="p-2 font-medium">{event.title}</TableCell>
-                      <TableCell className="p-2">{new Date(event.start_at).toLocaleString()}</TableCell>
-                      <TableCell className="p-2">
+                    <TableRow key={event.id} className="align-top">
+                      <TableCell className="min-w-[16rem] font-medium">
+                        {event.title}
+                        <p className="mt-1 text-xs text-muted-foreground">{event.id}</p>
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">{new Date(event.start_at).toLocaleString()}</TableCell>
+                      <TableCell className="min-w-[14rem]">
                         <div className="flex flex-wrap gap-1">
-                          {event.chapter && (
-                            <Badge 
-                              variant="outline" 
-                              className="text-xs px-2 py-1 border-primary/20 text-primary"
-                            >
-                              {event.chapter.name}
-                            </Badge>
-                          )}
+                          {event.chapter && <Badge variant="info">{event.chapter.name}</Badge>}
                           {event.event_chapter?.map((collaborator) => (
-                            <Badge 
-                              key={collaborator.id} 
-                              variant="secondary" 
-                              className="text-xs px-2 py-1"
-                            >
-                              {collaborator.chapter?.name || 'Unknown Chapter'}
+                            <Badge key={collaborator.id} variant="secondary">
+                              {collaborator.chapter?.name || 'Unknown chapter'}
                             </Badge>
                           ))}
                         </div>
                       </TableCell>
-                      <TableCell className="p-2">
-                        <Badge variant={status === 'published' ? 'secondary' : 'outline'}>{status}</Badge>
+                      <TableCell><Badge variant={statusVariant(status)}>{status}</Badge></TableCell>
+                      <TableCell>
+                        <Badge variant={event.capacity !== null && event.registrations >= event.capacity ? 'warning' : 'outline'}>
+                          {event.registrations}{event.capacity !== null ? ` / ${event.capacity}` : ''}
+                        </Badge>
                       </TableCell>
-                      <TableCell className="p-2">
-                        {event.registrations}{event.capacity !== null ? ` / ${event.capacity}` : ''}
-                      </TableCell>
-                      <TableCell className="p-2">
-                        <div className="flex gap-2">
+                      <TableCell>
+                        <div className="flex flex-wrap gap-2">
                           <Button asChild size="sm" variant="outline">
                             <Link href={`/admin/events/${event.id}`}>Manage</Link>
                           </Button>
@@ -204,33 +224,28 @@ export function EventsManagementClient({
                     </TableRow>
                   )
                 })}
-            </TableBody>
-          </Table>
+              </TableBody>
+            </Table>
+          </div>
 
           {items.length === 0 && (
-            <div className="py-10 text-center text-sm text-muted-foreground">No events found.</div>
+            <div className="py-10 text-center">
+              <CardTitle className="mb-2 text-lg">{hasFilters ? 'No events match your filters' : 'No events created yet'}</CardTitle>
+              <p className="text-sm text-muted-foreground">{hasFilters ? 'Clear filters or try a different search.' : 'Create the first event or wait for chapter editors to add one.'}</p>
+              <div className="mt-4 flex justify-center gap-2">
+                {hasFilters && <Button variant="outline" onClick={resetFilters}>Clear filters</Button>}
+                <Button asChild><Link href="/admin/events/new">New event</Link></Button>
+              </div>
+            </div>
           )}
 
-          <div className="mt-4 flex justify-between items-center">
-            <p className="text-sm text-muted-foreground">
-              {total} total • page {page} / {totalPages}
-            </p>
-            <div className="flex items-center gap-2">
-              <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => updateParam('page', String(page - 1))}>
-                Previous
-              </Button>
-              <Button size="sm" variant="outline" disabled={page >= totalPages} onClick={() => updateParam('page', String(page + 1))}>
-                Next
-              </Button>
+          <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <p className="text-sm text-muted-foreground">{total} total - page {page} / {totalPages}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => updateParam('page', String(page - 1))}>Previous</Button>
+              <Button size="sm" variant="outline" disabled={page >= totalPages} onClick={() => updateParam('page', String(page + 1))}>Next</Button>
               {[25, 50, 100].map((size) => (
-                <Button
-                  key={size}
-                  size="sm"
-                  variant={pageSize === size ? 'default' : 'outline'}
-                  onClick={() => updateParam('pageSize', String(size))}
-                >
-                  {size}
-                </Button>
+                <Button key={size} size="sm" variant={pageSize === size ? 'default' : 'outline'} onClick={() => updateParam('pageSize', String(size))}>{size}</Button>
               ))}
             </div>
           </div>

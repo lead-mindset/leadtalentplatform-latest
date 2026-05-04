@@ -49,9 +49,9 @@ export default async function AdminEventsPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-4xl font-bold tracking-tight">Global Events Management</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Events</h1>
         <p className="text-muted-foreground mt-2">
-          Manage events across chapters with filters, sorting, and quick actions.
+          Manage chapter-owned and collaborative events with filters, sorting, and quick actions.
         </p>
       </div>
 

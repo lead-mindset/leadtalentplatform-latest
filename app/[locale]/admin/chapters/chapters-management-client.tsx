@@ -6,17 +6,11 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,7 +21,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   assignEditor,
   createChapter,
@@ -71,6 +72,15 @@ const INITIAL_FORM: ChapterFormState = {
   region: '',
 }
 
+const SORT_COLUMNS: Array<[string, string]> = [
+  ['name', 'Chapter'],
+  ['university', 'University'],
+  ['city', 'City'],
+  ['region', 'Region'],
+  ['member_count', 'Members'],
+  ['active_events_count', 'Active events'],
+]
+
 export function ChaptersManagementClient({
   items,
   total,
@@ -90,15 +100,24 @@ export function ChaptersManagementClient({
   const [editOpen, setEditOpen] = useState<ChapterListItem | null>(null)
   const [editorOpen, setEditorOpen] = useState<ChapterListItem | null>(null)
   const [deleteOpen, setDeleteOpen] = useState<ChapterListItem | null>(null)
-
   const [createForm, setCreateForm] = useState<ChapterFormState>(INITIAL_FORM)
   const [editForm, setEditForm] = useState<ChapterFormState>(INITIAL_FORM)
   const [selectedEditorIds, setSelectedEditorIds] = useState<string[]>([])
 
   const updateParam = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString())
-    params.set(key, value)
+    if (value) params.set(key, value)
+    else params.delete(key)
     if (key !== 'page') params.set('page', '1')
+    router.push(`${pathname}?${params.toString()}`)
+  }
+
+  const resetFilters = () => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete('search')
+    params.delete('sortBy')
+    params.delete('sortOrder')
+    params.set('page', '1')
     router.push(`${pathname}?${params.toString()}`)
   }
 
@@ -113,10 +132,7 @@ export function ChaptersManagementClient({
 
   const submitCreate = () => {
     startTransition(async () => {
-      const result = await createChapter({
-        ...createForm,
-        editorIds: selectedEditorIds,
-      })
+      const result = await createChapter({ ...createForm, editorIds: selectedEditorIds })
       if (!result.success) {
         toast.error(result.error)
         return
@@ -188,131 +204,139 @@ export function ChaptersManagementClient({
   }
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
+  const hasFilters = Boolean(search)
 
   return (
     <div className="space-y-4">
       <Card>
-        <CardContent className="pt-6 flex flex-wrap gap-2 justify-between">
-          <div className="flex gap-2 w-full md:w-auto">
-            <Input
-              defaultValue={search}
-              placeholder="Search chapter name/university"
-              onChange={(event) => updateParam('search', event.target.value)}
-            />
+        <CardHeader>
+          <CardTitle>Filters</CardTitle>
+          <CardDescription>Search chapters and sort by operational columns.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <Input
+            defaultValue={search}
+            placeholder="Search chapter name or university"
+            onChange={(event) => updateParam('search', event.target.value)}
+            className="md:max-w-md"
+          />
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={resetFilters}>Reset</Button>
+            <Button onClick={() => setCreateOpen(true)}>Create chapter</Button>
           </div>
-          <Button onClick={() => setCreateOpen(true)}>Create Chapter</Button>
         </CardContent>
       </Card>
 
       <Card>
         <CardContent className="pt-6">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  {[
-                    ['name', 'Chapter Name'],
-                    ['university', 'University'],
-                    ['city', 'City'],
-                    ['region', 'Region'],
-                    ['member_count', 'Member Count'],
-                    ['active_events_count', 'Active Events'],
-                  ].map(([key, label]) => (
-                    <th key={key} className="text-left p-2">
-                      <button className="hover:underline" onClick={() => toggleSort(key)}>
-                        {label}
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  {SORT_COLUMNS.map(([key, label]) => (
+                    <TableHead key={key} className="whitespace-nowrap">
+                      <button className="rounded-sm hover:underline" onClick={() => toggleSort(key)}>
+                        {label}{sortBy === key ? ` ${sortOrder === 'asc' ? 'up' : 'down'}` : ''}
                       </button>
-                    </th>
+                    </TableHead>
                   ))}
-                  <th className="text-left p-2">Editors</th>
-                  <th className="text-left p-2">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((chapter) => (
-                  <tr key={chapter.id} className="border-b align-top">
-                    <td className="p-2 font-medium">
-                      <Link className="hover:underline" href={`/admin/chapters/${chapter.id}`}>
-                        {chapter.name}
-                      </Link>
-                    </td>
-                    <td className="p-2">{chapter.university}</td>
-                    <td className="p-2">{chapter.city ?? '—'}</td>
-                    <td className="p-2">{chapter.region ?? '—'}</td>
-                    <td className="p-2">{chapter.member_count}</td>
-                    <td className="p-2">{chapter.active_events_count}</td>
-                    <td className="p-2">
-                      {chapter.editors.length === 0 ? '—' : chapter.editors.map((editor) => editor.email).join(', ')}
-                    </td>
-                    <td className="p-2">
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setEditForm({
-                              id: chapter.id,
-                              name: chapter.name,
-                              university: chapter.university,
-                              city: chapter.city ?? '',
-                              region: chapter.region ?? '',
-                            })
-                            setEditOpen(chapter)
-                          }}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setEditorOpen(chapter)
-                            setSelectedEditorIds(chapter.editors.map((editor) => editor.id))
-                          }}
-                        >
-                          Editors
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={chapter.member_count > 0 || chapter.active_events_count > 0}
-                          onClick={() => setDeleteOpen(chapter)}
-                        >
-                          Delete
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                  <TableHead>Editors</TableHead>
+                  <TableHead className="w-[18rem]">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {items.map((chapter) => {
+                  const deleteBlocked = chapter.member_count > 0 || chapter.active_events_count > 0
+                  return (
+                    <TableRow key={chapter.id} className="align-top">
+                      <TableCell className="font-medium">
+                        <Link className="hover:underline" href={`/admin/chapters/${chapter.id}`}>{chapter.name}</Link>
+                        <p className="mt-1 text-xs text-muted-foreground">{chapter.id}</p>
+                      </TableCell>
+                      <TableCell>{chapter.university}</TableCell>
+                      <TableCell>{chapter.city ?? '-'}</TableCell>
+                      <TableCell>{chapter.region ?? '-'}</TableCell>
+                      <TableCell><Badge variant="secondary">{chapter.member_count}</Badge></TableCell>
+                      <TableCell><Badge variant={chapter.active_events_count > 0 ? 'info' : 'outline'}>{chapter.active_events_count}</Badge></TableCell>
+                      <TableCell className="max-w-[16rem]">
+                        {chapter.editors.length === 0 ? (
+                          <Badge variant="outline">No editors</Badge>
+                        ) : (
+                          <div className="space-y-1">
+                            {chapter.editors.slice(0, 2).map((editor) => (
+                              <p key={editor.id} className="truncate text-xs text-muted-foreground">{editor.email}</p>
+                            ))}
+                            {chapter.editors.length > 2 && <Badge variant="outline">+{chapter.editors.length - 2}</Badge>}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setEditForm({
+                                id: chapter.id,
+                                name: chapter.name,
+                                university: chapter.university,
+                                city: chapter.city ?? '',
+                                region: chapter.region ?? '',
+                              })
+                              setEditOpen(chapter)
+                            }}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setEditorOpen(chapter)
+                              setSelectedEditorIds(chapter.editors.map((editor) => editor.id))
+                            }}
+                          >
+                            Editors
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={deleteBlocked}
+                            title={deleteBlocked ? 'Delete is blocked while this chapter has members or active events.' : 'Delete chapter'}
+                            onClick={() => setDeleteOpen(chapter)}
+                          >
+                            Delete
+                          </Button>
+                          {deleteBlocked && (
+                            <p className="w-full text-xs text-muted-foreground">Delete blocked by members or active events.</p>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
           </div>
+
           {items.length === 0 && (
             <div className="py-10 text-center">
-              <CardTitle className="mb-2 text-lg">No chapters created yet</CardTitle>
-              <p className="text-sm text-muted-foreground">Create your first chapter to get started.</p>
+              <CardTitle className="mb-2 text-lg">{hasFilters ? 'No chapters match your filters' : 'No chapters created yet'}</CardTitle>
+              <p className="text-sm text-muted-foreground">{hasFilters ? 'Clear filters or try a different search.' : 'Create your first chapter to get started.'}</p>
+              <div className="mt-4 flex justify-center gap-2">
+                {hasFilters && <Button variant="outline" onClick={resetFilters}>Clear filters</Button>}
+                <Button onClick={() => setCreateOpen(true)}>Create chapter</Button>
+              </div>
             </div>
           )}
-          <div className="mt-4 flex justify-between items-center">
-            <p className="text-sm text-muted-foreground">
-              {total} total • page {page} / {totalPages}
-            </p>
-            <div className="flex items-center gap-2">
-              <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => updateParam('page', String(page - 1))}>
-                Previous
-              </Button>
-              <Button size="sm" variant="outline" disabled={page >= totalPages} onClick={() => updateParam('page', String(page + 1))}>
-                Next
-              </Button>
+
+          <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <p className="text-sm text-muted-foreground">{total} total - page {page} / {totalPages}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => updateParam('page', String(page - 1))}>Previous</Button>
+              <Button size="sm" variant="outline" disabled={page >= totalPages} onClick={() => updateParam('page', String(page + 1))}>Next</Button>
               {[25, 50, 100].map((size) => (
-                <Button
-                  key={size}
-                  size="sm"
-                  variant={pageSize === size ? 'default' : 'outline'}
-                  onClick={() => updateParam('pageSize', String(size))}
-                >
-                  {size}
-                </Button>
+                <Button key={size} size="sm" variant={pageSize === size ? 'default' : 'outline'} onClick={() => updateParam('pageSize', String(size))}>{size}</Button>
               ))}
             </div>
           </div>
@@ -375,7 +399,7 @@ export function ChaptersManagementClient({
           </DialogHeader>
           <div className="space-y-2 max-h-72 overflow-y-auto">
             {(editorOpen ? availableEditorsByChapter[editorOpen.id] : [])?.map((user) => (
-              <label key={user.id} className="flex items-center gap-2 border p-2 rounded">
+              <label key={user.id} className="flex items-center gap-2 rounded border p-2">
                 <Checkbox
                   checked={selectedEditorIds.includes(user.id)}
                   onCheckedChange={(checked) =>
