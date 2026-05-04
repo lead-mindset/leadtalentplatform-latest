@@ -33,6 +33,16 @@ We maintain standard accounts in `supabase/seed.sql` pre-loaded with the necessa
 For unit testing service functions (`lib/services/`), **do not use real authentication**. Mock the Supabase Client as the correct user context.
 If testing server actions or E2E flows, utilize the standard seed credentials rather than relying on external providers like Google OAuth.
 
+### Admin Role vs LEAD Identity
+
+Admin access is controlled by `public.user.role`, not by `lead_identity`:
+
+- `public.user.role='admin'` is the authorization source for admin routes, server actions, and RLS bypass behavior.
+- `lead_identity.identity_type='founder'` or `identity_type='staff'` is public LEAD status/display data; it does not grant admin access by itself.
+- Do not create or test an `admin` LEAD identity type. Admin is an app role, not an official public identity.
+- Local `admin@test.com` should have `public.user.role='admin'` plus a founder identity.
+- Local `staff@test.com` should have `public.user.role='admin'` plus a staff identity.
+
 ### Basic Person Profile Flow (LEAD-005)
 
 The public participant profile foundation is intentionally separate from chapter membership:

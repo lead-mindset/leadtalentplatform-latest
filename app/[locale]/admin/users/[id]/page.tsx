@@ -20,7 +20,10 @@ import {
 } from 'lucide-react'
 import { getUserById } from '@/lib/actions/admin/get-data'
 import { createClient } from '@/lib/supabase/server'
+import { AdminService } from '@/lib/services/admin.service'
+import { LeadIdentityService } from '@/lib/services/lead-identity.service'
 import { MemberActionButtons } from '@/app/[locale]/chapter/members/components/member-actions'
+import { LeadIdentityManager } from '@/app/[locale]/admin/users/[id]/_components/lead-identity-manager'
 import { getRoleColor } from '@/lib/options'
 
 export default async function UserDetailPage({
@@ -51,6 +54,12 @@ export default async function UserDetailPage({
 
   const profile = resolvedUser.person_profile
   const membership = resolvedUser.chapter_membership
+  const [identityResult, chaptersResult] = await Promise.all([
+    LeadIdentityService.getActiveIdentities(supabase, resolvedUser.id),
+    AdminService.getAllChapters(supabase),
+  ])
+  const identities = identityResult.success ? identityResult.identities : []
+  const chapters = 'chapters' in chaptersResult ? chaptersResult.chapters : []
   const approval_status = membership?.status ?? 'pending'
   const actionableStatus =
     approval_status === 'pending' || approval_status === 'approved' || approval_status === 'rejected'
@@ -173,6 +182,14 @@ export default async function UserDetailPage({
             </div>
           </div>
         </div>
+
+        <LeadIdentityManager
+          userId={resolvedUser.id}
+          userRole={resolvedUser.role}
+          identities={identities}
+          chapters={chapters}
+          defaultChapterId={membership?.chapter_id}
+        />
 
         {canApprove && profile && actionableStatus && currentUser && (
           <Card className="border-primary/20 bg-primary/5">
@@ -349,9 +366,9 @@ export default async function UserDetailPage({
               <div className="rounded-full bg-muted p-3 mb-4">
                 <XCircle className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h3 className="font-semibold text-lg mb-2">No Student Profile</h3>
+              <h3 className="font-semibold text-lg mb-2">No Basic Profile</h3>
               <p className="text-sm text-muted-foreground text-center max-w-sm">
-                This user hasn&apos;t created a student profile yet.
+                This user hasn&apos;t completed a basic person profile yet.
               </p>
             </CardContent>
           </Card>
