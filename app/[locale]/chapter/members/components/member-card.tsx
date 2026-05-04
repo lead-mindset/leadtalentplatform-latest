@@ -1,20 +1,28 @@
 import type { MemberWithProfile } from "@/lib/types"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
-import {
-  CheckCircle2,
-  Clock,
-  UserCheck,
-  XCircle,
-  Mail,
-  Phone,
-  Linkedin,
-  GraduationCap,
-  Calendar,
-} from 'lucide-react'
 import { Icons } from '@/components/ui/icons'
 import { MemberActionButtons } from "./member-actions"
+
+function statusConfig(status?: string | null) {
+  if (status === 'approved') {
+    return { label: 'Approved', variant: 'success' as const }
+  }
+
+  if (status === 'rejected') {
+    return { label: 'Rejected', variant: 'destructive' as const }
+  }
+
+  if (status === 'alumni') {
+    return { label: 'Alumni', variant: 'neutral' as const }
+  }
+
+  return { label: 'Pending', variant: 'warning' as const }
+}
+
+function formatPosition(position?: string | null) {
+  return position ? position.replaceAll('_', ' ') : 'member'
+}
 
 export default function MemberCard({
   member,
@@ -29,181 +37,153 @@ export default function MemberCard({
 }) {
   const profile = member.person_profile
   const membership = member.chapter_membership
-
-  const approval_status = membership?.status
-  const isPending  = Boolean(profile) && approval_status === 'pending'
-  const isApproved = approval_status === 'approved'
-  const isRejected = approval_status === 'rejected'
+  const status = membership?.status
+  const isPending = Boolean(profile) && status === 'pending'
+  const isApproved = status === 'approved'
+  const isRejected = status === 'rejected'
+  const isAlumni = status === 'alumni'
+  const badge = statusConfig(status)
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            {showSelector && (
-              <label className="inline-flex items-center gap-2 text-xs text-muted-foreground">
-                <Checkbox
-                  checked={selected}
-                  onCheckedChange={(checked) => onSelectChange?.(checked === true)}
-                />
-                Select for bulk approve
-              </label>
-            )}
-            <CardTitle className="text-lg">
-              {member.name ?? 'No name provided'}
-            </CardTitle>
-            <CardDescription className="flex items-center gap-2">
-              <Mail className="h-3 w-3" />
-              {member.email}
-            </CardDescription>
+    <article className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)_minmax(14rem,0.8fr)] lg:items-start">
+      <div className="flex min-w-0 gap-3">
+        {showSelector ? (
+          <Checkbox
+            className="mt-1"
+            checked={selected}
+            onCheckedChange={(checked) => onSelectChange?.(checked === true)}
+            aria-label={`Select ${member.name ?? member.email}`}
+          />
+        ) : null}
+
+        <div className="min-w-0 space-y-3">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Icons.User className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="truncate font-semibold">{member.name ?? 'No name provided'}</h3>
+              <p className="mt-0.5 break-all text-sm text-muted-foreground">{member.email}</p>
+              {member.phone ? (
+                <p className="mt-1 text-sm text-muted-foreground">{member.phone}</p>
+              ) : null}
+            </div>
           </div>
 
-          <div className="flex flex-col items-end gap-2">
-            {isPending && (
-              <Badge
-                variant="outline"
-                className="border-warning text-warning"
-              >
-                <Clock className="h-3 w-3 mr-1" />
-                Pending
-              </Badge>
-            )}
-            {isApproved && (
-              <Badge
-                variant="outline"
-                className="border-success text-success"
-              >
-                <CheckCircle2 className="h-3 w-3 mr-1" />
-                Approved
-              </Badge>
-            )}
-            {isRejected && (
-              <Badge
-                variant="outline"
-                className="border-destructive text-destructive"
-              >
-                <XCircle className="h-3 w-3 mr-1" />
-                Rejected
-              </Badge>
-            )}
-            {!profile && (
-              <Badge variant="outline" className="text-muted-foreground">
-                Incomplete
-              </Badge>
-            )}
+          <div className="flex flex-wrap gap-2">
+            <Badge variant={badge.variant}>{badge.label}</Badge>
+            {profile?.is_recruiter_visible ? (
+              <Badge variant="info">Company visible</Badge>
+            ) : null}
+            {!profile ? (
+              <Badge variant="outline">Incomplete profile</Badge>
+            ) : null}
           </div>
         </div>
-      </CardHeader>
+      </div>
 
-      {profile ? (
-        <CardContent className="space-y-4">
-          <div className="grid gap-3 text-sm">
-            {member.phone && (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Phone className="h-4 w-4" />
-                {member.phone}
-              </div>
-            )}
+      <div className="min-w-0 space-y-3 text-sm">
+        {profile ? (
+          <>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <p className="flex min-w-0 items-center gap-2 text-muted-foreground">
+                <Icons.GraduationCap className="h-4 w-4 shrink-0" />
+                <span className="truncate">{profile.major_or_interest || 'No major listed'}</span>
+              </p>
+              <p className="flex items-center gap-2 text-muted-foreground">
+                <Icons.Calendar className="h-4 w-4 shrink-0" />
+                <span>{profile.graduation_year ? `Class of ${profile.graduation_year}` : 'Graduation not listed'}</span>
+              </p>
+            </div>
 
-            {profile.major_or_interest && (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <GraduationCap className="h-4 w-4" />
-                {profile.major_or_interest}
-              </div>
-            )}
+            {profile.linkedin_url ? (
+              <a
+                href={profile.linkedin_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex max-w-full items-center gap-1 text-primary underline underline-offset-4"
+              >
+                <span className="truncate">LinkedIn profile</span>
+                <Icons.ExternalLink className="h-4 w-4 shrink-0" />
+              </a>
+            ) : null}
 
-            {profile.graduation_year && (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Calendar className="h-4 w-4" />
-                Class of {profile.graduation_year}
-              </div>
-            )}
-
-            {profile.linkedin_url && (
-              <div className="flex items-center gap-2">
-                <Linkedin className="h-4 w-4 text-info" />
-                <a
-                  href={profile.linkedin_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-info underline hover:underline text-sm"
-                >
-                  LinkedIn Profile
-                </a>
-              </div>
-            )}
-
-            {profile.skills && profile.skills.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
-                {profile.skills.map((skill: string) => (
-                  <Badge key={skill} variant="secondary" className="text-xs">
+            {profile.skills && profile.skills.length > 0 ? (
+              <div className="flex flex-wrap gap-1">
+                {profile.skills.slice(0, 6).map((skill: string) => (
+                  <Badge key={skill} variant="secondary" size="sm">
                     {skill}
                   </Badge>
                 ))}
+                {profile.skills.length > 6 ? (
+                  <Badge variant="neutral" size="sm">+{profile.skills.length - 6}</Badge>
+                ) : null}
               </div>
-            )}
-          </div>
-
-          {isPending && (
-            <div className="pt-4 border-t">
-              <MemberActionButtons
-                userId={member.id}
-                userName={member.name ?? member.email}
-                currentState="pending"
-              />
-            </div>
-          )}
-
-          {isApproved && (
-            <div className="pt-4 border-t space-y-3">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <UserCheck className="h-4 w-4 text-success" />
-                Approved on {new Date(profile.updated_at).toLocaleDateString()}
-              </div>
-              {membership?.member_id && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Icons.IdCard className="h-4 w-4 text-primary" />
-                  <span className="font-medium text-muted-foreground">Member ID:</span>{' '}
-                  <code className="px-2 py-1 bg-primary/5 border border-primary/10 rounded text-sm font-mono text-primary">
-                    {membership.member_id}
-                  </code>
-                </div>
-              )}
-              {membership?.position && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <UserCheck className="h-4 w-4 text-primary" />
-                  Position: {membership.position.replaceAll('_', ' ')}
-                </div>
-              )}
-              <MemberActionButtons
-                userId={member.id}
-                userName={member.name ?? member.email}
-                currentState="approved"
-              />
-            </div>
-          )}
-
-          {isRejected && (
-            <div className="pt-4 border-t space-y-3">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <XCircle className="h-4 w-4 text-destructive" />
-                Rejected on {new Date(profile.updated_at).toLocaleDateString()}
-              </div>
-              <MemberActionButtons
-                userId={member.id}
-                userName={member.name ?? member.email}
-                currentState="rejected"
-              />
-            </div>
-          )}
-        </CardContent>
-      ) : (
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            This member hasn&apos;t completed their profile yet.
+            ) : null}
+          </>
+        ) : (
+          <p className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+            This member has not completed their basic profile yet.
           </p>
-        </CardContent>
-      )}
-    </Card>
+        )}
+      </div>
+
+      <div className="space-y-3 lg:text-right">
+        <div className="flex flex-wrap gap-2 lg:justify-end">
+          {membership?.chapter_id ? (
+            <Badge variant="outline">{member.chapter?.name ?? membership.chapter_id}</Badge>
+          ) : null}
+          {membership?.position ? (
+            <Badge variant="secondary">{formatPosition(membership.position)}</Badge>
+          ) : null}
+          {membership?.member_id ? (
+            <Badge variant="student">
+              <Icons.IdCard className="h-3 w-3" />
+              {membership.member_id}
+            </Badge>
+          ) : null}
+        </div>
+
+        {membership?.joined_at ? (
+          <p className="text-xs text-muted-foreground">
+            Joined {new Date(membership.joined_at).toLocaleDateString(undefined, {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            })}
+          </p>
+        ) : null}
+
+        {isPending ? (
+          <MemberActionButtons
+            userId={member.id}
+            userName={member.name ?? member.email}
+            currentState="pending"
+          />
+        ) : null}
+
+        {isApproved ? (
+          <MemberActionButtons
+            userId={member.id}
+            userName={member.name ?? member.email}
+            currentState="approved"
+          />
+        ) : null}
+
+        {isRejected ? (
+          <MemberActionButtons
+            userId={member.id}
+            userName={member.name ?? member.email}
+            currentState="rejected"
+          />
+        ) : null}
+
+        {isAlumni ? (
+          <p className="rounded-lg border bg-muted/40 p-3 text-left text-xs text-muted-foreground lg:text-right">
+            Alumni records are read-only in this roster view.
+          </p>
+        ) : null}
+      </div>
+    </article>
   )
 }
