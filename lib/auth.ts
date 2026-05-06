@@ -12,7 +12,7 @@ import type {
   UserRow,
 } from './types'
 
-const USER_SELECT = 'id, email, name, role, phone, gender, created_at, updated_at, deactivated_at'
+const USER_SELECT = 'id, email, name, role, phone, created_at, updated_at, deactivated_at'
 const RECRUITER_ACCESS_SELECT =
   'id, company_id, is_active, granted_by_id, accepted_by_user_id, granted_at, accepted_at, revoked_at, invite_expires_at, recruiter_email, invite_token, revoked_by_id'
 export const COMPANY_ACCESS_HELP_PATH = '/company/onboard?access=missing'
