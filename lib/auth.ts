@@ -26,7 +26,14 @@ type ApprovedChapterMembership = {
 type ManageableEvent = Pick<EventRow, 'id' | 'chapter_id' | 'capacity' | 'title' | 'access_model'>
 
 type ActiveRecruiterAccessRaw = RecruiterAccessRow & {
-  Company: { id: string; name: string; created_at: string; created_by_id: string }[];
+  company:
+    | { id: string; name: string; created_at: string; created_by_id: string }
+    | { id: string; name: string; created_at: string; created_by_id: string }[]
+    | null;
+  Company?:
+    | { id: string; name: string; created_at: string; created_by_id: string }
+    | { id: string; name: string; created_at: string; created_by_id: string }[]
+    | null;
 }
 
 export type RecruiterAccessResolution =
@@ -147,7 +154,7 @@ export async function requireChapterMember(): Promise<{
   const membership = await getApprovedChapterMembership(supabase, user.id)
 
   if (!membership?.chapter_id) {
-    redirect('/chapter')
+    redirect('/student')
   }
 
   return {
@@ -180,7 +187,7 @@ export async function requireChapterEditor(): Promise<{
 
   const membership = await getApprovedChapterMembership(supabase, user.id)
   if (!membership?.chapter_id) {
-    redirect('/chapter')
+    redirect('/student')
   }
 
   return {
@@ -398,7 +405,7 @@ export async function resolveRecruiterAccess(
     .from('recruiter_access')
     .select(`
       ${RECRUITER_ACCESS_SELECT},
-      Company!inner (id, name, created_at, created_by_id)
+      company!inner (id, name, created_at, created_by_id)
     `)
     .eq('accepted_by_user_id', userId)
     .maybeSingle<ActiveRecruiterAccessRaw>()
@@ -423,7 +430,8 @@ export async function resolveRecruiterAccess(
     return { allowed: false, reason: 'expired' }
   }
 
-  const company = access.Company?.[0] ?? null
+  const companyRelation = access.company ?? access.Company ?? null
+  const company = Array.isArray(companyRelation) ? companyRelation[0] ?? null : companyRelation
 
   return {
     allowed: true,

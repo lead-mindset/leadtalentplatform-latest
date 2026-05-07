@@ -73,6 +73,14 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
       select: vi.fn(() => builder),
       _builder: builder,
     },
+    chapter_membership: {
+      select: vi.fn(() => builder),
+      _builder: builder,
+    },
+    chapter: {
+      select: vi.fn(() => builder),
+      _builder: builder,
+    },
     recruiter_access: {
       select: vi.fn(() => builder),
       update: vi.fn(() => builder),
@@ -172,24 +180,35 @@ describe('RecruiterService', () => {
         data: [
           {
             student_id: 'user-1',
-            student: {
-              id: 'user-1',
-              name: 'John',
-              email: 'john@test.com',
-              person_profile: {
-                graduation_year: 2025,
-                major_or_interest: 'CS',
-                skills: ['React'],
-                updated_at: '2024-01-01',
-                chapter_membership: {
-                  chapter: { name: 'MIT', university: 'MIT' },
-                },
-              },
-            },
           },
         ],
         error: null,
         count: 1,
+      })
+      tableMocks.user._builder._setThenValue({
+        data: [{ id: 'user-1', name: 'John', email: 'john@test.com' }],
+        error: null,
+      })
+      tableMocks.person_profile._builder._setThenValue({
+        data: [
+          {
+            user_id: 'user-1',
+            graduation_year: 2025,
+            major_or_interest: 'CS',
+            skills: ['React'],
+            updated_at: '2024-01-01',
+            is_recruiter_visible: true,
+          },
+        ],
+        error: null,
+      })
+      tableMocks.chapter_membership._builder._setThenValue({
+        data: [{ user_id: 'user-1', chapter_id: 'ch-1' }],
+        error: null,
+      })
+      tableMocks.chapter._builder._setThenValue({
+        data: [{ id: 'ch-1', name: 'MIT', university: 'MIT' }],
+        error: null,
       })
 
       const result = await RecruiterService.getSavedStudents(mockSupabase as unknown as SupabaseClient, 'recruiter-1', {})

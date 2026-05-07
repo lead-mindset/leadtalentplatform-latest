@@ -19,21 +19,6 @@ const TALENT_UNAVAILABLE_ERROR = 'Profile not found or unavailable.'
 // Shared select string — keeps both query functions consistent
 // ───────────────────────────────────────────────────────────────
 
-const STUDENT_SELECT = `
-  id, email, name, phone, created_at,
-  person_profile!user_id!inner (
-    major_or_interest, graduation_year, linkedin_url, skills,
-    is_recruiter_visible, updated_at,
-    chapter_membership!user_id!inner (
-      chapter_id,
-      status,
-      chapter (
-        name, university, city, region
-      )
-    )
-  )
-`
-
 // ───────────────────────────────────────────────────────────────
 // Types
 // ───────────────────────────────────────────────────────────────
@@ -70,7 +55,10 @@ export type RecruiterAccessWithCompany = {
   company_id: string
   is_active: boolean
   accepted_at: string | null
-  company: { id: string; name: string; created_at: string; created_by_id: string }[]
+  company:
+    | { id: string; name: string; created_at: string; created_by_id: string }
+    | { id: string; name: string; created_at: string; created_by_id: string }[]
+    | null
 }
 
 export type AccessWithCompany = {
@@ -80,54 +68,154 @@ export type AccessWithCompany = {
   accepted_at: string | null
   granted_at: string
   revoked_at: string | null
-  company: { id: string; name: string; created_at: string; created_by_id: string }[]
+  company:
+    | { id: string; name: string; created_at: string; created_by_id: string }
+    | { id: string; name: string; created_at: string; created_by_id: string }[]
+    | null
+}
+
+type VisibleProfileRow = Pick<
+  PersonProfileRow,
+  | 'user_id'
+  | 'major_or_interest'
+  | 'graduation_year'
+  | 'linkedin_url'
+  | 'skills'
+  | 'is_recruiter_visible'
+  | 'updated_at'
+>
+
+type VisibleMembershipRow = {
+  user_id: string
+  chapter_id: string
+  status: string | null
+}
+
+type VisibleTalentFilters = {
+  studentIds?: string[]
+  query?: string
+  major?: string
+  graduation_year?: number
+  chapter_id?: string
 }
 
 // ───────────────────────────────────────────────────────────────
 // Helpers
 // ───────────────────────────────────────────────────────────────
 
-function mapStudentRow(user: RecruiterStudentRow): StudentForRecruiter | null {
-  const profile = Array.isArray(user.person_profile)
-    ? user.person_profile[0]
-    : user.person_profile
-
-  if (!profile) return null
-
-  const membership = Array.isArray(profile.chapter_membership)
-    ? profile.chapter_membership[0]
-    : profile.chapter_membership
-
-  if (!membership) return null
-  if (profile.is_recruiter_visible !== true) return null
-  if (membership.status !== 'approved') return null
-
-  const chapter = Array.isArray(membership.chapter)
-    ? membership.chapter[0]
-    : membership.chapter
-
-  return {
-    id: user.id,
-    email: user.email,
-    name: user.name ?? '',
-    phone: user.phone,
-    created_at: user.created_at,
-    chapter: chapter ?? null,
-    person_profile: {
-      chapter_id: membership.chapter_id,
-      major_or_interest: profile.major_or_interest,
-      graduation_year: profile.graduation_year,
-      linkedin_url: profile.linkedin_url,
-      skills: profile.skills,
-      is_recruiter_visible: profile.is_recruiter_visible,
-      updated_at: profile.updated_at,
-    },
-  }
-}
-
 // ───────────────────────────────────────────────────────────────
 // Service
 // ───────────────────────────────────────────────────────────────
+
+async function loadVisibleStudents(
+  supabase: SupabaseClient<Database>,
+  filters: VisibleTalentFilters = {}
+): Promise<StudentForRecruiter[]> {
+  let profileQuery = supabase
+    .from('person_profile')
+    .select('user_id, major_or_interest, graduation_year, linkedin_url, skills, is_recruiter_visible, updated_at')
+    .eq('is_recruiter_visible', true)
+
+  if (filters.studentIds) {
+    if (filters.studentIds.length === 0) return []
+    profileQuery = profileQuery.in('user_id', filters.studentIds)
+  }
+
+  if (filters.major) {
+    profileQuery = profileQuery.ilike('major_or_interest', `%${filters.major.trim()}%`)
+  }
+
+  if (filters.graduation_year) {
+    profileQuery = profileQuery.eq('graduation_year', filters.graduation_year)
+  }
+
+  const { data: profiles, error: profilesError } = await profileQuery
+  if (profilesError) {
+    logger.error({ context: 'loadVisibleStudents', error: profilesError }, 'Profile load error')
+    return []
+  }
+
+  const profileRows = (profiles ?? []) as VisibleProfileRow[]
+  const profileUserIds = profileRows.map((profile) => profile.user_id)
+  if (profileUserIds.length === 0) return []
+
+  let membershipQuery = supabase
+    .from('chapter_membership')
+    .select('user_id, chapter_id, status')
+    .in('user_id', profileUserIds)
+    .eq('status', 'approved')
+
+  if (filters.chapter_id) {
+    membershipQuery = membershipQuery.eq('chapter_id', filters.chapter_id)
+  }
+
+  const { data: memberships, error: membershipsError } = await membershipQuery
+  if (membershipsError) {
+    logger.error({ context: 'loadVisibleStudents', error: membershipsError }, 'Membership load error')
+    return []
+  }
+
+  const membershipRows = (memberships ?? []) as VisibleMembershipRow[]
+  const eligibleUserIds = membershipRows.map((membership) => membership.user_id)
+  if (eligibleUserIds.length === 0) return []
+
+  let userQuery = supabase
+    .from('user')
+    .select('id, email, name, phone, created_at')
+    .in('id', eligibleUserIds)
+
+  if (filters.query?.trim()) {
+    const query = filters.query.trim()
+    userQuery = userQuery.or(`name.ilike.%${query}%,email.ilike.%${query}%`)
+  }
+
+  const chapterIds = Array.from(new Set(membershipRows.map((membership) => membership.chapter_id)))
+  const [{ data: users, error: usersError }, { data: chapters, error: chaptersError }] = await Promise.all([
+    userQuery,
+    supabase
+      .from('chapter')
+      .select('id, name, university, city, region')
+      .in('id', chapterIds),
+  ])
+
+  if (usersError || chaptersError) {
+    logger.error({ context: 'loadVisibleStudents', error: usersError ?? chaptersError }, 'User/chapter load error')
+    return []
+  }
+
+  const profilesByUserId = new Map(profileRows.map((profile) => [profile.user_id, profile]))
+  const membershipsByUserId = new Map(membershipRows.map((membership) => [membership.user_id, membership]))
+  const chaptersById = new Map((chapters ?? []).map((chapter) => [chapter.id, chapter]))
+
+  return ((users ?? []) as Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'created_at'>[])
+    .map((user): StudentForRecruiter | null => {
+      const profile = profilesByUserId.get(user.id)
+      const membership = membershipsByUserId.get(user.id)
+      const chapter = membership?.chapter_id ? chaptersById.get(membership.chapter_id) : null
+
+      if (!profile || !membership || !chapter) return null
+
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.name ?? '',
+        phone: user.phone,
+        created_at: user.created_at,
+        chapter,
+        person_profile: {
+          chapter_id: membership.chapter_id,
+          major_or_interest: profile.major_or_interest,
+          graduation_year: profile.graduation_year,
+          linkedin_url: profile.linkedin_url,
+          skills: Array.isArray(profile.skills) ? profile.skills : [],
+          is_recruiter_visible: profile.is_recruiter_visible,
+          updated_at: profile.updated_at,
+        },
+      }
+    })
+    .filter((student): student is StudentForRecruiter => student !== null)
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+}
 
 export const CompanyService = {
   /**
@@ -138,26 +226,7 @@ export const CompanyService = {
   async getVisibleStudents(
     supabase: SupabaseClient<Database>
   ): Promise<StudentForRecruiter[]> {
-    const { data, error } = await supabase
-      .from('user')
-      .select(STUDENT_SELECT)
-      .eq('person_profile.is_recruiter_visible', true)
-      .eq('person_profile.chapter_membership.status', 'approved')
-      .order('created_at', { ascending: false })
-
-    if (error) {
-      logger.error({ context: 'getVisibleStudents', error: error }, 'Error')
-      return []
-    }
-
-    const rows = (data ?? []) as unknown as RecruiterStudentRow[]
-
-    return rows
-      .map(mapStudentRow)
-      .filter((s): s is StudentForRecruiter =>
-        s !== null &&
-        s.person_profile?.is_recruiter_visible === true
-      )
+    return loadVisibleStudents(supabase)
   },
 
   /**
@@ -167,31 +236,8 @@ export const CompanyService = {
     supabase: SupabaseClient<Database>,
     studentId: string
   ): Promise<StudentForRecruiter | null> {
-    const { data, error } = await supabase
-      .from('user')
-      .select(STUDENT_SELECT)
-      .eq('id', studentId)
-      .eq('person_profile.is_recruiter_visible', true)
-      .eq('person_profile.chapter_membership.status', 'approved')
-      .single()
-
-    if (error) {
-      logger.error({ context: 'getStudentById', error: error }, 'Error')
-      return null
-    }
-
-    if (!data) return null
-
-    const student = mapStudentRow(data as unknown as RecruiterStudentRow)
-
-    if (
-      !student ||
-      student.person_profile?.is_recruiter_visible !== true
-    ) {
-      return null
-    }
-
-    return student
+    const students = await loadVisibleStudents(supabase, { studentIds: [studentId] })
+    return students[0] ?? null
   },
 
   /**
@@ -201,28 +247,10 @@ export const CompanyService = {
     supabase: SupabaseClient<Database>,
     userId: string
   ): Promise<SavedStudent[]> {
-    const { data, error } = await supabase
+    const { data: savedRows, error } = await supabase
       .from('saved_student')
-      .select(`
-        id, recruiter_id, student_id, saved_at, notes,
-        student:user!saved_student_student_id_fkey (
-          id, email, name, phone, created_at,
-          person_profile!user_id!inner (
-            major_or_interest, graduation_year, linkedin_url, skills,
-            is_recruiter_visible, updated_at,
-            chapter_membership!user_id!inner (
-              chapter_id,
-              status,
-              chapter (
-                name, university, city, region
-              )
-            )
-          )
-        )
-      `)
+      .select('id, recruiter_id, student_id, saved_at, notes')
       .eq('recruiter_id', userId)
-      .eq('student.person_profile.is_recruiter_visible', true)
-      .eq('student.person_profile.chapter_membership.status', 'approved')
       .order('saved_at', { ascending: false })
 
     if (error) {
@@ -230,19 +258,16 @@ export const CompanyService = {
       return []
     }
 
-    if (!data) return []
+    if (!savedRows) return []
 
-    return (data as unknown as SavedStudentWithUserRow[])
+    const students = await loadVisibleStudents(supabase, {
+      studentIds: savedRows.map((saved) => saved.student_id),
+    })
+    const studentsById = new Map(students.map((student) => [student.id, student]))
+
+    return savedRows
       .map((saved): SavedStudent | null => {
-        const studentData = Array.isArray(saved.student)
-          ? saved.student[0]
-          : saved.student
-
-        if (!studentData) {
-          return null
-        }
-
-        const student = mapStudentRow(studentData)
+        const student = studentsById.get(saved.student_id)
         if (!student) return null
 
         return {
@@ -284,23 +309,13 @@ export const CompanyService = {
     supabase: SupabaseClient<Database>,
     userId: string
   ): Promise<CompanyStats> {
-    const [{ count: total_students }, saved_students] = await Promise.all([
-      supabase
-        .from('user')
-        .select(`
-          id,
-          person_profile!user_id!inner (
-            user_id,
-            chapter_membership!user_id!inner (status)
-          )
-        `, { count: 'exact', head: true })
-        .eq('person_profile.is_recruiter_visible', true)
-        .eq('person_profile.chapter_membership.status', 'approved'),
+    const [visibleStudents, saved_students] = await Promise.all([
+      this.getVisibleStudents(supabase),
       this.getSavedStudents(supabase, userId),
     ])
 
     return {
-      total_students: total_students ?? 0,
+      total_students: visibleStudents.length,
       saved_students: saved_students.length,
       recent_views: 0,
     }
@@ -319,47 +334,7 @@ export const CompanyService = {
       chapter_id?: string
     }
   ): Promise<StudentForRecruiter[]> {
-    let query = supabase
-      .from('user')
-      .select(STUDENT_SELECT)
-      .eq('person_profile.is_recruiter_visible', true)
-      .eq('person_profile.chapter_membership.status', 'approved')
-      .order('created_at', { ascending: false })
-
-    // Name/email search pushed to DB
-    if (filters.query) {
-      query = query.or(
-        `name.ilike.%${filters.query}%,email.ilike.%${filters.query}%`
-      )
-    }
-
-    if (filters.major) {
-      query = query.ilike('person_profile.major_or_interest', `%${filters.major.trim()}%`)
-    }
-
-    if (filters.graduation_year) {
-      query = query.eq('person_profile.graduation_year', filters.graduation_year)
-    }
-
-    if (filters.chapter_id) {
-      query = query.eq('person_profile.chapter_membership.chapter_id', filters.chapter_id)
-    }
-
-    const { data, error } = await query
-
-    if (error) {
-      logger.error({ context: 'searchStudents', error: error }, 'Error')
-      return []
-    }
-
-    const rows = (data ?? []) as unknown as RecruiterStudentRow[]
-
-    return rows
-      .map(mapStudentRow)
-      .filter((s): s is StudentForRecruiter =>
-        s !== null &&
-        s.person_profile?.is_recruiter_visible === true
-      )
+    return loadVisibleStudents(supabase, filters)
   },
 
   async toggleSaveStudent(
@@ -550,7 +525,7 @@ export const CompanyService = {
         company_id,
         is_active,
         accepted_at,
-        Company!inner (id, name, created_at, created_by_id)
+        company!inner (id, name, created_at, created_by_id)
       `)
       .eq('accepted_by_user_id', userId)
       .eq('is_active', true)
@@ -561,7 +536,9 @@ export const CompanyService = {
       return { success: false as const, error: 'Failed to load recruiter access.' }
     }
 
-    const company = recruiterAccess?.company?.[0] ?? null
+    const company = Array.isArray(recruiterAccess?.company)
+      ? recruiterAccess.company[0] ?? null
+      : recruiterAccess?.company ?? null
 
     return {
       success: true as const,
@@ -646,7 +623,7 @@ export const CompanyService = {
         accepted_at,
         granted_at,
         revoked_at,
-        Company!inner (id, name, created_at, created_by_id)
+        company!inner (id, name, created_at, created_by_id)
       `)
       .eq('accepted_by_user_id', userId)
       .order('accepted_at', { ascending: false })
@@ -655,16 +632,20 @@ export const CompanyService = {
       return { success: false as const, error: 'Failed to fetch companies' }
     }
 
-    const companies = (allAccess as unknown as AccessWithCompany[]).map(access => ({
+    const companies = (allAccess as unknown as AccessWithCompany[]).map(access => {
+      const company = Array.isArray(access.company) ? access.company[0] ?? null : access.company ?? null
+
+      return {
       accessId: access.id,
       companyId: access.company_id,
-      companyName: access.company[0]?.name ?? 'Unknown',
+      companyName: company?.name ?? 'Unknown',
       isActive: access.is_active,
       accepted_at: access.accepted_at,
       granted_at: access.granted_at,
       revoked_at: access.revoked_at,
-      company: access.company[0] ?? null
-    }))
+      company,
+    }
+    })
 
     return {
       success: true as const,
