@@ -29,6 +29,7 @@ export async function applyToChapter(input: { chapterId: string }) {
       return result
     }
 
+    revalidatePath('/student')
     revalidatePath('/student/profile')
     revalidatePath('/chapter')
     revalidatePath('/chapter/members')
