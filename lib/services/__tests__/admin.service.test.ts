@@ -160,6 +160,55 @@ describe('AdminService', () => {
     })
   })
 
+  describe('getChapterActivityList', () => {
+    it('returns member and pending counts for each chapter', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.chapter._builder._setThenValue({
+        data: [
+          { id: 'leaduni', name: 'LEAD UNI', university: 'Universidad Nacional de Ingenieria' },
+          { id: 'leadtecsup', name: 'LEAD TECSUP', university: 'Instituto Tecsup' },
+        ],
+        error: null,
+      })
+
+      tableMocks.chapter_membership._builder._setThenValue({ data: [], error: null, count: 3 })
+      tableMocks.chapter_membership._builder._setThenValue({ data: [], error: null, count: 0 })
+      tableMocks.chapter_membership._builder._setThenValue({ data: [], error: null, count: 1 })
+      tableMocks.chapter_membership._builder._setThenValue({ data: [], error: null, count: 1 })
+
+      tableMocks.event._builder._setThenValue({
+        data: { start_at: '2026-11-21T09:00:00.000Z' },
+        error: null,
+      })
+      tableMocks.event._builder._setThenValue({
+        data: null,
+        error: null,
+      })
+
+      const result = await AdminService.getChapterActivityList(mockSupabase as unknown as SupabaseClient)
+
+      expect(result).toEqual([
+        {
+          id: 'leaduni',
+          name: 'LEAD UNI',
+          university: 'Universidad Nacional de Ingenieria',
+          member_count: 3,
+          pending_approvals: 0,
+          last_event_at: '2026-11-21T09:00:00.000Z',
+        },
+        {
+          id: 'leadtecsup',
+          name: 'LEAD TECSUP',
+          university: 'Instituto Tecsup',
+          member_count: 1,
+          pending_approvals: 1,
+          last_event_at: null,
+        },
+      ])
+    })
+  })
+
   // ───────────────────────────────────────────────────────────────
   // getUsersList
   // ───────────────────────────────────────────────────────────────

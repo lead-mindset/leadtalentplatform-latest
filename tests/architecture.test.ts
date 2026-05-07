@@ -109,6 +109,21 @@ async function collectSourceFiles(rootRelativePath: string): Promise<SourceFile[
   return files
 }
 
+async function collectMigrationFiles(): Promise<SourceFile[]> {
+  const migrationPath = path.join(ROOT, 'supabase', 'migrations')
+  const entries = await readdir(migrationPath, { withFileTypes: true })
+
+  return Promise.all(
+    entries
+      .filter((entry) => entry.isFile() && entry.name.endsWith('.sql'))
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map(async (entry) => ({
+        relativePath: normalizePath(path.join('supabase', 'migrations', entry.name)),
+        content: await readFile(path.join(migrationPath, entry.name), 'utf8'),
+      }))
+  )
+}
+
 function normalizePath(filePath: string): string {
   return filePath.split(path.sep).join('/')
 }
@@ -240,5 +255,34 @@ describe('architecture boundaries', () => {
       violations.sort(),
       'Architecture rule: `student_profile` is legacy/migration-only. Do not add live table access or compatibility aliases.'
     ).toEqual([])
+  })
+
+  it('keeps admin RLS tied to the canonical app role', async () => {
+    const migrationFiles = await collectMigrationFiles()
+    const definitions = migrationFiles.flatMap(({ relativePath, content }) => {
+      const matches = content.matchAll(
+        /CREATE\s+OR\s+REPLACE\s+FUNCTION\s+public\.is_admin\s*\(\)\s+RETURNS\s+boolean[\s\S]*?\$\$(?<body>[\s\S]*?)\$\$/gi
+      )
+
+      return [...matches].map((match) => ({
+        relativePath,
+        body: match.groups?.body ?? '',
+      }))
+    })
+
+    const finalDefinition = definitions.at(-1)
+
+    expect(
+      finalDefinition,
+      'Architecture rule: public.is_admin() must exist because RLS admin policies depend on it.'
+    ).toBeDefined()
+
+    expect(
+      finalDefinition?.body,
+      `Architecture rule: final public.is_admin() must check public."user".role, not the Supabase JWT role. Last definition: ${finalDefinition?.relativePath ?? '(missing)'}`
+    ).toMatch(/FROM\s+public\."user"\s+\w+/i)
+
+    expect(finalDefinition?.body).toMatch(/\.role\s*=\s*'admin'/i)
+    expect(finalDefinition?.body).not.toMatch(/request\.jwt\.claims|auth\.jwt\(\)\s*->>\s*'role'/i)
   })
 })
