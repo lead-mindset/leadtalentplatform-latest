@@ -3,6 +3,7 @@ import type { z } from 'zod'
 import { createBasicOnboardingSchema } from '@/lib/memberschema'
 import type { Database } from '@/lib/database.generated'
 import { PersonProfileService } from '@/lib/services/person-profile.service'
+import { ChapterMembershipService } from '@/lib/services/chapter-membership.service'
 import { NewsletterSubscriptionService } from '@/lib/services/newsletter-subscription.service'
 
 type BasicOnboardingData = z.infer<ReturnType<typeof createBasicOnboardingSchema>>
@@ -75,6 +76,19 @@ export async function saveBasicOnboarding(
   })
 
   if (!profileResult.success) return profileResult
+
+  const shouldApplyToChapter =
+    params.data.chapterIntent === 'already_member' || params.data.chapterIntent === 'apply_to_chapter'
+
+  if (shouldApplyToChapter) {
+    const membershipResult = await ChapterMembershipService.applyToChapter(supabase, {
+      userId: params.userId,
+      chapterId: params.data.selectedChapterId,
+      position: 'member',
+    })
+
+    if (!membershipResult.success) return membershipResult
+  }
 
   if (params.data.emailNotificationsEnabled) {
     const globalResult = await NewsletterSubscriptionService.subscribeGlobal(supabase, {
