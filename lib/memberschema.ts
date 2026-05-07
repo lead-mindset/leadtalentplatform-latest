@@ -3,6 +3,8 @@ import { LEAD_CHAPTER_VALUES } from './options'
 import type { Translator } from './types'
 
 const MAX_YEAR = new Date().getFullYear() + 6
+export const CHAPTER_INTENT_VALUES = ['already_member', 'apply_to_chapter', 'events_only'] as const
+export type ChapterIntent = (typeof CHAPTER_INTENT_VALUES)[number]
 
 const optionalUrl = (t: Translator) =>
   z
@@ -53,6 +55,10 @@ export function createBasicOnboardingSchema(t: Translator) {
   return createBaseProfileSchema(t).extend({
     university: z.string().trim().optional().default(''),
     portfolio_url: optionalUrl(t),
+    chapterIntent: z.enum(CHAPTER_INTENT_VALUES, {
+      message: t('validation.selectChapterIntent'),
+    }),
+    selectedChapterId: z.string().trim().optional().default(''),
     chapterNewsletterIds: z
       .array(z.string())
       .default([])
@@ -63,6 +69,29 @@ export function createBasicOnboardingSchema(t: Translator) {
     termsAccepted: z.literal(true, {
       message: t('validation.termsRequired'),
     }),
+  }).superRefine((data, ctx) => {
+    const hasChapterIntent =
+      data.chapterIntent === 'already_member' || data.chapterIntent === 'apply_to_chapter'
+
+    if (!data.selectedChapterId) {
+      if (hasChapterIntent) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['selectedChapterId'],
+          message: t('validation.selectYourChapter'),
+        })
+      }
+
+      return
+    }
+
+    if (!(LEAD_CHAPTER_VALUES as readonly string[]).includes(data.selectedChapterId)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['selectedChapterId'],
+        message: t('validation.selectValidChapter'),
+      })
+    }
   })
 }
 
@@ -110,6 +139,8 @@ export type BasicPersonProfileData = {
   skills: string[]
   linkedin_url: string
   portfolio_url?: string
+  chapterIntent?: ChapterIntent
+  selectedChapterId?: string
   chapterNewsletterIds?: string[]
   consentRecruiterVisibility: boolean
   emailNotificationsEnabled: boolean

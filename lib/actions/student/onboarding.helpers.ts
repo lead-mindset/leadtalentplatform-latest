@@ -42,6 +42,8 @@ export function parseBasicOnboardingFormData(
     skills: parseJsonStringArray(formData.get('skills')),
     linkedin_url: formData.get('linkedin_url')?.toString() ?? '',
     portfolio_url: formData.get('portfolio_url')?.toString() ?? '',
+    chapterIntent: formData.get('chapterIntent')?.toString() ?? '',
+    selectedChapterId: formData.get('selectedChapterId')?.toString() ?? '',
     chapterNewsletterIds: parseJsonStringArray(formData.get('chapterNewsletterIds')),
     consentRecruiterVisibility: readBoolean(formData, 'consentRecruiterVisibility'),
     emailNotificationsEnabled: readBoolean(formData, 'emailNotificationsEnabled'),
