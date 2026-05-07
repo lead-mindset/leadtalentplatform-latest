@@ -43,6 +43,7 @@ export async function submitOnboarding(formData: FormData) {
 
   revalidatePath('/onboarding')
   revalidatePath('/events')
+  revalidatePath('/student')
   revalidatePath('/student/profile')
-  redirect('/events')
+  redirect('/student')
 }
