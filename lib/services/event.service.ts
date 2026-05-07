@@ -1100,7 +1100,7 @@ export const EventService = {
 
     return (data as unknown[]).map((row: unknown) => {
       const r = row as Record<string, unknown>;
-      
+
       const event: EventRow | null = r.event_title ? {
         id: r.event_id as string,
         title: r.event_title as string,
@@ -1413,59 +1413,80 @@ export const EventService = {
     supabase: SupabaseClient<Database>,
     eventId: string
   ): Promise<RegistrationWithUser[]> {
-    const { data, error } = await supabase
-      .from('event_registration')
-      .select(`
-        id,
-        event_id,
+      const { data, error } = await supabase
+        .from('event_registration')
+        .select(`
+          id,
+          event_id,
         user_id,
         registered_at,
         status,
         qr_token,
-        checked_in_at,
-        checked_in_by_id,
-        user:user!event_registration_user_id_fkey (
-          id,
-          name,
-          email,
-          phone,
-          person_profile!user_id!inner ( major_or_interest, graduation_year, linkedin_url )
-        )
-      `)
-      .eq('event_id', eventId)
-      .order('registered_at', { ascending: true })
+          checked_in_at,
+          checked_in_by_id,
+          user:user!event_registration_user_id_fkey (
+            id,
+            name,
+            email,
+            phone
+          )
+        `)
+        .eq('event_id', eventId)
+        .order('registered_at', { ascending: true })
 
     if (error || !data) {
       logger.error({ context: 'getEventRegistrations', error: error }, 'Error')
-      return []
-    }
+        return []
+      }
 
-    function mapRegistration(raw: unknown): RegistrationWithUser | null {
-      if (!raw || typeof raw !== 'object') return null
-      const r = raw as Record<string, unknown>
-      const u = Array.isArray(r.user) ? (r.user as unknown[])[0] : r.user
-      const userRecord = u as Record<string, unknown> | null
-      const profile = Array.isArray(userRecord?.person_profile) ? (userRecord.person_profile as unknown[])[0] : userRecord?.person_profile
-      const profileRecord = profile as Record<string, unknown> | null
-      return {
-        id: String(r.id),
-        event_id: String(r.event_id),
-        user_id: String(r.user_id),
+      const userIds = Array.from(
+        new Set(
+          (data as Array<{ user_id: string | null }>)
+            .map((registration) => registration.user_id)
+            .filter((userId): userId is string => Boolean(userId))
+        )
+      )
+
+      const { data: profiles, error: profilesError } = userIds.length > 0
+        ? await supabase
+            .from('person_profile')
+            .select('user_id, major_or_interest, graduation_year, linkedin_url')
+            .in('user_id', userIds)
+        : { data: [], error: null }
+
+      if (profilesError) {
+        logger.error({ context: 'getEventRegistrations.profiles', error: profilesError }, 'Error')
+      }
+
+      const profileByUserId = new Map(
+        (profiles ?? []).map((profile) => [profile.user_id, profile])
+      )
+
+      function mapRegistration(raw: unknown): RegistrationWithUser | null {
+        if (!raw || typeof raw !== 'object') return null
+        const r = raw as Record<string, unknown>
+        const u = Array.isArray(r.user) ? (r.user as unknown[])[0] : r.user
+        const userRecord = u as Record<string, unknown> | null
+        const profile = profileByUserId.get(String(r.user_id))
+        return {
+          id: String(r.id),
+          event_id: String(r.event_id),
+          user_id: String(r.user_id),
         registered_at: String(r.registered_at),
         status: r.status as RegistrationStatus,
         qr_token: (r.qr_token as string | null) ?? null,
-        checked_in_at: (r.checked_in_at as string | null) ?? null,
-        checked_in_by_id: (r.checked_in_by_id as string | null) ?? null,
-        user: u as RegistrationWithUser['user'],
-        person_profile: profileRecord
-          ? {
-              major_or_interest: String(profileRecord.major_or_interest ?? ''),
-              graduation_year: Number(profileRecord.graduation_year ?? 0),
-              linkedin_url: (profileRecord.linkedin_url as string | null) ?? null,
-            }
-          : null,
+          checked_in_at: (r.checked_in_at as string | null) ?? null,
+          checked_in_by_id: (r.checked_in_by_id as string | null) ?? null,
+          user: u as RegistrationWithUser['user'],
+          person_profile: profile
+            ? {
+                major_or_interest: profile.major_or_interest,
+                graduation_year: profile.graduation_year,
+                linkedin_url: profile.linkedin_url,
+              }
+            : null,
+        }
       }
-    }
 
     const registrations = (data as unknown[])
       .map(mapRegistration)

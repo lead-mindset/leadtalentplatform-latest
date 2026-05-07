@@ -155,14 +155,14 @@ export function ApplicationReviewCard({
               </div>
 
               <div className="grid gap-2 text-sm">
-                <p className="flex min-w-0 items-center gap-2 text-muted-foreground">
+                <div className="flex min-w-0 items-center gap-2 text-muted-foreground">
                   <Icons.GraduationCap className="h-4 w-4 shrink-0" />
                   <span className="truncate">{application.ApplicantProfile.majorOrInterest}</span>
-                </p>
-                <p className="flex items-center gap-2 text-muted-foreground">
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
                   <Icons.Calendar className="h-4 w-4 shrink-0" />
                   <span>Graduation {application.ApplicantProfile.graduation_year || 'not listed'}</span>
-                </p>
+                </div>
                 {application.ApplicantProfile.linkedinUrl ? (
                   <a
                     href={application.ApplicantProfile.linkedinUrl}

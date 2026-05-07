@@ -11,13 +11,25 @@ export async function bulkApproveApplications(eventId: string, applicationIds: s
   if ('error' in access) throw new Error(access.error)
   const { supabase, user } = access
 
-  const { data } = await supabase.rpc('bulk_approve_applications', {
+  const { data, error } = await supabase.rpc('bulk_approve_applications', {
     p_event_id: eventId,
     p_application_ids: applicationIds,
     p_approved_by: user.id,
   })
 
-  const result = data as { capacity_warning: boolean; capacity_status: string } | null
+  if (error) {
+    throw new Error(error.message || 'Failed to approve applications')
+  }
+
+  const result = data as {
+    capacity_warning: boolean
+    capacity_status: string
+    updated_count?: number
+  } | null
+
+  if ((result?.updated_count ?? 0) === 0) {
+    throw new Error('No pending applications were approved.')
+  }
 
   const capacityWarning = result?.capacity_warning ?? false
   const capacityStatus = result?.capacity_status === 'at_capacity' || result?.capacity_status === 'over_capacity'

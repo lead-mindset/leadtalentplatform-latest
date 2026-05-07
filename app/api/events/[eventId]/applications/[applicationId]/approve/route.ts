@@ -24,7 +24,15 @@ export async function POST(
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  const result = data as { capacity_warning: boolean; capacity_status: string } | null
+  const result = data as {
+    capacity_warning: boolean
+    capacity_status: string
+    updated_count?: number
+  } | null
+
+  if ((result?.updated_count ?? 0) === 0) {
+    return NextResponse.json({ error: 'No pending application was approved.' }, { status: 409 })
+  }
 
   const { data: registration } = await supabase
     .from('event_registration')
