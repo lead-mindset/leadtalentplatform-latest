@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
@@ -9,7 +10,23 @@ import {
   saveBasicOnboarding,
 } from '@/lib/actions/student/onboarding.helpers'
 
+const SUPPORTED_LOCALES = new Set(['en', 'es'])
+
+async function getRequestLocale() {
+  const referer = (await headers()).get('referer')
+  if (!referer) return 'en'
+
+  try {
+    const locale = new URL(referer).pathname.split('/').filter(Boolean)[0]
+    return SUPPORTED_LOCALES.has(locale) ? locale : 'en'
+  } catch {
+    return 'en'
+  }
+}
+
 export async function submitOnboarding(formData: FormData) {
+  const locale = await getRequestLocale()
+
   try {
     const supabase = await createClient()
     const {
@@ -45,5 +62,5 @@ export async function submitOnboarding(formData: FormData) {
   revalidatePath('/events')
   revalidatePath('/student')
   revalidatePath('/student/profile')
-  redirect('/student')
+  redirect(`/${locale}/student`)
 }

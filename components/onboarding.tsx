@@ -148,10 +148,10 @@ export default function Onboarding({ initialValues }: OnboardingProps) {
 
   const FieldError = ({ message }: { message?: string }) =>
     message ? (
-      <p className="mt-1 flex items-center gap-1 text-sm text-destructive">
+      <div className="mt-1 flex items-center gap-1 text-sm text-destructive">
         <Icons.X className="h-3 w-3 shrink-0" />
         {message}
-      </p>
+      </div>
     ) : null
 
   const StepHeader = ({ title, subtitle }: { title: string; subtitle: string }) => (
@@ -294,7 +294,7 @@ export default function Onboarding({ initialValues }: OnboardingProps) {
                           <label className="text-sm font-medium text-foreground">
                             {t('genderLabel')}
                           </label>
-                          <Select value={field.value} onValueChange={field.onChange}>
+                          <Select value={field.value ?? ''} onValueChange={field.onChange}>
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder={t('selectGender')} />
                             </SelectTrigger>
