@@ -2,7 +2,7 @@
 import { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.generated'
 import { generateUniqueMemberId } from '@/lib/utils/member-id'
-import type { ChapterMembershipRow, ChapterRow, MemberWithProfile, PersonProfileRow, UserRow } from '@/lib/types'
+import type { ChapterRow, MemberWithProfile } from '@/lib/types'
 import { ChapterMembershipService } from '@/lib/services/chapter-membership.service'
 
 /**
@@ -13,105 +13,6 @@ import { ChapterMembershipService } from '@/lib/services/chapter-membership.serv
  */
 
 type ApprovalResult = { success: true; member_id: string } | { success: false; error: string }
-
-const PROFILE_SELECT = `
-  id,
-  user_id,
-  university,
-  major_or_interest,
-  graduation_year,
-  linkedin_url,
-  portfolio_url,
-  skills,
-  is_recruiter_visible,
-  updated_at,
-  created_at,
-  gender,
-  chapter_membership!inner(
-    status,
-    position,
-    member_id,
-    joined_at,
-    chapter_id,
-    chapter (
-      id,
-      name,
-      university,
-      city,
-      region,
-      created_at,
-      updated_at
-    )
-  )
-`
-
-type ChapterProfileRow = Pick<
-  PersonProfileRow,
-  | 'id'
-  | 'user_id'
-  | 'university'
-  | 'major_or_interest'
-  | 'graduation_year'
-  | 'linkedin_url'
-  | 'portfolio_url'
-  | 'skills'
-  | 'is_recruiter_visible'
-  | 'updated_at'
-  | 'created_at'
-  | 'gender'
-> & {
-  chapter_membership: {
-    status: ChapterMembershipRow['status']
-    position: string | null
-    member_id: string | null
-    joined_at: string | null
-    chapter_id: string
-    chapter: ChapterRow | ChapterRow[] | null
-  }
-  user:
-    | Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'role' | 'created_at' | 'updated_at' | 'deactivated_at'>
-    | Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'role' | 'created_at' | 'updated_at' | 'deactivated_at'>[]
-}
-
-function mapProfile(profile: ChapterProfileRow): MemberWithProfile | null {
-  const user = Array.isArray(profile.user) ? profile.user[0] : profile.user
-  const chapter = Array.isArray(profile.chapter_membership.chapter) ? profile.chapter_membership.chapter[0] : profile.chapter_membership.chapter
-
-  if (!user) return null
-
-  return {
-    id: user.id,
-    email: user.email,
-    name: user.name ?? '',
-    phone: user.phone ?? null,
-    role: user.role,
-    created_at: user.created_at,
-    updated_at: user.updated_at,
-    deactivated_at: user.deactivated_at,
-    person_profile: {
-      id: profile.id,
-      user_id: profile.user_id,
-      university: profile.university,
-      major_or_interest: profile.major_or_interest,
-      graduation_year: profile.graduation_year,
-      linkedin_url: profile.linkedin_url,
-      portfolio_url: profile.portfolio_url,
-      skills: profile.skills,
-      is_recruiter_visible: profile.is_recruiter_visible,
-      updated_at: profile.updated_at,
-      created_at: profile.created_at,
-      gender: profile.gender,
-    },
-    chapter_membership: {
-      status: profile.chapter_membership.status,
-      position: profile.chapter_membership.position,
-      member_id: profile.chapter_membership.member_id,
-      joined_at: profile.chapter_membership.joined_at,
-      chapter_id: profile.chapter_membership.chapter_id,
-    },
-    chapter: chapter ?? null,
-  }
-}
 
 const CHAPTER_SELECT = 'id, name, university, city, region, created_at, updated_at, instagram_url, latitude, longitude, location_point'
 
@@ -184,22 +85,21 @@ export const ChapterService = {
     chapter_id: string,
     limit: number = 5
   ): Promise<MemberWithProfile[]> {
-    const { data, error } = await supabase
-      .from('person_profile')
-      .select(PROFILE_SELECT)
-      .eq('chapter_membership.chapter_id', chapter_id)
-      .eq('chapter_membership.status', 'approved')
-      .order('updated_at', { ascending: false })
-      .limit(limit)
+    const members = await ChapterMembershipService.getChapterRoster(supabase, chapter_id)
 
-    if (error || !data) {
-      logger.error({ context: 'ChapterService.getRecentChapterActivity', error: error }, 'Error')
-      return []
-    }
+    return members
+      .filter((member) => member.chapter_membership?.status === 'approved')
+      .sort((a, b) => {
+        const aUpdated = a.person_profile?.updated_at
+          ? new Date(a.person_profile.updated_at).getTime()
+          : 0
+        const bUpdated = b.person_profile?.updated_at
+          ? new Date(b.person_profile.updated_at).getTime()
+          : 0
 
-    return (data as unknown as ChapterProfileRow[])
-      .map(mapProfile)
-      .filter((m): m is MemberWithProfile => m !== null)
+        return bUpdated - aUpdated
+      })
+      .slice(0, limit)
   },
 
   // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

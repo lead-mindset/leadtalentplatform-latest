@@ -86,14 +86,14 @@ export default function MemberCard({
         {profile ? (
           <>
             <div className="grid gap-2 sm:grid-cols-2">
-              <p className="flex min-w-0 items-center gap-2 text-muted-foreground">
+              <div className="flex min-w-0 items-center gap-2 text-muted-foreground">
                 <Icons.GraduationCap className="h-4 w-4 shrink-0" />
                 <span className="truncate">{profile.major_or_interest || 'No major listed'}</span>
-              </p>
-              <p className="flex items-center gap-2 text-muted-foreground">
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground">
                 <Icons.Calendar className="h-4 w-4 shrink-0" />
                 <span>{profile.graduation_year ? `Class of ${profile.graduation_year}` : 'Graduation not listed'}</span>
-              </p>
+              </div>
             </div>
 
             {profile.linkedin_url ? (

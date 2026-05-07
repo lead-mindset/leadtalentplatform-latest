@@ -32,9 +32,16 @@ function buildMockSupabase(overrides: Record<string, TableMock> = {}) {
     person_profile: {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
       maybeSingle: vi.fn(),
     },
     user: {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn(),
+    },
+    chapter: {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       maybeSingle: vi.fn(),
@@ -352,6 +359,22 @@ describe('ChapterMembershipService', () => {
             chapter: { id: 'leaduni', name: 'LEAD UNI', university: 'UNI', city: 'Lima', region: 'Lima', created_at: '2026-05-03', updated_at: '2026-05-03', instagram_url: null, latitude: null, longitude: null, location_point: null },
           },
         ],
+        error: null,
+      })
+      tableMocks.user.in?.mockResolvedValue({
+        data: [
+          { id: 'user-1', email: 'member@test.com', name: 'Test Member', phone: null, role: 'member', created_at: '2026-05-03', updated_at: '2026-05-03', deactivated_at: null },
+        ],
+        error: null,
+      })
+      tableMocks.person_profile.in?.mockResolvedValue({
+        data: [
+          { id: 'profile-1', user_id: 'user-1', major_or_interest: 'Engineering', graduation_year: 2027, linkedin_url: null, portfolio_url: null, skills: [], is_recruiter_visible: true, updated_at: '2026-05-03', created_at: '2026-05-03', gender: null, university: 'UNI' },
+        ],
+        error: null,
+      })
+      tableMocks.chapter.maybeSingle?.mockResolvedValue({
+        data: { id: 'leaduni', name: 'LEAD UNI', university: 'UNI', city: 'Lima', region: 'Lima', created_at: '2026-05-03', updated_at: '2026-05-03', instagram_url: null, latitude: null, longitude: null, location_point: null },
         error: null,
       })
 
