@@ -30,10 +30,10 @@ jobs:
 
       - name: Apply migrations to QA
         run: |
-          supabase db push --project-ref ${{ vars.QA_SUPABASE_PROJECT_REF }}
+          supabase db push --db-url "postgresql://postgres:${{ secrets.QA_DB_PASSWORD }}@${{ vars.QA_DB_HOST }}:5432/postgres?sslmode=require" --yes
         env:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.QA_SUPABASE_SERVICE_ROLE_KEY }}
-        if: vars.QA_SUPABASE_PROJECT_REF != ''
+        if: vars.QA_DB_HOST != ''
 
       - name: Seed QA data
         run: |
