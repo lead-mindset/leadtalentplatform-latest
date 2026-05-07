@@ -1,10 +1,10 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { useState } from 'react'
-import { Controller, FormProvider, useForm } from 'react-hook-form'
+import { useEffect, useState } from 'react'
+import { Controller, FormProvider, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { CheckCircle2, Mail, ShieldCheck, UserRound } from 'lucide-react'
+import { Building2, CalendarCheck, CheckCircle2, Mail, ShieldCheck, UserRound, UsersRound } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import z from 'zod'
 import { submitOnboarding } from '@/lib/actions/student/onboarding'
@@ -45,6 +45,7 @@ export default function Onboarding({ initialValues }: OnboardingProps) {
   const translatedGender = useTranslatedGender()
 
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [lastAutoNewsletterChapterId, setLastAutoNewsletterChapterId] = useState<string | null>(null)
 
   const basicOnboardingSchema = createBasicOnboardingSchema(tValidation)
 
@@ -61,6 +62,8 @@ export default function Onboarding({ initialValues }: OnboardingProps) {
       gender: initialValues?.gender,
       linkedin_url: initialValues?.linkedin_url ?? '',
       portfolio_url: initialValues?.portfolio_url ?? '',
+      chapterIntent: initialValues?.chapterIntent,
+      selectedChapterId: initialValues?.selectedChapterId ?? '',
       chapterNewsletterIds: initialValues?.chapterNewsletterIds ?? [],
       consentRecruiterVisibility: initialValues?.consentRecruiterVisibility ?? false,
       emailNotificationsEnabled: initialValues?.emailNotificationsEnabled ?? true,
@@ -72,15 +75,47 @@ export default function Onboarding({ initialValues }: OnboardingProps) {
     control,
     formState: { errors },
     getValues,
+    setValue,
     trigger,
   } = methods
+
+  const chapterIntent = useWatch({ control, name: 'chapterIntent' })
+  const selectedChapterId = useWatch({ control, name: 'selectedChapterId' })
+  const needsChapterSelection =
+    chapterIntent === 'already_member' || chapterIntent === 'apply_to_chapter'
 
   const stepFields: Record<number, (keyof BasicOnboardingValues)[]> = {
     1: ['full_name', 'phone', 'gender'],
     2: ['university', 'career', 'graduation_year', 'skills', 'linkedin_url', 'portfolio_url'],
-    3: ['consentRecruiterVisibility', 'emailNotificationsEnabled', 'chapterNewsletterIds'],
-    4: ['termsAccepted'],
+    3: ['chapterIntent', 'selectedChapterId'],
+    4: ['consentRecruiterVisibility', 'emailNotificationsEnabled', 'chapterNewsletterIds'],
+    5: ['termsAccepted'],
   }
+
+  useEffect(() => {
+    if (!needsChapterSelection || !selectedChapterId) {
+      setLastAutoNewsletterChapterId(null)
+      return
+    }
+
+    if (lastAutoNewsletterChapterId === selectedChapterId) return
+
+    const selectedChapterIds = getValues('chapterNewsletterIds') ?? []
+    if (!selectedChapterIds.includes(selectedChapterId)) {
+      setValue('chapterNewsletterIds', [...selectedChapterIds, selectedChapterId], {
+        shouldDirty: true,
+        shouldValidate: true,
+      })
+    }
+
+    setLastAutoNewsletterChapterId(selectedChapterId)
+  }, [
+    getValues,
+    lastAutoNewsletterChapterId,
+    needsChapterSelection,
+    selectedChapterId,
+    setValue,
+  ])
 
   const validateCurrentStep = async (step: number) => trigger(stepFields[step])
 
@@ -148,6 +183,43 @@ export default function Onboarding({ initialValues }: OnboardingProps) {
         <p className="text-sm leading-5 text-muted-foreground">{description}</p>
       </div>
     </label>
+  )
+
+  const ChapterIntentCard = ({
+    description,
+    icon,
+    onSelect,
+    selected,
+    title,
+  }: {
+    description: string
+    icon: ReactNode
+    onSelect: () => void
+    selected: boolean
+    title: string
+  }) => (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={selected}
+      className={`flex min-h-32 w-full items-start gap-3 rounded-lg border p-4 text-left transition-colors ${
+        selected
+          ? 'border-primary bg-primary/5 text-foreground shadow-sm'
+          : 'border-border bg-card text-foreground hover:bg-muted/60'
+      }`}
+    >
+      <span
+        className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+          selected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+        }`}
+      >
+        {icon}
+      </span>
+      <span className="space-y-1">
+        <span className="block text-sm font-semibold leading-5">{title}</span>
+        <span className="block text-sm leading-5 text-muted-foreground">{description}</span>
+      </span>
+    </button>
   )
 
   const ContextItem = ({
@@ -313,6 +385,79 @@ export default function Onboarding({ initialValues }: OnboardingProps) {
                 <div className="space-y-6">
                   <StepHeader title={t('step3Title')} subtitle={t('step3Subtitle')} />
 
+                  <Controller
+                    control={control}
+                    name="chapterIntent"
+                    render={({ field }) => (
+                      <div className="space-y-4">
+                        <div className="grid gap-3 md:grid-cols-3">
+                          <ChapterIntentCard
+                            selected={field.value === 'already_member'}
+                            onSelect={() => field.onChange('already_member')}
+                            icon={<UsersRound className="h-4 w-4" />}
+                            title={t('chapterIntentAlreadyMemberTitle')}
+                            description={t('chapterIntentAlreadyMemberDesc')}
+                          />
+                          <ChapterIntentCard
+                            selected={field.value === 'apply_to_chapter'}
+                            onSelect={() => field.onChange('apply_to_chapter')}
+                            icon={<Building2 className="h-4 w-4" />}
+                            title={t('chapterIntentApplyTitle')}
+                            description={t('chapterIntentApplyDesc')}
+                          />
+                          <ChapterIntentCard
+                            selected={field.value === 'events_only'}
+                            onSelect={() => {
+                              field.onChange('events_only')
+                              setValue('selectedChapterId', '', {
+                                shouldDirty: true,
+                                shouldValidate: true,
+                              })
+                            }}
+                            icon={<CalendarCheck className="h-4 w-4" />}
+                            title={t('chapterIntentEventsOnlyTitle')}
+                            description={t('chapterIntentEventsOnlyDesc')}
+                          />
+                        </div>
+                        <FieldError message={errors.chapterIntent?.message} />
+                      </div>
+                    )}
+                  />
+
+                  {needsChapterSelection ? (
+                    <Controller
+                      control={control}
+                      name="selectedChapterId"
+                      render={({ field }) => (
+                        <div className="space-y-2 rounded-lg border border-border bg-card p-4">
+                          <label className="text-sm font-medium text-foreground">
+                            {t('chapterSelectionLabel')}
+                          </label>
+                          <Select value={field.value ?? ''} onValueChange={field.onChange}>
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder={t('selectChapter')} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {translatedChapters.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <p className="text-sm leading-5 text-muted-foreground">
+                            {t('chapterSelectionHelper')}
+                          </p>
+                          <FieldError message={errors.selectedChapterId?.message} />
+                        </div>
+                      )}
+                    />
+                  ) : null}
+                </div>
+
+                <div className="space-y-6">
+                  <StepHeader title={t('step4Title')} subtitle={t('step4Subtitle')} />
+
                   <div className="space-y-3">
                     <Controller
                       control={control}
@@ -385,7 +530,7 @@ export default function Onboarding({ initialValues }: OnboardingProps) {
                 </div>
 
                 <div className="space-y-6">
-                  <StepHeader title={t('step4Title')} subtitle={t('step4Subtitle')} />
+                  <StepHeader title={t('step5Title')} subtitle={t('step5Subtitle')} />
 
                   <Controller
                     control={control}

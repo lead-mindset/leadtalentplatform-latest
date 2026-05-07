@@ -34,6 +34,8 @@ function validFormData() {
   formData.set('skills', JSON.stringify(['Leadership', 'Research']))
   formData.set('linkedin_url', 'https://linkedin.com/in/test-participant')
   formData.set('portfolio_url', 'https://example.com')
+  formData.set('chapterIntent', 'events_only')
+  formData.set('selectedChapterId', '')
   formData.set('chapterNewsletterIds', JSON.stringify(['leaduni', 'leadutec']))
   formData.set('consentRecruiterVisibility', 'true')
   formData.set('emailNotificationsEnabled', 'true')
@@ -57,10 +59,62 @@ describe('basic onboarding helpers', () => {
     expect(parsed.data).toMatchObject({
       full_name: 'Test Participant',
       career: 'Product Design',
+      chapterIntent: 'events_only',
+      selectedChapterId: '',
       chapterNewsletterIds: ['leaduni', 'leadutec'],
       consentRecruiterVisibility: true,
       emailNotificationsEnabled: true,
     })
+  })
+
+  it('accepts chapter-related intent when a valid chapter is selected', () => {
+    const formData = validFormData()
+    formData.set('chapterIntent', 'already_member')
+    formData.set('selectedChapterId', 'leaduni')
+
+    const parsed = parseBasicOnboardingFormData(formData, t)
+
+    expect(parsed.success).toBe(true)
+    if (!parsed.success) return
+
+    expect(parsed.data).toMatchObject({
+      chapterIntent: 'already_member',
+      selectedChapterId: 'leaduni',
+    })
+  })
+
+  it('requires a chapter for chapter-related intent', () => {
+    const formData = validFormData()
+    formData.set('chapterIntent', 'apply_to_chapter')
+    formData.set('selectedChapterId', '')
+
+    const parsed = parseBasicOnboardingFormData(formData, t)
+
+    expect(parsed.success).toBe(false)
+    if (parsed.success) return
+
+    expect(parsed.error.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: ['selectedChapterId'],
+          message: 'validation.selectYourChapter',
+        }),
+      ])
+    )
+  })
+
+  it('allows events-only onboarding without a chapter selection', () => {
+    const formData = validFormData()
+    formData.set('chapterIntent', 'events_only')
+    formData.set('selectedChapterId', '')
+    formData.set('chapterNewsletterIds', JSON.stringify([]))
+
+    const parsed = parseBasicOnboardingFormData(formData, t)
+
+    expect(parsed.success).toBe(true)
+    if (!parsed.success) return
+
+    expect(parsed.data.selectedChapterId).toBe('')
   })
 
   it('saves person_profile data and optional newsletter subscriptions', async () => {
