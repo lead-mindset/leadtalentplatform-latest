@@ -5,7 +5,6 @@ import type {
   ChapterRow,
   MemberWithProfile,
   PersonProfileRow,
-  UserRow,
 } from '@/lib/types'
 
 type ActionResult = { success: true } | { success: false; error: string }
@@ -46,62 +45,6 @@ type EditorEligibilityParams = {
   chapterId?: string
 }
 
-type MembershipWithJoins = ChapterMembershipRow & {
-  user:
-    | Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'role' | 'created_at' | 'updated_at' | 'deactivated_at'>
-    | Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'role' | 'created_at' | 'updated_at' | 'deactivated_at'>[]
-    | null
-  person_profile: PersonProfileRow | PersonProfileRow[] | null
-  chapter: ChapterRow | ChapterRow[] | null
-}
-
-const ROSTER_SELECT = `
-  user_id,
-  chapter_id,
-  status,
-  position,
-  member_id,
-  joined_at,
-  created_at,
-  updated_at,
-  user:user_id (
-    id,
-    email,
-    name,
-    phone,
-    role,
-    created_at,
-    updated_at,
-    deactivated_at
-  ),
-  person_profile:user_id (
-    user_id,
-    university,
-    major_or_interest,
-    graduation_year,
-    linkedin_url,
-    portfolio_url,
-    skills,
-    gender,
-    is_recruiter_visible,
-    created_at,
-    updated_at
-  ),
-  chapter:chapter_id (
-    id,
-    name,
-    university,
-    city,
-    region,
-    created_at,
-    updated_at,
-    instagram_url,
-    latitude,
-    longitude,
-    location_point
-  )
-`
-
 const CHAPTER_MANAGER_POSITIONS: MembershipPosition[] = [
   'editor',
   'president',
@@ -109,29 +52,6 @@ const CHAPTER_MANAGER_POSITIONS: MembershipPosition[] = [
   'secretary',
   'treasurer',
 ]
-
-function first<T>(value: T | T[] | null): T | null {
-  if (Array.isArray(value)) return value[0] ?? null
-  return value
-}
-
-function mapRosterRow(row: MembershipWithJoins): MemberWithProfile | null {
-  const user = first(row.user)
-  if (!user) return null
-
-  return {
-    ...user,
-    person_profile: first(row.person_profile),
-    chapter_membership: {
-      chapter_id: row.chapter_id,
-      status: row.status,
-      position: row.position,
-      member_id: row.member_id,
-      joined_at: row.joined_at,
-    } as MemberWithProfile['chapter_membership'],
-    chapter: first(row.chapter),
-  }
-}
 
 function isOneApprovedMembershipError(error: { code?: string; message?: string } | null): boolean {
   return Boolean(
@@ -275,16 +195,84 @@ export const ChapterMembershipService = {
     supabase: SupabaseClient<Database>,
     chapterId: string
   ): Promise<MemberWithProfile[]> {
-    const { data, error } = await supabase
+    const { data: memberships, error } = await supabase
       .from('chapter_membership')
-      .select(ROSTER_SELECT)
+      .select('user_id, chapter_id, status, position, member_id, joined_at, created_at, updated_at')
       .eq('chapter_id', chapterId)
       .order('created_at', { ascending: false })
 
-    if (error) return []
+    if (error || !memberships) return []
 
-    return ((data ?? []) as unknown as MembershipWithJoins[])
-      .map(mapRosterRow)
+    const userIds = memberships.map((membership) => membership.user_id)
+    if (userIds.length === 0) return []
+
+    const [usersResult, profilesResult, chapterResult] = await Promise.all([
+      supabase
+        .from('user')
+        .select('id, email, name, phone, role, created_at, updated_at, deactivated_at')
+        .in('id', userIds),
+      supabase
+        .from('person_profile')
+        .select(`
+          user_id,
+          id,
+          university,
+          major_or_interest,
+          graduation_year,
+          linkedin_url,
+          portfolio_url,
+          skills,
+          gender,
+          is_recruiter_visible,
+          created_at,
+          updated_at
+        `)
+        .in('user_id', userIds),
+      supabase
+        .from('chapter')
+        .select(`
+          id,
+          name,
+          university,
+          city,
+          region,
+          created_at,
+          updated_at,
+          instagram_url,
+          latitude,
+          longitude,
+          location_point
+        `)
+        .eq('id', chapterId)
+        .maybeSingle(),
+    ])
+
+    if (usersResult.error) return []
+
+    const usersById = new Map((usersResult.data ?? []).map((user) => [user.id, user]))
+    const profilesByUserId = new Map(
+      (profilesResult.data ?? []).map((profile) => [profile.user_id, profile])
+    )
+    const chapter = (chapterResult.data ?? null) as ChapterRow | null
+
+    return memberships
+      .map((membership): MemberWithProfile | null => {
+        const user = usersById.get(membership.user_id)
+        if (!user) return null
+
+        return {
+          ...user,
+          person_profile: (profilesByUserId.get(membership.user_id) ?? null) as PersonProfileRow | null,
+          chapter_membership: {
+            chapter_id: membership.chapter_id,
+            status: membership.status,
+            position: membership.position,
+            member_id: membership.member_id,
+            joined_at: membership.joined_at,
+          } as MemberWithProfile['chapter_membership'],
+          chapter,
+        }
+      })
       .filter((member): member is MemberWithProfile => member !== null)
   },
 
