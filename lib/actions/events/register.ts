@@ -1,6 +1,7 @@
 'use server'
 
 import { isRedirectError } from 'next/dist/client/components/redirect-error'
+import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
@@ -14,6 +15,8 @@ const ApplicationAnswerSchema = z.object({
   questionId: z.string().uuid(),
   value: z.union([z.string(), z.array(z.string())]).nullable().optional(),
 })
+
+const SUPPORTED_LOCALES = new Set(['en', 'es'])
 
 export type RegisterForEventState = {
   error?: string
@@ -29,8 +32,20 @@ function revalidateEventRegistrationPaths(eventId: string) {
   revalidatePath('/student/events')
 }
 
-function redirectToStudentEventQr(eventId: string) {
-  redirect(`/student/events?event=${eventId}`)
+async function getRequestLocale() {
+  const referer = (await headers()).get('referer')
+  if (!referer) return 'en'
+
+  try {
+    const locale = new URL(referer).pathname.split('/').filter(Boolean)[0]
+    return SUPPORTED_LOCALES.has(locale) ? locale : 'en'
+  } catch {
+    return 'en'
+  }
+}
+
+function redirectToStudentEventQr(eventId: string, locale: string) {
+  redirect(`/${locale}/student/events?event=${eventId}`)
 }
 
 export async function applyForEvent(
@@ -103,6 +118,8 @@ export async function registerForEvent(
   _prev: RegisterForEventState | null,
   formData: FormData
 ): Promise<RegisterForEventState> {
+  const locale = await getRequestLocale()
+
   try {
     const { supabase, user } = await requireUser()
     if (!user) {
@@ -138,7 +155,7 @@ export async function registerForEvent(
     }
 
     revalidateEventRegistrationPaths(eventId)
-    redirectToStudentEventQr(eventId)
+    redirectToStudentEventQr(eventId, locale)
 
     return { error: 'Something went wrong. Please try again.' }
   } catch (err) {
