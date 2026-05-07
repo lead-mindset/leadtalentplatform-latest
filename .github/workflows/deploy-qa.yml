@@ -37,5 +37,5 @@ jobs:
 
       - name: Seed QA data
         run: |
-          PGPASSWORD=${{ secrets.QA_DB_PASSWORD }} psql -h ${{ vars.QA_DB_HOST }} -U postgres -d postgres -f supabase/seed-qa.sql
+          PGPASSWORD=${{ secrets.QA_DB_PASSWORD }} psql -h ${{ vars.QA_DB_HOST }} -U postgres -d postgres -f supabase/seed.sql
         if: vars.QA_DB_HOST != ''
