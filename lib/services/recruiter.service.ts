@@ -49,10 +49,6 @@ type TalentPoolRow = Pick<UserRow, 'id' | 'name' | 'email'> & {
   person_profile: TalentPoolProfileRow | TalentPoolProfileRow[] | null
 }
 
-type SavedTalentPoolRow = {
-  student: TalentPoolRow | TalentPoolRow[] | null
-}
-
 type TalentPoolFilterRow = Pick<PersonProfileRow, 'graduation_year'> & {
   chapter_membership: {
     chapter: { id: string; name: string } | { id: string; name: string }[] | null
@@ -174,52 +170,16 @@ export const RecruiterService = {
     filters: TalentPoolFilters,
     pagination?: TalentPoolPagination
   ) {
-    const { page, pageSize, from, to } = parsePagination(pagination)
+    const { page, pageSize } = parsePagination(pagination)
 
-    let query = supabase
+    const { data: savedRows, error: savedError } = await supabase
       .from('saved_student')
-      .select(
-        `
-        student_id,
-        student:user!saved_student_student_id_fkey (
-          id, name, email,
-          person_profile!user_id!inner (
-            graduation_year, major_or_interest, skills, updated_at, is_recruiter_visible,
-            chapter_membership!user_id!inner (
-              status,
-              chapter_id,
-              chapter (name, university)
-            )
-          )
-        )
-        `,
-        { count: 'exact' }
-      )
+      .select('student_id, saved_at')
       .eq('recruiter_id', recruiterId)
-      .eq('student.person_profile.is_recruiter_visible', true)
-      .eq('student.person_profile.chapter_membership.status', 'approved')
       .order('saved_at', { ascending: false })
-      .range(from, to)
 
-    if (filters.query?.trim()) {
-      query = query.ilike('student.name', `%${filters.query.trim()}%`)
-    }
-
-    if (filters.graduation_year) {
-      query = query.eq('student.person_profile.graduation_year', filters.graduation_year)
-    }
-
-    if (filters.chapter_id) {
-      query = query.eq('student.person_profile.chapter_membership.chapter_id', filters.chapter_id)
-    }
-
-    if (filters.skills && filters.skills.length > 0) {
-      query = query.contains('student.person_profile.skills', filters.skills)
-    }
-
-    const { data, error, count } = await query
-    if (error) {
-      logger.error({ context: 'recruiter/talent-pool', error: error }, 'getSavedStudents error')
+    if (savedError) {
+      logger.error({ context: 'recruiter/talent-pool', error: savedError }, 'getSavedStudents error')
       return {
         students: [] as TalentPoolStudent[],
         total: 0,
@@ -230,18 +190,135 @@ export const RecruiterService = {
       }
     }
 
-    const students = ((data ?? []) as unknown as SavedTalentPoolRow[])
-      .map((row) => {
-        const user = Array.isArray(row.student) ? row.student[0] : row.student
-        return user ? mapTalentPoolRow(user) : null
+    const savedStudentIds = (savedRows ?? []).map((row) => row.student_id)
+    if (savedStudentIds.length === 0) {
+      return {
+        students: [] as TalentPoolStudent[],
+        total: 0,
+        page,
+        pageSize,
+        totalPages: 0,
+        hasNextPage: false,
+      }
+    }
+
+    const [{ data: users, error: usersError }, { data: profiles, error: profilesError }] = await Promise.all([
+      supabase
+        .from('user')
+        .select('id, name, email')
+        .in('id', savedStudentIds),
+      supabase
+        .from('person_profile')
+        .select('user_id, graduation_year, major_or_interest, skills, updated_at, is_recruiter_visible')
+        .in('user_id', savedStudentIds)
+        .eq('is_recruiter_visible', true),
+    ])
+
+    if (usersError || profilesError) {
+      logger.error(
+        { context: 'recruiter/talent-pool', error: usersError ?? profilesError },
+        'getSavedStudents profile load error'
+      )
+      return {
+        students: [] as TalentPoolStudent[],
+        total: 0,
+        page,
+        pageSize,
+        totalPages: 0,
+        hasNextPage: false,
+      }
+    }
+
+    const profileUserIds = (profiles ?? []).map((profile) => profile.user_id)
+    const { data: memberships, error: membershipsError } = profileUserIds.length > 0
+      ? await supabase
+          .from('chapter_membership')
+          .select('user_id, chapter_id')
+          .in('user_id', profileUserIds)
+          .eq('status', 'approved')
+      : { data: [], error: null }
+
+    if (membershipsError) {
+      logger.error({ context: 'recruiter/talent-pool', error: membershipsError }, 'getSavedStudents membership error')
+      return {
+        students: [] as TalentPoolStudent[],
+        total: 0,
+        page,
+        pageSize,
+        totalPages: 0,
+        hasNextPage: false,
+      }
+    }
+
+    const chapterIds = Array.from(new Set((memberships ?? []).map((membership) => membership.chapter_id)))
+    const { data: chapters, error: chaptersError } = chapterIds.length > 0
+      ? await supabase
+          .from('chapter')
+          .select('id, name, university')
+          .in('id', chapterIds)
+      : { data: [], error: null }
+
+    if (chaptersError) {
+      logger.error({ context: 'recruiter/talent-pool', error: chaptersError }, 'getSavedStudents chapter error')
+      return {
+        students: [] as TalentPoolStudent[],
+        total: 0,
+        page,
+        pageSize,
+        totalPages: 0,
+        hasNextPage: false,
+      }
+    }
+
+    const usersById = new Map((users ?? []).map((user) => [user.id, user]))
+    const profilesByUserId = new Map((profiles ?? []).map((profile) => [profile.user_id, profile]))
+    const membershipsByUserId = new Map((memberships ?? []).map((membership) => [membership.user_id, membership]))
+    const chaptersById = new Map((chapters ?? []).map((chapter) => [chapter.id, chapter]))
+    const query = filters.query?.trim().toLowerCase()
+
+    const students = savedStudentIds
+      .map((studentId) => {
+        const user = usersById.get(studentId)
+        const profile = profilesByUserId.get(studentId)
+        const membership = membershipsByUserId.get(studentId)
+        const chapter = membership?.chapter_id ? chaptersById.get(membership.chapter_id) : null
+
+        if (!user || !profile || !membership || !chapter) return null
+
+        return mapTalentPoolRow({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          person_profile: {
+            graduation_year: profile.graduation_year,
+            major_or_interest: profile.major_or_interest,
+            skills: profile.skills,
+            updated_at: profile.updated_at,
+            linkedin_url: null,
+            chapter_membership: {
+              chapter: {
+                name: chapter.name,
+                university: chapter.university,
+              },
+            },
+          },
+        })
       })
       .filter((student): student is TalentPoolStudent => student !== null)
+      .filter((student) => !query || student.name.toLowerCase().includes(query))
+      .filter((student) => !filters.graduation_year || student.graduation_year === filters.graduation_year)
+      .filter((student) => !filters.chapter_id || membershipsByUserId.get(student.id)?.chapter_id === filters.chapter_id)
+      .filter((student) => {
+        if (!filters.skills || filters.skills.length === 0) return true
+        return filters.skills.every((skill) => student.skills.includes(skill))
+      })
 
-    const total = count ?? 0
+    const total = students.length
     const totalPages = total === 0 ? 0 : Math.ceil(total / pageSize)
+    const paginatedStudents = students.slice((page - 1) * pageSize, page * pageSize)
 
     return {
-      students,
+      students: paginatedStudents,
       total,
       page,
       pageSize,
