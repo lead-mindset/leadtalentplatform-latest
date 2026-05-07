@@ -26,7 +26,7 @@ jobs:
       - name: Install Supabase CLI
         uses: supabase/setup-cli@v1
         with:
-          version: 1
+          version: latest
 
       - name: Apply migrations to QA
         run: |
