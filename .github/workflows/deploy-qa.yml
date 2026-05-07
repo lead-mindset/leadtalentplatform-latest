@@ -30,12 +30,21 @@ jobs:
 
       - name: Apply migrations to QA
         run: |
-          supabase db push --db-url "postgresql://postgres:${{ secrets.QA_DB_PASSWORD }}@${{ vars.QA_DB_HOST }}:5432/postgres?sslmode=require" --yes
+          supabase db push --db-url "postgresql://${QA_DB_USER}:${QA_DB_PASSWORD}@${QA_DB_HOST}:${QA_DB_PORT}/postgres?sslmode=require" --yes
         env:
+          QA_DB_HOST: ${{ vars.QA_DB_HOST }}
+          QA_DB_PORT: ${{ vars.QA_DB_PORT }}
+          QA_DB_USER: ${{ vars.QA_DB_USER }}
+          QA_DB_PASSWORD: ${{ secrets.QA_DB_PASSWORD }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.QA_SUPABASE_SERVICE_ROLE_KEY }}
         if: vars.QA_DB_HOST != ''
 
       - name: Seed QA data
         run: |
-          PGPASSWORD=${{ secrets.QA_DB_PASSWORD }} psql -h ${{ vars.QA_DB_HOST }} -U postgres -d postgres -f supabase/seed.sql
+          PGPASSWORD="${QA_DB_PASSWORD}" psql -h "${QA_DB_HOST}" -p "${QA_DB_PORT}" -U "${QA_DB_USER}" -d postgres -f supabase/seed.sql
+        env:
+          QA_DB_HOST: ${{ vars.QA_DB_HOST }}
+          QA_DB_PORT: ${{ vars.QA_DB_PORT }}
+          QA_DB_USER: ${{ vars.QA_DB_USER }}
+          QA_DB_PASSWORD: ${{ secrets.QA_DB_PASSWORD }}
         if: vars.QA_DB_HOST != ''
