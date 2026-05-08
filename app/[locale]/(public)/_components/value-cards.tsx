@@ -1,4 +1,4 @@
-import { Briefcase, BadgeCheck, EyeOff } from "lucide-react";
+import { BadgeCheck, Briefcase, EyeOff } from "lucide-react";
 import { MainContainer } from "@/components/global/main-container";
 import { SectionLabel } from "@/components/ui/section-label";
 import { Icon } from "@/components/ui/icon";
@@ -7,28 +7,28 @@ import PrismaticBurst from "@/components/ui/prismatic-burst";
 const VALUE_CARDS = [
   {
     icon: Briefcase,
-    title: "Accede a oportunidades reales",
+    title: "Access real opportunities",
     description:
-      "Empresas buscan talento LEAD activamente. Tu perfil llega a ellos cuando estás listo.",
+      "LEAD partners can discover your profile when you choose to become visible.",
   },
   {
     icon: BadgeCheck,
-    title: "Tu Member ID oficial",
+    title: "Your official LEAD ID",
     description:
-      "Obtén tu número único como miembro LEAD — tu credencial para eventos y la comunidad. Generado automáticamente.",
+      "Approved chapter members receive an official ID for events and community recognition.",
   },
   {
     icon: EyeOff,
-    title: "Tú controlas quién te ve",
+    title: "You control visibility",
     description:
-      "Privado por defecto. Activa tu visibilidad cuando quieras. Cámbialo en cualquier momento.",
+      "Profiles are private by default. Turn company visibility on only when you are ready.",
   },
 ] as const;
 
 export function ValueCards() {
   return (
-    <section className="py-24 bg-background overflow-hidden relative border-b border-border/10">
-      <div className="absolute bg-background inset-0 z-0">
+    <section className="relative overflow-hidden border-b border-border/10 bg-background py-24">
+      <div className="absolute inset-0 z-0 bg-background">
         <PrismaticBurst
           animationType="rotate3d"
           intensity={1.9}
@@ -39,30 +39,30 @@ export function ValueCards() {
           hoverDampness={0.25}
           rayCount={24}
           mixBlendMode="lighten"
-          colors={['#e2315f', '#8037c4', '#4220c9']}
+          colors={["#e2315f", "#8037c4", "#4220c9"]}
         />
       </div>
       <MainContainer className="relative z-10">
-        <div className="text-center mb-16">
+        <div className="mb-16 text-center">
           <SectionLabel>LEAD Talent Platform</SectionLabel>
-          <h2 className="fluid-h2 mb-6">
-            Your Fast-Track to Global Tech
-          </h2>
+          <h2 className="fluid-h2 mb-6">Your fast track to the LEAD community</h2>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           {VALUE_CARDS.map((card) => {
             const CardIcon = card.icon;
             return (
               <div
                 key={card.title}
-                className="bg-card border border-border/30 p-8 sm:p-10 rounded-[2rem] hover:bg-muted/50 hover:border-primary/40 hover:-translate-y-2 transition-all duration-300 group cursor-pointer"
+                className="group rounded-[2rem] border border-border/30 bg-card p-8 transition-all duration-300 hover:-translate-y-2 hover:border-primary/40 hover:bg-muted/50 sm:p-10"
               >
-                <div className="mb-6 group-hover:scale-110 transition-transform duration-300">
+                <div className="mb-6 transition-transform duration-300 group-hover:scale-110">
                   <Icon icon={CardIcon} size="md" variant="accent" />
                 </div>
-                <h3 className="text-xl sm:text-2xl font-bold mb-4 text-foreground group-hover:text-primary transition-colors">{card.title}</h3>
-                <p className="text-muted-foreground leading-relaxed group-hover:text-foreground transition-colors">
+                <h3 className="mb-4 text-xl font-bold text-foreground transition-colors group-hover:text-primary sm:text-2xl">
+                  {card.title}
+                </h3>
+                <p className="leading-relaxed text-muted-foreground transition-colors group-hover:text-foreground">
                   {card.description}
                 </p>
               </div>

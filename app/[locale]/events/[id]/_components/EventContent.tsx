@@ -36,15 +36,19 @@ type TimingStatus = {
   isRegistrationClosed: boolean
 }
 
+const EVENT_TIME_ZONE = 'America/Lima'
+const EVENT_LOCALE = 'en-US'
+
 function formatDate(value: string) {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
 
-  return date.toLocaleDateString(undefined, {
+  return date.toLocaleDateString(EVENT_LOCALE, {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
     year: 'numeric',
+    timeZone: EVENT_TIME_ZONE,
   })
 }
 
@@ -52,9 +56,10 @@ function formatTime(value: string) {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
 
-  return date.toLocaleTimeString(undefined, {
+  return date.toLocaleTimeString(EVENT_LOCALE, {
     hour: 'numeric',
     minute: '2-digit',
+    timeZone: EVENT_TIME_ZONE,
   })
 }
 
@@ -114,8 +119,8 @@ function getLocationLabel(event: EventWithDetails) {
 function getAvailability(event: EventWithDetails) {
   if (event.capacity === null) {
     return {
-      label: 'Open capacity',
-      variant: 'secondary' as const,
+      label: 'Open spots',
+      variant: 'success' as const,
     }
   }
 
@@ -129,7 +134,7 @@ function getAvailability(event: EventWithDetails) {
 
   return {
     label: remaining === 1 ? '1 spot left' : `${remaining} spots left`,
-    variant: remaining <= 10 ? 'warning' as const : 'secondary' as const,
+    variant: remaining <= 10 ? 'warning' as const : 'neutral' as const,
   }
 }
 
@@ -253,10 +258,6 @@ export function EventContent({
     ?.map((ec: { chapter: { id: string; name: string } | null }) => ec.chapter)
     .filter((chapter): chapter is { id: string; name: string } => Boolean(chapter)) ?? []
 
-  const heroImageSrc =
-    event.cover_image ||
-    'https://lh3.googleusercontent.com/aida-public/AB6AXuCPkIXdCnOC4xM_keP1HVTc8Nn_asHtEtsE3T3mkN8Dr3QDObO6BA_ppVqlJIOjEtv0dKqF4KMU1-fhBVeeVu3IXJeHu8VndjHef3GU9_jWWTgMaM292D6UJYbE5a_U0cvkFDiDGhTFm8THZlrg838_CIZKgIu5YgUAX7YVP9gXTVeR__XeheoSuPRYMbn2NDMzbAW30OW15MOIUgace6VZNCZ51xoLDKKL7SXJmeoAjaoD8u32pDMrs3HiE7HRqw5Cps0fVyH8KRJU'
-
   return (
     <main className="min-h-screen bg-background">
       <MainContainer className="space-y-8 pb-24 pt-8 md:pt-12">
@@ -290,19 +291,27 @@ export function EventContent({
             </div>
 
             <Card className="overflow-hidden">
-              <div className="grid gap-0 md:grid-cols-[18rem_1fr]">
-                <div className="relative min-h-64 bg-muted md:min-h-full">
-                  <Image
-                    src={heroImageSrc}
-                    alt={event.cover_image ? event.title || 'Event cover' : ''}
-                    fill
-                    className="object-cover"
-                    priority
-                  />
+              <div className="grid gap-0">
+                <div className="relative min-h-56 bg-muted md:min-h-64">
+                  {event.cover_image ? (
+                    <Image
+                      src={event.cover_image}
+                      alt={event.title || 'Event cover'}
+                      fill
+                      className="object-cover"
+                      priority
+                    />
+                  ) : (
+                    <div className="flex h-full min-h-56 flex-col justify-end bg-[radial-gradient(circle_at_25%_20%,hsl(var(--primary)/0.35),transparent_32%),linear-gradient(135deg,hsl(var(--muted)),hsl(var(--card)))] p-6 md:min-h-64">
+                      <CalendarDays className="mb-4 h-10 w-10 text-primary" />
+                      <p className="text-sm font-medium text-muted-foreground">LEAD event</p>
+                      <p className="mt-1 text-xl font-semibold text-foreground">{ownerChapterLabel}</p>
+                    </div>
+                  )}
                 </div>
 
                 <CardContent className="space-y-5 p-5 md:p-6">
-                  <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="grid gap-4 md:grid-cols-2">
                     <div className="flex gap-3">
                       <CalendarDays className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
                       <div>
@@ -320,8 +329,8 @@ export function EventContent({
                         <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
                       )}
                       <div className="min-w-0">
-                        <p className="truncate font-medium">{getLocationLabel(event)}</p>
-                        <p className="truncate text-sm text-muted-foreground">
+                        <p className="font-medium">{getLocationLabel(event)}</p>
+                        <p className="text-sm text-muted-foreground">
                           {event.location_address || event.location_city || event.meeting_url || 'Details available from the host'}
                         </p>
                       </div>
@@ -330,7 +339,7 @@ export function EventContent({
                     <div className="flex gap-3">
                       <Building2 className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
                       <div className="min-w-0">
-                        <p className="truncate font-medium">{ownerChapterLabel}</p>
+                        <p className="font-medium">{ownerChapterLabel}</p>
                         <p className="text-sm text-muted-foreground">
                           {collaborators.length > 0
                             ? `${collaborators.length} collaborator${collaborators.length === 1 ? '' : 's'}`

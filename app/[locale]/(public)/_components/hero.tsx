@@ -17,7 +17,7 @@ export function Hero() {
           playsInline
           className="w-full h-full object-cover"
         >
-          <source src="https://sboibxszratyaswwursb.supabase.co/storage/v1/object/sign/video/video3.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV81MzNiYjliNy03NjlkLTRhZjMtOTQ3MC0yMGM2NmJjYTI3OWIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ2aWRlby92aWRlbzMubXA0IiwiaWF0IjoxNzc2NjMxNzEzLCJleHAiOjIwOTE5OTE3MTN9.SQ0yf7HaD3Uc2Df5JXECvsqXDgMm2WnzuGHAhBJZylo" type="video/mp4" />
+          <source src="/video3.mp4" type="video/mp4" />
         </video>
       </div>
       <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/30 to-background z-10"></div>
@@ -48,10 +48,10 @@ export function Hero() {
         
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
           <Button size="lg" className="px-8 py-4 sm:px-10 sm:py-5 text-base sm:text-lg font-bold rounded-full" asChild>
-            <Link href="/auth/sign-up">Join the Mission</Link>
+            <Link href="/auth/sign-up">Create your profile</Link>
           </Button>
           <Button variant="outline" size="lg" className="px-8 py-4 sm:px-10 sm:py-5 text-base sm:text-lg font-bold rounded-full" asChild>
-            <Link href="/about">Learn More</Link>
+            <Link href="/events">Explore events</Link>
           </Button>
         </div>
       </MainContainer>

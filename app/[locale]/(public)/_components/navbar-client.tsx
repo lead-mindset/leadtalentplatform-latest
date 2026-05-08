@@ -36,7 +36,7 @@ export function NavbarClient({ visibleLinks, user, dashboardHref }: Props) {
           <Link
             href="/"
             className="flex shrink-0 items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-            aria-label="LEAD Talent Platform - inicio"
+            aria-label="LEAD Talent Platform home"
           >
             <Image
               src="/leadl2.svg"
@@ -56,7 +56,7 @@ export function NavbarClient({ visibleLinks, user, dashboardHref }: Props) {
 
           <nav
             className="hidden flex-1 items-center gap-1 px-2 md:flex"
-            aria-label="Navegacion principal"
+            aria-label="Primary navigation"
           >
             {visibleLinks.map((link) => (
               <Link
@@ -86,16 +86,16 @@ export function NavbarClient({ visibleLinks, user, dashboardHref }: Props) {
             ) : (
               <>
                 <Button asChild variant="outline" size="sm">
-                  <Link href="/auth/login">Iniciar sesion</Link>
+                  <Link href="/auth/login">Sign in</Link>
                 </Button>
                 <Button asChild size="sm">
-                  <Link href="/auth/sign-up">Unirse</Link>
+                  <Link href="/auth/sign-up">Create profile</Link>
                 </Button>
                 <Link
                   href="/company/login"
                   className="ml-1 whitespace-nowrap border-l border-border pl-3 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                 >
-                  Soy empresa -&gt;
+                  Company access
                 </Link>
               </>
             )}
@@ -107,7 +107,7 @@ export function NavbarClient({ visibleLinks, user, dashboardHref }: Props) {
             size="icon-sm"
             className="-mr-1 md:hidden"
             onClick={() => setMobileOpen((open) => !open)}
-            aria-label={mobileOpen ? "Cerrar menu" : "Abrir menu"}
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileOpen}
           >
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -119,9 +119,9 @@ export function NavbarClient({ visibleLinks, user, dashboardHref }: Props) {
         <div
           className="mx-2 mb-2 flex flex-col gap-3 rounded-b-lg border border-border bg-background/95 px-4 py-4 shadow-sm backdrop-blur md:hidden"
           role="dialog"
-          aria-label="Menu de navegacion"
+          aria-label="Navigation menu"
         >
-          <nav className="grid gap-1" aria-label="Navegacion principal movil">
+          <nav className="grid gap-1" aria-label="Mobile primary navigation">
             {visibleLinks.map((link) => (
               <Link
                 key={link.href}
@@ -152,12 +152,12 @@ export function NavbarClient({ visibleLinks, user, dashboardHref }: Props) {
               <>
                 <Button asChild className="w-full">
                   <Link href="/auth/sign-up" onClick={() => setMobileOpen(false)}>
-                    Unirse
+                    Create profile
                   </Link>
                 </Button>
                 <Button asChild variant="outline" className="w-full">
                   <Link href="/auth/login" onClick={() => setMobileOpen(false)}>
-                    Iniciar sesion
+                    Sign in
                   </Link>
                 </Button>
                 <Link
@@ -165,7 +165,7 @@ export function NavbarClient({ visibleLinks, user, dashboardHref }: Props) {
                   onClick={() => setMobileOpen(false)}
                   className="rounded-md py-2 text-center text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                 >
-                  Soy empresa -&gt;
+                  Company access
                 </Link>
               </>
             )}

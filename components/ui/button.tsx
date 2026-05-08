@@ -67,6 +67,21 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, icon, iconPosition = "right", children, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
 
+    if (asChild) {
+      return (
+        <Comp
+          data-slot="button"
+          data-variant={variant}
+          data-size={size}
+          className={cn(buttonVariants({ variant, size, className }))}
+          ref={ref}
+          {...props}
+        >
+          {children}
+        </Comp>
+      )
+    }
+
     return (
       <Comp
         data-slot="button"
@@ -76,19 +91,11 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         {...props}
       >
-        {asChild ? (
-          <span>
-            {icon && iconPosition === "left" && <span className="mr-1">{icon}</span>}
-            {children}
-            {icon && iconPosition === "right" && <span className="ml-1">{icon}</span>}
-          </span>
-        ) : (
-          <div className="contents">
-            {icon && iconPosition === "left" && <span className="mr-1">{icon}</span>}
-            {children}
-            {icon && iconPosition === "right" && <span className="ml-1">{icon}</span>}
-          </div>
-        )}
+        <span className="inline-flex min-w-0 w-full items-center justify-[inherit] gap-2 [&>svg]:shrink-0">
+          {icon && iconPosition === "left" && <span className="shrink-0">{icon}</span>}
+          {children}
+          {icon && iconPosition === "right" && <span className="shrink-0">{icon}</span>}
+        </span>
       </Comp>
     )
   }

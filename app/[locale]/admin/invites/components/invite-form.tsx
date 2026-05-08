@@ -83,7 +83,7 @@ export function InviteForm({ companies }: InviteFormProps) {
           <div className="space-y-2">
             <Label htmlFor="companyId">Company *</Label>
             <Select name="companyId" required disabled={isSubmitting}>
-              <SelectTrigger>
+              <SelectTrigger id="companyId" aria-label="Company">
                 <SelectValue placeholder="Select a company" />
               </SelectTrigger>
               <SelectContent>
@@ -99,7 +99,7 @@ export function InviteForm({ companies }: InviteFormProps) {
           <div className="space-y-2">
             <Label htmlFor="expiresInDays">Expiration (days)</Label>
             <Select name="expiresInDays" defaultValue="7" disabled={isSubmitting}>
-              <SelectTrigger>
+              <SelectTrigger id="expiresInDays" aria-label="Expiration in days">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
