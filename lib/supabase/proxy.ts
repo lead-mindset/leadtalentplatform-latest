@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { hasEnvVars } from "../utils";
+import { routing } from "@/i18n/routing";
 
 const PUBLIC_ROUTES = ['/', '/login', '/auth', '/company/onboard', '/company/login'];
 
@@ -52,7 +53,7 @@ export async function updateSession(request: NextRequest) {
 
     if (!user && isProtected) {
       const localeMatch = pathname.match(/^\/(en|es)/);
-      const locale = localeMatch ? localeMatch[1] : 'en';
+      const locale = localeMatch ? localeMatch[1] : routing.defaultLocale;
       const redirectUrl = new URL(`/${locale}/auth/login`, process.env.NEXT_PUBLIC_FRONTEND_URL);
       return NextResponse.redirect(redirectUrl);
     }
