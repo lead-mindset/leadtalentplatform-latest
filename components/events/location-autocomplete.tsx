@@ -175,16 +175,9 @@ export function LocationAutocomplete({
   }
 
   useEffect(() => {
-
-    const checkGoogleLoaded = () => {
-      if (window.google && window.google.maps && window.google.maps.places) {
-        initializeAutocomplete()
-      } else {
-        setTimeout(checkGoogleLoaded, 100)
-      }
+    if (window.google && window.google.maps && window.google.maps.places) {
+      initializeAutocomplete()
     }
-
-    checkGoogleLoaded()
   }, [])
 
   useEffect(() => {
