@@ -15,27 +15,27 @@ interface RegistrationStatusBadgeProps {
 const statusConfig = {
   pending_review: {
     icon: Icons.Clock,
-    label: 'Pending review',
+    label: 'En revision',
     variant: 'warning',
   },
   registered: {
     icon: Icons.CheckCircle2,
-    label: 'Registered',
+    label: 'Registrado',
     variant: 'secondary',
   },
   attended: {
     icon: Icons.CheckCircle2,
-    label: 'Attended',
+    label: 'Asistio',
     variant: 'success',
   },
   rejected: {
     icon: Icons.XCircle,
-    label: 'Rejected',
+    label: 'Rechazado',
     variant: 'destructive',
   },
   cancelled: {
     icon: Icons.X,
-    label: 'Cancelled',
+    label: 'Cancelado',
     variant: 'destructive',
   },
 } satisfies Record<
@@ -56,7 +56,7 @@ export function RegistrationStatusBadge({
   const config = checkedIn
     ? {
         icon: Icons.CheckCircle2,
-        label: 'Checked in',
+        label: 'Check-in realizado',
         variant: 'success' as const,
       }
     : statusConfig[status]

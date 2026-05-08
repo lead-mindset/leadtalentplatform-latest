@@ -16,15 +16,15 @@ export default function Error({ reset }: ErrorProps) {
       <Card className="rounded-lg">
         <CardContent className="space-y-5 py-8 text-center">
           <div className="space-y-2">
-            <h2 className="text-lg font-semibold">Unable to load your events</h2>
+            <h2 className="text-lg font-semibold">No pudimos cargar tus eventos</h2>
             <p className="text-sm text-muted-foreground">
-              Refresh the page or browse public events while we try again.
+              Actualiza la pagina o explora eventos publicos mientras lo intentamos otra vez.
             </p>
           </div>
           <div className="flex flex-col justify-center gap-2 sm:flex-row">
-            <Button onClick={reset}>Retry</Button>
+            <Button onClick={reset}>Reintentar</Button>
             <Button asChild variant="outline">
-              <Link href="/events">Browse events</Link>
+              <Link href="/events">Explorar eventos</Link>
             </Button>
           </div>
         </CardContent>

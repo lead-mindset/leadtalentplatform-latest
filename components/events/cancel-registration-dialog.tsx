@@ -30,24 +30,24 @@ export function CancelRegistrationDialog({
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button type="button" variant="outline" className={triggerClassName ?? 'w-full'}>
-          Cancel registration
+          Cancelar registro
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent size="sm">
         <AlertDialogHeader>
-          <AlertDialogTitle>Cancel registration?</AlertDialogTitle>
+          <AlertDialogTitle>¿Cancelar registro?</AlertDialogTitle>
           <AlertDialogDescription>
-            This will cancel your registration for {eventTitle}. Your QR code will stop being valid
-            and your spot may open for another participant.
+            Esto cancelara tu registro para {eventTitle}. Tu codigo QR dejara de ser valido
+            y tu cupo podria abrirse para otro participante.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel type="button">Keep my spot</AlertDialogCancel>
+          <AlertDialogCancel type="button">Mantener mi cupo</AlertDialogCancel>
           <form action={cancelRegistration} className="inline">
             <input type="hidden" name="registrationId" value={registrationId} />
             {eventId ? <input type="hidden" name="eventId" value={eventId} /> : null}
             <Button type="submit" variant="destructive">
-              Cancel registration
+              Cancelar registro
             </Button>
           </form>
         </AlertDialogFooter>

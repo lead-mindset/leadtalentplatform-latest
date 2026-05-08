@@ -14,7 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {Link} from '@/i18n/routing';
 import { useState } from "react";
-import {useTranslations} from 'next-intl';
+import {useLocale, useTranslations} from 'next-intl';
+import { getAuthErrorKey } from '@/lib/auth-errors'
 
 export function ForgotPasswordForm({
   className,
@@ -25,6 +26,7 @@ export function ForgotPasswordForm({
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const t = useTranslations('auth');
+  const locale = useLocale();
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,12 +36,12 @@ export function ForgotPasswordForm({
     try {
 
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/update-password`,
+        redirectTo: `${window.location.origin}/${locale}/auth/update-password`,
       });
       if (error) throw error;
       setSuccess(true);
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : t('anErrorOccurred'));
+      setError(t(getAuthErrorKey(error)));
     } finally {
       setIsLoading(false);
     }

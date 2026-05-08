@@ -137,19 +137,19 @@ export default function ProfileUpdateForm({
           <div className="rounded-lg bg-primary/5 border border-primary/10 p-4">
             <div className="flex items-center gap-2 mb-2">
               <Icons.IdCard className="h-4 w-4 text-primary" />
-              <p className="text-sm text-muted-foreground">Your Member ID</p>
+              <p className="text-sm text-muted-foreground">Tu Member ID</p>
             </div>
             <div className="flex items-center gap-2">
               <code className="px-3 py-1.5 bg-background rounded-md border border-border text-lg font-mono font-semibold text-primary">
                 {initialData.memberId}
               </code>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">This is your unique identifier as a LEAD member</p>
+            <p className="text-xs text-muted-foreground mt-2">Este es tu identificador unico como miembro de LEAD</p>
           </div>
         ) : initialData.approvalStatus === 'pending' && (
           <div className="rounded-lg bg-muted p-4">
             <p className="text-sm text-muted-foreground">
-              Member ID assigned after your application is reviewed.
+              El Member ID se asigna despues de revisar tu solicitud.
             </p>
           </div>
         )}
@@ -174,14 +174,14 @@ export default function ProfileUpdateForm({
             <FormInput
               label={t('personalInfo.fullName')}
               name="full_name"
-              placeholder="John Doe"
+              placeholder="Juan Perez"
               error={errors.full_name?.message}
             />
 
             <FormInput
               label={t('personalInfo.phone')}
               name="phone"
-              placeholder="+1 (555) 123-4567"
+              placeholder="+51 999 999 999"
               error={errors.phone?.message}
             />
 

@@ -33,17 +33,17 @@ export default async function StudentLayout({
 
   return (
     <SidebarLayout
-      mobileTitle="My LEAD"
-      mobileSubtitle={membership?.member_id ? 'Member dashboard' : 'Participant dashboard'}
+      mobileTitle="Mi LEAD"
+      mobileSubtitle={membership?.member_id ? 'Panel de miembro' : 'Panel de participante'}
       headerRight={
         <MobileUserBadge
-          name={user.name ?? 'Student'}
+          name={user.name ?? 'Estudiante'}
           memberId={membership?.member_id ?? undefined}
         />
       }
       sidebar={
         <BaseSidebar
-          userName={user.name ?? 'Student'}
+          userName={user.name ?? 'Estudiante'}
           userEmail={user.email}
           userRole={user.role}
           memberId={membership?.member_id ?? undefined}

@@ -28,7 +28,7 @@ function formatDateTime(value: string) {
   const d = new Date(value)
   if (Number.isNaN(d.getTime())) return value
 
-  return d.toLocaleString(undefined, {
+  return d.toLocaleString('es-PE', {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
@@ -50,8 +50,8 @@ function isCheckedIn(registration: RegistrationWithEvent) {
 function getRegistrationMessage(registration: RegistrationWithEvent, qrDataUrl: string | null) {
   if (isCheckedIn(registration)) {
     return {
-      title: 'Checked in',
-      body: 'You are marked present for this event.',
+      title: 'Check-in realizado',
+      body: 'Tu asistencia ya fue registrada para este evento.',
       variant: 'success' as const,
     }
   }
@@ -59,36 +59,36 @@ function getRegistrationMessage(registration: RegistrationWithEvent, qrDataUrl: 
   if (registration.status === 'registered') {
     return qrDataUrl
       ? {
-          title: 'QR ready',
-          body: 'Show this code at check-in. Keep your brightness up when you arrive.',
+          title: 'QR listo',
+          body: 'Muestra este codigo al llegar. Mantén el brillo alto para facilitar el check-in.',
           variant: 'success' as const,
         }
       : {
-          title: 'Registration confirmed',
-          body: 'You are registered. QR details will appear here when available.',
+          title: 'Registro confirmado',
+          body: 'Ya estas registrado. Los detalles del QR apareceran aqui cuando esten disponibles.',
           variant: 'info' as const,
         }
   }
 
   if (registration.status === 'pending_review') {
     return {
-      title: 'Application submitted',
-      body: 'Editors will email you after review.',
+      title: 'Postulacion enviada',
+      body: 'El equipo te escribira por correo despues de revisarla.',
       variant: 'warning' as const,
     }
   }
 
   if (registration.status === 'rejected') {
     return {
-      title: 'Not selected',
-      body: 'You were not selected for this event.',
+      title: 'No seleccionado',
+      body: 'No fuiste seleccionado para este evento.',
       variant: 'destructive' as const,
     }
   }
 
   return {
-    title: 'Cancelled',
-    body: 'This registration is inactive.',
+    title: 'Cancelado',
+    body: 'Este registro esta inactivo.',
     variant: 'neutral' as const,
   }
 }
@@ -128,7 +128,7 @@ function QrPanel({ qrDataUrl }: { qrDataUrl: string }) {
         />
       </div>
       <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-[#111827]">
-        Ready for check-in
+        Listo para check-in
       </p>
     </div>
   )
@@ -153,7 +153,7 @@ function EventRegistrationCard({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 space-y-2">
             <CardTitle className="break-words text-lg leading-6">
-              {event?.title ?? 'Event'}
+              {event?.title ?? 'Evento'}
             </CardTitle>
             <EventMeta registration={registration} />
           </div>
@@ -178,7 +178,7 @@ function EventRegistrationCard({
 
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button asChild variant="outline" className="w-full sm:flex-1">
-            <Link href={`/events/${registration.event_id}`}>Event details</Link>
+            <Link href={`/events/${registration.event_id}`}>Ver detalle</Link>
           </Button>
           {canCancel ? (
             <CancelRegistrationDialog
@@ -202,13 +202,13 @@ function EmptyState() {
           <Icons.Calendar className="h-6 w-6" />
         </span>
         <div className="space-y-1">
-          <h2 className="text-lg font-semibold">No event registrations yet</h2>
+          <h2 className="text-lg font-semibold">Aun no tienes registros a eventos</h2>
           <p className="max-w-md text-sm text-muted-foreground">
-            Browse public events and register or apply when something fits your goals.
+            Explora eventos publicos y registrate o postula cuando encuentres algo que encaje con tus objetivos.
           </p>
         </div>
         <Button asChild>
-          <Link href="/events">Browse events</Link>
+          <Link href="/events">Explorar eventos</Link>
         </Button>
       </CardContent>
     </Card>
@@ -254,12 +254,12 @@ function CurrentTicket({
       <CardHeader className="gap-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-2">
-            <Badge variant="outline">Current ticket</Badge>
+            <Badge variant="outline">Ticket actual</Badge>
             <CardTitle className="break-words text-2xl leading-8">
-              {registration.event?.title ?? 'Your next event'}
+              {registration.event?.title ?? 'Tu proximo evento'}
             </CardTitle>
             <CardDescription>
-              Keep this ready on your phone when you arrive.
+              Ten esto listo en tu celular cuando llegues.
             </CardDescription>
           </div>
           <RegistrationStatusBadge
@@ -284,7 +284,7 @@ function CurrentTicket({
 
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button asChild className="w-full sm:w-auto">
-              <Link href={`/events/${registration.event_id}`}>Event details</Link>
+              <Link href={`/events/${registration.event_id}`}>Ver detalle</Link>
             </Button>
             {canCancel ? (
               <CancelRegistrationDialog
@@ -302,9 +302,9 @@ function CurrentTicket({
         ) : (
           <div className="flex min-h-64 flex-col items-center justify-center rounded-lg border border-dashed border-border bg-muted/30 p-6 text-center">
             <QrCode className="mb-3 h-8 w-8 text-muted-foreground" />
-            <p className="text-sm font-medium text-foreground">QR not available yet</p>
+            <p className="text-sm font-medium text-foreground">QR aun no disponible</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Confirmed registrations show a QR code here.
+              Los registros confirmados muestran aqui su codigo QR.
             </p>
           </div>
         )}
@@ -368,12 +368,12 @@ export default async function StudentEventsPage({
       <ScrollToHighlightedEvent eventId={highlightEventId} />
 
       <PageHeader
-        eyebrow="My LEAD"
-        title="My Events"
-        description="Track registrations, application decisions, and QR check-in codes in one place."
+        eyebrow="Mi LEAD"
+        title="Mis eventos"
+        description="Revisa tus registros, decisiones de postulacion y codigos QR de check-in en un solo lugar."
         actions={
           <Button asChild>
-            <Link href="/events">Browse events</Link>
+            <Link href="/events">Explorar eventos</Link>
           </Button>
         }
       />
@@ -392,13 +392,13 @@ export default async function StudentEventsPage({
               <Card className="rounded-lg border-dashed">
                 <CardContent className="flex flex-col gap-4 py-8 sm:flex-row sm:items-center sm:justify-between">
                   <div className="space-y-1">
-                    <h2 className="text-lg font-semibold">No active ticket right now</h2>
+                    <h2 className="text-lg font-semibold">No tienes un ticket activo ahora</h2>
                     <p className="text-sm text-muted-foreground">
-                      Registered upcoming events with QR codes will appear here first.
+                      Los proximos eventos registrados con QR apareceran primero aqui.
                     </p>
                   </div>
                   <Button asChild variant="outline">
-                    <Link href="/events">Find an event</Link>
+                    <Link href="/events">Buscar evento</Link>
                   </Button>
                 </CardContent>
               </Card>
@@ -406,14 +406,14 @@ export default async function StudentEventsPage({
 
             <Tabs defaultValue="active" className="space-y-4">
               <TabsList className="flex w-full justify-start overflow-x-auto">
-                <TabsTrigger value="active">Active ({visibleActiveRegistrations.length})</TabsTrigger>
+                <TabsTrigger value="active">Activos ({visibleActiveRegistrations.length})</TabsTrigger>
                 <TabsTrigger value="applications">
-                  Applications ({applicationRegistrations.length})
+                  Postulaciones ({applicationRegistrations.length})
                 </TabsTrigger>
-                <TabsTrigger value="history">History ({historyRegistrations.length})</TabsTrigger>
+                <TabsTrigger value="history">Historial ({historyRegistrations.length})</TabsTrigger>
                 {cancelledRegistrations.length > 0 ? (
                   <TabsTrigger value="cancelled">
-                    Cancelled ({cancelledRegistrations.length})
+                    Cancelados ({cancelledRegistrations.length})
                   </TabsTrigger>
                 ) : null}
               </TabsList>
@@ -422,8 +422,8 @@ export default async function StudentEventsPage({
                 {visibleActiveRegistrations.length === 0 ? (
                   <TabEmptyState
                     icon={<Icons.Ticket className="h-5 w-5" />}
-                    title="No other active tickets"
-                    description="Your next ticket is shown above. Additional upcoming registrations will appear here."
+                    title="No hay otros tickets activos"
+                    description="Tu proximo ticket se muestra arriba. Otros registros futuros apareceran aqui."
                   />
                 ) : (
                   <div className="grid gap-4 lg:grid-cols-2">
@@ -443,8 +443,8 @@ export default async function StudentEventsPage({
                 {applicationRegistrations.length === 0 ? (
                   <TabEmptyState
                     icon={<Icons.Clock className="h-5 w-5" />}
-                    title="No applications waiting"
-                    description="Application-based events will show here while they are reviewed."
+                    title="No hay postulaciones en espera"
+                    description="Los eventos con postulacion apareceran aqui mientras se revisan."
                   />
                 ) : (
                   <div className="grid gap-4 lg:grid-cols-2">
@@ -463,8 +463,8 @@ export default async function StudentEventsPage({
                 {historyRegistrations.length === 0 ? (
                   <TabEmptyState
                     icon={<Icons.Calendar className="h-5 w-5" />}
-                    title="No event history yet"
-                    description="Past attended events and completed registrations will appear here."
+                    title="Aun no hay historial de eventos"
+                    description="Los eventos pasados y registros completados apareceran aqui."
                   />
                 ) : (
                   <div className="grid gap-4 lg:grid-cols-2">
@@ -498,22 +498,22 @@ export default async function StudentEventsPage({
           <aside className="space-y-4">
             <Card className="rounded-lg">
               <CardHeader>
-                <CardTitle className="text-base">Check-in basics</CardTitle>
-                <CardDescription>Simple things that make event entry smoother.</CardDescription>
+                <CardTitle className="text-base">Basicos del check-in</CardTitle>
+                <CardDescription>Detalles simples para entrar mas rapido al evento.</CardDescription>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3 text-sm leading-6 text-muted-foreground">
                   <li className="flex gap-3">
                     <Icons.CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                    <span>Use the current ticket QR when you arrive.</span>
+                    <span>Usa el QR del ticket actual cuando llegues.</span>
                   </li>
                   <li className="flex gap-3">
                     <Icons.CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                    <span>Pending applications do not have QR codes until approved.</span>
+                    <span>Las postulaciones pendientes no tienen QR hasta ser aprobadas.</span>
                   </li>
                   <li className="flex gap-3">
                     <Icons.CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                    <span>Cancelled or rejected registrations are inactive.</span>
+                    <span>Los registros cancelados o rechazados quedan inactivos.</span>
                   </li>
                 </ul>
               </CardContent>

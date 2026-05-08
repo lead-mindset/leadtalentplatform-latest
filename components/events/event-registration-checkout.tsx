@@ -19,7 +19,7 @@ function SubmitButton({ disabled, label }: { disabled?: boolean; label: string }
       {pending ? (
         <span className="flex items-center">
           <Icons.Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Registering...
+          Registrando...
         </span>
       ) : (
         label
@@ -73,19 +73,19 @@ export function EventRegistrationCheckout({
       <>
         {registrationClosed ? (
           <p className="text-sm text-muted-foreground">
-            Registration is closed because this event has already started.
+            El registro esta cerrado porque este evento ya comenzo.
           </p>
         ) : isFull ? (
           <p className="text-sm text-muted-foreground">
-            This event is full. Someone may cancel, so check back later.
+            Este evento esta lleno. Alguien podria cancelar, vuelve a revisar mas tarde.
           </p>
         ) : showLowSpots ? (
           <p className="text-sm text-muted-foreground">
-            {spotsLeft === 1 ? '1 spot left' : `${spotsLeft} spots left`}
+            {spotsLeft === 1 ? 'Queda 1 cupo' : `Quedan ${spotsLeft} cupos`}
           </p>
         ) : hadCancelledRegistration ? (
           <p className="text-sm text-muted-foreground">
-            You cancelled earlier. Register again to get a QR code for check-in.
+            Cancelaste antes. Registrate otra vez para obtener tu QR de check-in.
           </p>
         ) : null}
       </>
@@ -102,23 +102,23 @@ export function EventRegistrationCheckout({
       {!isLoggedIn ? (
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Sign in to register and receive your QR code for check-in.
+            Inicia sesion para registrarte y recibir tu codigo QR de check-in.
           </p>
           <Button asChild className="w-full">
-            <Link href={loginUrl}>Sign in</Link>
+            <Link href={loginUrl}>Iniciar sesion</Link>
           </Button>
         </div>
       ) : !hasBasicProfile ? (
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Complete onboarding once, then use your profile to register for LEAD events.
+            Completa el onboarding una vez y luego usa tu perfil para registrarte a eventos LEAD.
           </p>
           <Button asChild className="w-full">
-            <Link href={onboardingUrl}>Complete onboarding</Link>
+            <Link href={onboardingUrl}>Completar onboarding</Link>
           </Button>
           {state?.requiresOnboarding && state.onboardingPath ? (
             <p className="text-xs text-muted-foreground">
-              Your profile is still incomplete. Continue to onboarding to finish registration.
+              Tu perfil aun esta incompleto. Continua al onboarding para terminar el registro.
             </p>
           ) : null}
         </div>
@@ -126,15 +126,15 @@ export function EventRegistrationCheckout({
         <div className="space-y-3">
           <Badge variant="success" className="w-fit gap-1.5 pl-2">
             <Icons.CheckCircle2 className="h-4 w-4" />
-            Registered
+            Registrado
           </Badge>
           {canCancel && registrationId ? (
             <CancelRegistrationDialog registrationId={registrationId} eventTitle={eventTitle} />
           ) : (
-            <p className="text-sm text-muted-foreground">Cancellation is not available.</p>
+            <p className="text-sm text-muted-foreground">La cancelacion no esta disponible.</p>
           )}
           <Button asChild className="w-full">
-            <Link href={qrHref}>View my QR code</Link>
+            <Link href={qrHref}>Ver mi codigo QR</Link>
           </Button>
         </div>
       ) : (
@@ -150,12 +150,12 @@ export function EventRegistrationCheckout({
               className="mt-0.5"
             />
             <span className="text-muted-foreground">
-              Send me updates from the host and collaborator chapters for this event.
+              Enviarme novedades del capitulo anfitrion y capitulos colaboradores de este evento.
             </span>
           </label>
 
           <div className="hidden space-y-2 md:block">
-            <SubmitButton disabled={registerDisabled} label="Register" />
+            <SubmitButton disabled={registerDisabled} label="Registrarme" />
             {state?.error ? (
               <p
                 className={cn(
@@ -177,16 +177,16 @@ export function EventRegistrationCheckout({
             )}
           >
             {registrationClosed ? (
-              <p className="mb-2 text-center text-xs text-muted-foreground">Registration closed</p>
+              <p className="mb-2 text-center text-xs text-muted-foreground">Registro cerrado</p>
             ) : isFull ? (
-              <p className="mb-2 text-center text-xs text-muted-foreground">Event is full</p>
+              <p className="mb-2 text-center text-xs text-muted-foreground">Evento lleno</p>
             ) : showLowSpots ? (
               <p className="mb-2 text-center text-xs text-muted-foreground">
-                {spotsLeft === 1 ? '1 spot left' : `${spotsLeft} spots left`}
+                {spotsLeft === 1 ? 'Queda 1 cupo' : `Quedan ${spotsLeft} cupos`}
               </p>
             ) : hadCancelledRegistration ? (
               <p className="mb-2 text-center text-xs text-muted-foreground">
-                You cancelled earlier. Tap Register to sign up again.
+                Cancelaste antes. Toca Registrarme para inscribirte otra vez.
               </p>
             ) : null}
 
@@ -202,7 +202,7 @@ export function EventRegistrationCheckout({
               </p>
             ) : null}
 
-            <SubmitButton disabled={registerDisabled} label="Register" />
+            <SubmitButton disabled={registerDisabled} label="Registrarme" />
           </div>
         </form>
       )}

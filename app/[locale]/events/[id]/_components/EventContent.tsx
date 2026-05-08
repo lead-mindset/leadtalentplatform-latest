@@ -37,7 +37,7 @@ type TimingStatus = {
 }
 
 const EVENT_TIME_ZONE = 'America/Lima'
-const EVENT_LOCALE = 'en-US'
+const EVENT_LOCALE = 'es-PE'
 
 function formatDate(value: string) {
   const date = new Date(value)
@@ -64,9 +64,9 @@ function formatTime(value: string) {
 }
 
 function getEventTypeLabel(eventType: EventWithDetails['event_type']) {
-  if (eventType === 'online') return 'Online'
-  if (eventType === 'hybrid') return 'Hybrid'
-  return 'In person'
+  if (eventType === 'online') return 'En linea'
+  if (eventType === 'hybrid') return 'Hibrido'
+  return 'Presencial'
 }
 
 function getEventTiming(event: EventWithDetails, isApplicationRequired: boolean): TimingStatus {
@@ -76,8 +76,8 @@ function getEventTiming(event: EventWithDetails, isApplicationRequired: boolean)
 
   if (!Number.isFinite(start) || !Number.isFinite(end)) {
     return {
-      label: 'Date pending',
-      message: 'The event schedule is not available yet.',
+      label: 'Fecha pendiente',
+      message: 'El horario del evento aun no esta disponible.',
       variant: 'outline',
       isRegistrationClosed: true,
     }
@@ -85,8 +85,8 @@ function getEventTiming(event: EventWithDetails, isApplicationRequired: boolean)
 
   if (now >= start && now <= end) {
     return {
-      label: 'Live now',
-      message: 'This event is currently in progress.',
+      label: 'En vivo',
+      message: 'Este evento esta ocurriendo ahora.',
       variant: 'live',
       isRegistrationClosed: true,
     }
@@ -94,32 +94,32 @@ function getEventTiming(event: EventWithDetails, isApplicationRequired: boolean)
 
   if (now > end) {
     return {
-      label: 'Past event',
-      message: 'This event has concluded.',
+      label: 'Evento pasado',
+      message: 'Este evento ya finalizo.',
       variant: 'outline',
       isRegistrationClosed: true,
     }
   }
 
   return {
-    label: isApplicationRequired ? 'Application required' : 'Open registration',
+    label: isApplicationRequired ? 'Requiere postulacion' : 'Registro abierto',
     message: isApplicationRequired
-      ? 'Submit an application for editor review before you can attend.'
-      : 'Registration is open for this upcoming event.',
+      ? 'Envia una postulacion para revision antes de asistir.'
+      : 'El registro esta abierto para este proximo evento.',
     variant: isApplicationRequired ? 'info' : 'success',
     isRegistrationClosed: false,
   }
 }
 
 function getLocationLabel(event: EventWithDetails) {
-  if (event.event_type === 'online') return 'Online'
-  return event.location_name || event.location || event.location_city || 'Location pending'
+  if (event.event_type === 'online') return 'En linea'
+  return event.location_name || event.location || event.location_city || 'Ubicacion pendiente'
 }
 
 function getAvailability(event: EventWithDetails) {
   if (event.capacity === null) {
     return {
-      label: 'Open spots',
+      label: 'Cupos abiertos',
       variant: 'success' as const,
     }
   }
@@ -127,13 +127,13 @@ function getAvailability(event: EventWithDetails) {
   const remaining = Math.max(0, event.capacity - event._count.registrations)
   if (remaining === 0) {
     return {
-      label: 'Full',
+      label: 'Lleno',
       variant: 'destructive' as const,
     }
   }
 
   return {
-    label: remaining === 1 ? '1 spot left' : `${remaining} spots left`,
+    label: remaining === 1 ? 'Queda 1 cupo' : `Quedan ${remaining} cupos`,
     variant: remaining <= 10 ? 'warning' as const : 'neutral' as const,
   }
 }
@@ -142,19 +142,19 @@ function getRegistrationBadge(myRegistration: MyRegistration) {
   if (!myRegistration) return null
 
   if (myRegistration.status === 'registered') {
-    return { label: 'Registered', variant: 'success' as const }
+    return { label: 'Registrado', variant: 'success' as const }
   }
   if (myRegistration.status === 'pending_review') {
-    return { label: 'Under review', variant: 'warning' as const }
+    return { label: 'En revision', variant: 'warning' as const }
   }
   if (myRegistration.status === 'rejected') {
-    return { label: 'Not selected', variant: 'destructive' as const }
+    return { label: 'No seleccionado', variant: 'destructive' as const }
   }
   if (myRegistration.status === 'cancelled') {
-    return { label: 'Cancelled', variant: 'outline' as const }
+    return { label: 'Cancelado', variant: 'outline' as const }
   }
   if (myRegistration.status === 'attended') {
-    return { label: 'Attended', variant: 'success' as const }
+    return { label: 'Asistio', variant: 'success' as const }
   }
 
   return null
@@ -188,13 +188,13 @@ export function EventContent({
             <CardContent className="flex flex-col items-center gap-3 px-6 py-12 text-center">
               <CalendarDays className="h-10 w-10 text-muted-foreground" />
               <div>
-                <h1 className="text-lg font-semibold">Event not found</h1>
+                <h1 className="text-lg font-semibold">Evento no encontrado</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  This event may have been removed or is no longer public.
+                  Este evento puede haber sido eliminado o ya no esta publico.
                 </p>
               </div>
               <Button asChild variant="outline">
-                <Link href="/events">Back to events</Link>
+                <Link href="/events">Volver a eventos</Link>
               </Button>
             </CardContent>
           </Card>
@@ -264,7 +264,7 @@ export function EventContent({
         <Button asChild variant="ghost" className="w-fit px-0 text-muted-foreground hover:text-foreground">
           <Link href="/events">
             <ArrowLeft className="h-4 w-4" />
-            Back to events
+            Volver a eventos
           </Link>
         </Button>
 
@@ -282,7 +282,7 @@ export function EventContent({
 
               <div className="space-y-3">
                 <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-5xl">
-                  {event.title || 'Untitled event'}
+                  {event.title || 'Evento sin titulo'}
                 </h1>
                 <p className="max-w-3xl text-base text-muted-foreground md:text-lg">
                   {timing.message}
@@ -296,7 +296,7 @@ export function EventContent({
                   {event.cover_image ? (
                     <Image
                       src={event.cover_image}
-                      alt={event.title || 'Event cover'}
+                      alt={event.title || 'Imagen del evento'}
                       fill
                       className="object-cover"
                       priority
@@ -304,7 +304,7 @@ export function EventContent({
                   ) : (
                     <div className="flex h-full min-h-56 flex-col justify-end bg-[radial-gradient(circle_at_25%_20%,hsl(var(--primary)/0.35),transparent_32%),linear-gradient(135deg,hsl(var(--muted)),hsl(var(--card)))] p-6 md:min-h-64">
                       <CalendarDays className="mb-4 h-10 w-10 text-primary" />
-                      <p className="text-sm font-medium text-muted-foreground">LEAD event</p>
+                      <p className="text-sm font-medium text-muted-foreground">Evento LEAD</p>
                       <p className="mt-1 text-xl font-semibold text-foreground">{ownerChapterLabel}</p>
                     </div>
                   )}
@@ -331,7 +331,7 @@ export function EventContent({
                       <div className="min-w-0">
                         <p className="font-medium">{getLocationLabel(event)}</p>
                         <p className="text-sm text-muted-foreground">
-                          {event.location_address || event.location_city || event.meeting_url || 'Details available from the host'}
+                          {event.location_address || event.location_city || event.meeting_url || 'Detalles disponibles con el organizador'}
                         </p>
                       </div>
                     </div>
@@ -343,7 +343,7 @@ export function EventContent({
                         <p className="text-sm text-muted-foreground">
                           {collaborators.length > 0
                             ? `${collaborators.length} collaborator${collaborators.length === 1 ? '' : 's'}`
-                            : 'Host chapter'}
+                            : 'Capitulo anfitrion'}
                         </p>
                       </div>
                     </div>
@@ -352,7 +352,7 @@ export function EventContent({
                       <Users className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
                       <div>
                         <p className="font-medium">
-                          {registeredCount} registered
+                          {registeredCount} registrados
                           {event.capacity !== null ? ` / ${event.capacity}` : ''}
                         </p>
                         <p className="text-sm text-muted-foreground">{availability.label}</p>
@@ -364,18 +364,18 @@ export function EventContent({
             </Card>
 
             <section className="space-y-3">
-              <h2 className="text-xl font-semibold tracking-tight">About this event</h2>
+              <h2 className="text-xl font-semibold tracking-tight">Sobre este evento</h2>
               <div className="prose prose-sm max-w-none text-muted-foreground dark:prose-invert md:prose-base">
                 {event.description ? (
                   <p className="whitespace-pre-wrap">{event.description}</p>
                 ) : (
-                  <p>No description is available for this event yet.</p>
+                  <p>Aun no hay descripcion disponible para este evento.</p>
                 )}
               </div>
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-xl font-semibold tracking-tight">Hosted by</h2>
+              <h2 className="text-xl font-semibold tracking-tight">Organizado por</h2>
               <div className="grid gap-3 sm:grid-cols-2">
                 <Card>
                   <CardContent className="flex items-center gap-3 p-4">
@@ -384,7 +384,7 @@ export function EventContent({
                     </div>
                     <div className="min-w-0">
                       <p className="truncate font-medium">{ownerChapterLabel}</p>
-                      <p className="text-sm text-muted-foreground">Host chapter</p>
+                      <p className="text-sm text-muted-foreground">Capitulo anfitrion</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -397,7 +397,7 @@ export function EventContent({
                       </div>
                       <div className="min-w-0">
                         <p className="truncate font-medium">{chapter.name}</p>
-                        <p className="text-sm text-muted-foreground">Collaborator</p>
+                        <p className="text-sm text-muted-foreground">Colaborador</p>
                       </div>
                     </CardContent>
                   </Card>
@@ -410,7 +410,7 @@ export function EventContent({
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between gap-3 text-lg">
-                  Registration
+                  Registro
                   <Badge variant={timing.variant}>{timing.label}</Badge>
                 </CardTitle>
               </CardHeader>
@@ -422,8 +422,8 @@ export function EventContent({
                       <p className="text-sm font-medium">{timing.message}</p>
                       <p className="mt-1 text-xs text-muted-foreground">
                         {isApplicationRequired
-                          ? 'Application answers are reviewed before registration is confirmed.'
-                          : 'Registration creates your QR code for check-in.'}
+                          ? 'Las respuestas se revisan antes de confirmar el registro.'
+                          : 'El registro crea tu codigo QR para el check-in.'}
                       </p>
                     </div>
                   </div>
@@ -453,23 +453,23 @@ export function EventContent({
                   <div className="space-y-3">
                     {isPending ? (
                       <div className="rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm">
-                        Your application is under review. You will receive an email when a decision is made.
+                        Tu postulacion esta en revision. Recibiras un correo cuando haya una decision.
                       </div>
                     ) : null}
 
                     {isRejected ? (
                       <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
-                        You were not selected for this event.
+                        No fuiste seleccionado para este evento.
                       </div>
                     ) : null}
 
                     {isRegistered ? (
                       <div className="space-y-3">
                         <div className="rounded-lg border border-success/30 bg-success/10 p-4 text-sm">
-                          You are registered for this event. Check your email or student events page for QR details.
+                          Ya estas registrado en este evento. Revisa tu correo o la pagina de mis eventos para ver el QR.
                         </div>
                         <Button asChild className="w-full">
-                          <Link href={`/student/events?event=${event.id}`}>View my QR code</Link>
+                          <Link href={`/student/events?event=${event.id}`}>Ver mi codigo QR</Link>
                         </Button>
                       </div>
                     ) : isPending || isRejected ? null : (
@@ -479,18 +479,18 @@ export function EventContent({
                         disabled={isSubmitting || registrationClosed}
                         className="w-full"
                       >
-                        {isSubmitting ? 'Processing...' : isLoggedIn ? 'Apply now' : 'Sign in to apply'}
+                        {isSubmitting ? 'Procesando...' : isLoggedIn ? 'Postular ahora' : 'Inicia sesion para postular'}
                         <ArrowRight className="h-4 w-4" />
                       </Button>
                     )}
 
                     {!isLoggedIn ? (
                       <p className="text-xs text-muted-foreground">
-                        You will be sent to sign in before applying.
+                        Te enviaremos a iniciar sesion antes de postular.
                       </p>
                     ) : !hasBasicProfile ? (
                       <p className="text-xs text-muted-foreground">
-                        Complete onboarding once before applying to LEAD events.
+                        Completa el onboarding una vez antes de postular a eventos LEAD.
                       </p>
                     ) : null}
                   </div>

@@ -20,41 +20,49 @@ type ParticipantApplicationCardProps = {
 
 const STATUS_CONTENT = {
   participant: {
-    badge: 'Participant',
-    title: 'You are set up as a LEAD participant.',
-    body: 'You can browse public events now. If you are part of a chapter or want to join one, send a chapter request for review.',
+    badge: 'Participante',
+    title: 'Tu perfil de participante LEAD esta listo.',
+    body: 'Ya puedes explorar eventos publicos. Si eres parte de un capitulo o quieres unirte, envia una solicitud para revision.',
     badgeVariant: 'info' as const,
     icon: Users,
   },
   pending: {
-    badge: 'Pending review',
-    title: 'Your chapter membership is pending review.',
-    body: 'Chapter editors can review your request. While you wait, you can keep your profile updated and register for public events.',
+    badge: 'En revision',
+    title: 'Tu solicitud de capitulo esta en revision.',
+    body: 'El equipo del capitulo puede revisar tu solicitud. Mientras esperas, mantén tu perfil actualizado y registrate a eventos publicos.',
     badgeVariant: 'warning' as const,
     icon: Clock3,
   },
   official_member: {
-    badge: 'Official member',
-    title: 'You are an official LEAD member.',
-    body: 'Your approved chapter membership is active. Your member ID is only shown after approval.',
+    badge: 'Miembro oficial',
+    title: 'Ya eres miembro oficial de LEAD.',
+    body: 'Tu membresia aprobada esta activa. Tu Member ID solo aparece despues de la aprobacion.',
     badgeVariant: 'success' as const,
     icon: CheckCircle2,
   },
   alumni: {
     badge: 'Alumni',
-    title: 'You are listed as LEAD alumni.',
-    body: 'Your chapter history is preserved. You can still keep your profile current and participate in relevant events.',
+    title: 'Estas registrado como alumni de LEAD.',
+    body: 'Tu historial de capitulo se mantiene. Puedes seguir actualizando tu perfil y participar en eventos relevantes.',
     badgeVariant: 'secondary' as const,
     icon: IdCard,
   },
 }
 
 function formatPosition(position: string | null) {
-  if (!position) return 'Member'
-  return position
-    .split('_')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ')
+  if (!position) return 'Miembro'
+  const labels: Record<string, string> = {
+    member: 'Miembro',
+    president: 'Presidente',
+    vice_president: 'Vicepresidente',
+    secretary: 'Secretaria',
+    treasurer: 'Tesorero',
+    events_lead: 'Lider de eventos',
+    marketing_lead: 'Lider de marketing',
+    editor: 'Editor',
+    alumni: 'Alumni',
+  }
+  return labels[position] ?? position.split('_').join(' ')
 }
 
 function ProfileReadinessCard({ dashboard }: { dashboard: StudentActivationDashboard }) {
@@ -65,29 +73,29 @@ function ProfileReadinessCard({ dashboard }: { dashboard: StudentActivationDashb
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Edit3 className="h-5 w-5 text-primary" />
-          Profile readiness
+          Estado del perfil
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm leading-6 text-muted-foreground">
           {dashboard.hasProfile
-            ? 'Your basic profile is ready for event registration and chapter review.'
-            : 'Complete your basic profile before applying to a chapter or registering for events.'}
+            ? 'Tu perfil basico esta listo para registros a eventos y revision de capitulo.'
+            : 'Completa tu perfil basico antes de postular a un capitulo o registrarte a eventos.'}
         </p>
         <div className="grid gap-3 text-sm sm:grid-cols-2">
           <div className="rounded-lg border border-border/70 bg-muted/25 p-3">
-            <p className="font-semibold text-foreground">University</p>
-            <p className="mt-1 text-muted-foreground">{profile?.university ?? 'Not added yet'}</p>
+            <p className="font-semibold text-foreground">Universidad</p>
+            <p className="mt-1 text-muted-foreground">{profile?.university ?? 'Aun no agregado'}</p>
           </div>
           <div className="rounded-lg border border-border/70 bg-muted/25 p-3">
-            <p className="font-semibold text-foreground">Focus</p>
+            <p className="font-semibold text-foreground">Enfoque</p>
             <p className="mt-1 text-muted-foreground">
-              {profile?.major_or_interest ?? 'Not added yet'}
+              {profile?.major_or_interest ?? 'Aun no agregado'}
             </p>
           </div>
         </div>
         <Button asChild variant="outline" className="w-full sm:w-auto">
-          <Link href="/student/profile">Edit profile</Link>
+          <Link href="/student/profile">Editar perfil</Link>
         </Button>
       </CardContent>
     </Card>
@@ -102,7 +110,7 @@ function MembershipDetailsCard({ dashboard }: { dashboard: StudentActivationDash
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <IdCard className="h-5 w-5 text-primary" />
-          Chapter status
+          Estado de capitulo
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -113,12 +121,12 @@ function MembershipDetailsCard({ dashboard }: { dashboard: StudentActivationDash
                 {membership.chapter?.name ?? membership.chapter_id}
               </p>
               <p className="mt-1 text-sm text-muted-foreground">
-                {membership.chapter?.university ?? 'Chapter details'}
+                {membership.chapter?.university ?? 'Detalles del capitulo'}
               </p>
             </div>
             <div className="grid gap-3 text-sm sm:grid-cols-2">
               <div className="rounded-lg border border-border/70 bg-muted/25 p-3">
-                <p className="font-semibold text-foreground">Position</p>
+                <p className="font-semibold text-foreground">Posicion</p>
                 <p className="mt-1 text-muted-foreground">{formatPosition(membership.position)}</p>
               </div>
               <div className="rounded-lg border border-border/70 bg-muted/25 p-3">
@@ -126,15 +134,15 @@ function MembershipDetailsCard({ dashboard }: { dashboard: StudentActivationDash
                 <p className="mt-1 text-muted-foreground">
                   {dashboard.status === 'official_member' && membership.member_id
                     ? membership.member_id
-                    : 'Available after approval'}
+                    : 'Disponible despues de la aprobacion'}
                 </p>
               </div>
             </div>
           </div>
         ) : (
           <p className="text-sm leading-6 text-muted-foreground">
-            You do not have a chapter request yet. Applying creates a pending request for editors to
-            review.
+            Aun no tienes una solicitud de capitulo. Al postular, se crea una solicitud pendiente
+            para que el equipo la revise.
           </p>
         )}
       </CardContent>
@@ -150,23 +158,23 @@ function ParticipantApplicationCard({ dashboard, chapterOptions }: ParticipantAp
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Users className="h-5 w-5 text-primary" />
-          Join a chapter
+          Unirte a un capitulo
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm leading-6 text-muted-foreground">
-          Send one chapter request when you are ready. It will stay pending until the chapter team
-          reviews it.
+          Envia una solicitud cuando estes listo. Quedara pendiente hasta que el equipo del capitulo
+          la revise.
         </p>
         {dashboard.hasProfile ? (
           <ChapterApplicationCard chapters={chapterOptions} />
         ) : (
           <div className="space-y-3">
             <p className="text-sm font-medium text-warning">
-              Finish your profile first so reviewers have the basics.
+              Termina tu perfil primero para que el equipo tenga los datos basicos.
             </p>
             <Button asChild className="w-full sm:w-auto">
-              <Link href="/student/profile">Complete profile</Link>
+              <Link href="/student/profile">Completar perfil</Link>
             </Button>
           </div>
         )}
@@ -179,13 +187,13 @@ function PrimaryActions({ dashboard }: { dashboard: StudentActivationDashboard }
   const actions =
     dashboard.status === 'official_member'
       ? [
-          { href: '/student/events', label: 'View my events', icon: CalendarDays },
-          { href: '/student/profile', label: 'Edit profile', icon: Edit3 },
+          { href: '/student/events', label: 'Ver mis eventos', icon: CalendarDays },
+          { href: '/student/profile', label: 'Editar perfil', icon: Edit3 },
         ]
       : [
-          { href: '/events', label: 'Browse events', icon: CalendarDays },
-          { href: '/student/events', label: 'My events', icon: IdCard },
-          { href: '/student/profile', label: 'Edit profile', icon: Edit3 },
+          { href: '/events', label: 'Explorar eventos', icon: CalendarDays },
+          { href: '/student/events', label: 'Mis eventos', icon: IdCard },
+          { href: '/student/profile', label: 'Editar perfil', icon: Edit3 },
         ]
 
   return (
@@ -226,8 +234,8 @@ export default async function StudentDashboard() {
   return (
     <MainContainer maxWidth="7xl" className="space-y-6 py-6 pb-24 sm:py-8">
       <PageHeader
-        eyebrow="My LEAD"
-        title={`Welcome${user.name ? `, ${user.name}` : ''}`}
+        eyebrow="Mi LEAD"
+        title={`Bienvenido${user.name ? `, ${user.name}` : ''}`}
         badge={
           <Badge variant={content.badgeVariant} size="lg">
             {content.badge}
@@ -247,7 +255,7 @@ export default async function StudentDashboard() {
             <p className="text-sm leading-6 text-muted-foreground">
               {dashboard.membership?.chapter?.name
                 ? `${dashboard.membership.chapter.name} - ${dashboard.membership.chapter.university}`
-                : 'Your event and chapter activity will appear here as you use the platform.'}
+                : 'Tu actividad de eventos y capitulos aparecera aqui cuando uses la plataforma.'}
             </p>
           </div>
         </CardContent>

@@ -22,11 +22,45 @@ type Props = {
 export function NavbarClient({ visibleLinks, user, dashboardHref }: Props) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
+  const isEnglish = pathname.startsWith("/en");
   const pathnameWithoutLocale = pathname.replace(/^\/[a-z]{2}/, "") || "/";
 
   const isActive = (href: string) => {
     if (href === "/") return pathnameWithoutLocale === "/";
     return pathnameWithoutLocale === href || pathnameWithoutLocale.startsWith(`${href}/`);
+  };
+
+  const authLabels = isEnglish
+    ? {
+        signIn: "Sign in",
+        createProfile: "Create profile",
+        companyAccess: "Company access",
+        closeMenu: "Close menu",
+        openMenu: "Open menu",
+        primaryNav: "Primary navigation",
+        mobileNav: "Mobile primary navigation",
+        navMenu: "Navigation menu",
+      }
+    : {
+        signIn: "Iniciar sesion",
+        createProfile: "Crear perfil",
+        companyAccess: "Acceso para empresas",
+        closeMenu: "Cerrar menu",
+        openMenu: "Abrir menu",
+        primaryNav: "Navegacion principal",
+        mobileNav: "Navegacion principal movil",
+        navMenu: "Menu de navegacion",
+      };
+
+  const getNavLabel = (label: string) => {
+    if (isEnglish) return label;
+    const labels: Record<string, string> = {
+      Events: "Eventos",
+      Dashboard: "Panel",
+      "Chapter tools": "Herramientas de capitulo",
+      Admin: "Admin",
+    };
+    return labels[label] ?? label;
   };
 
   return (
@@ -56,7 +90,7 @@ export function NavbarClient({ visibleLinks, user, dashboardHref }: Props) {
 
           <nav
             className="hidden flex-1 items-center gap-1 px-2 md:flex"
-            aria-label="Primary navigation"
+            aria-label={authLabels.primaryNav}
           >
             {visibleLinks.map((link) => (
               <Link
@@ -70,7 +104,7 @@ export function NavbarClient({ visibleLinks, user, dashboardHref }: Props) {
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
-                {link.label}
+                {getNavLabel(link.label)}
               </Link>
             ))}
           </nav>
@@ -86,16 +120,16 @@ export function NavbarClient({ visibleLinks, user, dashboardHref }: Props) {
             ) : (
               <>
                 <Button asChild variant="outline" size="sm">
-                  <Link href="/auth/login">Sign in</Link>
+                  <Link href="/auth/login">{authLabels.signIn}</Link>
                 </Button>
                 <Button asChild size="sm">
-                  <Link href="/auth/sign-up">Create profile</Link>
+                  <Link href="/auth/sign-up">{authLabels.createProfile}</Link>
                 </Button>
                 <Link
                   href="/company/login"
                   className="ml-1 whitespace-nowrap border-l border-border pl-3 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                 >
-                  Company access
+                  {authLabels.companyAccess}
                 </Link>
               </>
             )}
@@ -107,7 +141,7 @@ export function NavbarClient({ visibleLinks, user, dashboardHref }: Props) {
             size="icon-sm"
             className="-mr-1 md:hidden"
             onClick={() => setMobileOpen((open) => !open)}
-            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            aria-label={mobileOpen ? authLabels.closeMenu : authLabels.openMenu}
             aria-expanded={mobileOpen}
           >
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -119,9 +153,9 @@ export function NavbarClient({ visibleLinks, user, dashboardHref }: Props) {
         <div
           className="mx-2 mb-2 flex flex-col gap-3 rounded-b-lg border border-border bg-background/95 px-4 py-4 shadow-sm backdrop-blur md:hidden"
           role="dialog"
-          aria-label="Navigation menu"
+          aria-label={authLabels.navMenu}
         >
-          <nav className="grid gap-1" aria-label="Mobile primary navigation">
+          <nav className="grid gap-1" aria-label={authLabels.mobileNav}>
             {visibleLinks.map((link) => (
               <Link
                 key={link.href}
@@ -135,7 +169,7 @@ export function NavbarClient({ visibleLinks, user, dashboardHref }: Props) {
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
-                {link.label}
+                {getNavLabel(link.label)}
               </Link>
             ))}
           </nav>
@@ -152,12 +186,12 @@ export function NavbarClient({ visibleLinks, user, dashboardHref }: Props) {
               <>
                 <Button asChild className="w-full">
                   <Link href="/auth/sign-up" onClick={() => setMobileOpen(false)}>
-                    Create profile
+                    {authLabels.createProfile}
                   </Link>
                 </Button>
                 <Button asChild variant="outline" className="w-full">
                   <Link href="/auth/login" onClick={() => setMobileOpen(false)}>
-                    Sign in
+                    {authLabels.signIn}
                   </Link>
                 </Button>
                 <Link
@@ -165,7 +199,7 @@ export function NavbarClient({ visibleLinks, user, dashboardHref }: Props) {
                   onClick={() => setMobileOpen(false)}
                   className="rounded-md py-2 text-center text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                 >
-                  Company access
+                  {authLabels.companyAccess}
                 </Link>
               </>
             )}

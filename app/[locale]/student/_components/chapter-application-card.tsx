@@ -30,7 +30,7 @@ export function ChapterApplicationCard({ chapters, disabled = false }: ChapterAp
     event.preventDefault()
 
     if (!chapterId) {
-      setError('Choose a chapter to continue.')
+      setError('Elige un capitulo para continuar.')
       return
     }
 
@@ -39,13 +39,13 @@ export function ChapterApplicationCard({ chapters, disabled = false }: ChapterAp
       const result = await applyToChapter({ chapterId })
 
       if (!result.success) {
-        const message = result.error ?? 'Could not submit your chapter request.'
+        const message = result.error ?? 'No se pudo enviar tu solicitud de capitulo.'
         setError(message)
         toast.error(message)
         return
       }
 
-      toast.success('Your chapter request is pending review.')
+      toast.success('Tu solicitud de capitulo esta pendiente de revision.')
       router.refresh()
     })
   }
@@ -54,7 +54,7 @@ export function ChapterApplicationCard({ chapters, disabled = false }: ChapterAp
     <form className="space-y-3" onSubmit={handleSubmit}>
       <div className="space-y-2">
         <label className="text-sm font-semibold text-foreground" htmlFor="chapter-application">
-          Chapter
+          Capitulo
         </label>
         <Select
           value={chapterId}
@@ -62,7 +62,7 @@ export function ChapterApplicationCard({ chapters, disabled = false }: ChapterAp
           disabled={disabled || isPending || !hasChapters}
         >
           <SelectTrigger id="chapter-application" className="h-11 w-full rounded-lg">
-            <SelectValue placeholder={hasChapters ? 'Choose your chapter' : 'No chapters available'} />
+            <SelectValue placeholder={hasChapters ? 'Elige tu capitulo' : 'No hay capitulos disponibles'} />
           </SelectTrigger>
           <SelectContent>
             {chapters.map((chapter) => {
@@ -84,7 +84,7 @@ export function ChapterApplicationCard({ chapters, disabled = false }: ChapterAp
         className="w-full sm:w-auto"
         disabled={disabled || isPending || !hasChapters}
       >
-        {isPending ? 'Submitting...' : 'Apply to chapter'}
+        {isPending ? 'Enviando...' : 'Postular a capitulo'}
       </Button>
     </form>
   )
