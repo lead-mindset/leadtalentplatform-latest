@@ -2,6 +2,39 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { AdminService } from '../admin.service'
 import { SupabaseClient } from '@supabase/supabase-js'
 
+interface MockBuilder {
+  eq: ReturnType<typeof vi.fn>
+  match: ReturnType<typeof vi.fn>
+  in: ReturnType<typeof vi.fn>
+  or: ReturnType<typeof vi.fn>
+  ilike: ReturnType<typeof vi.fn>
+  contains: ReturnType<typeof vi.fn>
+  limit: ReturnType<typeof vi.fn>
+  order: ReturnType<typeof vi.fn>
+  range: ReturnType<typeof vi.fn>
+  gte: ReturnType<typeof vi.fn>
+  lt: ReturnType<typeof vi.fn>
+  gt: ReturnType<typeof vi.fn>
+  is: ReturnType<typeof vi.fn>
+  not: ReturnType<typeof vi.fn>
+  select: ReturnType<typeof vi.fn>
+  update: ReturnType<typeof vi.fn>
+  insert: ReturnType<typeof vi.fn>
+  delete: ReturnType<typeof vi.fn>
+  maybeSingle: ReturnType<typeof vi.fn>
+  single: ReturnType<typeof vi.fn>
+  then: ReturnType<typeof vi.fn>
+  _setThenValue: (value: unknown) => void
+}
+
+interface TableMock {
+  select?: ReturnType<typeof vi.fn>
+  update?: ReturnType<typeof vi.fn>
+  insert?: ReturnType<typeof vi.fn>
+  delete?: ReturnType<typeof vi.fn>
+  _builder: MockBuilder
+}
+
 // ───────────────────────────────────────────────────────────────
 // Helper: Build a thenable Supabase query builder mock
 // ───────────────────────────────────────────────────────────────
@@ -15,7 +48,7 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
       return defaultValue
     }
 
-    const builder: Record<string, unknown> = {
+    const builder = {
       eq: vi.fn(() => builder),
       match: vi.fn(() => builder),
       in: vi.fn(() => builder),
@@ -41,7 +74,7 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
         valueQueue.push(value)
         defaultValue = value
       },
-    }
+    } satisfies MockBuilder
 
     return builder
   }
@@ -55,7 +88,7 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
   const chapterMembershipBuilder = createBuilder()
   const leadIdentityBuilder = createBuilder()
 
-  const tableMocks: Record<string, unknown> = {
+  const tableMocks: Record<string, TableMock> = {
     user: {
       select: vi.fn(() => userBuilder),
       update: vi.fn(() => userBuilder),
