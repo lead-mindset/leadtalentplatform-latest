@@ -22,6 +22,7 @@ import { SaveStudentButton } from '../../_components/save-student-button'
 import { ResumeAccessButton } from '../../_components/resume-access-button'
 import NextLink from 'next/link'
 import { MainContainer } from '@/components/global/main-container'
+import { PageHeader } from '@/components/ui/page-header'
 
 export default async function StudentProfilePage({
   params,
@@ -65,10 +66,11 @@ export default async function StudentProfilePage({
       <Card>
         <CardContent className="grid gap-6 py-6 lg:grid-cols-[1fr_280px]">
           <div className="space-y-5">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Visible LEAD profile</p>
-              <h1 className="mt-1 text-3xl font-bold tracking-tight">{resolvedStudent.name}</h1>
-              <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+            <PageHeader
+              eyebrow="Visible LEAD profile"
+              title={resolvedStudent.name}
+              description={
+                <span className="flex flex-wrap items-center gap-3">
                 <span className="inline-flex items-center gap-1.5">
                   <Mail className="h-4 w-4" />
                   {resolvedStudent.email}
@@ -79,8 +81,10 @@ export default async function StudentProfilePage({
                     {resolvedStudent.phone}
                   </span>
                 )}
-              </div>
-            </div>
+                </span>
+              }
+              className="border-b-0 pb-0"
+            />
 
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="rounded-lg border bg-muted/20 p-4">

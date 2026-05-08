@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Link } from '@/i18n/routing'
 import { requireUser } from '@/lib/auth'
+import { PageHeader } from '@/components/ui/page-header'
 import {
   StudentDashboardService,
   type StudentActivationDashboard,
@@ -188,7 +189,7 @@ function PrimaryActions({ dashboard }: { dashboard: StudentActivationDashboard }
         ]
 
   return (
-    <div className="grid gap-3 sm:grid-cols-3">
+    <div className="grid w-full gap-3 sm:grid-cols-3 lg:max-w-xl">
       {actions.map((action) => {
         const Icon = action.icon
         return (
@@ -196,12 +197,12 @@ function PrimaryActions({ dashboard }: { dashboard: StudentActivationDashboard }
             key={action.href}
             asChild
             variant={action.href === '/events' ? 'default' : 'outline'}
-            className="h-12 w-full justify-between rounded-lg px-4"
+            className="h-12 w-full min-w-0 justify-between rounded-lg px-4"
           >
             <Link href={action.href}>
-              <span className="flex items-center gap-2">
+              <span className="flex min-w-0 items-center gap-2">
                 <Icon className="h-4 w-4" />
-                {action.label}
+                <span className="truncate">{action.label}</span>
               </span>
               <ArrowRight className="h-4 w-4" />
             </Link>
@@ -224,20 +225,17 @@ export default async function StudentDashboard() {
 
   return (
     <MainContainer maxWidth="7xl" className="space-y-6 py-6 pb-24 sm:py-8">
-      <section className="space-y-4">
-        <Badge variant={content.badgeVariant} size="lg">
-          {content.badge}
-        </Badge>
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-3xl space-y-3">
-            <h1 className="text-3xl font-semibold leading-tight text-foreground sm:text-4xl">
-              Welcome{user.name ? `, ${user.name}` : ''}
-            </h1>
-            <p className="text-base leading-7 text-muted-foreground sm:text-lg">{content.body}</p>
-          </div>
-          <PrimaryActions dashboard={dashboard} />
-        </div>
-      </section>
+      <PageHeader
+        eyebrow="My LEAD"
+        title={`Welcome${user.name ? `, ${user.name}` : ''}`}
+        badge={
+          <Badge variant={content.badgeVariant} size="lg">
+            {content.badge}
+          </Badge>
+        }
+        description={content.body}
+        actions={<PrimaryActions dashboard={dashboard} />}
+      />
 
       <Card className="rounded-lg">
         <CardContent className="flex flex-col gap-5 py-6 sm:flex-row sm:items-center">

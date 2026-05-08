@@ -1,6 +1,7 @@
 import { getCompanyStats, getSavedStudents } from '@/lib/actions/company/get-data'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/ui/page-header'
 import { Users, Heart, Building } from 'lucide-react'
 import Link from 'next/link'
 import { requireRecruiter } from '@/lib/auth'
@@ -17,10 +18,21 @@ export default async function CompanyDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Company Portal</h1>
-        <p className="text-muted-foreground">Welcome back, {user.name}</p>
-      </div>
+      <PageHeader
+        eyebrow="Company portal"
+        title="Representative Dashboard"
+        description={`Welcome back${user.name ? `, ${user.name}` : ''}. Review visible LEAD talent, saved profiles, and company access from one place.`}
+        actions={
+          <>
+            <Button asChild>
+              <Link href="/company/browse">Browse talent</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/company/saved">Saved talent</Link>
+            </Button>
+          </>
+        }
+      />
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
@@ -61,7 +73,7 @@ export default async function CompanyDashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common tasks and shortcuts</CardDescription>
+            <CardDescription>Most common review tasks for company representatives.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
             <Button asChild className="w-full justify-start">

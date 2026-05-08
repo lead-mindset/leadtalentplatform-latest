@@ -4,6 +4,7 @@ import {
   getChaptersList,
 } from '@/lib/actions/admin/chapters'
 import type { ChapterSortKey, SortOrder } from '@/lib/services/admin.service'
+import { PageHeader } from '@/components/ui/page-header'
 
 type PageSearchParams = {
   search?: string
@@ -42,12 +43,11 @@ export default async function AdminChaptersPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Chapters</h1>
-        <p className="text-muted-foreground mt-2">
-          Manage chapter metadata, editor assignments, membership counts, and safe deletion checks.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Admin"
+        title="Chapters"
+        description="Manage chapter metadata, editor assignments, membership counts, and safe deletion checks."
+      />
       <ChaptersManagementClient
         items={list.items}
         total={list.total}

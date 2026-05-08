@@ -6,6 +6,7 @@ import type { RecruiterInvite } from '@/lib/types'
 import { InviteForm } from './components/invite-form'
 import { InviteActions } from './components/invite-actions'
 import { getInvites, getCompanies } from '@/lib/actions/admin/get-data'
+import { PageHeader } from '@/components/ui/page-header'
 
 function getInviteStatus(invite: RecruiterInvite): 'pending' | 'accepted' | 'expired' | 'revoked' {
   if (invite.revoked_at) return 'revoked'
@@ -144,7 +145,8 @@ async function InvitesList() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            <div className="hidden overflow-x-auto lg:block">
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
@@ -217,6 +219,53 @@ async function InvitesList() {
                 </tbody>
               </table>
             </div>
+            <div className="divide-y rounded-lg border lg:hidden">
+              {invites.map((invite) => {
+                const statusDisplay = getInviteStatusDisplay(invite)
+                const status = getInviteStatus(invite)
+                const StatusIcon = statusDisplay.icon
+
+                return (
+                  <div key={invite.id} className="space-y-4 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 space-y-1">
+                        <p className="break-words font-medium">{invite.recruiter_email}</p>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Building className="h-4 w-4 shrink-0" />
+                          <span className="truncate">{invite.company?.name || 'Unknown company'}</span>
+                        </div>
+                      </div>
+                      <Badge variant={statusDisplay.variant} className="shrink-0 gap-1">
+                        <StatusIcon className={`h-3 w-3 ${statusDisplay.iconClass}`} />
+                        {statusDisplay.label}
+                      </Badge>
+                    </div>
+
+                    <div className="grid gap-2 text-sm text-muted-foreground">
+                      <p>
+                        <span className="font-medium text-foreground">Granted by:</span>{' '}
+                        {invite.granted_by?.name || invite.granted_by?.email || 'Unknown'}
+                      </p>
+                      <p>
+                        <span className="font-medium text-foreground">Granted:</span>{' '}
+                        {new Date(invite.granted_at).toLocaleDateString()}
+                      </p>
+                      <p>
+                        <span className="font-medium text-foreground">Expires:</span>{' '}
+                        {invite.invite_expires_at
+                          ? new Date(invite.invite_expires_at).toLocaleDateString()
+                          : 'Never'}
+                      </p>
+                    </div>
+
+                    <div className="flex justify-end">
+                      <InviteActions inviteId={invite.id} status={status} />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            </>
           )}
         </CardContent>
       </Card>
@@ -274,12 +323,11 @@ function LoadingSkeleton() {
 export default function AdminInvitesPage() {
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Company Representative Invites</h1>
-        <p className="text-muted-foreground mt-2">
-          Invite and manage company representative access across all companies
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Admin"
+        title="Company Representative Invites"
+        description="Invite and manage company representative access across all companies."
+      />
       <Suspense fallback={<LoadingSkeleton />}>
         <InvitesList />
       </Suspense>

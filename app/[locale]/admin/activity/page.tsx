@@ -4,6 +4,7 @@ import { Suspense } from 'react'
 import { Activity, CheckCircle2, Mail, Calendar, XCircle } from 'lucide-react'
 import { getActivityLog } from '@/lib/actions/admin/get-data'
 import type { ActivityItem } from '@/lib/types'
+import { PageHeader } from '@/components/ui/page-header'
 
 function getActivityDescription(activity: ActivityItem) {
   const actorName = activity.actor?.name || activity.actor?.email || 'Unknown'
@@ -169,12 +170,11 @@ function LoadingSkeleton() {
 export default function AdminActivityPage() {
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">System Activity</h1>
-        <p className="text-muted-foreground mt-2">
-          Audit log of all system events and administrative actions
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Admin"
+        title="System Activity"
+        description="Audit log of recent platform events and administrative actions."
+      />
       <Suspense fallback={<LoadingSkeleton />}>
         <ActivityLog />
       </Suspense>

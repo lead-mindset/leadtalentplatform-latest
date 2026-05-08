@@ -68,6 +68,7 @@ function SaveButton({
 export function StudentsTable({ students, savedStudentIds = [] }: StudentsTableProps) {
   return (
     <div className="overflow-hidden rounded-lg border bg-card">
+      <div className="hidden lg:block">
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/40">
@@ -152,6 +153,77 @@ export function StudentsTable({ students, savedStudentIds = [] }: StudentsTableP
           ))}
         </TableBody>
       </Table>
+      </div>
+
+      <div className="divide-y divide-border lg:hidden">
+        {students.map((student) => {
+          const skills = student.person_profile?.skills ?? []
+
+          return (
+            <div key={student.id} className="space-y-4 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 space-y-1">
+                  <p className="break-words font-semibold text-foreground">{student.name}</p>
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Mail className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">{student.email}</span>
+                  </div>
+                </div>
+                <SaveButton
+                  studentId={student.id}
+                  initialSaved={savedStudentIds.includes(student.id)}
+                  studentName={student.name}
+                />
+              </div>
+
+              <div className="grid gap-3 text-sm">
+                <div className="flex items-start gap-2">
+                  <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                  <div className="min-w-0">
+                    <p className="font-medium">
+                      {student.chapter?.name ?? 'Chapter not listed'}
+                    </p>
+                    {student.chapter?.university ? (
+                      <p className="text-xs text-muted-foreground">{student.chapter.university}</p>
+                    ) : null}
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span>{student.person_profile?.major_or_interest || 'Focus not specified'}</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <GraduationCap className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span>
+                    {student.person_profile?.graduation_year
+                      ? `Class of ${student.person_profile.graduation_year}`
+                      : 'Graduation year not listed'}
+                  </span>
+                </div>
+              </div>
+
+              {skills.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {skills.slice(0, 4).map((skill: string, i: number) => (
+                    <Badge key={i} variant="secondary" className="text-xs">
+                      {skill}
+                    </Badge>
+                  ))}
+                  {skills.length > 4 ? (
+                    <Badge variant="outline" className="text-xs">
+                      +{skills.length - 4}
+                    </Badge>
+                  ) : null}
+                </div>
+              ) : null}
+
+              <Button asChild variant="outline" className="w-full">
+                <Link href={`/company/students/${student.id}`}>View profile</Link>
+              </Button>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }

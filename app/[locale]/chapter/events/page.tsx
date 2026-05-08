@@ -7,6 +7,7 @@ import { Icons } from '@/components/ui/icons'
 import { Breadcrumb } from '@/components/ui/breadcrumb'
 import { MainContainer } from '@/components/global/main-container'
 import type { ElementType } from 'react'
+import { PageHeader } from '@/components/ui/page-header'
 
 function StatBlock({
   label,
@@ -52,20 +53,19 @@ export default async function ChapterEventsPage() {
       />
 
       <div className="space-y-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight">Chapter Events</h1>
-            <p className="max-w-2xl text-muted-foreground">
-              Manage owned and collaborative events scoped to your chapter.
-            </p>
-          </div>
-          <Button asChild className="shrink-0">
+        <PageHeader
+          eyebrow="Chapter tools"
+          title="Chapter Events"
+          description="Manage owned and collaborative events scoped to your chapter."
+          actions={
+            <Button asChild className="shrink-0">
             <Link href="/chapter/events/new">
               <Icons.Plus className="mr-2 h-4 w-4" />
               Create event
             </Link>
           </Button>
-        </div>
+          }
+        />
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <StatBlock

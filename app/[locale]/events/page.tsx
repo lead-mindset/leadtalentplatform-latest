@@ -4,7 +4,6 @@ import {
   CalendarDays,
   MapPin,
   Monitor,
-  Search,
   Users,
 } from 'lucide-react'
 import { getPublishedEvents } from '@/lib/actions/events/get-data'
@@ -89,22 +88,31 @@ function getAvailabilityLabel(event: EventWithDetails) {
   return `${remaining} spots left`
 }
 
+function getAvailabilityVariant(event: EventWithDetails) {
+  if (event.capacity === null) return 'secondary' as const
+
+  const remaining = Math.max(0, event.capacity - event._count.registrations)
+  if (remaining === 0) return 'destructive' as const
+  if (remaining <= 10) return 'warning' as const
+  return 'secondary' as const
+}
+
 function EventCard({ event }: { event: EventWithDetails }) {
   const timing = getEventTiming(event)
   const ownerChapter = event.chapter?.name ?? event.owner_chapter?.name ?? 'LEAD'
   const availability = getAvailabilityLabel(event)
-  const isFull = availability === 'Full'
+  const availabilityVariant = getAvailabilityVariant(event)
 
   return (
-    <Card className="overflow-hidden transition-colors hover:border-primary/40">
+    <Card className={cn('overflow-hidden transition-colors hover:border-primary/40', timing.label === 'Past event' && 'opacity-80')}>
       <CardContent className="p-0">
         <Link href={`/events/${event.id}`} className="block">
           <div className="grid gap-0 md:grid-cols-[11rem_1fr]">
-            <div className="flex border-b bg-muted/40 p-5 md:border-b-0 md:border-r">
+            <div className="flex border-b bg-muted/40 p-4 md:border-b-0 md:border-r md:p-5">
               <div className="flex w-full flex-row items-center gap-4 md:flex-col md:items-start md:justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">{formatDate(event.start_at)}</p>
-                  <p className="mt-1 text-2xl font-semibold text-foreground">{formatTime(event.start_at)}</p>
+                  <p className="mt-1 text-lg font-semibold text-foreground md:text-2xl">{formatTime(event.start_at)}</p>
                 </div>
                 <Badge variant={timing.variant}>{timing.label}</Badge>
               </div>
@@ -115,7 +123,7 @@ function EventCard({ event }: { event: EventWithDetails }) {
                 <div className="min-w-0 space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="outline">{getEventTypeLabel(event.event_type)}</Badge>
-                    <Badge variant={isFull ? 'destructive' : 'secondary'}>{availability}</Badge>
+                    <Badge variant={availabilityVariant}>{availability}</Badge>
                   </div>
                   <h2 className="line-clamp-2 text-xl font-semibold tracking-tight text-foreground md:text-2xl">
                     {event.title || 'Untitled event'}
@@ -125,7 +133,7 @@ function EventCard({ event }: { event: EventWithDetails }) {
                 <span
                   className={cn(
                     buttonVariants({ variant: 'outline' }),
-                    'shrink-0 justify-between sm:min-w-32'
+                    'w-full shrink-0 justify-between sm:w-auto sm:min-w-32'
                   )}
                   aria-hidden="true"
                 >
@@ -165,7 +173,14 @@ function EventCard({ event }: { event: EventWithDetails }) {
 
 async function EventsContent() {
   const events: EventWithDetails[] = await getPublishedEvents()
-  const openEvents = events.filter((event) => new Date(event.end_at).getTime() >= Date.now()).length
+  const now = Date.now()
+  const upcomingEvents = events
+    .filter((event) => new Date(event.end_at).getTime() >= now)
+    .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime())
+  const pastEvents = events
+    .filter((event) => new Date(event.end_at).getTime() < now)
+    .sort((a, b) => new Date(b.start_at).getTime() - new Date(a.start_at).getTime())
+  const openEvents = upcomingEvents.length
 
   return (
     <main className="min-h-screen bg-background">
@@ -198,26 +213,26 @@ async function EventsContent() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 rounded-lg border bg-card px-4 py-3 text-sm text-muted-foreground">
-            <Search className="h-4 w-4 shrink-0" />
-            <span>Use the list below to compare date, host, format, availability, and whether the event requires an application.</span>
+          <div className="flex items-start gap-3 rounded-lg border bg-card px-4 py-3 text-sm text-muted-foreground">
+            <CalendarDays className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>Upcoming and live events appear first. Past events remain below as a reference for the LEAD community.</span>
           </div>
         </section>
 
         <section className="space-y-4">
           <div className="flex items-center justify-between gap-4 border-b pb-3">
             <div>
-              <h2 className="text-xl font-semibold tracking-tight">Upcoming and open events</h2>
+              <h2 className="text-xl font-semibold tracking-tight">Upcoming and live events</h2>
               <p className="text-sm text-muted-foreground">Select an event to view details and register or apply.</p>
             </div>
           </div>
 
-          {events.length === 0 ? (
+          {upcomingEvents.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center gap-3 px-6 py-12 text-center">
                 <CalendarDays className="h-10 w-10 text-muted-foreground" />
                 <div>
-                  <h3 className="font-semibold">No events are published yet</h3>
+                  <h3 className="font-semibold">No upcoming events are published yet</h3>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Check back soon for upcoming LEAD opportunities.
                   </p>
@@ -226,12 +241,29 @@ async function EventsContent() {
             </Card>
           ) : (
             <div className="space-y-4">
-              {events.map((event) => (
+              {upcomingEvents.map((event) => (
                 <EventCard key={event.id} event={event} />
               ))}
             </div>
           )}
         </section>
+
+        {pastEvents.length > 0 && (
+          <section className="space-y-4">
+            <div className="flex items-center justify-between gap-4 border-b pb-3">
+              <div>
+                <h2 className="text-xl font-semibold tracking-tight">Past events</h2>
+                <p className="text-sm text-muted-foreground">Browse previous LEAD programs and community activity.</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {pastEvents.map((event) => (
+                <EventCard key={event.id} event={event} />
+              ))}
+            </div>
+          </section>
+        )}
       </MainContainer>
     </main>
   )

@@ -8,6 +8,7 @@ import { MembersList } from './components/members-list'
 import { Breadcrumb } from '@/components/ui/breadcrumb'
 import { MainContainer } from '@/components/global/main-container'
 import { MembersTabs, type MemberStatusCounts } from './components/member-tabs'
+import { PageHeader } from '@/components/ui/page-header'
 
 export type MemberFilterStatus = 'pending' | 'active' | 'rejected' | 'alumni'
 
@@ -122,17 +123,12 @@ export default async function ChapterMembersPage({
         ]}
       />
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-3xl font-bold tracking-tight">Chapter Members</h1>
-            <Badge variant="outline">{chapter.name}</Badge>
-          </div>
-          <p className="max-w-3xl text-muted-foreground">
-            Review pending applicants and manage membership status for {chapter.university}.
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Chapter tools"
+        title="Chapter Members"
+        badge={<Badge variant="outline">{chapter.name}</Badge>}
+        description={`Review pending applicants and manage membership status for ${chapter.university}.`}
+      />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <SummaryBlock

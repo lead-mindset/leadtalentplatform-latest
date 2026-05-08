@@ -1,6 +1,7 @@
 import { CompaniesManagementClient } from './companies-management-client'
 import { getCompaniesList } from '@/lib/actions/admin/companies'
 import type { CompanySortKey, SortOrder } from '@/lib/services/admin.service'
+import { PageHeader } from '@/components/ui/page-header'
 
 type PageSearchParams = {
   search?: string
@@ -28,12 +29,11 @@ export default async function AdminCompaniesPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Companies</h1>
-        <p className="text-muted-foreground mt-2">
-          Manage organizations, company representative access, and invite readiness.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Admin"
+        title="Companies"
+        description="Manage organizations, company representative access, and invite readiness."
+      />
       <CompaniesManagementClient
         items={list.items}
         total={list.total}

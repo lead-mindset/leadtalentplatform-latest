@@ -2,6 +2,7 @@ import { getChapters } from '@/lib/actions/admin/get-data'
 import { getAdminEventsList } from '@/lib/actions/admin/events'
 import type { AdminEventStatus, EventSortKey, SortOrder } from '@/lib/services/admin.service'
 import { EventsManagementClient } from './events-management-client'
+import { PageHeader } from '@/components/ui/page-header'
 
 type PageSearchParams = {
   search?: string
@@ -48,12 +49,11 @@ export default async function AdminEventsPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Events</h1>
-        <p className="text-muted-foreground mt-2">
-          Manage chapter-owned and collaborative events with filters, sorting, and quick actions.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Admin"
+        title="Events"
+        description="Manage chapter-owned and collaborative events with filters, sorting, and quick actions."
+      />
 
       <EventsManagementClient
         items={list.items}

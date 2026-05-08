@@ -8,6 +8,7 @@ import { getCheckInCounter } from '@/lib/actions/events/checkin'
 import { CheckinScanner } from '../events/_components/checkin-scanner'
 import { Breadcrumb } from '@/components/ui/breadcrumb'
 import { MainContainer } from '@/components/global/main-container'
+import { PageHeader } from '@/components/ui/page-header'
 
 function formatDate(value: string) {
   const d = new Date(value)
@@ -71,17 +72,16 @@ export default async function ChapterCheckinPage({
         ]}
       />
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Check-in</h1>
-          <p className="max-w-3xl text-muted-foreground">
-            Scan QR codes, search attendees, or paste a token for the selected event.
-          </p>
-        </div>
-        <Button asChild variant="outline">
+      <PageHeader
+        eyebrow="Chapter tools"
+        title="Check-in"
+        description="Scan QR codes, search attendees, or paste a token for the selected event."
+        actions={
+          <Button asChild variant="outline">
           <Link href="/chapter/events">Chapter events</Link>
         </Button>
-      </div>
+        }
+      />
 
       {selectedEvent ? (
         <>

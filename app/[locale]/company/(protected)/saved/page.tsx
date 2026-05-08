@@ -6,6 +6,7 @@ import { StudentsTable } from '../_components/students-table';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { MainContainer } from '@/components/global/main-container';
+import { PageHeader } from '@/components/ui/page-header';
 
 export default async function SavedStudentsPage() {
   const { supabase, user } = await requireRecruiter();
@@ -16,22 +17,20 @@ export default async function SavedStudentsPage() {
 
   return (
     <MainContainer className="space-y-5 py-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">Company portal</p>
-          <h1 className="text-3xl font-bold tracking-tight">Saved Talent</h1>
-          <p className="mt-1 text-muted-foreground">
-            Keep promising visible profiles in one place for follow-up.
-          </p>
-        </div>
-        <div className="rounded-lg border bg-card px-4 py-3">
+      <PageHeader
+        eyebrow="Company portal"
+        title="Saved Talent"
+        description="Keep promising visible profiles in one place for follow-up."
+        actions={
+          <div className="rounded-lg border bg-card px-4 py-3">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Heart className="h-4 w-4" />
             Saved profiles
           </div>
           <p className="mt-1 text-2xl font-semibold">{saved_students.length}</p>
         </div>
-      </div>
+        }
+      />
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
