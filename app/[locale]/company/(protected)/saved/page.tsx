@@ -18,14 +18,14 @@ export default async function SavedStudentsPage() {
   return (
     <MainContainer className="space-y-5 py-8">
       <PageHeader
-        eyebrow="Company portal"
-        title="Saved Talent"
-        description="Keep promising visible profiles in one place for follow-up."
+        eyebrow="Portal de empresa"
+        title="Talento guardado"
+        description="Guarda perfiles visibles prometedores en un solo lugar para seguimiento."
         actions={
           <div className="rounded-lg border bg-card px-4 py-3">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Heart className="h-4 w-4" />
-            Saved profiles
+            Perfiles guardados
           </div>
           <p className="mt-1 text-2xl font-semibold">{saved_students.length}</p>
         </div>
@@ -35,9 +35,9 @@ export default async function SavedStudentsPage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <div>
-            <CardTitle>Your Saved Talent</CardTitle>
+            <CardTitle>Tu talento guardado</CardTitle>
             <CardDescription>
-              {saved_students.length} saved profile{saved_students.length !== 1 ? 's' : ''} available to your company.
+              {saved_students.length} perfil{saved_students.length !== 1 ? 'es' : ''} guardado{saved_students.length !== 1 ? 's' : ''} disponible{saved_students.length !== 1 ? 's' : ''} para tu empresa.
             </CardDescription>
           </div>
           <Heart className="h-5 w-5 text-red-500" />
@@ -46,12 +46,12 @@ export default async function SavedStudentsPage() {
           {saved_students.length === 0 ? (
             <div className="text-center py-12">
               <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="font-medium mb-2">No saved talent yet</p>
+              <p className="font-medium mb-2">Todavia no hay talento guardado</p>
               <p className="text-sm text-muted-foreground mb-4">
-                Save profiles while browsing to build a focused follow-up list.
+                Guarda perfiles mientras exploras para construir una lista enfocada de seguimiento.
               </p>
               <Button asChild>
-                <Link href="/company/browse">Browse Talent</Link>
+                <Link href="/company/browse">Explorar talento</Link>
               </Button>
             </div>
           ) : (

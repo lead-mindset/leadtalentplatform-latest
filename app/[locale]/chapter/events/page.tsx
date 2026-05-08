@@ -47,21 +47,21 @@ export default async function ChapterEventsPage() {
     <MainContainer className="py-8 space-y-8">
       <Breadcrumb
         items={[
-          { label: 'Dashboard', href: '/chapter' },
-          { label: 'Events' },
+          { label: 'Resumen', href: '/chapter' },
+          { label: 'Eventos' },
         ]}
       />
 
       <div className="space-y-5">
         <PageHeader
-          eyebrow="Chapter tools"
-          title="Chapter Events"
-          description="Manage owned and collaborative events scoped to your chapter."
+          eyebrow="Herramientas del capitulo"
+          title="Eventos del capitulo"
+          description="Gestiona eventos propios y colaborativos asociados a tu capitulo."
           actions={
             <Button asChild className="shrink-0">
             <Link href="/chapter/events/new">
               <Icons.Plus className="mr-2 h-4 w-4" />
-              Create event
+              Crear evento
             </Link>
           </Button>
           }
@@ -69,27 +69,27 @@ export default async function ChapterEventsPage() {
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <StatBlock
-            label="Active"
+            label="Activos"
             value={activeEvents.length}
-            helper="Published and not ended"
+            helper="Publicados y vigentes"
             icon={Icons.Calendar}
           />
           <StatBlock
-            label="Drafts"
+            label="Borradores"
             value={draftEvents.length}
-            helper="Need review before publishing"
+            helper="Necesitan revision antes de publicar"
             icon={Icons.Edit}
           />
           <StatBlock
-            label="Applications"
+            label="Postulaciones"
             value={pendingApplications}
-            helper="Pending event decisions"
+            helper="Decisiones pendientes"
             icon={Icons.FileText}
           />
           <StatBlock
             label="Check-in"
             value={upcomingCheckins}
-            helper="Upcoming published events"
+            helper="Eventos publicados proximos"
             icon={Icons.Ticket}
           />
         </div>
@@ -101,14 +101,14 @@ export default async function ChapterEventsPage() {
             <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
               <Icons.Calendar className="h-5 w-5 text-primary" />
             </div>
-            <h2 className="text-xl font-semibold">No events yet</h2>
+            <h2 className="text-xl font-semibold">Todavia no hay eventos</h2>
             <p className="mx-auto mt-2 mb-6 max-w-md text-sm text-muted-foreground">
-              Create the first chapter event when your team is ready to collect registrations or applications.
+              Crea el primer evento del capitulo cuando tu equipo este listo para recibir registros o postulaciones.
             </p>
             <Button asChild>
               <Link href="/chapter/events/new">
                 <Icons.Plus className="mr-2 h-4 w-4" />
-                Create event
+                Crear evento
               </Link>
             </Button>
           </CardContent>

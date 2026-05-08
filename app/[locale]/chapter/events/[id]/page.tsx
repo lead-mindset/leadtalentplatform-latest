@@ -50,12 +50,12 @@ export default async function ChapterEventDetailPage({
             <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
               <Icons.Calendar className="h-5 w-5 text-muted-foreground" />
             </div>
-            <h1 className="text-xl font-semibold">Event not found</h1>
+            <h1 className="text-xl font-semibold">Evento no encontrado</h1>
             <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-              This event may have been removed or your chapter may not have access to manage it.
+              Este evento puede haber sido eliminado o tu capitulo no tiene acceso para gestionarlo.
             </p>
             <Button asChild className="mt-6">
-              <Link href={`/${locale}/chapter/events`}>Back to events</Link>
+              <Link href={`/${locale}/chapter/events`}>Volver a eventos</Link>
             </Button>
           </CardContent>
         </Card>
@@ -67,18 +67,18 @@ export default async function ChapterEventDetailPage({
     <MainContainer className="py-8 space-y-8">
       <Breadcrumb
         items={[
-          { label: 'Dashboard', href: `/${locale}/chapter` },
-          { label: 'Events', href: `/${locale}/chapter/events` },
-          { label: 'Edit event' },
+          { label: 'Resumen', href: `/${locale}/chapter` },
+          { label: 'Eventos', href: `/${locale}/chapter/events` },
+          { label: 'Editar evento' },
         ]}
       />
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-3xl font-bold tracking-tight">Edit Event</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Editar evento</h1>
             <Badge variant={event.is_published ? 'success' : 'outline'}>
-              {event.is_published ? 'Published' : 'Draft'}
+              {event.is_published ? 'Publicado' : 'Borrador'}
             </Badge>
           </div>
           <p className="max-w-2xl text-muted-foreground">
@@ -89,7 +89,7 @@ export default async function ChapterEventDetailPage({
           <Button asChild variant="outline">
             <Link href={`/${locale}/chapter/events`}>
               <Icons.ArrowLeft className="mr-2 h-4 w-4" />
-              Events
+              Eventos
             </Link>
           </Button>
           <Button asChild variant="outline">

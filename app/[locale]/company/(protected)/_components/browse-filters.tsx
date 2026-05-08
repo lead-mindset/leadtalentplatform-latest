@@ -68,8 +68,8 @@ export function BrowseFilters({
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            aria-label="Search talent profiles"
-            placeholder="Search profiles by name, email, or skill..."
+            aria-label="Buscar perfiles de talento"
+            placeholder="Buscar por nombre, correo o habilidad..."
             defaultValue={currentFilters.q ?? ''}
             className="pl-10"
             onChange={e => {
@@ -84,7 +84,7 @@ export function BrowseFilters({
         {activeCount > 0 && (
           <Button variant="ghost" onClick={clearAll} className="gap-2 shrink-0">
             <X className="h-4 w-4" />
-            Clear filters
+            Limpiar filtros
             <Badge variant="secondary">{activeCount}</Badge>
           </Button>
         )}
@@ -97,10 +97,10 @@ export function BrowseFilters({
           disabled={isPending}
         >
           <SelectTrigger className="w-[12.5rem]">
-            <SelectValue placeholder="All focus areas" />
+            <SelectValue placeholder="Todas las areas" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All focus areas</SelectItem>
+            <SelectItem value="all">Todas las areas</SelectItem>
             {majors.map(major => (
               <SelectItem key={major} value={major}>
                 {major}
@@ -115,13 +115,13 @@ export function BrowseFilters({
           disabled={isPending}
         >
           <SelectTrigger className="w-[10rem]">
-            <SelectValue placeholder="All years" />
+            <SelectValue placeholder="Todos los anos" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All years</SelectItem>
+            <SelectItem value="all">Todos los anos</SelectItem>
             {years.map(year => (
               <SelectItem key={year} value={String(year)}>
-                Class of {year}
+                Promocion {year}
               </SelectItem>
             ))}
           </SelectContent>
@@ -133,10 +133,10 @@ export function BrowseFilters({
           disabled={isPending}
         >
           <SelectTrigger className="w-[12.5rem]">
-            <SelectValue placeholder="All chapters" />
+            <SelectValue placeholder="Todos los capitulos" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All chapters</SelectItem>
+            <SelectItem value="all">Todos los capitulos</SelectItem>
             {chapters.map(([id, name]) => (
               <SelectItem key={id} value={id}>
                 {name}

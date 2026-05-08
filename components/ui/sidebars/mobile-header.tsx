@@ -25,7 +25,7 @@ interface MobileSidebarWrapperProps {
 
 export function MobileSidebarWrapper({
   children,
-  title = 'Dashboard',
+  title = 'Resumen',
   subtitle,
 }: MobileSidebarWrapperProps) {
   const [open, setOpen] = useState(false)

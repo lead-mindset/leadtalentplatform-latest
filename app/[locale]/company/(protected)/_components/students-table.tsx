@@ -38,9 +38,9 @@ function SaveButton({
       if (!result.success) {
         // Revert on failure
         setIsSaved(isSaved)
-        toast.error(result.error || 'Failed to update save status')
+        toast.error(result.error || 'No se pudo actualizar el guardado')
       } else {
-        toast.success(result.isSaved ? `${studentName} saved to talent list` : `${studentName} removed from saved talent`)
+        toast.success(result.isSaved ? `${studentName} se guardo en tu lista de talento` : `${studentName} se quito de talento guardado`)
       }
     })
   }
@@ -52,15 +52,15 @@ function SaveButton({
       className="gap-1.5"
       onClick={handleToggle}
       disabled={isPending}
-      aria-label={isSaved ? `Remove ${studentName} from saved talent` : `Save ${studentName} to saved talent`}
-      title={isSaved ? 'Remove from saved talent' : 'Save profile'}
+      aria-label={isSaved ? `Quitar ${studentName} de talento guardado` : `Guardar ${studentName} en talento guardado`}
+      title={isSaved ? 'Quitar de talento guardado' : 'Guardar perfil'}
     >
       {isPending ? (
         <Loader2 className="h-3 w-3 animate-spin" />
       ) : (
         <Heart className={cn('h-3 w-3', isSaved && 'fill-current')} />
       )}
-      <span className="hidden xl:inline">{isSaved ? 'Saved' : 'Save'}</span>
+      <span className="hidden xl:inline">{isSaved ? 'Guardado' : 'Guardar'}</span>
     </Button>
   )
 }
@@ -72,12 +72,12 @@ export function StudentsTable({ students, savedStudentIds = [] }: StudentsTableP
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/40">
-            <TableHead className="min-w-[220px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Profile</TableHead>
-            <TableHead className="min-w-[210px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Chapter</TableHead>
-            <TableHead className="min-w-[180px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Focus</TableHead>
-            <TableHead className="w-[130px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Graduation</TableHead>
-            <TableHead className="min-w-[240px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Skills</TableHead>
-            <TableHead className="w-[150px] px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Actions</TableHead>
+            <TableHead className="min-w-[220px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Perfil</TableHead>
+            <TableHead className="min-w-[210px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Capitulo</TableHead>
+            <TableHead className="min-w-[180px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Area</TableHead>
+            <TableHead className="w-[130px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Graduacion</TableHead>
+            <TableHead className="min-w-[240px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Habilidades</TableHead>
+            <TableHead className="w-[150px] px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Acciones</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -102,14 +102,14 @@ export function StudentsTable({ students, savedStudentIds = [] }: StudentsTableP
                     </div>
                   </div>
                 ) : (
-                  <span className="text-sm text-muted-foreground">Chapter not listed</span>
+                  <span className="text-sm text-muted-foreground">Capitulo no registrado</span>
                 )}
               </TableCell>
               <TableCell className="px-4 py-3 align-top">
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-muted-foreground shrink-0" />
                   <span className="text-sm">
-                    {student.person_profile?.major_or_interest || 'Focus not specified'}
+                    {student.person_profile?.major_or_interest || 'Area no especificada'}
                   </span>
                 </div>
               </TableCell>
@@ -119,7 +119,7 @@ export function StudentsTable({ students, savedStudentIds = [] }: StudentsTableP
                   <span>
                     {student.person_profile?.graduation_year
                       ? student.person_profile.graduation_year
-                      : 'Not listed'}
+                      : 'No registrado'}
                   </span>
                 </div>
               </TableCell>
@@ -145,7 +145,7 @@ export function StudentsTable({ students, savedStudentIds = [] }: StudentsTableP
                     studentName={student.name}
                   />
                   <Button asChild variant="outline" size="sm">
-                    <Link href={`/company/students/${student.id}`}>Profile</Link>
+                    <Link href={`/company/students/${student.id}`}>Perfil</Link>
                   </Button>
                 </div>
               </TableCell>
@@ -181,7 +181,7 @@ export function StudentsTable({ students, savedStudentIds = [] }: StudentsTableP
                   <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                   <div className="min-w-0">
                     <p className="font-medium">
-                      {student.chapter?.name ?? 'Chapter not listed'}
+                      {student.chapter?.name ?? 'Capitulo no registrado'}
                     </p>
                     {student.chapter?.university ? (
                       <p className="text-xs text-muted-foreground">{student.chapter.university}</p>
@@ -190,14 +190,14 @@ export function StudentsTable({ students, savedStudentIds = [] }: StudentsTableP
                 </div>
                 <div className="flex items-start gap-2">
                   <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                  <span>{student.person_profile?.major_or_interest || 'Focus not specified'}</span>
+                  <span>{student.person_profile?.major_or_interest || 'Area no especificada'}</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <GraduationCap className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                   <span>
                     {student.person_profile?.graduation_year
-                      ? `Class of ${student.person_profile.graduation_year}`
-                      : 'Graduation year not listed'}
+                      ? `Promocion ${student.person_profile.graduation_year}`
+                      : 'Ano de graduacion no registrado'}
                   </span>
                 </div>
               </div>
@@ -218,7 +218,7 @@ export function StudentsTable({ students, savedStudentIds = [] }: StudentsTableP
               ) : null}
 
               <Button asChild variant="outline" className="w-full">
-                <Link href={`/company/students/${student.id}`}>View profile</Link>
+                <Link href={`/company/students/${student.id}`}>Ver perfil</Link>
               </Button>
             </div>
           )

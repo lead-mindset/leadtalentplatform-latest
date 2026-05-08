@@ -29,12 +29,12 @@ export function SaveStudentButton({
 
       if (!result.success) {
         setIsSaved(isSaved)
-        toast.error(result.error || 'Failed to update save status')
+        toast.error(result.error || 'No se pudo actualizar el guardado')
       } else {
         toast.success(
           result.isSaved
-            ? `${studentName} saved to your collection`
-            : `${studentName} removed from saved`
+            ? `${studentName} se guardo en tu lista`
+            : `${studentName} se quito de talento guardado`
         )
       }
     })
@@ -52,7 +52,7 @@ export function SaveStudentButton({
       ) : (
         <Heart className={cn('h-4 w-4', isSaved && 'fill-current')} />
       )}
-      {isSaved ? 'Saved' : 'Save Profile'}
+      {isSaved ? 'Guardado' : 'Guardar perfil'}
     </Button>
   )
 }

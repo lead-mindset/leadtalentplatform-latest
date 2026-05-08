@@ -60,33 +60,33 @@ export function MembersList({
     try {
       const result = await approveMembersBulk(selectedUserIds)
       if ('error' in result) {
-        const message = result.error || 'Failed to bulk approve members'
+        const message = result.error || 'No se pudo aprobar miembros en bloque'
         toast.error(message)
-        setFeedback({ type: 'error', title: 'Bulk approval failed', message })
+        setFeedback({ type: 'error', title: 'La aprobacion en bloque fallo', message })
         return
       }
 
       const skippedMessage =
         result.skipped > 0
-          ? `${result.skipped} selected member${result.skipped === 1 ? ' was' : 's were'} skipped because they were no longer eligible.`
+          ? `${result.skipped} miembro${result.skipped === 1 ? '' : 's'} seleccionado${result.skipped === 1 ? '' : 's'} se omitieron porque ya no eran elegibles.`
           : undefined
 
       toast.success(
         result.skipped > 0
-          ? `${result.count} approved, ${result.skipped} skipped`
-          : `${result.count} members approved`
+          ? `${result.count} aprobados, ${result.skipped} omitidos`
+          : `${result.count} miembros aprobados`
       )
       setFeedback({
         type: 'success',
-        title: `${result.count} member${result.count === 1 ? '' : 's'} approved`,
-        message: skippedMessage || 'Selected pending members were approved.',
+        title: `${result.count} miembro${result.count === 1 ? '' : 's'} aprobado${result.count === 1 ? '' : 's'}`,
+        message: skippedMessage || 'Los miembros pendientes seleccionados fueron aprobados.',
       })
       setSelectedUserIds([])
       router.refresh()
     } catch {
-      const message = 'Unexpected error while bulk approving members'
+      const message = 'Ocurrio un error inesperado al aprobar miembros'
       toast.error(message)
-      setFeedback({ type: 'error', title: 'Bulk approval failed', message })
+      setFeedback({ type: 'error', title: 'La aprobacion en bloque fallo', message })
     } finally {
       setIsSubmitting(false)
     }
@@ -104,8 +104,8 @@ export function MembersList({
                 onCheckedChange={onToggleAll}
               />
               <label htmlFor="select-all-pending" className="text-sm font-medium">
-                {selectedUserIds.length} selected
-                <span className="ml-1 text-muted-foreground">of {selectableMembers.length} eligible pending</span>
+                {selectedUserIds.length} seleccionados
+                <span className="ml-1 text-muted-foreground">de {selectableMembers.length} pendientes elegibles</span>
               </label>
             </div>
             <Button disabled={isSubmitting || selectedUserIds.length === 0} onClick={onBulkApprove}>
@@ -114,11 +114,11 @@ export function MembersList({
               ) : (
                 <Icons.CheckCircle2 className="mr-2 h-4 w-4" />
               )}
-              Approve selected
+              Aprobar seleccionados
             </Button>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            Bulk approval only includes pending applicants with completed basic profiles. Same-chapter authorization remains enforced by the service.
+            La aprobacion en bloque solo incluye postulantes pendientes con perfil basico completo. La autorizacion del mismo capitulo sigue protegida por el servicio.
           </p>
         </div>
       )}

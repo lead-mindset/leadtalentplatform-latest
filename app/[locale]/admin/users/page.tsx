@@ -55,9 +55,9 @@ export default async function AdminUsersPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Admin"
-        title="Users Management"
-        description="Search, filter, update roles, deactivate users, and export filtered results."
+        eyebrow="Administracion"
+        title="Gestion de usuarios"
+        description="Busca, filtra, actualiza roles, desactiva usuarios y exporta resultados filtrados."
       />
 
       <UsersManagementClient

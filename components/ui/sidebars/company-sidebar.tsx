@@ -13,7 +13,7 @@ export function CompanyNavigation() {
   return (
     <SidebarGroup>
       <SidebarGroupLabel className="text-sidebar-foreground font-medium">
-        Company Portal
+        Portal de empresa
       </SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>

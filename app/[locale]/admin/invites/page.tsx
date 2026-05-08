@@ -28,28 +28,28 @@ function getInviteStatusDisplay(invite: RecruiterInvite): InviteStatusDisplay {
   switch (status) {
     case 'revoked':
       return {
-        label: 'Revoked',
+        label: 'Revocada',
         variant: 'destructive',
         icon: XCircle,
         iconClass: 'text-destructive',
       }
     case 'accepted':
       return {
-        label: 'Accepted',
+        label: 'Aceptada',
         variant: 'default',
         icon: CheckCircle2,
         iconClass: 'text-success',
       }
     case 'expired':
       return {
-        label: 'Expired',
+        label: 'Vencida',
         variant: 'secondary',
         icon: AlertCircle,
         iconClass: 'text-warning',
       }
     default:
       return {
-        label: 'Pending',
+        label: 'Pendiente',
         variant: 'outline',
         icon: Clock,
         iconClass: 'text-info',
@@ -85,7 +85,7 @@ async function InvitesList() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Pending</CardTitle>
+                <CardTitle className="text-sm font-medium">Pendientes</CardTitle>
                 <Clock className="h-4 w-4 text-info" />
               </CardHeader>
               <CardContent>
@@ -95,7 +95,7 @@ async function InvitesList() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Accepted</CardTitle>
+                <CardTitle className="text-sm font-medium">Aceptadas</CardTitle>
                 <CheckCircle2 className="h-4 w-4 text-success" />
               </CardHeader>
               <CardContent>
@@ -105,7 +105,7 @@ async function InvitesList() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Expired</CardTitle>
+                <CardTitle className="text-sm font-medium">Vencidas</CardTitle>
                 <AlertCircle className="h-4 w-4 text-warning" />
               </CardHeader>
               <CardContent>
@@ -115,7 +115,7 @@ async function InvitesList() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Revoked</CardTitle>
+                <CardTitle className="text-sm font-medium">Revocadas</CardTitle>
                 <XCircle className="h-4 w-4 text-destructive" />
               </CardHeader>
               <CardContent>
@@ -132,16 +132,16 @@ async function InvitesList() {
 
       <Card>
         <CardHeader>
-          <CardTitle>All Invites</CardTitle>
-          <CardDescription>Company representative invitations across all companies</CardDescription>
+          <CardTitle>Todas las invitaciones</CardTitle>
+          <CardDescription>Invitaciones de representantes de empresa en todas las empresas</CardDescription>
         </CardHeader>
         <CardContent>
           {invites.length === 0 ? (
             <div className="text-center py-12">
               <Mail className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">No invites yet</p>
+              <p className="text-muted-foreground">Todavia no hay invitaciones</p>
               <p className="text-sm text-muted-foreground mt-2">
-                Send your first invitation using the form above
+                Envia tu primera invitacion usando el formulario superior
               </p>
             </div>
           ) : (
@@ -151,12 +151,12 @@ async function InvitesList() {
                 <thead>
                   <tr className="border-b">
                     <th className="text-left p-3 font-medium">Email</th>
-                    <th className="text-left p-3 font-medium">Company</th>
-                    <th className="text-left p-3 font-medium">Status</th>
-                    <th className="text-left p-3 font-medium">Granted By</th>
-                    <th className="text-left p-3 font-medium">Granted Date</th>
-                    <th className="text-left p-3 font-medium">Expires</th>
-                    <th className="text-right p-3 font-medium">Actions</th>
+                    <th className="text-left p-3 font-medium">Empresa</th>
+                    <th className="text-left p-3 font-medium">Estado</th>
+                    <th className="text-left p-3 font-medium">Otorgada por</th>
+                    <th className="text-left p-3 font-medium">Fecha</th>
+                    <th className="text-left p-3 font-medium">Vence</th>
+                    <th className="text-right p-3 font-medium">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -180,7 +180,7 @@ async function InvitesList() {
                           <div className="flex items-center gap-2">
                             <Building className="h-4 w-4 text-muted-foreground" />
                             <span className="text-sm">
-                              {invite.company?.name || 'Unknown'}
+                              {invite.company?.name || 'Desconocida'}
                             </span>
                           </div>
                         </td>
@@ -192,7 +192,7 @@ async function InvitesList() {
                         </td>
                         <td className="p-3">
                           <div className="text-sm">
-                            <p className="font-medium">{invite.granted_by?.name || 'Unknown'}</p>
+                            <p className="font-medium">{invite.granted_by?.name || 'Desconocido'}</p>
                             <p className="text-muted-foreground text-xs">
                               {invite.granted_by?.email}
                             </p>
@@ -200,14 +200,14 @@ async function InvitesList() {
                         </td>
                         <td className="p-3">
                           <span className="text-sm text-muted-foreground">
-                            {new Date(invite.granted_at).toLocaleDateString()}
+                            {new Date(invite.granted_at).toLocaleDateString('es-PE')}
                           </span>
                         </td>
                         <td className="p-3">
                           <span className="text-sm text-muted-foreground">
                             {invite.invite_expires_at
-                              ? new Date(invite.invite_expires_at).toLocaleDateString()
-                              : 'Never'}
+                              ? new Date(invite.invite_expires_at).toLocaleDateString('es-PE')
+                              : 'Nunca'}
                           </span>
                         </td>
                         <td className="p-3 text-right">
@@ -232,7 +232,7 @@ async function InvitesList() {
                         <p className="break-words font-medium">{invite.recruiter_email}</p>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Building className="h-4 w-4 shrink-0" />
-                          <span className="truncate">{invite.company?.name || 'Unknown company'}</span>
+                          <span className="truncate">{invite.company?.name || 'Empresa desconocida'}</span>
                         </div>
                       </div>
                       <Badge variant={statusDisplay.variant} className="shrink-0 gap-1">
@@ -243,18 +243,18 @@ async function InvitesList() {
 
                     <div className="grid gap-2 text-sm text-muted-foreground">
                       <p>
-                        <span className="font-medium text-foreground">Granted by:</span>{' '}
-                        {invite.granted_by?.name || invite.granted_by?.email || 'Unknown'}
+                        <span className="font-medium text-foreground">Otorgada por:</span>{' '}
+                        {invite.granted_by?.name || invite.granted_by?.email || 'Desconocido'}
                       </p>
                       <p>
-                        <span className="font-medium text-foreground">Granted:</span>{' '}
-                        {new Date(invite.granted_at).toLocaleDateString()}
+                        <span className="font-medium text-foreground">Fecha:</span>{' '}
+                        {new Date(invite.granted_at).toLocaleDateString('es-PE')}
                       </p>
                       <p>
-                        <span className="font-medium text-foreground">Expires:</span>{' '}
+                        <span className="font-medium text-foreground">Vence:</span>{' '}
                         {invite.invite_expires_at
-                          ? new Date(invite.invite_expires_at).toLocaleDateString()
-                          : 'Never'}
+                          ? new Date(invite.invite_expires_at).toLocaleDateString('es-PE')
+                          : 'Nunca'}
                       </p>
                     </div>
 
@@ -324,9 +324,9 @@ export default function AdminInvitesPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="Admin"
-        title="Company Representative Invites"
-        description="Invite and manage company representative access across all companies."
+        eyebrow="Administracion"
+        title="Invitaciones de representantes"
+        description="Invita y gestiona acceso de representantes de empresa en todas las empresas."
       />
       <Suspense fallback={<LoadingSkeleton />}>
         <InvitesList />

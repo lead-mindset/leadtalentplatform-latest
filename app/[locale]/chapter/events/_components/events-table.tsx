@@ -32,22 +32,22 @@ import LocalDate from './local_date'
 import { Icons } from '@/components/ui/icons'
 
 function statusForEvent(event: EventWithDetails): {
-  label: 'Draft' | 'Published' | 'Past'
+  label: 'Borrador' | 'Publicado' | 'Finalizado'
   variant: 'outline' | 'secondary' | 'neutral'
 } {
   const isPast = new Date(event.end_at) < new Date()
-  if (isPast) return { label: 'Past', variant: 'neutral' }
+  if (isPast) return { label: 'Finalizado', variant: 'neutral' }
   return event.is_published
-    ? { label: 'Published', variant: 'secondary' }
-    : { label: 'Draft', variant: 'outline' }
+    ? { label: 'Publicado', variant: 'secondary' }
+    : { label: 'Borrador', variant: 'outline' }
 }
 
 function ownershipLabel(event: EventWithDetails) {
   if (event.is_owned_by_chapter === false) {
-    return { label: 'Collaborating', icon: Icons.Handshake }
+    return { label: 'Colaborador', icon: Icons.Handshake }
   }
 
-  return { label: 'Owned', icon: Icons.Crown }
+  return { label: 'Propio', icon: Icons.Crown }
 }
 
 export function EventsTable({ events }: { events: EventWithDetails[] }) {
@@ -61,7 +61,7 @@ export function EventsTable({ events }: { events: EventWithDetails[] }) {
         toast.error(response.error)
         return
       }
-      toast.success(response.event.is_published ? 'Event published' : 'Event moved to draft')
+      toast.success(response.event.is_published ? 'Evento publicado' : 'Evento movido a borrador')
       router.refresh()
     })
   }
@@ -73,7 +73,7 @@ export function EventsTable({ events }: { events: EventWithDetails[] }) {
         toast.error(response.error)
         return
       }
-      toast.success('Event deleted')
+      toast.success('Evento eliminado')
       router.refresh()
     })
   }
@@ -84,11 +84,11 @@ export function EventsTable({ events }: { events: EventWithDetails[] }) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[36%] pl-4">Event</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Registration</TableHead>
-              <TableHead>Applications</TableHead>
-              <TableHead className="text-right pr-4">Actions</TableHead>
+              <TableHead className="w-[36%] pl-4">Evento</TableHead>
+              <TableHead>Estado</TableHead>
+              <TableHead>Registro</TableHead>
+              <TableHead>Postulaciones</TableHead>
+              <TableHead className="text-right pr-4">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -103,7 +103,7 @@ export function EventsTable({ events }: { events: EventWithDetails[] }) {
                 : null
 
               return (
-                <TableRow key={event.id} className={status.label === 'Past' ? 'opacity-75' : ''}>
+                <TableRow key={event.id} className={status.label === 'Finalizado' ? 'opacity-75' : ''}>
                   <TableCell className="pl-4 align-top">
                     <div className="min-w-0 space-y-2">
                       <div className="flex min-w-0 items-center gap-2">
@@ -128,8 +128,8 @@ export function EventsTable({ events }: { events: EventWithDetails[] }) {
                     <div className="space-y-2">
                       <p className="text-sm text-foreground">
                         {event.capacity === null
-                          ? `${registrations} registered`
-                          : `${registrations}/${event.capacity} registered`}
+                          ? `${registrations} registrados`
+                          : `${registrations}/${event.capacity} registrados`}
                       </p>
                       {fillRate !== null ? (
                         <div className="h-2 w-32 overflow-hidden rounded-full bg-muted">
@@ -141,26 +141,26 @@ export function EventsTable({ events }: { events: EventWithDetails[] }) {
                   <TableCell className="align-top">
                     {event.access_model === 'application' ? (
                       <Badge variant={pendingApplications > 0 ? 'warning' : 'outline'}>
-                        {pendingApplications} pending
+                        {pendingApplications} pendientes
                       </Badge>
                     ) : (
-                      <span className="text-sm text-muted-foreground">Open registration</span>
+                      <span className="text-sm text-muted-foreground">Registro abierto</span>
                     )}
                   </TableCell>
                   <TableCell className="pr-4 align-top">
                     <div className="flex flex-wrap justify-end gap-2">
                       <Button asChild size="sm" variant="outline">
-                        <Link href={`/chapter/events/${event.id}`}>Edit</Link>
+                        <Link href={`/chapter/events/${event.id}`}>Editar</Link>
                       </Button>
                       {event.access_model === 'application' ? (
                         <Button asChild size="sm" variant="outline">
                           <Link href={`/chapter/events/${event.id}/applications`}>
-                            Applications
+                            Postulaciones
                           </Link>
                         </Button>
                       ) : null}
                       <Button size="sm" variant="outline" disabled={isPending} onClick={() => onTogglePublish(event)}>
-                        {event.is_published ? 'Unpublish' : 'Publish'}
+                        {event.is_published ? 'Despublicar' : 'Publicar'}
                       </Button>
                       <Button asChild size="sm" variant="outline">
                         <Link href={`/chapter/events/${event.id}/checkin`}>Check-in</Link>
@@ -224,7 +224,7 @@ function MobileEventRow({
             <Badge variant="outline">{ownership.label}</Badge>
             {event.access_model === 'application' ? (
               <Badge variant={pendingApplications > 0 ? 'warning' : 'outline'}>
-                {pendingApplications} pending
+                {pendingApplications} pendientes
               </Badge>
             ) : null}
           </div>
@@ -233,24 +233,24 @@ function MobileEventRow({
 
       <p className="text-sm text-muted-foreground">
         {event.capacity === null
-          ? `${event._count.registrations} registered`
-          : `${event._count.registrations}/${event.capacity} registered`}
+          ? `${event._count.registrations} registrados`
+          : `${event._count.registrations}/${event.capacity} registrados`}
       </p>
 
       <div className="grid grid-cols-2 gap-2">
         <Button asChild size="sm" variant="outline">
-          <Link href={`/chapter/events/${event.id}`}>Edit</Link>
+          <Link href={`/chapter/events/${event.id}`}>Editar</Link>
         </Button>
         <Button asChild size="sm" variant="outline">
           <Link href={`/chapter/events/${event.id}/checkin`}>Check-in</Link>
         </Button>
         {event.access_model === 'application' ? (
           <Button asChild size="sm" variant="outline">
-            <Link href={`/chapter/events/${event.id}/applications`}>Applications</Link>
+            <Link href={`/chapter/events/${event.id}/applications`}>Postulaciones</Link>
           </Button>
         ) : null}
         <Button size="sm" variant="outline" disabled={isPending} onClick={() => onTogglePublish(event)}>
-          {event.is_published ? 'Unpublish' : 'Publish'}
+          {event.is_published ? 'Despublicar' : 'Publicar'}
         </Button>
         <DeleteEventButton
           disabled={isPending}
@@ -275,21 +275,20 @@ function DeleteEventButton({
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button size="sm" variant="destructive" disabled={disabled}>
-          Delete
+          Eliminar
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent size="sm">
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete event?</AlertDialogTitle>
+          <AlertDialogTitle>¿Eliminar evento?</AlertDialogTitle>
           <AlertDialogDescription>
-            This will delete {eventTitle}. This action should only be used for events that should no
-            longer exist in chapter operations.
+            Esto eliminara {eventTitle}. Usa esta accion solo para eventos que ya no deben existir en las operaciones del capitulo.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Keep event</AlertDialogCancel>
+          <AlertDialogCancel>Mantener evento</AlertDialogCancel>
           <AlertDialogAction onClick={onConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-            Delete event
+            Eliminar evento
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

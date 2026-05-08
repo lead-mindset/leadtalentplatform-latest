@@ -13,7 +13,7 @@ import { PageHeader } from '@/components/ui/page-header'
 function formatDate(value: string) {
   const d = new Date(value)
   if (Number.isNaN(d.getTime())) return value
-  return d.toLocaleString(undefined, {
+  return d.toLocaleString('es-PE', {
     month: 'short',
     day: 'numeric',
     hour: 'numeric',
@@ -33,15 +33,15 @@ function CheckInSummary({
   return (
     <div className="grid gap-3 sm:grid-cols-3">
       <div className="rounded-lg border bg-card p-4">
-        <p className="text-sm font-medium text-muted-foreground">Attended</p>
+        <p className="text-sm font-medium text-muted-foreground">Asistieron</p>
         <p className="mt-3 text-2xl font-semibold tracking-tight text-success">{checkedIn}</p>
       </div>
       <div className="rounded-lg border bg-card p-4">
-        <p className="text-sm font-medium text-muted-foreground">Registered</p>
+        <p className="text-sm font-medium text-muted-foreground">Registrados</p>
         <p className="mt-3 text-2xl font-semibold tracking-tight">{total}</p>
       </div>
       <div className="rounded-lg border bg-card p-4">
-        <p className="text-sm font-medium text-muted-foreground">Progress</p>
+        <p className="text-sm font-medium text-muted-foreground">Progreso</p>
         <p className="mt-3 text-2xl font-semibold tracking-tight">{percentage}%</p>
       </div>
     </div>
@@ -67,18 +67,18 @@ export default async function ChapterCheckinPage({
     <MainContainer className="py-8 space-y-8">
       <Breadcrumb
         items={[
-          { label: 'Dashboard', href: '/chapter' },
+          { label: 'Resumen', href: '/chapter' },
           { label: 'Check-in' },
         ]}
       />
 
       <PageHeader
-        eyebrow="Chapter tools"
+        eyebrow="Herramientas del capitulo"
         title="Check-in"
-        description="Scan QR codes, search attendees, or paste a token for the selected event."
+        description="Escanea codigos QR, busca asistentes o pega un token para el evento seleccionado."
         actions={
           <Button asChild variant="outline">
-          <Link href="/chapter/events">Chapter events</Link>
+          <Link href="/chapter/events">Eventos del capitulo</Link>
         </Button>
         }
       />
@@ -89,7 +89,7 @@ export default async function ChapterCheckinPage({
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-xl font-semibold">{selectedEvent.title}</h2>
               <Badge variant={selectedEvent.is_published ? 'success' : 'outline'}>
-                {selectedEvent.is_published ? 'Published' : 'Draft'}
+                {selectedEvent.is_published ? 'Publicado' : 'Borrador'}
               </Badge>
             </div>
             <CheckInSummary
@@ -107,9 +107,9 @@ export default async function ChapterCheckinPage({
 
             <aside className="space-y-3">
               <div className="rounded-lg border bg-card p-4">
-                <h3 className="font-semibold">Event selector</h3>
+                <h3 className="font-semibold">Selector de evento</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Switch quickly if you are operating multiple chapter events.
+                  Cambia rapidamente si estas operando varios eventos del capitulo.
                 </p>
               </div>
               <div className="divide-y overflow-hidden rounded-lg border bg-card">
@@ -119,11 +119,11 @@ export default async function ChapterCheckinPage({
                       <div className="min-w-0">
                         <p className="truncate font-medium">{event.title}</p>
                         <p className="mt-1 text-xs text-muted-foreground">{formatDate(event.start_at)}</p>
-                        <p className="text-xs text-muted-foreground">{event._count.registrations} registered</p>
+                        <p className="text-xs text-muted-foreground">{event._count.registrations} registrados</p>
                       </div>
                       <Button asChild size="sm" variant={event.id === selectedEvent.id ? 'default' : 'outline'}>
                         <Link href={`/chapter/checkin?eventId=${event.id}`}>
-                          {event.id === selectedEvent.id ? 'Using' : 'Use'}
+                          {event.id === selectedEvent.id ? 'En uso' : 'Usar'}
                         </Link>
                       </Button>
                     </div>
@@ -139,12 +139,12 @@ export default async function ChapterCheckinPage({
             <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
               <Icons.Calendar className="h-5 w-5 text-muted-foreground" />
             </div>
-            <h2 className="text-xl font-semibold">No active check-in events</h2>
+            <h2 className="text-xl font-semibold">No hay eventos activos para check-in</h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-              Create or publish an upcoming event before opening check-in.
+              Crea o publica un evento proximo antes de abrir el check-in.
             </p>
             <Button asChild className="mt-6">
-              <Link href="/chapter/events">Manage events</Link>
+              <Link href="/chapter/events">Gestionar eventos</Link>
             </Button>
           </CardContent>
         </Card>

@@ -59,29 +59,29 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
   return (
     <MainContainer className="space-y-5 py-8">
       <PageHeader
-        eyebrow="Company portal"
-        title="Browse Talent"
-        description="Review visible LEAD profiles that match your team&apos;s interests. Only approved, opted-in members appear here."
+        eyebrow="Portal de empresa"
+        title="Explorar talento"
+        description="Revisa perfiles LEAD visibles que coinciden con los intereses de tu equipo. Solo aparecen miembros aprobados que aceptaron visibilidad."
         actions={
           <div className="grid grid-cols-2 gap-3 sm:flex">
           <div className="rounded-lg border bg-card px-4 py-3">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Users className="h-4 w-4" />
-              Profiles
+              Perfiles
             </div>
             <p className="mt-1 text-2xl font-semibold">{filtered.length}</p>
           </div>
           <div className="rounded-lg border bg-card px-4 py-3">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <GraduationCap className="h-4 w-4" />
-              Classes
+              Promociones
             </div>
             <p className="mt-1 text-2xl font-semibold">{years.length}</p>
           </div>
           <div className="hidden rounded-lg border bg-card px-4 py-3 sm:block">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <BriefcaseBusiness className="h-4 w-4" />
-              Saved
+              Guardados
             </div>
             <p className="mt-1 text-2xl font-semibold">{savedIds.length}</p>
           </div>
@@ -105,9 +105,9 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
         <Card>
           <CardContent className="py-16 text-center">
             <Users className="mx-auto h-12 w-12 opacity-50 mb-3" />
-            <p className="font-medium">No visible profiles match your filters</p>
+            <p className="font-medium">No hay perfiles visibles que coincidan con tus filtros</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Try adjusting the search, chapter, focus area, or graduation year.
+              Prueba ajustar la busqueda, capitulo, area de interes o ano de graduacion.
             </p>
           </CardContent>
         </Card>

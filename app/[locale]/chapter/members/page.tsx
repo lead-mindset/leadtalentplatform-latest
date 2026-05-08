@@ -90,9 +90,9 @@ export default async function ChapterMembersPage({
             <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-warning/10">
               <Icons.AlertCircle className="h-5 w-5 text-warning" />
             </div>
-            <h1 className="text-xl font-semibold">No chapter assigned</h1>
+            <h1 className="text-xl font-semibold">Sin capitulo asignado</h1>
             <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-              You are not currently assigned to a chapter. Please contact an administrator.
+              No tienes un capitulo asignado. Contacta a una persona administradora.
             </p>
           </CardContent>
         </Card>
@@ -118,47 +118,47 @@ export default async function ChapterMembersPage({
     <MainContainer className="py-8 space-y-8">
       <Breadcrumb
         items={[
-          { label: 'Dashboard', href: '/chapter' },
-          { label: 'Members' },
+          { label: 'Resumen', href: '/chapter' },
+          { label: 'Miembros' },
         ]}
       />
 
       <PageHeader
-        eyebrow="Chapter tools"
-        title="Chapter Members"
+        eyebrow="Herramientas del capitulo"
+        title="Miembros del capitulo"
         badge={<Badge variant="outline">{chapter.name}</Badge>}
-        description={`Review pending applicants and manage membership status for ${chapter.university}.`}
+        description={`Revisa postulantes pendientes y gestiona el estado de membresia para ${chapter.university}.`}
       />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <SummaryBlock
-          label="Pending"
+          label="Pendientes"
           value={stats.pending}
-          helper="Need editor review"
+          helper="Necesitan revision"
           variant="warning"
         />
         <SummaryBlock
-          label="Approved"
+          label="Aprobados"
           value={stats.approved}
-          helper="Active chapter members"
+          helper="Miembros activos del capitulo"
           variant="success"
         />
         <SummaryBlock
-          label="Rejected"
+          label="Rechazados"
           value={stats.rejected}
-          helper="Declined applications"
+          helper="Postulaciones rechazadas"
           variant="destructive"
         />
         <SummaryBlock
           label="Alumni"
           value={alumni}
-          helper="Former members"
+          helper="Exmiembros"
           variant="neutral"
         />
         <SummaryBlock
           label="Total"
           value={stats.total}
-          helper="All roster records"
+          helper="Todos los registros"
         />
       </div>
 
@@ -171,9 +171,9 @@ export default async function ChapterMembersPage({
               <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
                 <Icons.Users className="h-5 w-5 text-muted-foreground" />
               </div>
-              <h2 className="text-lg font-semibold">No members in this view</h2>
+              <h2 className="text-lg font-semibold">No hay miembros en esta vista</h2>
               <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-                Switch status filters to review other chapter membership records.
+                Cambia el filtro de estado para revisar otros registros de membresia.
               </p>
             </CardContent>
           </Card>

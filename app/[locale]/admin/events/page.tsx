@@ -50,9 +50,9 @@ export default async function AdminEventsPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Admin"
-        title="Events"
-        description="Manage chapter-owned and collaborative events with filters, sorting, and quick actions."
+        eyebrow="Administracion"
+        title="Eventos"
+        description="Gestiona eventos propios y colaborativos de capitulos con filtros, ordenamiento y acciones rapidas."
       />
 
       <EventsManagementClient
