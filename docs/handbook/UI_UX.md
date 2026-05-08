@@ -401,9 +401,46 @@ Every major redesign issue must account for the states below.
 - Keep contrast readable.
 - Respect reduced motion where animation is used.
 
+## Visual Design Loop
+
+Meaningful UI work should use Codex Desktop as a visual product builder, not only as a code editor. The loop is:
+
+1. Build the smallest complete version of the changed screen or flow.
+2. Run the app locally or against the QA preview.
+3. Capture desktop and relevant mobile screenshots.
+4. Inspect the rendered UI for hierarchy, spacing, contrast, text fit, responsive behavior, and empty/error states.
+5. Click through the primary user flow.
+6. Revise the implementation.
+7. Recheck the changed screens before calling the work done.
+
+Use this loop for:
+
+- New pages and major page redesigns.
+- Public event discovery, onboarding, registration, QR/check-in, admin, editor, and company workflows.
+- Any change that introduces a new layout pattern, navigation pattern, form, table, or status-heavy screen.
+
+Keep the loop light for:
+
+- Copy-only changes.
+- Backend-only changes.
+- Small component fixes where static validation is enough.
+
+Visual review should judge the actual rendered product, not just the code. Prioritize:
+
+- Clear hierarchy: the next action is obvious.
+- Consistent spacing: sections, controls, and records follow the same rhythm.
+- Readability: labels, values, badges, and actions scan quickly.
+- Responsive fit: mobile widths do not overflow, overlap, or hide required actions.
+- Interaction clarity: hover, focus, disabled, loading, success, and error states feel intentional.
+- Role clarity: student, chapter editor, admin, and company representative surfaces remain coherent without becoming separate visual products.
+
+Use image generation only when a workflow needs source material such as event imagery, branded empty-state art, or a visual concept for a hero/marketing surface. Do not use generated assets to compensate for weak layout, unclear copy, or inconsistent components.
+
+For larger redesigns, compare two or three layout variants when the direction is not obvious. Choose the variant that best supports readability, task completion, and consistency with this handbook.
+
 ## Redesign Issue Checklist
 
-Every #75-#87 redesign issue should answer:
+Every redesign issue should answer:
 
 - Which workflow is being redesigned?
 - Which routes/components are touched?
@@ -415,6 +452,7 @@ Every #75-#87 redesign issue should answer:
 - What loading, empty, error, unauthorized, success, and destructive states exist?
 - Are cards, tables, and lists used according to this handbook?
 - What light visual QA is required?
+- What screenshots or browser checks prove the visual design loop was completed?
 
 ## Validation For This Handbook
 
