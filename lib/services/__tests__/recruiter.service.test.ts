@@ -26,7 +26,9 @@ interface MockBuilder {
 
 interface TableMock {
   select?: ReturnType<typeof vi.fn>
-  _builder?: MockBuilder
+  update?: ReturnType<typeof vi.fn>
+  insert?: ReturnType<typeof vi.fn>
+  _builder: MockBuilder
 }
 
 const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {

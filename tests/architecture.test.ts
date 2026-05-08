@@ -261,12 +261,12 @@ describe('architecture boundaries', () => {
     const migrationFiles = await collectMigrationFiles()
     const definitions = migrationFiles.flatMap(({ relativePath, content }) => {
       const matches = content.matchAll(
-        /CREATE\s+OR\s+REPLACE\s+FUNCTION\s+public\.is_admin\s*\(\)\s+RETURNS\s+boolean[\s\S]*?\$\$(?<body>[\s\S]*?)\$\$/gi
+        /CREATE\s+OR\s+REPLACE\s+FUNCTION\s+public\.is_admin\s*\(\)\s+RETURNS\s+boolean[\s\S]*?\$\$([\s\S]*?)\$\$/gi
       )
 
       return [...matches].map((match) => ({
         relativePath,
-        body: match.groups?.body ?? '',
+        body: match[1] ?? '',
       }))
     })
 
