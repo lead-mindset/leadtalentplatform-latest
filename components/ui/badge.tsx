@@ -5,35 +5,35 @@ import { Slot } from "@radix-ui/react-slot"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "inline-flex w-fit shrink-0 items-center justify-center gap-1.5 overflow-hidden rounded-full px-3 py-1 text-xs font-semibold tracking-wide whitespace-nowrap transition-all duration-300 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3",
+  "inline-flex w-fit shrink-0 items-center justify-center gap-1.5 overflow-hidden rounded-md px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring/40 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground [a&]:hover:bg-primary/90",
+        default: "bg-primary/10 text-primary ring-1 ring-primary/20 [a&]:hover:bg-primary/20",
         secondary:
-          "bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
+          "bg-secondary/10 text-secondary ring-1 ring-secondary/20 [a&]:hover:bg-secondary/20",
         destructive:
-          "bg-destructive/15 text-destructive ring-1 ring-destructive/30 focus-visible:ring-destructive/20 dark:bg-destructive/15 dark:focus-visible:ring-destructive/40 [a&]:hover:bg-destructive/25",
+          "bg-destructive/10 text-destructive ring-1 ring-destructive/30 focus-visible:ring-destructive/20 dark:bg-destructive/10 dark:focus-visible:ring-destructive/40 [a&]:hover:bg-destructive/20",
         success:
-          "bg-success/15 text-success ring-1 ring-success/30 focus-visible:ring-success/20 dark:bg-success/15 dark:focus-visible:ring-success/40 [a&]:hover:bg-success/25",
+          "bg-success/10 text-success ring-1 ring-success/30 focus-visible:ring-success/20 dark:bg-success/10 dark:focus-visible:ring-success/40 [a&]:hover:bg-success/20",
         warning:
-          "bg-warning/15 text-warning ring-1 ring-warning/30 focus-visible:ring-warning/20 dark:bg-warning/15 dark:focus-visible:ring-warning/40 [a&]:hover:bg-warning/25",
+          "bg-warning/10 text-warning ring-1 ring-warning/30 focus-visible:ring-warning/20 dark:bg-warning/10 dark:focus-visible:ring-warning/40 [a&]:hover:bg-warning/20",
         info:
-          "bg-info/15 text-info ring-1 ring-info/30 focus-visible:ring-info/20 dark:bg-info/15 dark:focus-visible:ring-info/40 [a&]:hover:bg-info/25",
+          "bg-info/10 text-info ring-1 ring-info/30 focus-visible:ring-info/20 dark:bg-info/10 dark:focus-visible:ring-info/40 [a&]:hover:bg-info/20",
         outline:
-          "border border-border text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
-        ghost: "[a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
-        neutral: "bg-card text-muted-foreground ring-1 ring-white/10",
-        live: "bg-primary/15 text-primary ring-1 ring-primary/30 animate-pulse",
-        student: "bg-primary/15 text-primary ring-1 ring-primary/30",
-        editor: "bg-accent/15 text-accent ring-1 ring-accent/30",
-        count: "min-w-[20px] h-5 px-1.5 bg-primary text-primary-foreground text-[10px] font-bold",
-        link: "text-primary underline hover:underline underline-offset-4",
+          "border border-border bg-background text-muted-foreground [a&]:hover:bg-muted [a&]:hover:text-foreground",
+        ghost: "text-muted-foreground [a&]:hover:bg-muted [a&]:hover:text-foreground",
+        neutral: "bg-muted text-muted-foreground ring-1 ring-border",
+        live: "bg-primary/10 text-primary ring-1 ring-primary/30 animate-pulse",
+        student: "bg-primary/10 text-primary ring-1 ring-primary/20",
+        editor: "bg-info/10 text-info ring-1 ring-info/20",
+        count: "h-5 min-w-5 rounded-full bg-primary px-1.5 text-[10px] font-semibold text-primary-foreground",
+        link: "rounded-none px-0 text-primary underline underline-offset-4",
       },
       size: {
         default: "",
-        sm: "px-2 py-0.5 text-[10px]",
-        lg: "px-4 py-1.5 text-sm",
+        sm: "px-1.5 py-0.5 text-[10px]",
+        lg: "px-2.5 py-1 text-sm",
       },
       pulse: {
         true: "animate-pulse",

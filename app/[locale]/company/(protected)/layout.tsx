@@ -13,6 +13,8 @@ export default async function CompanyLayout({ children }: CompanyLayoutProps) {
 
   return (
     <SidebarLayout
+      mobileTitle="Company"
+      mobileSubtitle="Talent access"
       sidebar={
         <BaseSidebar
           userName={user.name ?? 'Company representative'}

@@ -15,6 +15,8 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
   
   return (
     <SidebarLayout
+      mobileTitle="Admin"
+      mobileSubtitle="Platform management"
       headerRight={<Badge variant="outline">Admin</Badge>}
       sidebar={
         <BaseSidebar

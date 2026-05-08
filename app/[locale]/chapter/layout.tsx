@@ -26,6 +26,8 @@ export default async function ChapterLayout({ children }: ChapterLayoutProps) {
 
   return (
     <SidebarLayout
+      mobileTitle="Chapter"
+      mobileSubtitle="Member and event tools"
       sidebar={
         <BaseSidebar
           userName={user.name ?? ''}

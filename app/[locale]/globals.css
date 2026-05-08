@@ -171,7 +171,15 @@ p { font-size: var(--fluid-body); line-height: 1.7; font-family: var(--font-mont
   --border: #2A2F5B; /* Much subtler border color */
   --input: #1A1F4B; /* Surface variant */
   --ring: #7A57D1; /* Your accent color */
-  --radius: 1.5rem; /* MD3 large corner radius */
+  --radius: 0.625rem; /* LEAD app default radius */
+  --sidebar: #060A2E;
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: #7A57D1;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #1A1F4B;
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: #2A2F5B;
+  --sidebar-ring: #7A57D1;
   
   /* Elevation Scale (Mapped to Tailwind shadows with MD3 tinting) */
   --md-sys-elevation-0: none;
@@ -184,10 +192,10 @@ p { font-size: var(--fluid-body); line-height: 1.7; font-family: var(--font-mont
   /* Shape Scale */
   --md-sys-shape-corner-none: 0px;
   --md-sys-shape-corner-extra-small: 4px;
-  --md-sys-shape-corner-small: 8px;
-  --md-sys-shape-corner-medium: 12px;
-  --md-sys-shape-corner-large: 16px;
-  --md-sys-shape-corner-extra-large: 28px; /* MD3 extra large */
+  --md-sys-shape-corner-small: 6px;
+  --md-sys-shape-corner-medium: 8px;
+  --md-sys-shape-corner-large: 12px;
+  --md-sys-shape-corner-extra-large: 16px;
   --md-sys-shape-corner-full: 9999px;
   
   /* Typography Scale - Display (Raleway) */
@@ -318,6 +326,14 @@ p { font-size: var(--fluid-body); line-height: 1.7; font-family: var(--font-mont
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-sidebar: #060A2E;
+  --color-sidebar-foreground: #FFFFFF;
+  --color-sidebar-primary: #7A57D1;
+  --color-sidebar-primary-foreground: #FFFFFF;
+  --color-sidebar-accent: #1A1F4B;
+  --color-sidebar-accent-foreground: #FFFFFF;
+  --color-sidebar-border: #2A2F5B;
+  --color-sidebar-ring: #7A57D1;
   --radius: var(--radius);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -444,7 +460,15 @@ p { font-size: var(--fluid-body); line-height: 1.7; font-family: var(--font-mont
   --border: #2A2F5B; /* Much subtler border color */
   --input: #1A1F4B; /* Surface variant */
   --ring: #7A57D1; /* Your accent color */
-  --radius: 1.5rem; /* MD3 large corner radius */
+  --radius: 0.625rem; /* LEAD app default radius */
+  --sidebar: #060A2E;
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: #7A57D1;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #1A1F4B;
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: #2A2F5B;
+  --sidebar-ring: #7A57D1;
 }
 
 @layer base {
@@ -726,10 +750,7 @@ p { font-size: var(--fluid-body); line-height: 1.7; font-family: var(--font-mont
 
   button {
     cursor: pointer;
-    border-radius: var(--md-sys-shape-corner-full);
-    transition: all 0.2s ease;
-    font-family: var(--font-montserrat), sans-serif;
-    font-weight: 700;
+    transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
   }
 
   /* Custom gradient button using CSS variables */
@@ -742,6 +763,42 @@ p { font-size: var(--fluid-body); line-height: 1.7; font-family: var(--font-mont
   button.button-gradient-primary:hover,
   .button-gradient-primary:hover {
     box-shadow: 0 0 40px rgba(186, 78, 94, 0.3) !important;
+  }
+
+  /* Compatibility aliases for older Material-style variants. New code should use Button variants. */
+  .md-button-filled,
+  .md-button-tonal,
+  .md-button-outlined,
+  .md-button-text {
+    border-radius: var(--radius-md);
+    box-shadow: none;
+    font-weight: 500;
+    transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .md-button-filled {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+  }
+
+  .md-button-tonal {
+    background-color: var(--secondary);
+    color: var(--secondary-foreground);
+  }
+
+  .md-button-outlined {
+    border-color: var(--border);
+    color: var(--foreground);
+  }
+
+  .md-button-text {
+    color: var(--primary);
+  }
+
+  .md-input,
+  .md-input-filled {
+    border-radius: var(--radius-md);
+    box-shadow: none;
   }
 
   /* Material Design 3 Button Variants */
@@ -1247,3 +1304,46 @@ p { font-size: var(--fluid-body); line-height: 1.7; font-family: var(--font-mont
 .md-bg-surface-container { background-color: var(--md-sys-color-surface-container); }
 .md-bg-surface-container-high { background-color: var(--md-sys-color-surface-container-high); }
 .md-bg-surface-container-highest { background-color: var(--md-sys-color-surface-container-highest); }
+
+/* LEAD #96 compatibility overrides: keep legacy Material classes usable while
+   shared primitives move to the calmer Shadcn-style system. */
+@layer components {
+  .md-button-filled,
+  .md-button-tonal,
+  .md-button-outlined,
+  .md-button-text {
+    border-radius: var(--radius-md);
+    box-shadow: none;
+    font-family: inherit;
+    font-weight: 500;
+    letter-spacing: 0;
+    min-height: 2.5rem;
+    transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .md-button-filled {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+  }
+
+  .md-button-tonal {
+    background-color: var(--secondary);
+    color: var(--secondary-foreground);
+  }
+
+  .md-button-outlined {
+    border-color: var(--border);
+    color: var(--foreground);
+  }
+
+  .md-button-text {
+    color: var(--primary);
+  }
+
+  .md-input,
+  .md-input-filled {
+    border-radius: var(--radius-md);
+    box-shadow: none;
+    font-family: inherit;
+  }
+}
