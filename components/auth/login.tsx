@@ -13,12 +13,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Eye, EyeOff } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, Info } from "lucide-react";
 import { Link, useRouter } from '@/i18n/routing';
 import { useState } from "react";
 import { GoogleButton } from "./google-button";
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { getAuthErrorKey } from '@/lib/auth-errors'
+import { getPostAuthRedirectPath } from '@/lib/auth-redirects'
 export function LoginForm({
   className,
   ...props
@@ -30,6 +31,8 @@ export function LoginForm({
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const t = useTranslations('auth');
+  const locale = useLocale();
+  const isEnglish = locale === 'en';
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,12 +40,27 @@ export function LoginForm({
     setError(null);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       if (error) throw error;
-      router.push("/");
+
+      const userId = data.user?.id
+      if (!userId) {
+        router.push("/onboarding");
+        return;
+      }
+
+      const [{ data: userData }, { data: profile }] = await Promise.all([
+        supabase.from('user').select('role').eq('id', userId).maybeSingle(),
+        supabase.from('person_profile').select('user_id').eq('user_id', userId).maybeSingle(),
+      ])
+
+      router.push(getPostAuthRedirectPath({
+        hasProfile: Boolean(profile),
+        role: userData?.role,
+      }));
     } catch (error: unknown) {
       setError(t(getAuthErrorKey(error)));
     } finally {
@@ -67,6 +85,15 @@ export function LoginForm({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            {isEnglish ? (
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  Public LEAD pages are available in English. The MVP workspace after sign-in is Spanish-first for students, chapters, admins, and company representatives.
+                </AlertDescription>
+              </Alert>
+            ) : null}
+
             <GoogleButton />
 
             <div className="relative">
