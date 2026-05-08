@@ -19,6 +19,7 @@ import { Link, useRouter } from '@/i18n/routing';
 import { useState } from "react";
 import { GoogleButton } from "./google-button";
 import { useTranslations } from 'next-intl';
+import { getAuthErrorKey } from '@/lib/auth-errors'
 
 export function SignUpForm({
   className,
@@ -66,7 +67,7 @@ export function SignUpForm({
       if (error) throw error;
       router.push(data.session ? "/onboarding" : "/auth/sign-up-success");
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : t('anErrorOccurred'));
+      setError(t(getAuthErrorKey(error)));
     } finally {
       setIsLoading(false);
     }
@@ -135,7 +136,7 @@ export function SignUpForm({
                     className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowPassword(!showPassword)}
                     disabled={isLoading}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-label={showPassword ? t('hidePassword') : t('showPassword')}
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4 text-muted-foreground" />
@@ -170,7 +171,7 @@ export function SignUpForm({
                     className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowRepeatPassword(!showRepeatPassword)}
                     disabled={isLoading}
-                    aria-label={showRepeatPassword ? "Hide password" : "Show password"}
+                    aria-label={showRepeatPassword ? t('hidePassword') : t('showPassword')}
                   >
                     {showRepeatPassword ? (
                       <EyeOff className="h-4 w-4 text-muted-foreground" />

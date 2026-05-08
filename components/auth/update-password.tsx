@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { useRouter } from '@/i18n/routing';
 import { useState } from "react";
 import { useTranslations } from 'next-intl';
+import { getAuthErrorKey } from '@/lib/auth-errors'
 
 export function UpdatePasswordForm({
   className,
@@ -36,7 +37,7 @@ export function UpdatePasswordForm({
       if (error) throw error;
       router.push("/");
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : t('anErrorOccurred'));
+      setError(t(getAuthErrorKey(error)));
     } finally {
       setIsLoading(false);
     }

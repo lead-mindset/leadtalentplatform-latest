@@ -23,17 +23,17 @@ export default function StudentError({
           <Icons.AlertCircle className="h-8 w-8 text-destructive" />
         </div>
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Something went wrong</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Algo salio mal</h1>
           <p className="text-muted-foreground text-lg max-w-md">
-            We encountered an error while loading this page. Please try again.
+            Ocurrio un error al cargar esta pagina. Intenta nuevamente.
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
           <Button onClick={() => reset()} size="lg">
-            Try again
+            Intentar de nuevo
           </Button>
           <Button variant="outline" size="lg" asChild>
-            <Link href="/student/profile">Go to Profile</Link>
+            <Link href="/student/profile">Ir a mi perfil</Link>
           </Button>
         </div>
       </div>

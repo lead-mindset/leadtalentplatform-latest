@@ -45,9 +45,9 @@ export default function ProfilePage() {
   return (
     <div className="container max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-8">
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">My Profile</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Mi perfil</h1>
         <p className="text-muted-foreground text-lg">
-          Manage your reusable profile details. Chapter membership and member status are separate.
+          Gestiona los datos reutilizables de tu perfil. La membresia de capitulo y el estado de miembro se manejan por separado.
         </p>
       </div>
       <Suspense fallback={<Loading />}>

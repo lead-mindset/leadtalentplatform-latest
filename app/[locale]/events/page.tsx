@@ -17,16 +17,16 @@ import { cn } from '@/lib/utils'
 import type { EventWithDetails } from '@/lib/types'
 
 const EVENT_TIME_ZONE = 'America/Lima'
-const EVENT_LOCALE = 'en-US'
+const EVENT_LOCALE = 'es-PE'
 
 export const metadata = {
-  title: 'Events',
-  description: 'Browse upcoming LEAD events and register online.',
+  title: 'Eventos',
+  description: 'Explora proximos eventos de LEAD y registrate en linea.',
 }
 
 function formatDate(value: string) {
   const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'Date pending'
+  if (Number.isNaN(date.getTime())) return 'Fecha pendiente'
 
   return date.toLocaleDateString(EVENT_LOCALE, {
     weekday: 'short',
@@ -38,7 +38,7 @@ function formatDate(value: string) {
 
 function formatTime(value: string) {
   const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'Time pending'
+  if (Number.isNaN(date.getTime())) return 'Hora pendiente'
 
   return date.toLocaleTimeString(EVENT_LOCALE, {
     hour: 'numeric',
@@ -48,18 +48,18 @@ function formatTime(value: string) {
 }
 
 function getEventTypeLabel(eventType: EventWithDetails['event_type']) {
-  if (eventType === 'online') return 'Online'
-  if (eventType === 'hybrid') return 'Hybrid'
-  return 'In person'
+  if (eventType === 'online') return 'En linea'
+  if (eventType === 'hybrid') return 'Hibrido'
+  return 'Presencial'
 }
 
 function getLocationLabel(event: EventWithDetails) {
-  if (event.event_type === 'online') return 'Online'
+  if (event.event_type === 'online') return 'En linea'
   if (event.event_type === 'hybrid') {
-    return event.location_name || event.location_city || event.location || 'Hybrid'
+    return event.location_name || event.location_city || event.location || 'Hibrido'
   }
 
-  return event.location_name || event.location_city || event.location || 'Location pending'
+  return event.location_name || event.location_city || event.location || 'Ubicacion pendiente'
 }
 
 function getEventTiming(event: EventWithDetails) {
@@ -68,29 +68,29 @@ function getEventTiming(event: EventWithDetails) {
   const end = new Date(event.end_at).getTime()
 
   if (!Number.isFinite(start) || !Number.isFinite(end)) {
-    return { label: 'Date pending', variant: 'outline' as const }
+    return { label: 'Fecha pendiente', variant: 'outline' as const }
   }
 
   if (now >= start && now <= end) {
-    return { label: 'Live now', variant: 'live' as const }
+    return { label: 'En vivo', variant: 'live' as const }
   }
 
   if (now > end) {
-    return { label: 'Past event', variant: 'outline' as const }
+    return { label: 'Evento pasado', variant: 'outline' as const }
   }
 
   return event.access_model === 'application'
-    ? { label: 'Application required', variant: 'info' as const }
-    : { label: 'Open registration', variant: 'success' as const }
+    ? { label: 'Requiere postulacion', variant: 'info' as const }
+    : { label: 'Registro abierto', variant: 'success' as const }
 }
 
 function getAvailabilityLabel(event: EventWithDetails) {
-  if (event.capacity === null) return 'Open spots'
+  if (event.capacity === null) return 'Cupos abiertos'
 
   const remaining = Math.max(0, event.capacity - event._count.registrations)
-  if (remaining === 0) return 'Full'
-  if (remaining === 1) return '1 spot left'
-  return `${remaining} spots left`
+  if (remaining === 0) return 'Lleno'
+  if (remaining === 1) return 'Queda 1 cupo'
+  return `Quedan ${remaining} cupos`
 }
 
 function getAvailabilityVariant(event: EventWithDetails) {
@@ -109,7 +109,7 @@ function EventCard({ event }: { event: EventWithDetails }) {
   const availabilityVariant = getAvailabilityVariant(event)
 
   return (
-    <Card className={cn('overflow-hidden transition-colors hover:border-primary/40', timing.label === 'Past event' && 'opacity-80')}>
+    <Card className={cn('overflow-hidden transition-colors hover:border-primary/40', timing.label === 'Evento pasado' && 'opacity-80')}>
       <CardContent className="p-0">
         <Link href={`/events/${event.id}`} className="block">
           <div className="grid gap-0 md:grid-cols-[11rem_1fr]">
@@ -131,7 +131,7 @@ function EventCard({ event }: { event: EventWithDetails }) {
                     <Badge variant={availabilityVariant}>{availability}</Badge>
                   </div>
                   <h2 className="line-clamp-2 text-xl font-semibold tracking-tight text-foreground md:text-2xl">
-                    {event.title || 'Untitled event'}
+                    {event.title || 'Evento sin titulo'}
                   </h2>
                 </div>
 
@@ -142,7 +142,7 @@ function EventCard({ event }: { event: EventWithDetails }) {
                   )}
                   aria-hidden="true"
                 >
-                  View details
+                  Ver detalle
                   <ArrowRight className="h-4 w-4" />
                 </span>
               </div>
@@ -163,7 +163,7 @@ function EventCard({ event }: { event: EventWithDetails }) {
                 <div className="flex min-w-0 items-center gap-2">
                   <CalendarDays className="h-4 w-4 shrink-0" />
                   <span className="truncate">
-                    {event._count.registrations} registered
+                    {event._count.registrations} registrados
                     {event.capacity !== null ? ` / ${event.capacity}` : ''}
                   </span>
                 </div>
@@ -194,14 +194,14 @@ async function EventsContent() {
           <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div className="max-w-3xl space-y-3">
               <Badge variant="outline" className="w-fit">
-                LEAD events
+                Eventos LEAD
               </Badge>
               <div className="space-y-2">
                 <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-5xl">
-                  Find your next LEAD event
+                  Encuentra tu proximo evento LEAD
                 </h1>
                 <p className="text-base text-muted-foreground md:text-lg">
-                  Browse public events, chapter programs, and application-based opportunities from the LEAD community.
+                  Explora eventos publicos, programas de capitulos y oportunidades con postulacion de la comunidad LEAD.
                 </p>
               </div>
             </div>
@@ -209,26 +209,26 @@ async function EventsContent() {
             <div className="grid grid-cols-2 gap-3 sm:flex">
               <div className="rounded-lg border bg-card px-4 py-3">
                 <p className="text-2xl font-semibold">{events.length}</p>
-                <p className="text-xs text-muted-foreground">Published</p>
+                <p className="text-xs text-muted-foreground">Publicados</p>
               </div>
               <div className="rounded-lg border bg-card px-4 py-3">
                 <p className="text-2xl font-semibold">{openEvents}</p>
-                <p className="text-xs text-muted-foreground">Upcoming/live</p>
+                <p className="text-xs text-muted-foreground">Proximos/en vivo</p>
               </div>
             </div>
           </div>
 
           <div className="flex items-start gap-3 rounded-lg border bg-card px-4 py-3 text-sm text-muted-foreground">
             <CalendarDays className="mt-0.5 h-4 w-4 shrink-0" />
-            <span>Upcoming and live events appear first. Past events remain below as a reference for the LEAD community.</span>
+            <span>Los eventos proximos y en vivo aparecen primero. Los eventos pasados quedan abajo como referencia para la comunidad LEAD.</span>
           </div>
         </section>
 
         <section className="space-y-4">
           <div className="flex items-center justify-between gap-4 border-b pb-3">
             <div>
-              <h2 className="text-xl font-semibold tracking-tight">Upcoming and live events</h2>
-              <p className="text-sm text-muted-foreground">Select an event to view details and register or apply.</p>
+              <h2 className="text-xl font-semibold tracking-tight">Eventos proximos y en vivo</h2>
+              <p className="text-sm text-muted-foreground">Selecciona un evento para ver detalles, registrarte o postular.</p>
             </div>
           </div>
 
@@ -237,9 +237,9 @@ async function EventsContent() {
               <CardContent className="flex flex-col items-center gap-3 px-6 py-12 text-center">
                 <CalendarDays className="h-10 w-10 text-muted-foreground" />
                 <div>
-                  <h3 className="font-semibold">No upcoming events are published yet</h3>
+                  <h3 className="font-semibold">Aun no hay eventos proximos publicados</h3>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Check back soon for upcoming LEAD opportunities.
+                    Vuelve pronto para ver nuevas oportunidades de LEAD.
                   </p>
                 </div>
               </CardContent>
@@ -257,8 +257,8 @@ async function EventsContent() {
           <section className="space-y-4">
             <div className="flex items-center justify-between gap-4 border-b pb-3">
               <div>
-                <h2 className="text-xl font-semibold tracking-tight">Past events</h2>
-                <p className="text-sm text-muted-foreground">Browse previous LEAD programs and community activity.</p>
+                <h2 className="text-xl font-semibold tracking-tight">Eventos pasados</h2>
+                <p className="text-sm text-muted-foreground">Explora programas anteriores y actividad de la comunidad LEAD.</p>
               </div>
             </div>
 
@@ -281,7 +281,7 @@ export default function EventsPage() {
       <Suspense
         fallback={
           <div className="p-8 text-center text-sm text-muted-foreground">
-            Loading events...
+            Cargando eventos...
           </div>
         }
       >

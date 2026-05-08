@@ -38,6 +38,7 @@ type OnboardingProps = {
 
 export default function Onboarding({ initialValues }: OnboardingProps) {
   const t = useTranslations('onboarding')
+  const tCommon = useTranslations('common')
   const tValidation = useTranslations()
 
   const translatedSkills = useTranslatedSkills()
@@ -264,6 +265,8 @@ export default function Onboarding({ initialValues }: OnboardingProps) {
                 contentClassName="px-4 sm:px-6"
                 footerClassName="px-4 sm:px-6"
                 completeButtonText={t('saveProfile')}
+                backButtonText={tCommon('back')}
+                nextButtonText={tCommon('next')}
                 nextButtonProps={{ disabled: isSubmitting }}
               >
                 <div className="space-y-6">
@@ -561,7 +564,7 @@ export default function Onboarding({ initialValues }: OnboardingProps) {
                               >
                                 {t('termsLink')}
                               </Link>
-                              {' '}and{' '}
+                              {' '}{t('and')}{' '}
                               <Link
                                 href="/privacy"
                                 target="_blank"

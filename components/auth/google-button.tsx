@@ -2,10 +2,11 @@
 
 import { Button } from "@/components/ui/button"
 import { supabase } from "@/lib/supabase/client"
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 
 export function GoogleButton() {
   const locale = useLocale();
+  const t = useTranslations('auth');
 
   const signInWithGoogle = async () => {
     await supabase.auth.signInWithOAuth({
@@ -22,7 +23,7 @@ export function GoogleButton() {
       variant="outline"
       className="w-full"
     >
-      Continue with Google
+      {t('continueWithGoogle')}
     </Button>
   )
 }

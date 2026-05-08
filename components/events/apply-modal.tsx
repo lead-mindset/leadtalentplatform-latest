@@ -77,7 +77,7 @@ export function ApplyModal({
       const value = answers[question.id]
 
       if (question.is_required && !isAnswerPresent(value)) {
-        nextErrors[question.id] = 'This question is required.'
+        nextErrors[question.id] = 'Esta pregunta es obligatoria.'
         continue
       }
 
@@ -87,7 +87,7 @@ export function ApplyModal({
         value.trim() &&
         !isValidUrl(value.trim())
       ) {
-        nextErrors[question.id] = 'Enter a valid http or https URL.'
+        nextErrors[question.id] = 'Ingresa una URL valida con http o https.'
       }
     }
 
@@ -154,9 +154,9 @@ export function ApplyModal({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader className="pb-4">
-            <DialogTitle className="text-xl font-semibold">Apply to {eventTitle}</DialogTitle>
+            <DialogTitle className="text-xl font-semibold">Postular a {eventTitle}</DialogTitle>
             <DialogDescription>
-              Submit your application for editor review.
+              Envia tu postulacion para revision.
             </DialogDescription>
           </DialogHeader>
 
@@ -186,7 +186,7 @@ export function ApplyModal({
                       fieldErrors[question.id] ? 'border-destructive' : 'border-input'
                     }`}
                   >
-                    <option value="">Select an option</option>
+                    <option value="">Selecciona una opcion</option>
                     {(question.options ?? []).map((option) => (
                       <option key={option} value={option}>{option}</option>
                     ))}
@@ -238,23 +238,23 @@ export function ApplyModal({
                 className="mt-0.5"
               />
               <span className="text-sm text-muted-foreground">
-                Send me updates from the host and collaborator chapters for this event.
+                Enviarme novedades del capitulo anfitrion y capitulos colaboradores de este evento.
               </span>
             </label>
           </div>
 
           <DialogFooter className="gap-3 sm:gap-0 pt-4">
             <Button variant="outline" onClick={handleCancel} disabled={isSubmitting}>
-              Cancel
+              Cancelar
             </Button>
             <Button onClick={handleConfirm} disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
                   <Icons.Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Submitting
+                  Enviando
                 </>
               ) : (
-                'Submit Application'
+                'Enviar postulacion'
               )}
             </Button>
           </DialogFooter>
@@ -272,9 +272,9 @@ export function ApplyModal({
               <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                 <Icons.FileText className="h-4 w-4 text-primary" />
               </div>
-              <DialogTitle className="text-xl font-semibold">Application Required</DialogTitle>
+              <DialogTitle className="text-xl font-semibold">Este evento requiere postulacion</DialogTitle>
               <DialogDescription className="text-base mt-2">
-                This event requires you to complete an application form before registering.
+                Completa el formulario de postulacion antes de registrarte.
               </DialogDescription>
             </DialogHeader>
 
@@ -282,7 +282,7 @@ export function ApplyModal({
               <div className="rounded-lg border bg-card p-4 space-y-3">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-primary"></div>
-                  <p className="text-sm font-semibold">Event Details</p>
+                  <p className="text-sm font-semibold">Detalles del evento</p>
                 </div>
                 <p className="text-sm font-medium">{eventTitle}</p>
               </div>
@@ -293,9 +293,9 @@ export function ApplyModal({
                     <span className="text-primary font-semibold text-sm">1</span>
                   </div>
                   <div>
-                    <p className="text-sm font-medium">Open Application Form</p>
+                    <p className="text-sm font-medium">Abre el formulario</p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Click the button below to open the external application form in a new tab
+                      Usa el boton de abajo para abrir el formulario externo en una nueva pestana.
                     </p>
                   </div>
                 </div>
@@ -305,9 +305,9 @@ export function ApplyModal({
                     <span className="text-primary font-semibold text-sm">2</span>
                   </div>
                   <div>
-                    <p className="text-sm font-medium">Complete & Submit</p>
+                    <p className="text-sm font-medium">Completa y envia</p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Fill out all required fields and submit the application
+                      Llena los campos requeridos y envia la postulacion.
                     </p>
                   </div>
                 </div>
@@ -317,9 +317,9 @@ export function ApplyModal({
                     <span className="text-primary font-semibold text-sm">3</span>
                   </div>
                   <div>
-                    <p className="text-sm font-medium">Return & Confirm</p>
+                    <p className="text-sm font-medium">Regresa y confirma</p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Come back to this page and confirm you've submitted the form
+                      Vuelve a esta pagina y confirma que enviaste el formulario.
                     </p>
                   </div>
                 </div>
@@ -329,9 +329,9 @@ export function ApplyModal({
                 <div className="flex items-start gap-2">
                   <Icons.Clock className="h-4 w-4 text-warning mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-medium">Keep this tab open</p>
+                    <p className="text-sm font-medium">Mantén esta pestana abierta</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      You'll need to return here to confirm your submission
+                      Necesitaras volver aqui para confirmar el envio.
                     </p>
                   </div>
                 </div>
@@ -344,14 +344,14 @@ export function ApplyModal({
                 onClick={handleCancel}
                 className="flex-1 sm:flex-none"
               >
-                Cancel
+                Cancelar
               </Button>
               <Button 
                 onClick={handleOpenForm}
                 className="flex-1 sm:flex-none h-12"
               >
                 <Icons.ExternalLink className="mr-2 w-4 h-4" />
-                Open Application Form
+                Abrir formulario
               </Button>
             </DialogFooter>
           </>
@@ -361,9 +361,9 @@ export function ApplyModal({
               <div className="mx-auto w-12 h-12 rounded-full bg-success/10 flex items-center justify-center mb-4">
                 <Icons.CheckCircle2 className="h-4 w-4 text-success" />
               </div>
-              <DialogTitle className="text-xl font-semibold">Confirm Your Application</DialogTitle>
+              <DialogTitle className="text-xl font-semibold">Confirma tu postulacion</DialogTitle>
               <DialogDescription className="text-base mt-2">
-                Did you complete and submit the application form?
+                ¿Completaste y enviaste el formulario?
               </DialogDescription>
             </DialogHeader>
 
@@ -372,9 +372,9 @@ export function ApplyModal({
                 <div className="flex items-start gap-3">
                   <Icons.CheckCircle2 className="w-5 h-5 text-success mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-medium">Ready to confirm?</p>
+                    <p className="text-sm font-medium">¿Listo para confirmar?</p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      If you've successfully submitted the application form, click confirm below to complete your registration request.
+                      Si ya enviaste el formulario, confirma abajo para completar tu solicitud de registro.
                     </p>
                   </div>
                 </div>
@@ -384,11 +384,11 @@ export function ApplyModal({
                 <div className="flex items-start gap-3">
                   <Icons.Mail className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-medium">What happens next?</p>
+                    <p className="text-sm font-medium">¿Que pasa despues?</p>
                     <ul className="text-sm text-muted-foreground mt-2 space-y-1">
-                      <li>· You'll receive an email confirmation</li>
-                      <li>· We'll review your application</li>
-                      <li>· You'll be notified of the decision</li>
+                      <li>- Recibiras una confirmacion por correo</li>
+                      <li>- Revisaremos tu postulacion</li>
+                      <li>- Te avisaremos la decision</li>
                     </ul>
                   </div>
                 </div>
@@ -401,20 +401,20 @@ export function ApplyModal({
                   className="mt-0.5"
                 />
                 <span className="text-sm text-muted-foreground">
-                  Send me updates from the host and collaborator chapters for this event.
+                  Enviarme novedades del capitulo anfitrion y capitulos colaboradores de este evento.
                 </span>
               </label>
 
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">
-                  Haven't submitted yet?
+                  ¿Aun no lo enviaste?
                 </p>
                 <Button 
                   variant="link" 
                   onClick={() => setStep('form')}
                   className="h-auto p-0 text-sm"
                 >
-                  Go back to application form
+                  Volver al formulario
                 </Button>
               </div>
             </div>
@@ -426,7 +426,7 @@ export function ApplyModal({
                 disabled={isSubmitting}
                 className="flex-1 sm:flex-none"
               >
-                Cancel
+                Cancelar
               </Button>
               <Button 
                 onClick={handleConfirm} 
@@ -436,12 +436,12 @@ export function ApplyModal({
                 {isSubmitting ? (
                   <>
                     <div className="w-4 h-4 border-2 border-border border-t-transparent rounded-full animate-spin mr-2" />
-                    Submitting...
+                    Enviando...
                   </>
                 ) : (
                   <>
                     <Icons.CheckCircle2 className="mr-2 w-4 h-4" />
-                    Yes, I submitted it
+                    Si, ya lo envie
                   </>
                 )}
               </Button>
