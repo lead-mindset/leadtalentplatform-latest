@@ -106,6 +106,7 @@ export function CompaniesManagementClient({
         </CardHeader>
         <CardContent className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <Input
+            aria-label="Search companies by name"
             defaultValue={search}
             placeholder="Search company name"
             onChange={(event) => updateParam('search', event.target.value)}
@@ -136,7 +137,10 @@ export function CompaniesManagementClient({
                       {key === 'created_by_name' ? (
                         label
                       ) : (
-                        <button className="rounded-sm hover:underline" onClick={() => toggleSort(key)}>
+                        <button
+                          className="min-h-6 rounded-sm px-1 py-1 hover:underline"
+                          onClick={() => toggleSort(key)}
+                        >
                           {label}{sortBy === key ? ` ${sortOrder === 'asc' ? 'up' : 'down'}` : ''}
                         </button>
                       )}

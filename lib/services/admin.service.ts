@@ -97,28 +97,6 @@ type AdminProfileSummaryRow = Pick<
 
 
 
-type ActivityApprovalRow = {
-  user_id: string
-  updated_at: string
-  student: { name: string | null; email: string } | { name: string | null; email: string }[] | null
-  chapter: { name: string } | { name: string }[] | null
-  approved_by: { name: string | null; email: string } | { name: string | null; email: string }[] | null
-}
-
-type ActivityInviteRow = {
-  id: string
-  granted_at: string
-  accepted_at: string | null
-  revoked_at: string | null
-  recruiter_email: string
-  company: { name: string } | { name: string }[] | null
-  granted_by: { name: string | null; email: string } | { name: string | null; email: string }[] | null
-  accepted_by: { name: string | null; email: string } | { name: string | null; email: string }[] | null
-  revoked_by: { name: string | null; email: string } | { name: string | null; email: string }[] | null
-}
-
-
-
 type RecentApprovalRaw = {
   user_id: string
   updated_at: string
@@ -138,9 +116,90 @@ type ChapterWithCount = ChapterRow & {
   _count: { users: number }
 }
 
+type UserSummary = Pick<UserRow, 'id' | 'name' | 'email' | 'role'>
+type UserContactSummary = Pick<UserRow, 'id' | 'name' | 'email'>
+type CompanyNameSummary = Pick<CompanyRow, 'id' | 'name'>
+type ChapterNameSummary = Pick<ChapterRow, 'id' | 'name'>
+
+function uniqueStrings(values: Array<string | null | undefined>): string[] {
+  return [...new Set(values.filter((value): value is string => Boolean(value)))]
+}
+
+async function fetchUserSummaryMap(
+  supabase: SupabaseClient<Database>,
+  userIds: Array<string | null | undefined>
+): Promise<Map<string, UserSummary>> {
+  const ids = uniqueStrings(userIds)
+  if (ids.length === 0) return new Map()
+
+  const { data, error } = await supabase.from('user').select('id, name, email, role').in('id', ids)
+  if (error || !data) {
+    logger.error({ context: 'admin/fetchUserSummaryMap', error }, 'Failed to fetch users')
+    return new Map()
+  }
+
+  return new Map((data as UserSummary[]).map((user) => [user.id, user]))
+}
+
+async function fetchUserContactMap(
+  supabase: SupabaseClient<Database>,
+  userIds: Array<string | null | undefined>
+): Promise<Map<string, UserContactSummary>> {
+  const ids = uniqueStrings(userIds)
+  if (ids.length === 0) return new Map()
+
+  const { data, error } = await supabase.from('user').select('id, name, email').in('id', ids)
+  if (error || !data) {
+    logger.error({ context: 'admin/fetchUserContactMap', error }, 'Failed to fetch users')
+    return new Map()
+  }
+
+  return new Map((data as UserContactSummary[]).map((user) => [user.id, user]))
+}
+
+async function fetchCompanyNameMap(
+  supabase: SupabaseClient<Database>,
+  companyIds: Array<string | null | undefined>
+): Promise<Map<string, CompanyNameSummary>> {
+  const ids = uniqueStrings(companyIds)
+  if (ids.length === 0) return new Map()
+
+  const { data, error } = await supabase.from('company').select('id, name').in('id', ids)
+  if (error || !data) {
+    logger.error({ context: 'admin/fetchCompanyNameMap', error }, 'Failed to fetch companies')
+    return new Map()
+  }
+
+  return new Map((data as CompanyNameSummary[]).map((company) => [company.id, company]))
+}
+
+async function fetchChapterNameMap(
+  supabase: SupabaseClient<Database>,
+  chapterIds: Array<string | null | undefined>
+): Promise<Map<string, ChapterNameSummary>> {
+  const ids = uniqueStrings(chapterIds)
+  if (ids.length === 0) return new Map()
+
+  const { data, error } = await supabase.from('chapter').select('id, name').in('id', ids)
+  if (error || !data) {
+    logger.error({ context: 'admin/fetchChapterNameMap', error }, 'Failed to fetch chapters')
+    return new Map()
+  }
+
+  return new Map((data as ChapterNameSummary[]).map((chapter) => [chapter.id, chapter]))
+}
+
 // ───────────────────────────────────────────────────────────────
 // Internal types (users.ts)
 // ───────────────────────────────────────────────────────────────
+
+function toNamedContact(user: UserContactSummary | undefined): { name: string; email: string } | null {
+  if (!user) return null
+  return {
+    name: user.name ?? user.email,
+    email: user.email,
+  }
+}
 
 type AdminUsersProfileRow = {
   user_id: string
@@ -949,39 +1008,58 @@ export const AdminService = {
   async getRecentActivity(supabase: SupabaseClient<Database>) {
     const { data: recentApprovals } = await supabase
       .from('chapter_membership')
-      .select(`
-      user_id,
-      updated_at,
-      user:user!inner (
-        name,
-        email
-      ),
-      approved_by:user!chapter_membership_approved_by_id_fkey (
-        name
-      )
-    `)
+      .select('user_id, updated_at, approved_by_id')
       .not('approved_by_id', 'is', null)
       .order('updated_at', { ascending: false })
       .limit(5)
 
     const { data: recentInvites } = await supabase
       .from('recruiter_access')
-      .select(`
-      id,
-      accepted_at,
-      recruiter_email,
-      Company (name),
-      accepted_by:user!recruiter_access_accepted_by_user_id_fkey (
-        name
-      )
-    `)
+      .select('id, accepted_at, recruiter_email, company_id, accepted_by_user_id')
       .not('accepted_at', 'is', null)
       .order('accepted_at', { ascending: false })
       .limit(5)
 
+    type RecentApprovalSource = Pick<ChapterMembershipRow, 'user_id' | 'updated_at' | 'approved_by_id'>
+    type RecentInviteSource = Pick<
+      RecruiterAccessRow,
+      'id' | 'accepted_at' | 'recruiter_email' | 'company_id' | 'accepted_by_user_id'
+    >
+    const approvalRows = (recentApprovals ?? []) as RecentApprovalSource[]
+    const inviteRows = (recentInvites ?? []) as RecentInviteSource[]
+    const [approvalUserMap, approvalApproverMap, inviteCompanyMap, inviteAcceptedByMap] = await Promise.all([
+      fetchUserContactMap(
+        supabase,
+        approvalRows.map((approval) => approval.user_id)
+      ),
+      fetchUserContactMap(
+        supabase,
+        approvalRows.map((approval) => approval.approved_by_id)
+      ),
+      fetchCompanyNameMap(
+        supabase,
+        inviteRows.map((invite) => invite.company_id)
+      ),
+      fetchUserContactMap(
+        supabase,
+        inviteRows.map((invite) => invite.accepted_by_user_id)
+      ),
+    ])
+
     return {
-      recentApprovals: (recentApprovals ?? []) as unknown as RecentApprovalRaw[],
-      recentInvites: (recentInvites ?? []) as unknown as RecentInviteRaw[],
+      recentApprovals: approvalRows.map((approval) => ({
+        user_id: approval.user_id,
+        updated_at: approval.updated_at,
+        user: approvalUserMap.get(approval.user_id) ?? null,
+        approved_by: approvalApproverMap.get(approval.approved_by_id ?? '') ?? null,
+      })) as RecentApprovalRaw[],
+      recentInvites: inviteRows.map((invite) => ({
+        id: invite.id,
+        accepted_at: invite.accepted_at,
+        recruiter_email: invite.recruiter_email,
+        company: inviteCompanyMap.get(invite.company_id) ?? null,
+        accepted_by: inviteAcceptedByMap.get(invite.accepted_by_user_id ?? '') ?? null,
+      })) as RecentInviteRaw[],
     }
   },
 
@@ -1154,20 +1232,7 @@ export const AdminService = {
   async getActivityLog(supabase: SupabaseClient<Database>): Promise<ActivityItem[]> {
     const { data: approvals, error: approvalsError } = await supabase
       .from('chapter_membership')
-      .select(`
-      user_id,
-      updated_at,
-      chapter_id,
-      student:user!inner (
-        name,
-        email
-      ),
-      chapter (name),
-      approved_by:user!chapter_membership_approved_by_id_fkey (
-        name,
-        email
-      )
-    `)
+      .select('user_id, updated_at, chapter_id, approved_by_id')
       .not('approved_by_id', 'is', null)
       .order('updated_at', { ascending: false })
       .limit(20)
@@ -1178,26 +1243,7 @@ export const AdminService = {
 
     const { data: invites, error: invitesError } = await supabase
       .from('recruiter_access')
-      .select(`
-      id,
-      granted_at,
-      accepted_at,
-      revoked_at,
-      recruiter_email,
-      company (name),
-      granted_by:user!recruiter_access_granted_by_id_fkey (
-        name,
-        email
-      ),
-      accepted_by:user!recruiter_access_accepted_by_user_id_fkey (
-        name,
-        email
-      ),
-      revoked_by:user!recruiter_access_revoked_by_id_fkey (
-        name,
-        email
-      )
-    `)
+      .select('id, granted_at, accepted_at, revoked_at, recruiter_email, company_id, granted_by_id, accepted_by_user_id, revoked_by_id')
       .order('granted_at', { ascending: false })
       .limit(20)
 
@@ -1208,10 +1254,27 @@ export const AdminService = {
     const activities: ActivityItem[] = []
 
     if (approvals) {
-      ; (approvals as unknown as ActivityApprovalRow[]).forEach((approval: ActivityApprovalRow) => {
-        const student = Array.isArray(approval.student) ? approval.student[0] : approval.student
-        const approver = Array.isArray(approval.approved_by) ? approval.approved_by[0] : approval.approved_by
-        const chapter = Array.isArray(approval.chapter) ? approval.chapter[0] : approval.chapter
+      type ApprovalActivitySource = Pick<ChapterMembershipRow, 'user_id' | 'updated_at' | 'chapter_id' | 'approved_by_id'>
+      const approvalRows = approvals as ApprovalActivitySource[]
+      const [studentMap, approverMap, chapterMap] = await Promise.all([
+        fetchUserContactMap(
+          supabase,
+          approvalRows.map((approval) => approval.user_id)
+        ),
+        fetchUserContactMap(
+          supabase,
+          approvalRows.map((approval) => approval.approved_by_id)
+        ),
+        fetchChapterNameMap(
+          supabase,
+          approvalRows.map((approval) => approval.chapter_id)
+        ),
+      ])
+
+      approvalRows.forEach((approval) => {
+        const student = studentMap.get(approval.user_id) ?? null
+        const approver = approverMap.get(approval.approved_by_id ?? '') ?? null
+        const chapter = chapterMap.get(approval.chapter_id) ?? null
 
         activities.push({
           id: `approval-${approval.user_id}`,
@@ -1225,11 +1288,39 @@ export const AdminService = {
     }
 
     if (invites) {
-      ; (invites as ActivityInviteRow[]).forEach((invite: ActivityInviteRow) => {
-        const company = Array.isArray(invite.company) ? invite.company[0] : invite.company
-        const grantedBy = Array.isArray(invite.granted_by) ? invite.granted_by[0] : invite.granted_by
-        const acceptedBy = Array.isArray(invite.accepted_by) ? invite.accepted_by[0] : invite.accepted_by
-        const revokedBy = Array.isArray(invite.revoked_by) ? invite.revoked_by[0] : invite.revoked_by
+      type InviteActivitySource = Pick<
+        RecruiterAccessRow,
+        | 'id'
+        | 'granted_at'
+        | 'accepted_at'
+        | 'revoked_at'
+        | 'recruiter_email'
+        | 'company_id'
+        | 'granted_by_id'
+        | 'accepted_by_user_id'
+        | 'revoked_by_id'
+      >
+      const inviteRows = invites as InviteActivitySource[]
+      const [companyMap, userMap] = await Promise.all([
+        fetchCompanyNameMap(
+          supabase,
+          inviteRows.map((invite) => invite.company_id)
+        ),
+        fetchUserContactMap(
+          supabase,
+          inviteRows.flatMap((invite) => [
+            invite.granted_by_id,
+            invite.accepted_by_user_id,
+            invite.revoked_by_id,
+          ])
+        ),
+      ])
+
+      inviteRows.forEach((invite) => {
+        const company = companyMap.get(invite.company_id) ?? null
+        const grantedBy = userMap.get(invite.granted_by_id) ?? null
+        const acceptedBy = userMap.get(invite.accepted_by_user_id ?? '') ?? null
+        const revokedBy = userMap.get(invite.revoked_by_id ?? '') ?? null
 
         activities.push({
           id: `invite-sent-${invite.id}`,
@@ -1328,25 +1419,7 @@ export const AdminService = {
   async getInvites(supabase: SupabaseClient<Database>): Promise<RecruiterInvite[]> {
     const { data: invites, error } = await supabase
       .from('recruiter_access')
-      .select(`
-      id,
-      recruiter_email,
-      is_active,
-      granted_at,
-      invite_expires_at,
-      accepted_at,
-      revoked_at,
-      company_id,
-      Company (name),
-      granted_by:user!recruiter_access_granted_by_id_fkey (
-        name,
-        email
-      ),
-      accepted_by:user!recruiter_access_accepted_by_user_id_fkey (
-        name,
-        email
-      )
-    `)
+      .select('id, recruiter_email, is_active, granted_at, invite_expires_at, accepted_at, revoked_at, company_id, granted_by_id, accepted_by_user_id')
       .order('granted_at', { ascending: false })
 
     if (error || !invites) {
@@ -1354,7 +1427,44 @@ export const AdminService = {
       return []
     }
 
-    return this.normalizeRecruiterInvites(invites as unknown as RecruiterInviteRaw[])
+    type RecruiterInviteSource = Pick<
+      RecruiterAccessRow,
+      | 'id'
+      | 'recruiter_email'
+      | 'is_active'
+      | 'granted_at'
+      | 'invite_expires_at'
+      | 'accepted_at'
+      | 'revoked_at'
+      | 'company_id'
+      | 'granted_by_id'
+      | 'accepted_by_user_id'
+    >
+    const inviteRows = invites as RecruiterInviteSource[]
+    const [companyMap, userMap] = await Promise.all([
+      fetchCompanyNameMap(
+        supabase,
+        inviteRows.map((invite) => invite.company_id)
+      ),
+      fetchUserContactMap(
+        supabase,
+        inviteRows.flatMap((invite) => [invite.granted_by_id, invite.accepted_by_user_id])
+      ),
+    ])
+
+    return inviteRows.map((invite) => ({
+      id: invite.id,
+      recruiter_email: invite.recruiter_email,
+      is_active: invite.is_active,
+      granted_at: invite.granted_at,
+      invite_expires_at: invite.invite_expires_at,
+      accepted_at: invite.accepted_at,
+      revoked_at: invite.revoked_at,
+      company_id: invite.company_id,
+      company: companyMap.get(invite.company_id) ?? null,
+      granted_by: toNamedContact(userMap.get(invite.granted_by_id)),
+      accepted_by: toNamedContact(userMap.get(invite.accepted_by_user_id ?? '')),
+    }))
   },
 
   // ───────────────────────────────────────────────────────────────
@@ -1866,7 +1976,7 @@ export const AdminService = {
     const [{ data: memberships }, { data: events }] = await Promise.all([
       supabase
         .from('chapter_membership')
-        .select('chapter_id, user_id, user!chapter_membership_user_id_fkey(name, email, role)')
+        .select('chapter_id, user_id')
         .in('chapter_id', chapter_ids),
       supabase
         .from('event')
@@ -1876,16 +1986,15 @@ export const AdminService = {
         .gt('end_at', now),
     ])
 
-    type ChapterMembershipListRow = Pick<ChapterMembershipRow, 'chapter_id' | 'user_id'> & {
-      user:
-        | Pick<UserRow, 'name' | 'email' | 'role'>
-        | Pick<UserRow, 'name' | 'email' | 'role'>[]
-        | null
-    }
+    type ChapterMembershipListRow = Pick<ChapterMembershipRow, 'chapter_id' | 'user_id'>
     type ChapterEventRow = Pick<EventRow, 'id' | 'chapter_id'>
 
     const membershipRows = (memberships ?? []) as unknown as ChapterMembershipListRow[]
     const eventRows = (events ?? []) as unknown as ChapterEventRow[]
+    const memberUserMap = await fetchUserSummaryMap(
+      supabase,
+      membershipRows.map((membership) => membership.user_id)
+    )
 
     const membershipByChapter = new Map<string, ChapterMembershipListRow[]>()
     membershipRows.forEach((membership: ChapterMembershipListRow) => {
@@ -1904,11 +2013,11 @@ export const AdminService = {
       const chapterMemberships = membershipByChapter.get(chapter.id) ?? []
       const editors = chapterMemberships
         .filter((membership: ChapterMembershipListRow) => {
-          const user = Array.isArray(membership.user) ? membership.user[0] : membership.user
+          const user = memberUserMap.get(membership.user_id)
           return user?.role === 'editor'
         })
         .map((membership: ChapterMembershipListRow) => {
-          const user = Array.isArray(membership.user) ? membership.user[0] : membership.user
+          const user = memberUserMap.get(membership.user_id)
           return {
             id: membership.user_id,
             name: user?.name ?? 'Unknown',
@@ -2007,24 +2116,24 @@ export const AdminService = {
   ): Promise<{ id: string; name: string; email: string; role: 'member' | 'editor' }[]> {
     const { data, error } = await supabase
       .from('chapter_membership')
-      .select('user_id, user!chapter_membership_user_id_fkey(id, name, email, role)')
+      .select('user_id')
       .eq('chapter_id', chapter_id)
+      .eq('status', 'approved')
 
     if (error) {
       logger.error({ context: 'admin/chapters', error: error }, 'getAvailableEditors error')
       return []
     }
 
-    type AvailableEditorRow = Pick<ChapterMembershipRow, 'user_id'> & {
-      user:
-        | Pick<UserRow, 'id' | 'name' | 'email' | 'role'>
-        | Pick<UserRow, 'id' | 'name' | 'email' | 'role'>[]
-        | null
-    }
+    const membershipRows = (data ?? []) as Pick<ChapterMembershipRow, 'user_id'>[]
+    const userMap = await fetchUserSummaryMap(
+      supabase,
+      membershipRows.map((row) => row.user_id)
+    )
 
-    return ((data ?? []) as unknown as AvailableEditorRow[])
-      .map((row: AvailableEditorRow) => {
-        const user = Array.isArray(row.user) ? row.user[0] : row.user
+    return membershipRows
+      .map((row) => {
+        const user = userMap.get(row.user_id)
         if (!user) return null
         if (user.role !== 'member' && user.role !== 'editor') return null
         return {

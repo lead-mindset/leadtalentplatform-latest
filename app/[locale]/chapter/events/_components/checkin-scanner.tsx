@@ -399,6 +399,7 @@ export function CheckinScanner({
           <CardContent className="space-y-3">
             <div className="relative">
               <Input
+                aria-label="Search attendees by name or email"
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
                 placeholder="Search name or email"
@@ -503,6 +504,7 @@ export function CheckinScanner({
             </CardHeader>
             <CardContent className="space-y-3">
               <Input
+                aria-label="Paste QR token"
                 value={qrToken}
                 onChange={(e) => setQrToken(e.target.value)}
                 placeholder="Paste token"

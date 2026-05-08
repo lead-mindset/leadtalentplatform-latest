@@ -215,6 +215,7 @@ export function ChaptersManagementClient({
         </CardHeader>
         <CardContent className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <Input
+            aria-label="Search chapters by name or university"
             defaultValue={search}
             placeholder="Search chapter name or university"
             onChange={(event) => updateParam('search', event.target.value)}
@@ -235,7 +236,10 @@ export function ChaptersManagementClient({
                 <TableRow>
                   {SORT_COLUMNS.map(([key, label]) => (
                     <TableHead key={key} className="whitespace-nowrap">
-                      <button className="rounded-sm hover:underline" onClick={() => toggleSort(key)}>
+                      <button
+                        className="min-h-6 rounded-sm px-1 py-1 hover:underline"
+                        onClick={() => toggleSort(key)}
+                      >
                         {label}{sortBy === key ? ` ${sortOrder === 'asc' ? 'up' : 'down'}` : ''}
                       </button>
                     </TableHead>

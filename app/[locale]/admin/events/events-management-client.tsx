@@ -120,6 +120,7 @@ export function EventsManagementClient({
         <CardContent className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex flex-col gap-2 md:flex-row">
             <Input
+              aria-label="Search events by title"
               className="md:w-80"
               defaultValue={search}
               placeholder="Search event title"
@@ -177,7 +178,10 @@ export function EventsManagementClient({
                 <TableRow>
                   {SORT_COLUMNS.map(([key, label]) => (
                     <TableHead key={key} className="whitespace-nowrap">
-                      <button className="rounded-sm hover:underline" onClick={() => toggleSort(key)}>
+                      <button
+                        className="min-h-6 rounded-sm px-1 py-1 hover:underline"
+                        onClick={() => toggleSort(key)}
+                      >
                         {label}{sortBy === key ? ` ${sortOrder === 'asc' ? 'up' : 'down'}` : ''}
                       </button>
                     </TableHead>
