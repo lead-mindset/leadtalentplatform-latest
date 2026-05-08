@@ -14,6 +14,7 @@ import type { RegistrationStatus } from '@/lib/types'
 import { Link } from '@/i18n/routing'
 import { Icons } from '@/components/ui/icons'
 import { MainContainer } from '@/components/global/main-container'
+import { PageHeader } from '@/components/ui/page-header'
 
 type RegistrationWithEvent = Awaited<ReturnType<typeof getMyRegistrations>>[number]
 
@@ -366,17 +367,16 @@ export default async function StudentEventsPage({
     <MainContainer maxWidth="7xl" className="space-y-8 py-6 pb-24 sm:py-8">
       <ScrollToHighlightedEvent eventId={highlightEventId} />
 
-      <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground">My Events</h1>
-          <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-            Track registrations, application decisions, and QR check-in codes in one place.
-          </p>
-        </div>
-        <Button asChild>
-          <Link href="/events">Browse events</Link>
-        </Button>
-      </header>
+      <PageHeader
+        eyebrow="My LEAD"
+        title="My Events"
+        description="Track registrations, application decisions, and QR check-in codes in one place."
+        actions={
+          <Button asChild>
+            <Link href="/events">Browse events</Link>
+          </Button>
+        }
+      />
 
       {registrations.length === 0 ? (
         <EmptyState />

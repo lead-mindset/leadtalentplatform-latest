@@ -25,6 +25,7 @@ import type { RegistrationWithUser } from '@/lib/types'
 import { CheckCircle, Loader2, Users, XCircle } from 'lucide-react'
 import { Icons } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
+import { PageHeader } from '@/components/ui/page-header'
 
 type EventApplicationsClientProps = {
   event: {
@@ -231,27 +232,28 @@ export function EventApplicationsClient({
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8 sm:px-6">
       <div className="space-y-8">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-3">
+        <div className="space-y-3">
             <Button asChild variant="ghost" size="sm" className="w-fit px-0">
               <Link href={`/chapter/events/${event.id}`}>
                 <Icons.ArrowLeft className="mr-2 h-4 w-4" />
                 Back to event
               </Link>
             </Button>
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-3xl font-bold tracking-tight">Application Review</h1>
-                <Badge variant={event.accessModel === 'application' ? 'info' : 'outline'}>
-                  {event.accessModel === 'application' ? 'Application required' : 'Open registration'}
-                </Badge>
-              </div>
-              <p className="max-w-3xl text-muted-foreground">{event.title}</p>
-            </div>
-          </div>
-          <Button asChild variant="outline">
-            <Link href={`/chapter/events/${event.id}`}>Event settings</Link>
-          </Button>
+          <PageHeader
+            eyebrow="Chapter tools"
+            title="Application Review"
+            badge={
+              <Badge variant={event.accessModel === 'application' ? 'info' : 'outline'}>
+                {event.accessModel === 'application' ? 'Application required' : 'Open registration'}
+              </Badge>
+            }
+            description={event.title}
+            actions={
+              <Button asChild variant="outline">
+                <Link href={`/chapter/events/${event.id}`}>Event settings</Link>
+              </Button>
+            }
+          />
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

@@ -5,6 +5,7 @@ import { BrowseFilters } from '../_components/browse-filters'
 import { Card, CardContent } from '@/components/ui/card'
 import { BriefcaseBusiness, GraduationCap, Users } from 'lucide-react'
 import { MainContainer } from '@/components/global/main-container'
+import { PageHeader } from '@/components/ui/page-header'
 
 interface BrowsePageProps {
   searchParams: Promise<{
@@ -57,15 +58,12 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
 
   return (
     <MainContainer className="space-y-5 py-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">Company portal</p>
-          <h1 className="text-3xl font-bold tracking-tight">Browse Talent</h1>
-          <p className="mt-1 text-muted-foreground">
-            Review visible LEAD profiles that match your team&apos;s interests.
-          </p>
-        </div>
-        <div className="grid grid-cols-2 gap-3 sm:flex">
+      <PageHeader
+        eyebrow="Company portal"
+        title="Browse Talent"
+        description="Review visible LEAD profiles that match your team&apos;s interests. Only approved, opted-in members appear here."
+        actions={
+          <div className="grid grid-cols-2 gap-3 sm:flex">
           <div className="rounded-lg border bg-card px-4 py-3">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Users className="h-4 w-4" />
@@ -88,7 +86,8 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
             <p className="mt-1 text-2xl font-semibold">{savedIds.length}</p>
           </div>
         </div>
-      </div>
+        }
+      />
 
       <BrowseFilters
         majors={majors}

@@ -3,6 +3,7 @@ import { getUsersList } from '@/lib/actions/admin/users'
 import type { ProfileStatusFilter } from '@/lib/services/admin.service'
 import type { Role } from '@/lib/types'
 import { UsersManagementClient } from './users-management-client'
+import { PageHeader } from '@/components/ui/page-header'
 
 type PageSearchParams = {
   search?: string
@@ -53,12 +54,11 @@ export default async function AdminUsersPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-4xl font-bold tracking-tight">Users Management</h1>
-        <p className="text-muted-foreground mt-2">
-          Search, filter, update roles, deactivate users, and export filtered results.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Admin"
+        title="Users Management"
+        description="Search, filter, update roles, deactivate users, and export filtered results."
+      />
 
       <UsersManagementClient
         users={items}
@@ -69,7 +69,10 @@ export default async function AdminUsersPage({
         chapterFilters={chapterFilters}
         approvalFilters={approvalFilters}
         search={search}
-        chapterOptions={chapters.map((chapter: any) => ({ id: chapter.id, name: chapter.name }))}
+        chapterOptions={chapters.map((chapter: { id: string; name: string }) => ({
+          id: chapter.id,
+          name: chapter.name,
+        }))}
       />
     </div>
   )
