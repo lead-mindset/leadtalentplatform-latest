@@ -41,15 +41,12 @@ const EventInputSchema = z
   .refine(
     (data) => {
       if (data.accessModel === 'application') {
-        return (
-          Boolean(data.applicationFormUrl?.trim()) ||
-          Boolean(data.applicationQuestions?.length)
-        );
+        return Boolean(data.applicationQuestions?.length);
       }
       return true;
     },
     {
-      message: 'Application events need at least one question or an application form URL',
+      message: 'Application events need at least one native question.',
       path: ['applicationQuestions'],
     }
   )
@@ -103,6 +100,7 @@ export async function createEvent(input: CreateEventInput): Promise<CreateEventR
 
     const event = await EventService.createEvent(supabase, {
       ...data,
+      applicationFormUrl: null,
       chapter_id: targetChapterId,
       createdById: user.id,
     });
@@ -113,7 +111,10 @@ export async function createEvent(input: CreateEventInput): Promise<CreateEventR
         questions: data.applicationQuestions ?? [],
       });
 
-      if (!questionsResult.success) return { error: questionsResult.error };
+      if (!questionsResult.success) {
+        await EventService.deleteEvent(supabase, event.id);
+        return { error: questionsResult.error };
+      }
     }
 
     revalidatePath(redirectPath);

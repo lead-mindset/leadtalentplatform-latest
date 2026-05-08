@@ -1,4 +1,5 @@
 import { SupabaseClient } from '@supabase/supabase-js'
+import { randomUUID } from 'node:crypto'
 import type { Database, Json } from '@/lib/database.generated'
 import type {
   EventApplicationAnswerInsert,
@@ -66,7 +67,7 @@ export const EventApplicationService = {
     questions: EventApplicationQuestionInput[]
   ): EventApplicationQuestionInsert[] {
     return questions.map((question, index) => ({
-      id: question.id,
+      id: question.id ?? randomUUID(),
       event_id: eventId,
       question_text: question.questionText.trim(),
       question_type: question.questionType,
@@ -164,7 +165,10 @@ export const EventApplicationService = {
       .from('event_application_question')
       .upsert(normalized, { onConflict: 'id' })
 
-    if (error) return { success: false, error: 'Could not save application questions.' }
+    if (error) {
+      console.error('[EventApplicationService.upsertQuestionsForEvent]', error)
+      return { success: false, error: 'Could not save application questions.' }
+    }
     return { success: true }
   },
 

@@ -13,6 +13,7 @@ declare global {
 }
 
 interface LocationData {
+  name?: string
   address?: string
   city?: string
   region?: string
@@ -48,7 +49,7 @@ export function LocationAutocomplete({
 
     const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
       types: ['establishment', 'geocode'],
-      fields: ['place_id', 'formatted_address', 'geometry', 'address_components']
+      fields: ['place_id', 'name', 'formatted_address', 'geometry', 'address_components']
     })
 
     autocomplete.addListener('place_changed', () => {
@@ -59,7 +60,8 @@ export function LocationAutocomplete({
         return
       }
 
-      const locationData: LocationData = {
+    const locationData: LocationData = {
+        name: place.name || '',
         address: place.formatted_address || '',
         placeId: place.place_id || '',
         latitude: place.geometry.location.lat(),
@@ -129,6 +131,7 @@ export function LocationAutocomplete({
       const data = await response.json()
       
       return data.map((item: any) => ({
+        name: item.display_name.split(',')[0]?.trim(),
         display_name: item.display_name,
         lat: parseFloat(item.lat),
         lon: parseFloat(item.lon),
@@ -145,6 +148,7 @@ export function LocationAutocomplete({
 
   const handleSuggestionSelect = (suggestion: any) => {
     const locationData: LocationData = {
+      name: suggestion.name,
       address: suggestion.address,
       latitude: suggestion.lat,
       longitude: suggestion.lon,
@@ -198,6 +202,9 @@ export function LocationAutocomplete({
           placeholder={placeholder}
           disabled={disabled}
           className={className}
+          onChange={(event) => {
+            onChange({ address: event.target.value })
+          }}
           onFocus={() => {
             if (inputRef.current?.value && inputRef.current.value.length > 2) {
               setShowSuggestions(true)
