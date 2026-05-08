@@ -36,6 +36,8 @@ const questionTypeOptions: Array<{ value: EventApplicationQuestionType; label: s
   { value: 'url', label: 'URL' },
 ]
 
+const EMPTY_APPLICATION_QUESTIONS: EventApplicationQuestionRow[] = []
+
 function toEditableQuestion(question: EventApplicationQuestionRow): EditableApplicationQuestion {
   return {
     id: question.id,
@@ -80,7 +82,7 @@ export function EventForm({
   mode,
   initial,
   editorChapter,
-  applicationQuestions = [],
+  applicationQuestions = EMPTY_APPLICATION_QUESTIONS,
 }: {
   mode: Mode
   initial?: EventRow | null
@@ -107,6 +109,8 @@ export function EventForm({
       locationAddress: e?.location_address ?? '',
       locationCity: e?.location_city ?? '',
       locationRegion: e?.location_region ?? '',
+      locationLatitude: e?.location_latitude ?? null,
+      locationLongitude: e?.location_longitude ?? null,
       meetingUrl: e?.meeting_url ?? '',
       eventType: (e?.event_type ?? 'in_person') as EventType,
       capacity: e?.capacity?.toString?.() ?? '',
@@ -126,6 +130,8 @@ export function EventForm({
   const [locationAddress, setLocationAddress] = useState(defaults.locationAddress)
   const [locationCity, setLocationCity] = useState(defaults.locationCity)
   const [locationRegion, setLocationRegion] = useState(defaults.locationRegion)
+  const [locationLatitude, setLocationLatitude] = useState<number | null>(defaults.locationLatitude)
+  const [locationLongitude, setLocationLongitude] = useState<number | null>(defaults.locationLongitude)
   const [meetingUrl, setMeetingUrl] = useState(defaults.meetingUrl)
   const [eventType, setEventType] = useState<EventType>(defaults.eventType)
   const [capacity, setCapacity] = useState(defaults.capacity)
@@ -154,6 +160,8 @@ export function EventForm({
       setLocationAddress(initial.location_address ?? '')
       setLocationCity(initial.location_city ?? '')
       setLocationRegion(initial.location_region ?? '')
+      setLocationLatitude(initial.location_latitude ?? null)
+      setLocationLongitude(initial.location_longitude ?? null)
       setMeetingUrl(initial.meeting_url ?? '')
       setEventType((initial.event_type ?? 'in_person') as EventType)
       setCapacity(initial.capacity?.toString() ?? '')
@@ -234,7 +242,7 @@ export function EventForm({
       if (accessModel === 'application' && !applicationFormUrl?.trim()) {
         const hasQuestions = applicationQuestionsState.some((question) => question.questionText.trim())
         if (!hasQuestions) {
-          errors.application_questions = 'Add at least one question or an external form URL'
+          errors.application_questions = 'Add at least one application question'
           isValid = false
         }
       }
@@ -295,12 +303,14 @@ export function EventForm({
         locationAddress: locationAddress || undefined,
         locationCity: locationCity || undefined,
         locationRegion: locationRegion || undefined,
+        locationLatitude,
+        locationLongitude,
         meetingUrl: meetingUrl || undefined,
         eventType,
         capacity: capacity === '' ? undefined : Number(capacity),
         isPublished: targetPublished,
         accessModel,
-        applicationFormUrl: accessModel === 'application' ? applicationFormUrl : undefined,
+        applicationFormUrl: undefined,
         applicationQuestions:
           accessModel === 'application'
             ? applicationQuestionsState.map(toQuestionPayload).filter((question) => question.questionText)
@@ -329,7 +339,7 @@ export function EventForm({
         setIsPublished(res.event.is_published)
 
         if (mode === 'create') {
-          router.push(`/${locale}/chapter/events/${res.event.id}/edit`)
+          router.push(`/${locale}/chapter/events/${res.event.id}`)
         } else {
           router.refresh()
         }
@@ -357,12 +367,14 @@ export function EventForm({
         locationAddress: locationAddress || null,
         locationCity: locationCity || null,
         locationRegion: locationRegion || null,
+        locationLatitude,
+        locationLongitude,
         meetingUrl: meetingUrl || null,
         eventType,
         capacity: capacity === '' ? null : Number(capacity),
         isPublished: false,
         accessModel,
-        applicationFormUrl: accessModel === 'application' ? applicationFormUrl : null,
+        applicationFormUrl: null,
         applicationQuestions:
           accessModel === 'application'
             ? applicationQuestionsState.map(toQuestionPayload).filter((question) => question.questionText)
@@ -376,7 +388,7 @@ export function EventForm({
     }, 30000)
 
     return () => window.clearInterval(interval)
-  }, [mode, isPublished, initial, title, description, coverImage, startAt, endAt, location, locationName, locationAddress, locationCity, locationRegion, meetingUrl, eventType, capacity, accessModel, applicationFormUrl, applicationQuestionsState])
+  }, [mode, isPublished, initial, title, description, coverImage, startAt, endAt, location, locationName, locationAddress, locationCity, locationRegion, locationLatitude, locationLongitude, meetingUrl, eventType, capacity, accessModel, applicationFormUrl, applicationQuestionsState])
 
   async function onDelete() {
     if (!initial?.id) return
@@ -534,6 +546,7 @@ export function EventForm({
                 src={coverImage}
                 alt="Cover preview"
                 fill
+                sizes="(min-width: 1024px) 768px, 100vw"
                 className="object-cover"
               />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
@@ -649,15 +662,21 @@ export function EventForm({
               value={location}
               onChange={(data) => {
                 setLocation(data.address || '')
+                setLocationName(data.name || data.address?.split(',')[0]?.trim() || '')
                 setLocationAddress(data.address || '')
                 setLocationCity(data.city || '')
                 setLocationRegion(data.region || '')
+                setLocationLatitude(data.latitude ?? null)
+                setLocationLongitude(data.longitude ?? null)
               }}
               onClear={() => {
                 setLocation('')
+                setLocationName('')
                 setLocationAddress('')
                 setLocationCity('')
                 setLocationRegion('')
+                setLocationLatitude(null)
+                setLocationLongitude(null)
               }}
               placeholder="Start typing to search for venue via Google Places..."
               className={`h-12 w-full bg-muted/50 border-transparent focus-visible:bg-background ${fieldErrors.location ? 'border-destructive' : ''}`}
@@ -739,20 +758,7 @@ export function EventForm({
 
         {accessModel === 'application' && (
           <div className="mt-6 ml-10 p-5 rounded-xl bg-muted/50 border-l-4 border-l-primary animate-in fade-in slide-in-from-left-4">
-            <Label htmlFor="applicationFormUrl" className="text-sm font-semibold mb-2 block">External Form URL</Label>
-            <Input
-              id="applicationFormUrl"
-              value={applicationFormUrl}
-              onChange={(e) => setApplicationFormUrl(e.target.value)}
-              placeholder="https://forms.google.com/..."
-              className={`bg-background ${fieldErrors.application_form_url ? 'border-destructive' : ''}`}
-            />
-            <p className="text-xs text-muted-foreground mt-2">
-              Paste any form link — Google Forms, Typeform, etc. Students will be redirected here when they click &quot;Apply&quot;.
-            </p>
-            {fieldErrors.application_form_url && <p className="text-xs text-destructive mt-1">{fieldErrors.application_form_url}</p>}
-
-            <div className="mt-5 space-y-3">
+            <div className="space-y-3">
               <div className="flex items-center justify-between gap-3">
                 <Label className="text-sm font-semibold">Application Questions</Label>
                 <Button type="button" variant="outline" size="sm" onClick={addApplicationQuestion}>
@@ -763,7 +769,7 @@ export function EventForm({
 
               {applicationQuestionsState.length === 0 ? (
                 <div className="rounded-lg border border-dashed bg-background p-4 text-sm text-muted-foreground">
-                  Add native questions or provide an external form URL.
+                  Add at least one question. Applicants will answer directly inside LEAD.
                 </div>
               ) : (
                 <div className="space-y-3">

@@ -40,12 +40,12 @@ const UpdateEventSchema = z.object({
 }).refine(
   (data) => {
     if (data.accessModel === 'application') {
-      return Boolean(data.applicationFormUrl?.trim()) || Boolean(data.applicationQuestions?.length)
+      return Boolean(data.applicationQuestions?.length)
     }
     return true
   },
   {
-    message: 'Application events need at least one question or an application form URL',
+    message: 'Application events need at least one native question',
     path: ['applicationQuestions'],
   }
 )
@@ -82,7 +82,7 @@ export async function updateEvent(input: UpdateEventInput): Promise<UpdateEventR
     is_published: d.isPublished,
     chapter_id: d.chapter_id,
     access_model: d.accessModel,
-    application_form_url: d.applicationFormUrl,
+    application_form_url: null,
     location_name: d.locationName ?? null,
     location_address: d.locationAddress ?? null,
     location_city: d.locationCity ?? null,

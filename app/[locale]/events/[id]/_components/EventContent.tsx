@@ -298,6 +298,7 @@ export function EventContent({
                       src={event.cover_image}
                       alt={event.title || 'Imagen del evento'}
                       fill
+                      sizes="(min-width: 1024px) calc(100vw - 28rem), 100vw"
                       className="object-cover"
                       priority
                     />
@@ -505,7 +506,6 @@ export function EventContent({
             open={showApplyModal}
             onOpenChange={setShowApplyModal}
             eventTitle={event.title}
-            applicationFormUrl={event.application_form_url || ''}
             questions={applicationQuestions}
             submissionError={applicationError}
             onConfirm={handleApplyConfirm}

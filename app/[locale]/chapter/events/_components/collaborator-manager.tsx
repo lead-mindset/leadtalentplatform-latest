@@ -52,9 +52,12 @@ export function CollaboratorManager({
   const [isExpanded, setIsExpanded] = useState(false)
 
   useEffect(() => {
+    let isCancelled = false
+
     const loadData = async () => {
       try {
         const allChapters = await getAllChapters()
+        if (isCancelled) return
 
         const filtered = allChapters.filter(c => c.id !== ownerChapterId)
         setAvailableChapters(filtered)
@@ -63,6 +66,7 @@ export function CollaboratorManager({
           setCollaborators([])
         } else {
           const result = await getEventCollaborators(eventId, ownerChapterId || undefined)
+          if (isCancelled) return
 
           if ('error' in result) {
             console.error('Failed to load event collaborators:', result.error)
@@ -74,7 +78,8 @@ export function CollaboratorManager({
               .map((collab): Collaborator | null => {
                 const collabRecord = collab as Record<string, unknown>
                 const chapter = Array.isArray(collabRecord.chapter) ? (collabRecord.chapter as unknown[])[0] : collabRecord.chapter
-                const addedBy = Array.isArray(collabRecord.addedBy) ? (collabRecord.addedBy as unknown[])[0] : collabRecord.addedBy
+                const addedByRecord = collabRecord.addedBy ?? collabRecord.added_by
+                const addedBy = Array.isArray(addedByRecord) ? (addedByRecord as unknown[])[0] : addedByRecord
 
                 if (!chapter || !addedBy) return null
 
@@ -99,13 +104,21 @@ export function CollaboratorManager({
           }
         }
       } catch (error) {
-        console.error('Failed to load chapter data:', error)
+        if (!isCancelled) {
+          console.error('Failed to load chapter data:', error)
+        }
       } finally {
-        setIsLoading(false)
+        if (!isCancelled) {
+          setIsLoading(false)
+        }
       }
     }
 
     loadData()
+
+    return () => {
+      isCancelled = true
+    }
   }, [eventId, mode, ownerChapterId])
 
   const handleAddCollaborator = () => {
@@ -152,11 +165,9 @@ export function CollaboratorManager({
           },
         }
 
-        setCollaborators(prev => {
-          const updated = [...prev, newCollaborator]
-          onCollaboratorsChange?.(updated.map(c => c.chapter_id))
-          return updated
-        })
+        const updatedCollaborators = [...collaborators, newCollaborator]
+        setCollaborators(updatedCollaborators)
+        onCollaboratorsChange?.(updatedCollaborators.map(c => c.chapter_id))
 
         toast.success(`${selectedChapter.name} added as collaborator`)
       } catch (error) {

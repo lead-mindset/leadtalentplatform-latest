@@ -1591,7 +1591,9 @@ export const EventService = {
         id,
         chapter_id,
         added_at,
-        added_by_id
+        added_by_id,
+        chapter:chapter!event_chapter_chapter_id_fkey (id, name, university),
+        added_by:user!event_chapter_added_by_id_fkey (id, name, email)
       `)
       .eq('event_id', eventId)
 

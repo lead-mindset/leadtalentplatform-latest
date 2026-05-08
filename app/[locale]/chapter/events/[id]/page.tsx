@@ -32,7 +32,7 @@ export default async function ChapterEventDetailPage({
 
   const { data: event } = await supabase
     .from('event')
-    .select('id, title, description, cover_image, start_at, end_at, location, meeting_url, event_type, capacity, is_published, chapter_id, created_by_id, created_at, updated_at, access_model, application_form_url')
+    .select('id, title, description, cover_image, start_at, end_at, location, meeting_url, event_type, capacity, is_published, chapter_id, created_by_id, created_at, updated_at, access_model, application_form_url, location_name, location_address, location_city, location_region, location_latitude, location_longitude')
     .eq('id', id)
     .maybeSingle<EventRow>()
 

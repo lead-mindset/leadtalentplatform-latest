@@ -5,6 +5,10 @@ import { revalidatePath } from 'next/cache'
 import { EventService } from '@/lib/services/event.service'
 import { assertCanManageEvent } from './access'
 
+function toPlain<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T
+}
+
 export async function addEventCollaborator(eventId: string, chapter_id: string) {
   try {
     const access = await assertCanManageEvent(eventId)
@@ -17,7 +21,7 @@ export async function addEventCollaborator(eventId: string, chapter_id: string) 
     }
 
     revalidatePath('/chapter/events')
-    return { success: true, data: result.data }
+    return toPlain({ success: true, data: result.data })
   } catch {
     return { error: 'Internal server error' }
   }
@@ -57,7 +61,7 @@ export async function getEventCollaborators(eventId: string, ownerChapterId?: st
     const access = await assertCanManageEvent(eventId)
     if ('error' in access) return { ...access, data: [] }
 
-    return EventService.getEventCollaborators(access.supabase, eventId, ownerChapterId)
+    return toPlain(await EventService.getEventCollaborators(access.supabase, eventId, ownerChapterId))
   } catch {
     return { error: 'Internal server error', data: [] }
   }
