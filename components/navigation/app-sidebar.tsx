@@ -57,7 +57,7 @@ const navConfig: Record<string, NavItem[]> = {
       children: [
         { label: "Edit Profile", href: "/student/profile", icon: null },
         { label: "Resume", href: "/student/resume", icon: null },
-        { label: "Member ID", href: "/student/member-id", icon: null },
+        { label: "Member ID", href: "/student", icon: null },
       ],
     },
   ],

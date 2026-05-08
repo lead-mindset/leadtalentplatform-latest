@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { routing } from '@/i18n/routing';
+import { getPostAuthRedirectPath } from '@/lib/auth-redirects'
 
 const SITE_URL = process.env.NEXT_PUBLIC_FRONTEND_URL!
 
@@ -55,27 +56,16 @@ export async function GET(
     .eq('id', user.id)
     .maybeSingle()
 
-  if (!userData) {
-    return NextResponse.redirect(`${SITE_URL}/${locale}/onboarding`)
-  }
-
-  const role = userData.role ?? 'member'
-
-  if (role === 'member' || role === 'editor') {
 const { data: profile } = await supabase
       .from('person_profile')
       .select('user_id')
       .eq('user_id', user.id)
       .maybeSingle()
 
-    if (!profile) {
-      return NextResponse.redirect(`${SITE_URL}/${locale}/onboarding`)
-    }
-    return NextResponse.redirect(`${SITE_URL}/${locale}/student/profile`)
-  }
+  const redirectPath = getPostAuthRedirectPath({
+    hasProfile: Boolean(profile),
+    role: userData?.role,
+  })
 
-  if (role === 'recruiter') return NextResponse.redirect(`${SITE_URL}/${locale}/company`)
-  if (role === 'admin') return NextResponse.redirect(`${SITE_URL}/${locale}/admin`)
-
-  return NextResponse.redirect(`${SITE_URL}/${locale}/auth/error`)
+  return NextResponse.redirect(`${SITE_URL}/${locale}${redirectPath}`)
 }
