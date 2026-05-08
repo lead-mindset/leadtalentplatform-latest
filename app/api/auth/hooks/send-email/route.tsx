@@ -4,7 +4,15 @@ import { render } from '@react-email/render';
 import ConfirmSignupEmail from '@/emails/templates/ConfirmSignUpEmail';
 import ResetPasswordEmail from '@/emails/templates/ResetPasswordEmail';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+function createResendClient() {
+  const apiKey = process.env.RESEND_API_KEY;
+
+  if (!apiKey) {
+    throw new Error('RESEND_API_KEY not configured');
+  }
+
+  return new Resend(apiKey);
+}
 
 type SupabaseEmailUser = {
   email: string
@@ -73,6 +81,17 @@ export async function POST(request: Request) {
       return new Response(
         JSON.stringify({ error: 'Missing email data' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    let resend: Resend;
+    try {
+      resend = createResendClient();
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : 'Email service not configured');
+      return new Response(
+        JSON.stringify({ error: 'Email service not configured' }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
