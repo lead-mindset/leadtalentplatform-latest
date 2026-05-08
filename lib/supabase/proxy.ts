@@ -54,7 +54,7 @@ export async function updateSession(request: NextRequest) {
     if (!user && isProtected) {
       const localeMatch = pathname.match(/^\/(en|es)/);
       const locale = localeMatch ? localeMatch[1] : routing.defaultLocale;
-      const redirectUrl = new URL(`/${locale}/auth/login`, process.env.NEXT_PUBLIC_FRONTEND_URL);
+      const redirectUrl = new URL(`/${locale}/auth/login`, request.url);
       return NextResponse.redirect(redirectUrl);
     }
 
