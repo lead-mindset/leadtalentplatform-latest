@@ -149,6 +149,7 @@ export default function ResumeClient({
               <input
                 ref={fileInputRef}
                 type="file"
+                aria-label="Upload resume PDF"
                 name="resume"
                 accept=".pdf"
                 required

@@ -376,6 +376,7 @@ export default function ProfileUpdateForm({
                   <div className="group relative overflow-hidden rounded-lg border border-border/60 bg-gradient-to-br from-muted/40 to-muted/20 p-4 transition-all duration-200 hover:border-border hover:shadow-sm">
                     <label className="flex cursor-pointer items-start gap-3.5">
                       <Checkbox
+                        aria-label={t('professional.visibility')}
                         checked={field.value}
                         onCheckedChange={(checked) =>
                           field.onChange(Boolean(checked))
@@ -412,6 +413,7 @@ export default function ProfileUpdateForm({
                   <div className="group relative overflow-hidden rounded-lg border border-border/60 bg-gradient-to-br from-muted/40 to-muted/20 p-4 transition-all duration-200 hover:border-border hover:shadow-sm">
                     <label className="flex cursor-pointer items-start gap-3.5">
                       <Checkbox
+                        aria-label={t('professional.emailNotificationsLabel')}
                         checked={field.value}
                         onCheckedChange={(checked) =>
                           field.onChange(Boolean(checked))

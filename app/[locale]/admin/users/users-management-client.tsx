@@ -176,6 +176,7 @@ export function UsersManagementClient({
         <CardContent className="space-y-3">
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
             <Input
+              aria-label="Search users by name or email"
               placeholder="Search by name or email"
               value={searchInput}
               onChange={(event) => setSearchInput(event.target.value)}
@@ -353,6 +354,7 @@ export function UsersManagementClient({
               <TableRow>
                 <TableHead className="text-left p-2">
                     <Checkbox
+                      aria-label="Select all visible users"
                       checked={allVisibleSelected}
                       onCheckedChange={(checked) =>
                         setSelectedIds(checked ? users.map((user) => user.id) : [])
@@ -373,6 +375,7 @@ export function UsersManagementClient({
                   <TableRow key={user.id} className="align-top">
                     <TableCell className="p-2">
                       <Checkbox
+                        aria-label={`Select ${user.name || user.email}`}
                         checked={selectedIds.includes(user.id)}
                         onCheckedChange={(checked) =>
                           setSelectedIds((prev) =>
