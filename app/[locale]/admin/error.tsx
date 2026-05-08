@@ -25,15 +25,15 @@ export default function AdminError({
             <AlertCircle className="h-5 w-5 text-destructive" />
           </div>
           <div>
-            <h2 className="text-xl font-semibold">Admin data did not load</h2>
+            <h2 className="text-xl font-semibold">No se cargaron los datos de administracion</h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-              Retry the admin surface, or return to the overview and choose a management section again.
+              Intenta recargar la vista o vuelve al resumen para elegir otra seccion de gestion.
             </p>
           </div>
           <div className="flex flex-col justify-center gap-2 sm:flex-row">
-            <Button onClick={() => reset()}>Retry</Button>
+            <Button onClick={() => reset()}>Reintentar</Button>
             <Button variant="outline" asChild>
-              <Link href="/admin">Admin overview</Link>
+              <Link href="/admin">Resumen de administracion</Link>
             </Button>
           </div>
         </CardContent>

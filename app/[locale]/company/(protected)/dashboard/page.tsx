@@ -19,16 +19,16 @@ export default async function CompanyDashboardPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Company portal"
-        title="Representative Dashboard"
-        description={`Welcome back${user.name ? `, ${user.name}` : ''}. Review visible LEAD talent, saved profiles, and company access from one place.`}
+        eyebrow="Portal de empresa"
+        title="Resumen de representante"
+        description={`Bienvenido de nuevo${user.name ? `, ${user.name}` : ''}. Revisa talento LEAD visible, perfiles guardados y acceso de empresa desde un solo lugar.`}
         actions={
           <>
             <Button asChild>
-              <Link href="/company/browse">Browse talent</Link>
+              <Link href="/company/browse">Explorar talento</Link>
             </Button>
             <Button asChild variant="outline">
-              <Link href="/company/saved">Saved talent</Link>
+              <Link href="/company/saved">Talento guardado</Link>
             </Button>
           </>
         }
@@ -37,34 +37,34 @@ export default async function CompanyDashboardPage() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Available Talent</CardTitle>
+            <CardTitle className="text-sm font-medium">Talento disponible</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.total_students}</div>
-            <p className="text-xs text-muted-foreground">Available to view</p>
+            <p className="text-xs text-muted-foreground">Disponible para revisar</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Saved Talent</CardTitle>
+            <CardTitle className="text-sm font-medium">Talento guardado</CardTitle>
             <Heart className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.saved_students}</div>
-            <p className="text-xs text-muted-foreground">In your collection</p>
+            <p className="text-xs text-muted-foreground">En tu lista</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Company</CardTitle>
+            <CardTitle className="text-sm font-medium">Empresa</CardTitle>
             <Building className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-lg font-bold">{user.company?.name}</div>
-            <p className="text-xs text-muted-foreground">Your organization</p>
+            <p className="text-xs text-muted-foreground">Tu organizacion</p>
           </CardContent>
         </Card>
       </div>
@@ -72,20 +72,20 @@ export default async function CompanyDashboardPage() {
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Most common review tasks for company representatives.</CardDescription>
+            <CardTitle>Acciones rapidas</CardTitle>
+            <CardDescription>Tareas frecuentes para representantes de empresa.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
             <Button asChild className="w-full justify-start">
               <Link href="/company/browse">
                 <Users className="mr-2 h-4 w-4" />
-                Browse Talent
+                Explorar talento
               </Link>
             </Button>
             <Button asChild variant="outline" className="w-full justify-start">
               <Link href="/company/saved">
                 <Heart className="mr-2 h-4 w-4" />
-                View Saved Talent
+                Ver talento guardado
               </Link>
             </Button>
           </CardContent>
@@ -93,16 +93,16 @@ export default async function CompanyDashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Recently Saved</CardTitle>
-            <CardDescription>Profiles you&apos;ve saved recently</CardDescription>
+            <CardTitle>Guardados recientemente</CardTitle>
+            <CardDescription>Perfiles que guardaste hace poco</CardDescription>
           </CardHeader>
           <CardContent>
             {recentlySaved.length === 0 ? (
               <div className="text-center py-8">
                 <Heart className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">No saved talent yet</p>
+                <p className="text-sm text-muted-foreground">Todavia no hay talento guardado</p>
                 <Button asChild variant="link" size="sm" className="mt-2">
-                  <Link href="/company/browse">Start browsing</Link>
+                  <Link href="/company/browse">Empezar a explorar</Link>
                 </Button>
               </div>
             ) : (
@@ -112,11 +112,11 @@ export default async function CompanyDashboardPage() {
                     <div>
                       <p className="font-medium text-sm">{saved.student.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {saved.student.person_profile?.major_or_interest || 'No major listed'}
+                        {saved.student.person_profile?.major_or_interest || 'Area no registrada'}
                       </p>
                     </div>
                     <Button asChild size="sm" variant="ghost">
-                      <Link href={`/company/students/${saved.student_id}`}>View</Link>
+                      <Link href={`/company/students/${saved.student_id}`}>Ver</Link>
                     </Button>
                   </div>
                 ))}

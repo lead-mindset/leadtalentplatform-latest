@@ -19,7 +19,7 @@ export function SidebarLayout({
   sidebar,
   children,
   headerRight,
-  mobileTitle = 'Dashboard',
+  mobileTitle = 'Resumen',
   mobileSubtitle,
 }: SidebarLayoutProps) {
   return (

@@ -85,11 +85,11 @@ function mapApplication(application: RegistrationWithUser) {
     registeredAt: application.registered_at,
     status: application.status as 'pending_review' | 'registered' | 'rejected',
     User: {
-      name: application.user?.name ?? 'Unknown attendee',
+      name: application.user?.name ?? 'Asistente sin nombre',
       email: application.user?.email ?? '',
     },
     ApplicantProfile: {
-      majorOrInterest: application.person_profile?.major_or_interest ?? 'Unknown major',
+      majorOrInterest: application.person_profile?.major_or_interest ?? 'Area no registrada',
       graduation_year: application.person_profile?.graduation_year ?? 0,
       linkedinUrl: application.person_profile?.linkedin_url ?? null,
     },
@@ -125,7 +125,7 @@ export function EventApplicationsClient({
   const rejectedApps = applications.filter((application) => application.status === 'rejected')
   const selectedCount = selectedApplications.size
   const registeredCount = approvedApps.length
-  const capacityLabel = event.capacity === null ? 'Unlimited' : `${registeredCount}/${event.capacity}`
+  const capacityLabel = event.capacity === null ? 'Sin limite' : `${registeredCount}/${event.capacity}`
 
   const refreshPage = () => {
     router.refresh()
@@ -148,8 +148,8 @@ export function EventApplicationsClient({
       } catch (error) {
         setFeedback({
           type: 'error',
-          title: 'Application action failed',
-          message: error instanceof Error ? error.message : 'Please try again.',
+          title: 'No se pudo completar la accion',
+          message: error instanceof Error ? error.message : 'Intentalo de nuevo.',
         })
       }
     })
@@ -158,14 +158,14 @@ export function EventApplicationsClient({
   const handleApprove = async (applicationId: string) => {
     runAction(
       () => bulkApproveApplications(event.id, [applicationId]),
-      'Application approved'
+      'Postulacion aprobada'
     )
   }
 
   const handleReject = async (applicationId: string) => {
     runAction(
       () => bulkRejectApplications(event.id, [applicationId]),
-      'Application rejected'
+      'Postulacion rechazada'
     )
   }
 
@@ -175,7 +175,7 @@ export function EventApplicationsClient({
 
     runAction(
       () => bulkApproveApplications(event.id, selectedIds),
-      `${selectedIds.length} application${selectedIds.length === 1 ? '' : 's'} approved`
+      `${selectedIds.length} postulacion${selectedIds.length === 1 ? '' : 'es'} aprobada${selectedIds.length === 1 ? '' : 's'}`
     )
   }
 
@@ -185,7 +185,7 @@ export function EventApplicationsClient({
 
     runAction(
       () => bulkRejectApplications(event.id, selectedIds),
-      `${selectedIds.length} application${selectedIds.length === 1 ? '' : 's'} rejected`
+      `${selectedIds.length} postulacion${selectedIds.length === 1 ? '' : 'es'} rechazada${selectedIds.length === 1 ? '' : 's'}`
     )
     setShowBulkRejectDialog(false)
   }
@@ -236,21 +236,21 @@ export function EventApplicationsClient({
             <Button asChild variant="ghost" size="sm" className="w-fit px-0">
               <Link href={`/chapter/events/${event.id}`}>
                 <Icons.ArrowLeft className="mr-2 h-4 w-4" />
-                Back to event
+                Volver al evento
               </Link>
             </Button>
           <PageHeader
-            eyebrow="Chapter tools"
-            title="Application Review"
+            eyebrow="Herramientas del capitulo"
+            title="Revision de postulaciones"
             badge={
               <Badge variant={event.accessModel === 'application' ? 'info' : 'outline'}>
-                {event.accessModel === 'application' ? 'Application required' : 'Open registration'}
+                {event.accessModel === 'application' ? 'Requiere postulacion' : 'Registro abierto'}
               </Badge>
             }
             description={event.title}
             actions={
               <Button asChild variant="outline">
-                <Link href={`/chapter/events/${event.id}`}>Event settings</Link>
+                <Link href={`/chapter/events/${event.id}`}>Configuracion del evento</Link>
               </Button>
             }
           />
@@ -258,27 +258,27 @@ export function EventApplicationsClient({
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <SummaryBlock
-            label="Pending"
+            label="Pendientes"
             value={pendingApps.length}
-            helper="Need editor review"
+            helper="Necesitan revision"
             variant="warning"
           />
           <SummaryBlock
-            label="Approved"
+            label="Aprobadas"
             value={approvedApps.length}
-            helper="Registered for the event"
+            helper="Registradas para el evento"
             variant="success"
           />
           <SummaryBlock
-            label="Rejected"
+            label="Rechazadas"
             value={rejectedApps.length}
-            helper="Kept for review history"
+            helper="Conservadas para historial"
             variant="destructive"
           />
           <SummaryBlock
-            label="Capacity"
+            label="Capacidad"
             value={capacityLabel}
-            helper={event.capacity === null ? 'No fixed limit' : 'Approved against limit'}
+            helper={event.capacity === null ? 'Sin limite fijo' : 'Aprobadas contra el limite'}
           />
         </div>
 
@@ -304,15 +304,15 @@ export function EventApplicationsClient({
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <TabsList className="w-full justify-start overflow-x-auto lg:w-auto">
               <TabsTrigger value="pending">
-                Pending
+                Pendientes
                 <Badge variant="warning" size="sm" className="ml-2">{pendingApps.length}</Badge>
               </TabsTrigger>
               <TabsTrigger value="approved">
-                Approved
+                Aprobadas
                 <Badge variant="success" size="sm" className="ml-2">{approvedApps.length}</Badge>
               </TabsTrigger>
               <TabsTrigger value="rejected">
-                Rejected
+                Rechazadas
                 <Badge variant="destructive" size="sm" className="ml-2">{rejectedApps.length}</Badge>
               </TabsTrigger>
             </TabsList>
@@ -321,11 +321,11 @@ export function EventApplicationsClient({
               <div className="flex flex-col gap-2 rounded-lg border bg-card p-3 sm:flex-row sm:items-center sm:justify-between lg:min-w-[34rem]">
                 <div className="flex items-center gap-3">
                   <Button variant="outline" size="sm" onClick={toggleSelectAll} disabled={isPending}>
-                    {selectedCount === pendingApps.length ? 'Deselect all' : 'Select all'}
+                    {selectedCount === pendingApps.length ? 'Deseleccionar todo' : 'Seleccionar todo'}
                   </Button>
                   <p className="text-sm font-medium">
-                    {selectedCount} selected
-                    <span className="ml-1 text-muted-foreground">of {pendingApps.length} pending</span>
+                    {selectedCount} seleccionadas
+                    <span className="ml-1 text-muted-foreground">de {pendingApps.length} pendientes</span>
                   </p>
                 </div>
                 <div className="flex gap-2">
@@ -335,7 +335,7 @@ export function EventApplicationsClient({
                     disabled={selectedCount === 0 || isPending}
                   >
                     {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
-                    Approve
+                    Aprobar
                   </Button>
                   <Button
                     size="sm"
@@ -344,7 +344,7 @@ export function EventApplicationsClient({
                     disabled={selectedCount === 0 || isPending}
                   >
                     <XCircle className="mr-2 h-4 w-4" />
-                    Reject
+                    Rechazar
                   </Button>
                 </div>
               </div>
@@ -354,24 +354,24 @@ export function EventApplicationsClient({
           <TabsContent value="pending" className="space-y-3">
             {renderApplications(pendingApps, {
               icon: Users,
-              title: 'All applications have been reviewed',
-              description: 'No pending applications need editor decisions right now.',
+              title: 'Todas las postulaciones fueron revisadas',
+              description: 'No hay postulaciones pendientes que necesiten decision editorial.',
             })}
           </TabsContent>
 
           <TabsContent value="approved" className="space-y-3">
             {renderApplications(approvedApps, {
               icon: CheckCircle,
-              title: 'No approved applications',
-              description: 'Approved applications will appear here.',
+              title: 'No hay postulaciones aprobadas',
+              description: 'Las postulaciones aprobadas apareceran aqui.',
             })}
           </TabsContent>
 
           <TabsContent value="rejected" className="space-y-3">
             {renderApplications(rejectedApps, {
               icon: XCircle,
-              title: 'No rejected applications',
-              description: 'Rejected applications will appear here for reference.',
+              title: 'No hay postulaciones rechazadas',
+              description: 'Las postulaciones rechazadas apareceran aqui como referencia.',
             })}
           </TabsContent>
         </Tabs>
@@ -380,15 +380,15 @@ export function EventApplicationsClient({
       <AlertDialog open={showBulkRejectDialog} onOpenChange={setShowBulkRejectDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Reject selected applications?</AlertDialogTitle>
+            <AlertDialogTitle>¿Rechazar postulaciones seleccionadas?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will reject {selectedCount} pending application{selectedCount === 1 ? '' : 's'} and notify the applicant{selectedCount === 1 ? '' : 's'}. This action should only be used after review.
+              Esto rechazara {selectedCount} postulacion{selectedCount === 1 ? '' : 'es'} pendiente{selectedCount === 1 ? '' : 's'} y notificara a la persona postulante. Usa esta accion solo despues de revisar.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Keep reviewing</AlertDialogCancel>
+            <AlertDialogCancel>Seguir revisando</AlertDialogCancel>
             <AlertDialogAction variant="destructive" onClick={handleBulkReject} disabled={isPending}>
-              Reject selected
+              Rechazar seleccionadas
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

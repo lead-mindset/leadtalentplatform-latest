@@ -6,18 +6,18 @@ import { MemberActionButtons } from "./member-actions"
 
 function statusConfig(status?: string | null) {
   if (status === 'approved') {
-    return { label: 'Approved', variant: 'success' as const }
+    return { label: 'Aprobado', variant: 'success' as const }
   }
 
   if (status === 'rejected') {
-    return { label: 'Rejected', variant: 'destructive' as const }
+    return { label: 'Rechazado', variant: 'destructive' as const }
   }
 
   if (status === 'alumni') {
     return { label: 'Alumni', variant: 'neutral' as const }
   }
 
-  return { label: 'Pending', variant: 'warning' as const }
+  return { label: 'Pendiente', variant: 'warning' as const }
 }
 
 function formatPosition(position?: string | null) {
@@ -52,7 +52,7 @@ export default function MemberCard({
             className="mt-1"
             checked={selected}
             onCheckedChange={(checked) => onSelectChange?.(checked === true)}
-            aria-label={`Select ${member.name ?? member.email}`}
+            aria-label={`Seleccionar ${member.name ?? member.email}`}
           />
         ) : null}
 
@@ -62,7 +62,7 @@ export default function MemberCard({
               <Icons.User className="h-4 w-4" />
             </div>
             <div className="min-w-0">
-              <h3 className="truncate font-semibold">{member.name ?? 'No name provided'}</h3>
+              <h3 className="truncate font-semibold">{member.name ?? 'Sin nombre registrado'}</h3>
               <p className="mt-0.5 break-all text-sm text-muted-foreground">{member.email}</p>
               {member.phone ? (
                 <p className="mt-1 text-sm text-muted-foreground">{member.phone}</p>
@@ -73,10 +73,10 @@ export default function MemberCard({
           <div className="flex flex-wrap gap-2">
             <Badge variant={badge.variant}>{badge.label}</Badge>
             {profile?.is_recruiter_visible ? (
-              <Badge variant="info">Company visible</Badge>
+              <Badge variant="info">Visible para empresas</Badge>
             ) : null}
             {!profile ? (
-              <Badge variant="outline">Incomplete profile</Badge>
+              <Badge variant="outline">Perfil incompleto</Badge>
             ) : null}
           </div>
         </div>
@@ -88,11 +88,11 @@ export default function MemberCard({
             <div className="grid gap-2 sm:grid-cols-2">
               <div className="flex min-w-0 items-center gap-2 text-muted-foreground">
                 <Icons.GraduationCap className="h-4 w-4 shrink-0" />
-                <span className="truncate">{profile.major_or_interest || 'No major listed'}</span>
+                <span className="truncate">{profile.major_or_interest || 'Area no registrada'}</span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Icons.Calendar className="h-4 w-4 shrink-0" />
-                <span>{profile.graduation_year ? `Class of ${profile.graduation_year}` : 'Graduation not listed'}</span>
+                <span>{profile.graduation_year ? `Promocion ${profile.graduation_year}` : 'Graduacion no registrada'}</span>
               </div>
             </div>
 
@@ -123,7 +123,7 @@ export default function MemberCard({
           </>
         ) : (
           <p className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
-            This member has not completed their basic profile yet.
+            Este miembro todavia no completo su perfil basico.
           </p>
         )}
       </div>
@@ -146,7 +146,7 @@ export default function MemberCard({
 
         {membership?.joined_at ? (
           <p className="text-xs text-muted-foreground">
-            Joined {new Date(membership.joined_at).toLocaleDateString(undefined, {
+            Se unio el {new Date(membership.joined_at).toLocaleDateString('es-PE', {
               month: 'short',
               day: 'numeric',
               year: 'numeric',
@@ -180,7 +180,7 @@ export default function MemberCard({
 
         {isAlumni ? (
           <p className="rounded-lg border bg-muted/40 p-3 text-left text-xs text-muted-foreground lg:text-right">
-            Alumni records are read-only in this roster view.
+            Los registros alumni son de solo lectura en esta vista.
           </p>
         ) : null}
       </div>

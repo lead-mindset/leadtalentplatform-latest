@@ -26,25 +26,25 @@ export interface NavItemConfig {
 export const STUDENT_NAV: NavItemConfig[] = [
   {
     id: 'browse-events',
-    label: 'Browse Events',
+    label: 'Explorar eventos',
     href: '/events',
     icon: CalendarSearch,
   },
   {
     id: 'my-events',
-    label: 'My Events',
+    label: 'Mis eventos',
     href: '/student/events',
     icon: QrCode,
   },
   {
     id: 'profile',
-    label: 'Profile',
+    label: 'Perfil',
     href: '/student/profile',
     icon: User,
   },
   {
     id: 'resume',
-    label: 'Resume',
+    label: 'CV',
     href: '/student/resume',
     icon: Sheet,
   },
@@ -53,13 +53,13 @@ export const STUDENT_NAV: NavItemConfig[] = [
 export const CHAPTER_NAV: NavItemConfig[] = [
   {
     id: 'overview',
-    label: 'Overview',
+    label: 'Resumen',
     href: '/chapter',
     icon: LayoutDashboard,
   },
   {
     id: 'events',
-    label: 'Events',
+    label: 'Eventos',
     href: '/chapter/events',
     icon: CalendarDays,
   },
@@ -71,13 +71,13 @@ export const CHAPTER_NAV: NavItemConfig[] = [
   },
   {
     id: 'members',
-    label: 'Members',
+    label: 'Miembros',
     href: '/chapter/members',
     icon: UserCheck,
   },
   {
     id: 'my-profile',
-    label: 'My Profile',
+    label: 'Mi perfil',
     href: '/student/profile',
     icon: User,
   },
@@ -86,43 +86,43 @@ export const CHAPTER_NAV: NavItemConfig[] = [
 export const ADMIN_NAV: NavItemConfig[] = [
   {
     id: 'overview',
-    label: 'Overview',
+    label: 'Resumen',
     href: '/admin',
     icon: LayoutDashboard,
   },
   {
     id: 'events',
-    label: 'Events',
+    label: 'Eventos',
     href: '/admin/events',
     icon: CalendarDays,
   },
   {
     id: 'chapters',
-    label: 'Chapters',
+    label: 'Capitulos',
     href: '/admin/chapters',
     icon: Building2,
   },
   {
     id: 'users',
-    label: 'Users',
+    label: 'Usuarios',
     href: '/admin/users',
     icon: Users,
   },
   {
     id: 'companies',
-    label: 'Companies',
+    label: 'Empresas',
     href: '/admin/companies',
     icon: Building,
   },
   {
     id: 'invites',
-    label: 'Invites',
+    label: 'Invitaciones',
     href: '/admin/invites',
     icon: Mail,
   },
   {
     id: 'activity',
-    label: 'Activity',
+    label: 'Actividad',
     href: '/admin/activity',
     icon: Activity,
   },
@@ -131,25 +131,25 @@ export const ADMIN_NAV: NavItemConfig[] = [
 export const COMPANY_NAV: NavItemConfig[] = [
   {
     id: 'dashboard',
-    label: 'Dashboard',
+    label: 'Resumen',
     href: '/company/dashboard',
     icon: LayoutDashboard,
   },
   {
     id: 'browse',
-    label: 'Browse Talent',
+    label: 'Explorar talento',
     href: '/company/browse',
     icon: Users,
   },
   {
     id: 'saved',
-    label: 'Saved Talent',
+    label: 'Talento guardado',
     href: '/company/saved',
     icon: Heart,
   },
   {
     id: 'profile',
-    label: 'Profile',
+    label: 'Perfil',
     href: '/company/profile',
     icon: User,
   },

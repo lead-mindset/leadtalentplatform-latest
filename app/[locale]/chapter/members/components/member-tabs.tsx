@@ -8,9 +8,9 @@ import type { MemberFilterStatus } from '../page'
 export type MemberStatusCounts = Record<MemberFilterStatus, number>
 
 const tabLabels: Record<MemberFilterStatus, string> = {
-  pending: 'Pending',
-  active: 'Approved',
-  rejected: 'Rejected',
+  pending: 'Pendientes',
+  active: 'Aprobados',
+  rejected: 'Rechazados',
   alumni: 'Alumni',
 }
 

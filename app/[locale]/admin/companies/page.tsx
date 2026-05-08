@@ -30,9 +30,9 @@ export default async function AdminCompaniesPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Admin"
-        title="Companies"
-        description="Manage organizations, company representative access, and invite readiness."
+        eyebrow="Administracion"
+        title="Empresas"
+        description="Gestiona organizaciones, acceso de representantes de empresa e invitaciones."
       />
       <CompaniesManagementClient
         items={list.items}

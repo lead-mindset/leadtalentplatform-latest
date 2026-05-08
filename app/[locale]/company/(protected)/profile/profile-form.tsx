@@ -53,17 +53,17 @@ export default function ProfileForm({ user, company, accessInfo }: ProfileFormPr
       })
 
       if (!result.success) {
-        toast.error('Profile update failed', {
-          description: result.error || 'Something went wrong',
+        toast.error('No se pudo actualizar el perfil', {
+          description: result.error || 'Algo salio mal',
         })
       } else {
-        toast.success('Profile updated', {
+        toast.success('Perfil actualizado', {
           description: result.message,
         })
       }
     } catch {
-      toast.error('Unexpected error', {
-        description: 'Please try again later',
+      toast.error('Ocurrio un error inesperado', {
+        description: 'Intentalo de nuevo mas tarde',
       })
     } finally {
       setLoading(false)
@@ -77,7 +77,7 @@ export default function ProfileForm({ user, company, accessInfo }: ProfileFormPr
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Building2 className="h-5 w-5" />
-              Company Information
+              Informacion de empresa
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -87,7 +87,7 @@ export default function ProfileForm({ user, company, accessInfo }: ProfileFormPr
                 <p className="text-sm text-muted-foreground">{user.email}</p>
                 {accessInfo?.accepted_at && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    Access granted on {new Date(accessInfo.accepted_at).toLocaleDateString('en-US', {
+                    Acceso otorgado el {new Date(accessInfo.accepted_at).toLocaleDateString('es-PE', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric'
@@ -104,32 +104,32 @@ export default function ProfileForm({ user, company, accessInfo }: ProfileFormPr
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
-            Personal Information
+            Informacion personal
           </CardTitle>
           <CardDescription>
-            Update your personal details and contact information
+            Actualiza tus datos personales y de contacto
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email Address</Label>
+            <Label htmlFor="email">Correo electronico</Label>
             <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
               <Mail className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm">{user.email}</span>
             </div>
             <p className="text-xs text-muted-foreground">
-              Email cannot be changed
+              El correo no se puede cambiar
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="name">Full Name *</Label>
+            <Label htmlFor="name">Nombre completo *</Label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 id="name"
                 type="text"
-                placeholder="John Doe"
+                placeholder="Nombre Apellido"
                 value={formData.name}
                 onChange={(e) => handleChange('name', e.target.value)}
                 required
@@ -141,7 +141,7 @@ export default function ProfileForm({ user, company, accessInfo }: ProfileFormPr
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number</Label>
+            <Label htmlFor="phone">Telefono</Label>
             <div className="relative">
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -163,16 +163,16 @@ export default function ProfileForm({ user, company, accessInfo }: ProfileFormPr
           variant="outline"
           onClick={() => window.location.href = '/company'}
         >
-          Cancel
+          Cancelar
         </Button>
         <Button type="submit" disabled={loading}>
           {loading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
+              Guardando...
             </>
           ) : (
-            'Save Profile'
+            'Guardar perfil'
           )}
         </Button>
       </div>

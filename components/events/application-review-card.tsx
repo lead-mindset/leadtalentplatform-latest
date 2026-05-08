@@ -58,19 +58,19 @@ function answerValue(answer: NonNullable<ApplicationReviewCardProps['application
     return JSON.stringify(answer.answer_json)
   }
 
-  return answer.answer_text || 'No answer provided'
+  return answer.answer_text || 'Sin respuesta'
 }
 
 function statusConfig(status: ApplicationReviewCardProps['application']['status']) {
   if (status === 'registered') {
-    return { label: 'Approved', variant: 'success' as const }
+    return { label: 'Aprobada', variant: 'success' as const }
   }
 
   if (status === 'rejected') {
-    return { label: 'Rejected', variant: 'destructive' as const }
+    return { label: 'Rechazada', variant: 'destructive' as const }
   }
 
-  return { label: 'Pending review', variant: 'warning' as const }
+  return { label: 'Pendiente de revision', variant: 'warning' as const }
 }
 
 export function ApplicationReviewCard({
@@ -127,7 +127,7 @@ export function ApplicationReviewCard({
                 checked={isSelected}
                 onCheckedChange={(checked) => onSelect?.(application.id, checked as boolean)}
                 disabled={isProcessing}
-                aria-label={`Select ${application.User.name}`}
+                aria-label={`Seleccionar ${application.User.name}`}
               />
             ) : null}
 
@@ -147,7 +147,7 @@ export function ApplicationReviewCard({
               <div className="flex flex-wrap gap-2">
                 <Badge variant={status.variant}>{status.label}</Badge>
                 <Badge variant="outline">
-                  Applied {new Date(application.registeredAt).toLocaleDateString(undefined, {
+                  Postulo el {new Date(application.registeredAt).toLocaleDateString('es-PE', {
                     month: 'short',
                     day: 'numeric',
                   })}
@@ -161,7 +161,7 @@ export function ApplicationReviewCard({
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Icons.Calendar className="h-4 w-4 shrink-0" />
-                  <span>Graduation {application.ApplicantProfile.graduation_year || 'not listed'}</span>
+                  <span>Graduacion {application.ApplicantProfile.graduation_year || 'no registrada'}</span>
                 </div>
                 {application.ApplicantProfile.linkedinUrl ? (
                   <a
@@ -180,9 +180,9 @@ export function ApplicationReviewCard({
 
           <div className="min-w-0 space-y-3">
             <div className="flex items-center justify-between gap-3">
-              <h4 className="text-sm font-semibold">Application answers</h4>
+              <h4 className="text-sm font-semibold">Respuestas de postulacion</h4>
               <Badge variant="neutral" size="sm">
-                {applicationAnswers.length} answer{applicationAnswers.length === 1 ? '' : 's'}
+                {applicationAnswers.length} respuesta{applicationAnswers.length === 1 ? '' : 's'}
               </Badge>
             </div>
 
@@ -191,7 +191,7 @@ export function ApplicationReviewCard({
                 {applicationAnswers.map((answer) => (
                   <div key={answer.id} className="rounded-lg border bg-background p-3">
                     <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                      {answer.event_application_question?.question_text ?? 'Application question'}
+                      {answer.event_application_question?.question_text ?? 'Pregunta de postulacion'}
                     </p>
                     <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-foreground">
                       {answerValue(answer)}
@@ -201,7 +201,7 @@ export function ApplicationReviewCard({
               </div>
             ) : (
               <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-                No native application answers were submitted for this registration.
+                No se enviaron respuestas nativas para este registro.
               </p>
             )}
           </div>
@@ -214,7 +214,7 @@ export function ApplicationReviewCard({
                 disabled={isActionPending || isProcessing}
               >
                 <Icons.CheckCircle2 className="mr-2 h-4 w-4" />
-                Approve
+                Aprobar
               </Button>
               <Button
                 size="sm"
@@ -223,7 +223,7 @@ export function ApplicationReviewCard({
                 disabled={isActionPending || isProcessing}
               >
                 <Icons.XCircle className="mr-2 h-4 w-4" />
-                Reject
+                Rechazar
               </Button>
             </div>
           ) : null}
@@ -233,12 +233,12 @@ export function ApplicationReviewCard({
       <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reject application?</DialogTitle>
+            <DialogTitle>¿Rechazar postulacion?</DialogTitle>
             <DialogDescription>
-              Reject {application.User.name}&apos;s application for this event.
+              Rechazar la postulacion de {application.User.name} para este evento.
               {!showCheckbox && (
                 <span className="mt-2 block text-sm text-muted-foreground">
-                  The applicant will be notified by email. The optional note stays internal for v1.
+                  La persona postulante recibira una notificacion por correo. La nota opcional queda interna en v1.
                 </span>
               )}
             </DialogDescription>
@@ -246,25 +246,25 @@ export function ApplicationReviewCard({
 
           <div className="py-4">
             <label className="mb-2 block text-sm font-medium">
-              Internal note (optional)
+              Nota interna (opcional)
             </label>
             <Textarea
-              placeholder="Add internal context for this decision..."
+              placeholder="Agrega contexto interno para esta decision..."
               value={rejectNote}
               onChange={(e) => setRejectNote(e.target.value)}
               rows={3}
             />
             <p className="mt-2 text-xs text-muted-foreground">
-              This note is only visible to editors, not shared with the applicant.
+              Esta nota solo es visible para editores; no se comparte con la persona postulante.
             </p>
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowRejectDialog(false)}>
-              Cancel
+              Cancelar
             </Button>
             <Button variant="destructive" onClick={handleReject} disabled={isActionPending}>
-              {isActionPending ? 'Processing...' : 'Reject application'}
+              {isActionPending ? 'Procesando...' : 'Rechazar postulacion'}
             </Button>
           </DialogFooter>
         </DialogContent>

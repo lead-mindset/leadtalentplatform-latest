@@ -23,12 +23,12 @@ export default function CompanyError({
         <CardHeader>
           <div className="flex items-center gap-2">
             <AlertCircle className="h-5 w-5 text-destructive" />
-            <CardTitle>Something went wrong</CardTitle>
+            <CardTitle>Algo salio mal</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            We encountered an error while loading this page. Please try again.
+            Ocurrio un error al cargar esta pagina. Intentalo de nuevo.
           </p>
           {error.message ? (
             <div className="rounded-lg bg-muted p-3">
@@ -37,10 +37,10 @@ export default function CompanyError({
           ) : null}
           <div className="flex gap-2">
             <Button onClick={reset} variant="default">
-              Try Again
+              Intentar de nuevo
             </Button>
             <Button asChild variant="outline">
-              <Link href="/company/dashboard">Go to Dashboard</Link>
+              <Link href="/company/dashboard">Ir al resumen</Link>
             </Button>
           </div>
         </CardContent>

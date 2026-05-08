@@ -7,8 +7,8 @@ import type { ActivityItem } from '@/lib/types'
 import { PageHeader } from '@/components/ui/page-header'
 
 function getActivityDescription(activity: ActivityItem) {
-  const actorName = activity.actor?.name || activity.actor?.email || 'Unknown'
-  const targetName = activity.target?.name || activity.target?.email || 'Unknown'
+  const actorName = activity.actor?.name || activity.actor?.email || 'Desconocido'
+  const targetName = activity.target?.name || activity.target?.email || 'Desconocido'
 
   switch (activity.type) {
     case 'approval':
@@ -16,8 +16,8 @@ function getActivityDescription(activity: ActivityItem) {
         icon: CheckCircle2,
         iconClass: 'text-success',
         bgClass: 'bg-success-muted',
-        title: 'Profile Approved',
-        description: `${actorName} approved ${targetName}'s profile`,
+        title: 'Perfil aprobado',
+        description: `${actorName} aprobo el perfil de ${targetName}`,
         badge: activity.chapter?.name,
       }
     case 'invite_sent':
@@ -25,8 +25,8 @@ function getActivityDescription(activity: ActivityItem) {
         icon: Mail,
         iconClass: 'text-info',
         bgClass: 'bg-info-muted',
-        title: 'Invite Sent',
-        description: `${actorName} invited ${targetName} to ${activity.company?.name || 'a company'}`,
+        title: 'Invitacion enviada',
+        description: `${actorName} invito a ${targetName} a ${activity.company?.name || 'una empresa'}`,
         badge: activity.company?.name,
       }
     case 'invite_accepted':
@@ -34,8 +34,8 @@ function getActivityDescription(activity: ActivityItem) {
         icon: CheckCircle2,
         iconClass: 'text-success',
         bgClass: 'bg-success-muted',
-        title: 'Invite Accepted',
-        description: `${targetName} accepted invite to ${activity.company?.name || 'a company'}`,
+        title: 'Invitacion aceptada',
+        description: `${targetName} acepto la invitacion a ${activity.company?.name || 'una empresa'}`,
         badge: activity.company?.name,
       }
     case 'invite_revoked':
@@ -43,8 +43,8 @@ function getActivityDescription(activity: ActivityItem) {
         icon: XCircle,
         iconClass: 'text-destructive',
         bgClass: 'bg-destructive/10',
-        title: 'Invite Revoked',
-        description: `${actorName} revoked invite for ${targetName}`,
+        title: 'Invitacion revocada',
+        description: `${actorName} revoco la invitacion para ${targetName}`,
         badge: activity.company?.name,
       }
     default:
@@ -52,8 +52,8 @@ function getActivityDescription(activity: ActivityItem) {
         icon: Activity,
         iconClass: 'text-muted-foreground',
         bgClass: 'bg-muted',
-        title: 'Unknown Activity',
-        description: 'Unknown activity type',
+        title: 'Actividad desconocida',
+        description: 'Tipo de actividad desconocido',
         badge: undefined,
       }
   }
@@ -67,11 +67,11 @@ function formatTimestamp(timestamp: string) {
   const diffHours = Math.floor(diffMs / 3600000)
   const diffDays = Math.floor(diffMs / 86400000)
 
-  if (diffMins < 1) return 'Just now'
-  if (diffMins < 60) return `${diffMins}m ago`
-  if (diffHours < 24) return `${diffHours}h ago`
-  if (diffDays < 7) return `${diffDays}d ago`
-  return date.toLocaleDateString()
+  if (diffMins < 1) return 'Ahora'
+  if (diffMins < 60) return `Hace ${diffMins} min`
+  if (diffHours < 24) return `Hace ${diffHours} h`
+  if (diffDays < 7) return `Hace ${diffDays} d`
+  return date.toLocaleDateString('es-PE')
 }
 
 async function ActivityLog() {
@@ -80,16 +80,16 @@ async function ActivityLog() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>System Activity Log</CardTitle>
-        <CardDescription>Recent actions across the platform (last 50 events)</CardDescription>
+        <CardTitle>Registro de actividad del sistema</CardTitle>
+        <CardDescription>Acciones recientes en la plataforma (ultimos 50 eventos)</CardDescription>
       </CardHeader>
       <CardContent>
         {activities.length === 0 ? (
           <div className="text-center py-12">
             <Activity className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">No activity yet</p>
+            <p className="text-muted-foreground">Todavia no hay actividad</p>
             <p className="text-sm text-muted-foreground mt-2">
-              System events will appear here
+              Los eventos del sistema apareceran aqui
             </p>
           </div>
         ) : (
@@ -129,7 +129,7 @@ async function ActivityLog() {
                     </div>
                     <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
                       <Calendar className="h-3 w-3" />
-                      <span>{new Date(activity.timestamp).toLocaleString()}</span>
+                      <span>{new Date(activity.timestamp).toLocaleString('es-PE')}</span>
                     </div>
                   </div>
                 </div>
@@ -171,9 +171,9 @@ export default function AdminActivityPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="Admin"
-        title="System Activity"
-        description="Audit log of recent platform events and administrative actions."
+        eyebrow="Administracion"
+        title="Actividad del sistema"
+        description="Bitacora de eventos recientes de la plataforma y acciones administrativas."
       />
       <Suspense fallback={<LoadingSkeleton />}>
         <ActivityLog />

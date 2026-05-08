@@ -15,13 +15,13 @@ export default async function ProfilePage() {
   return (
     <div className="max-w-4xl space-y-6">
       <PageHeader
-        eyebrow="Company portal"
-        title="Representative Profile"
-        description={`Manage your profile information for ${company?.name || 'your company'} and confirm your access status.`}
+        eyebrow="Portal de empresa"
+        title="Perfil de representante"
+        description={`Gestiona tu informacion de perfil para ${company?.name || 'tu empresa'} y confirma tu estado de acceso.`}
       />
 
       <ProfileForm
-        user={{ ...user, name: user.name ?? 'Company representative' }}
+        user={{ ...user, name: user.name ?? 'Representante de empresa' }}
         company={company}
         accessInfo={accessInfo}
       />

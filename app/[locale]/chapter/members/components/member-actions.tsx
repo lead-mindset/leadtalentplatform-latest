@@ -29,13 +29,13 @@ export function MemberActionButtons({
     try {
       const result = await approveMember(userId)
       if (result.success) {
-        toast.success(`${userName} approved successfully`)
+        toast.success(`${userName} fue aprobado correctamente`)
         router.refresh()
       } else {
-        toast.error(result.error || 'Failed to approve member')
+        toast.error(result.error || 'No se pudo aprobar al miembro')
       }
     } catch {
-      toast.error('An unexpected error occurred')
+      toast.error('Ocurrio un error inesperado')
     } finally {
       setIsLoading(false)
     }
@@ -46,15 +46,15 @@ export function MemberActionButtons({
     try {
       const result = await rejectMember(userId, rejectReason || undefined)
       if (result.success) {
-        toast.success(`${userName}'s chapter application was rejected`)
+        toast.success(`La postulacion de ${userName} fue rechazada`)
         setShowRejectReason(false)
         setRejectReason('')
         router.refresh()
       } else {
-        toast.error(result.error || 'Failed to reject member')
+        toast.error(result.error || 'No se pudo rechazar al miembro')
       }
     } catch {
-      toast.error('An unexpected error occurred')
+      toast.error('Ocurrio un error inesperado')
     } finally {
       setIsLoading(false)
     }
@@ -65,13 +65,13 @@ export function MemberActionButtons({
     try {
       const result = await revokeApproval(userId)
       if (result.success) {
-        toast.success(`${userName} was moved back to pending review`)
+        toast.success(`${userName} volvio a revision pendiente`)
         router.refresh()
       } else {
-        toast.error(result.error || 'Failed to revoke approval')
+        toast.error(result.error || 'No se pudo revertir la aprobacion')
       }
     } catch {
-      toast.error('An unexpected error occurred')
+      toast.error('Ocurrio un error inesperado')
     } finally {
       setIsLoading(false)
     }
@@ -91,7 +91,7 @@ export function MemberActionButtons({
             ) : (
               <CheckCircle2 className="mr-2 h-4 w-4" />
             )}
-            Approve
+            Aprobar
           </Button>
           <Button
             onClick={() => setShowRejectReason(v => !v)}
@@ -100,7 +100,7 @@ export function MemberActionButtons({
             className="flex-1"
           >
             <XCircle className="mr-2 h-4 w-4" />
-            Reject
+            Rechazar
           </Button>
         </div>
         {showRejectReason && (
@@ -108,11 +108,11 @@ export function MemberActionButtons({
             <Textarea
               value={rejectReason}
               onChange={(event) => setRejectReason(event.target.value)}
-              placeholder="Optional internal note for editors"
+              placeholder="Nota interna opcional para editores"
               rows={3}
             />
             <p className="text-xs text-muted-foreground">
-              This note stays internal. The applicant can re-enter review if moved back to pending later.
+              Esta nota queda interna. La persona postulante puede volver a revision si se mueve a pendiente.
             </p>
             <Button
               onClick={handleReject}
@@ -125,7 +125,7 @@ export function MemberActionButtons({
               ) : (
                 <XCircle className="mr-2 h-4 w-4" />
               )}
-              Confirm rejection
+              Confirmar rechazo
             </Button>
           </div>
         )}
@@ -146,7 +146,7 @@ export function MemberActionButtons({
         ) : (
           <RotateCcw className="mr-2 h-4 w-4" />
         )}
-        Move back to pending review
+        Volver a revision pendiente
       </Button>
     )
   }
@@ -163,7 +163,7 @@ export function MemberActionButtons({
       ) : (
         <XCircle className="mr-2 h-4 w-4" />
       )}
-      Move back to pending review
+      Volver a revision pendiente
     </Button>
   )
 }
