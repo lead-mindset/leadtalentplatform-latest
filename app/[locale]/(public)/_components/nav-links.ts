@@ -8,11 +8,11 @@ export type NavLink = {
 };
 
 export const NAV_LINKS: NavLink[] = [
-  { label: "Eventos", href: "/events", auth: "public" },
+  { label: "Events", href: "/events", auth: "public" },
   { label: "Dashboard", href: "/student", auth: "authenticated", roles: ["member", "editor"] },
   { label: "Dashboard", href: "/company", auth: "authenticated", roles: ["recruiter"] },
-  { label: "Gestionar capítulo", href: "/chapter", auth: "authenticated", roles: ["editor"] },
-  { label: "Panel admin", href: "/admin", auth: "authenticated", roles: ["admin"] },
+  { label: "Chapter tools", href: "/chapter", auth: "authenticated", roles: ["editor"] },
+  { label: "Admin", href: "/admin", auth: "authenticated", roles: ["admin"] },
 ];
 
 export function getVisibleLinks(role: Role | null): NavLink[] {

@@ -16,7 +16,7 @@ export function FinalCTA() {
             playsInline
             className="w-full h-full object-cover"
           >
-            <source src="https://sboibxszratyaswwursb.supabase.co/storage/v1/object/sign/video/video3.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV81MzNiYjliNy03NjlkLTRhZjMtOTQ3MC0yMGM2NmJjYTI3OWIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ2aWRlby92aWRlbzMubXA0IiwiaWF0IjoxNzc2NjMxNzEzLCJleHAiOjIwOTE5OTE3MTN9.SQ0yf7HaD3Uc2Df5JXECvsqXDgMm2WnzuGHAhBJZylo" type="video/mp4" />
+            <source src="/video3.mp4" type="video/mp4" />
           </video>
         </div>
         
@@ -28,7 +28,7 @@ export function FinalCTA() {
               Join the Next Frontier.
             </h2>
             <p className="text-white/80 text-lg sm:text-xl md:text-2xl font-medium mb-12 max-w-2xl">
-              Connect with global STEM opportunities and a community of visionaries. Transform your potential into leadership with the fastest growing tech community in the Americas.
+              Create your profile, join events, and apply to a chapter when you are ready.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
@@ -38,7 +38,7 @@ export function FinalCTA() {
                 className="px-8 py-6 text-base sm:text-lg rounded-full font-bold hover:scale-105 hover:shadow-2xl transition-all group bg-white text-background hover:bg-white/90"
               >
                 <Link href="/auth/sign-up">
-                  Become a Member
+                  Create your profile
                   <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
@@ -49,7 +49,7 @@ export function FinalCTA() {
                 className="px-8 py-6 text-base sm:text-lg rounded-full font-bold hover:scale-105 transition-all group border-white/30 text-white hover:bg-white/10 hover:text-white"
               >
                 <Link href="/about">
-                  Explore Mentorship
+                  Explore LEAD
                   <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>

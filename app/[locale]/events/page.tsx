@@ -16,6 +16,9 @@ import { MainContainer } from '@/components/global/main-container'
 import { cn } from '@/lib/utils'
 import type { EventWithDetails } from '@/lib/types'
 
+const EVENT_TIME_ZONE = 'America/Lima'
+const EVENT_LOCALE = 'en-US'
+
 export const metadata = {
   title: 'Events',
   description: 'Browse upcoming LEAD events and register online.',
@@ -25,10 +28,11 @@ function formatDate(value: string) {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return 'Date pending'
 
-  return date.toLocaleDateString(undefined, {
+  return date.toLocaleDateString(EVENT_LOCALE, {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
+    timeZone: EVENT_TIME_ZONE,
   })
 }
 
@@ -36,9 +40,10 @@ function formatTime(value: string) {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return 'Time pending'
 
-  return date.toLocaleTimeString(undefined, {
+  return date.toLocaleTimeString(EVENT_LOCALE, {
     hour: 'numeric',
     minute: '2-digit',
+    timeZone: EVENT_TIME_ZONE,
   })
 }
 
@@ -80,7 +85,7 @@ function getEventTiming(event: EventWithDetails) {
 }
 
 function getAvailabilityLabel(event: EventWithDetails) {
-  if (event.capacity === null) return 'Open capacity'
+  if (event.capacity === null) return 'Open spots'
 
   const remaining = Math.max(0, event.capacity - event._count.registrations)
   if (remaining === 0) return 'Full'
@@ -89,12 +94,12 @@ function getAvailabilityLabel(event: EventWithDetails) {
 }
 
 function getAvailabilityVariant(event: EventWithDetails) {
-  if (event.capacity === null) return 'secondary' as const
+  if (event.capacity === null) return 'success' as const
 
   const remaining = Math.max(0, event.capacity - event._count.registrations)
   if (remaining === 0) return 'destructive' as const
   if (remaining <= 10) return 'warning' as const
-  return 'secondary' as const
+  return 'neutral' as const
 }
 
 function EventCard({ event }: { event: EventWithDetails }) {
