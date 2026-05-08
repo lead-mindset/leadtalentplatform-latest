@@ -20,8 +20,7 @@ export function GoogleMapsProvider({
   const [hasError, setHasError] = useState(false);
   
   if (!apiKey) {
-    console.error('Google Maps API key is missing. Please set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY environment variable.');
-    return fallback || <div>Error: Google Maps API key not configured</div>;
+    return <>{fallback ?? children}</>;
   }
 
   if (hasError) {
