@@ -8,6 +8,20 @@ The goal is one coherent LEAD application, not a collection of separately styled
 
 LEAD should feel clear, credible, and organized. The product can be warm and community-oriented, but it should not become decorative at the expense of task clarity.
 
+The product should not solve cohesion by making every surface equally dark, equally rounded, or equally card-heavy. Public and student surfaces may feel warmer and more community-oriented. Chapter editor, admin, and company representative surfaces should feel calmer, denser, and optimized for repeated work. The shared language comes from primitives, spacing, typography, status semantics, and navigation structure, not from giving every route the same visual weight.
+
+### Surface Hierarchy
+
+Use a deliberate surface hierarchy:
+
+- **Public surfaces**: visual, warmer, and more spacious; use imagery and expressive calls to action where they support mission and event discovery.
+- **Student surfaces**: encouraging and clear; use friendly guidance, but keep profile, event, and chapter status easy to scan.
+- **Chapter editor surfaces**: operational and focused; prioritize rosters, applications, events, and check-in speed.
+- **Admin surfaces**: quiet, dense, and audit-friendly; prioritize tables, filters, role/identity clarity, and safe actions.
+- **Company representative surfaces**: professional and restrained; prioritize talent search, saved profiles, and access clarity.
+
+Avoid one-note palettes. LEAD can keep its dark brand base, but operational tools should use quieter surfaces, stronger hierarchy, and less decorative glow/gradient treatment than public marketing sections.
+
 Use a Shadcn-style system:
 
 - `components/ui` is the source of truth for reusable primitives.
@@ -28,6 +42,64 @@ Canonical primitive families:
 - `Sidebar` and navigation primitives for authenticated app shells.
 
 Do not build custom visual systems inside individual pages unless the issue explicitly scopes a new reusable primitive.
+
+### Radius Scale
+
+Use a restrained Shadcn-style radius scale:
+
+| Token | Use |
+|-------|-----|
+| `sm` / `4px` | Small internal elements, progress fills, compact controls |
+| `md` / `6-8px` | Default buttons, inputs, badges, table rows, filter controls |
+| `lg` / `8-12px` | Cards, forms, dialogs, contained tools |
+| `xl` / `16px` | Major panels or public/student marketing surfaces when useful |
+| `full` | Avatars, circular icon buttons, small status dots only |
+
+Do not use `24px` or full-pill shapes as the default app radius. Full pills and large rounded cards are opt-in for public/student hero-level moments, not the default for admin, chapter, company, or dense records.
+
+### Typography Decisions
+
+- Use brand display typography for public heroes, major marketing moments, and campaign-level surfaces.
+- Use tighter operational typography for admin, chapter, and company tools.
+- Do not use hero-scale type inside compact cards, tables, sidebars, filters, or dense panels.
+- Avoid global semantic text rules that unexpectedly resize text inside controls or compact records.
+- Buttons and badges should not force heavy display styling by default.
+- Do not scale control text with viewport width. Text inside controls should stay predictable and wrap/truncate intentionally.
+
+### Button Contract
+
+The base `Button` should be calm, predictable, and Shadcn-like.
+
+Core variants:
+
+- `primary`: the main action on a page or object.
+- `secondary`: supportive action with visible affordance.
+- `outline`: secondary action or filter/action group.
+- `ghost`: low-emphasis action, navigation affordance, row utility.
+- `destructive`: destructive or irreversible action.
+- `link`: inline text navigation.
+
+Rules:
+
+- One primary action per page/object context.
+- Do not make gradients, full pills, or hover-scale the default button behavior.
+- Reserve gradient/full-pill CTA treatment for public or student hero-level calls to action.
+- Admin, chapter, and company buttons should be stable on hover; use color, border, or background changes instead of scale.
+- Avoid status-colored button variants such as `success`, `warning`, and `info` in the base primitive unless a repeated domain workflow justifies them.
+- Do not mix Material-style variants (`filled`, `tonal`, `outlined`, `text`) with Shadcn variants unless the system explicitly chooses that naming model.
+- Icon-only buttons must have stable dimensions, accessible labels, and tooltips when the icon is not obvious.
+
+### Badge Contract
+
+Badges are for status, role, counts, and compact metadata. They are not decoration.
+
+Rules:
+
+- Base badges should be compact, low-emphasis, and stable.
+- Animation is reserved for genuinely live or active states.
+- Domain status mapping should drive badge color and label. Do not choose badge variants ad hoc in page code.
+- Secondary metadata should not always become a badge on mobile; use text rows when badges compete with titles or CTAs.
+- Role labels, navigation counts, and semantic statuses should remain visually distinct.
 
 ## App Shell
 
@@ -66,9 +138,29 @@ Rules:
 
 - Use `lib/nav-config.ts` as the canonical role navigation map.
 - Use shared sidebar primitives from `components/ui/sidebar.tsx` and `components/ui/sidebars/*`.
-- Mobile authenticated views use a compact header with a sidebar trigger.
+- Mobile authenticated views use a compact header with a clear sidebar trigger and visible role/workspace context.
 - Do not create page-specific navigation unless the workflow truly needs a local sub-navigation.
 - Role differences are information architecture differences, not separate visual directions.
+
+### Sidebar Anatomy
+
+Desktop sidebars should use one hierarchy across student, chapter editor, admin, and company contexts:
+
+- User block: name, email, and avatar or initials.
+- Role/workspace label: participant, chapter editor, admin, or company representative.
+- Context chip when useful: member ID, chapter, company, or scoped workspace.
+- Nav groups: short labels that match `lib/nav-config.ts`.
+- Active item: one clear active state, not a competing glow/gradient treatment.
+- Counts: compact count badges only where the number changes the user's next action.
+- Logout: stable footer placement with no overlap from floating widgets or toasts.
+
+Mobile authenticated headers should show:
+
+- A clear menu trigger.
+- Current role or workspace name.
+- Optional compact user/avatar affordance.
+
+Do not collapse all orientation into an unlabeled icon. When the sidebar drawer opens, it should preserve the same user, role, context, nav groups, active state, and logout hierarchy as desktop.
 
 ### Role Navigation
 
@@ -123,6 +215,8 @@ Rules:
 - Do not use hero-scale typography inside operational pages.
 - Do not hide important status under decorative copy.
 - Keep page titles stable and literal.
+- Public pages may use larger hero composition, but operational pages should keep page headers compact and scannable.
+- Secondary actions should not visually compete with the primary action.
 
 ### Action Placement
 
@@ -163,6 +257,16 @@ Use the simplest structure that supports the workflow:
 - Do not make card-heavy admin, editor, or company workflows.
 - Do not use cards as decorative filler.
 
+### Density Decisions
+
+Use workflow density to choose the component:
+
+- Public/student discovery can use cards when the record benefits from imagery, status, and narrative.
+- Admin, chapter, and company desktop workflows should default to tables or dense lists for repeated records.
+- Mobile versions of dense records should use a reusable mobile record-card/list pattern rather than squeezing desktop table columns.
+- Summary metric cards are allowed when each card answers a real operational question.
+- Page sections should be layout containers, not floating cards.
+
 ### Use Cards For
 
 - Repeated records where card scanning helps, especially on mobile.
@@ -184,12 +288,25 @@ Use the simplest structure that supports the workflow:
 - Mobile alternatives to tables.
 - Object-associated records that do not need full table controls.
 
+### Mobile Record Pattern
+
+For records that are tables on desktop, mobile records should show:
+
+- Primary label/title.
+- One or two key status badges.
+- The most important metadata as labeled rows.
+- One primary row action.
+- Secondary row actions in a menu or lower-emphasis area.
+
+Do not horizontally clip tables on mobile. If a table cannot fit comfortably at `390px`, it needs a mobile record alternative.
+
 ## Forms
 
 Forms should be grouped by user intent, not database table.
 
 Rules:
 
+- Use consistent input height, radius, border, focus ring, label spacing, and help text.
 - Keep required and optional fields obvious.
 - Show field-level validation near the field.
 - Show a short summary when submission is blocked by multiple errors.
@@ -204,9 +321,15 @@ Form sections should answer:
 - Why is this field needed?
 - What happens after submit?
 
+Avoid form sections that look visually unrelated to the rest of the product. Forms should use the same button, input, card, and page-header decisions as the workflow around them.
+
 ## Status Semantics
 
 Status badges must use consistent meaning across the app. Prefer domain-specific status components when repeated status logic appears.
+
+Status labels and colors should come from domain mapping helpers or small domain components where repeated logic appears. Avoid choosing `Badge` variants directly in many route files when the same status appears across event, registration, chapter, identity, newsletter, or company workflows.
+
+The base badge primitive should stay visually calm. Domain mappings may make important states stand out, but status color must remain semantic and consistent across the product.
 
 ### Badge Variant Semantics
 
@@ -306,6 +429,19 @@ Use consistent labels for:
 - Missing access.
 
 Do not route company representatives into student onboarding when the problem is company access.
+
+## Implementation Order For Design-System Passes
+
+Follow this order for #96 and later UI implementation:
+
+1. Normalize global tokens, surface hierarchy, typography defaults, and radius scale.
+2. Normalize `Button` variants and remove conflicting default behaviors.
+3. Normalize `Badge` and add domain status mappings where repeated.
+4. Normalize `Card`, `Table`, `Input`, and form primitives.
+5. Normalize authenticated sidebar and mobile shell behavior.
+6. Only then clean up route-level pages and workflows.
+
+Do not start with route-level polish. If a page looks wrong because primitives are inconsistent, fix the primitive contract first. If a page has a truly unique workflow need, add or extend a reusable primitive before adding one-off Tailwind styling.
 
 ## Responsive Rules
 
