@@ -12,7 +12,7 @@ export function GoogleButton() {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/${locale}/auth/callback`
+        redirectTo: `${window.location.origin}/${locale}/auth/callback`
       },
     })
   }

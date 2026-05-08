@@ -61,7 +61,7 @@ export function SignUpForm({
           data: {
             locale: locale,
           },
-          emailRedirectTo: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/${locale}/auth/callback`
+          emailRedirectTo: `${window.location.origin}/${locale}/auth/callback`
         },
       });
       if (error) throw error;
