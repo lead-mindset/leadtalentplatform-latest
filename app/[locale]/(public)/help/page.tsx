@@ -10,7 +10,49 @@ export const metadata = {
   description: 'Get help using the LEAD Talent Platform.',
 }
 
-export default function HelpPage() {
+type HelpPageProps = {
+  params: Promise<{ locale: string }>
+}
+
+export default async function HelpPage({ params }: HelpPageProps) {
+  const { locale } = await params
+  const isEnglish = locale === 'en'
+  const copy = isEnglish
+    ? {
+        badge: 'Support',
+        title: 'Help Center',
+        body:
+          'Find the quickest path for account access, public event registration, partnership questions, and company invite support.',
+        accountTitle: 'Student account help',
+        accountDesc: 'Sign-in issues, profile setup, chapter access, and event registration.',
+        accountCta: 'Go to sign in',
+        emailTitle: 'Partnership support',
+        emailDesc:
+          'Reach the team for sponsorships, company access, invitations, or platform questions.',
+        privacyTitle: 'Privacy and policies',
+        privacyDesc:
+          'Review platform terms and privacy expectations before onboarding or partnership conversations.',
+        privacy: 'Privacy',
+        terms: 'Terms',
+      }
+    : {
+        badge: 'Soporte',
+        title: 'Centro de ayuda',
+        body:
+          'Encuentra el camino mas rapido para acceso de cuenta, registro a eventos, alianzas y soporte de invitaciones para empresas.',
+        accountTitle: 'Ayuda de cuenta',
+        accountDesc: 'Problemas de ingreso, perfil, acceso a capitulos y registro a eventos.',
+        accountCta: 'Ir a iniciar sesion',
+        emailTitle: 'Soporte de alianzas',
+        emailDesc:
+          'Contacta al equipo por sponsors, acceso de empresas, invitaciones o preguntas de la plataforma.',
+        privacyTitle: 'Privacidad y politicas',
+        privacyDesc:
+          'Revisa terminos y privacidad antes de completar onboarding o conversaciones de alianza.',
+        privacy: 'Privacidad',
+        terms: 'Terminos',
+      }
+
   return (
     <>
       <Navbar />
@@ -18,12 +60,11 @@ export default function HelpPage() {
         <div className="mx-auto flex max-w-5xl flex-col gap-6 px-6 pb-16 pt-28">
           <div className="space-y-3">
             <Badge variant="secondary" className="w-fit">
-              Support
+              {copy.badge}
             </Badge>
-            <h1 className="text-4xl font-bold tracking-tight">Help Center</h1>
+            <h1 className="text-4xl font-bold tracking-tight">{copy.title}</h1>
             <p className="max-w-2xl text-muted-foreground">
-              Find the quickest path for account access, profile setup, event registration, and
-              company onboarding support.
+              {copy.body}
             </p>
           </div>
 
@@ -31,14 +72,14 @@ export default function HelpPage() {
             <Card>
               <CardHeader>
                 <LifeBuoy className="h-5 w-5 text-primary" />
-                <CardTitle>Account help</CardTitle>
+                <CardTitle>{copy.accountTitle}</CardTitle>
                 <CardDescription>
-                  Sign-in issues, chapter access, and student profile updates.
+                  {copy.accountDesc}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <Button asChild className="w-full">
-                  <Link href="/auth/login">Go to sign in</Link>
+                  <Link href="/auth/login">{copy.accountCta}</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -46,9 +87,9 @@ export default function HelpPage() {
             <Card>
               <CardHeader>
                 <Mail className="h-5 w-5 text-primary" />
-                <CardTitle>Email support</CardTitle>
+                <CardTitle>{copy.emailTitle}</CardTitle>
                 <CardDescription>
-                  Reach the team for invitations, approvals, or platform access questions.
+                  {copy.emailDesc}
                 </CardDescription>
               </CardHeader>
               <CardContent className="text-sm text-muted-foreground">
@@ -59,17 +100,17 @@ export default function HelpPage() {
             <Card>
               <CardHeader>
                 <ShieldCheck className="h-5 w-5 text-primary" />
-                <CardTitle>Privacy and policies</CardTitle>
+                <CardTitle>{copy.privacyTitle}</CardTitle>
                 <CardDescription>
-                  Review the platform terms and privacy expectations before onboarding.
+                  {copy.privacyDesc}
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex gap-2">
                 <Button asChild variant="outline" className="flex-1">
-                  <Link href="/privacy">Privacy</Link>
+                  <Link href="/privacy">{copy.privacy}</Link>
                 </Button>
                 <Button asChild variant="outline" className="flex-1">
-                  <Link href="/terms">Terms</Link>
+                  <Link href="/terms">{copy.terms}</Link>
                 </Button>
               </CardContent>
             </Card>

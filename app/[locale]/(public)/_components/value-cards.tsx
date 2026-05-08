@@ -1,31 +1,71 @@
+"use client";
+
+import { useLocale } from "next-intl";
 import { BadgeCheck, Briefcase, EyeOff } from "lucide-react";
 import { MainContainer } from "@/components/global/main-container";
 import { SectionLabel } from "@/components/ui/section-label";
 import { Icon } from "@/components/ui/icon";
 import PrismaticBurst from "@/components/ui/prismatic-burst";
 
-const VALUE_CARDS = [
-  {
-    icon: Briefcase,
-    title: "Access real opportunities",
-    description:
-      "LEAD partners can discover your profile when you choose to become visible.",
+const VALUE_CARDS = {
+  en: [
+    {
+      icon: Briefcase,
+      title: "Community-backed talent",
+      description:
+        "Meet students through LEAD chapters, public programs, and opt-in profile visibility.",
+    },
+    {
+      icon: BadgeCheck,
+      title: "Official member context",
+      description:
+        "Approved chapter members can carry official LEAD identity and participation history.",
+    },
+    {
+      icon: EyeOff,
+      title: "Consent-first visibility",
+      description:
+        "Profiles are private by default and visible to company representatives only when students choose it.",
+    },
+  ],
+  es: [
+    {
+      icon: Briefcase,
+      title: "Oportunidades reales",
+      description:
+        "Las empresas aliadas pueden descubrir tu perfil cuando eliges hacerlo visible.",
+    },
+    {
+      icon: BadgeCheck,
+      title: "Tu ID oficial LEAD",
+      description:
+        "Miembros aprobados de capitulos reciben un ID oficial para eventos y reconocimiento de comunidad.",
+    },
+    {
+      icon: EyeOff,
+      title: "Tu controlas la visibilidad",
+      description:
+        "Los perfiles son privados por defecto. Activa visibilidad para empresas solo cuando estes listo.",
+    },
+  ],
+} as const;
+
+const SECTION_COPY = {
+  en: {
+    eyebrow: "LEAD Talent Platform",
+    title: "A credible bridge between community and opportunity",
   },
-  {
-    icon: BadgeCheck,
-    title: "Your official LEAD ID",
-    description:
-      "Approved chapter members receive an official ID for events and community recognition.",
+  es: {
+    eyebrow: "LEAD Talent Platform",
+    title: "Tu camino rapido a la comunidad LEAD",
   },
-  {
-    icon: EyeOff,
-    title: "You control visibility",
-    description:
-      "Profiles are private by default. Turn company visibility on only when you are ready.",
-  },
-] as const;
+} as const;
 
 export function ValueCards() {
+  const locale = useLocale() === "en" ? "en" : "es";
+  const cards = VALUE_CARDS[locale];
+  const copy = SECTION_COPY[locale];
+
   return (
     <section className="relative overflow-hidden border-b border-border/10 bg-background py-24">
       <div className="absolute inset-0 z-0 bg-background">
@@ -44,12 +84,12 @@ export function ValueCards() {
       </div>
       <MainContainer className="relative z-10">
         <div className="mb-16 text-center">
-          <SectionLabel>LEAD Talent Platform</SectionLabel>
-          <h2 className="fluid-h2 mb-6">Your fast track to the LEAD community</h2>
+          <SectionLabel>{copy.eyebrow}</SectionLabel>
+          <h2 className="fluid-h2 mb-6">{copy.title}</h2>
         </div>
 
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-          {VALUE_CARDS.map((card) => {
+          {cards.map((card) => {
             const CardIcon = card.icon;
             return (
               <div

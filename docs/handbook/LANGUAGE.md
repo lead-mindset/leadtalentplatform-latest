@@ -52,6 +52,20 @@ Avoid mixing English and Spanish inside one route's interface copy unless the mi
 - Public English copy should be polished and credible, but should not imply that the full authenticated app is English-ready.
 - Follow `docs/handbook/UI_UX.md` for visual consistency while translating copy.
 
+## Public English Sponsor Layer
+
+Issue #104 defines the intentional English public layer. Supported English public routes include the homepage, public event shell, partner information, and help/contact surfaces.
+
+English public pages should help sponsors, partners, and international reviewers understand LEAD, review public community activity, and find the right contact or company-access path. They must not imply that logged-in student, chapter, admin, or company workflows are fully English-ready.
+
+Event titles, descriptions, chapter names, company names, and user-authored content stay in their original authored language. Translate the route shell, navigation labels, CTAs, status labels, empty states, and help text only.
+
+## Future English Company Portal
+
+The company representative portal remains Spanish-first for the MVP. Future English company portal support is scoped in `docs/handbook/ENGLISH_COMPANY_PORTAL_READINESS.md` and should begin only when a real English-speaking partner must test authenticated company workflows.
+
+Do not partially translate protected company routes as opportunistic cleanup. English company portal support requires a complete bilingual copy map, access-state review, and QA pass across login, onboarding/access help, dashboard, browse, saved talent, profile detail, settings, empty states, toasts, and errors.
+
 ## Validation Checklist
 
 For language-related work, verify:
