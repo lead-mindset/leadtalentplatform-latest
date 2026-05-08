@@ -192,6 +192,8 @@ Depends on: Apply cohesive workflow refinements across core routes.
 
 After the visual system is verified, update the UI/UX handbook and planning docs with final design rules, screenshots/evidence summary, and follow-up guardrails to prevent future isolated visual drift.
 
+Implementation note: preserve a compact evidence summary and artifact policy in the handbook. Do not commit raw screenshot folders by default; keep `tmp/visual-audit/*` local unless selected screenshots are reviewed and intentionally attached or preserved.
+
 ### Acceptance Criteria
 
 - [ ] Given the final design pass, when documentation is updated, then `docs/handbook/UI_UX.md` reflects the actual system decisions.
@@ -211,4 +213,3 @@ Small
 ### Dependencies
 
 Depends on: Run accessibility, mobile overflow, and browser QA pass.
-
