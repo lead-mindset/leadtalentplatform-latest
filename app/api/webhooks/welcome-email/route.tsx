@@ -3,7 +3,15 @@ import { render } from '@react-email/render';
 import { createServiceClient } from '@/lib/supabase/server-service';
 import WelcomeEmail from '@/emails/templates/WelcomeEmail';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+function createResendClient() {
+  const apiKey = process.env.RESEND_API_KEY;
+
+  if (!apiKey) {
+    throw new Error('RESEND_API_KEY not configured');
+  }
+
+  return new Resend(apiKey);
+}
 
 export async function POST(request: Request) {
   const authHeader = request.headers.get('authorization');
@@ -16,6 +24,14 @@ export async function POST(request: Request) {
 
   if (!record?.email) {
     return new Response(JSON.stringify({ skipped: 'no email' }), { status: 200 });
+  }
+
+  let resend: Resend;
+  try {
+    resend = createResendClient();
+  } catch (err) {
+    console.error(err instanceof Error ? err.message : 'Email service not configured');
+    return new Response(JSON.stringify({ error: 'Email service not configured' }), { status: 500 });
   }
 
   const supabase = createServiceClient();
