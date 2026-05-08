@@ -574,6 +574,72 @@ Use image generation only when a workflow needs source material such as event im
 
 For larger redesigns, compare two or three layout variants when the direction is not obvious. Choose the variant that best supports readability, task completion, and consistency with this handbook.
 
+## Final Cohesion Pass Evidence
+
+The cohesive UI/UX pass is the reference baseline for future LEAD visual work.
+
+Completed sequence:
+
+- **#94 Baseline audit**: captured primary public, student, chapter editor, admin, and company representative screens and separated system-level drift from page-specific polish.
+- **#95 Design decisions**: clarified the unified LEAD product system, role-based surface hierarchy, radius scale, typography rules, button contract, badge semantics, card/table/form rules, and authenticated shell expectations.
+- **#96 Shared primitives**: normalized global tokens and core Shadcn-style primitives before route-level cleanup.
+- **#97 Shells**: aligned public navigation and authenticated sidebar/mobile shell behavior.
+- **#98 Workflow refinements**: refined core public, student, chapter, admin, and company workflows only after shared primitives and shells were stable.
+- **#99 QA gate**: verified public visitor, participant/student, chapter editor, admin, and company representative paths with browser QA, mobile screenshots, keyboard probes, and validation commands.
+
+Final QA summary:
+
+- Mobile overflow blockers: 0 in captured primary routes.
+- Screenshot privacy blockers: 0; no service-role keys, PATs, passwords, or JWT-looking secrets were detected in captured body previews.
+- Route click-through blockers: 0 across the role workflows covered by #99.
+- Validation passed: Playwright QA gate, `pnpm test`, `pnpm lint`, and `pnpm build`.
+- Remaining notes are non-blocking: hidden native controls used by custom select/checkbox/file inputs can appear as small targets in DOM probes, public media/map requests may abort during fast route transitions, and the public logo image can emit a Next image-ratio warning.
+
+Keep future evidence summaries compact. Do not paste route-by-route QA tables into this handbook unless a future decision depends on the exact route details.
+
+## Future UI Guardrails
+
+Future UI work should use this order:
+
+1. Confirm the workflow and role surface from this handbook.
+2. Use or extend shared `components/ui` primitives.
+3. Use the shared public or authenticated shell patterns.
+4. Compose page layout with Tailwind.
+5. Apply route-level polish only after the shared primitive and shell contracts are adequate.
+
+Hard guardrails:
+
+- Shared primitives come before isolated page polish when the same inconsistency appears in more than one place.
+- Page-level Tailwind may handle layout, spacing, and responsive composition; it should not create a new button, badge, card, table, form, or navigation system.
+- If a route needs a visual pattern not covered by existing primitives, create or extend a shared primitive before adding one-off styling.
+- Domain status labels should continue to use shared badge semantics or small domain mapping helpers.
+- Significant UI changes need rendered browser review. Copy-only, docs-only, and backend-only changes do not need heavy visual QA.
+- If a future issue must intentionally diverge from this system, document the reason in the issue plan before implementation.
+
+## Visual Artifact Policy
+
+Visual QA artifacts are useful evidence, but they are not source code.
+
+Default handling:
+
+- Store local screenshots, reports, and Playwright scripts under `tmp/visual-audit/{issue}/`.
+- Keep visual artifacts out of git unless the product owner explicitly asks to preserve selected files.
+- Attach or share only selected screenshots after reviewing them for privacy and relevance.
+- Never commit or attach screenshots that expose service-role keys, PATs, JWT-looking tokens, passwords, private credentials, or sensitive real personal data.
+- Seed emails and demo names are acceptable for local evidence, but they should still be reviewed before external sharing.
+- When an issue closes, summarize what the screenshots proved and either leave local artifacts untracked, attach a small reviewed subset to GitHub, or discard/archive them outside the repo.
+
+## Future Tooling Options
+
+These are follow-up options, not current requirements:
+
+- **Component gallery or Storybook**: useful once core primitives stabilize enough that designers and engineers need a browsable reference.
+- **Visual regression snapshots**: useful for a small set of high-value routes such as public events, onboarding, student dashboard, chapter check-in, admin users, and company browse.
+- **Architecture or lint guardrails**: useful if isolated page-level visual systems start reappearing, especially around button, badge, table, sidebar, and status patterns.
+- **Automated accessibility checks**: useful after false positives from hidden native controls and custom primitives are handled intentionally.
+
+Add tooling only when it reduces repeated review effort. Do not add process weight before the product workflow itself is stable.
+
 ## Redesign Issue Checklist
 
 Every redesign issue should answer:
