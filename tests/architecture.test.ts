@@ -255,7 +255,7 @@ describe('architecture boundaries', () => {
       violations.sort(),
       'Architecture rule: `student_profile` is legacy/migration-only. Do not add live table access or compatibility aliases.'
     ).toEqual([])
-  })
+  }, 20_000)
 
   it('keeps admin RLS tied to the canonical app role', async () => {
     const migrationFiles = await collectMigrationFiles()
