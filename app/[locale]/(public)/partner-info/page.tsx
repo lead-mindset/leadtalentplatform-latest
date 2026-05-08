@@ -10,7 +10,71 @@ export const metadata = {
   description: 'Information for partners and company collaborators on LEAD.',
 }
 
-export default function PartnerInfo() {
+type PartnerInfoProps = {
+  params: Promise<{ locale: string }>
+}
+
+export default async function PartnerInfo({ params }: PartnerInfoProps) {
+  const { locale } = await params
+  const isEnglish = locale === 'en'
+  const copy = isEnglish
+    ? {
+        badge: 'For partners',
+        title: 'Partner with LEAD',
+        body:
+          'LEAD connects sponsors and partner organizations with Latin American student leaders through chapter communities, public events, and opt-in talent visibility.',
+        cards: [
+          {
+            title: 'Opt-in student visibility',
+            description:
+              'Company representatives only browse profiles from students who have explicitly chosen to be visible.',
+          },
+          {
+            title: 'Company access workflows',
+            description:
+              'Invited representatives can review visible talent, save profiles, and coordinate with LEAD through scoped access.',
+          },
+          {
+            title: 'Events and applications',
+            description:
+              'Support chapter programs, workshops, and application-based events with clear operational flows.',
+          },
+        ],
+        nextTitle: 'Next steps',
+        nextDescription:
+          'Ready to explore a partnership or need company account support?',
+        primary: 'Company login',
+        secondary: 'Visit help center',
+      }
+    : {
+        badge: 'Para aliados',
+        title: 'Colabora con LEAD',
+        body:
+          'LEAD conecta empresas aliadas y sponsors con lideres estudiantiles de Latinoamerica mediante capitulos, eventos publicos y visibilidad de talento con consentimiento.',
+        cards: [
+          {
+            title: 'Visibilidad con consentimiento',
+            description:
+              'Los representantes solo pueden explorar perfiles de estudiantes que eligieron hacerlos visibles.',
+          },
+          {
+            title: 'Acceso para empresas',
+            description:
+              'Representantes invitados pueden revisar talento visible, guardar perfiles y coordinar con LEAD mediante acceso controlado.',
+          },
+          {
+            title: 'Eventos y postulaciones',
+            description:
+              'Apoya programas de capitulos, talleres y eventos con postulacion usando flujos claros.',
+          },
+        ],
+        nextTitle: 'Siguientes pasos',
+        nextDescription:
+          'Quieres explorar una alianza o necesitas soporte de acceso para empresas?',
+        primary: 'Ingreso empresa',
+        secondary: 'Centro de ayuda',
+      }
+
   return (
     <>
       <Navbar />
@@ -18,12 +82,11 @@ export default function PartnerInfo() {
         <div className="mx-auto flex max-w-5xl flex-col gap-6 px-6 pb-16 pt-28">
           <div className="space-y-3">
             <Badge variant="secondary" className="w-fit">
-              For partners
+              {copy.badge}
             </Badge>
-            <h1 className="text-4xl font-bold tracking-tight">Partner Information</h1>
+            <h1 className="text-4xl font-bold tracking-tight">{copy.title}</h1>
             <p className="max-w-3xl text-muted-foreground">
-              LEAD connects companies with student talent through chapter communities, curated
-              visibility controls, and event-based recruiting workflows.
+              {copy.body}
             </p>
           </div>
 
@@ -31,9 +94,9 @@ export default function PartnerInfo() {
             <Card>
               <CardHeader>
                 <Users className="h-5 w-5 text-primary" />
-                <CardTitle>Student visibility</CardTitle>
+                <CardTitle>{copy.cards[0].title}</CardTitle>
                 <CardDescription>
-                  Company representatives only browse profiles from students who have explicitly opted in.
+                  {copy.cards[0].description}
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -41,9 +104,9 @@ export default function PartnerInfo() {
             <Card>
               <CardHeader>
                 <BriefcaseBusiness className="h-5 w-5 text-primary" />
-                <CardTitle>Company workflows</CardTitle>
+                <CardTitle>{copy.cards[1].title}</CardTitle>
                 <CardDescription>
-                  Invite teammates, save prospects, and manage company access centrally.
+                  {copy.cards[1].description}
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -51,9 +114,9 @@ export default function PartnerInfo() {
             <Card>
               <CardHeader>
                 <Zap className="h-5 w-5 text-primary" />
-                <CardTitle>Events and applications</CardTitle>
+                <CardTitle>{copy.cards[2].title}</CardTitle>
                 <CardDescription>
-                  Support chapter events with open registration or application review flows.
+                  {copy.cards[2].description}
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -61,17 +124,17 @@ export default function PartnerInfo() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Next steps</CardTitle>
+              <CardTitle>{copy.nextTitle}</CardTitle>
               <CardDescription>
-                Ready to work with LEAD or need company account support?
+                {copy.nextDescription}
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-3 sm:flex-row">
               <Button asChild>
-                <Link href="/company/login">Company login</Link>
+                <Link href="/company/login">{copy.primary}</Link>
               </Button>
               <Button asChild variant="outline">
-                <Link href="/help">Visit help center</Link>
+                <Link href="/help">{copy.secondary}</Link>
               </Button>
             </CardContent>
           </Card>

@@ -56,6 +56,8 @@ export function NavbarClient({ visibleLinks, user, dashboardHref }: Props) {
     if (isEnglish) return label;
     const labels: Record<string, string> = {
       Events: "Eventos",
+      Partners: "Aliados",
+      Help: "Ayuda",
       Dashboard: "Panel",
       "Chapter tools": "Herramientas de capitulo",
       Admin: "Admin",

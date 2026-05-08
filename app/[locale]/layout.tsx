@@ -62,13 +62,18 @@ type Props = {
   params: Promise<{ locale: string }>;
 };
 
-export default function LocaleLayout({
+export default async function LocaleLayout({
   children,
   params
 }: Props) {
+  const { locale } = await params;
+  const htmlLang = routing.locales.includes(locale as (typeof routing.locales)[number])
+    ? locale
+    : routing.defaultLocale;
+
   return (
     <html
-      lang={routing.defaultLocale}
+      lang={htmlLang}
       className={` ${raleway.variable} ${montserrat.variable}`}
       suppressHydrationWarning
     >
@@ -81,7 +86,7 @@ export default function LocaleLayout({
         >
           <GoogleMapsProvider>
             <Suspense fallback={null}>
-              <LocaleContent params={params}>
+              <LocaleContent params={Promise.resolve({ locale: htmlLang })}>
                 {children}
               </LocaleContent>
             </Suspense>

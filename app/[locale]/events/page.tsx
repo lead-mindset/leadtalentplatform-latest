@@ -17,18 +17,102 @@ import { cn } from '@/lib/utils'
 import type { EventWithDetails } from '@/lib/types'
 
 const EVENT_TIME_ZONE = 'America/Lima'
-const EVENT_LOCALE = 'es-PE'
+const EVENT_LOCALES = {
+  en: 'en-US',
+  es: 'es-PE',
+} as const
+
+type PublicEventsLocale = keyof typeof EVENT_LOCALES
+
+const EVENT_COPY = {
+  en: {
+    metadataTitle: 'Events',
+    metadataDescription: 'Explore public LEAD events and community programs.',
+    pendingDate: 'Date pending',
+    pendingTime: 'Time pending',
+    online: 'Online',
+    hybrid: 'Hybrid',
+    inPerson: 'In person',
+    pendingLocation: 'Location pending',
+    live: 'Live',
+    past: 'Past event',
+    application: 'Application required',
+    open: 'Registration open',
+    openCapacity: 'Open seats',
+    full: 'Full',
+    oneSeat: '1 seat left',
+    seatsLeft: (count: number) => `${count} seats left`,
+    detail: 'View details',
+    fallbackTitle: 'Untitled event',
+    registrations: 'registered',
+    badge: 'LEAD events',
+    heading: 'Explore public LEAD events',
+    subheading:
+      'Browse public programs, chapter events, and application-based opportunities across the LEAD community.',
+    published: 'Published',
+    upcoming: 'Upcoming/live',
+    note:
+      'Upcoming and live events appear first. Past events remain below as a public record of LEAD community activity.',
+    upcomingTitle: 'Upcoming and live events',
+    upcomingDescription: 'Select an event to view details, register, or apply.',
+    emptyTitle: 'No upcoming events published yet',
+    emptyBody: 'Check back soon for new LEAD opportunities.',
+    pastTitle: 'Past events',
+    pastDescription: 'Explore previous programs and LEAD community activity.',
+    loading: 'Loading events...',
+  },
+  es: {
+    metadataTitle: 'Eventos',
+    metadataDescription: 'Explora proximos eventos de LEAD y registrate en linea.',
+    pendingDate: 'Fecha pendiente',
+    pendingTime: 'Hora pendiente',
+    online: 'En linea',
+    hybrid: 'Hibrido',
+    inPerson: 'Presencial',
+    pendingLocation: 'Ubicacion pendiente',
+    live: 'En vivo',
+    past: 'Evento pasado',
+    application: 'Requiere postulacion',
+    open: 'Registro abierto',
+    openCapacity: 'Cupos abiertos',
+    full: 'Lleno',
+    oneSeat: 'Queda 1 cupo',
+    seatsLeft: (count: number) => `Quedan ${count} cupos`,
+    detail: 'Ver detalle',
+    fallbackTitle: 'Evento sin titulo',
+    registrations: 'registrados',
+    badge: 'Eventos LEAD',
+    heading: 'Encuentra tu proximo evento LEAD',
+    subheading:
+      'Explora eventos publicos, programas de capitulos y oportunidades con postulacion de la comunidad LEAD.',
+    published: 'Publicados',
+    upcoming: 'Proximos/en vivo',
+    note:
+      'Los eventos proximos y en vivo aparecen primero. Los eventos pasados quedan abajo como referencia para la comunidad LEAD.',
+    upcomingTitle: 'Eventos proximos y en vivo',
+    upcomingDescription: 'Selecciona un evento para ver detalles, registrarte o postular.',
+    emptyTitle: 'Aun no hay eventos proximos publicados',
+    emptyBody: 'Vuelve pronto para ver nuevas oportunidades de LEAD.',
+    pastTitle: 'Eventos pasados',
+    pastDescription: 'Explora programas anteriores y actividad de la comunidad LEAD.',
+    loading: 'Cargando eventos...',
+  },
+} as const
 
 export const metadata = {
-  title: 'Eventos',
-  description: 'Explora proximos eventos de LEAD y registrate en linea.',
+  title: 'Events',
+  description: 'Explore public LEAD events and community programs.',
 }
 
-function formatDate(value: string) {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'Fecha pendiente'
+function resolveLocale(locale?: string): PublicEventsLocale {
+  return locale === 'en' ? 'en' : 'es'
+}
 
-  return date.toLocaleDateString(EVENT_LOCALE, {
+function formatDate(value: string, locale: PublicEventsLocale) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return EVENT_COPY[locale].pendingDate
+
+  return date.toLocaleDateString(EVENT_LOCALES[locale], {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
@@ -36,61 +120,65 @@ function formatDate(value: string) {
   })
 }
 
-function formatTime(value: string) {
+function formatTime(value: string, locale: PublicEventsLocale) {
   const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'Hora pendiente'
+  if (Number.isNaN(date.getTime())) return EVENT_COPY[locale].pendingTime
 
-  return date.toLocaleTimeString(EVENT_LOCALE, {
+  return date.toLocaleTimeString(EVENT_LOCALES[locale], {
     hour: 'numeric',
     minute: '2-digit',
     timeZone: EVENT_TIME_ZONE,
   })
 }
 
-function getEventTypeLabel(eventType: EventWithDetails['event_type']) {
-  if (eventType === 'online') return 'En linea'
-  if (eventType === 'hybrid') return 'Hibrido'
-  return 'Presencial'
+function getEventTypeLabel(eventType: EventWithDetails['event_type'], locale: PublicEventsLocale) {
+  const copy = EVENT_COPY[locale]
+  if (eventType === 'online') return copy.online
+  if (eventType === 'hybrid') return copy.hybrid
+  return copy.inPerson
 }
 
-function getLocationLabel(event: EventWithDetails) {
-  if (event.event_type === 'online') return 'En linea'
+function getLocationLabel(event: EventWithDetails, locale: PublicEventsLocale) {
+  const copy = EVENT_COPY[locale]
+  if (event.event_type === 'online') return copy.online
   if (event.event_type === 'hybrid') {
-    return event.location_name || event.location_city || event.location || 'Hibrido'
+    return event.location_name || event.location_city || event.location || copy.hybrid
   }
 
-  return event.location_name || event.location_city || event.location || 'Ubicacion pendiente'
+  return event.location_name || event.location_city || event.location || copy.pendingLocation
 }
 
-function getEventTiming(event: EventWithDetails) {
+function getEventTiming(event: EventWithDetails, locale: PublicEventsLocale) {
+  const copy = EVENT_COPY[locale]
   const now = Date.now()
   const start = new Date(event.start_at).getTime()
   const end = new Date(event.end_at).getTime()
 
   if (!Number.isFinite(start) || !Number.isFinite(end)) {
-    return { label: 'Fecha pendiente', variant: 'outline' as const }
+    return { label: copy.pendingDate, variant: 'outline' as const }
   }
 
   if (now >= start && now <= end) {
-    return { label: 'En vivo', variant: 'live' as const }
+    return { label: copy.live, variant: 'live' as const }
   }
 
   if (now > end) {
-    return { label: 'Evento pasado', variant: 'outline' as const }
+    return { label: copy.past, variant: 'outline' as const }
   }
 
   return event.access_model === 'application'
-    ? { label: 'Requiere postulacion', variant: 'info' as const }
-    : { label: 'Registro abierto', variant: 'success' as const }
+    ? { label: copy.application, variant: 'info' as const }
+    : { label: copy.open, variant: 'success' as const }
 }
 
-function getAvailabilityLabel(event: EventWithDetails) {
-  if (event.capacity === null) return 'Cupos abiertos'
+function getAvailabilityLabel(event: EventWithDetails, locale: PublicEventsLocale) {
+  const copy = EVENT_COPY[locale]
+  if (event.capacity === null) return copy.openCapacity
 
   const remaining = Math.max(0, event.capacity - event._count.registrations)
-  if (remaining === 0) return 'Lleno'
-  if (remaining === 1) return 'Queda 1 cupo'
-  return `Quedan ${remaining} cupos`
+  if (remaining === 0) return copy.full
+  if (remaining === 1) return copy.oneSeat
+  return copy.seatsLeft(remaining)
 }
 
 function getAvailabilityVariant(event: EventWithDetails) {
@@ -102,22 +190,23 @@ function getAvailabilityVariant(event: EventWithDetails) {
   return 'neutral' as const
 }
 
-function EventCard({ event }: { event: EventWithDetails }) {
-  const timing = getEventTiming(event)
+function EventCard({ event, locale }: { event: EventWithDetails; locale: PublicEventsLocale }) {
+  const copy = EVENT_COPY[locale]
+  const timing = getEventTiming(event, locale)
   const ownerChapter = event.chapter?.name ?? event.owner_chapter?.name ?? 'LEAD'
-  const availability = getAvailabilityLabel(event)
+  const availability = getAvailabilityLabel(event, locale)
   const availabilityVariant = getAvailabilityVariant(event)
 
   return (
-    <Card className={cn('overflow-hidden transition-colors hover:border-primary/40', timing.label === 'Evento pasado' && 'opacity-80')}>
+    <Card className={cn('overflow-hidden transition-colors hover:border-primary/40', timing.label === copy.past && 'opacity-80')}>
       <CardContent className="p-0">
         <Link href={`/events/${event.id}`} className="block">
           <div className="grid gap-0 md:grid-cols-[11rem_1fr]">
             <div className="flex border-b bg-muted/40 p-4 md:border-b-0 md:border-r md:p-5">
               <div className="flex w-full flex-row items-center gap-4 md:flex-col md:items-start md:justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">{formatDate(event.start_at)}</p>
-                  <p className="mt-1 text-lg font-semibold text-foreground md:text-2xl">{formatTime(event.start_at)}</p>
+                  <p className="text-sm font-medium text-muted-foreground">{formatDate(event.start_at, locale)}</p>
+                  <p className="mt-1 text-lg font-semibold text-foreground md:text-2xl">{formatTime(event.start_at, locale)}</p>
                 </div>
                 <Badge variant={timing.variant}>{timing.label}</Badge>
               </div>
@@ -127,11 +216,11 @@ function EventCard({ event }: { event: EventWithDetails }) {
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0 space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="outline">{getEventTypeLabel(event.event_type)}</Badge>
+                    <Badge variant="outline">{getEventTypeLabel(event.event_type, locale)}</Badge>
                     <Badge variant={availabilityVariant}>{availability}</Badge>
                   </div>
                   <h2 className="line-clamp-2 text-xl font-semibold tracking-tight text-foreground md:text-2xl">
-                    {event.title || 'Evento sin titulo'}
+                    {event.title || copy.fallbackTitle}
                   </h2>
                 </div>
 
@@ -142,7 +231,7 @@ function EventCard({ event }: { event: EventWithDetails }) {
                   )}
                   aria-hidden="true"
                 >
-                  Ver detalle
+                  {copy.detail}
                   <ArrowRight className="h-4 w-4" />
                 </span>
               </div>
@@ -158,12 +247,12 @@ function EventCard({ event }: { event: EventWithDetails }) {
                   ) : (
                     <MapPin className="h-4 w-4 shrink-0" />
                   )}
-                  <span className="truncate">{getLocationLabel(event)}</span>
+                  <span className="truncate">{getLocationLabel(event, locale)}</span>
                 </div>
                 <div className="flex min-w-0 items-center gap-2">
                   <CalendarDays className="h-4 w-4 shrink-0" />
                   <span className="truncate">
-                    {event._count.registrations} registrados
+                    {event._count.registrations} {copy.registrations}
                     {event.capacity !== null ? ` / ${event.capacity}` : ''}
                   </span>
                 </div>
@@ -176,7 +265,8 @@ function EventCard({ event }: { event: EventWithDetails }) {
   )
 }
 
-async function EventsContent() {
+async function EventsContent({ locale }: { locale: PublicEventsLocale }) {
+  const copy = EVENT_COPY[locale]
   const events: EventWithDetails[] = await getPublishedEvents()
   const now = Date.now()
   const upcomingEvents = events
@@ -194,14 +284,14 @@ async function EventsContent() {
           <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div className="max-w-3xl space-y-3">
               <Badge variant="outline" className="w-fit">
-                Eventos LEAD
+                {copy.badge}
               </Badge>
               <div className="space-y-2">
                 <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-5xl">
-                  Encuentra tu proximo evento LEAD
+                  {copy.heading}
                 </h1>
                 <p className="text-base text-muted-foreground md:text-lg">
-                  Explora eventos publicos, programas de capitulos y oportunidades con postulacion de la comunidad LEAD.
+                  {copy.subheading}
                 </p>
               </div>
             </div>
@@ -209,26 +299,26 @@ async function EventsContent() {
             <div className="grid grid-cols-2 gap-3 sm:flex">
               <div className="rounded-lg border bg-card px-4 py-3">
                 <p className="text-2xl font-semibold">{events.length}</p>
-                <p className="text-xs text-muted-foreground">Publicados</p>
+                <p className="text-xs text-muted-foreground">{copy.published}</p>
               </div>
               <div className="rounded-lg border bg-card px-4 py-3">
                 <p className="text-2xl font-semibold">{openEvents}</p>
-                <p className="text-xs text-muted-foreground">Proximos/en vivo</p>
+                <p className="text-xs text-muted-foreground">{copy.upcoming}</p>
               </div>
             </div>
           </div>
 
           <div className="flex items-start gap-3 rounded-lg border bg-card px-4 py-3 text-sm text-muted-foreground">
             <CalendarDays className="mt-0.5 h-4 w-4 shrink-0" />
-            <span>Los eventos proximos y en vivo aparecen primero. Los eventos pasados quedan abajo como referencia para la comunidad LEAD.</span>
+            <span>{copy.note}</span>
           </div>
         </section>
 
         <section className="space-y-4">
           <div className="flex items-center justify-between gap-4 border-b pb-3">
             <div>
-              <h2 className="text-xl font-semibold tracking-tight">Eventos proximos y en vivo</h2>
-              <p className="text-sm text-muted-foreground">Selecciona un evento para ver detalles, registrarte o postular.</p>
+              <h2 className="text-xl font-semibold tracking-tight">{copy.upcomingTitle}</h2>
+              <p className="text-sm text-muted-foreground">{copy.upcomingDescription}</p>
             </div>
           </div>
 
@@ -237,9 +327,9 @@ async function EventsContent() {
               <CardContent className="flex flex-col items-center gap-3 px-6 py-12 text-center">
                 <CalendarDays className="h-10 w-10 text-muted-foreground" />
                 <div>
-                  <h3 className="font-semibold">Aun no hay eventos proximos publicados</h3>
+                  <h3 className="font-semibold">{copy.emptyTitle}</h3>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Vuelve pronto para ver nuevas oportunidades de LEAD.
+                    {copy.emptyBody}
                   </p>
                 </div>
               </CardContent>
@@ -247,7 +337,7 @@ async function EventsContent() {
           ) : (
             <div className="space-y-4">
               {upcomingEvents.map((event) => (
-                <EventCard key={event.id} event={event} />
+                <EventCard key={event.id} event={event} locale={locale} />
               ))}
             </div>
           )}
@@ -257,14 +347,14 @@ async function EventsContent() {
           <section className="space-y-4">
             <div className="flex items-center justify-between gap-4 border-b pb-3">
               <div>
-                <h2 className="text-xl font-semibold tracking-tight">Eventos pasados</h2>
-                <p className="text-sm text-muted-foreground">Explora programas anteriores y actividad de la comunidad LEAD.</p>
+                <h2 className="text-xl font-semibold tracking-tight">{copy.pastTitle}</h2>
+                <p className="text-sm text-muted-foreground">{copy.pastDescription}</p>
               </div>
             </div>
 
             <div className="space-y-4">
               {pastEvents.map((event) => (
-                <EventCard key={event.id} event={event} />
+                <EventCard key={event.id} event={event} locale={locale} />
               ))}
             </div>
           </section>
@@ -274,18 +364,26 @@ async function EventsContent() {
   )
 }
 
-export default function EventsPage() {
+type EventsPageProps = {
+  params: Promise<{ locale: string }>
+}
+
+export default async function EventsPage({ params }: EventsPageProps) {
+  const { locale } = await params
+  const resolvedLocale = resolveLocale(locale)
+  const copy = EVENT_COPY[resolvedLocale]
+
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
       <Suspense
         fallback={
           <div className="p-8 text-center text-sm text-muted-foreground">
-            Cargando eventos...
+            {copy.loading}
           </div>
         }
       >
-        <EventsContent />
+        <EventsContent locale={resolvedLocale} />
       </Suspense>
     </div>
   )
