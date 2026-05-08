@@ -3,13 +3,12 @@ import { createClient } from '@/lib/supabase/server'
 import { routing } from '@/i18n/routing';
 import { getPostAuthRedirectPath } from '@/lib/auth-redirects'
 
-const SITE_URL = process.env.NEXT_PUBLIC_FRONTEND_URL!
-
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ locale: string }> | { locale: string } }
 ) {
   const { searchParams, pathname } = new URL(request.url)
+  const siteUrl = new URL(request.url).origin
   const code = searchParams.get('code')
   let next = searchParams.get('next') ?? '/'
   
@@ -26,20 +25,20 @@ export async function GET(
   }
 
   if (!code) {
-    return NextResponse.redirect(`${SITE_URL}/${locale}/auth/error`)
+    return NextResponse.redirect(`${siteUrl}/${locale}/auth/error`)
   }
 
   const supabase = await createClient()
   const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
 
   if (exchangeError) {
-    return NextResponse.redirect(`${SITE_URL}/${locale}/auth/error`)
+    return NextResponse.redirect(`${siteUrl}/${locale}/auth/error`)
   }
 
   const { data: { user }, error: userFetchError } = await supabase.auth.getUser()
 
   if (!user || userFetchError) {
-    return NextResponse.redirect(`${SITE_URL}/${locale}/auth/error`)
+    return NextResponse.redirect(`${siteUrl}/${locale}/auth/error`)
   }
 
   if (!user.user_metadata?.locale) {
@@ -47,7 +46,7 @@ export async function GET(
   }
 
   if (next && next !== '/') {
-    return NextResponse.redirect(`${SITE_URL}/${locale}${next}`)
+    return NextResponse.redirect(`${siteUrl}/${locale}${next}`)
   }
 
   const { data: userData } = await supabase
@@ -67,5 +66,5 @@ const { data: profile } = await supabase
     role: userData?.role,
   })
 
-  return NextResponse.redirect(`${SITE_URL}/${locale}${redirectPath}`)
+  return NextResponse.redirect(`${siteUrl}/${locale}${redirectPath}`)
 }
