@@ -33,6 +33,17 @@ type SupabaseEmailWebhookPayload = {
   email_data?: SupabaseEmailData
 }
 
+function getRequestOrigin(request: Request) {
+  const forwardedProto = request.headers.get('x-forwarded-proto');
+  const forwardedHost = request.headers.get('x-forwarded-host') || request.headers.get('host');
+
+  if (forwardedHost) {
+    return `${forwardedProto || 'https'}://${forwardedHost}`;
+  }
+
+  return new URL(request.url).origin;
+}
+
 export async function POST(request: Request) {
   try {
     const payload = await request.text();
@@ -96,7 +107,7 @@ export async function POST(request: Request) {
     }
 
     const locale = (user.user_metadata?.locale || 'es') as 'en' | 'es';
-    const appUrl = process.env.FRONTEND_URL || email_data.site_url;
+    const appUrl = getRequestOrigin(request);
     const emailType = email_data.email_action_type || 'signup';
 
     const confirmationUrl = `${appUrl}/${locale}/auth/confirm?token_hash=${email_data.token_hash}&type=${emailType}&next=${encodeURIComponent(email_data.redirect_to || `/${locale}/dashboard`)}`;
