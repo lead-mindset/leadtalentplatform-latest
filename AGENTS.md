@@ -59,6 +59,23 @@ Use the layered account model from `docs/PRODUCT-SPECIFICATION.md` and `docs/han
 - Use client state for interactive UI only
 - Avoid duplicating fetching logic
 
+## Visual Product Builder Workflow
+For meaningful UI/UX work, use the Codex Desktop visual loop from `docs/handbook/UI_UX.md`:
+
+`prompt -> build -> run -> screenshot -> visual review -> click/test -> revise -> recheck`
+
+Apply this loop to new pages, major redesigns, forms, tables, navigation, onboarding, registration, check-in, admin, editor, and company workflows.
+
+Review the rendered product for:
+- Hierarchy and obvious next action
+- Spacing rhythm and visual consistency
+- Contrast and text readability
+- Mobile fit without overflow or overlap
+- Hover, focus, loading, empty, error, and success states
+- Preservation of service/action/auth behavior
+
+Use image generation only when real source assets are needed. Vision/browser review judges the actual UI; imagegen creates supporting assets. For ambiguous design directions, prototype lightweight variants and keep the one that best improves readability, task completion, and system consistency.
+
 ## Developer Workflow
 
 ### PIV Planning and Implementation
