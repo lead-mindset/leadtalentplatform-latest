@@ -26,8 +26,8 @@ export function BaseSidebar({
   children 
 }: BaseSidebarProps) {
   return (
-    <Sidebar className="border-r border-border/60 bg-gradient-card">
-      <SidebarHeader className="border-b border-border/60">
+    <Sidebar className="border-r border-sidebar-border bg-sidebar">
+      <SidebarHeader className="border-b border-sidebar-border">
         <SidebarUserHeader 
           name={userName}
           email={userEmail}
@@ -40,7 +40,7 @@ export function BaseSidebar({
         {children}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-border/60 p-4">
+      <SidebarFooter className="border-t border-sidebar-border p-4">
         <LogoutButton className="w-full" />
       </SidebarFooter>
     </Sidebar>

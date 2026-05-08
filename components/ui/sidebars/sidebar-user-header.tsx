@@ -27,16 +27,16 @@ export function SidebarUserHeader({ name, email, role, memberId }: SidebarUserHe
         </Avatar>
 
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-sidebar-foreground truncate leading-tight">
+          <p className="!text-sm font-semibold text-sidebar-foreground truncate !leading-tight">
             {name}
           </p>
           {email && (
-            <p className="text-xs text-sidebar-foreground/50 truncate mt-0.5">
+            <p className="mt-0.5 truncate !text-xs text-sidebar-foreground/60 !leading-tight">
               {email}
             </p>
           )}
           {role && (
-            <p className="text-xs text-sidebar-foreground/40 truncate mt-0.5">
+            <p className="mt-0.5 truncate !text-xs text-sidebar-foreground/50 !leading-tight">
               {ROLE_LABELS[role]}
             </p>
           )}

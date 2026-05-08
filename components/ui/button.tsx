@@ -5,42 +5,47 @@ import { Slot } from "@radix-ui/react-slot"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center gap-2 rounded-full text-sm font-bold whitespace-nowrap transition-all duration-300 outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:scale-[1.02] active:scale-[0.98]",
+  "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        default: "button-gradient-primary text-background",
+        default:
+          "bg-primary text-primary-foreground shadow-xs hover:bg-primary/90",
         destructive:
-          "bg-destructive/15 text-destructive ring-1 ring-destructive/30 hover:bg-destructive/25 hover:ring-destructive/50",
+          "bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90",
         success:
-          "bg-success/15 text-success ring-1 ring-success/30 hover:bg-success/25 hover:ring-success/50",
+          "bg-success/10 text-success ring-1 ring-success/30 hover:bg-success/20",
         warning:
-          "bg-warning/15 text-warning ring-1 ring-warning/30 hover:bg-warning/25 hover:ring-warning/50",
+          "bg-warning/10 text-warning ring-1 ring-warning/30 hover:bg-warning/20",
         info:
-          "bg-info/15 text-info ring-1 ring-info/30 hover:bg-info/25 hover:ring-info/50",
+          "bg-info/10 text-info ring-1 ring-info/30 hover:bg-info/20",
         outline:
-          "border border-border/60 bg-background shadow-xs hover:bg-accent/10 hover:text-accent-foreground hover:border-accent/30",
+          "border border-border bg-background shadow-xs hover:bg-muted hover:text-foreground",
         secondary:
-          "bg-secondary text-secondary-foreground ring-1 ring-white/5 hover:bg-secondary/80 hover:ring-white/10",
+          "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/85",
         ghost:
-          "text-muted-foreground hover:text-foreground hover:bg-white/5",
+          "text-muted-foreground hover:bg-muted hover:text-foreground",
         glass:
-          "bg-secondary/60 backdrop-blur-xl text-foreground ring-1 ring-white/10 hover:bg-secondary/80 hover:ring-white/20",
-        link: "text-primary underline hover:underline underline-offset-4",
-        filled: "md-button-filled",
-        tonal: "md-button-tonal",
-        outlined: "md-button-outlined",
-        text: "md-button-text",
+          "bg-card/80 text-foreground ring-1 ring-border backdrop-blur hover:bg-card",
+        brand:
+          "button-gradient-primary rounded-full font-semibold text-primary-foreground shadow-sm hover:shadow-md",
+        hero:
+          "button-gradient-primary rounded-full px-7 font-semibold text-primary-foreground shadow-sm hover:shadow-md",
+        link: "h-auto rounded-none px-0 text-primary underline-offset-4 hover:underline",
+        filled: "bg-primary text-primary-foreground shadow-xs hover:bg-primary/90",
+        tonal: "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/85",
+        outlined: "border border-border bg-background shadow-xs hover:bg-muted hover:text-foreground",
+        text: "h-auto rounded-none px-0 text-primary underline-offset-4 hover:underline",
       },
       size: {
         default: "h-10 px-5 py-2 has-[>svg]:px-4",
-        xs: "h-6 gap-1 px-2 text-xs has-[>svg]:px-1.5 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-8 gap-1.5 px-3 text-xs has-[>svg]:px-2.5",
-        lg: "h-14 px-8 text-base has-[>svg]:px-6",
+        xs: "h-6 gap-1 rounded px-2 text-xs has-[>svg]:px-1.5 [&_svg:not([class*='size-'])]:size-3",
+        sm: "h-8 gap-1.5 rounded-md px-3 text-xs has-[>svg]:px-2.5",
+        lg: "h-11 rounded-lg px-6 text-base has-[>svg]:px-5",
         icon: "size-10",
-        "icon-xs": "size-6 [&_svg:not([class*='size-'])]:size-3",
-        "icon-sm": "size-8",
-        "icon-lg": "size-14",
+        "icon-xs": "size-6 rounded [&_svg:not([class*='size-'])]:size-3",
+        "icon-sm": "size-8 rounded-md",
+        "icon-lg": "size-11 rounded-lg",
       },
     },
     defaultVariants: {
@@ -67,7 +72,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         data-slot="button"
         data-variant={variant}
         data-size={size}
-        className={cn(buttonVariants({ variant, size, className }), "font-montserrat")}
+        className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
         {...props}
       >

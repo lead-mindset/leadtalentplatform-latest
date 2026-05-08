@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const inputVariants = cva(
-  "w-full rounded-2xl bg-secondary/30 text-foreground placeholder:text-muted-foreground ring-1 ring-border/40 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/50 hover:ring-border disabled:opacity-50 disabled:cursor-not-allowed selection:bg-primary selection:text-primary-foreground md-input",
+  "w-full rounded-md border border-input bg-background text-foreground shadow-xs placeholder:text-muted-foreground transition-colors duration-150 selection:bg-primary selection:text-primary-foreground hover:border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-50",
   {
     variants: {
       size: {
@@ -18,8 +18,8 @@ const inputVariants = cva(
       },
       variant: {
         default: "",
-        filled: "md-input-filled",
-        outlined: "md-input",
+        filled: "bg-muted/50",
+        outlined: "bg-background",
       },
     },
     defaultVariants: {
@@ -59,7 +59,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full space-y-2">
         {label && (
-          <label className="block text-sm font-medium text-muted-foreground">
+          <label className="block text-sm font-medium text-foreground">
             {label}
           </label>
         )}

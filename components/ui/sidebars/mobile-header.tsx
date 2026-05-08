@@ -19,21 +19,27 @@ export function useMobileSidebar() {
 
 interface MobileSidebarWrapperProps {
   children: ReactNode
+  title?: string
+  subtitle?: string
 }
 
-export function MobileSidebarWrapper({ children }: MobileSidebarWrapperProps) {
+export function MobileSidebarWrapper({
+  children,
+  title = 'Dashboard',
+  subtitle,
+}: MobileSidebarWrapperProps) {
   const [open, setOpen] = useState(false)
 
   const closeSheet = () => setOpen(false)
 
   return (
-    <header className="md:hidden sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-14 items-center gap-4 px-4">
+    <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:hidden">
+      <div className="flex min-h-14 items-center gap-3 px-4">
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
             <Button 
               variant="ghost" 
-              size="icon"
+              size="icon-sm"
               aria-label="Navigation menu"
             >
               <Menu className="h-5 w-5" />
@@ -49,7 +55,12 @@ export function MobileSidebarWrapper({ children }: MobileSidebarWrapperProps) {
             </MobileSidebarContext.Provider>
           </SheetContent>
         </Sheet>
-        <h1 className="font-semibold text-foreground">Dashboard</h1>
+        <div className="min-w-0">
+          <h1 className="truncate text-sm font-semibold text-foreground">{title}</h1>
+          {subtitle && (
+            <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
+          )}
+        </div>
       </div>
     </header>
   )
