@@ -5,6 +5,7 @@ import ApplicationReceivedEmail from '../../emails/templates/ApplicationReceived
 import ApplicationApprovedEmail from '../../emails/templates/ApplicationApprovedEmail'
 import ApplicationRejectedEmail from '../../emails/templates/ApplicationRejectedEmail'
 import { render as renderEmail } from '@react-email/render'
+import { getConfiguredAppUrl } from '@/lib/app-url'
 
 interface SendEmailParams {
   to: string
@@ -47,7 +48,7 @@ export async function sendWelcomeEmail(
   chapter_name: string,
   locale: 'en' | 'es' = 'es'
 ) {
-  const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL}/student` 
+  const dashboardUrl = `${getConfiguredAppUrl()}/student`
   
   const html = await renderEmail(
     WelcomeEmail({ 
@@ -73,7 +74,7 @@ export async function sendMemberApprovalEmail(
   chapter_name: string,
   locale: 'en' | 'es' = 'es'
 ) {
-  const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL}/student` 
+  const dashboardUrl = `${getConfiguredAppUrl()}/student`
   
   const html = await renderEmail(
     MemberApprovalEmail({ 
@@ -100,7 +101,7 @@ export async function sendApplicationReceivedEmail(
   chapter_name: string,
   locale: 'en' | 'es' = 'es'
 ) {
-  const eventsUrl = `${process.env.NEXT_PUBLIC_APP_URL}/student/events` 
+  const eventsUrl = `${getConfiguredAppUrl()}/student/events`
   
   const html = await renderEmail(
     ApplicationReceivedEmail({ 
@@ -131,8 +132,8 @@ export async function sendApplicationApprovedEmail(
   registrationId: string,
   locale: 'en' | 'es' = 'es'
 ) {
-  const qrUrl = `${process.env.NEXT_PUBLIC_APP_URL}/student/events` 
-  const eventsUrl = `${process.env.NEXT_PUBLIC_APP_URL}/student/events` 
+  const qrUrl = `${getConfiguredAppUrl()}/student/events`
+  const eventsUrl = `${getConfiguredAppUrl()}/student/events`
   
   const html = await renderEmail(
     ApplicationApprovedEmail({
@@ -163,7 +164,7 @@ export async function sendApplicationRejectedEmail(
   chapter_name: string,
   locale: 'en' | 'es' = 'es'
 ) {
-  const eventsUrl = `${process.env.NEXT_PUBLIC_APP_URL}/student/events` 
+  const eventsUrl = `${getConfiguredAppUrl()}/student/events`
   
   const html = await renderEmail(
     ApplicationRejectedEmail({ 

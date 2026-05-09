@@ -2,6 +2,7 @@ import { Resend } from 'resend';
 import { render } from '@react-email/render';
 import { createServiceClient } from '@/lib/supabase/server-service';
 import WelcomeEmail from '@/emails/templates/WelcomeEmail';
+import { getConfiguredAppUrl } from '@/lib/app-url';
 
 function createResendClient() {
   const apiKey = process.env.RESEND_API_KEY;
@@ -44,7 +45,7 @@ export async function POST(request: Request) {
   const meta = authUser?.user?.user_metadata ?? {};
   const locale = (['en', 'es'].includes(meta.locale) ? meta.locale : 'es') as 'en' | 'es';
 
-  const appUrl = process.env.FRONTEND_URL;
+  const appUrl = getConfiguredAppUrl();
 
   const role = record.role ?? 'member';
   const dashboardPath =

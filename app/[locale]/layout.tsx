@@ -9,6 +9,7 @@ import { routing } from '@/i18n/routing';
 import { Suspense } from 'react';
 import { Raleway, Montserrat } from "next/font/google";
 import { GoogleMapsProvider } from "@/components/global/google-maps-provider";
+import { getConfiguredAppUrl } from "@/lib/app-url";
 
 const raleway = Raleway({
   subsets: ["latin"],
@@ -20,9 +21,7 @@ const montserrat = Montserrat({
   variable: "--font-montserrat",
 });
 
-const defaultUrl = process.env.FRONTEND_URL
-  ? `https://${process.env.FRONTEND_URL}`
-  : "http://localhost:3000";
+const defaultUrl = getConfiguredAppUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),

@@ -4,6 +4,7 @@ import { requireAdmin } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import nodemailer from 'nodemailer'
 import { AdminService } from '@/lib/services/admin.service'
+import { getConfiguredAppUrl } from '@/lib/app-url'
 
 
 const transporter = nodemailer.createTransport({
@@ -16,10 +17,8 @@ const transporter = nodemailer.createTransport({
   },
 })
 
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000'
-
 function generateInviteLink(token: string): string {
-  return `${FRONTEND_URL}/recruiter/access?token=${token}`
+  return `${getConfiguredAppUrl()}/recruiter/access?token=${token}`
 }
 
 function getErrorMessage(error: unknown): string {
