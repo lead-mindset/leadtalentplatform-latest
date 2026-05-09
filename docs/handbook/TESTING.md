@@ -15,7 +15,7 @@ We follow a **Service Layer Pattern** (see `docs/adr/001-service-layer-pattern.m
 Due to the complex, multi-role nature of the platform (Participants, Members, Editors, Admins, Staff, Company Representatives, and Alumni), tests should rely on **deterministic seed personas** rather than ad-hoc setups.
 
 ### Seed Personas Matrix
-We maintain standard accounts in `supabase/seed.sql` pre-loaded with the necessary auth and schema structures:
+We maintain standard local accounts in `supabase/seed.sql` pre-loaded with the necessary auth and schema structures. Shared QA data is refreshed only through the manual GitHub Action that runs `supabase/qa.seed.sql`.
 
 | Persona | Email | Required Tables / State |
 |---------|-------|-------------------------|
@@ -125,7 +125,9 @@ Application questions are first-party event data, not external form state:
 - `student_profile.chapter_id`, `approval_status`, `approved_by_id`, and `member_id` map to `chapter_membership`.
 - Approved or alumni memberships should have an active `lead_identity` unless the user already has a stronger founder/staff identity.
 - `consent_date` and `is_filled` have no direct target; keep them historical until `student_profile` is removed in a later cleanup.
-- `supabase/seed-qa.sql` is a legacy migration fixture. Routine QA should use `supabase/seed.sql`.
+- `supabase/seed.sql` is the canonical local Docker seed file.
+- `supabase/qa.seed.sql` is the current manual QA refresh entrypoint.
+- `supabase/seed-qa.sql` is a legacy migration fixture for old `student_profile` migration paths. Do not use it for routine QA refreshes.
 
 After `pnpm supabase db reset`, run these checks against local Docker Supabase:
 
