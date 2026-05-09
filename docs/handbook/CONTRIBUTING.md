@@ -341,3 +341,11 @@ Hosted auth configuration must be environment-specific:
 | Production | Production domain | Production auth callback/company/dashboard URLs |
 
 For QA, Google OAuth must be enabled in the QA Supabase project and should redirect through the QA Supabase callback, not localhost. Verify with the Supabase authorize endpoint before asking the team to test Google login.
+
+QA auth emails use the Supabase **Send Email** auth hook, not Supabase's default email templates. The hook points to:
+
+```text
+https://leadqa.vercel.app/api/auth/hooks/send-email
+```
+
+The QA Vercel project must have `SUPABASE_HOOK_SECRET` and `RESEND_API_KEY` configured before enabling the hook. After changing either value, redeploy `leadqa` so the serverless route receives the latest environment.

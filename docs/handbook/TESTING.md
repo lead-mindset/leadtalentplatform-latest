@@ -36,6 +36,7 @@ If testing server actions or E2E flows, utilize the standard seed credentials ra
 For hosted QA signup smoke tests, verify email/password and Google separately:
 
 - Email/password signup should create an unconfirmed auth user and send the confirmation email to a QA-origin redirect URL.
+- In QA, Supabase auth emails should invoke `POST /api/auth/hooks/send-email`; check Vercel logs for `Email sent` after a signup smoke test.
 - Google OAuth should return a redirect to Google from the QA Supabase project. If it returns `Unsupported provider`, the QA Supabase Google provider is not enabled.
 - Delete smoke-test auth users after API-level tests so shared QA data stays clean.
 
