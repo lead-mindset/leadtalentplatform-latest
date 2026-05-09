@@ -25,6 +25,12 @@ export interface NavItemConfig {
 
 export const STUDENT_NAV: NavItemConfig[] = [
   {
+    id: 'dashboard',
+    label: 'Resumen',
+    href: '/student',
+    icon: LayoutDashboard,
+  },
+  {
     id: 'browse-events',
     label: 'Explorar eventos',
     href: '/events',

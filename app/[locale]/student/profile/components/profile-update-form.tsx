@@ -4,7 +4,7 @@ import { useForm, FormProvider, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useState, useEffect } from 'react'
-import { X } from 'lucide-react'
+import { BriefcaseBusiness, GraduationCap, UserRound, X } from 'lucide-react'
 import { Icons } from '@/components/ui/icons'
 import { toast } from 'sonner'
 import { Checkbox } from "@/components/ui/checkbox"
@@ -49,9 +49,10 @@ export default function ProfileUpdateForm({
   const router = useRouter()
 
   const profileUpdateSchema = createProfileUpdateSchema(tValidation)
-  type OnboardingValues = z.infer<typeof profileUpdateSchema>
+  type ProfileUpdateInput = z.input<typeof profileUpdateSchema>
+  type ProfileUpdateValues = z.output<typeof profileUpdateSchema>
 
-  const methods = useForm<OnboardingValues>({
+  const methods = useForm<ProfileUpdateInput, unknown, ProfileUpdateValues>({
     resolver: zodResolver(profileUpdateSchema),
     mode: 'onChange',
     defaultValues: {
@@ -63,6 +64,7 @@ export default function ProfileUpdateForm({
       skills: initialData?.skills || [],
       lead_chapter: initialData?.lead_chapter || '',
       linkedin_url: initialData?.linkedin_url || '',
+      portfolio_url: initialData?.portfolio_url || '',
       resume_pdf: undefined,
       consentRecruiterVisibility: initialData?.consentRecruiterVisibility || false,
       emailNotificationsEnabled: initialData?.emailNotificationsEnabled ?? true,
@@ -87,13 +89,14 @@ export default function ProfileUpdateForm({
       skills: initialData?.skills || [],
       lead_chapter: initialData?.lead_chapter || '',
       linkedin_url: initialData?.linkedin_url || '',
+      portfolio_url: initialData?.portfolio_url || '',
       resume_pdf: undefined,
       consentRecruiterVisibility: initialData?.consentRecruiterVisibility || false,
       emailNotificationsEnabled: initialData?.emailNotificationsEnabled ?? true,
     })
   }, [initialData, reset])
 
-  const onSubmit: SubmitHandler<OnboardingValues> = async (data) => {
+  const onSubmit: SubmitHandler<ProfileUpdateValues> = async (data) => {
     setIsSaving(true)
 
     try {
@@ -106,6 +109,7 @@ export default function ProfileUpdateForm({
       formData.append("graduation_year", String(data.graduation_year || 0))
       formData.append("skills", JSON.stringify(data.skills))
       formData.append("linkedin_url", data.linkedin_url || "")
+      formData.append("portfolio_url", data.portfolio_url || "")
       formData.append("consentRecruiterVisibility", String(data.consentRecruiterVisibility))
       formData.append("emailNotificationsEnabled", String(data.emailNotificationsEnabled))
       formData.append("gender", data.gender)
@@ -132,7 +136,7 @@ export default function ProfileUpdateForm({
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-12">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
         {initialData.approvalStatus === 'approved' && initialData.memberId ? (
           <div className="rounded-lg bg-primary/5 border border-primary/10 p-4">
             <div className="flex items-center gap-2 mb-2">
@@ -155,9 +159,9 @@ export default function ProfileUpdateForm({
         )}
         <div className="space-y-6">
           <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 text-2xl">
-                👋
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <UserRound className="h-5 w-5" />
               </div>
               <div>
                 <h2 className="text-2xl font-semibold tracking-tight text-foreground">
@@ -170,7 +174,7 @@ export default function ProfileUpdateForm({
             </div>
           </div>
 
-          <div className="grid gap-5 rounded-xl border border-border/60 bg-card/30 p-6 shadow-sm backdrop-blur-sm">
+          <div className="grid gap-5 rounded-lg border bg-card p-5 shadow-sm sm:p-6">
             <FormInput
               label={t('personalInfo.fullName')}
               name="full_name"
@@ -258,9 +262,9 @@ export default function ProfileUpdateForm({
 
         <div className="space-y-6">
           <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 text-2xl">
-                🎓
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <GraduationCap className="h-5 w-5" />
               </div>
               <div>
                 <h2 className="text-2xl font-semibold tracking-tight text-foreground">
@@ -273,7 +277,7 @@ export default function ProfileUpdateForm({
             </div>
           </div>
 
-          <div className="grid gap-5 rounded-xl border border-border/60 bg-card/30 p-6 shadow-sm backdrop-blur-sm">
+          <div className="grid gap-5 rounded-lg border bg-card p-5 shadow-sm sm:p-6">
             <Controller
               control={control}
               name="career"
@@ -345,9 +349,9 @@ export default function ProfileUpdateForm({
 
         <div className="space-y-6">
           <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 text-2xl">
-                💼
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <BriefcaseBusiness className="h-5 w-5" />
               </div>
               <div>
                 <h2 className="text-2xl font-semibold tracking-tight text-foreground">
@@ -360,12 +364,20 @@ export default function ProfileUpdateForm({
             </div>
           </div>
 
-          <div className="grid gap-5 rounded-xl border border-border/60 bg-card/30 p-6 shadow-sm backdrop-blur-sm">
+          <div className="grid gap-5 rounded-lg border bg-card p-5 shadow-sm sm:p-6">
             <FormInput
               label={t('professional.linkedin')}
               name="linkedin_url"
               type="url"
               error={errors.linkedin_url?.message}
+            />
+
+            <FormInput
+              label={t('professional.portfolio')}
+              name="portfolio_url"
+              type="url"
+              placeholder={t('professional.portfolioPlaceholder')}
+              error={errors.portfolio_url?.message}
             />
 
             <Controller
@@ -437,7 +449,7 @@ export default function ProfileUpdateForm({
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 rounded-xl border border-border/60 bg-gradient-to-br from-muted/20 to-transparent p-5 shadow-sm backdrop-blur-sm">
+        <div className="flex items-center justify-end gap-3 rounded-lg border bg-card p-5 shadow-sm">
           <Button
             type="submit"
             disabled={isSaving}

@@ -197,7 +197,7 @@ function PrimaryActions({ dashboard }: { dashboard: StudentActivationDashboard }
         ]
 
   return (
-    <div className="grid w-full gap-3 sm:grid-cols-3 lg:max-w-xl">
+    <div className="grid w-full gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {actions.map((action) => {
         const Icon = action.icon
         return (
@@ -205,14 +205,14 @@ function PrimaryActions({ dashboard }: { dashboard: StudentActivationDashboard }
             key={action.href}
             asChild
             variant={action.href === '/events' ? 'default' : 'outline'}
-            className="h-12 w-full min-w-0 justify-between rounded-lg px-4"
+            className="h-auto min-h-11 w-full min-w-0 justify-between rounded-lg px-4 py-2.5"
           >
-            <Link href={action.href}>
+            <Link href={action.href} className="min-w-0">
               <span className="flex min-w-0 items-center gap-2">
-                <Icon className="h-4 w-4" />
+                <Icon className="h-4 w-4 shrink-0" />
                 <span className="truncate">{action.label}</span>
               </span>
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-4 w-4 shrink-0" />
             </Link>
           </Button>
         )
@@ -242,8 +242,9 @@ export default async function StudentDashboard() {
           </Badge>
         }
         description={content.body}
-        actions={<PrimaryActions dashboard={dashboard} />}
       />
+
+      <PrimaryActions dashboard={dashboard} />
 
       <Card className="rounded-lg">
         <CardContent className="flex flex-col gap-5 py-6 sm:flex-row sm:items-center">
