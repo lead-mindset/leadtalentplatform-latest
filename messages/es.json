@@ -55,6 +55,7 @@
     "networkError": "Error de red. Por favor verifica tu conexión",
     "userNotFound": "No se encontró ninguna cuenta con este correo",
     "emailAlreadyInUse": "Este correo ya está en uso",
+    "invalidEmailAddress": "Ingresa un correo electrónico válido",
     "signingIn": "Iniciando sesión...",
     "creatingAccount": "Creando cuenta...",
     "alreadyHaveAccount": "¿Ya tienes una cuenta?",
