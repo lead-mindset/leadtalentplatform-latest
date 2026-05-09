@@ -298,6 +298,8 @@ Use the manual **Refresh QA Data** GitHub Action when the team intentionally wan
 
 The manual refresh action requires typing `REFRESH_QA` so accidental clicks do not mutate QA data.
 
+GitHub only exposes manual `workflow_dispatch` actions from the repository default branch (`master`). If a manual QA workflow is introduced on `dev`, it will not appear in the Actions UI until the workflow file is also present on `master`.
+
 ### Seed Files
 - `supabase/seed.sql` is the canonical local Docker baseline. It should stay deterministic and compatible with the current account model.
 - `supabase/qa.seed.sql` is the current QA refresh entrypoint. It may include `seed.sql` plus QA-only fixtures.
@@ -327,3 +329,15 @@ We use two environments for secrets/variables:
 - `QA_DB_PASSWORD` - QA database password
 - `QA_SUPABASE_SERVICE_ROLE_KEY` - QA service role key
 - `SUPABASE_ACCESS_TOKEN` - Supabase CLI token if required by hosted migration commands
+
+### Hosted Supabase Auth Configuration
+Do not push the local `supabase/config.toml` directly to hosted QA or production. The local file contains localhost auth URLs for Docker Supabase.
+
+Hosted auth configuration must be environment-specific:
+
+| Environment | Site URL | Required redirect shape |
+|-------------|----------|-------------------------|
+| QA | `https://leadqa.vercel.app` | QA auth callback/company/dashboard URLs plus local dev URLs if needed |
+| Production | Production domain | Production auth callback/company/dashboard URLs |
+
+For QA, Google OAuth must be enabled in the QA Supabase project and should redirect through the QA Supabase callback, not localhost. Verify with the Supabase authorize endpoint before asking the team to test Google login.

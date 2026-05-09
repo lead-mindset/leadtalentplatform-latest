@@ -30,8 +30,14 @@ We maintain standard local accounts in `supabase/seed.sql` pre-loaded with the n
 *(All seed accounts share the same password: `password123` for manual UI testing).*
 
 ### Auth in Tests
-For unit testing service functions (`lib/services/`), **do not use real authentication**. Mock the Supabase Client as the correct user context.
+For unit testing service functions (`lib/services/`), **do not use real authentication**. Mock the Supabase Client as the correct user context. 
 If testing server actions or E2E flows, utilize the standard seed credentials rather than relying on external providers like Google OAuth.
+
+For hosted QA signup smoke tests, verify email/password and Google separately:
+
+- Email/password signup should create an unconfirmed auth user and send the confirmation email to a QA-origin redirect URL.
+- Google OAuth should return a redirect to Google from the QA Supabase project. If it returns `Unsupported provider`, the QA Supabase Google provider is not enabled.
+- Delete smoke-test auth users after API-level tests so shared QA data stays clean.
 
 ### Admin Role vs LEAD Identity
 
