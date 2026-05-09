@@ -5,6 +5,9 @@ import { Link } from "@/i18n/routing";
 import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+const HOME_VIDEO_URL =
+  "https://sboibxszratyaswwursb.supabase.co/storage/v1/object/sign/video/video3.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV81MzNiYjliNy03NjlkLTRhZjMtOTQ3MC0yMGM2NmJjYTI3OWIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ2aWRlby92aWRlbzMubXA0IiwiaWF0IjoxNzc4MzI4NjAyLCJleHAiOjIwOTM2ODg2MDJ9.wAIIA6UgDmn-oQNMbUELEW8UHbawTVgM740jhf_SMbk";
+
 export function FinalCTA() {
   const locale = useLocale() === "en" ? "en" : "es";
   const copy = locale === "en"
@@ -38,7 +41,7 @@ export function FinalCTA() {
             playsInline
             className="w-full h-full object-cover"
           >
-            <source src="/video3.mp4" type="video/mp4" />
+            <source src={HOME_VIDEO_URL} type="video/mp4" />
           </video>
         </div>
         
