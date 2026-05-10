@@ -118,6 +118,7 @@ describe('RecruiterService', () => {
               major_or_interest: 'CS',
               skills: ['React'],
               updated_at: '2024-01-01',
+              portfolio_url: 'https://portfolio.example.com/john',
               chapter_membership: {
                 chapter: { name: 'MIT', university: 'MIT' },
               },
@@ -217,6 +218,41 @@ describe('RecruiterService', () => {
 
       expect(result.students).toHaveLength(1)
       expect(result.total).toBe(1)
+    })
+  })
+
+  describe('getStudentProfile', () => {
+    it('should return portfolio URL for an authorized student detail profile', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.user._builder._setThenValue({
+        data: {
+          id: 'user-1',
+          name: 'John',
+          email: 'john@test.com',
+          person_profile: {
+            graduation_year: 2025,
+            major_or_interest: 'CS',
+            skills: ['React'],
+            updated_at: '2024-01-01',
+            linkedin_url: 'https://linkedin.com/in/john',
+            portfolio_url: 'https://portfolio.example.com/john',
+            chapter_membership: {
+              chapter: { name: 'MIT', university: 'MIT' },
+            },
+          },
+          resume: null,
+        },
+        error: null,
+      })
+
+      const result = await RecruiterService.getStudentProfile(
+        mockSupabase as unknown as SupabaseClient,
+        'user-1'
+      )
+
+      expect(result?.portfolio_url).toBe('https://portfolio.example.com/john')
+      expect(tableMocks.user.select).toHaveBeenCalledWith(expect.stringContaining('portfolio_url'))
     })
   })
 

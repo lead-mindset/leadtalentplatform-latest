@@ -28,7 +28,7 @@ export type TalentPoolStudent = {
 
 type TalentPoolProfileRow = Pick<
   PersonProfileRow,
-  'graduation_year' | 'major_or_interest' | 'skills' | 'updated_at' | 'linkedin_url'
+  'graduation_year' | 'major_or_interest' | 'skills' | 'updated_at' | 'linkedin_url' | 'portfolio_url'
 > & {
   chapter_membership: {
     chapter: Pick<ChapterRow, 'name' | 'university'> | Pick<ChapterRow, 'name' | 'university'>[] | null
@@ -295,6 +295,7 @@ export const RecruiterService = {
             skills: profile.skills,
             updated_at: profile.updated_at,
             linkedin_url: null,
+            portfolio_url: null,
             chapter_membership: {
               chapter: {
                 name: chapter.name,
@@ -400,6 +401,7 @@ export const RecruiterService = {
     major: string | null
     skills: string[]
     linkedin_url: string | null
+    portfolio_url: string | null
     resume: {
       file_name: string
       file_url: string
@@ -412,7 +414,7 @@ export const RecruiterService = {
         `
         id, name, email,
         person_profile!user_id!inner (
-          major_or_interest, graduation_year, skills, linkedin_url, is_recruiter_visible,
+          major_or_interest, graduation_year, skills, linkedin_url, portfolio_url, is_recruiter_visible,
           chapter_membership!user_id!inner (
             status,
             chapter_id,
@@ -452,6 +454,7 @@ export const RecruiterService = {
       major: profile.major_or_interest ?? null,
       skills: Array.isArray(profile.skills) ? profile.skills : [],
       linkedin_url: profile.linkedin_url ?? null,
+      portfolio_url: profile.portfolio_url ?? null,
       resume: resume
         ? {
             file_name: resume.file_name,

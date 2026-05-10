@@ -216,12 +216,12 @@ export type EventWithDetails = EventRow & {
 
 export type RegistrationWithUserRaw = EventRegistrationRow & {
   user: Pick<UserRow, 'id' | 'name' | 'email' | 'phone'>[]
-  person_profile: Pick<PersonProfileRow, 'major_or_interest' | 'graduation_year' | 'linkedin_url'>[]
+  person_profile: Pick<PersonProfileRow, 'major_or_interest' | 'graduation_year' | 'linkedin_url' | 'portfolio_url'>[]
 }
 
 export type RegistrationWithUser = EventRegistrationRow & {
   user: Pick<UserRow, 'id' | 'name' | 'email' | 'phone'> | null
-  person_profile: Pick<PersonProfileRow, 'major_or_interest' | 'graduation_year' | 'linkedin_url'> | null
+  person_profile: Pick<PersonProfileRow, 'major_or_interest' | 'graduation_year' | 'linkedin_url' | 'portfolio_url'> | null
   application_answers?: Array<
     EventApplicationAnswerRow & {
       event_application_question: Pick<
@@ -286,6 +286,7 @@ export type RecruiterVisibleProfile = Pick<
   | 'major_or_interest'
   | 'graduation_year'
   | 'linkedin_url'
+  | 'portfolio_url'
   | 'skills'
   | 'is_recruiter_visible'
   | 'updated_at'

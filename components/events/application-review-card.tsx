@@ -30,6 +30,7 @@ interface ApplicationReviewCardProps {
       majorOrInterest: string
       graduation_year: number
       linkedinUrl?: string | null
+      portfolioUrl?: string | null
     }
     applicationAnswers?: Array<{
       id: string
@@ -171,6 +172,17 @@ export function ApplicationReviewCard({
                     className="inline-flex min-w-0 items-center gap-1 text-sm text-primary underline underline-offset-4"
                   >
                     <span className="truncate">LinkedIn profile</span>
+                    <Icons.ExternalLink className="h-4 w-4 shrink-0" />
+                  </a>
+                ) : null}
+                {application.ApplicantProfile.portfolioUrl ? (
+                  <a
+                    href={application.ApplicantProfile.portfolioUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-w-0 items-center gap-1 text-sm text-primary underline underline-offset-4"
+                  >
+                    <span className="truncate">Portafolio</span>
                     <Icons.ExternalLink className="h-4 w-4 shrink-0" />
                   </a>
                 ) : null}

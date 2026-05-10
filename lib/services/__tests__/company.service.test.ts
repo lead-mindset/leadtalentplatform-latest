@@ -122,6 +122,7 @@ function queueVisibleStudent(
             major_or_interest: 'CS',
             graduation_year: 2025,
             linkedin_url: null,
+            portfolio_url: 'https://portfolio.example.com/student',
             skills: ['React'],
             is_recruiter_visible: true,
             updated_at: '2024-01-01',
@@ -196,6 +197,7 @@ describe('CompanyService', () => {
       expect(result).not.toBeNull()
       expect(result?.name).toBe('Student')
       expect(result?.person_profile?.is_recruiter_visible).toBe(true)
+      expect(result?.person_profile?.portfolio_url).toBe('https://portfolio.example.com/student')
       expect(tableMocks.person_profile._builder.eq).toHaveBeenCalledWith('is_recruiter_visible', true)
       expect(tableMocks.chapter_membership._builder.eq).toHaveBeenCalledWith('status', 'approved')
     })
@@ -363,6 +365,7 @@ describe('CompanyService', () => {
                 major_or_interest: 'CS',
                 graduation_year: 2025,
                 linkedin_url: null,
+                portfolio_url: 'https://portfolio.example.com/student',
                 skills: ['React'],
                 is_recruiter_visible: true,
                 updated_at: '2024-01-01',
@@ -390,6 +393,7 @@ describe('CompanyService', () => {
                 major_or_interest: 'CS',
                 graduation_year: 2025,
                 linkedin_url: null,
+                portfolio_url: 'https://portfolio.example.com/hidden',
                 skills: ['React'],
                 is_recruiter_visible: false,
                 updated_at: '2024-01-01',

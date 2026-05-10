@@ -1450,7 +1450,7 @@ export const EventService = {
       const { data: profiles, error: profilesError } = userIds.length > 0
         ? await supabase
             .from('person_profile')
-            .select('user_id, major_or_interest, graduation_year, linkedin_url')
+            .select('user_id, major_or_interest, graduation_year, linkedin_url, portfolio_url')
             .in('user_id', userIds)
         : { data: [], error: null }
 
@@ -1466,7 +1466,6 @@ export const EventService = {
         if (!raw || typeof raw !== 'object') return null
         const r = raw as Record<string, unknown>
         const u = Array.isArray(r.user) ? (r.user as unknown[])[0] : r.user
-        const userRecord = u as Record<string, unknown> | null
         const profile = profileByUserId.get(String(r.user_id))
         return {
           id: String(r.id),
@@ -1483,6 +1482,7 @@ export const EventService = {
                 major_or_interest: profile.major_or_interest,
                 graduation_year: profile.graduation_year,
                 linkedin_url: profile.linkedin_url,
+                portfolio_url: profile.portfolio_url,
               }
             : null,
         }

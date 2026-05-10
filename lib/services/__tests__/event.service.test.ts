@@ -103,6 +103,10 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
       select: vi.fn().mockReturnValue(selectChain),
       _selectChain: selectChain,
     },
+    person_profile: {
+      select: vi.fn().mockReturnValue(selectChain),
+      _selectChain: selectChain,
+    },
     event_with_chapter: {
       select: vi.fn().mockReturnValue(selectChain),
       _selectChain: selectChain,
@@ -666,6 +670,57 @@ describe('EventService', () => {
   // ───────────────────────────────────────────────────────────────
   // resolveCheckInCandidate
   // ───────────────────────────────────────────────────────────────
+  describe('getEventRegistrations', () => {
+    it('should include portfolio URL in applicant profile mapping', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.event_registration._selectChain!.then
+        .mockImplementationOnce((resolve: (value: unknown) => unknown) =>
+          resolve({
+            data: [
+              {
+                id: 'reg-1',
+                event_id: 'evt-1',
+                user_id: 'user-1',
+                registered_at: '2026-05-01T00:00:00Z',
+                status: 'pending_review',
+                qr_token: 'qr-1',
+                checked_in_at: null,
+                checked_in_by_id: null,
+                user: { id: 'user-1', name: 'Ana', email: 'ana@test.com', phone: null },
+              },
+            ],
+            error: null,
+          })
+        )
+        .mockImplementationOnce((resolve: (value: unknown) => unknown) =>
+          resolve({
+            data: [
+              {
+                user_id: 'user-1',
+                major_or_interest: 'Product',
+                graduation_year: 2026,
+                linkedin_url: 'https://linkedin.com/in/ana',
+                portfolio_url: 'https://portfolio.example.com/ana',
+              },
+            ],
+            error: null,
+          })
+        )
+      vi.spyOn(EventApplicationService, 'getAnswersForRegistrations').mockResolvedValueOnce([])
+
+      const result = await EventService.getEventRegistrations(
+        mockSupabase as unknown as SupabaseClient,
+        'evt-1'
+      )
+
+      expect(result[0].person_profile?.portfolio_url).toBe('https://portfolio.example.com/ana')
+      expect(tableMocks.person_profile.select).toHaveBeenCalledWith(
+        'user_id, major_or_interest, graduation_year, linkedin_url, portfolio_url'
+      )
+    })
+  })
+
   describe('resolveCheckInCandidate', () => {
     it('should return ready status for valid registration', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
