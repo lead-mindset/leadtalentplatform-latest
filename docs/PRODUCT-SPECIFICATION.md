@@ -202,6 +202,9 @@ Minimum basic onboarding fields:
 - University or organization
 - Major, field, or interest area
 - Graduation year, optional for non-students
+- LinkedIn URL, optional
+- Portfolio URL, optional
+- Skills, optional
 - Global newsletter preference
 - Optional chapter newsletter interests
 

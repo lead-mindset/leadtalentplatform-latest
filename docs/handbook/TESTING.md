@@ -66,7 +66,11 @@ Company representative access is invite-only and independent from student onboar
 The public participant profile foundation is intentionally separate from chapter membership:
 
 - `PersonProfileService.upsertBasicProfile()` must update `public.user` contact fields and upsert `person_profile`.
+- `person_profile` owns reusable profile and professional fields: `university`, `major_or_interest`, `graduation_year`, `linkedin_url`, `portfolio_url`, `skills`, `gender`, and `is_recruiter_visible`.
+- `portfolio_url` is optional, normalized through schemas/actions, stored as `null` when cleared, and hidden on read-only surfaces when absent.
+- Portfolio links follow LinkedIn/resume-style visibility: show them only in self-owned profile editing or authorized professional/review surfaces.
 - Basic profile tests must assert `chapter_membership` is not required and not written.
+- Regression tests should fail if service/action mappings drop `portfolio_url` from basic profile, student profile edit, company review, recruiter detail, or event application review paths.
 - Returning-user flows should call `PersonProfileService.getBasicProfile()` and prefill reusable fields.
 - Manual validation should use `participant@test.com` and confirm the account can complete/reuse `person_profile` without a `chapter_membership` row.
 - RLS validation should confirm authenticated users can insert/update/select only their own `person_profile`; admins may access all profiles.
