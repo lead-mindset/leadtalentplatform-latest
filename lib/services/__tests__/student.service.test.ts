@@ -94,6 +94,7 @@ describe('StudentService', () => {
         graduation_year: 2025,
         skills: ['TypeScript', 'React'],
         linkedin_url: 'https://linkedin.com/in/test',
+        portfolio_url: 'https://portfolio.example.com/test',
         is_recruiter_visible: true,
         gender: 'female',
       };
@@ -112,7 +113,7 @@ describe('StudentService', () => {
       expect(result).toEqual({ ...mockProfile, ...mockMembership });
       expect(mockSupabase.from).toHaveBeenCalledWith('person_profile');
       expect(tableMocks.person_profile.select).toHaveBeenCalledWith(
-        'user_id, university, major_or_interest, graduation_year, skills, linkedin_url, is_recruiter_visible, gender'
+        'user_id, university, major_or_interest, graduation_year, skills, linkedin_url, portfolio_url, is_recruiter_visible, gender'
       );
       expect(tableMocks.person_profile.eq).toHaveBeenCalledWith('user_id', 'user-123');
       expect(mockSupabase.from).toHaveBeenCalledWith('chapter_membership');
@@ -148,6 +149,7 @@ describe('StudentService', () => {
       graduation_year: 2025,
       skills: ['TypeScript', 'React'],
       linkedinUrl: 'https://linkedin.com/in/janedoe',
+      portfolioUrl: 'https://portfolio.example.com/janedoe',
       consentRecruiterVisibility: true,
       emailNotificationsEnabled: true,
       chapter_id: 'chapter-1',
@@ -189,6 +191,7 @@ describe('StudentService', () => {
           graduation_year: 2025,
           skills: ['TypeScript', 'React'],
           linkedin_url: 'https://linkedin.com/in/janedoe',
+          portfolio_url: 'https://portfolio.example.com/janedoe',
           is_recruiter_visible: true,
         }),
         { onConflict: 'user_id' }
@@ -280,6 +283,28 @@ describe('StudentService', () => {
 
       expect(result).toEqual({ success: true });
       expect(tableMocks.newsletter_subscription.insert).not.toHaveBeenCalled();
+    });
+
+    it('should store a cleared portfolio URL as null', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase();
+
+      tableMocks.user.eq.mockResolvedValue({ error: null });
+      tableMocks.person_profile.upsert.mockResolvedValue({ error: null });
+      tableMocks.chapter_membership.upsert.mockResolvedValue({ error: null });
+
+      const result = await StudentService.updateProfile(mockSupabase as unknown as SupabaseClient, {
+        ...baseParams,
+        portfolioUrl: null,
+        emailNotificationsEnabled: false,
+      });
+
+      expect(result).toEqual({ success: true });
+      expect(tableMocks.person_profile.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          portfolio_url: null,
+        }),
+        { onConflict: 'user_id' }
+      );
     });
 
     it('should upload resume when resumePdf is provided', async () => {

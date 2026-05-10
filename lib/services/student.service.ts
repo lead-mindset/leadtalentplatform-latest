@@ -29,6 +29,7 @@ export type UpdateProfileParams = {
   graduation_year: number;
   skills: string[];
   linkedinUrl: string;
+  portfolioUrl?: string | null;
   consentRecruiterVisibility: boolean;
   emailNotificationsEnabled: boolean;
   chapter_id: string;
@@ -40,7 +41,7 @@ export const StudentService = {
     const { data: profile, error } = await supabase
       .from('person_profile')
       .select(
-        'user_id, university, major_or_interest, graduation_year, skills, linkedin_url, is_recruiter_visible, gender'
+        'user_id, university, major_or_interest, graduation_year, skills, linkedin_url, portfolio_url, is_recruiter_visible, gender'
       )
       .eq('user_id', userId)
       .single();
@@ -81,6 +82,7 @@ export const StudentService = {
         graduation_year: params.graduation_year,
         skills: params.skills,
         linkedin_url: params.linkedinUrl,
+        portfolio_url: params.portfolioUrl ?? null,
         is_recruiter_visible: params.consentRecruiterVisibility,
         updated_at: now,
       },

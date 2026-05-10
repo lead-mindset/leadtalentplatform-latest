@@ -69,7 +69,7 @@ export async function saveBasicOnboarding(
     majorOrInterest: params.data.career,
     graduationYear: params.data.graduation_year,
     linkedinUrl: params.data.linkedin_url,
-    portfolioUrl: params.data.portfolio_url || null,
+    portfolioUrl: params.data.portfolio_url ?? null,
     skills: params.data.skills,
     gender: params.data.gender,
     isRecruiterVisible: params.data.consentRecruiterVisibility,

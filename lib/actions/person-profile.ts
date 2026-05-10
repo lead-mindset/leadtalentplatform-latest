@@ -45,6 +45,7 @@ export async function upsertBasicPersonProfile(
     graduation_year: Number(formData.get('graduation_year') ?? 0),
     skills: parseSkills(formData.get('skills')),
     linkedin_url: formData.get('linkedin_url')?.toString() || '',
+    portfolio_url: formData.get('portfolio_url')?.toString() || '',
     consentRecruiterVisibility: formData.get('consentRecruiterVisibility') === 'true',
     emailNotificationsEnabled: formData.get('emailNotificationsEnabled') === 'true',
   }
@@ -64,7 +65,7 @@ export async function upsertBasicPersonProfile(
     majorOrInterest: data.career,
     graduationYear: data.graduation_year,
     linkedinUrl: data.linkedin_url,
-    portfolioUrl: formData.get('portfolio_url')?.toString() || null,
+    portfolioUrl: data.portfolio_url ?? null,
     skills: data.skills,
     gender: data.gender,
     isRecruiterVisible: data.consentRecruiterVisibility,

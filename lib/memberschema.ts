@@ -6,13 +6,29 @@ const MAX_YEAR = new Date().getFullYear() + 6
 export const CHAPTER_INTENT_VALUES = ['already_member', 'apply_to_chapter', 'events_only'] as const
 export type ChapterIntent = (typeof CHAPTER_INTENT_VALUES)[number]
 
+const URL_SCHEME = /^[a-z][a-z\d+\-.]*:/i
+const HTTP_URL_SCHEME = /^https?:\/\//i
+
+export function normalizeOptionalUrl(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+
+  const trimmed = value.trim()
+  if (!trimmed) return null
+
+  return URL_SCHEME.test(trimmed) ? trimmed : `https://${trimmed}`
+}
+
 const optionalUrl = (t: Translator) =>
-  z
-    .string()
-    .trim()
-    .optional()
-    .or(z.literal(''))
-    .refine((val) => !val || z.string().url().safeParse(val).success, {
+  z.preprocess(
+    normalizeOptionalUrl,
+    z
+      .string()
+      .url(t('validation.invalidUrl'))
+      .refine((val) => HTTP_URL_SCHEME.test(val), {
+        message: t('validation.invalidUrl'),
+      })
+      .nullable()
+  ).refine((val) => val === null || z.string().url().safeParse(val).success, {
       message: t('validation.invalidUrl'),
     })
 
@@ -49,7 +65,11 @@ export function createBaseProfileSchema(t: Translator) {
   })
 }
 
-export const createBasicPersonProfileSchema = createBaseProfileSchema
+export function createBasicPersonProfileSchema(t: Translator) {
+  return createBaseProfileSchema(t).extend({
+    portfolio_url: optionalUrl(t).optional(),
+  })
+}
 
 export function createBasicOnboardingSchema(t: Translator) {
   return createBaseProfileSchema(t).extend({
@@ -124,6 +144,7 @@ export function createFullMemberSchemaFrontend(t: Translator) {
 
 export function createProfileUpdateSchema(t: Translator) {
   return createMemberProfileSchema(t).extend({
+    portfolio_url: optionalUrl(t).optional(),
     resume_pdf: resumeSchema(t).optional(),
 
   })
@@ -138,7 +159,7 @@ export type BasicPersonProfileData = {
   graduation_year: number
   skills: string[]
   linkedin_url: string
-  portfolio_url?: string
+  portfolio_url?: string | null
   chapterIntent?: ChapterIntent
   selectedChapterId?: string
   chapterNewsletterIds?: string[]
@@ -156,6 +177,7 @@ export type ProfileData = {
   graduation_year: number
   skills: string[]
   linkedin_url: string
+  portfolio_url?: string | null
   consentRecruiterVisibility: boolean
   emailNotificationsEnabled: boolean
   memberId?: string | null

@@ -45,6 +45,7 @@ export async function getProfileData() {
       graduation_year: profileData.graduation_year || 0,
       skills: profileData.skills || [],
       linkedin_url: profileData.linkedin_url || '',
+      portfolio_url: profileData.portfolio_url || '',
       consentRecruiterVisibility: profileData.is_recruiter_visible || false,
       emailNotificationsEnabled: true,
     };
@@ -71,6 +72,7 @@ export async function updateProfile(formData: FormData) {
       graduation_year: Number(formData.get('graduation_year') ?? 0),
       skills: JSON.parse(formData.get('skills')?.toString() || '[]'),
       linkedin_url: formData.get('linkedin_url')?.toString() || '',
+      portfolio_url: formData.get('portfolio_url')?.toString() || '',
       consentRecruiterVisibility: formData.get('consentRecruiterVisibility') === 'true',
       emailNotificationsEnabled: formData.get('emailNotificationsEnabled') === 'true',
       resume_pdf: resume || undefined,
@@ -92,6 +94,7 @@ export async function updateProfile(formData: FormData) {
       graduation_year: data.graduation_year,
       skills: data.skills,
       linkedinUrl: data.linkedin_url,
+      portfolioUrl: data.portfolio_url ?? null,
       consentRecruiterVisibility: data.consentRecruiterVisibility,
       emailNotificationsEnabled: data.emailNotificationsEnabled,
       chapter_id: data.lead_chapter,

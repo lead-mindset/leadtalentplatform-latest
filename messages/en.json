@@ -165,6 +165,8 @@
       "title": "Professional Profile",
       "subtitle": "Update your professional information",
       "linkedin": "LinkedIn Profile",
+      "portfolio": "Portfolio",
+      "portfolioPlaceholder": "https://your-site.com",
       "visibility": "Make my profile visible",
       "visibilityDesc": "Share my profile with LEAD partners",
       "emailNotifications": "Email Notifications",

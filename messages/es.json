@@ -159,6 +159,8 @@
       "title": "Perfil Profesional",
       "subtitle": "Actualiza tu información profesional",
       "linkedin": "Perfil de LinkedIn",
+      "portfolio": "Portafolio",
+      "portfolioPlaceholder": "https://mi-portafolio.com",
       "visibility": "Hacer visible mi perfil",
       "visibilityDesc": "Comparte mi perfil con socios de LEAD",
       "emailNotifications": "Notificaciones por Correo",

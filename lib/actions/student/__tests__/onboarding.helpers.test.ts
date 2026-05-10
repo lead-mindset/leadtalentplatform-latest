@@ -75,6 +75,61 @@ describe('basic onboarding helpers', () => {
     })
   })
 
+  it('normalizes portfolio URLs that omit the https scheme', () => {
+    const formData = validFormData()
+    formData.set('portfolio_url', 'github.com/lead/example')
+
+    const parsed = parseBasicOnboardingFormData(formData, t)
+
+    expect(parsed.success).toBe(true)
+    if (!parsed.success) return
+
+    expect(parsed.data.portfolio_url).toBe('https://github.com/lead/example')
+  })
+
+  it('preserves portfolio URLs that already include https', () => {
+    const formData = validFormData()
+    formData.set('portfolio_url', 'https://portfolio.example.com/work')
+
+    const parsed = parseBasicOnboardingFormData(formData, t)
+
+    expect(parsed.success).toBe(true)
+    if (!parsed.success) return
+
+    expect(parsed.data.portfolio_url).toBe('https://portfolio.example.com/work')
+  })
+
+  it('treats an empty portfolio URL as null', () => {
+    const formData = validFormData()
+    formData.set('portfolio_url', '   ')
+
+    const parsed = parseBasicOnboardingFormData(formData, t)
+
+    expect(parsed.success).toBe(true)
+    if (!parsed.success) return
+
+    expect(parsed.data.portfolio_url).toBeNull()
+  })
+
+  it('rejects invalid portfolio URLs after normalization', () => {
+    const formData = validFormData()
+    formData.set('portfolio_url', 'not a url')
+
+    const parsed = parseBasicOnboardingFormData(formData, t)
+
+    expect(parsed.success).toBe(false)
+    if (parsed.success) return
+
+    expect(parsed.error.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: ['portfolio_url'],
+          message: 'validation.invalidUrl',
+        }),
+      ])
+    )
+  })
+
   it('accepts chapter-related intent when a valid chapter is selected', () => {
     const formData = validFormData()
     formData.set('chapterIntent', 'already_member')
