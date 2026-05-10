@@ -48,8 +48,13 @@ export async function bulkApproveApplications(eventId: string, applicationIds: s
         registration.event.location,
         registration.event.meeting_url,
         registration.event.event_type,
-        registration.id
-      ).catch((err: Error) => console.error('Failed to send approval email:', err))
+        registration.id,
+        'es'
+      ).then((emailResult) => {
+        if (!emailResult.success) {
+          console.error('Failed to send approval email:', emailResult.error)
+        }
+      }).catch((err: Error) => console.error('Failed to send approval email:', err))
     }
   })
 
@@ -83,8 +88,13 @@ export async function bulkRejectApplications(eventId: string, applicationIds: st
         registration.user.email,
         registration.user.name ?? 'Student',
         registration.event.title,
-        chapter_name
-      ).catch((err: Error) => console.error('Failed to send rejection email:', err))
+        chapter_name,
+        'es'
+      ).then((emailResult) => {
+        if (!emailResult.success) {
+          console.error('Failed to send rejection email:', emailResult.error)
+        }
+      }).catch((err: Error) => console.error('Failed to send rejection email:', err))
     }
   })
 

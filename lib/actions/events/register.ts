@@ -7,7 +7,7 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { requireUser } from '@/lib/auth'
 import { EventService } from '@/lib/services/event.service'
-import { sendApplicationReceivedEmail } from '@/lib/emails/send-email'
+import { sendApplicationReceivedEmail, sendEventRegistrationConfirmedEmail } from '@/lib/emails/send-email'
 import type { EventRegistrationRow } from '@/lib/types'
 import { getEventRegistrationPreflight } from '@/lib/actions/events/register.helpers'
 
@@ -34,13 +34,13 @@ function revalidateEventRegistrationPaths(eventId: string) {
 
 async function getRequestLocale() {
   const referer = (await headers()).get('referer')
-  if (!referer) return 'en'
+  if (!referer) return 'es'
 
   try {
     const locale = new URL(referer).pathname.split('/').filter(Boolean)[0]
-    return SUPPORTED_LOCALES.has(locale) ? locale : 'en'
+    return SUPPORTED_LOCALES.has(locale) ? locale : 'es'
   } catch {
-    return 'en'
+    return 'es'
   }
 }
 
@@ -97,12 +97,15 @@ export async function applyForEvent(
       ? eventData.chapter[0]?.name
       : eventData?.chapter?.name || 'LEAD Chapter'
 
+    const locale = await getRequestLocale()
+
     if (eventData?.title) {
       void sendApplicationReceivedEmail(
         user.email!,
         user.name || user.email!.split('@')[0],
         eventData.title,
-        chapter_name
+        chapter_name,
+        locale as 'en' | 'es'
       ).catch((err: Error) => console.error('Failed to send application received email:', err))
     }
 
@@ -152,6 +155,24 @@ export async function registerForEvent(
     if (!result.success) {
       revalidateEventRegistrationPaths(eventId)
       return { error: result.error, capacityExceeded: result.capacityExceeded }
+    }
+
+    const { data: eventData } = await supabase
+      .from('event')
+      .select('title, start_at, location, meeting_url, event_type')
+      .eq('id', eventId)
+      .single()
+
+    if (eventData?.title) {
+      void sendEventRegistrationConfirmedEmail(user.email!, {
+        name: user.name,
+        eventTitle: eventData.title,
+        eventDate: new Date(eventData.start_at).toLocaleString(),
+        eventLocation: eventData.location,
+        meetingUrl: eventData.meeting_url,
+        eventType: eventData.event_type,
+        locale: locale as 'en' | 'es',
+      }).catch((error: Error) => console.error('Failed to send event registration email:', error))
     }
 
     revalidateEventRegistrationPaths(eventId)

@@ -1,11 +1,13 @@
 import {
   EmailLayout,
   EMAIL_COLORS as C,
+  SUPPORT_EMAIL,
+  bulletDotStyle,
   buttonStyle,
-  infoBoxStyle,
   featureBoxStyle,
   featureItemStyle,
   helpTextStyle,
+  sectionLabelStyle,
 } from '../EmailLayout'
 
 type MemberApprovalEmailProps = {
@@ -25,41 +27,43 @@ export default function MemberApprovalEmail({
 }: MemberApprovalEmailProps) {
   const t = {
     es: {
-      title: '¡Felicidades! Tu membresía ha sido aprobada',
-      preview: 'Bienvenido oficialmente a LEAD. Tu Member ID está listo.',
-      greeting: `¡Hola, ${name}!`,
-      intro: `¡Excelentes noticias! Tu solicitud de membresía para <strong>${chapter_name}</strong> ha sido aprobada.`,
-      memberIdTitle: 'Tu Member ID:',
-      memberIdDesc: 'Este es tu identificador único como miembro de LEAD. Guárdalo para futuras referencias.',
-      featuresTitle: 'Con tu membresía ahora tienes acceso a:',
+      title: 'Tu membresia fue aprobada',
+      preview: 'Ya eres miembro oficial de LEAD Americas.',
+      greeting: `Hola, ${name}`,
+      intro: 'Tu solicitud de membresia fue aprobada.',
+      chapter: 'Capitulo',
+      memberIdTitle: 'Tu Member ID',
+      memberIdDesc: 'Este identificador confirma tu membresia oficial en LEAD Americas.',
+      featuresTitle: 'Ahora puedes',
       features: [
-        'Registrarte para eventos y talleres de tu capítulo',
-        'Obtener códigos QR para el check-in en eventos',
-        'Optar por visibilidad ante empresas aliadas para oportunidades laborales',
-        'Subir tu currículum para que las empresas aliadas te descubran',
+        'Acceder a tu dashboard de miembro.',
+        'Usar tu Member ID en procesos oficiales de LEAD.',
+        'Gestionar tu perfil profesional y visibilidad ante empresas aliadas.',
+        'Ver tus eventos, codigos QR y proximas actividades.',
       ],
-      button: 'Ir a mi Dashboard',
-      closing: 'Estamos emocionados de tenerte como parte de la comunidad LEAD.',
-      signature: 'Equipo LEAD',
-      help: '¿Necesitas ayuda?',
+      button: 'Ir a mi dashboard',
+      closing: 'Felicitaciones por este paso. Nos alegra tenerte oficialmente en la comunidad.',
+      signature: 'Equipo LEAD Americas',
+      help: 'Necesitas ayuda?',
     },
     en: {
-      title: 'Congratulations! Your Membership is Approved',
-      preview: 'Welcome officially to LEAD. Your Member ID is ready.',
-      greeting: `Hi, ${name}!`,
-      intro: `Great news! Your membership application for <strong>${chapter_name}</strong> has been approved.`,
-      memberIdTitle: 'Your Member ID:',
-      memberIdDesc: 'This is your unique identifier as a LEAD member. Keep it for future reference.',
-      featuresTitle: 'With your membership you now have access to:',
+      title: 'Your membership was approved',
+      preview: 'You are now an official LEAD Americas member.',
+      greeting: `Hi, ${name}`,
+      intro: 'Your membership application was approved.',
+      chapter: 'Chapter',
+      memberIdTitle: 'Your Member ID',
+      memberIdDesc: 'This identifier confirms your official membership in LEAD Americas.',
+      featuresTitle: 'You can now',
       features: [
-        'Register for chapter events and workshops',
-        'Get QR codes for event check-ins',
-        'Opt into partner company visibility for job opportunities',
-        'Upload your resume for partner companies to discover',
+        'Access your member dashboard.',
+        'Use your Member ID in official LEAD processes.',
+        'Manage your professional profile and partner company visibility.',
+        'View your events, QR codes, and upcoming activities.',
       ],
-      button: 'Go to My Dashboard',
-      closing: 'We are thrilled to have you as part of the LEAD community.',
-      signature: 'LEAD Team',
+      button: 'Go to my dashboard',
+      closing: 'Congratulations on this step. We are glad to have you officially in the community.',
+      signature: 'LEAD Americas Team',
       help: 'Need help?',
     },
   }[locale]
@@ -69,84 +73,70 @@ export default function MemberApprovalEmail({
   return (
     <EmailLayout title={t.title} preview={t.preview}>
       <p style={{ fontSize: 20, fontWeight: 700, margin: '0 0 16px 0', color: C.foreground }}>
-        {t.greeting} 
+        {t.greeting}
       </p>
-
+      <p style={{ margin: '0 0 12px 0' }}>{t.intro}</p>
       <p style={{ margin: '0 0 24px 0' }}>
-        {t.intro}
+        <strong>{t.chapter}:</strong> {chapter_name}
       </p>
 
-      {}
-      <div style={{
-        backgroundColor: C.primaryLight,
-        border: `2px solid ${C.primaryBorder}`,
-        borderRadius: 12,
-        padding: '24px',
-        textAlign: 'center',
-        margin: '24px 0',
-      }}>
-        <p style={{
-          margin: '0 0 8px 0',
-          fontSize: 14,
-          fontWeight: 600,
-          color: C.primary,
-          textTransform: 'uppercase',
-          letterSpacing: '1px',
-        }}>
+      <div
+        style={{
+          backgroundColor: C.primaryLight,
+          border: `2px solid ${C.primaryBorder}`,
+          borderRadius: 12,
+          padding: '24px',
+          textAlign: 'center',
+          margin: '24px 0',
+        }}
+      >
+        <p style={sectionLabelStyle}>
           {t.memberIdTitle}
         </p>
-        <div style={{
-          backgroundColor: C.white,
-          border: `1px solid ${C.primaryBorder}`,
-          borderRadius: 8,
-          padding: '16px 20px',
-          display: 'inline-block',
-          fontFamily: 'monospace',
-          fontSize: 28,
-          fontWeight: 700,
-          color: C.foreground,
-          letterSpacing: '2px',
-        }}>
+        <div
+          style={{
+            backgroundColor: C.white,
+            border: `1px solid ${C.primaryBorder}`,
+            borderRadius: 8,
+            padding: '16px 20px',
+            display: 'inline-block',
+            fontFamily: 'monospace',
+            fontSize: 28,
+            fontWeight: 700,
+            color: C.foreground,
+            letterSpacing: '2px',
+          }}
+        >
           {memberId}
         </div>
-        <p style={{
-          margin: '12px 0 0 0',
-          fontSize: 13,
-          color: C.muted,
-          fontStyle: 'italic',
-        }}>
-          {t.memberIdDesc}
-        </p>
+        <p style={{ margin: '12px 0 0 0', fontSize: 13, color: C.muted }}>{t.memberIdDesc}</p>
       </div>
 
-      {}
       <div style={featureBoxStyle}>
-        <p style={{ margin: '0 0 12px 0', fontWeight: 700, fontSize: 13, color: C.primary, textTransform: 'uppercase', letterSpacing: '1px' }}>
+        <p style={sectionLabelStyle}>
           {t.featuresTitle}
         </p>
-        {t.features.map((feature, i) => (
-          <div key={i} style={{ ...featureItemStyle, ...(i === lastIdx ? { borderBottom: 'none', paddingBottom: 0 } : {}) }}>
-            <span style={{ fontSize: 20, lineHeight: 1 }}>{'\u2713'}</span>
+        {t.features.map((feature, index) => (
+          <div
+            key={feature}
+            style={{ ...featureItemStyle, ...(index === lastIdx ? { borderBottom: 'none', paddingBottom: 0 } : {}) }}
+          >
+            <span style={bulletDotStyle} />
             <span style={{ color: C.foreground }}>{feature}</span>
           </div>
         ))}
       </div>
 
-      {}
-      {dashboardUrl && (
-        <div style={{ textAlign: 'center', margin: '32px 0' }}>
-          <a href={dashboardUrl} style={buttonStyle}>{t.button}</a>
-        </div>
-      )}
+      <div style={{ textAlign: 'center', margin: '32px 0' }}>
+        <a href={dashboardUrl} style={buttonStyle}>{t.button}</a>
+      </div>
 
-      {}
       <p style={{ marginTop: 28, marginBottom: 4 }}>{t.closing}</p>
-      <p style={{ margin: 0, fontWeight: 600, color: C.foreground }}>&mdash; {t.signature}</p>
-
+      <p style={{ margin: 0, fontWeight: 600, color: C.foreground }}>{t.signature}</p>
       <p style={helpTextStyle}>
         {t.help}{' '}
-        <a href="mailto:soporte@leadmindset.org" style={{ color: C.primary, textDecoration: 'none', fontWeight: 600 }}>
-          soporte@leadmindset.org
+        <a href={`mailto:${SUPPORT_EMAIL}`} style={{ color: C.primary, textDecoration: 'none', fontWeight: 600 }}>
+          {SUPPORT_EMAIL}
         </a>
       </p>
     </EmailLayout>

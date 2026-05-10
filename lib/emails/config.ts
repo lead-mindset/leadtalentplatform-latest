@@ -1,33 +1,20 @@
-import nodemailer from 'nodemailer'
+export const EMAIL_FROM = process.env.EMAIL_FROM || 'LEAD Americas <noreply@leadamericas.org>'
+export const EMAIL_REPLY_TO = process.env.EMAIL_REPLY_TO || 'soporte@leadamericas.org'
 
-export const EMAIL_FROM = process.env.EMAIL_FROM || 'LEAD Talent Platform <noreply@lead.org.pe>'
-export const EMAIL_REPLY_TO = process.env.EMAIL_REPLY_TO || 'support@lead.org.pe'
+export function isEmailConfigured(): boolean {
+  return Boolean(process.env.RESEND_API_KEY)
+}
 
-export const createTransporter = () => {
-  if (!process.env.SMTP_HOST) {
-    console.warn('SMTP not configured. Emails will be logged instead of sent.')
-    return null
-  }
-
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_SECURE === 'true',
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
+export function logEmailFailure(context: {
+  to: string | string[]
+  subject: string
+  error: string
+  critical?: boolean
+}) {
+  console.error('[email]', {
+    to: context.to,
+    subject: context.subject,
+    critical: context.critical ?? false,
+    error: context.error,
   })
-}
-
-export const isEmailConfigured = (): boolean => {
-  return !!process.env.SMTP_HOST && !!process.env.SMTP_USER
-}
-
-export const logEmail = (to: string, subject: string, html: string) => {
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`📧 [EMAIL] To: ${to}`)
-    console.log(`📧 [EMAIL] Subject: ${subject}`)
-    console.log(`📧 [EMAIL] HTML length: ${html.length} chars`)
-  }
 }

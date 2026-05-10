@@ -8,6 +8,11 @@ import {
 import { PersonProfileService } from '@/lib/services/person-profile.service'
 import { NewsletterSubscriptionService } from '@/lib/services/newsletter-subscription.service'
 import { ChapterMembershipService } from '@/lib/services/chapter-membership.service'
+import { ChapterService } from '@/lib/services/chapter.service'
+import {
+  sendChapterApplicationSubmittedEmail,
+  sendWelcomeEmail,
+} from '@/lib/emails/send-email'
 
 vi.mock('@/lib/services/person-profile.service', () => ({
   PersonProfileService: {
@@ -26,6 +31,17 @@ vi.mock('@/lib/services/chapter-membership.service', () => ({
   ChapterMembershipService: {
     applyToChapter: vi.fn(),
   },
+}))
+
+vi.mock('@/lib/services/chapter.service', () => ({
+  ChapterService: {
+    getChapterName: vi.fn(),
+  },
+}))
+
+vi.mock('@/lib/emails/send-email', () => ({
+  sendChapterApplicationSubmittedEmail: vi.fn().mockResolvedValue({ success: true }),
+  sendWelcomeEmail: vi.fn().mockResolvedValue({ success: true }),
 }))
 
 const t = (key: string) => key
@@ -56,6 +72,12 @@ describe('basic onboarding helpers', () => {
     vi.mocked(NewsletterSubscriptionService.subscribeGlobal).mockReset()
     vi.mocked(NewsletterSubscriptionService.subscribeToChapters).mockReset()
     vi.mocked(ChapterMembershipService.applyToChapter).mockReset()
+    vi.mocked(ChapterService.getChapterName).mockReset()
+    vi.mocked(sendChapterApplicationSubmittedEmail).mockReset()
+    vi.mocked(sendWelcomeEmail).mockReset()
+    vi.mocked(ChapterService.getChapterName).mockResolvedValue('LEAD UNI')
+    vi.mocked(sendChapterApplicationSubmittedEmail).mockResolvedValue({ success: true })
+    vi.mocked(sendWelcomeEmail).mockResolvedValue({ success: true })
   })
 
   it('parses reusable profile and newsletter data without requiring chapter membership fields', () => {
@@ -218,6 +240,7 @@ describe('basic onboarding helpers', () => {
       }
     )
     expect(ChapterMembershipService.applyToChapter).not.toHaveBeenCalled()
+    expect(sendWelcomeEmail).toHaveBeenCalledWith('participant@test.com', 'Test Participant')
   })
 
   it('creates a pending membership application for an existing chapter member claim', async () => {
@@ -247,6 +270,11 @@ describe('basic onboarding helpers', () => {
         chapterId: 'leaduni',
         position: 'member',
       }
+    )
+    expect(sendChapterApplicationSubmittedEmail).toHaveBeenCalledWith(
+      'participant@test.com',
+      'Test Participant',
+      'LEAD UNI'
     )
   })
 
@@ -278,6 +306,11 @@ describe('basic onboarding helpers', () => {
         position: 'member',
       }
     )
+    expect(sendChapterApplicationSubmittedEmail).toHaveBeenCalledWith(
+      'participant@test.com',
+      'Test Participant',
+      'LEAD UNI'
+    )
   })
 
   it('returns membership application failure and skips newsletter writes', async () => {
@@ -306,6 +339,8 @@ describe('basic onboarding helpers', () => {
     })
     expect(NewsletterSubscriptionService.subscribeGlobal).not.toHaveBeenCalled()
     expect(NewsletterSubscriptionService.subscribeToChapters).not.toHaveBeenCalled()
+    expect(sendChapterApplicationSubmittedEmail).not.toHaveBeenCalled()
+    expect(sendWelcomeEmail).not.toHaveBeenCalled()
   })
 
   it('skips newsletter writes when no newsletter choices are selected', async () => {

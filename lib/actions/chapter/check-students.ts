@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { requireUser } from '@/lib/auth'
 import { ChapterService } from '@/lib/services/chapter.service'
-import { sendMemberApprovalEmail } from '@/lib/emails/send-email'
+import { sendChapterApplicationRejectedEmail, sendMemberApprovalEmail } from '@/lib/emails/send-email'
 
 // ───────────────────────────────────────────────────────────────
 // Zod schemas (input validation at the controller boundary)
@@ -98,7 +98,11 @@ export async function approveMember(user_id: string) {
         userData.name || userData.email.split('@')[0],
         result.member_id,
         chapterName
-      ).catch(() => {})
+      ).then((emailResult) => {
+        if (!emailResult.success) {
+          console.error('Failed to send member approval email:', emailResult.error)
+        }
+      }).catch((error: Error) => console.error('Failed to send member approval email:', error))
     }
 
     return { success: true, member_id: result.member_id }
@@ -158,6 +162,20 @@ export async function rejectMember(user_id: string, _reason?: string) {
     }
 
     revalidateMemberPaths(parsed.data)
+
+    const [userData, chapterName] = await Promise.all([
+      ChapterService.getUserBasicInfo(auth.supabase, parsed.data),
+      auth.targetChapterId ? ChapterService.getChapterName(auth.supabase, auth.targetChapterId) : Promise.resolve(null),
+    ])
+
+    if (userData?.email && chapterName) {
+      void sendChapterApplicationRejectedEmail(
+        userData.email,
+        userData.name || userData.email.split('@')[0],
+        chapterName
+      ).catch((error: Error) => console.error('Failed to send chapter rejection email:', error))
+    }
+
     return { success: true }
   } catch {
     return { success: false, error: 'An unexpected error occurred' }

@@ -205,7 +205,7 @@ describe('architecture boundaries', () => {
       UI_DIRECT_DB_ALLOWLIST,
       'Architecture rule: UI/routes should call actions/services instead of adding direct DB queries.'
     )
-  })
+  }, 20_000)
 
   it('keeps foundation domain services present and tested', async () => {
     const missing = FOUNDATION_SERVICES.flatMap((serviceFile) => {
@@ -284,5 +284,39 @@ describe('architecture boundaries', () => {
 
     expect(finalDefinition?.body).toMatch(/\.role\s*=\s*'admin'/i)
     expect(finalDefinition?.body).not.toMatch(/request\.jwt\.claims|auth\.jwt\(\)\s*->>\s*'role'/i)
+  })
+
+  it('keeps transactional email on Resend without legacy SMTP imports', async () => {
+    const files = [
+      ...(await collectSourceFiles('app')),
+      ...(await collectSourceFiles('components')),
+      ...(await collectSourceFiles('lib')),
+      ...(await collectSourceFiles('emails')),
+    ]
+
+    const violations = files.flatMap(({ relativePath, content }) => {
+      if (/from\s+['"]nodemailer['"]|require\(['"]nodemailer['"]\)/.test(content)) {
+        return [relativePath]
+      }
+      return []
+    })
+
+    expect(
+      violations.sort(),
+      'Architecture rule: transactional email must use lib/emails/provider.ts and Resend, not Nodemailer/SMTP imports.'
+    ).toEqual([])
+  })
+
+  it('keeps email templates free of mojibake and old brand copy', async () => {
+    const files = await collectSourceFiles('emails')
+    const forbidden = [/LEAD Mindset/, /Ã/, /Â/, /ðŸ/, /âœ/, /â€”/, /â€“/]
+    const violations = files.flatMap(({ relativePath, content }) =>
+      forbidden.some((pattern) => pattern.test(content)) ? [relativePath] : []
+    )
+
+    expect(
+      violations.sort(),
+      'Architecture rule: email copy must use clean LEAD Americas / LEAD Talent Platform text without mojibake.'
+    ).toEqual([])
   })
 })

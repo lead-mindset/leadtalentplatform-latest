@@ -5,6 +5,11 @@ import type { Database } from '@/lib/database.generated'
 import { PersonProfileService } from '@/lib/services/person-profile.service'
 import { ChapterMembershipService } from '@/lib/services/chapter-membership.service'
 import { NewsletterSubscriptionService } from '@/lib/services/newsletter-subscription.service'
+import { ChapterService } from '@/lib/services/chapter.service'
+import {
+  sendChapterApplicationSubmittedEmail,
+  sendWelcomeEmail,
+} from '@/lib/emails/send-email'
 
 type BasicOnboardingData = z.infer<ReturnType<typeof createBasicOnboardingSchema>>
 type ActionResult =
@@ -88,6 +93,15 @@ export async function saveBasicOnboarding(
     })
 
     if (!membershipResult.success) return membershipResult
+
+    const chapterName = await ChapterService.getChapterName(supabase, params.data.selectedChapterId)
+    if (chapterName) {
+      void sendChapterApplicationSubmittedEmail(
+        params.email,
+        params.data.full_name,
+        chapterName
+      ).catch((error: Error) => console.error('Failed to send chapter application email:', error))
+    }
   }
 
   if (params.data.emailNotificationsEnabled) {
@@ -108,6 +122,10 @@ export async function saveBasicOnboarding(
 
     if (!chapterResult.success) return chapterResult
   }
+
+  void sendWelcomeEmail(params.email, params.data.full_name).catch((error: Error) => {
+    console.error('Failed to send onboarding welcome email:', error)
+  })
 
   return { success: true }
 }

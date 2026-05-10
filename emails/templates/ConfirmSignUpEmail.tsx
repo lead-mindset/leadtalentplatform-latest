@@ -1,9 +1,10 @@
 import {
   EmailLayout,
   EMAIL_COLORS as C,
+  SUPPORT_EMAIL,
   buttonStyle,
-  infoBoxStyle,
   helpTextStyle,
+  infoBoxStyle,
 } from '../EmailLayout'
 
 type ConfirmSignupEmailProps = {
@@ -14,26 +15,26 @@ type ConfirmSignupEmailProps = {
 export default function ConfirmSignupEmail({ confirmationUrl, locale = 'es' }: ConfirmSignupEmailProps) {
   const t = {
     es: {
-      title: 'Confirma tu registro ✓',
-      preview: 'Un último paso para activar tu cuenta en LEAD Mindset.',
-      greeting: '¡Hola! 👋',
-      intro: 'Gracias por registrarte en LEAD Mindset. Estamos emocionados de tenerte como parte de nuestra comunidad.',
-      cta: 'Solo un paso más — confirma tu correo electrónico para activar tu cuenta:',
-      button: '✓ Confirmar mi correo',
+      title: 'Confirma tu cuenta',
+      preview: 'Activa tu cuenta en LEAD Talent Platform.',
+      greeting: 'Hola',
+      intro: 'Gracias por registrarte en LEAD Talent Platform, la plataforma de LEAD Americas para eventos, comunidad y oportunidades.',
+      cta: 'Confirma tu correo para activar tu cuenta y continuar con tu perfil.',
+      button: 'Confirmar mi correo',
       noteTitle: 'Importante',
-      note: 'Este enlace expira en 24 horas. Si no realizaste este registro, puedes ignorar este mensaje de forma segura.',
-      help: '¿Necesitas ayuda? Contáctanos en',
+      note: 'Este enlace expira por seguridad. Si no creaste esta cuenta, puedes ignorar este mensaje.',
+      help: 'Necesitas ayuda? Escribenos a',
     },
     en: {
-      title: 'Confirm your registration ✓',
-      preview: 'One last step to activate your LEAD Mindset account.',
-      greeting: 'Hi! 👋',
-      intro: 'Thanks for signing up for LEAD Mindset. We are excited to have you as part of our community.',
-      cta: 'Just one more step — confirm your email address to activate your account:',
-      button: '✓ Confirm my email',
+      title: 'Confirm your account',
+      preview: 'Activate your LEAD Talent Platform account.',
+      greeting: 'Hi',
+      intro: 'Thanks for signing up for LEAD Talent Platform, the LEAD Americas platform for events, community, and opportunities.',
+      cta: 'Confirm your email to activate your account and continue with your profile.',
+      button: 'Confirm my email',
       noteTitle: 'Important',
-      note: 'This link expires in 24 hours. If you did not sign up, you can safely ignore this message.',
-      help: 'Need help? Contact us at',
+      note: 'This link expires for security. If you did not create this account, you can ignore this message.',
+      help: 'Need help? Email us at',
     },
   }[locale]
 
@@ -42,29 +43,18 @@ export default function ConfirmSignupEmail({ confirmationUrl, locale = 'es' }: C
       <p style={{ fontSize: 20, fontWeight: 700, margin: '0 0 16px 0', color: C.foreground }}>
         {t.greeting}
       </p>
-
-      <p style={{ margin: '0 0 20px 0' }}>
-        {t.intro.split('LEAD Mindset').map((part, i, arr) =>
-          i < arr.length - 1 ? (
-            <span key={i}>{part}<strong style={{ color: C.primary }}>LEAD Mindset</strong></span>
-          ) : <span key={i}>{part}</span>
-        )}
-      </p>
-
+      <p style={{ margin: '0 0 20px 0' }}>{t.intro}</p>
       <p style={{ margin: '0 0 28px 0', color: C.muted }}>{t.cta}</p>
-
       <div style={{ textAlign: 'center', margin: '32px 0' }}>
         <a href={confirmationUrl} style={buttonStyle}>{t.button}</a>
       </div>
-
       <div style={infoBoxStyle}>
-        <strong>📋 {t.noteTitle}:</strong>{' '}{t.note}
+        <strong>{t.noteTitle}:</strong> {t.note}
       </div>
-
       <p style={helpTextStyle}>
         {t.help}{' '}
-        <a href="mailto:soporte@leadmindset.org" style={{ color: C.primary, textDecoration: 'none', fontWeight: 600 }}>
-          soporte@leadmindset.org
+        <a href={`mailto:${SUPPORT_EMAIL}`} style={{ color: C.primary, textDecoration: 'none', fontWeight: 600 }}>
+          {SUPPORT_EMAIL}
         </a>
       </p>
     </EmailLayout>

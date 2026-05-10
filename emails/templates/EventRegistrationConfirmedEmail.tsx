@@ -1,60 +1,52 @@
 import { EmailLayout, EMAIL_COLORS as C, SUPPORT_EMAIL, buttonStyle, detailBoxStyle, helpTextStyle, infoBoxStyle } from '../EmailLayout'
 
-type ApplicationApprovedEmailProps = {
+type EventRegistrationConfirmedEmailProps = {
   name: string
   eventTitle: string
   eventDate: string
   eventLocation?: string | null
   meetingUrl?: string | null
   eventType: string
-  qrUrl: string
   eventsUrl: string
   locale?: 'en' | 'es'
 }
 
-export default function ApplicationApprovedEmail({
+export default function EventRegistrationConfirmedEmail({
   name,
   eventTitle,
   eventDate,
   eventLocation,
   meetingUrl,
   eventType,
-  qrUrl,
   eventsUrl,
   locale = 'es',
-}: ApplicationApprovedEmailProps) {
+}: EventRegistrationConfirmedEmailProps) {
   const isOnline = eventType === 'online'
   const isHybrid = eventType === 'hybrid'
   const t = {
     es: {
-      title: 'Solicitud aprobada',
-      preview: `Tu solicitud para ${eventTitle} fue aprobada.`,
+      title: 'Registro confirmado',
+      preview: `Tu registro para ${eventTitle} esta confirmado.`,
       greeting: `Hola, ${name}`,
-      intro: 'Tu solicitud fue aprobada. Ya puedes revisar los detalles y tu codigo QR.',
+      intro: 'Tu registro fue confirmado. Puedes revisar los detalles y tu codigo QR desde la plataforma.',
       date: 'Fecha',
       location: 'Lugar',
       meetingLink: 'Enlace',
-      qrTitle: 'Tu codigo QR',
-      qrDesc: 'Usa tu codigo QR desde LEAD Talent Platform para hacer check-in.',
-      qrButton: 'Ver codigo QR',
-      eventsButton: 'Ir a mis eventos',
-      closing: 'Te esperamos en el evento.',
+      qr: 'Tu codigo QR estara disponible en Mis eventos.',
+      button: 'Ver mis eventos',
       signature: 'Equipo LEAD Americas',
       help: 'Necesitas ayuda?',
     },
     en: {
-      title: 'Application approved',
-      preview: `Your application for ${eventTitle} was approved.`,
+      title: 'Registration confirmed',
+      preview: `Your registration for ${eventTitle} is confirmed.`,
       greeting: `Hi, ${name}`,
-      intro: 'Your application was approved. You can now review details and your QR code.',
+      intro: 'Your registration was confirmed. You can review details and your QR code from the platform.',
       date: 'Date',
       location: 'Location',
       meetingLink: 'Link',
-      qrTitle: 'Your QR code',
-      qrDesc: 'Use your QR code from LEAD Talent Platform to check in.',
-      qrButton: 'View QR code',
-      eventsButton: 'Go to my events',
-      closing: 'We look forward to seeing you at the event.',
+      qr: 'Your QR code will be available in My events.',
+      button: 'View my events',
       signature: 'LEAD Americas Team',
       help: 'Need help?',
     },
@@ -77,16 +69,10 @@ export default function ApplicationApprovedEmail({
           </p>
         )}
       </div>
-      <div style={infoBoxStyle}>
-        <strong>{t.qrTitle}:</strong> {t.qrDesc}
-      </div>
+      <div style={infoBoxStyle}>{t.qr}</div>
       <div style={{ textAlign: 'center', margin: '32px 0' }}>
-        <a href={qrUrl || eventsUrl} style={buttonStyle}>{t.qrButton}</a>
+        <a href={eventsUrl} style={buttonStyle}>{t.button}</a>
       </div>
-      <div style={{ textAlign: 'center', margin: '0 0 32px 0' }}>
-        <a href={eventsUrl} style={{ ...buttonStyle, backgroundColor: C.foreground, boxShadow: 'none' }}>{t.eventsButton}</a>
-      </div>
-      <p style={{ marginTop: 28, marginBottom: 4 }}>{t.closing}</p>
       <p style={{ margin: 0, fontWeight: 600, color: C.foreground }}>{t.signature}</p>
       <p style={helpTextStyle}>
         {t.help}{' '}

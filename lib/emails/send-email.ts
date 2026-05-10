@@ -1,126 +1,195 @@
-import { createTransporter, isEmailConfigured, logEmail, EMAIL_FROM } from './config'
+import { render as renderEmail } from '@react-email/render'
+import { getConfiguredAppUrl } from '@/lib/app-url'
 import WelcomeEmail from '../../emails/templates/WelcomeEmail'
 import MemberApprovalEmail from '../../emails/templates/MemberApprovalEmail'
 import ApplicationReceivedEmail from '../../emails/templates/ApplicationReceivedEmail'
 import ApplicationApprovedEmail from '../../emails/templates/ApplicationApprovedEmail'
 import ApplicationRejectedEmail from '../../emails/templates/ApplicationRejectedEmail'
-import { render as renderEmail } from '@react-email/render'
-import { getConfiguredAppUrl } from '@/lib/app-url'
+import ChapterApplicationSubmittedEmail from '../../emails/templates/ChapterApplicationSubmittedEmail'
+import ChapterApplicationRejectedEmail from '../../emails/templates/ChapterApplicationRejectedEmail'
+import EventRegistrationConfirmedEmail from '../../emails/templates/EventRegistrationConfirmedEmail'
+import CompanyInviteEmail from '../../emails/templates/CompanyInviteEmail'
+import { sendTransactionalEmail, type TransactionalEmailResult } from './provider'
 
-interface SendEmailParams {
-  to: string
-  subject: string
-  html: string
-  replyTo?: string
+type Locale = 'en' | 'es'
+
+function appPath(locale: Locale, path: string) {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+  return `${getConfiguredAppUrl()}/${locale}${normalizedPath}`
 }
 
-async function sendEmail({ to, subject, html, replyTo }: SendEmailParams): Promise<{ success: boolean; error?: string }> {
-  if (!isEmailConfigured()) {
-    logEmail(to, subject, html)
-    return { success: true }
-  }
-
-  const transporter = createTransporter()
-  if (!transporter) {
-    logEmail(to, subject, html)
-    return { success: true }
-  }
-
-  try {
-    await transporter.sendMail({
-      from: EMAIL_FROM,
-      to,
-      replyTo: replyTo || process.env.EMAIL_REPLY_TO,
-      subject,
-      html,
-    })
-    return { success: true }
-  } catch (error) {
-    console.error('Failed to send email:', error)
-    return { success: false, error: String(error) }
-  }
+function safeLocale(locale?: Locale): Locale {
+  return locale === 'en' ? 'en' : 'es'
 }
 
-// Welcome Email
+function defaultName(email: string, name?: string | null) {
+  return name || email.split('@')[0] || 'LEAD'
+}
+
 export async function sendWelcomeEmail(
-  to: string, 
-  name: string, 
-  chapter_name: string,
-  locale: 'en' | 'es' = 'es'
-) {
-  const dashboardUrl = `${getConfiguredAppUrl()}/student`
-  
+  to: string,
+  name: string,
+  _chapterName?: string,
+  locale: Locale = 'es'
+): Promise<TransactionalEmailResult> {
+  const resolvedLocale = safeLocale(locale)
   const html = await renderEmail(
-    WelcomeEmail({ 
-      name, 
-      dashboardUrl, 
-      locale,
-      role: 'member' 
+    WelcomeEmail({
+      name,
+      dashboardUrl: appPath(resolvedLocale, '/student'),
+      locale: resolvedLocale,
+      role: 'member',
     })
   )
-  
-  return sendEmail({
+
+  return sendTransactionalEmail({
     to,
-    subject: locale === 'es' ? '¡Bienvenido/a a LEAD Mindset!' : 'Welcome to LEAD Mindset!',
+    subject: resolvedLocale === 'es'
+      ? 'Tu perfil esta listo en LEAD Talent Platform'
+      : 'Your profile is ready in LEAD Talent Platform',
     html,
   })
 }
 
-// Member Approval Email
+export async function sendChapterApplicationSubmittedEmail(
+  to: string,
+  name: string,
+  chapterName: string,
+  locale: Locale = 'es'
+): Promise<TransactionalEmailResult> {
+  const resolvedLocale = safeLocale(locale)
+  const html = await renderEmail(
+    ChapterApplicationSubmittedEmail({
+      name,
+      chapterName,
+      dashboardUrl: appPath(resolvedLocale, '/student'),
+      locale: resolvedLocale,
+    })
+  )
+
+  return sendTransactionalEmail({
+    to,
+    subject: resolvedLocale === 'es'
+      ? `Solicitud recibida: ${chapterName}`
+      : `Application received: ${chapterName}`,
+    html,
+  })
+}
+
+export async function sendChapterApplicationRejectedEmail(
+  to: string,
+  name: string,
+  chapterName: string,
+  locale: Locale = 'es'
+): Promise<TransactionalEmailResult> {
+  const resolvedLocale = safeLocale(locale)
+  const html = await renderEmail(
+    ChapterApplicationRejectedEmail({
+      name,
+      chapterName,
+      dashboardUrl: appPath(resolvedLocale, '/student'),
+      locale: resolvedLocale,
+    })
+  )
+
+  return sendTransactionalEmail({
+    to,
+    subject: resolvedLocale === 'es'
+      ? `Actualizacion de solicitud: ${chapterName}`
+      : `Application update: ${chapterName}`,
+    html,
+  })
+}
+
 export async function sendMemberApprovalEmail(
-  to: string, 
-  name: string, 
-  memberId: string, 
-  chapter_name: string,
-  locale: 'en' | 'es' = 'es'
-) {
-  const dashboardUrl = `${getConfiguredAppUrl()}/student`
-  
+  to: string,
+  name: string,
+  memberId: string,
+  chapterName: string,
+  locale: Locale = 'es'
+): Promise<TransactionalEmailResult> {
+  const resolvedLocale = safeLocale(locale)
   const html = await renderEmail(
-    MemberApprovalEmail({ 
-      name, 
-      memberId, 
-      chapter_name, 
-      dashboardUrl,
-      locale 
+    MemberApprovalEmail({
+      name,
+      memberId,
+      chapter_name: chapterName,
+      dashboardUrl: appPath(resolvedLocale, '/student'),
+      locale: resolvedLocale,
     })
   )
-  
-  return sendEmail({
+
+  return sendTransactionalEmail({
     to,
-    subject: locale === 'es' ? '¡Felicidades! Tu membresía ha sido aprobada' : 'Congratulations! Your Membership is Approved',
+    subject: resolvedLocale === 'es'
+      ? `Membresia aprobada: ${memberId}`
+      : `Membership approved: ${memberId}`,
     html,
   })
 }
 
-// Application Received Email
 export async function sendApplicationReceivedEmail(
-  to: string, 
-  name: string, 
-  eventTitle: string, 
-  chapter_name: string,
-  locale: 'en' | 'es' = 'es'
-) {
-  const eventsUrl = `${getConfiguredAppUrl()}/student/events`
-  
+  to: string,
+  name: string,
+  eventTitle: string,
+  chapterName: string,
+  locale: Locale = 'es'
+): Promise<TransactionalEmailResult> {
+  const resolvedLocale = safeLocale(locale)
   const html = await renderEmail(
-    ApplicationReceivedEmail({ 
-      name, 
-      eventTitle, 
-      chapter_name, 
-      eventsUrl,
-      locale 
+    ApplicationReceivedEmail({
+      name,
+      eventTitle,
+      chapter_name: chapterName,
+      eventsUrl: appPath(resolvedLocale, '/student/events'),
+      locale: resolvedLocale,
     })
   )
-  
-  return sendEmail({
+
+  return sendTransactionalEmail({
     to,
-    subject: locale === 'es' ? `Solicitud de evento recibida: ${eventTitle}` : `Event Application Received: ${eventTitle}`,
+    subject: resolvedLocale === 'es'
+      ? `Solicitud de evento recibida: ${eventTitle}`
+      : `Event application received: ${eventTitle}`,
     html,
   })
 }
 
-// Application Approved Email
+export async function sendEventRegistrationConfirmedEmail(
+  to: string,
+  params: {
+    name?: string | null
+    eventTitle: string
+    eventDate: string
+    eventLocation?: string | null
+    meetingUrl?: string | null
+    eventType: string
+    locale?: Locale
+  }
+): Promise<TransactionalEmailResult> {
+  const resolvedLocale = safeLocale(params.locale)
+  const html = await renderEmail(
+    EventRegistrationConfirmedEmail({
+      name: defaultName(to, params.name),
+      eventTitle: params.eventTitle,
+      eventDate: params.eventDate,
+      eventLocation: params.eventLocation,
+      meetingUrl: params.meetingUrl,
+      eventType: params.eventType,
+      eventsUrl: appPath(resolvedLocale, '/student/events'),
+      locale: resolvedLocale,
+    })
+  )
+
+  return sendTransactionalEmail({
+    to,
+    subject: resolvedLocale === 'es'
+      ? `Registro confirmado: ${params.eventTitle}`
+      : `Registration confirmed: ${params.eventTitle}`,
+    html,
+  })
+}
+
 export async function sendApplicationApprovedEmail(
   to: string,
   name: string,
@@ -130,11 +199,10 @@ export async function sendApplicationApprovedEmail(
   meetingUrl: string | null,
   eventType: string,
   registrationId: string,
-  locale: 'en' | 'es' = 'es'
-) {
-  const qrUrl = `${getConfiguredAppUrl()}/student/events`
-  const eventsUrl = `${getConfiguredAppUrl()}/student/events`
-  
+  locale: Locale = 'es'
+): Promise<TransactionalEmailResult> {
+  const resolvedLocale = safeLocale(locale)
+  const eventsPath = '/student/events'
   const html = await renderEmail(
     ApplicationApprovedEmail({
       name,
@@ -143,42 +211,70 @@ export async function sendApplicationApprovedEmail(
       eventLocation,
       meetingUrl,
       eventType,
-      qrUrl,
-      eventsUrl,
-      locale,
+      qrUrl: `${appPath(resolvedLocale, eventsPath)}?registration=${registrationId}`,
+      eventsUrl: appPath(resolvedLocale, eventsPath),
+      locale: resolvedLocale,
     })
   )
-  
-  return sendEmail({
+
+  return sendTransactionalEmail({
     to,
-    subject: locale === 'es' ? `¡Estás dentro! Solicitud aprobada: ${eventTitle}` : `You're In! Application Approved: ${eventTitle}`,
+    subject: resolvedLocale === 'es'
+      ? `Solicitud aprobada: ${eventTitle}`
+      : `Application approved: ${eventTitle}`,
     html,
   })
 }
 
-// Application Rejected Email
 export async function sendApplicationRejectedEmail(
   to: string,
   name: string,
   eventTitle: string,
-  chapter_name: string,
-  locale: 'en' | 'es' = 'es'
-) {
-  const eventsUrl = `${getConfiguredAppUrl()}/student/events`
-  
+  chapterName: string,
+  locale: Locale = 'es'
+): Promise<TransactionalEmailResult> {
+  const resolvedLocale = safeLocale(locale)
   const html = await renderEmail(
-    ApplicationRejectedEmail({ 
-      name, 
-      eventTitle, 
-      chapter_name, 
-      eventsUrl,
-      locale 
+    ApplicationRejectedEmail({
+      name,
+      eventTitle,
+      chapter_name: chapterName,
+      eventsUrl: appPath(resolvedLocale, '/student/events'),
+      locale: resolvedLocale,
     })
   )
-  
-  return sendEmail({
+
+  return sendTransactionalEmail({
     to,
-    subject: locale === 'es' ? `Actualización de solicitud: ${eventTitle}` : `Application Update: ${eventTitle}`,
+    subject: resolvedLocale === 'es'
+      ? `Actualizacion de solicitud: ${eventTitle}`
+      : `Application update: ${eventTitle}`,
     html,
+  })
+}
+
+export async function sendCompanyRepresentativeInviteEmail(
+  to: string,
+  inviteToken: string,
+  companyName = 'la empresa',
+  locale: Locale = 'es'
+): Promise<TransactionalEmailResult> {
+  const resolvedLocale = safeLocale(locale)
+  const inviteUrl = `${appPath(resolvedLocale, '/recruiter/access')}?token=${encodeURIComponent(inviteToken)}`
+  const html = await renderEmail(
+    CompanyInviteEmail({
+      companyName,
+      inviteUrl,
+      locale: resolvedLocale,
+    })
+  )
+
+  return sendTransactionalEmail({
+    to,
+    subject: resolvedLocale === 'es'
+      ? `Invitacion de ${companyName} a LEAD Talent Platform`
+      : `${companyName} invitation to LEAD Talent Platform`,
+    html,
+    critical: true,
   })
 }

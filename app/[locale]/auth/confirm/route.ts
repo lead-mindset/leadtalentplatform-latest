@@ -3,6 +3,21 @@ import { type EmailOtpType } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 import { isValidLocale, routing } from "@/i18n/routing";
 
+function getSafeNextPath(value: string | null, locale: string) {
+  if (!value) return null;
+
+  try {
+    const decoded = decodeURIComponent(value);
+    if (decoded.startsWith("//")) return null;
+    if (decoded === `/${locale}` || decoded.startsWith(`/${locale}/`)) {
+      return decoded;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams, pathname } = new URL(request.url);
   const siteUrl = new URL(request.url).origin;
@@ -31,11 +46,15 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // User is authenticated — route based on role
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
     return NextResponse.redirect(`${siteUrl}/${locale}/auth/error?error=No+user+after+verify`);
+  }
+
+  const safeNext = getSafeNextPath(searchParams.get("next"), locale);
+  if (type === "recovery" && safeNext) {
+    return NextResponse.redirect(`${siteUrl}${safeNext}`);
   }
 
   const { data: userData } = await supabase
@@ -55,7 +74,7 @@ export async function GET(request: NextRequest) {
       .from("person_profile")
       .select("user_id")
       .eq("user_id", user.id)
-      .maybeSingle()
+      .maybeSingle();
 
     if (!profile) {
       return NextResponse.redirect(`${siteUrl}/${locale}/onboarding`);
