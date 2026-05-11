@@ -53,6 +53,23 @@ export type GeneratedPathwayRecommendation = {
   sort_order: number
 }
 
+export type ChapterAggregateTrend = {
+  value: string
+  count: number
+}
+
+export type ChapterPathwayInsights = {
+  totalMembers: number
+  completedCheckIns: number
+  completionRate: number
+  topNeeds: ChapterAggregateTrend[]
+  topBlockers: ChapterAggregateTrend[]
+  growthStages: ChapterAggregateTrend[]
+  primaryFocuses: ChapterAggregateTrend[]
+  completedReflections: number
+  proofItemsCreated: number
+}
+
 const CHECK_IN_SELECT = `
   id,
   user_id,
@@ -87,6 +104,32 @@ const RECOMMENDATION_SELECT = `
 function normalizeStatus(status: string | null | undefined): PathwayCheckInStatus {
   if (status === 'in_progress' || status === 'completed') return status
   return 'not_started'
+}
+
+function getTopCounts(values: Array<string | null | undefined>, limit = 3): ChapterAggregateTrend[] {
+  const counts = new Map<string, number>()
+
+  values.forEach((value) => {
+    if (!value) return
+    counts.set(value, (counts.get(value) ?? 0) + 1)
+  })
+
+  return Array.from(counts.entries())
+    .map(([value, count]) => ({ value, count }))
+    .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value))
+    .slice(0, limit)
+}
+
+const EMPTY_CHAPTER_INSIGHTS: ChapterPathwayInsights = {
+  totalMembers: 0,
+  completedCheckIns: 0,
+  completionRate: 0,
+  topNeeds: [],
+  topBlockers: [],
+  growthStages: [],
+  primaryFocuses: [],
+  completedReflections: 0,
+  proofItemsCreated: 0,
 }
 
 export function classifyPathwayCheckIn(
@@ -380,5 +423,92 @@ export const PathwayCheckInService = {
     }
 
     return { success: true }
+  },
+
+  async getChapterAggregateInsights(
+    supabase: SupabaseClient<Database>,
+    chapterId: string
+  ): Promise<ChapterPathwayInsights> {
+    const [{ data: memberRows, error: memberError }, { data: checkInRows, error: checkInError }] =
+      await Promise.all([
+        supabase
+          .from('chapter_membership')
+          .select('user_id')
+          .eq('chapter_id', chapterId)
+          .eq('status', 'approved'),
+        supabase
+          .from('pathway_check_in')
+          .select(
+            'id, user_id, status, looking_for, current_blocker, growth_stage, primary_focus'
+          )
+          .eq('chapter_id', chapterId)
+          .eq('status', 'completed'),
+      ])
+
+    if (memberError || checkInError) {
+      logger.error(
+        {
+          context: 'PathwayCheckInService.getChapterAggregateInsights',
+          chapterId,
+          memberError,
+          checkInError,
+        },
+        'Failed to load chapter pathway insights'
+      )
+      return EMPTY_CHAPTER_INSIGHTS
+    }
+
+    const memberIds = ((memberRows ?? []) as Array<{ user_id: string | null }>)
+      .map((row) => row.user_id)
+      .filter((userId): userId is string => Boolean(userId))
+    const checkIns = (checkInRows ?? []) as Array<{
+      id: string
+      user_id: string
+      status: string
+      looking_for: string | null
+      current_blocker: string | null
+      growth_stage: string | null
+      primary_focus: string | null
+    }>
+
+    let completedReflections = 0
+    let proofItemsCreated = 0
+
+    if (memberIds.length > 0) {
+      const { data: reflectionRows, error: reflectionError } = await supabase
+        .from('growth_reflection')
+        .select('id, status, user_id')
+        .in('user_id', memberIds)
+
+      if (reflectionError) {
+        logger.error(
+          {
+            context: 'PathwayCheckInService.getChapterAggregateInsights.reflections',
+            chapterId,
+            error: reflectionError,
+          },
+          'Failed to load chapter growth reflection counts'
+        )
+      } else {
+        const reflections = (reflectionRows ?? []) as Array<{ id: string; status: string }>
+        proofItemsCreated = reflections.length
+        completedReflections = reflections.filter((row) => row.status === 'completed').length
+      }
+    }
+
+    const totalMembers = memberIds.length
+    const completedCheckIns = checkIns.length
+
+    return {
+      totalMembers,
+      completedCheckIns,
+      completionRate: totalMembers > 0 ? Math.round((completedCheckIns / totalMembers) * 100) : 0,
+      topNeeds: getTopCounts(checkIns.map((row) => row.looking_for)),
+      topBlockers: getTopCounts(checkIns.map((row) => row.current_blocker)),
+      growthStages: getTopCounts(checkIns.map((row) => row.growth_stage)),
+      primaryFocuses: getTopCounts(checkIns.map((row) => row.primary_focus)),
+      completedReflections,
+      proofItemsCreated,
+    }
   },
 }

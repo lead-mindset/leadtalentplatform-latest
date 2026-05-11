@@ -10,6 +10,33 @@ import { getChapterEvents } from '@/lib/actions/events/get-data'
 import MemberCard from './members/components/member-card'
 import { Breadcrumb } from '@/components/ui/breadcrumb'
 import { MainContainer } from '@/components/global/main-container'
+import {
+  PathwayCheckInService,
+  type ChapterAggregateTrend,
+  type ChapterPathwayInsights,
+} from '@/lib/services/pathway-check-in.service'
+
+const INSIGHT_LABELS: Record<string, string> = {
+  explore_career_paths: 'Explorar caminos de carrera',
+  build_technical_experience: 'Construir experiencia tecnica',
+  prepare_for_opportunities: 'Prepararse para oportunidades',
+  find_community_mentorship: 'Encontrar comunidad y mentoria',
+  start_leading: 'Empezar a liderar',
+  dont_know_where_to_start: 'No saben por donde empezar',
+  need_more_experience: 'Necesitan mas experiencia',
+  need_people_to_guide_me: 'Necesitan guia y mentoria',
+  need_career_prep: 'Necesitan preparacion profesional',
+  explorer: 'Explorer',
+  builder: 'Builder',
+  leader: 'Leader',
+  candidate: 'Candidate',
+  emerging_professional: 'Emerging Professional',
+  career_exploration: 'Career exploration',
+  technical_experience: 'Technical experience',
+  opportunity_readiness: 'Opportunity readiness',
+  community_mentorship: 'Community and mentorship',
+  leadership: 'Leadership',
+}
 
 function StatCard({
   label,
@@ -164,6 +191,86 @@ function QuickLinks({
   )
 }
 
+function InsightTrendList({
+  title,
+  items,
+}: {
+  title: string
+  items: ChapterAggregateTrend[]
+}) {
+  return (
+    <div className="rounded-lg border border-border/70 bg-muted/25 p-3">
+      <p className="text-sm font-semibold text-foreground">{title}</p>
+      {items.length > 0 ? (
+        <div className="mt-3 space-y-2">
+          {items.map((item) => (
+            <div key={item.value} className="flex items-center justify-between gap-3 text-sm">
+              <span className="min-w-0 truncate text-muted-foreground">
+                {INSIGHT_LABELS[item.value] ?? item.value}
+              </span>
+              <span className="rounded-md bg-background px-2 py-1 text-xs font-semibold text-foreground">
+                {item.count}
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-2 text-sm text-muted-foreground">Todavia no hay suficientes senales.</p>
+      )}
+    </div>
+  )
+}
+
+function PathwayInsightsCard({ insights }: { insights: ChapterPathwayInsights }) {
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Icons.TrendingUp className="h-4 w-4 text-primary" />
+          Senales de crecimiento del capitulo
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm leading-6 text-muted-foreground">
+          Vista agregada para planear mejor. No muestra respuestas individuales ni contenido privado
+          de Growth Reflections.
+        </p>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-lg border border-border/70 bg-muted/25 p-3">
+            <p className="text-xs font-medium text-muted-foreground">Check-Ins completados</p>
+            <p className="mt-1 text-2xl font-semibold text-foreground">
+              {insights.completedCheckIns}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {insights.completionRate}% de miembros aprobados
+            </p>
+          </div>
+          <div className="rounded-lg border border-border/70 bg-muted/25 p-3">
+            <p className="text-xs font-medium text-muted-foreground">Reflections completadas</p>
+            <p className="mt-1 text-2xl font-semibold text-foreground">
+              {insights.completedReflections}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">Aprendizajes convertidos en claridad</p>
+          </div>
+          <div className="rounded-lg border border-border/70 bg-muted/25 p-3">
+            <p className="text-xs font-medium text-muted-foreground">Proof items creados</p>
+            <p className="mt-1 text-2xl font-semibold text-foreground">
+              {insights.proofItemsCreated}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">Evidencia de crecimiento privada</p>
+          </div>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <InsightTrendList title="Necesidades mas comunes" items={insights.topNeeds} />
+          <InsightTrendList title="Blockers mas comunes" items={insights.topBlockers} />
+          <InsightTrendList title="Growth stages" items={insights.growthStages} />
+          <InsightTrendList title="Primary focus" items={insights.primaryFocuses} />
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
 function EventOpsList({
   events,
 }: {
@@ -256,10 +363,11 @@ async function ChapterContent() {
     )
   }
 
-  const [allMembers, recentActivity, chapterEvents] = await Promise.all([
+  const [allMembers, recentActivity, chapterEvents, pathwayInsights] = await Promise.all([
     getChapterMembers(chapter_id),
     getRecentChapterActivity(chapter_id, 4),
     getChapterEvents(),
+    PathwayCheckInService.getChapterAggregateInsights(supabase, chapter_id),
   ])
 
   const stats = getMemberStats(allMembers)
@@ -342,6 +450,8 @@ async function ChapterContent() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-4">
+          <PathwayInsightsCard insights={pathwayInsights} />
+
           {stats.pending > 0 && (
             <>
               <div className="flex items-center justify-between">

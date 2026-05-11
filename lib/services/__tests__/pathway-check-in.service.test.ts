@@ -79,6 +79,38 @@ function createSaveMock(params?: {
   }
 }
 
+function createChapterInsightsMock(params: {
+  members: { data: unknown; error: unknown }
+  checkIns: { data: unknown; error: unknown }
+  reflections?: { data: unknown; error: unknown }
+}) {
+  const membershipBuilder = {
+    select: vi.fn(() => membershipBuilder),
+    eq: vi.fn(() => membershipBuilder),
+    then: (resolve: (value: unknown) => unknown) => resolve(params.members),
+  }
+  const checkInBuilder = {
+    select: vi.fn(() => checkInBuilder),
+    eq: vi.fn(() => checkInBuilder),
+    then: (resolve: (value: unknown) => unknown) => resolve(params.checkIns),
+  }
+  const reflectionBuilder = {
+    select: vi.fn(() => reflectionBuilder),
+    in: vi.fn(async () => params.reflections ?? { data: [], error: null }),
+  }
+  const from = vi.fn((table: string) => {
+    if (table === 'chapter_membership') return membershipBuilder
+    if (table === 'pathway_check_in') return checkInBuilder
+    return reflectionBuilder
+  })
+  return {
+    supabase: { from } as unknown as SupabaseClient<Database>,
+    membershipBuilder,
+    checkInBuilder,
+    reflectionBuilder,
+  }
+}
+
 describe('PathwayCheckInService', () => {
   it('returns not_started when no row exists', async () => {
     const { supabase } = createSelectMock({ data: null, error: null })
@@ -335,6 +367,98 @@ describe('PathwayCheckInService', () => {
         status: 'dismissed',
       })
     ).resolves.toEqual({ success: false, error: 'Unable to update recommendation' })
+  })
+
+  it('returns chapter aggregate insights without exposing private reflection text', async () => {
+    const { supabase, membershipBuilder, checkInBuilder, reflectionBuilder } =
+      createChapterInsightsMock({
+        members: {
+          data: [{ user_id: 'user-1' }, { user_id: 'user-2' }, { user_id: 'user-3' }],
+          error: null,
+        },
+        checkIns: {
+          data: [
+            {
+              id: 'check-in-1',
+              user_id: 'user-1',
+              status: 'completed',
+              looking_for: 'prepare_for_opportunities',
+              current_blocker: 'need_career_prep',
+              growth_stage: 'candidate',
+              primary_focus: 'opportunity_readiness',
+            },
+            {
+              id: 'check-in-2',
+              user_id: 'user-2',
+              status: 'completed',
+              looking_for: 'prepare_for_opportunities',
+              current_blocker: 'need_more_experience',
+              growth_stage: 'builder',
+              primary_focus: 'opportunity_readiness',
+            },
+          ],
+          error: null,
+        },
+        reflections: {
+          data: [
+            { id: 'reflection-1', user_id: 'user-1', status: 'completed' },
+            { id: 'reflection-2', user_id: 'user-2', status: 'draft' },
+          ],
+          error: null,
+        },
+      })
+
+    await expect(
+      PathwayCheckInService.getChapterAggregateInsights(supabase, 'chapter-1')
+    ).resolves.toEqual({
+      totalMembers: 3,
+      completedCheckIns: 2,
+      completionRate: 67,
+      topNeeds: [{ value: 'prepare_for_opportunities', count: 2 }],
+      topBlockers: [
+        { value: 'need_career_prep', count: 1 },
+        { value: 'need_more_experience', count: 1 },
+      ],
+      growthStages: [
+        { value: 'builder', count: 1 },
+        { value: 'candidate', count: 1 },
+      ],
+      primaryFocuses: [{ value: 'opportunity_readiness', count: 2 }],
+      completedReflections: 1,
+      proofItemsCreated: 2,
+    })
+
+    expect(membershipBuilder.eq).toHaveBeenNthCalledWith(1, 'chapter_id', 'chapter-1')
+    expect(membershipBuilder.eq).toHaveBeenNthCalledWith(2, 'status', 'approved')
+    expect(checkInBuilder.eq).toHaveBeenNthCalledWith(1, 'chapter_id', 'chapter-1')
+    expect(checkInBuilder.eq).toHaveBeenNthCalledWith(2, 'status', 'completed')
+    expect(reflectionBuilder.select).toHaveBeenCalledWith('id, status, user_id')
+    expect(reflectionBuilder.select).not.toHaveBeenCalledWith(
+      expect.stringContaining('learned')
+    )
+    expect(reflectionBuilder.in).toHaveBeenCalledWith('user_id', ['user-1', 'user-2', 'user-3'])
+  })
+
+  it('does not query reflections when a chapter has no approved members', async () => {
+    const { supabase, reflectionBuilder } = createChapterInsightsMock({
+      members: { data: [], error: null },
+      checkIns: { data: [], error: null },
+    })
+
+    await expect(
+      PathwayCheckInService.getChapterAggregateInsights(supabase, 'chapter-1')
+    ).resolves.toEqual({
+      totalMembers: 0,
+      completedCheckIns: 0,
+      completionRate: 0,
+      topNeeds: [],
+      topBlockers: [],
+      growthStages: [],
+      primaryFocuses: [],
+      completedReflections: 0,
+      proofItemsCreated: 0,
+    })
+    expect(reflectionBuilder.select).not.toHaveBeenCalled()
   })
 
   it.each([
