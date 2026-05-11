@@ -17,6 +17,7 @@ export type PathwayPrimaryFocus =
   | 'community_mentorship'
   | 'leadership'
 export type PathwayRecommendationCategory = 'learn' | 'connect' | 'prove'
+export type PathwayRecommendationStatus = 'active' | 'started' | 'completed' | 'dismissed'
 
 export type PathwayCheckInAnswers = {
   looking_for: string
@@ -33,6 +34,10 @@ export type PathwayCheckInState = {
 
 export type PathwayDashboardGuidance = PathwayCheckInState & {
   recommendations: PathwayRecommendationRow[]
+  progress: {
+    actionable: number
+    completed: number
+  }
 }
 
 export type PathwayClassification = {
@@ -310,14 +315,14 @@ export const PathwayCheckInService = {
     const checkIn = await this.getForUser(supabase, userId)
 
     if (!checkIn.row || checkIn.status !== 'completed') {
-      return { ...checkIn, recommendations: [] }
+      return { ...checkIn, recommendations: [], progress: { actionable: 0, completed: 0 } }
     }
 
     const { data, error } = await supabase
       .from('pathway_recommendation')
       .select(RECOMMENDATION_SELECT)
       .eq('check_in_id', checkIn.row.id)
-      .in('status', ['active', 'started'])
+      .in('status', ['active', 'started', 'completed'])
       .order('sort_order', { ascending: true })
 
     if (error) {
@@ -329,12 +334,51 @@ export const PathwayCheckInService = {
         },
         'Failed to load pathway dashboard recommendations'
       )
-      return { ...checkIn, recommendations: [] }
+      return { ...checkIn, recommendations: [], progress: { actionable: 0, completed: 0 } }
     }
 
+    const recommendations = (data ?? []) as PathwayRecommendationRow[]
     return {
       ...checkIn,
-      recommendations: (data ?? []) as PathwayRecommendationRow[],
+      recommendations,
+      progress: {
+        actionable: recommendations.length,
+        completed: recommendations.filter((recommendation) => recommendation.status === 'completed')
+          .length,
+      },
     }
+  },
+
+  async updateRecommendationStatus(
+    supabase: SupabaseClient<Database>,
+    params: {
+      userId: string
+      recommendationId: string
+      status: Exclude<PathwayRecommendationStatus, 'active'>
+    }
+  ): Promise<{ success: true } | { success: false; error: string }> {
+    const { error } = await supabase
+      .from('pathway_recommendation')
+      .update({
+        status: params.status,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', params.recommendationId)
+      .eq('user_id', params.userId)
+
+    if (error) {
+      logger.error(
+        {
+          context: 'PathwayCheckInService.updateRecommendationStatus',
+          userId: params.userId,
+          recommendationId: params.recommendationId,
+          error,
+        },
+        'Failed to update pathway recommendation status'
+      )
+      return { success: false, error: 'Unable to update recommendation' }
+    }
+
+    return { success: true }
   },
 }

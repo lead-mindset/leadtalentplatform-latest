@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Link } from '@/i18n/routing'
 import { requireUser } from '@/lib/auth'
+import { updatePathwayRecommendationStatus } from '@/lib/actions/student/pathway-recommendation'
 import { PageHeader } from '@/components/ui/page-header'
 import {
   StudentDashboardService,
@@ -258,6 +259,28 @@ const RECOMMENDATION_LABELS: Record<string, string> = {
   prove: 'Prove',
 }
 
+function RecommendationAction({
+  recommendationId,
+  status,
+  label,
+  variant = 'outline',
+}: {
+  recommendationId: string
+  status: 'started' | 'completed' | 'dismissed'
+  label: string
+  variant?: 'default' | 'outline' | 'ghost'
+}) {
+  return (
+    <form action={updatePathwayRecommendationStatus}>
+      <input type="hidden" name="recommendation_id" value={recommendationId} />
+      <input type="hidden" name="status" value={status} />
+      <Button type="submit" size="sm" variant={variant}>
+        {label}
+      </Button>
+    </form>
+  )
+}
+
 function PathwayGuidanceCard({ guidance }: { guidance: PathwayDashboardGuidance | null }) {
   if (!guidance || guidance.status !== 'completed' || !guidance.row) {
     return (
@@ -290,6 +313,13 @@ function PathwayGuidanceCard({ guidance }: { guidance: PathwayDashboardGuidance 
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
+        <div className="rounded-lg border border-border/70 bg-muted/25 p-3 text-sm text-muted-foreground">
+          <span className="font-semibold text-foreground">
+            {guidance.progress.completed} de {guidance.progress.actionable}
+          </span>{' '}
+          movimientos completados. Avanza a tu ritmo; esto es guia, no una calificacion.
+        </div>
+
         <div className="grid gap-3 text-sm sm:grid-cols-2">
           <div className="rounded-lg border border-border/70 bg-muted/25 p-3">
             <p className="font-semibold text-foreground">Growth stage</p>
@@ -321,6 +351,35 @@ function PathwayGuidanceCard({ guidance }: { guidance: PathwayDashboardGuidance 
               <p className="mt-2 text-xs leading-5 text-muted-foreground">
                 {recommendation.reason}
               </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {recommendation.status === 'active' ? (
+                  <RecommendationAction
+                    recommendationId={recommendation.id}
+                    status="started"
+                    label="Marcar empezado"
+                  />
+                ) : null}
+                {recommendation.status !== 'completed' ? (
+                  <RecommendationAction
+                    recommendationId={recommendation.id}
+                    status="completed"
+                    label="Completar"
+                    variant="default"
+                  />
+                ) : (
+                  <Badge variant="success" size="sm">
+                    Completado
+                  </Badge>
+                )}
+                {recommendation.status !== 'completed' ? (
+                  <RecommendationAction
+                    recommendationId={recommendation.id}
+                    status="dismissed"
+                    label="No aplica"
+                    variant="ghost"
+                  />
+                ) : null}
+              </div>
             </div>
           ))}
         </div>

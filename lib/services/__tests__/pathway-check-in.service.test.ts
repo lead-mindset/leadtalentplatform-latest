@@ -250,9 +250,9 @@ describe('PathwayCheckInService', () => {
       updated_at: '2026-05-11T12:00:00Z',
     }
     const recommendations = [
-      { id: 'rec-1', category: 'learn', sort_order: 1 },
-      { id: 'rec-2', category: 'connect', sort_order: 2 },
-      { id: 'rec-3', category: 'prove', sort_order: 3 },
+      { id: 'rec-1', category: 'learn', status: 'active', sort_order: 1 },
+      { id: 'rec-2', category: 'connect', status: 'started', sort_order: 2 },
+      { id: 'rec-3', category: 'prove', status: 'completed', sort_order: 3 },
     ]
     const { supabase, recommendationBuilder } = createDashboardMock({
       checkIn: { data: checkIn, error: null },
@@ -263,8 +263,13 @@ describe('PathwayCheckInService', () => {
       status: 'completed',
       row: checkIn,
       recommendations,
+      progress: { actionable: 3, completed: 1 },
     })
-    expect(recommendationBuilder.in).toHaveBeenCalledWith('status', ['active', 'started'])
+    expect(recommendationBuilder.in).toHaveBeenCalledWith('status', [
+      'active',
+      'started',
+      'completed',
+    ])
     expect(recommendationBuilder.order).toHaveBeenCalledWith('sort_order', { ascending: true })
   })
 
@@ -277,8 +282,59 @@ describe('PathwayCheckInService', () => {
       status: 'not_started',
       row: null,
       recommendations: [],
+      progress: { actionable: 0, completed: 0 },
     })
     expect(recommendationBuilder.select).not.toHaveBeenCalled()
+  })
+
+  it('updates a recommendation status for the owning student', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-05-11T12:00:00Z'))
+    const eq = vi.fn()
+    const builder = {
+      update: vi.fn(() => builder),
+      eq,
+    }
+    eq.mockReturnValueOnce(builder).mockResolvedValueOnce({ error: null })
+    const supabase = {
+      from: vi.fn(() => builder),
+    } as unknown as SupabaseClient<Database>
+
+    await expect(
+      PathwayCheckInService.updateRecommendationStatus(supabase, {
+        userId: 'user-1',
+        recommendationId: 'rec-1',
+        status: 'completed',
+      })
+    ).resolves.toEqual({ success: true })
+
+    expect(builder.update).toHaveBeenCalledWith({
+      status: 'completed',
+      updated_at: '2026-05-11T12:00:00.000Z',
+    })
+    expect(builder.eq).toHaveBeenNthCalledWith(1, 'id', 'rec-1')
+    expect(builder.eq).toHaveBeenNthCalledWith(2, 'user_id', 'user-1')
+    vi.useRealTimers()
+  })
+
+  it('returns an error when recommendation status update fails', async () => {
+    const eq = vi.fn()
+    const builder = {
+      update: vi.fn(() => builder),
+      eq,
+    }
+    eq.mockReturnValueOnce(builder).mockResolvedValueOnce({ error: { message: 'failed' } })
+    const supabase = {
+      from: vi.fn(() => builder),
+    } as unknown as SupabaseClient<Database>
+
+    await expect(
+      PathwayCheckInService.updateRecommendationStatus(supabase, {
+        userId: 'user-1',
+        recommendationId: 'rec-1',
+        status: 'dismissed',
+      })
+    ).resolves.toEqual({ success: false, error: 'Unable to update recommendation' })
   })
 
   it.each([
