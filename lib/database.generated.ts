@@ -563,6 +563,69 @@ export type Database = {
           },
         ]
       }
+      growth_reflection: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          goal_connection: string
+          id: string
+          learned: string
+          next_move: string
+          participated_in: string
+          recommendation_id: string | null
+          skill_or_mindset: string
+          status: string
+          updated_at: string
+          user_id: string
+          visibility: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          goal_connection: string
+          id?: string
+          learned: string
+          next_move: string
+          participated_in: string
+          recommendation_id?: string | null
+          skill_or_mindset: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          visibility?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          goal_connection?: string
+          id?: string
+          learned?: string
+          next_move?: string
+          participated_in?: string
+          recommendation_id?: string | null
+          skill_or_mindset?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "growth_reflection_recommendation_id_fkey"
+            columns: ["recommendation_id"]
+            isOneToOne: false
+            referencedRelation: "pathway_recommendation"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "growth_reflection_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pathway_feature_flag: {
         Row: {
           chapter_id: string | null
