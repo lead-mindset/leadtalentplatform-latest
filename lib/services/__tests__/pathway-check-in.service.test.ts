@@ -111,6 +111,33 @@ function createChapterInsightsMock(params: {
   }
 }
 
+function createAdminPilotMetricsMock(params: {
+  members: { data: unknown; error: unknown }
+  checkIns: { data: unknown; error: unknown }
+  recommendations: { data: unknown; error: unknown }
+  reflections: { data: unknown; error: unknown }
+}) {
+  const makeBuilder = (result: { data: unknown; error: unknown }) => {
+    const builder = {
+      select: vi.fn(() => builder),
+      eq: vi.fn(() => builder),
+      then: (resolve: (value: unknown) => unknown) => resolve(result),
+    }
+    return builder
+  }
+  const builders = {
+    chapter_membership: makeBuilder(params.members),
+    pathway_check_in: makeBuilder(params.checkIns),
+    pathway_recommendation: makeBuilder(params.recommendations),
+    growth_reflection: makeBuilder(params.reflections),
+  }
+  const from = vi.fn((table: keyof typeof builders) => builders[table])
+  return {
+    supabase: { from } as unknown as SupabaseClient<Database>,
+    builders,
+  }
+}
+
 describe('PathwayCheckInService', () => {
   it('returns not_started when no row exists', async () => {
     const { supabase } = createSelectMock({ data: null, error: null })
@@ -459,6 +486,84 @@ describe('PathwayCheckInService', () => {
       proofItemsCreated: 0,
     })
     expect(reflectionBuilder.select).not.toHaveBeenCalled()
+  })
+
+  it('calculates admin pilot metrics and risk signals', async () => {
+    const { supabase, builders } = createAdminPilotMetricsMock({
+      members: {
+        data: [
+          { user_id: 'user-1' },
+          { user_id: 'user-2' },
+          { user_id: 'user-3' },
+          { user_id: 'user-4' },
+          { user_id: 'user-5' },
+        ],
+        error: null,
+      },
+      checkIns: {
+        data: [{ id: 'check-in-1', status: 'completed' }],
+        error: null,
+      },
+      recommendations: {
+        data: [
+          {
+            id: 'rec-1',
+            status: 'completed',
+            created_at: '2026-05-01T00:00:00Z',
+            updated_at: '2026-05-10T00:00:00Z',
+          },
+          {
+            id: 'rec-2',
+            status: 'completed',
+            created_at: '2026-05-01T00:00:00Z',
+            updated_at: '2026-05-20T00:00:00Z',
+          },
+          {
+            id: 'rec-3',
+            status: 'started',
+            created_at: '2026-05-01T00:00:00Z',
+            updated_at: '2026-05-02T00:00:00Z',
+          },
+        ],
+        error: null,
+      },
+      reflections: {
+        data: [{ id: 'reflection-1', status: 'draft' }],
+        error: null,
+      },
+    })
+
+    await expect(PathwayCheckInService.getAdminPilotMetrics(supabase)).resolves.toEqual({
+      totalApprovedMembers: 5,
+      completedCheckIns: 1,
+      checkInCompletionRate: 20,
+      totalNextMoves: 3,
+      nextMovesCompletedWithin14Days: 1,
+      nextMoveCompletionRate14Days: 33,
+      proofItemsCreated: 1,
+      completedReflections: 0,
+      growthReflectionCompletionRate: 0,
+      riskSignals: [
+        {
+          key: 'low_check_in_adoption',
+          label: 'Check-In adoption is below pilot target',
+          severity: 'risk',
+          value: 20,
+          threshold: 40,
+        },
+        {
+          key: 'low_reflection_conversion',
+          label: 'Check-Ins are not converting into Growth Reflections',
+          severity: 'risk',
+          value: 0,
+          threshold: 20,
+        },
+      ],
+    })
+
+    expect(builders.chapter_membership.eq).toHaveBeenCalledWith('status', 'approved')
+    expect(builders.pathway_check_in.eq).toHaveBeenCalledWith('status', 'completed')
+    expect(builders.growth_reflection.select).toHaveBeenCalledWith('id, status')
   })
 
   it.each([

@@ -70,6 +70,27 @@ export type ChapterPathwayInsights = {
   proofItemsCreated: number
 }
 
+export type AdminPilotRiskSignal = {
+  key: 'low_check_in_adoption' | 'low_next_move_completion' | 'low_reflection_conversion'
+  label: string
+  severity: 'watch' | 'risk'
+  value: number
+  threshold: number
+}
+
+export type AdminPathwayPilotMetrics = {
+  totalApprovedMembers: number
+  completedCheckIns: number
+  checkInCompletionRate: number
+  totalNextMoves: number
+  nextMovesCompletedWithin14Days: number
+  nextMoveCompletionRate14Days: number
+  proofItemsCreated: number
+  completedReflections: number
+  growthReflectionCompletionRate: number
+  riskSignals: AdminPilotRiskSignal[]
+}
+
 const CHECK_IN_SELECT = `
   id,
   user_id,
@@ -130,6 +151,67 @@ const EMPTY_CHAPTER_INSIGHTS: ChapterPathwayInsights = {
   primaryFocuses: [],
   completedReflections: 0,
   proofItemsCreated: 0,
+}
+
+const EMPTY_ADMIN_PILOT_METRICS: AdminPathwayPilotMetrics = {
+  totalApprovedMembers: 0,
+  completedCheckIns: 0,
+  checkInCompletionRate: 0,
+  totalNextMoves: 0,
+  nextMovesCompletedWithin14Days: 0,
+  nextMoveCompletionRate14Days: 0,
+  proofItemsCreated: 0,
+  completedReflections: 0,
+  growthReflectionCompletionRate: 0,
+  riskSignals: [],
+}
+
+function percentage(numerator: number, denominator: number) {
+  return denominator > 0 ? Math.round((numerator / denominator) * 100) : 0
+}
+
+function isCompletedWithinDays(row: { status: string; created_at: string; updated_at: string }, days: number) {
+  if (row.status !== 'completed') return false
+  const createdAt = new Date(row.created_at).getTime()
+  const updatedAt = new Date(row.updated_at).getTime()
+  if (Number.isNaN(createdAt) || Number.isNaN(updatedAt)) return false
+  return updatedAt - createdAt <= days * 24 * 60 * 60 * 1000
+}
+
+function buildPilotRiskSignals(metrics: Omit<AdminPathwayPilotMetrics, 'riskSignals'>): AdminPilotRiskSignal[] {
+  const signals: AdminPilotRiskSignal[] = []
+
+  if (metrics.totalApprovedMembers > 0 && metrics.checkInCompletionRate < 40) {
+    signals.push({
+      key: 'low_check_in_adoption',
+      label: 'Check-In adoption is below pilot target',
+      severity: metrics.checkInCompletionRate < 25 ? 'risk' : 'watch',
+      value: metrics.checkInCompletionRate,
+      threshold: 40,
+    })
+  }
+
+  if (metrics.totalNextMoves > 0 && metrics.nextMoveCompletionRate14Days < 25) {
+    signals.push({
+      key: 'low_next_move_completion',
+      label: 'Students are not completing next moves fast enough',
+      severity: metrics.nextMoveCompletionRate14Days < 15 ? 'risk' : 'watch',
+      value: metrics.nextMoveCompletionRate14Days,
+      threshold: 25,
+    })
+  }
+
+  if (metrics.completedCheckIns > 0 && metrics.growthReflectionCompletionRate < 20) {
+    signals.push({
+      key: 'low_reflection_conversion',
+      label: 'Check-Ins are not converting into Growth Reflections',
+      severity: metrics.growthReflectionCompletionRate < 10 ? 'risk' : 'watch',
+      value: metrics.growthReflectionCompletionRate,
+      threshold: 20,
+    })
+  }
+
+  return signals
 }
 
 export function classifyPathwayCheckIn(
@@ -509,6 +591,70 @@ export const PathwayCheckInService = {
       primaryFocuses: getTopCounts(checkIns.map((row) => row.primary_focus)),
       completedReflections,
       proofItemsCreated,
+    }
+  },
+
+  async getAdminPilotMetrics(
+    supabase: SupabaseClient<Database>
+  ): Promise<AdminPathwayPilotMetrics> {
+    const [
+      { data: memberRows, error: memberError },
+      { data: checkInRows, error: checkInError },
+      { data: recommendationRows, error: recommendationError },
+      { data: reflectionRows, error: reflectionError },
+    ] = await Promise.all([
+      supabase.from('chapter_membership').select('user_id').eq('status', 'approved'),
+      supabase.from('pathway_check_in').select('id, status').eq('status', 'completed'),
+      supabase.from('pathway_recommendation').select('id, status, created_at, updated_at'),
+      supabase.from('growth_reflection').select('id, status'),
+    ])
+
+    if (memberError || checkInError || recommendationError || reflectionError) {
+      logger.error(
+        {
+          context: 'PathwayCheckInService.getAdminPilotMetrics',
+          memberError,
+          checkInError,
+          recommendationError,
+          reflectionError,
+        },
+        'Failed to load admin pathway pilot metrics'
+      )
+      return EMPTY_ADMIN_PILOT_METRICS
+    }
+
+    const totalApprovedMembers = ((memberRows ?? []) as Array<{ user_id: string }>).length
+    const completedCheckIns = ((checkInRows ?? []) as Array<{ id: string }>).length
+    const recommendations = (recommendationRows ?? []) as Array<{
+      id: string
+      status: string
+      created_at: string
+      updated_at: string
+    }>
+    const reflections = (reflectionRows ?? []) as Array<{ id: string; status: string }>
+    const proofItemsCreated = reflections.length
+    const completedReflections = reflections.filter((row) => row.status === 'completed').length
+
+    const metricsWithoutSignals = {
+      totalApprovedMembers,
+      completedCheckIns,
+      checkInCompletionRate: percentage(completedCheckIns, totalApprovedMembers),
+      totalNextMoves: recommendations.length,
+      nextMovesCompletedWithin14Days: recommendations.filter((row) =>
+        isCompletedWithinDays(row, 14)
+      ).length,
+      nextMoveCompletionRate14Days: percentage(
+        recommendations.filter((row) => isCompletedWithinDays(row, 14)).length,
+        recommendations.length
+      ),
+      proofItemsCreated,
+      completedReflections,
+      growthReflectionCompletionRate: percentage(completedReflections, completedCheckIns),
+    }
+
+    return {
+      ...metricsWithoutSignals,
+      riskSignals: buildPilotRiskSignals(metricsWithoutSignals),
     }
   },
 }
