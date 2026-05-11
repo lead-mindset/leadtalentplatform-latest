@@ -563,6 +563,253 @@ export type Database = {
           },
         ]
       }
+      growth_reflection: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          event_id: string | null
+          goal_connection: string
+          id: string
+          learned: string
+          next_move: string
+          participated_in: string
+          recommendation_id: string | null
+          skill_or_mindset: string
+          status: string
+          updated_at: string
+          user_id: string
+          visibility: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          event_id?: string | null
+          goal_connection: string
+          id?: string
+          learned: string
+          next_move: string
+          participated_in: string
+          recommendation_id?: string | null
+          skill_or_mindset: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          visibility?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          event_id?: string | null
+          goal_connection?: string
+          id?: string
+          learned?: string
+          next_move?: string
+          participated_in?: string
+          recommendation_id?: string | null
+          skill_or_mindset?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "growth_reflection_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "growth_reflection_recommendation_id_fkey"
+            columns: ["recommendation_id"]
+            isOneToOne: false
+            referencedRelation: "pathway_recommendation"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "growth_reflection_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pathway_feature_flag: {
+        Row: {
+          chapter_id: string | null
+          created_at: string
+          enable_chapter_insights: boolean
+          enable_check_in: boolean
+          enable_growth_reflection: boolean
+          enable_recommendation_card: boolean
+          id: string
+          updated_at: string
+          updated_by_id: string | null
+        }
+        Insert: {
+          chapter_id?: string | null
+          created_at?: string
+          enable_chapter_insights?: boolean
+          enable_check_in?: boolean
+          enable_growth_reflection?: boolean
+          enable_recommendation_card?: boolean
+          id?: string
+          updated_at?: string
+          updated_by_id?: string | null
+        }
+        Update: {
+          chapter_id?: string | null
+          created_at?: string
+          enable_chapter_insights?: boolean
+          enable_check_in?: boolean
+          enable_growth_reflection?: boolean
+          enable_recommendation_card?: boolean
+          id?: string
+          updated_at?: string
+          updated_by_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathway_feature_flag_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: true
+            referencedRelation: "chapter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pathway_feature_flag_updated_by_id_fkey"
+            columns: ["updated_by_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pathway_check_in: {
+        Row: {
+          chapter_id: string | null
+          confidence_level: number | null
+          created_at: string
+          current_blocker: string | null
+          id: string
+          looking_for: string | null
+          monthly_time_commitment: string | null
+          growth_stage: string | null
+          primary_focus: string | null
+          status: string
+          study_interest: string | null
+          submitted_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chapter_id?: string | null
+          confidence_level?: number | null
+          created_at?: string
+          current_blocker?: string | null
+          id?: string
+          looking_for?: string | null
+          monthly_time_commitment?: string | null
+          growth_stage?: string | null
+          primary_focus?: string | null
+          status?: string
+          study_interest?: string | null
+          submitted_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chapter_id?: string | null
+          confidence_level?: number | null
+          created_at?: string
+          current_blocker?: string | null
+          id?: string
+          looking_for?: string | null
+          monthly_time_commitment?: string | null
+          growth_stage?: string | null
+          primary_focus?: string | null
+          status?: string
+          study_interest?: string | null
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathway_check_in_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pathway_check_in_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pathway_recommendation: {
+        Row: {
+          body: string
+          category: string
+          check_in_id: string
+          created_at: string
+          id: string
+          reason: string
+          sort_order: number
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          category: string
+          check_in_id: string
+          created_at?: string
+          id?: string
+          reason: string
+          sort_order: number
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          category?: string
+          check_in_id?: string
+          created_at?: string
+          id?: string
+          reason?: string
+          sort_order?: number
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathway_recommendation_check_in_id_fkey"
+            columns: ["check_in_id"]
+            isOneToOne: false
+            referencedRelation: "pathway_check_in"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pathway_recommendation_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       person_profile: {
         Row: {
           created_at: string
