@@ -1,4 +1,14 @@
-import { ArrowRight, CalendarDays, CheckCircle2, Clock3, Edit3, IdCard, Users } from 'lucide-react'
+import {
+  ArrowRight,
+  CalendarDays,
+  CheckCircle2,
+  Clock3,
+  Edit3,
+  IdCard,
+  Route,
+  Sparkles,
+  Users,
+} from 'lucide-react'
 import { MainContainer } from '@/components/global/main-container'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -11,6 +21,11 @@ import {
   type StudentActivationDashboard,
   type StudentDashboardChapterOption,
 } from '@/lib/services/student-dashboard.service'
+import {
+  PathwayCheckInService,
+  type PathwayDashboardGuidance,
+} from '@/lib/services/pathway-check-in.service'
+import { PathwayRolloutService } from '@/lib/services/pathway-rollout.service'
 import { ChapterApplicationCard } from './_components/chapter-application-card'
 
 type ParticipantApplicationCardProps = {
@@ -221,9 +236,109 @@ function PrimaryActions({ dashboard }: { dashboard: StudentActivationDashboard }
   )
 }
 
+const GROWTH_STAGE_LABELS: Record<string, string> = {
+  explorer: 'Explorer',
+  builder: 'Builder',
+  leader: 'Leader',
+  candidate: 'Candidate',
+  emerging_professional: 'Emerging Professional',
+}
+
+const PRIMARY_FOCUS_LABELS: Record<string, string> = {
+  career_exploration: 'Career exploration',
+  technical_experience: 'Technical experience',
+  opportunity_readiness: 'Opportunity readiness',
+  community_mentorship: 'Community and mentorship',
+  leadership: 'Leadership',
+}
+
+const RECOMMENDATION_LABELS: Record<string, string> = {
+  learn: 'Learn',
+  connect: 'Connect',
+  prove: 'Prove',
+}
+
+function PathwayGuidanceCard({ guidance }: { guidance: PathwayDashboardGuidance | null }) {
+  if (!guidance || guidance.status !== 'completed' || !guidance.row) {
+    return (
+      <Card className="rounded-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Route className="h-5 w-5 text-primary" />
+            Tus proximos pasos
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm leading-6 text-muted-foreground">
+            Completa un Check-In de 3 minutos para recibir tres movimientos claros: que aprender,
+            con quien conectar y que pequena prueba construir.
+          </p>
+          <Button asChild className="w-full sm:w-auto">
+            <Link href="/student/pathway-check-in">Empezar Check-In</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <Card className="rounded-lg">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Sparkles className="h-5 w-5 text-primary" />
+          Tus Next Three Moves
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        <div className="grid gap-3 text-sm sm:grid-cols-2">
+          <div className="rounded-lg border border-border/70 bg-muted/25 p-3">
+            <p className="font-semibold text-foreground">Growth stage</p>
+            <p className="mt-1 text-muted-foreground">
+              {GROWTH_STAGE_LABELS[guidance.row.growth_stage ?? ''] ?? 'En progreso'}
+            </p>
+          </div>
+          <div className="rounded-lg border border-border/70 bg-muted/25 p-3">
+            <p className="font-semibold text-foreground">Primary focus</p>
+            <p className="mt-1 text-muted-foreground">
+              {PRIMARY_FOCUS_LABELS[guidance.row.primary_focus ?? ''] ?? 'Tu siguiente paso'}
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          {guidance.recommendations.map((recommendation) => (
+            <div
+              key={recommendation.id}
+              className="rounded-lg border border-border/70 bg-background p-4"
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="secondary" size="sm">
+                  {RECOMMENDATION_LABELS[recommendation.category] ?? recommendation.category}
+                </Badge>
+                <h3 className="text-sm font-semibold text-foreground">{recommendation.title}</h3>
+              </div>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">{recommendation.body}</p>
+              <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                {recommendation.reason}
+              </p>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
 export default async function StudentDashboard() {
   const { supabase, user } = await requireUser()
   const dashboard = await StudentDashboardService.getActivationDashboard(supabase, user.id)
+  const pathwayFlags = await PathwayRolloutService.getFlagsForChapter(
+    supabase,
+    dashboard.membership?.chapter_id
+  )
+  const pathwayGuidance = pathwayFlags.enable_recommendation_card
+    ? await PathwayCheckInService.getDashboardGuidanceForUser(supabase, user.id)
+    : null
   const chapterOptions =
     dashboard.status === 'participant'
       ? await StudentDashboardService.getChapterApplicationOptions(supabase)
@@ -264,6 +379,9 @@ export default async function StudentDashboard() {
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-6">
+          {pathwayFlags.enable_recommendation_card ? (
+            <PathwayGuidanceCard guidance={pathwayGuidance} />
+          ) : null}
           <ParticipantApplicationCard dashboard={dashboard} chapterOptions={chapterOptions} />
           <ProfileReadinessCard dashboard={dashboard} />
         </div>

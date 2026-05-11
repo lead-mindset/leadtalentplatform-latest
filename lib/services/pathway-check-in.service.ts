@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/database.generated'
-import type { PathwayCheckInRow } from '@/lib/types'
+import type { PathwayCheckInRow, PathwayRecommendationRow } from '@/lib/types'
 import { logger } from '@/lib/logger'
 
 export type PathwayCheckInStatus = 'not_started' | 'in_progress' | 'completed'
@@ -31,6 +31,10 @@ export type PathwayCheckInState = {
   row: PathwayCheckInRow | null
 }
 
+export type PathwayDashboardGuidance = PathwayCheckInState & {
+  recommendations: PathwayRecommendationRow[]
+}
+
 export type PathwayClassification = {
   growth_stage: PathwayGrowthStage
   primary_focus: PathwayPrimaryFocus
@@ -57,6 +61,20 @@ const CHECK_IN_SELECT = `
   growth_stage,
   primary_focus,
   submitted_at,
+  created_at,
+  updated_at
+`
+
+const RECOMMENDATION_SELECT = `
+  id,
+  check_in_id,
+  user_id,
+  category,
+  status,
+  title,
+  body,
+  reason,
+  sort_order,
   created_at,
   updated_at
 `
@@ -283,5 +301,40 @@ export const PathwayCheckInService = {
     }
 
     return { success: true }
+  },
+
+  async getDashboardGuidanceForUser(
+    supabase: SupabaseClient<Database>,
+    userId: string
+  ): Promise<PathwayDashboardGuidance> {
+    const checkIn = await this.getForUser(supabase, userId)
+
+    if (!checkIn.row || checkIn.status !== 'completed') {
+      return { ...checkIn, recommendations: [] }
+    }
+
+    const { data, error } = await supabase
+      .from('pathway_recommendation')
+      .select(RECOMMENDATION_SELECT)
+      .eq('check_in_id', checkIn.row.id)
+      .in('status', ['active', 'started'])
+      .order('sort_order', { ascending: true })
+
+    if (error) {
+      logger.error(
+        {
+          context: 'PathwayCheckInService.getDashboardGuidanceForUser',
+          userId,
+          error,
+        },
+        'Failed to load pathway dashboard recommendations'
+      )
+      return { ...checkIn, recommendations: [] }
+    }
+
+    return {
+      ...checkIn,
+      recommendations: (data ?? []) as PathwayRecommendationRow[],
+    }
   },
 }

@@ -18,6 +18,8 @@ function createSelectMock(result: { data: unknown; error: unknown }) {
   const builder = {
     select: vi.fn(() => builder),
     eq: vi.fn(() => builder),
+    in: vi.fn(() => builder),
+    order: vi.fn(async () => result),
     maybeSingle: vi.fn(async () => result),
   }
   return {
@@ -25,6 +27,30 @@ function createSelectMock(result: { data: unknown; error: unknown }) {
       from: vi.fn(() => builder),
     } as unknown as SupabaseClient<Database>,
     builder,
+  }
+}
+
+function createDashboardMock(params: {
+  checkIn: { data: unknown; error: unknown }
+  recommendations?: { data: unknown; error: unknown }
+}) {
+  const checkInBuilder = {
+    select: vi.fn(() => checkInBuilder),
+    eq: vi.fn(() => checkInBuilder),
+    maybeSingle: vi.fn(async () => params.checkIn),
+  }
+  const recommendationBuilder = {
+    select: vi.fn(() => recommendationBuilder),
+    eq: vi.fn(() => recommendationBuilder),
+    in: vi.fn(() => recommendationBuilder),
+    order: vi.fn(async () => params.recommendations ?? { data: [], error: null }),
+  }
+  const from = vi.fn((table: string) =>
+    table === 'pathway_check_in' ? checkInBuilder : recommendationBuilder
+  )
+  return {
+    supabase: { from } as unknown as SupabaseClient<Database>,
+    recommendationBuilder,
   }
 }
 
@@ -204,6 +230,55 @@ describe('PathwayCheckInService', () => {
         },
       })
     ).resolves.toEqual({ success: false, error: 'Unable to save pathway recommendations' })
+  })
+
+  it('assembles completed dashboard guidance with active recommendations', async () => {
+    const checkIn = {
+      id: 'check-in-1',
+      user_id: 'user-1',
+      chapter_id: 'chapter-1',
+      status: 'completed',
+      looking_for: 'prepare_for_opportunities',
+      current_blocker: 'need_career_prep',
+      study_interest: 'Computer Science',
+      confidence_level: 4,
+      monthly_time_commitment: 'two_to_four_hours',
+      growth_stage: 'candidate',
+      primary_focus: 'opportunity_readiness',
+      submitted_at: '2026-05-11T12:00:00Z',
+      created_at: '2026-05-11T12:00:00Z',
+      updated_at: '2026-05-11T12:00:00Z',
+    }
+    const recommendations = [
+      { id: 'rec-1', category: 'learn', sort_order: 1 },
+      { id: 'rec-2', category: 'connect', sort_order: 2 },
+      { id: 'rec-3', category: 'prove', sort_order: 3 },
+    ]
+    const { supabase, recommendationBuilder } = createDashboardMock({
+      checkIn: { data: checkIn, error: null },
+      recommendations: { data: recommendations, error: null },
+    })
+
+    await expect(PathwayCheckInService.getDashboardGuidanceForUser(supabase, 'user-1')).resolves.toEqual({
+      status: 'completed',
+      row: checkIn,
+      recommendations,
+    })
+    expect(recommendationBuilder.in).toHaveBeenCalledWith('status', ['active', 'started'])
+    expect(recommendationBuilder.order).toHaveBeenCalledWith('sort_order', { ascending: true })
+  })
+
+  it('does not query recommendations before check-in completion', async () => {
+    const { supabase, recommendationBuilder } = createDashboardMock({
+      checkIn: { data: null, error: null },
+    })
+
+    await expect(PathwayCheckInService.getDashboardGuidanceForUser(supabase, 'user-1')).resolves.toEqual({
+      status: 'not_started',
+      row: null,
+      recommendations: [],
+    })
+    expect(recommendationBuilder.select).not.toHaveBeenCalled()
   })
 
   it.each([
