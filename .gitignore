@@ -67,6 +67,7 @@ supabase/.temp/
 
 # remote opencode
 logs/
+tmp/
 *.log
 ecosystem.config.json
 .pm2/
