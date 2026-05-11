@@ -13,12 +13,12 @@ const ALLOWED_STATUSES = new Set<PathwayRecommendationStatus>([
   'dismissed',
 ])
 
-export async function updatePathwayRecommendationStatus(formData: FormData) {
+export async function updatePathwayRecommendationStatus(formData: FormData): Promise<void> {
   const recommendationId = formData.get('recommendation_id')?.toString() ?? ''
   const status = formData.get('status')?.toString() as PathwayRecommendationStatus
 
   if (!recommendationId || !ALLOWED_STATUSES.has(status)) {
-    return { error: 'Invalid recommendation update' }
+    return
   }
 
   try {
@@ -27,7 +27,7 @@ export async function updatePathwayRecommendationStatus(formData: FormData) {
       data: { user },
     } = await supabase.auth.getUser()
 
-    if (!user?.id) return { error: 'Unauthorized' }
+    if (!user?.id) return
 
     const result = await PathwayCheckInService.updateRecommendationStatus(supabase, {
       userId: user.id,
@@ -35,12 +35,11 @@ export async function updatePathwayRecommendationStatus(formData: FormData) {
       status: status as Exclude<PathwayRecommendationStatus, 'active'>,
     })
 
-    if (!result.success) return { error: result.error }
+    if (!result.success) return
   } catch (error) {
     console.error('Pathway recommendation update error:', error)
-    return { error: 'Internal server error' }
+    return
   }
 
   revalidatePath('/student')
-  return { success: true }
 }
