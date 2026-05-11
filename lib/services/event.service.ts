@@ -674,6 +674,7 @@ export const EventService = {
       .from('event_registration')
       .update({
         status: 'attended' as RegistrationStatus,
+        qr_token: null,
         checked_in_at: now,
         checked_in_by_id: checkedInById,
       })

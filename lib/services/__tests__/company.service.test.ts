@@ -222,6 +222,18 @@ describe('CompanyService', () => {
       expect(result).toBeNull()
     })
 
+    it('should rely on approved membership so pending rejected and alumni-only users stay hidden', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      queueVisibleStudent(tableMocks, { approved: false })
+
+      const result = await CompanyService.getStudentById(mockSupabase as unknown as SupabaseClient, 'student-1')
+
+      expect(result).toBeNull()
+      expect(tableMocks.person_profile._builder.eq).toHaveBeenCalledWith('is_recruiter_visible', true)
+      expect(tableMocks.chapter_membership._builder.eq).toHaveBeenCalledWith('status', 'approved')
+    })
+
     it('should return null on error', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 

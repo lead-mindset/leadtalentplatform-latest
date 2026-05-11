@@ -300,7 +300,7 @@ export type StudentForRecruiterRaw = {
   name: string | null;
   phone: string | null;
   created_at: string;
-  chapter: Pick<ChapterRow, "name" | "university" | "city" | "region">[];
+  chapter: Pick<ChapterRow, "id" | "name" | "university" | "city" | "region">[];
   person_profile: RecruiterVisibleProfile[];
 };
 
@@ -310,7 +310,7 @@ export type StudentForRecruiter = {
   name: string;
   phone: string | null;
   created_at: string;
-  chapter: Pick<ChapterRow, "name" | "university" | "city" | "region"> | null;
+  chapter: Pick<ChapterRow, "id" | "name" | "university" | "city" | "region"> | null;
   person_profile: RecruiterVisibleProfile | null;
 };
 

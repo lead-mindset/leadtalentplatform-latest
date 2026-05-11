@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { RecruiterService } from '../recruiter.service'
+import { CompanyService } from '../company.service'
 import { SupabaseClient } from '@supabase/supabase-js'
 
 /**
@@ -88,6 +89,10 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
       update: vi.fn(() => builder),
       _builder: builder,
     },
+    resume: {
+      select: vi.fn(() => builder),
+      _builder: builder,
+    },
     ...overrides,
   }
 
@@ -100,6 +105,7 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
 
 describe('RecruiterService', () => {
   beforeEach(() => {
+    vi.restoreAllMocks()
     vi.clearAllMocks()
   })
 
@@ -107,27 +113,26 @@ describe('RecruiterService', () => {
     it('should return students with pagination', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.user._builder._setThenValue({
-        data: [
+      vi.spyOn(CompanyService, 'searchStudents').mockResolvedValue([
           {
             id: 'user-1',
             name: 'John',
             email: 'john@test.com',
+            phone: null,
+            created_at: '2024-01-01',
+            chapter: { id: 'ch-1', name: 'MIT', university: 'MIT', city: 'Cambridge', region: 'MA', created_at: '2024-01-01', updated_at: '2024-01-01', instagram_url: null, latitude: null, longitude: null, location_point: null },
             person_profile: {
+              chapter_id: 'ch-1',
               graduation_year: 2025,
               major_or_interest: 'CS',
               skills: ['React'],
               updated_at: '2024-01-01',
+              linkedin_url: null,
               portfolio_url: 'https://portfolio.example.com/john',
-              chapter_membership: {
-                chapter: { name: 'MIT', university: 'MIT' },
-              },
+              is_recruiter_visible: true,
             },
           },
-        ],
-        error: null,
-        count: 1,
-      })
+      ])
 
       const result = await RecruiterService.getTalentPool(mockSupabase as unknown as SupabaseClient, {})
 
@@ -135,16 +140,18 @@ describe('RecruiterService', () => {
       expect(result.total).toBe(1)
       expect(result.totalPages).toBe(1)
       expect(result.hasNextPage).toBe(false)
+      expect(CompanyService.searchStudents).toHaveBeenCalledWith(mockSupabase, {
+        query: undefined,
+        graduation_year: undefined,
+        chapter_id: undefined,
+      })
+      expect(tableMocks.user._builder.eq).not.toHaveBeenCalledWith('role', 'member')
     })
 
     it('should apply filters', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.user._builder._setThenValue({
-        data: [],
-        error: null,
-        count: 0,
-      })
+      vi.spyOn(CompanyService, 'searchStudents').mockResolvedValue([])
 
       await RecruiterService.getTalentPool(mockSupabase as unknown as SupabaseClient, {
         query: 'john',
@@ -153,10 +160,12 @@ describe('RecruiterService', () => {
         skills: ['React'],
       })
 
-      expect(tableMocks.user._builder.ilike).toHaveBeenCalledWith('name', '%john%')
-      expect(tableMocks.user._builder.eq).toHaveBeenCalledWith('person_profile.graduation_year', 2025)
-      expect(tableMocks.user._builder.eq).toHaveBeenCalledWith('person_profile.chapter_membership.chapter_id', 'ch-1')
-      expect(tableMocks.user._builder.contains).toHaveBeenCalledWith('person_profile.skills', ['React'])
+      expect(CompanyService.searchStudents).toHaveBeenCalledWith(mockSupabase, {
+        query: 'john',
+        graduation_year: 2025,
+        chapter_id: 'ch-1',
+      })
+      expect(tableMocks.user._builder.ilike).not.toHaveBeenCalled()
     })
 
     it('should handle errors gracefully', async () => {
@@ -179,45 +188,40 @@ describe('RecruiterService', () => {
     it('should return saved students for recruiter', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.saved_student._builder._setThenValue({
-        data: [
+      vi.spyOn(CompanyService, 'getSavedStudents').mockResolvedValue([
           {
+            id: 'saved-1',
+            recruiter_id: 'recruiter-1',
             student_id: 'user-1',
+            saved_at: '2024-01-01',
+            notes: null,
+            student: {
+              id: 'user-1',
+              name: 'John',
+              email: 'john@test.com',
+              phone: null,
+              created_at: '2024-01-01',
+              chapter: { id: 'ch-1', name: 'MIT', university: 'MIT', city: 'Cambridge', region: 'MA', created_at: '2024-01-01', updated_at: '2024-01-01', instagram_url: null, latitude: null, longitude: null, location_point: null },
+              person_profile: {
+                chapter_id: 'ch-1',
+                graduation_year: 2025,
+                major_or_interest: 'CS',
+                linkedin_url: null,
+                portfolio_url: null,
+                skills: ['React'],
+                is_recruiter_visible: true,
+                updated_at: '2024-01-01',
+              },
+            },
           },
-        ],
-        error: null,
-        count: 1,
-      })
-      tableMocks.user._builder._setThenValue({
-        data: [{ id: 'user-1', name: 'John', email: 'john@test.com' }],
-        error: null,
-      })
-      tableMocks.person_profile._builder._setThenValue({
-        data: [
-          {
-            user_id: 'user-1',
-            graduation_year: 2025,
-            major_or_interest: 'CS',
-            skills: ['React'],
-            updated_at: '2024-01-01',
-            is_recruiter_visible: true,
-          },
-        ],
-        error: null,
-      })
-      tableMocks.chapter_membership._builder._setThenValue({
-        data: [{ user_id: 'user-1', chapter_id: 'ch-1' }],
-        error: null,
-      })
-      tableMocks.chapter._builder._setThenValue({
-        data: [{ id: 'ch-1', name: 'MIT', university: 'MIT' }],
-        error: null,
-      })
+      ])
 
       const result = await RecruiterService.getSavedStudents(mockSupabase as unknown as SupabaseClient, 'recruiter-1', {})
 
       expect(result.students).toHaveLength(1)
       expect(result.total).toBe(1)
+      expect(CompanyService.getSavedStudents).toHaveBeenCalledWith(mockSupabase, 'recruiter-1')
+      expect(tableMocks.person_profile._builder.eq).not.toHaveBeenCalled()
     })
   })
 
@@ -225,24 +229,26 @@ describe('RecruiterService', () => {
     it('should return portfolio URL for an authorized student detail profile', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.user._builder._setThenValue({
-        data: {
+      vi.spyOn(CompanyService, 'getStudentById').mockResolvedValue({
           id: 'user-1',
           name: 'John',
           email: 'john@test.com',
+          phone: null,
+          created_at: '2024-01-01',
+          chapter: { id: 'ch-1', name: 'MIT', university: 'MIT', city: 'Cambridge', region: 'MA', created_at: '2024-01-01', updated_at: '2024-01-01', instagram_url: null, latitude: null, longitude: null, location_point: null },
           person_profile: {
+            chapter_id: 'ch-1',
             graduation_year: 2025,
             major_or_interest: 'CS',
             skills: ['React'],
             updated_at: '2024-01-01',
             linkedin_url: 'https://linkedin.com/in/john',
             portfolio_url: 'https://portfolio.example.com/john',
-            chapter_membership: {
-              chapter: { name: 'MIT', university: 'MIT' },
-            },
+            is_recruiter_visible: true,
           },
-          resume: null,
-        },
+      })
+      tableMocks.resume._builder._setThenValue({
+        data: null,
         error: null,
       })
 
@@ -252,7 +258,8 @@ describe('RecruiterService', () => {
       )
 
       expect(result?.portfolio_url).toBe('https://portfolio.example.com/john')
-      expect(tableMocks.user.select).toHaveBeenCalledWith(expect.stringContaining('portfolio_url'))
+      expect(CompanyService.getStudentById).toHaveBeenCalledWith(mockSupabase, 'user-1')
+      expect(tableMocks.resume.select).toHaveBeenCalledWith('file_name, file_url, uploaded_at')
     })
   })
 
@@ -260,14 +267,26 @@ describe('RecruiterService', () => {
     it('should return years and chapters', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.person_profile._builder._setThenValue({
-        data: [
-          { graduation_year: 2024, chapter_membership: { chapter: { id: 'ch-1', name: 'MIT' } } },
-          { graduation_year: 2025, chapter_membership: { chapter: { id: 'ch-2', name: 'Stanford' } } },
-          { graduation_year: 2024, chapter_membership: { chapter: { id: 'ch-1', name: 'MIT' } } },
-        ],
-        error: null,
-      })
+      vi.spyOn(CompanyService, 'getVisibleStudents').mockResolvedValue([
+        {
+          id: 'user-1',
+          name: 'John',
+          email: 'john@test.com',
+          phone: null,
+          created_at: '2024-01-01',
+          chapter: { id: 'ch-1', name: 'MIT', university: 'MIT', city: 'Cambridge', region: 'MA', created_at: '2024-01-01', updated_at: '2024-01-01', instagram_url: null, latitude: null, longitude: null, location_point: null },
+          person_profile: { chapter_id: 'ch-1', graduation_year: 2024, major_or_interest: 'CS', linkedin_url: null, portfolio_url: null, skills: [], is_recruiter_visible: true, updated_at: '2024-01-01' },
+        },
+        {
+          id: 'user-2',
+          name: 'Jane',
+          email: 'jane@test.com',
+          phone: null,
+          created_at: '2024-01-01',
+          chapter: { id: 'ch-2', name: 'Stanford', university: 'Stanford', city: 'Stanford', region: 'CA', created_at: '2024-01-01', updated_at: '2024-01-01', instagram_url: null, latitude: null, longitude: null, location_point: null },
+          person_profile: { chapter_id: 'ch-2', graduation_year: 2025, major_or_interest: 'CS', linkedin_url: null, portfolio_url: null, skills: [], is_recruiter_visible: true, updated_at: '2024-01-01' },
+        },
+      ])
 
       const result = await RecruiterService.getTalentPoolFilterOptions(mockSupabase as unknown as SupabaseClient)
 
@@ -275,6 +294,7 @@ describe('RecruiterService', () => {
       expect(result.chapters).toHaveLength(2)
       expect(result.chapters[0].name).toBe('MIT')
       expect(result.chapters[1].name).toBe('Stanford')
+      expect(tableMocks.person_profile._builder.eq).not.toHaveBeenCalled()
     })
 
     it('should handle errors gracefully', async () => {

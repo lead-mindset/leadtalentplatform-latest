@@ -161,8 +161,8 @@
       "linkedin": "Perfil de LinkedIn",
       "portfolio": "Portafolio",
       "portfolioPlaceholder": "https://mi-portafolio.com",
-      "visibility": "Hacer visible mi perfil",
-      "visibilityDesc": "Comparte mi perfil con socios de LEAD",
+      "visibility": "Hacer visible mi perfil a empresas invitadas por LEAD",
+      "visibilityDesc": "Opcional. Representantes aprobados podran ver tu perfil profesional. Puedes cambiarlo luego; no garantiza oportunidades.",
       "emailNotifications": "Notificaciones por Correo",
       "emailNotificationsLabel": "Mantenerme actualizado sobre LEAD",
       "emailNotificationsDesc": "Recibe correos sobre eventos, talleres y oportunidades"
