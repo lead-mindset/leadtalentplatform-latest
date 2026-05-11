@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import { ArrowRight, Building2, CalendarDays, MapPin, Users } from 'lucide-react'
+import { ArrowRight, Building2, CalendarDays, MapPin } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { MainContainer } from '@/components/global/main-container'
@@ -18,14 +18,12 @@ const DIRECTORY_COPY = {
     badge: 'LEAD chapters',
     heading: 'Find your LEAD chapter',
     subheading:
-      'Explore student communities by university, location, and current public activity.',
+      'Explore student communities by university, location, and ways to get involved.',
     totalChapters: 'Chapters',
-    totalMembers: 'Approved members',
-    totalEvents: 'Upcoming events',
-    members: 'approved members',
-    events: 'upcoming events',
+    locationSignal: 'Local student community',
+    eventsSignal: 'Events and programs',
     noLocation: 'Location pending',
-    quietChapter: 'Activity coming soon',
+    quietChapter: 'Chapter profile is being built',
     viewChapter: 'View chapter',
     emptyTitle: 'No public chapters available yet',
     emptyBody:
@@ -36,14 +34,12 @@ const DIRECTORY_COPY = {
     badge: 'Chapters LEAD',
     heading: 'Encuentra tu chapter LEAD',
     subheading:
-      'Explora comunidades estudiantiles por universidad, ubicacion y actividad publica actual.',
+      'Explora comunidades estudiantiles por universidad, ubicacion y formas de involucrarte.',
     totalChapters: 'Chapters',
-    totalMembers: 'Miembros aprobados',
-    totalEvents: 'Eventos proximos',
-    members: 'miembros aprobados',
-    events: 'eventos proximos',
+    locationSignal: 'Comunidad estudiantil local',
+    eventsSignal: 'Eventos y programas',
     noLocation: 'Ubicacion pendiente',
-    quietChapter: 'Actividad proximamente',
+    quietChapter: 'Perfil del chapter en construccion',
     viewChapter: 'Ver chapter',
     emptyTitle: 'Aun no hay chapters publicos disponibles',
     emptyBody:
@@ -111,12 +107,12 @@ function ChapterCard({
           </div>
           <div className="flex flex-wrap gap-2">
             <Badge variant="outline" className="max-w-full justify-start gap-1.5 whitespace-normal">
-              <Users className="h-3.5 w-3.5" />
-              {chapter.approvedMemberCount} {copy.members}
+              <Building2 className="h-3.5 w-3.5" />
+              {copy.locationSignal}
             </Badge>
             <Badge variant="outline" className="max-w-full justify-start gap-1.5 whitespace-normal">
               <CalendarDays className="h-3.5 w-3.5" />
-              {chapter.upcomingEventsCount} {copy.events}
+              {copy.eventsSignal}
             </Badge>
           </div>
           {!chapter.hasActivity && (
@@ -161,10 +157,8 @@ async function ChaptersContent({ locale }: { locale: DirectoryLocale }) {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3">
               <DirectoryStat label={copy.totalChapters} value={directory.stats.totalChapters} />
-              <DirectoryStat label={copy.totalMembers} value={directory.stats.totalApprovedMembers} />
-              <DirectoryStat label={copy.totalEvents} value={directory.stats.totalUpcomingEvents} />
             </div>
           </div>
         </section>

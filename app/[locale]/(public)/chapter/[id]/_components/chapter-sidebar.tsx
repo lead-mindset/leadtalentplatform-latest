@@ -1,59 +1,22 @@
 'use client'
 
-import { Activity, CalendarDays, MapPin, Navigation, Users } from 'lucide-react'
+import { MapPin, Navigation, Sparkles } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { PublicChapterProfile } from '@/lib/services/chapter-profile.service'
 
-function StatRow({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: typeof Users
-  label: string
-  value: number
-}) {
-  return (
-    <div className="flex items-center justify-between gap-4 rounded-lg border bg-background px-4 py-3">
-      <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">
-          <Icon className="h-4 w-4 text-muted-foreground" />
-        </div>
-        <span className="text-sm text-muted-foreground">{label}</span>
-      </div>
-      <span className="text-lg font-semibold tabular-nums">{value}</span>
-    </div>
-  )
-}
-
-function ActivitySignals({ profile }: { profile: PublicChapterProfile }) {
+function ChapterPathwaysCard() {
   return (
     <Card className="rounded-lg">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <Activity className="h-4 w-4 text-primary" />
-          Chapter snapshot
+          <Sparkles className="h-4 w-4 text-primary" />
+          Ways to connect
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <StatRow
-          icon={CalendarDays}
-          label="Upcoming events"
-          value={profile.stats.upcomingEventsCount}
-        />
-        <StatRow
-          icon={Users}
-          label="Approved members"
-          value={profile.stats.approvedMemberCount}
-        />
-        <StatRow
-          icon={CalendarDays}
-          label="Past events"
-          value={profile.stats.pastEventsCount}
-        />
-        <p className="pt-1 text-xs leading-relaxed text-muted-foreground">
-          These signals come from approved roster and published event data.
-        </p>
+      <CardContent className="space-y-3 text-sm leading-6 text-muted-foreground">
+        <p>Attend an event to meet the community in context.</p>
+        <p>Complete onboarding if you want the chapter team to understand your interests.</p>
+        <p>Follow chapter updates when social links are available.</p>
       </CardContent>
     </Card>
   )
@@ -103,7 +66,7 @@ function LocationCard({ profile }: { profile: PublicChapterProfile }) {
 export function ChapterSidebar({ profile }: { profile: PublicChapterProfile }) {
   return (
     <>
-      <ActivitySignals profile={profile} />
+      <ChapterPathwaysCard />
       <LocationCard profile={profile} />
     </>
   )

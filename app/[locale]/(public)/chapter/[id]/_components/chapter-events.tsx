@@ -89,8 +89,7 @@ function EventCard({ event, featured = false }: { event: PublicChapterProfileEve
                 ) : null}
               </div>
 
-              <div className="flex items-center justify-between gap-3 text-sm">
-                <span className="text-muted-foreground">{event.registration_count} registered</span>
+              <div className="flex items-center justify-end gap-3 text-sm">
                 <span className="inline-flex items-center gap-1 font-medium text-primary">
                   View event
                   <ArrowRight className="h-4 w-4" />
@@ -116,7 +115,6 @@ export function ChapterEvents({ events }: { events: PublicChapterProfileEvent[] 
             Join an event to meet the chapter and start participating in LEAD.
           </p>
         </div>
-        <Badge variant="outline">{events.length} upcoming</Badge>
       </div>
 
       {events.length === 0 ? (

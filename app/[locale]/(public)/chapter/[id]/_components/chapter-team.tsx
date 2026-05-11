@@ -23,21 +23,11 @@ export function ChapterTeam({ members }: { members: PublicChapterProfileMember[]
       <div>
         <h2 className="text-2xl font-semibold tracking-tight">Chapter community</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          A public-safe preview of approved members connected to this chapter.
+          A student-led community built around leadership, STEM, and opportunity access.
         </p>
       </div>
 
-      {members.length === 0 ? (
-        <Card className="rounded-lg">
-          <CardContent className="flex flex-col items-center justify-center px-6 py-10 text-center">
-            <Users className="mb-4 h-10 w-10 text-muted-foreground" />
-            <p className="font-medium">Community preview coming soon</p>
-            <p className="mt-1 max-w-md text-sm text-muted-foreground">
-              Approved member information will appear here once the chapter roster is ready for public display.
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
+      {members.length > 0 ? (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {members.slice(0, 8).map((member) => (
             <Card key={member.user_id} className="rounded-lg">
@@ -53,6 +43,16 @@ export function ChapterTeam({ members }: { members: PublicChapterProfileMember[]
             </Card>
           ))}
         </div>
+      ) : (
+        <Card className="rounded-lg">
+          <CardContent className="flex flex-col items-center justify-center px-6 py-10 text-center">
+            <Users className="mb-4 h-10 w-10 text-muted-foreground" />
+            <p className="font-medium">Community preview coming soon</p>
+            <p className="mt-1 max-w-md text-sm text-muted-foreground">
+              This chapter is preparing its public community preview. You can still explore events or express interest in joining.
+            </p>
+          </CardContent>
+        </Card>
       )}
     </section>
   )

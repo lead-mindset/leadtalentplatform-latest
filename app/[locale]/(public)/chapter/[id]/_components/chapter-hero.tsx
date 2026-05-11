@@ -18,7 +18,7 @@ function getInitials(name: string) {
 }
 
 export function ChapterHero({ profile }: { profile: PublicChapterProfile }) {
-  const { chapter, stats } = profile
+  const { chapter } = profile
   const location = [chapter.city, chapter.region].filter(Boolean).join(', ')
   const initials = getInitials(chapter.name)
 
@@ -78,21 +78,17 @@ export function ChapterHero({ profile }: { profile: PublicChapterProfile }) {
         <aside className="rounded-lg border bg-card p-5 shadow-sm">
           <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
             <Sparkles className="h-4 w-4 text-primary" />
-            Chapter snapshot
+            Start here
           </div>
-          <div className="mt-5 grid grid-cols-3 gap-3 text-center">
-            <div>
-              <p className="text-2xl font-semibold">{stats.upcomingEventsCount}</p>
-              <p className="text-xs text-muted-foreground">Upcoming</p>
-            </div>
-            <div>
-              <p className="text-2xl font-semibold">{stats.approvedMemberCount}</p>
-              <p className="text-xs text-muted-foreground">Members</p>
-            </div>
-            <div>
-              <p className="text-2xl font-semibold">{stats.pastEventsCount}</p>
-              <p className="text-xs text-muted-foreground">Past</p>
-            </div>
+          <div className="mt-5 space-y-3 text-sm leading-6 text-muted-foreground">
+            <p>
+              Meet the chapter through upcoming events, student-led programs, and community
+              opportunities.
+            </p>
+            <p>
+              If this chapter feels close to your goals, start by expressing interest or joining an
+              event.
+            </p>
           </div>
           {chapter.instagram_url ? (
             <a
