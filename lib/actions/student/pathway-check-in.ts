@@ -25,7 +25,7 @@ async function getRequestLocale() {
   }
 }
 
-export async function submitPathwayCheckIn(formData: FormData) {
+export async function submitPathwayCheckIn(formData: FormData): Promise<void> {
   const locale = await getRequestLocale()
 
   try {
@@ -34,21 +34,19 @@ export async function submitPathwayCheckIn(formData: FormData) {
       data: { user },
     } = await supabase.auth.getUser()
 
-    if (!user?.id) {
-      return { error: 'Unauthorized' }
-    }
+    if (!user?.id) redirect(`/${locale}/auth/login`)
 
     const dashboard = await StudentDashboardService.getActivationDashboard(supabase, user.id)
     const chapterId = dashboard.membership?.chapter_id ?? null
     const flags = await PathwayRolloutService.getFlagsForChapter(supabase, chapterId)
 
     if (!flags.enable_check_in) {
-      return { error: 'Pathway check-in is not enabled for this chapter.' }
+      redirect(`/${locale}/student/pathway-check-in?error=disabled`)
     }
 
     const parsed = parsePathwayCheckInFormData(formData)
     if (!parsed.success) {
-      return { error: 'Validation failed', details: parsed.error.flatten() }
+      redirect(`/${locale}/student/pathway-check-in?error=invalid`)
     }
 
     const result = await saveCompletedPathwayCheckIn(supabase, {
@@ -57,10 +55,10 @@ export async function submitPathwayCheckIn(formData: FormData) {
       answers: parsed.data,
     })
 
-    if (!result.success) return { error: result.error }
+    if (!result.success) redirect(`/${locale}/student/pathway-check-in?error=save`)
   } catch (error) {
     console.error('Pathway check-in submission error:', error)
-    return { error: 'Internal server error' }
+    redirect(`/${locale}/student/pathway-check-in?error=server`)
   }
 
   revalidatePath('/student')
