@@ -567,6 +567,7 @@ export type Database = {
         Row: {
           completed_at: string | null
           created_at: string
+          event_id: string | null
           goal_connection: string
           id: string
           learned: string
@@ -582,6 +583,7 @@ export type Database = {
         Insert: {
           completed_at?: string | null
           created_at?: string
+          event_id?: string | null
           goal_connection: string
           id?: string
           learned: string
@@ -597,6 +599,7 @@ export type Database = {
         Update: {
           completed_at?: string | null
           created_at?: string
+          event_id?: string | null
           goal_connection?: string
           id?: string
           learned?: string
@@ -610,6 +613,13 @@ export type Database = {
           visibility?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "growth_reflection_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "growth_reflection_recommendation_id_fkey"
             columns: ["recommendation_id"]

@@ -5,6 +5,7 @@ import { logger } from '@/lib/logger'
 export type GrowthReflectionStatus = 'draft' | 'completed'
 
 export type GrowthReflectionInput = {
+  event_id?: string | null
   participated_in: string
   learned: string
   skill_or_mindset: string
@@ -25,6 +26,7 @@ export const GrowthReflectionService = {
     const now = new Date().toISOString()
     const { error } = await supabase.from('growth_reflection').insert({
       user_id: params.userId,
+      event_id: params.data.event_id ?? null,
       recommendation_id: params.data.recommendation_id ?? null,
       status: params.status,
       visibility: 'private',

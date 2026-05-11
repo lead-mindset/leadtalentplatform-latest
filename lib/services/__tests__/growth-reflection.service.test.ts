@@ -43,6 +43,7 @@ describe('GrowthReflectionService', () => {
 
     expect(builder.insert).toHaveBeenCalledWith({
       user_id: 'user-1',
+      event_id: null,
       recommendation_id: null,
       status: 'completed',
       visibility: 'private',
@@ -71,6 +72,27 @@ describe('GrowthReflectionService', () => {
         status: 'draft',
         visibility: 'private',
         completed_at: null,
+      })
+    )
+  })
+
+  it('can link a private reflection to the related event', async () => {
+    const { supabase, builder } = createInsertMock({ error: null })
+
+    await GrowthReflectionService.createReflection(supabase, {
+      userId: 'user-1',
+      status: 'completed',
+      data: {
+        ...reflectionData,
+        event_id: 'event-1',
+      },
+    })
+
+    expect(builder.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        user_id: 'user-1',
+        event_id: 'event-1',
+        visibility: 'private',
       })
     )
   })
