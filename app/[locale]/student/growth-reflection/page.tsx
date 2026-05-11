@@ -28,8 +28,6 @@ function TextAreaField({
   )
 }
 
-export default async function GrowthReflectionPage() {
-  await requireUser()
 export default async function GrowthReflectionPage({
   searchParams,
 }: {
