@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { AdminService } from '@/lib/services/admin.service'
+import { PathwayCheckInService } from '@/lib/services/pathway-check-in.service'
 import type {
   ActivityItem,
   ChapterRow,
@@ -39,6 +40,11 @@ export async function getCompanyAccessForUser(userId: string, email: string) {
 export async function getSystemStats() {
   const supabase = await createClient()
   return AdminService.getSystemStats(supabase)
+}
+
+export async function getPathwayPilotMetrics() {
+  const supabase = await createClient()
+  return PathwayCheckInService.getAdminPilotMetrics(supabase)
 }
 
 export async function getRecentActivity() {

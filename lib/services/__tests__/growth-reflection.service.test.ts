@@ -19,6 +19,17 @@ function createInsertMock(result: { error: unknown }) {
   }
 }
 
+function createSelectMock(result: { data: unknown[] | null; error: unknown }) {
+  const builder = {
+    select: vi.fn(() => builder),
+    eq: vi.fn(async () => result),
+  }
+  return {
+    supabase: { from: vi.fn(() => builder) } as unknown as SupabaseClient<Database>,
+    builder,
+  }
+}
+
 const reflectionData = {
   participated_in: 'AI workshop',
   learned: 'How to frame an AI product problem',
@@ -107,5 +118,33 @@ describe('GrowthReflectionService', () => {
         data: reflectionData,
       })
     ).resolves.toEqual({ success: false, error: 'Unable to create growth reflection' })
+  })
+
+  it('summarizes private reflection progress for the student only', async () => {
+    const { supabase, builder } = createSelectMock({
+      data: [
+        { id: 'reflection-1', status: 'completed' },
+        { id: 'reflection-2', status: 'draft' },
+        { id: 'reflection-3', status: 'completed' },
+      ],
+      error: null,
+    })
+
+    await expect(GrowthReflectionService.getProgressForUser(supabase, 'user-1')).resolves.toEqual({
+      completedReflections: 2,
+      proofItemsCreated: 3,
+    })
+
+    expect(builder.select).toHaveBeenCalledWith('id, status')
+    expect(builder.eq).toHaveBeenCalledWith('user_id', 'user-1')
+  })
+
+  it('returns empty progress when reflection progress cannot be loaded', async () => {
+    const { supabase } = createSelectMock({ data: null, error: { message: 'failed' } })
+
+    await expect(GrowthReflectionService.getProgressForUser(supabase, 'user-1')).resolves.toEqual({
+      completedReflections: 0,
+      proofItemsCreated: 0,
+    })
   })
 })

@@ -137,6 +137,18 @@ export type EventChapterUpdate = Partial<EventChapterInsert>;
 export type NewsletterSubscriptionRow = Database["public"]["Tables"]["newsletter_subscription"]["Row"];
 export type NewsletterSubscriptionInsert = Database["public"]["Tables"]["newsletter_subscription"]["Insert"];
 export type NewsletterSubscriptionUpdate = Database["public"]["Tables"]["newsletter_subscription"]["Update"];
+export type GrowthReflectionRow = Database["public"]["Tables"]["growth_reflection"]["Row"];
+export type GrowthReflectionInsert = Database["public"]["Tables"]["growth_reflection"]["Insert"];
+export type GrowthReflectionUpdate = Database["public"]["Tables"]["growth_reflection"]["Update"];
+export type PathwayFeatureFlagRow = Database["public"]["Tables"]["pathway_feature_flag"]["Row"];
+export type PathwayFeatureFlagInsert = Database["public"]["Tables"]["pathway_feature_flag"]["Insert"];
+export type PathwayFeatureFlagUpdate = Database["public"]["Tables"]["pathway_feature_flag"]["Update"];
+export type PathwayCheckInRow = Database["public"]["Tables"]["pathway_check_in"]["Row"];
+export type PathwayCheckInInsert = Database["public"]["Tables"]["pathway_check_in"]["Insert"];
+export type PathwayCheckInUpdate = Database["public"]["Tables"]["pathway_check_in"]["Update"];
+export type PathwayRecommendationRow = Database["public"]["Tables"]["pathway_recommendation"]["Row"];
+export type PathwayRecommendationInsert = Database["public"]["Tables"]["pathway_recommendation"]["Insert"];
+export type PathwayRecommendationUpdate = Database["public"]["Tables"]["pathway_recommendation"]["Update"];
 
 // ============================================================================
 // COMPOSITE TYPES - Used in queries with joins
