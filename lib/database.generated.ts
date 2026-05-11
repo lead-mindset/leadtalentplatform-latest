@@ -680,6 +680,63 @@ export type Database = {
           },
         ]
       }
+      pathway_recommendation: {
+        Row: {
+          body: string
+          category: string
+          check_in_id: string
+          created_at: string
+          id: string
+          reason: string
+          sort_order: number
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          category: string
+          check_in_id: string
+          created_at?: string
+          id?: string
+          reason: string
+          sort_order: number
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          category?: string
+          check_in_id?: string
+          created_at?: string
+          id?: string
+          reason?: string
+          sort_order?: number
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathway_recommendation_check_in_id_fkey"
+            columns: ["check_in_id"]
+            isOneToOne: false
+            referencedRelation: "pathway_check_in"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pathway_recommendation_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       person_profile: {
         Row: {
           created_at: string

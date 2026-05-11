@@ -143,6 +143,9 @@ export type PathwayFeatureFlagUpdate = Database["public"]["Tables"]["pathway_fea
 export type PathwayCheckInRow = Database["public"]["Tables"]["pathway_check_in"]["Row"];
 export type PathwayCheckInInsert = Database["public"]["Tables"]["pathway_check_in"]["Insert"];
 export type PathwayCheckInUpdate = Database["public"]["Tables"]["pathway_check_in"]["Update"];
+export type PathwayRecommendationRow = Database["public"]["Tables"]["pathway_recommendation"]["Row"];
+export type PathwayRecommendationInsert = Database["public"]["Tables"]["pathway_recommendation"]["Insert"];
+export type PathwayRecommendationUpdate = Database["public"]["Tables"]["pathway_recommendation"]["Update"];
 
 // ============================================================================
 // COMPOSITE TYPES - Used in queries with joins
