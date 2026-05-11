@@ -14,6 +14,11 @@ export type GrowthReflectionInput = {
   recommendation_id?: string | null
 }
 
+export type GrowthReflectionProgress = {
+  completedReflections: number
+  proofItemsCreated: number
+}
+
 export const GrowthReflectionService = {
   async createReflection(
     supabase: SupabaseClient<Database>,
@@ -48,5 +53,29 @@ export const GrowthReflectionService = {
     }
 
     return { success: true }
+  },
+
+  async getProgressForUser(
+    supabase: SupabaseClient<Database>,
+    userId: string
+  ): Promise<GrowthReflectionProgress> {
+    const { data, error } = await supabase
+      .from('growth_reflection')
+      .select('id, status')
+      .eq('user_id', userId)
+
+    if (error) {
+      logger.error(
+        { context: 'GrowthReflectionService.getProgressForUser', userId, error },
+        'Failed to load growth reflection progress'
+      )
+      return { completedReflections: 0, proofItemsCreated: 0 }
+    }
+
+    const rows = (data ?? []) as Array<{ id: string; status: string }>
+    return {
+      completedReflections: rows.filter((row) => row.status === 'completed').length,
+      proofItemsCreated: rows.length,
+    }
   },
 }

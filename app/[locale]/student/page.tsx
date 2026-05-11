@@ -27,6 +27,10 @@ import {
   type PathwayDashboardGuidance,
 } from '@/lib/services/pathway-check-in.service'
 import { PathwayRolloutService } from '@/lib/services/pathway-rollout.service'
+import {
+  GrowthReflectionService,
+  type GrowthReflectionProgress,
+} from '@/lib/services/growth-reflection.service'
 import { ChapterApplicationCard } from './_components/chapter-application-card'
 
 type ParticipantApplicationCardProps = {
@@ -388,6 +392,64 @@ function PathwayGuidanceCard({ guidance }: { guidance: PathwayDashboardGuidance 
   )
 }
 
+function PersonalProgressCard({
+  pathwayGuidance,
+  reflectionProgress,
+}: {
+  pathwayGuidance: PathwayDashboardGuidance | null
+  reflectionProgress: GrowthReflectionProgress
+}) {
+  const completedMoves =
+    pathwayGuidance && pathwayGuidance.status === 'completed' ? pathwayGuidance.progress.completed : 0
+
+  const metrics = [
+    {
+      label: 'Next moves completados',
+      value: completedMoves,
+      helper: 'Acciones pequenas que ya convertiste en avance.',
+    },
+    {
+      label: 'Growth Reflections completadas',
+      value: reflectionProgress.completedReflections,
+      helper: 'Momentos que transformaste en aprendizaje claro.',
+    },
+    {
+      label: 'Proof items creados',
+      value: reflectionProgress.proofItemsCreated,
+      helper: 'Evidencia personal que puedes convertir en historias, perfil o entrevistas.',
+    },
+  ]
+
+  return (
+    <Card className="rounded-lg">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <CheckCircle2 className="h-5 w-5 text-primary" />
+          Tu progreso personal
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm leading-6 text-muted-foreground">
+          Sin rankings ni comparaciones. Solo senales de lo que ya estas construyendo.
+        </p>
+        <div className="grid gap-3">
+          {metrics.map((metric) => (
+            <div key={metric.label} className="rounded-lg border border-border/70 bg-muted/25 p-3">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-foreground">{metric.label}</p>
+                <span className="text-2xl font-semibold tabular-nums text-primary">
+                  {metric.value}
+                </span>
+              </div>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">{metric.helper}</p>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
 export default async function StudentDashboard() {
   const { supabase, user } = await requireUser()
   const dashboard = await StudentDashboardService.getActivationDashboard(supabase, user.id)
@@ -398,6 +460,7 @@ export default async function StudentDashboard() {
   const pathwayGuidance = pathwayFlags.enable_recommendation_card
     ? await PathwayCheckInService.getDashboardGuidanceForUser(supabase, user.id)
     : null
+  const reflectionProgress = await GrowthReflectionService.getProgressForUser(supabase, user.id)
   const chapterOptions =
     dashboard.status === 'participant'
       ? await StudentDashboardService.getChapterApplicationOptions(supabase)
@@ -444,7 +507,13 @@ export default async function StudentDashboard() {
           <ParticipantApplicationCard dashboard={dashboard} chapterOptions={chapterOptions} />
           <ProfileReadinessCard dashboard={dashboard} />
         </div>
-        <MembershipDetailsCard dashboard={dashboard} />
+        <div className="space-y-6">
+          <PersonalProgressCard
+            pathwayGuidance={pathwayGuidance}
+            reflectionProgress={reflectionProgress}
+          />
+          <MembershipDetailsCard dashboard={dashboard} />
+        </div>
       </div>
     </MainContainer>
   )
