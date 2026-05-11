@@ -1,6 +1,6 @@
 # Issue #106 Plan: Normalize and Validate Optional Portfolio URLs
 
-GitHub Issue: https://github.com/abigailbrionesa/leadtalentplatform-latest/issues/106
+GitHub Issue: https://github.com/lead-mindset/leadtalentplatform-latest/issues/106
 Source PRD: `.github/PRDs/portfolio-url-first-class-profile-data.prd.md`
 Source issue spec: `.github/issues/portfolio-url-first-class-profile-data-issues.md`
 Type: Technical / Enhancement
@@ -151,3 +151,11 @@ Completed on 2026-05-09:
 - `pnpm test` passed: 18 files, 274 tests.
 - `pnpm lint` passed with existing warnings only.
 - `pnpm build` passed.
+
+Re-validated on 2026-05-10:
+
+- `pnpm test -- lib/memberschema.test.ts lib/actions/student/__tests__/onboarding.helpers.test.ts lib/services/__tests__/person-profile.service.test.ts lib/services/__tests__/recruiter.service.test.ts` passed: 4 files, 42 tests.
+- `pnpm exec eslint lib/memberschema.ts lib/memberschema.test.ts lib/actions/person-profile.ts lib/actions/student/onboarding.helpers.ts lib/actions/student/__tests__/onboarding.helpers.test.ts lib/services/person-profile.service.ts lib/services/__tests__/person-profile.service.test.ts lib/services/recruiter.service.ts lib/services/__tests__/recruiter.service.test.ts lib/types.ts` passed.
+- `pnpm lint` passed with existing warnings only.
+- `pnpm build` passed.
+- Report created at `.github/reports/issue-106-normalize-validate-optional-portfolio-urls-report.md`.

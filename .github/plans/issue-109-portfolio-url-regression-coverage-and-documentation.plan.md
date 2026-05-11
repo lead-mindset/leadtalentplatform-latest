@@ -1,6 +1,6 @@
 # Issue #109 Plan: Portfolio URL Regression Coverage and Documentation
 
-GitHub Issue: https://github.com/abigailbrionesa/leadtalentplatform-latest/issues/109
+GitHub Issue: https://github.com/lead-mindset/leadtalentplatform-latest/issues/109
 Source PRD: `.github/PRDs/portfolio-url-first-class-profile-data.prd.md`
 Source issue spec: `.github/issues/portfolio-url-first-class-profile-data-issues.md`
 Depends on: #106, #107, #108
@@ -37,6 +37,17 @@ Out of scope:
 - Refactoring unrelated lint warnings.
 
 ## Current Code Findings
+
+Current re-check on 2026-05-10:
+
+- `docs/handbook/TESTING.md` now explicitly names `portfolio_url` as optional reusable `person_profile` professional data.
+- `docs/handbook/TESTING.md` documents that portfolio is normalized through schemas/actions, stored as `null` when cleared, hidden when absent, and only shown in self-owned or authorized review surfaces.
+- `docs/handbook/TESTING.md` now says regression tests should fail if `portfolio_url` is dropped from basic profile, student profile edit, company review, recruiter detail, or event application review paths.
+- `docs/PRODUCT-SPECIFICATION.md` includes Portfolio URL in minimum basic onboarding fields.
+- `lib/legal/privacy.ts` includes portfolio/portafolio in professional information for both English and Spanish privacy content.
+- Service/action tests already cover schema normalization, onboarding parsing, person profile read/write, student profile read/update/clear, company mapping/eligibility, recruiter detail, and event review mapping.
+
+Historical findings from the original plan:
 
 - `lib/memberschema.test.ts` already covers optional URL normalization, empty-to-null behavior, invalid URL rejection, and non-http scheme rejection.
 - `lib/actions/student/__tests__/onboarding.helpers.test.ts` already covers onboarding parsing/normalization for portfolio.
@@ -154,3 +165,17 @@ Passed:
 - `pnpm test` - 18 files, 279 tests.
 - `pnpm lint` - passed with existing warnings only.
 - `pnpm build` - passed.
+
+Planning re-check on 2026-05-10:
+
+- Code and documentation inspection confirms #109 appears implemented in the current branch.
+- Next `/implement #109` should be a close-out pass: run focused portfolio tests, targeted lint/docs checks, full lint/build, create report, comment on GitHub, and close #109 if validation passes.
+
+Close-out validation on 2026-05-10:
+
+- `pnpm test -- lib/memberschema.test.ts lib/actions/student/__tests__/onboarding.helpers.test.ts lib/services/__tests__/person-profile.service.test.ts lib/services/__tests__/student.service.test.ts lib/services/__tests__/company.service.test.ts lib/services/__tests__/recruiter.service.test.ts lib/services/__tests__/event.service.test.ts` passed: 7 files, 143 tests.
+- `pnpm exec eslint lib/memberschema.ts lib/memberschema.test.ts lib/actions/student/onboarding.helpers.ts lib/actions/student/__tests__/onboarding.helpers.test.ts lib/services/person-profile.service.ts lib/services/student.service.ts lib/services/company.service.ts lib/services/recruiter.service.ts lib/services/event.service.ts lib/services/__tests__/person-profile.service.test.ts lib/services/__tests__/student.service.test.ts lib/services/__tests__/company.service.test.ts lib/services/__tests__/recruiter.service.test.ts lib/services/__tests__/event.service.test.ts lib/legal/privacy.ts` passed.
+- `rg -n "portfolio_url|Portfolio URL|portfolio|portafolio" docs/handbook/TESTING.md docs/PRODUCT-SPECIFICATION.md lib/legal/privacy.ts` confirmed documentation references.
+- `pnpm lint` passed with existing warnings only.
+- `pnpm build` passed.
+- Report created at `.github/reports/issue-109-portfolio-url-regression-coverage-and-documentation-report.md`.

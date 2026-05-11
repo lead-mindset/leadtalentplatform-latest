@@ -1,6 +1,6 @@
 # Issue #108 Plan: Show Portfolio in Authorized Professional Review Surfaces
 
-GitHub Issue: https://github.com/abigailbrionesa/leadtalentplatform-latest/issues/108
+GitHub Issue: https://github.com/lead-mindset/leadtalentplatform-latest/issues/108
 Source PRD: `.github/PRDs/portfolio-url-first-class-profile-data.prd.md`
 Source issue spec: `.github/issues/portfolio-url-first-class-profile-data-issues.md`
 Depends on: #106
@@ -50,6 +50,21 @@ Out of scope:
 - Company/recruiter terminology remains company/representative in UI, while existing code may still use recruiter domain names internally.
 
 ## Current Code Findings
+
+Current re-check on 2026-05-10:
+
+- `CompanyService` already selects and maps `person_profile.portfolio_url` through the existing company-visible talent loader.
+- Company visibility still depends on `person_profile.is_recruiter_visible = true` and approved `chapter_membership.status = approved`; portfolio does not create a new discovery path.
+- `RecruiterVisibleProfile`, `StudentForRecruiterRaw`, and `StudentForRecruiter` already include `portfolio_url`.
+- Company candidate detail already renders an optional Portfolio external link in "Links and Resume" with `target="_blank"` and `rel="noopener noreferrer"`.
+- Company quick view already renders an optional "View Portfolio" external link when present.
+- `RecruiterService.getStudentProfile` already returns `portfolio_url`.
+- `EventService.getEventRegistrations` already selects and maps `portfolio_url`.
+- `EventApplicationsClient.mapApplication` already passes `portfolioUrl`.
+- `ApplicationReviewCard` already renders an optional "Portafolio" external link near LinkedIn when present.
+- Existing service tests already assert company, recruiter, and event portfolio mapping in the relevant paths.
+
+Historical findings from the original plan:
 
 - `lib/services/company.service.ts` already enforces company visibility with `person_profile.is_recruiter_visible = true` and approved `chapter_membership.status = approved`.
 - `lib/services/company.service.ts` `VisibleProfileRow` and `loadVisibleStudents` select `linkedin_url` but omit `portfolio_url`.
@@ -171,3 +186,16 @@ Passed:
 - `pnpm test` - 18 files, 278 tests.
 - `pnpm lint` - passed with existing warnings.
 - `pnpm build` - passed.
+
+Planning re-check on 2026-05-10:
+
+- Code inspection confirms #108 appears implemented in the current branch.
+- Next `/implement #108` should be a close-out pass: run focused company/recruiter/event tests, targeted lint, full lint/build, create report, comment on GitHub, and close #108 if validation passes.
+
+Close-out validation on 2026-05-10:
+
+- `pnpm test -- lib/services/__tests__/company.service.test.ts lib/services/__tests__/recruiter.service.test.ts lib/services/__tests__/event.service.test.ts` passed: 3 files, 102 tests.
+- `pnpm exec eslint lib/types.ts lib/services/company.service.ts lib/services/recruiter.service.ts lib/services/event.service.ts lib/services/__tests__/company.service.test.ts lib/services/__tests__/recruiter.service.test.ts lib/services/__tests__/event.service.test.ts "app/[locale]/company/(protected)/students/[id]/page.tsx" "app/[locale]/company/(protected)/_components/student-quick-view.tsx" "app/[locale]/chapter/events/[id]/applications/_components/event-applications-client.tsx" components/events/application-review-card.tsx` passed.
+- `pnpm lint` passed with existing warnings only.
+- `pnpm build` passed.
+- Report created at `.github/reports/issue-108-show-portfolio-in-authorized-professional-review-surfaces-report.md`.

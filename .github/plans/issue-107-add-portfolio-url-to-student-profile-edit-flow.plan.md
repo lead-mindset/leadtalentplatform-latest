@@ -1,6 +1,6 @@
 # Issue #107 Plan: Add Portfolio URL to Student Profile Edit Flow
 
-GitHub Issue: https://github.com/abigailbrionesa/leadtalentplatform-latest/issues/107
+GitHub Issue: https://github.com/lead-mindset/leadtalentplatform-latest/issues/107
 Source PRD: `.github/PRDs/portfolio-url-first-class-profile-data.prd.md`
 Source issue spec: `.github/issues/portfolio-url-first-class-profile-data-issues.md`
 Depends on: #106
@@ -48,6 +48,18 @@ Out of scope:
 - Portfolio follows LinkedIn/resume-style professional data rules later, but #107 is only edit/read persistence.
 
 ## Current Code Findings
+
+Current re-check on 2026-05-10:
+
+- The student profile page already maps `profileData?.portfolioUrl || ''` into `ProfileData.portfolio_url`.
+- The profile update form already includes `portfolio_url` in default values, reset values, `FormData`, and the professional section UI.
+- `createProfileUpdateSchema(t)` already includes optional normalized `portfolio_url` from #106.
+- `lib/actions/student/profile.ts` already parses and passes `data.portfolio_url ?? null`.
+- `StudentService.getProfile` already selects `portfolio_url`.
+- `StudentService.updateProfile` already upserts `portfolio_url: params.portfolioUrl ?? null`.
+- `student.service.test.ts` already asserts read/update/clear behavior for `portfolio_url`.
+
+Historical findings from the original plan:
 
 - `app/[locale]/student/profile/page.tsx:8` fetches `PersonProfileService.getBasicProfile`, which already returns `portfolioUrl`.
 - `app/[locale]/student/profile/page.tsx:23` builds `ProfileData` but currently omits `portfolio_url`.
@@ -160,3 +172,16 @@ Completed on 2026-05-09:
 - `pnpm test` passed: 18 files, 276 tests.
 - `pnpm lint` passed with existing warnings only.
 - `pnpm build` passed.
+
+Planning re-check on 2026-05-10:
+
+- Code inspection confirms #107 appears implemented in the current branch.
+- Next `/implement #107` should be a close-out pass: run focused tests, targeted lint, full lint/build, create report, comment on GitHub, and close #107 if validation passes.
+
+Close-out validation on 2026-05-10:
+
+- `pnpm test -- lib/memberschema.test.ts lib/services/__tests__/student.service.test.ts lib/services/__tests__/person-profile.service.test.ts` passed: 3 files, 28 tests.
+- `pnpm exec eslint lib/memberschema.ts lib/memberschema.test.ts lib/services/student.service.ts lib/services/__tests__/student.service.test.ts lib/actions/student/profile.ts "app/[locale]/student/profile/page.tsx" "app/[locale]/student/profile/components/profile-update-form.tsx" messages/es.json messages/en.json` passed with JSON ignore warnings for `messages/*.json`.
+- `pnpm lint` passed with existing warnings only.
+- `pnpm build` passed.
+- Report created at `.github/reports/issue-107-add-portfolio-url-to-student-profile-edit-flow-report.md`.
