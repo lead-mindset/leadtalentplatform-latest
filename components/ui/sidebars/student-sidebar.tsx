@@ -38,7 +38,7 @@ export function StudentNavigation({
 
       {isEditor && (
         <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground font-medium">Gestion de capitulo</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-sidebar-foreground font-medium">Gestion de chapter</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {CHAPTER_NAV.map((item) => (

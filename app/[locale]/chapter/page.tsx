@@ -280,7 +280,7 @@ function EventOpsList({
     return (
       <Card>
         <CardContent className="py-10 text-center text-sm text-muted-foreground">
-          Todavia no hay eventos proximos del capitulo. Crea el primero para abrir registros.
+          Todavia no hay eventos proximos del chapter. Crea el primero para abrir registros.
         </CardContent>
       </Card>
     )
@@ -298,7 +298,7 @@ function EventOpsList({
         return (
           <Card key={event.id}>
             <CardContent className="py-4 space-y-2">
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
                   <p className="font-medium truncate">{event.title}</p>
                   <p className="text-xs text-muted-foreground">
@@ -310,12 +310,12 @@ function EventOpsList({
                     })}
                   </p>
                 </div>
-                <div className="flex shrink-0 gap-2">
-                  <Button asChild size="sm" variant="outline">
+                <div className="grid shrink-0 gap-2 sm:flex">
+                  <Button asChild size="sm" variant="outline" className="w-full sm:w-auto">
                       <Link href={`/chapter/events/${event.id}`}>Gestionar</Link>
                   </Button>
                   {event.is_published && (
-                    <Button asChild size="sm" variant="outline">
+                    <Button asChild size="sm" variant="outline" className="w-full sm:w-auto">
                       <Link href={`/chapter/events/${event.id}/checkin`}>Check-in</Link>
                     </Button>
                   )}
@@ -352,11 +352,11 @@ async function ChapterContent() {
     return (
       <Card className="max-w-md mx-auto mt-20">
         <CardHeader>
-          <CardTitle>Sin capitulo asignado</CardTitle>
+          <CardTitle>Sin chapter asignado</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            No tienes un capitulo asignado. Contacta a una persona administradora.
+            No tienes un chapter asignado. Contacta a una persona administradora.
           </p>
         </CardContent>
       </Card>
@@ -380,13 +380,13 @@ async function ChapterContent() {
   const upcomingEventsCount = chapterEvents.filter((event) => new Date(event.end_at) >= new Date()).length
 
   return (
-    <MainContainer className="py-8 space-y-8">
+    <MainContainer className="w-full max-w-full py-8 space-y-8">
       {/* Breadcrumb Navigation */}
       <Breadcrumb items={[{ label: 'Resumen', href: '/chapter' }]} />
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Resumen del capitulo</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Resumen del chapter</h1>
           <p className="max-w-2xl text-muted-foreground">
             {chapter?.name} - {chapter?.university}
           </p>
@@ -407,7 +407,7 @@ async function ChapterContent() {
       {stats.total === 0 && (
         <Card>
           <CardContent className="py-8 text-center space-y-3">
-            <p className="font-medium">Tu capitulo todavia no tiene miembros.</p>
+            <p className="font-medium">Tu chapter todavia no tiene miembros.</p>
             <p className="text-sm text-muted-foreground">
               Comparte las indicaciones de postulacion para que estudiantes completen su perfil y aparezcan aqui.
             </p>
@@ -422,7 +422,7 @@ async function ChapterContent() {
         <StatCard
           label="Miembros"
           value={stats.total}
-          sub="En tu capitulo"
+          sub="En tu chapter"
           icon={Icons.Users}
         />
         <StatCard
@@ -448,21 +448,21 @@ async function ChapterContent() {
         />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-4">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-3">
+        <div className="min-w-0 space-y-4 lg:col-span-2">
           <PathwayInsightsCard insights={pathwayInsights} />
 
           {stats.pending > 0 && (
             <>
-              <div className="flex items-center justify-between">
-                <div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
                   <h2 className="text-base font-semibold">Aprobaciones pendientes</h2>
                   <p className="text-sm text-muted-foreground">
                     {stats.pending} miembro{stats.pending > 1 ? 's' : ''} esperando tu decision
                   </p>
                 </div>
                 {stats.pending > 3 && (
-                  <Button asChild variant="outline" size="sm">
+                  <Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
                     <Link href="/chapter/members?status=pending">
                       <span className="flex items-center">
                         Ver todo
@@ -487,7 +487,7 @@ async function ChapterContent() {
           <EventOpsList events={chapterEvents.filter((event) => new Date(event.end_at) >= new Date())} />
         </div>
 
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           <Card>
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
