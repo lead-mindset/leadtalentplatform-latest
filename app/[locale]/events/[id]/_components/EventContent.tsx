@@ -343,7 +343,7 @@ export function EventContent({
                         <p className="font-medium">{ownerChapterLabel}</p>
                         <p className="text-sm text-muted-foreground">
                           {collaborators.length > 0
-                            ? `${collaborators.length} collaborator${collaborators.length === 1 ? '' : 's'}`
+                            ? `${collaborators.length} ${collaborators.length === 1 ? 'capitulo colaborador' : 'capitulos colaboradores'}`
                             : 'Capitulo anfitrion'}
                         </p>
                       </div>

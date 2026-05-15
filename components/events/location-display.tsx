@@ -30,14 +30,17 @@ export function LocationDisplay({ event, className = "" }: LocationDisplayProps)
   } = event
 
   const hasLocation = location_name || location_address || location_city || location_region
-  const hasCoordinates = location_latitude && location_longitude
+  const hasCoordinates =
+    typeof location_latitude === 'number' && typeof location_longitude === 'number'
+  const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
 
-  const mapUrl = hasCoordinates 
-    ? `https://maps.googleapis.com/maps/api/staticmap?center=${location_latitude},${location_longitude}&zoom=15&size=400x200&maptype=roadmap&markers=color:red%7C${encodeURIComponent(location_name || 'Event Location')}%7C${location_latitude},${location_longitude}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'YOUR_API_KEY_HERE'}`
+  const mapUrl = hasCoordinates && googleMapsApiKey
+    ? `https://maps.googleapis.com/maps/api/staticmap?center=${location_latitude},${location_longitude}&zoom=15&size=400x200&maptype=roadmap&markers=color:red%7C${encodeURIComponent(location_name || 'Ubicacion del evento')}%7C${location_latitude},${location_longitude}&key=${googleMapsApiKey}`
     : null
 
-  const directionsUrl = hasCoordinates && location_address
-    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location_address)}`
+  const directionsQuery = location_address || location_name || [location_city, location_region].filter(Boolean).join(', ')
+  const directionsUrl = directionsQuery
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(directionsQuery)}`
     : null
 
   if (event_type === 'online') {
@@ -45,7 +48,7 @@ export function LocationDisplay({ event, className = "" }: LocationDisplayProps)
       <div className={`flex items-center gap-2 text-sm ${className}`}>
         <ExternalLink className="h-4 w-4 text-muted-foreground" />
         <div>
-          <p className="font-medium">Online Event</p>
+          <p className="font-medium">Evento online</p>
           {meeting_url && (
             <a 
               href={meeting_url} 
@@ -53,7 +56,7 @@ export function LocationDisplay({ event, className = "" }: LocationDisplayProps)
               rel="noopener noreferrer"
               className="text-primary hover:underline"
             >
-              Join Meeting
+              Entrar a la reunion
             </a>
           )}
         </div>
@@ -68,7 +71,7 @@ export function LocationDisplay({ event, className = "" }: LocationDisplayProps)
         <div className="flex items-center gap-2 text-sm">
           <ExternalLink className="h-4 w-4 text-muted-foreground" />
           <div>
-            <p className="font-medium">Online Portion</p>
+            <p className="font-medium">Parte online</p>
             {meeting_url && (
               <a 
                 href={meeting_url} 
@@ -76,7 +79,7 @@ export function LocationDisplay({ event, className = "" }: LocationDisplayProps)
                 rel="noopener noreferrer"
                 className="text-primary hover:underline"
               >
-                Join Meeting
+                Entrar a la reunion
               </a>
             )}
           </div>
@@ -88,7 +91,7 @@ export function LocationDisplay({ event, className = "" }: LocationDisplayProps)
             <div className="flex items-center gap-2 text-sm">
               <MapPin className="h-4 w-4 text-muted-foreground" />
               <div>
-                <p className="font-medium">In-Person Location</p>
+                <p className="font-medium">Ubicacion presencial</p>
                 <p className="text-muted-foreground">
                   {location_name && <span className="block">{location_name}</span>}
                   {location_address && <span className="block">{location_address}</span>}
@@ -106,7 +109,7 @@ export function LocationDisplay({ event, className = "" }: LocationDisplayProps)
                     className="text-primary hover:underline text-xs flex items-center gap-1"
                   >
                     <Navigation className="h-3 w-3" />
-                    Get Directions
+                    Ver indicaciones
                   </a>
                 )}
               </div>
@@ -117,7 +120,7 @@ export function LocationDisplay({ event, className = "" }: LocationDisplayProps)
               <div className="rounded-md overflow-hidden border">
                 <Image
                   src={mapUrl}
-                  alt={`Map showing location: ${location_name || 'Event Location'}`}
+                  alt={`Mapa de la ubicacion: ${location_name || 'Evento LEAD'}`}
                   width={400}
                   height={200}
                   className="w-full h-auto"
@@ -136,7 +139,7 @@ export function LocationDisplay({ event, className = "" }: LocationDisplayProps)
         <div className="flex items-center gap-2 text-sm">
           <MapPin className="h-4 w-4 text-muted-foreground" />
           <div>
-            <p className="font-medium">Location</p>
+            <p className="font-medium">Ubicacion</p>
             <p className="text-muted-foreground">
               {location_name && <span className="block">{location_name}</span>}
               {location_address && <span className="block">{location_address}</span>}
@@ -154,7 +157,7 @@ export function LocationDisplay({ event, className = "" }: LocationDisplayProps)
                 className="text-primary hover:underline text-xs flex items-center gap-1"
               >
                 <Navigation className="h-3 w-3" />
-                Get Directions
+                Ver indicaciones
               </a>
             )}
           </div>
@@ -165,7 +168,7 @@ export function LocationDisplay({ event, className = "" }: LocationDisplayProps)
           <div className="rounded-md overflow-hidden border">
             <Image
               src={mapUrl}
-              alt={`Map showing location: ${location_name || 'Event Location'}`}
+              alt={`Mapa de la ubicacion: ${location_name || 'Evento LEAD'}`}
               width={400}
               height={200}
               className="w-full h-auto"
@@ -179,7 +182,7 @@ export function LocationDisplay({ event, className = "" }: LocationDisplayProps)
   return (
     <div className={`flex items-center gap-2 text-sm text-muted-foreground ${className}`}>
       <MapPin className="h-4 w-4" />
-      <p>Location not specified</p>
+      <p>Ubicacion por confirmar</p>
     </div>
   )
 }

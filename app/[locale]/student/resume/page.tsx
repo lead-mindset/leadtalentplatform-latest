@@ -1,7 +1,6 @@
 import ResumeClient from './components/resume-form'
 import { uploadResume } from '@/lib/actions/student/handle-resume'
 import { getCurrentUserResume } from '@/lib/actions/student/profile'
-import Link from 'next/link'
 import { Icons } from '@/components/ui/icons'
 import { MainContainer } from '@/components/global/main-container'
 import { PageHeader } from '@/components/ui/page-header'
@@ -71,7 +70,10 @@ export default async function StudentResumePage() {
                 Recursos
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
+              <p className="text-sm leading-6 text-muted-foreground">
+                Estos recursos se agregaran pronto. Por ahora, enfocate en subir un PDF claro y actualizado.
+              </p>
               <div className="space-y-2">
                 {[
                   { label: 'Plantilla de CV', icon: 'FileText' as const },
@@ -79,17 +81,16 @@ export default async function StudentResumePage() {
                 ].map(({ label, icon }) => {
                   const IconComponent = Icons[icon]
                   return (
-                    <Link
+                    <div
                       key={label}
-                      href="#"
-                      className="group flex items-center justify-between gap-3 rounded-lg border bg-background p-3 transition-colors hover:bg-muted/60"
+                      className="flex items-center justify-between gap-3 rounded-lg border bg-muted/25 p-3"
                     >
                       <span className="flex min-w-0 items-center gap-3">
-                        <IconComponent className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
+                        <IconComponent className="h-4 w-4 shrink-0 text-muted-foreground" />
                         <span className="text-sm font-medium leading-snug text-foreground">{label}</span>
                       </span>
-                      <Icons.ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
-                    </Link>
+                      <Badge variant="outline">Pronto</Badge>
+                    </div>
                   )
                 })}
               </div>

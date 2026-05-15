@@ -4,6 +4,7 @@ import {
   CheckCircle2,
   Clock3,
   Edit3,
+  FileText,
   IdCard,
   Route,
   Sparkles,
@@ -56,7 +57,7 @@ const STATUS_CONTENT = {
   official_member: {
     badge: 'Miembro oficial',
     title: 'Ya eres miembro oficial de LEAD.',
-    body: 'Tu membresia aprobada esta activa. Tu Member ID solo aparece despues de la aprobacion.',
+    body: 'Tu membresia aprobada esta activa. Usa este espacio para mantener tu perfil listo, explorar eventos y revisar tu actividad.',
     badgeVariant: 'success' as const,
     icon: CheckCircle2,
   },
@@ -207,7 +208,9 @@ function PrimaryActions({ dashboard }: { dashboard: StudentActivationDashboard }
   const actions =
     dashboard.status === 'official_member'
       ? [
-          { href: '/student/events', label: 'Ver mis eventos', icon: CalendarDays },
+          { href: '/events', label: 'Explorar eventos', icon: CalendarDays },
+          { href: '/student/events', label: 'Mis eventos', icon: IdCard },
+          { href: '/student/resume', label: 'Mi CV', icon: FileText },
           { href: '/student/profile', label: 'Editar perfil', icon: Edit3 },
         ]
       : [
@@ -217,7 +220,7 @@ function PrimaryActions({ dashboard }: { dashboard: StudentActivationDashboard }
         ]
 
   return (
-    <div className="grid w-full gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid w-full gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {actions.map((action) => {
         const Icon = action.icon
         return (
