@@ -29,9 +29,9 @@ type EditableApplicationQuestion = {
 }
 
 const questionTypeOptions: Array<{ value: EventApplicationQuestionType; label: string }> = [
-  { value: 'short_text', label: 'Short text' },
-  { value: 'long_text', label: 'Long text' },
-  { value: 'single_select', label: 'Single select' },
+  { value: 'short_text', label: 'Texto corto' },
+  { value: 'long_text', label: 'Texto largo' },
+  { value: 'single_select', label: 'Seleccion unica' },
   { value: 'checkbox', label: 'Checkbox' },
   { value: 'url', label: 'URL' },
 ]
@@ -207,42 +207,42 @@ export function EventForm({
     const checkAccess = checkMode === 'all' || currentStep === 3
 
     if (checkBasics) {
-      if (!title.trim()) { errors.title = 'Title is required'; isValid = false }
-      if (title.length > 100) { errors.title = 'Title must be less than 100 characters'; isValid = false }
-      if (description.length > 2000) { errors.description = 'Description must be less than 2000 characters'; isValid = false }
-      if (coverImage && !coverImage.startsWith('http')) { errors.cover_image = 'Invalid image URL'; isValid = false }
+      if (!title.trim()) { errors.title = 'El titulo es obligatorio'; isValid = false }
+      if (title.length > 100) { errors.title = 'El titulo debe tener menos de 100 caracteres'; isValid = false }
+      if (description.length > 2000) { errors.description = 'La descripcion debe tener menos de 2000 caracteres'; isValid = false }
+      if (coverImage && !coverImage.startsWith('http')) { errors.cover_image = 'El URL de imagen no es valido'; isValid = false }
     }
 
     if (checkLogistics) {
-      if (!startAt) { errors.start_at = 'Start date and time are required'; isValid = false }
-      if (!endAt) { errors.end_at = 'End date and time are required'; isValid = false }
+      if (!startAt) { errors.start_at = 'La fecha y hora de inicio son obligatorias'; isValid = false }
+      if (!endAt) { errors.end_at = 'La fecha y hora de fin son obligatorias'; isValid = false }
       if (startAt && endAt && new Date(startAt) >= new Date(endAt)) {
-        errors.end_at = 'End date must be after start date'
+        errors.end_at = 'La fecha de fin debe ser posterior al inicio'
         isValid = false
       }
       if (eventType === 'in_person' && !location?.trim()) {
-        errors.location = 'Location is required for in-person events'
+        errors.location = 'El lugar es obligatorio para eventos presenciales'
         isValid = false
       }
       if (eventType === 'online' && !meetingUrl?.trim()) {
-        errors.meeting_url = 'Meeting URL is required for online events'
+        errors.meeting_url = 'El link es obligatorio para eventos virtuales'
         isValid = false
       }
       if (eventType === 'hybrid') {
-        if (!location?.trim()) { errors.location = 'Location is required for hybrid events'; isValid = false }
-        if (!meetingUrl?.trim()) { errors.meeting_url = 'Meeting URL is required for hybrid events'; isValid = false }
+        if (!location?.trim()) { errors.location = 'El lugar es obligatorio para eventos hibridos'; isValid = false }
+        if (!meetingUrl?.trim()) { errors.meeting_url = 'El link es obligatorio para eventos hibridos'; isValid = false }
       }
     }
 
     if (checkAccess) {
       if (capacity && (isNaN(Number(capacity)) || Number(capacity) <= 0)) {
-        errors.capacity = 'Capacity must be a valid number greater than 0'
+        errors.capacity = 'El cupo debe ser un numero mayor que 0'
         isValid = false
       }
       if (accessModel === 'application' && !applicationFormUrl?.trim()) {
         const hasQuestions = applicationQuestionsState.some((question) => question.questionText.trim())
         if (!hasQuestions) {
-          errors.application_questions = 'Add at least one application question'
+          errors.application_questions = 'Agrega al menos una pregunta de postulacion'
           isValid = false
         }
       }
@@ -250,7 +250,7 @@ export function EventForm({
       if (accessModel === 'application') {
         applicationQuestionsState.forEach((question, index) => {
           if (!question.questionText.trim()) {
-            errors.application_questions = `Question ${index + 1} needs text`
+            errors.application_questions = `La pregunta ${index + 1} necesita texto`
             isValid = false
           }
 
@@ -258,7 +258,7 @@ export function EventForm({
             ['single_select', 'checkbox'].includes(question.questionType) &&
             !question.optionsText.split('\n').some((option) => option.trim())
           ) {
-            errors.application_questions = `Question ${index + 1} needs at least one option`
+            errors.application_questions = `La pregunta ${index + 1} necesita al menos una opcion`
             isValid = false
           }
         })
@@ -267,7 +267,7 @@ export function EventForm({
 
     if (!isValid) {
       setFieldErrors(errors)
-      toast.error('Please fix the highlighted errors before saving')
+      toast.error('Revisa los campos marcados antes de continuar')
     }
     return isValid
   }
@@ -444,12 +444,88 @@ export function EventForm({
   }
 
   const steps = [
-    { num: 1, title: 'Basics' },
-    { num: 2, title: 'Logistics' },
-    { num: 3, title: 'Access' },
-    { num: 4, title: 'Review' },
+    { num: 1, title: 'Basico', shortTitle: 'Basico', helper: 'Nombre, descripcion e imagen' },
+    { num: 2, title: 'Logistica', shortTitle: 'Logistica', helper: 'Fecha, hora y lugar' },
+    { num: 3, title: 'Registro', shortTitle: 'Registro', helper: 'Acceso, preguntas y cupos' },
+    { num: 4, title: 'Revision', shortTitle: 'Revision', helper: 'Confirmar y publicar' },
   ]
+  const currentStep = steps.find((item) => item.num === step) ?? steps[0]
   const fieldErrorEntries = Object.entries(fieldErrors).filter(([, message]) => message)
+
+  const StepProgress = () => (
+    <nav aria-label="Progreso de creacion de evento" className="rounded-lg border bg-card px-4 py-4 shadow-sm">
+      <div className="space-y-3 md:hidden">
+        <div className="space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-primary">Paso {step} de 4</p>
+          <p className="font-semibold">{currentStep.title}</p>
+          <p className="text-xs leading-5 text-muted-foreground">{currentStep.helper}</p>
+        </div>
+        <div className="h-2 overflow-hidden rounded-full bg-muted">
+          <div className="h-full rounded-full bg-primary transition-all duration-300" style={{ width: `${(step / steps.length) * 100}%` }} />
+        </div>
+      </div>
+
+      <ol className="hidden grid-cols-4 gap-2 md:grid">
+        {steps.map((item) => {
+          const isComplete = step > item.num
+          const isCurrent = step === item.num
+
+          return (
+            <li key={item.num}>
+              <div
+                className={`flex min-h-16 flex-col justify-between rounded-md border px-3 py-2 transition-colors ${
+                  isCurrent
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : isComplete
+                      ? 'border-primary/30 bg-primary/5 text-foreground'
+                      : 'border-border/70 bg-muted/20 text-muted-foreground'
+                }`}
+                aria-current={isCurrent ? 'step' : undefined}
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`flex size-6 items-center justify-center rounded-full text-xs font-semibold ${
+                      isCurrent || isComplete ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {isComplete ? <Check className="size-3.5" /> : item.num}
+                  </span>
+                  <span className="text-xs font-semibold uppercase tracking-wide">{item.shortTitle}</span>
+                </div>
+                <span className="hidden text-xs leading-snug text-muted-foreground md:block">{item.helper}</span>
+              </div>
+            </li>
+          )
+        })}
+      </ol>
+    </nav>
+  )
+
+  function SectionHeader({
+    icon: Icon,
+    title,
+    description,
+  }: {
+    icon: typeof Lightbulb
+    title: string
+    description: string
+  }) {
+    return (
+      <div className="flex items-start gap-3">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+          <Icon className="size-5" />
+        </div>
+        <div className="space-y-1">
+          <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
+          <p className="text-sm leading-6 text-muted-foreground">{description}</p>
+        </div>
+      </div>
+    )
+  }
+
+  function RequiredMark() {
+    return <span className="ml-1 text-primary" aria-hidden="true">*</span>
+  }
 
   const renderErrorSummary = () => {
     if (!error && fieldErrorEntries.length === 0) return null
@@ -471,17 +547,19 @@ export function EventForm({
   // --- RENDER FUNCTIONS FOR UI SECTIONS ---
 
   const renderBasics = () => (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <section className="bg-card border rounded-lg p-6 md:p-8 space-y-8 shadow-sm">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 bg-primary/10 rounded-lg text-primary">
-            <Lightbulb className="w-5 h-5" />
-          </div>
-          <h2 className="text-xl font-bold">Event Basics</h2>
-        </div>
+    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <section className="rounded-lg border bg-card p-5 shadow-sm md:p-6">
         <div className="space-y-6">
+          <SectionHeader
+            icon={Lightbulb}
+            title="Informacion principal"
+            description="Escribe lo minimo que un estudiante necesita para entender si este evento es para el."
+          />
           <div className="space-y-2">
-            <Label htmlFor="title" className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">Event Title</Label>
+            <Label htmlFor="title" className="text-sm font-medium">
+              Titulo del evento
+              <RequiredMark />
+            </Label>
             <Input
               id="title"
               value={title}
@@ -491,21 +569,21 @@ export function EventForm({
                   setFieldErrors(prev => ({ ...prev, title: '' }))
                 }
               }}
-              placeholder="e.g. LATAM Tech Summit 2026"
-              className={`h-12 px-4 text-lg bg-muted/50 border-transparent focus-visible:ring-primary focus-visible:bg-background transition-all rounded-xl ${fieldErrors.title ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+              placeholder="Ej. LEAD Spark: Career Night"
+              className={`h-11 bg-muted/40 focus-visible:bg-background ${fieldErrors.title ? 'border-destructive focus-visible:ring-destructive' : ''}`}
             />
             {fieldErrors.title && <p className="text-sm text-destructive">{fieldErrors.title}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description" className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">Description</Label>
-            <div className={`bg-muted/50 rounded-xl overflow-hidden border transition-all focus-within:ring-2 focus-within:ring-primary focus-within:bg-background ${fieldErrors.description ? 'border-destructive focus-within:ring-destructive' : 'border-transparent'}`}>
+            <Label htmlFor="description" className="text-sm font-medium">Descripcion para participantes</Label>
+            <div className={`overflow-hidden rounded-md border bg-muted/40 transition-all focus-within:ring-2 focus-within:ring-primary focus-within:bg-background ${fieldErrors.description ? 'border-destructive focus-within:ring-destructive' : 'border-input'}`}>
               <textarea
                 id="description"
-                className="w-full min-h-32 bg-transparent border-none px-4 py-4 text-foreground outline-none resize-y placeholder:text-muted-foreground"
+                className="min-h-32 w-full resize-y border-none bg-transparent px-3 py-3 text-sm leading-6 text-foreground outline-none placeholder:text-muted-foreground"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Describe what participants should expect..."
+                placeholder="Cuenta que pasara, para quien es y que se llevara la persona al asistir."
               />
             </div>
             {fieldErrors.description && <p className="text-sm text-destructive">{fieldErrors.description}</p>}
@@ -513,8 +591,16 @@ export function EventForm({
         </div>
       </section>
 
-      <section className="bg-card border rounded-lg p-6 md:p-8 shadow-sm">
-        <Label className="text-sm font-semibold tracking-wide text-muted-foreground uppercase mb-4 block">Event Cover Image</Label>
+      <section className="rounded-lg border bg-card p-5 shadow-sm md:p-6">
+        <div className="mb-4 flex items-start justify-between gap-4">
+          <div className="space-y-1">
+            <Label className="text-sm font-medium">Imagen de portada</Label>
+            <p className="text-sm leading-6 text-muted-foreground">
+              Opcional, pero ayuda a que el evento se vea mejor en la pagina publica.
+            </p>
+          </div>
+          <span className="rounded-md border bg-muted/30 px-2 py-1 text-xs text-muted-foreground">Opcional</span>
+        </div>
         <div
           onDragOver={(event) => {
             event.preventDefault()
@@ -529,7 +615,7 @@ export function EventForm({
             setIsDraggingCover(false)
             await handleCoverFile(event.dataTransfer.files[0] ?? null)
           }}
-          className={`relative w-full aspect-[21/9] rounded-lg overflow-hidden border-2 border-dashed flex flex-col items-center justify-center gap-4 transition-all cursor-pointer group ${isDraggingCover ? 'border-primary bg-primary/5' : 'border-border bg-muted/30 hover:bg-muted/60'}`}
+          className={`group relative flex min-h-40 w-full cursor-pointer flex-col items-center justify-center gap-3 overflow-hidden rounded-lg border border-dashed transition-all md:aspect-[21/8] md:min-h-0 ${isDraggingCover ? 'border-primary bg-primary/5' : 'border-border bg-muted/25 hover:bg-muted/45'}`}
           onClick={() => !coverImage && fileInputRef.current?.click()}
         >
           <input
@@ -557,12 +643,12 @@ export function EventForm({
             </>
           ) : (
             <>
-              <div className="p-4 rounded-full bg-primary/10 text-primary transition-transform group-hover:scale-110">
-                <UploadCloud className="w-8 h-8" />
+              <div className="rounded-md bg-primary/10 p-3 text-primary transition-transform group-hover:scale-105">
+                <UploadCloud className="size-6" />
               </div>
               <div className="text-center px-4">
-                <p className="font-bold text-lg mb-1">Drop your cover here</p>
-                <p className="text-muted-foreground text-sm">Recommended: 1920x820px (Max 2MB)</p>
+                <p className="font-semibold">Sube o arrastra una imagen</p>
+                <p className="text-sm text-muted-foreground">Recomendado: 1920x820px, maximo 2MB</p>
               </div>
             </>
           )}
@@ -571,13 +657,13 @@ export function EventForm({
         {fieldErrors.cover_image && <p className="text-sm text-destructive mt-2">{fieldErrors.cover_image}</p>}
 
         <div className="mt-4 space-y-2">
-          <Label htmlFor="coverImageUrl" className="text-sm text-muted-foreground">Or paste image URL</Label>
+          <Label htmlFor="coverImageUrl" className="text-sm text-muted-foreground">O pega un URL de imagen</Label>
           <Input
             id="coverImageUrl"
             value={coverImage}
             onChange={(e) => setCoverImage(e.target.value)}
             placeholder="https://..."
-            className="bg-muted/50 border-transparent focus-visible:bg-background"
+            className="h-10 bg-muted/40 focus-visible:bg-background"
           />
         </div>
       </section>
@@ -585,136 +671,153 @@ export function EventForm({
   )
 
   const renderLogistics = () => (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <section className="bg-card border rounded-lg p-6 md:p-8 space-y-6 shadow-sm">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 bg-primary/10 rounded-lg text-primary">
-            <UserCheck className="w-5 h-5" />
+    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <section className="rounded-lg border bg-card p-5 shadow-sm md:p-6">
+        <div className="space-y-5">
+          <SectionHeader
+            icon={UserCheck}
+            title="Formato del evento"
+            description="Elige como participaran los estudiantes para mostrar solo los campos necesarios."
+          />
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+            {[
+              { value: 'in_person', label: 'Presencial', icon: MapPin },
+              { value: 'online', label: 'Virtual', icon: Video },
+              { value: 'hybrid', label: 'Hibrido', icon: MonitorSmartphone },
+            ].map((type) => (
+              <label key={type.value} className={`flex min-h-24 cursor-pointer flex-col items-center justify-center rounded-lg border p-4 text-center transition-all ${eventType === type.value ? 'border-primary bg-primary/10 text-primary shadow-sm' : 'border-border/70 bg-muted/20 text-muted-foreground hover:bg-muted/40 hover:text-foreground'}`}>
+                <input
+                  type="radio"
+                  name="attendance_type"
+                  value={type.value}
+                  checked={eventType === type.value}
+                  onChange={(e) => setEventType(e.target.value as EventType)}
+                  className="sr-only"
+                />
+                <type.icon className="mb-2 size-6" />
+                <span className="font-semibold">{type.label}</span>
+              </label>
+            ))}
           </div>
-          <h2 className="text-xl font-bold">Attendance Type</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[
-            { value: 'in_person', label: 'In-person', icon: MapPin },
-            { value: 'online', label: 'Virtual', icon: Video },
-            { value: 'hybrid', label: 'Hybrid', icon: MonitorSmartphone },
-          ].map((type) => (
-            <label key={type.value} className={`flex flex-col items-center justify-center p-6 border-2 rounded-xl cursor-pointer transition-all ${eventType === type.value ? 'bg-primary/5 border-primary text-primary shadow-sm' : 'border-border/50 hover:bg-muted/50 text-muted-foreground hover:text-foreground'}`}>
-              <input
-                type="radio"
-                name="attendance_type"
-                value={type.value}
-                checked={eventType === type.value}
-                onChange={(e) => setEventType(e.target.value as EventType)}
-                className="sr-only"
-              />
-              <type.icon className="mb-3 w-8 h-8" />
-              <span className="font-bold">{type.label}</span>
-            </label>
-          ))}
         </div>
       </section>
 
-      <section className="bg-card border rounded-lg p-6 md:p-8 space-y-6 shadow-sm">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 bg-primary/10 rounded-lg text-primary">
-            <Video className="w-5 h-5" />
-          </div>
-          <h2 className="text-xl font-bold">Schedule</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="startAt" className="text-sm font-semibold text-muted-foreground ml-1">Start Date & Time</Label>
-            <Input
-              id="startAt"
-              type="datetime-local"
-              value={startAt}
-              onChange={(e) => setStartAt(e.target.value)}
-              className={`h-12 bg-muted/50 border-transparent focus-visible:bg-background ${fieldErrors.start_at ? 'border-destructive' : ''}`}
-            />
-            {fieldErrors.start_at && <p className="text-xs text-destructive ml-1">{fieldErrors.start_at}</p>}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="endAt" className="text-sm font-semibold text-muted-foreground ml-1">End Date & Time</Label>
-            <Input
-              id="endAt"
-              type="datetime-local"
-              value={endAt}
-              onChange={(e) => setEndAt(e.target.value)}
-              className={`h-12 bg-muted/50 border-transparent focus-visible:bg-background ${fieldErrors.end_at ? 'border-destructive' : ''}`}
-            />
-            {fieldErrors.end_at && <p className="text-xs text-destructive ml-1">{fieldErrors.end_at}</p>}
+      <section className="rounded-lg border bg-card p-5 shadow-sm md:p-6">
+        <div className="space-y-5">
+          <SectionHeader
+            icon={Video}
+            title="Fecha y hora"
+            description="Confirma inicio y cierre para ordenar el calendario y habilitar check-in."
+          />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="startAt" className="text-sm font-medium">
+                Inicio
+                <RequiredMark />
+              </Label>
+              <Input
+                id="startAt"
+                type="datetime-local"
+                value={startAt}
+                onChange={(e) => setStartAt(e.target.value)}
+                className={`h-11 bg-muted/40 focus-visible:bg-background ${fieldErrors.start_at ? 'border-destructive' : ''}`}
+              />
+              {fieldErrors.start_at && <p className="text-xs text-destructive">{fieldErrors.start_at}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="endAt" className="text-sm font-medium">
+                Fin
+                <RequiredMark />
+              </Label>
+              <Input
+                id="endAt"
+                type="datetime-local"
+                value={endAt}
+                onChange={(e) => setEndAt(e.target.value)}
+                className={`h-11 bg-muted/40 focus-visible:bg-background ${fieldErrors.end_at ? 'border-destructive' : ''}`}
+              />
+              {fieldErrors.end_at && <p className="text-xs text-destructive">{fieldErrors.end_at}</p>}
+            </div>
           </div>
         </div>
       </section>
 
       {(eventType === 'in_person' || eventType === 'hybrid') && (
-        <section className="bg-card border rounded-lg p-6 md:p-8 space-y-6 shadow-sm animate-in fade-in zoom-in-95">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-primary/10 rounded-lg text-primary">
-              <MapPin className="w-5 h-5" />
-            </div>
-            <h2 className="text-xl font-bold">Venue Details</h2>
-          </div>
-          <div className="space-y-2 relative z-50">
-            <Label htmlFor="location" className="text-sm font-semibold text-muted-foreground ml-1">Location / Address</Label>
-            <LocationAutocomplete
-              value={location}
-              onChange={(data) => {
-                setLocation(data.address || '')
-                setLocationName(data.name || data.address?.split(',')[0]?.trim() || '')
-                setLocationAddress(data.address || '')
-                setLocationCity(data.city || '')
-                setLocationRegion(data.region || '')
-                setLocationLatitude(data.latitude ?? null)
-                setLocationLongitude(data.longitude ?? null)
-              }}
-              onClear={() => {
-                setLocation('')
-                setLocationName('')
-                setLocationAddress('')
-                setLocationCity('')
-                setLocationRegion('')
-                setLocationLatitude(null)
-                setLocationLongitude(null)
-              }}
-              placeholder="Start typing to search for venue via Google Places..."
-              className={`h-12 w-full bg-muted/50 border-transparent focus-visible:bg-background ${fieldErrors.location ? 'border-destructive' : ''}`}
+        <section className="animate-in fade-in zoom-in-95 rounded-lg border bg-card p-5 shadow-sm md:p-6">
+          <div className="relative z-50 space-y-5">
+            <SectionHeader
+              icon={MapPin}
+              title="Lugar"
+              description="Busca el venue para guardar direccion, ciudad y coordenadas cuando sea posible."
             />
-            {fieldErrors.location && <p className="text-xs text-destructive ml-1">{fieldErrors.location}</p>}
+            <div className="space-y-2">
+              <Label htmlFor="location" className="text-sm font-medium">
+                Lugar o direccion
+                <RequiredMark />
+              </Label>
+              <LocationAutocomplete
+                value={location}
+                onChange={(data) => {
+                  setLocation(data.address || '')
+                  setLocationName(data.name || data.address?.split(',')[0]?.trim() || '')
+                  setLocationAddress(data.address || '')
+                  setLocationCity(data.city || '')
+                  setLocationRegion(data.region || '')
+                  setLocationLatitude(data.latitude ?? null)
+                  setLocationLongitude(data.longitude ?? null)
+                }}
+                onClear={() => {
+                  setLocation('')
+                  setLocationName('')
+                  setLocationAddress('')
+                  setLocationCity('')
+                  setLocationRegion('')
+                  setLocationLatitude(null)
+                  setLocationLongitude(null)
+                }}
+                placeholder="Busca universidad, venue o direccion..."
+                className={`h-11 w-full bg-muted/40 focus-visible:bg-background ${fieldErrors.location ? 'border-destructive' : ''}`}
+              />
+              {fieldErrors.location && <p className="text-xs text-destructive">{fieldErrors.location}</p>}
 
-            {(locationCity || locationRegion) && (
-              <div className="flex gap-2 ml-1 mt-2 text-xs text-muted-foreground bg-muted/30 px-3 py-2 rounded-lg border inline-flex items-center">
-                <span>📍 Parsed Data:</span>
-                {locationCity && <span className="font-semibold text-foreground">{locationCity}</span>}
-                {locationCity && locationRegion && <span>,</span>}
-                {locationRegion && <span className="font-semibold text-foreground">{locationRegion}</span>}
-              </div>
-            )}
+              {(locationCity || locationRegion) && (
+                <div className="mt-2 inline-flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+                  <MapPin className="size-3" />
+                  <span>Detectado:</span>
+                  {locationCity && <span className="font-semibold text-foreground">{locationCity}</span>}
+                  {locationCity && locationRegion && <span>,</span>}
+                  {locationRegion && <span className="font-semibold text-foreground">{locationRegion}</span>}
+                </div>
+              )}
+            </div>
           </div>
         </section>
       )}
 
       {(eventType === 'online' || eventType === 'hybrid') && (
-        <section className="bg-card border rounded-lg p-6 md:p-8 space-y-6 shadow-sm animate-in fade-in zoom-in-95">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-primary/10 rounded-lg text-primary">
-              <Video className="w-5 h-5" />
-            </div>
-            <h2 className="text-xl font-bold">Virtual Connection</h2>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="meetingUrl" className="text-sm font-semibold text-muted-foreground ml-1">Meeting URL</Label>
-            <Input
-              id="meetingUrl"
-              type="url"
-              value={meetingUrl}
-              onChange={(e) => setMeetingUrl(e.target.value)}
-              placeholder="https://zoom.us/j/..."
-              className={`h-12 bg-muted/50 border-transparent focus-visible:bg-background ${fieldErrors.meeting_url ? 'border-destructive' : ''}`}
+        <section className="animate-in fade-in zoom-in-95 rounded-lg border bg-card p-5 shadow-sm md:p-6">
+          <div className="space-y-5">
+            <SectionHeader
+              icon={Video}
+              title="Conexion virtual"
+              description="Agrega el link que recibiran las personas registradas o aprobadas."
             />
-            <p className="text-xs text-muted-foreground ml-1 italic mt-1">Link will be shared with approved attendees only.</p>
-            {fieldErrors.meeting_url && <p className="text-xs text-destructive ml-1">{fieldErrors.meeting_url}</p>}
+            <div className="space-y-2">
+              <Label htmlFor="meetingUrl" className="text-sm font-medium">
+                Link de reunion
+                <RequiredMark />
+              </Label>
+              <Input
+                id="meetingUrl"
+                type="url"
+                value={meetingUrl}
+                onChange={(e) => setMeetingUrl(e.target.value)}
+                placeholder="https://zoom.us/j/..."
+                className={`h-11 bg-muted/40 focus-visible:bg-background ${fieldErrors.meeting_url ? 'border-destructive' : ''}`}
+              />
+              <p className="text-xs text-muted-foreground">El link se muestra solo a personas registradas o aprobadas.</p>
+              {fieldErrors.meeting_url && <p className="text-xs text-destructive">{fieldErrors.meeting_url}</p>}
+            </div>
           </div>
         </section>
       )}
@@ -722,17 +825,17 @@ export function EventForm({
   )
 
   const renderAccess = () => (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <section className="bg-card border rounded-lg p-6 md:p-8 space-y-6 shadow-sm">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 bg-primary/10 rounded-lg text-primary">
-            <QrCode className="w-5 h-5" />
-          </div>
-          <h2 className="text-xl font-bold">Enrollment Model</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <section className="rounded-lg border bg-card p-5 shadow-sm md:p-6">
+        <div className="space-y-5">
+          <SectionHeader
+            icon={QrCode}
+            title="Modelo de registro"
+            description="Define si el registro sera inmediato o si el equipo debe revisar postulaciones."
+          />
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {EVENT_ACCESS_MODEL_OPTIONS.map((option) => (
-            <label key={option.value} className={`flex items-start gap-4 p-5 rounded-xl transition-all cursor-pointer border ${accessModel === option.value ? 'bg-primary/5 border-primary shadow-sm' : 'bg-muted/30 border-transparent hover:bg-muted/60'}`}>
+            <label key={option.value} className={`flex cursor-pointer items-start gap-4 rounded-lg border p-4 transition-all ${accessModel === option.value ? 'border-primary bg-primary/10 shadow-sm' : 'border-border/70 bg-muted/20 hover:bg-muted/40'}`}>
               <div className="mt-1">
                 <input
                   type="radio"
@@ -744,46 +847,78 @@ export function EventForm({
                 />
               </div>
               <div>
-                <span className={`block font-semibold ${accessModel === option.value ? 'text-primary' : 'text-foreground'}`}>{option.label}</span>
+                <span className={`block font-semibold ${accessModel === option.value ? 'text-primary' : 'text-foreground'}`}>
+                  {option.value === 'open' ? 'Registro abierto' : 'Con postulacion'}
+                </span>
                 <span className="text-sm text-muted-foreground mt-1 block leading-relaxed">
                   {option.value === 'open'
-                    ? 'First-come, first-served. Students register instantly and receive their QR code immediately.'
-                    : 'Members must apply. Admins review and approve entries manually.'
+                    ? 'Las personas se registran al instante y reciben su QR.'
+                    : 'El equipo revisa respuestas antes de aprobar asistencia.'
                   }
                 </span>
               </div>
             </label>
           ))}
         </div>
+        </div>
 
         {accessModel === 'application' && (
-          <div className="mt-6 ml-10 p-5 rounded-xl bg-muted/50 border-l-4 border-l-primary animate-in fade-in slide-in-from-left-4">
+          <div className="mt-5 animate-in fade-in slide-in-from-left-4 rounded-lg border bg-muted/25 p-4">
             <div className="space-y-3">
-              <div className="flex items-center justify-between gap-3">
-                <Label className="text-sm font-semibold">Application Questions</Label>
-                <Button type="button" variant="outline" size="sm" onClick={addApplicationQuestion}>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <Label className="text-sm font-semibold">Preguntas de postulacion</Label>
+                  <p className="mt-1 text-xs text-muted-foreground">Estas preguntas son exactamente lo que vera el participante al postular.</p>
+                </div>
+                <Button type="button" variant="outline" size="sm" onClick={addApplicationQuestion} className="w-full sm:w-auto">
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Question
+                  Agregar pregunta
                 </Button>
               </div>
 
               {applicationQuestionsState.length === 0 ? (
                 <div className="rounded-lg border border-dashed bg-background p-4 text-sm text-muted-foreground">
-                  Add at least one question. Applicants will answer directly inside LEAD.
+                  Agrega al menos una pregunta para que el equipo pueda revisar postulantes.
                 </div>
               ) : (
                 <div className="space-y-3">
                   {applicationQuestionsState.map((question, index) => (
-                    <div key={question.id ?? index} className="rounded-lg border bg-background p-4 space-y-3">
-                      <div className="flex items-start gap-3">
-                        <GripVertical className="mt-3 h-4 w-4 text-muted-foreground" />
-                        <div className="grid flex-1 gap-3 md:grid-cols-[1fr_160px]">
+                    <div key={question.id ?? index} className="space-y-4 rounded-lg border bg-background p-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <GripVertical className="hidden h-4 w-4 shrink-0 text-muted-foreground sm:block" />
+                          <span className="rounded-md bg-primary/10 px-2 py-1 text-xs font-semibold text-primary">
+                            Pregunta {index + 1}
+                          </span>
+                          {question.isRequired ? (
+                            <span className="rounded-md border bg-muted/30 px-2 py-1 text-xs text-muted-foreground">Obligatoria</span>
+                          ) : null}
+                        </div>
+                        <div className="flex items-center gap-1 self-end sm:self-auto">
+                          <Button type="button" variant="ghost" size="icon-sm" aria-label="Mover pregunta arriba" onClick={() => moveApplicationQuestion(index, -1)} disabled={index === 0}>
+                            <ChevronUp className="h-4 w-4" />
+                          </Button>
+                          <Button type="button" variant="ghost" size="icon-sm" aria-label="Mover pregunta abajo" onClick={() => moveApplicationQuestion(index, 1)} disabled={index === applicationQuestionsState.length - 1}>
+                            <ChevronDown className="h-4 w-4" />
+                          </Button>
+                          <Button type="button" variant="ghost" size="icon-sm" aria-label="Eliminar pregunta" onClick={() => removeApplicationQuestion(index)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_180px]">
+                        <div className="space-y-2">
+                          <Label className="text-xs font-medium text-muted-foreground">Texto de la pregunta</Label>
                           <Input
                             value={question.questionText}
                             onChange={(event) => updateApplicationQuestion(index, { questionText: event.target.value })}
-                            placeholder={`Question ${index + 1}`}
-                            className="bg-muted/40"
+                            placeholder="Ej. Por que quieres participar?"
+                            className="h-10 bg-muted/40"
                           />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs font-medium text-muted-foreground">Tipo de respuesta</Label>
                           <select
                             value={question.questionType}
                             onChange={(event) => updateApplicationQuestion(index, {
@@ -792,43 +927,35 @@ export function EventForm({
                                 ? question.optionsText
                                 : '',
                             })}
-                            className="h-10 rounded-md border border-input bg-muted/40 px-3 text-sm"
+                            className="h-10 w-full rounded-md border border-input bg-muted/40 px-3 text-sm"
                           >
                             {questionTypeOptions.map((option) => (
                               <option key={option.value} value={option.value}>{option.label}</option>
                             ))}
                           </select>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Button type="button" variant="ghost" size="icon" onClick={() => moveApplicationQuestion(index, -1)} disabled={index === 0}>
-                            <ChevronUp className="h-4 w-4" />
-                          </Button>
-                          <Button type="button" variant="ghost" size="icon" onClick={() => moveApplicationQuestion(index, 1)} disabled={index === applicationQuestionsState.length - 1}>
-                            <ChevronDown className="h-4 w-4" />
-                          </Button>
-                          <Button type="button" variant="ghost" size="icon" onClick={() => removeApplicationQuestion(index)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
                       </div>
 
                       {['single_select', 'checkbox'].includes(question.questionType) ? (
-                        <textarea
-                          value={question.optionsText}
-                          onChange={(event) => updateApplicationQuestion(index, { optionsText: event.target.value })}
-                          placeholder="One option per line"
-                          className="min-h-20 w-full rounded-md border border-input bg-muted/40 px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                        />
+                        <div className="space-y-2">
+                          <Label className="text-xs font-medium text-muted-foreground">Opciones</Label>
+                          <textarea
+                            value={question.optionsText}
+                            onChange={(event) => updateApplicationQuestion(index, { optionsText: event.target.value })}
+                            placeholder="Una opcion por linea"
+                            className="min-h-24 w-full rounded-md border border-input bg-muted/40 px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                          />
+                        </div>
                       ) : null}
 
-                      <label className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+                      <label className="inline-flex min-h-9 items-center gap-2 rounded-md border bg-muted/20 px-3 text-sm text-muted-foreground">
                         <input
                           type="checkbox"
                           checked={question.isRequired}
                           onChange={(event) => updateApplicationQuestion(index, { isRequired: event.target.checked })}
                           className="h-4 w-4 rounded border-border"
                         />
-                        Required
+                        Obligatoria
                       </label>
                     </div>
                   ))}
@@ -843,38 +970,36 @@ export function EventForm({
         )}
       </section>
 
-      <section className="bg-card border rounded-lg p-6 md:p-8 shadow-sm">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-primary/10 rounded-lg text-primary">
-            <UserCheck className="w-5 h-5" />
-          </div>
-          <h2 className="text-xl font-bold">Capacity Limit</h2>
-        </div>
+      <section className="rounded-lg border bg-card p-5 shadow-sm md:p-6">
+        <SectionHeader
+          icon={UserCheck}
+          title="Cupo"
+          description="Usa un limite si el espacio o el equipo de check-in lo necesita."
+        />
         <div className="relative max-w-md">
           <Input
             id="capacity"
             inputMode="numeric"
             value={capacity}
             onChange={(e) => setCapacity(e.target.value)}
-            placeholder="e.g. 150"
-            className={`h-12 bg-muted/50 border-transparent focus-visible:bg-background ${fieldErrors.capacity ? 'border-destructive' : ''}`}
+            placeholder="Ej. 150"
+            className={`mt-5 h-11 bg-muted/40 focus-visible:bg-background ${fieldErrors.capacity ? 'border-destructive' : ''}`}
           />
           <div className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
             <UserCheck className="w-5 h-5 opacity-50" />
           </div>
         </div>
-        <p className="mt-2 text-sm text-muted-foreground">Leave blank for unlimited capacity.</p>
+        <p className="mt-2 text-sm text-muted-foreground">Dejalo vacio si el evento no tiene limite.</p>
         {fieldErrors.capacity && <p className="text-xs text-destructive mt-1">{fieldErrors.capacity}</p>}
       </section>
 
       {mode === 'edit' && initial?.id && (
-        <section className="bg-card border rounded-lg p-6 md:p-8 shadow-sm">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-primary/10 rounded-lg text-primary">
-              <MapPin className="w-5 h-5" />
-            </div>
-            <h2 className="text-xl font-bold">Collaborating Chapters</h2>
-          </div>
+        <section className="rounded-lg border bg-card p-5 shadow-sm md:p-6">
+          <SectionHeader
+            icon={MapPin}
+            title="Chapters colaboradores"
+            description="Agrega otros chapters cuando el evento se opera en conjunto."
+          />
           <CollaboratorManager
             eventId={initial.id}
             ownerChapterId={editorChapter?.id || null}
@@ -954,14 +1079,14 @@ export function EventForm({
             disabled={isPending}
           >
             <Rocket className="w-5 h-5 mr-2" />
-            Publish Event Now
+            Publicar evento
           </Button>
           <p className="text-center text-xs text-muted-foreground">
-            By publishing, this event will become visible to all members within the chapter network.
+            Al publicar, el evento sera visible segun su configuracion.
           </p>
           <div className="flex gap-4 pt-2">
             <Button variant="secondary" className="flex-1" onClick={() => submitEvent(false)} disabled={isPending}>
-              Save as Draft
+              Guardar borrador
             </Button>
           </div>
         </div>
@@ -993,10 +1118,10 @@ export function EventForm({
                 onClick={onDelete}
                 disabled={isPending}
               >
-                <Trash2 className="w-4 h-4 mr-2" /> Delete
+                <Trash2 className="w-4 h-4 mr-2" /> Eliminar
               </Button>
               <div className="text-xs text-muted-foreground hidden md:block font-medium">
-                {isAutoSaving ? 'Auto-saving...' : lastSavedAt ? `Last saved at ${lastSavedAt}` : 'All changes saved.'}
+                {isAutoSaving ? 'Guardando...' : lastSavedAt ? `Guardado a las ${lastSavedAt}` : 'Cambios guardados.'}
               </div>
             </div>
 
@@ -1007,14 +1132,14 @@ export function EventForm({
                 onClick={() => submitEvent(false)}
                 disabled={isPending}
               >
-                Save Draft
+                Guardar borrador
               </Button>
               <Button
                 className="flex-1 sm:flex-none font-semibold"
                 onClick={() => submitEvent(true)}
                 disabled={isPending}
               >
-                <Save className="w-4 h-4 mr-2" /> Save & Publish
+                <Save className="w-4 h-4 mr-2" /> Guardar y publicar
               </Button>
             </div>
           </div>
@@ -1025,128 +1150,108 @@ export function EventForm({
 
   // Create Mode Wizard
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-8 pb-16">
-      <div className="mb-12">
-        <div className="flex justify-between items-center mb-8 max-w-2xl mx-auto px-4">
-          {steps.map((s, i) => (
-            <React.Fragment key={s.num}>
-              <div className="flex flex-col items-center gap-2 relative z-10">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 ${
-                  step === s.num ? 'bg-primary text-primary-foreground ring-4 ring-primary/20 shadow-lg' :
-                  step > s.num ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                }`}>
-                  {step > s.num ? <Check className="w-5 h-5" /> : s.num}
-                </div>
-                <span className={`text-xs font-medium uppercase tracking-wider transition-colors ${step === s.num ? 'text-primary' : 'text-muted-foreground'}`}>
-                  {s.title}
-                </span>
-              </div>
-              {i < steps.length - 1 && (
-                <div className="h-[2px] flex-1 mx-2 relative overflow-hidden bg-muted">
-                  <div className={`absolute top-0 left-0 h-full bg-primary transition-all duration-500 ease-in-out ${step > s.num ? 'w-full' : 'w-0'}`} />
-                </div>
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-      </div>
+    <div className="mx-auto w-full max-w-5xl space-y-6 pb-28">
+      <StepProgress />
 
       {renderErrorSummary()}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div className="lg:col-span-8">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <div className="min-w-0">
           {step === 1 && renderBasics()}
           {step === 2 && renderLogistics()}
           {step === 3 && renderAccess()}
           {step === 4 && renderReview()}
-
-          {/* Form Navigation for Create Mode */}
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-6 border-t mt-8">
-            <Button
-              variant="outline"
-              size="lg"
-              className={step === 1 ? 'invisible' : ''}
-              onClick={handleBack}
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" /> Back
-            </Button>
-
-            {step < 4 ? (
-              <Button
-                size="lg"
-                className="min-w-[140px]"
-                onClick={handleNext}
-              >
-                Next <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            ) : (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                {isAutoSaving ? 'Auto-saving draft...' : lastSavedAt ? `Draft last saved at ${lastSavedAt}` : ''}
-              </div>
-            )}
-          </div>
         </div>
 
-        {/* Right Sidebar Tips */}
-        <aside className="lg:col-span-4 hidden lg:block">
-          <div className="sticky top-24 space-y-6">
-            <div className="rounded-lg border bg-card p-6 shadow-sm">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                  <Lightbulb className="w-5 h-5" />
-                </div>
-                <h3 className="font-bold text-lg">Editor Tips</h3>
+        <aside className="hidden lg:block">
+          <div className="sticky top-24 rounded-lg border bg-card p-5 shadow-sm">
+            <div className="mb-5 flex items-start gap-3">
+              <div className="flex size-9 items-center justify-center rounded-md bg-primary/10 text-primary">
+                <Lightbulb className="size-4" />
               </div>
+              <div>
+                <h3 className="font-semibold">Paso {currentStep.num}: {currentStep.title}</h3>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">{currentStep.helper}</p>
+              </div>
+            </div>
 
-              <ul className="space-y-6">
+              <ul className="space-y-4">
                 {step === 1 && (
                   <>
                     <li className="space-y-1">
-                      <p className="font-semibold text-sm">Clear titles</p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">Keep titles under 50 characters. Use action verbs to attract the right talent.</p>
+                      <p className="font-semibold text-sm">Lo obligatorio</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">Titulo claro. La descripcion puede mejorar despues.</p>
                     </li>
                     <li className="space-y-1">
-                      <p className="font-semibold text-sm">Visual impact</p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">High-contrast cover images perform 40% better. Avoid text-heavy graphics.</p>
+                      <p className="font-semibold text-sm">Portada opcional</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">No bloquea el avance. Sube imagen si ya la tienes.</p>
                     </li>
                   </>
                 )}
                 {step === 2 && (
                   <>
                     <li className="space-y-1">
-                      <p className="font-semibold text-sm">Timezone check</p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">Most LEAD events are cross-border. Ensure your timezone is clear in the description.</p>
+                      <p className="font-semibold text-sm">Primero fecha</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">Sin fecha y hora no se puede ordenar calendario ni check-in.</p>
                     </li>
                     <li className="space-y-1">
-                      <p className="font-semibold text-sm">Hybrid access</p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">Providing a virtual link increases participation for regional chapters.</p>
+                      <p className="font-semibold text-sm">Lugar o link</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">El formulario cambia segun presencial, virtual o hibrido.</p>
                     </li>
                   </>
                 )}
                 {step === 3 && (
                   <>
                     <li className="space-y-1">
-                      <p className="font-semibold text-sm">Open vs. application</p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">Open enrollment leads to higher turnout, but application models ensure higher attendee quality.</p>
+                      <p className="font-semibold text-sm">Registro abierto</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">Mas rapido para eventos generales y comunidad amplia.</p>
                     </li>
                     <li className="space-y-1">
-                      <p className="font-semibold text-sm">Capacity buffers</p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">Set capacity slightly lower than venue limit to ensure comfortable networking space.</p>
+                      <p className="font-semibold text-sm">Con postulacion</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">Mejor cuando necesitas revisar respuestas antes de aprobar.</p>
                     </li>
                   </>
                 )}
                 {step === 4 && (
                   <>
                     <li className="space-y-1">
-                      <p className="font-semibold text-sm">Final check</p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">Review all details carefully. Once published, members will receive immediate notifications.</p>
+                      <p className="font-semibold text-sm">Publicar o guardar</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">Publica si ya esta listo. Guarda borrador si falta confirmar algo.</p>
                     </li>
                   </>
                 )}
               </ul>
-            </div>
           </div>
         </aside>
+      </div>
+
+      <div className="sticky bottom-4 z-40 rounded-lg border bg-card/95 p-3 shadow-lg backdrop-blur-md">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">Paso {step} de 4</span>
+            <span className="mx-2">·</span>
+            {currentStep.helper}
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              className={step === 1 ? 'invisible flex-1 sm:flex-none' : 'flex-1 sm:flex-none'}
+              onClick={handleBack}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" /> Atras
+            </Button>
+
+            {step < 4 ? (
+              <Button className="flex-1 sm:flex-none sm:min-w-[150px]" onClick={handleNext}>
+                Continuar <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            ) : (
+              <Button variant="secondary" className="flex-1 sm:flex-none" onClick={() => submitEvent(false)} disabled={isPending}>
+                Guardar borrador
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   )

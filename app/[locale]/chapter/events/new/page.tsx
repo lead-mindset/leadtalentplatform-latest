@@ -27,22 +27,22 @@ export default async function NewChapterEventPage() {
       <Breadcrumb
         items={[
           { label: 'Dashboard', href: '/chapter' },
-          { label: 'Events', href: '/chapter/events' },
-          { label: 'New event' },
+          { label: 'Eventos', href: '/chapter/events' },
+          { label: 'Nuevo evento' },
         ]}
       />
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">New Event</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Nuevo evento</h1>
           <p className="max-w-2xl text-muted-foreground">
-            Create a draft event, then publish when details, registration, and applications are ready.
+            Crea un borrador rapido y publicalo cuando fecha, registro y detalles esten listos.
           </p>
         </div>
         <Button asChild variant="outline">
           <Link href="/chapter/events">
             <Icons.ArrowLeft className="mr-2 h-4 w-4" />
-            Events
+            Eventos
           </Link>
         </Button>
       </div>
