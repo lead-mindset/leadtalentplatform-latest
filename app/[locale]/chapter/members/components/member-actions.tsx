@@ -80,11 +80,11 @@ export function MemberActionButtons({
   if (currentState === 'pending') {
     return (
       <div className="space-y-2">
-        <div className="flex gap-2">
+        <div className="grid gap-2 sm:grid-cols-2">
           <Button
             onClick={handleApprove}
             disabled={isLoading}
-            className="flex-1 bg-success text-success-foreground hover:bg-success/90"
+            className="w-full min-w-0 shrink bg-success text-success-foreground hover:bg-success/90"
           >
             {isLoading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -97,7 +97,7 @@ export function MemberActionButtons({
             onClick={() => setShowRejectReason(v => !v)}
             disabled={isLoading}
             variant="destructive"
-            className="flex-1"
+            className="w-full min-w-0 shrink"
           >
             <XCircle className="mr-2 h-4 w-4" />
             Rechazar

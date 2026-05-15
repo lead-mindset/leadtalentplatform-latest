@@ -45,7 +45,7 @@ export default function MemberCard({
   const badge = statusConfig(status)
 
   return (
-    <article className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)_minmax(14rem,0.8fr)] lg:items-start">
+    <article className="grid min-w-0 overflow-hidden gap-4 p-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)_minmax(14rem,0.8fr)] lg:items-start">
       <div className="flex min-w-0 gap-3">
         {showSelector ? (
           <Checkbox
@@ -128,7 +128,7 @@ export default function MemberCard({
         )}
       </div>
 
-      <div className="space-y-3 lg:text-right">
+      <div className="min-w-0 space-y-3 lg:text-right">
         <div className="flex flex-wrap gap-2 lg:justify-end">
           {membership?.chapter_id ? (
             <Badge variant="outline">{member.chapter?.name ?? membership.chapter_id}</Badge>

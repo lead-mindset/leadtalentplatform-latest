@@ -84,15 +84,15 @@ export default async function ChapterMembersPage({
 
   if (!chapter) {
     return (
-      <MainContainer className="py-8">
+      <MainContainer className="w-full max-w-full py-8">
         <Card>
           <CardContent className="py-12 text-center">
             <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-warning/10">
               <Icons.AlertCircle className="h-5 w-5 text-warning" />
             </div>
-            <h1 className="text-xl font-semibold">Sin capitulo asignado</h1>
+            <h1 className="text-xl font-semibold">Sin chapter asignado</h1>
             <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-              No tienes un capitulo asignado. Contacta a una persona administradora.
+              No tienes un chapter asignado. Contacta a una persona administradora.
             </p>
           </CardContent>
         </Card>
@@ -115,7 +115,7 @@ export default async function ChapterMembersPage({
   const displayMembers = filterMembers(allMembers, safeStatus)
 
   return (
-    <MainContainer className="py-8 space-y-8">
+    <MainContainer className="w-full max-w-full py-8 space-y-8">
       <Breadcrumb
         items={[
           { label: 'Resumen', href: '/chapter' },
@@ -124,8 +124,8 @@ export default async function ChapterMembersPage({
       />
 
       <PageHeader
-        eyebrow="Herramientas del capitulo"
-        title="Miembros del capitulo"
+        eyebrow="Herramientas del chapter"
+        title="Miembros del chapter"
         badge={<Badge variant="outline">{chapter.name}</Badge>}
         description={`Revisa postulantes pendientes y gestiona el estado de membresia para ${chapter.university}.`}
       />
@@ -140,7 +140,7 @@ export default async function ChapterMembersPage({
         <SummaryBlock
           label="Aprobados"
           value={stats.approved}
-          helper="Miembros activos del capitulo"
+          helper="Miembros activos del chapter"
           variant="success"
         />
         <SummaryBlock

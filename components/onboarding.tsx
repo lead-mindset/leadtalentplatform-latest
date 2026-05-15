@@ -240,12 +240,12 @@ export default function Onboarding({ initialValues }: OnboardingProps) {
 
   return (
     <FormProvider {...methods}>
-      <div className="mx-auto grid min-h-screen w-full max-w-6xl gap-8 px-4 py-8 sm:px-6 md:grid-cols-[minmax(0,1fr)_20rem] md:py-12 lg:px-8">
-        <section className="space-y-6">
-          <div className="space-y-4">
+      <div className="mx-auto grid min-h-screen w-full max-w-6xl gap-6 px-4 py-5 sm:px-6 md:grid-cols-[minmax(0,1fr)_20rem] md:gap-8 md:py-12 lg:px-8">
+        <section className="space-y-5">
+          <div className="space-y-3">
             <Badge variant="outline">{t('profileOnlyBadge')}</Badge>
-            <div className="space-y-3">
-              <h1 className="max-w-3xl text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+            <div className="space-y-2">
+              <h1 className="max-w-3xl text-2xl font-semibold tracking-tight text-foreground sm:text-4xl">
                 {t('pageTitle')}
               </h1>
               <p className="max-w-2xl text-base leading-7 text-muted-foreground">
@@ -261,9 +261,9 @@ export default function Onboarding({ initialValues }: OnboardingProps) {
                 onFinalStepCompleted={handleComplete}
                 className="min-h-0 p-0 sm:aspect-auto md:aspect-auto"
                 stepCircleContainerClassName="max-w-none p-0 shadow-none"
-                stepContainerClassName="px-4 py-5 sm:px-6"
+                stepContainerClassName="px-4 py-4 sm:px-6 sm:py-5"
                 contentClassName="px-4 sm:px-6"
-                footerClassName="px-4 sm:px-6"
+                footerClassName="px-4 pb-4 sm:px-6 sm:pb-6"
                 completeButtonText={t('saveProfile')}
                 backButtonText={tCommon('back')}
                 nextButtonText={tCommon('next')}

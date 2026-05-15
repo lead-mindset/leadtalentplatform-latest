@@ -915,6 +915,7 @@ describe('EventService', () => {
       }
       expect(tableMocks.event_registration.update).toHaveBeenCalledWith({
         status: 'attended',
+        qr_token: null,
         checked_in_at: expect.any(String),
         checked_in_by_id: 'checker-1',
       })

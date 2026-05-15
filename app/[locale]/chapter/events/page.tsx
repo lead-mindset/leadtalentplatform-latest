@@ -44,7 +44,7 @@ export default async function ChapterEventsPage() {
   const upcomingCheckins = events.filter(event => event.is_published && new Date(event.start_at) >= now).length
 
   return (
-    <MainContainer className="py-8 space-y-8">
+    <MainContainer className="w-full max-w-full py-8 space-y-8">
       <Breadcrumb
         items={[
           { label: 'Resumen', href: '/chapter' },
@@ -54,9 +54,9 @@ export default async function ChapterEventsPage() {
 
       <div className="space-y-5">
         <PageHeader
-          eyebrow="Herramientas del capitulo"
-          title="Eventos del capitulo"
-          description="Gestiona eventos propios y colaborativos asociados a tu capitulo."
+          eyebrow="Herramientas del chapter"
+          title="Eventos del chapter"
+          description="Gestiona eventos propios y colaborativos asociados a tu chapter."
           actions={
             <Button asChild className="shrink-0">
             <Link href="/chapter/events/new">
@@ -103,7 +103,7 @@ export default async function ChapterEventsPage() {
             </div>
             <h2 className="text-xl font-semibold">Todavia no hay eventos</h2>
             <p className="mx-auto mt-2 mb-6 max-w-md text-sm text-muted-foreground">
-              Crea el primer evento del capitulo cuando tu equipo este listo para recibir registros o postulaciones.
+              Crea el primer evento del chapter cuando tu equipo este listo para recibir registros o postulaciones.
             </p>
             <Button asChild>
               <Link href="/chapter/events/new">

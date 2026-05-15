@@ -165,9 +165,9 @@ export default function Stepper({
         </StepContentWrapper>
 
         {!isCompleted && (
-          <div className={`px-8 pb-8 ${footerClassName}`}>
+          <div className={`px-4 pb-5 sm:px-8 sm:pb-8 ${footerClassName}`}>
             <div
-              className={`mt-10 flex ${currentStep !== 1 ? "justify-between" : "justify-end"
+              className={`mt-6 flex sm:mt-10 ${currentStep !== 1 ? "justify-between" : "justify-end"
                 }`}
             >
               {currentStep !== 1 && (
@@ -218,7 +218,7 @@ function StepContentWrapper({
     <motion.div
       animate={{ height: isCompleted ? 0 : height }}
       transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
-      style={{ position: 'relative', overflow: 'hidden' }}
+      style={{ position: 'relative', overflow: 'visible' }}
       className={className}
     >
       <AnimatePresence initial={false} mode="sync" custom={direction}>
@@ -345,8 +345,6 @@ function StepIndicator({
       >
         {status === 'complete' ? (
           <CheckIcon className="h-4 w-4 text-background" />
-        ) : status === 'active' ? (
-          <div className="h-3 w-3 rounded-full bg-background" />
         ) : (
           <span className="text-sm">{step}</span>
         )}
@@ -535,9 +533,9 @@ export function FormStepper({
         </StepContentWrapper>
 
         {!isCompleted && (
-          <div className={`px-8 pb-8 ${footerClassName}`}>
+          <div className={`px-4 pb-5 sm:px-8 sm:pb-8 ${footerClassName}`}>
             <div
-              className={`mt-10 flex ${currentStep !== 1 ? "justify-between" : "justify-end"
+              className={`mt-6 flex sm:mt-10 ${currentStep !== 1 ? "justify-between" : "justify-end"
                 }`}
             >
               {currentStep !== 1 && (

@@ -319,4 +319,34 @@ describe('auth recruiter access helpers', () => {
 
     expect(result).toEqual({ allowed: false, reason: 'inactive' })
   })
+
+  it('denies expired recruiter access', async () => {
+    const { mockSupabase, tableMocks } = buildMockSupabase()
+    tableMocks.recruiter_access.maybeSingle.mockResolvedValue({
+      data: {
+        id: 'access-1',
+        is_active: true,
+        revoked_at: null,
+        invite_expires_at: '2026-01-01T00:00:00.000Z',
+        Company: [],
+      },
+      error: null,
+    })
+
+    const result = await resolveRecruiterAccess(mockSupabase, 'recruiter-1')
+
+    expect(result).toEqual({ allowed: false, reason: 'expired' })
+  })
+
+  it('denies recruiter access when the access query fails', async () => {
+    const { mockSupabase, tableMocks } = buildMockSupabase()
+    tableMocks.recruiter_access.maybeSingle.mockResolvedValue({
+      data: null,
+      error: { message: 'DB error' },
+    })
+
+    const result = await resolveRecruiterAccess(mockSupabase, 'recruiter-1')
+
+    expect(result).toEqual({ allowed: false, reason: 'error' })
+  })
 })

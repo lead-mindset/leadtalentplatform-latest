@@ -64,7 +64,7 @@ export default async function ChapterCheckinPage({
   const counter = selectedEvent ? await getCheckInCounter(selectedEvent.id) : null
 
   return (
-    <MainContainer className="py-8 space-y-8">
+    <MainContainer className="w-full max-w-full py-8 space-y-8">
       <Breadcrumb
         items={[
           { label: 'Resumen', href: '/chapter' },
@@ -73,12 +73,12 @@ export default async function ChapterCheckinPage({
       />
 
       <PageHeader
-        eyebrow="Herramientas del capitulo"
+        eyebrow="Herramientas del chapter"
         title="Check-in"
         description="Escanea codigos QR, busca asistentes o pega un token para el evento seleccionado."
         actions={
           <Button asChild variant="outline">
-          <Link href="/chapter/events">Eventos del capitulo</Link>
+          <Link href="/chapter/events">Eventos del chapter</Link>
         </Button>
         }
       />
@@ -109,19 +109,19 @@ export default async function ChapterCheckinPage({
               <div className="rounded-lg border bg-card p-4">
                 <h3 className="font-semibold">Selector de evento</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Cambia rapidamente si estas operando varios eventos del capitulo.
+                  Cambia rapidamente si estas operando varios eventos del chapter.
                 </p>
               </div>
               <div className="divide-y overflow-hidden rounded-lg border bg-card">
                 {upcomingOrLive.slice(0, 8).map((event) => (
                   <div key={event.id} className="p-3">
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="min-w-0">
                         <p className="truncate font-medium">{event.title}</p>
                         <p className="mt-1 text-xs text-muted-foreground">{formatDate(event.start_at)}</p>
                         <p className="text-xs text-muted-foreground">{event._count.registrations} registrados</p>
                       </div>
-                      <Button asChild size="sm" variant={event.id === selectedEvent.id ? 'default' : 'outline'}>
+                      <Button asChild size="sm" variant={event.id === selectedEvent.id ? 'default' : 'outline'} className="w-full sm:w-auto">
                         <Link href={`/chapter/checkin?eventId=${event.id}`}>
                           {event.id === selectedEvent.id ? 'En uso' : 'Usar'}
                         </Link>
