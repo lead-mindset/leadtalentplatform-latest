@@ -32,7 +32,6 @@ export type UpdateProfileParams = {
   portfolioUrl?: string | null;
   consentRecruiterVisibility: boolean;
   emailNotificationsEnabled: boolean;
-  chapter_id: string;
   resumePdf?: File;
 };
 
@@ -108,15 +107,8 @@ export const StudentService = {
 
     if (profileError) throw profileError;
 
-    // 3. Create explicit chapter application
-    const membershipResult = await ChapterMembershipService.applyToChapter(supabase, {
-      userId: params.userId,
-      chapterId: params.chapter_id,
-    });
-
-    if (!membershipResult.success) throw new Error(membershipResult.error);
-
-    // 4. Create newsletter preferences when explicitly opted in.
+    // 3. Create global newsletter preferences when explicitly opted in.
+    // Chapter-scoped subscriptions belong to onboarding/application flows, not profile edits.
     if (params.emailNotificationsEnabled) {
       const globalResult = await NewsletterSubscriptionService.subscribeGlobal(supabase, {
         userId: params.userId,
@@ -124,17 +116,9 @@ export const StudentService = {
       });
 
       if (!globalResult.success) throw new Error(globalResult.error);
-
-      const chapterResult = await NewsletterSubscriptionService.subscribeToChapter(supabase, {
-        userId: params.userId,
-        chapterId: params.chapter_id,
-        source: 'onboarding',
-      });
-
-      if (!chapterResult.success) throw new Error(chapterResult.error);
     }
 
-    // 5. Handle Resume if provided
+    // 4. Handle Resume if provided
     if (params.resumePdf) {
       await this.uploadResume(supabase, params.userId, params.resumePdf);
     }

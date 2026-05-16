@@ -18,6 +18,7 @@ import { useTranslations } from 'next-intl'
 import { useTranslatedSkills, useTranslatedChapters } from '@/lib/use-translated-options'
 import { useTranslatedGender } from '@/lib/use-translated-options'
 import type { SubmitHandler } from 'react-hook-form'
+import { Badge } from '@/components/ui/badge'
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -47,6 +48,18 @@ export default function ProfileUpdateForm({
 
   const [isSaving, setIsSaving] = useState(false)
   const router = useRouter()
+  const chapterLabel =
+    translatedChapters.find((option) => option.value === initialData.lead_chapter)?.label ||
+    initialData.lead_chapter ||
+    'Sin capitulo asignado'
+  const membershipStatusLabels: Record<NonNullable<ProfileData['approvalStatus']>, string> = {
+    pending: 'Pendiente de revision',
+    approved: 'Miembro aprobado',
+    rejected: 'Solicitud rechazada',
+    alumni: 'Alumni',
+    inactive: 'Inactivo',
+  }
+  const membershipStatus = initialData.approvalStatus ?? 'pending'
 
   const profileUpdateSchema = createProfileUpdateSchema(tValidation)
   type ProfileUpdateInput = z.input<typeof profileUpdateSchema>
@@ -62,7 +75,6 @@ export default function ProfileUpdateForm({
       gender: initialData?.gender || undefined,
       graduation_year: initialData?.graduation_year || 0,
       skills: initialData?.skills || [],
-      lead_chapter: initialData?.lead_chapter || '',
       linkedin_url: initialData?.linkedin_url || '',
       portfolio_url: initialData?.portfolio_url || '',
       resume_pdf: undefined,
@@ -87,7 +99,6 @@ export default function ProfileUpdateForm({
       gender: initialData?.gender || undefined,
       graduation_year: initialData?.graduation_year || 0,
       skills: initialData?.skills || [],
-      lead_chapter: initialData?.lead_chapter || '',
       linkedin_url: initialData?.linkedin_url || '',
       portfolio_url: initialData?.portfolio_url || '',
       resume_pdf: undefined,
@@ -104,7 +115,6 @@ export default function ProfileUpdateForm({
 
       formData.append("full_name", data.full_name)
       formData.append("phone", data.phone)
-      formData.append("lead_chapter", data.lead_chapter || "")
       formData.append("career", data.career)
       formData.append("graduation_year", String(data.graduation_year || 0))
       formData.append("skills", JSON.stringify(data.skills))
@@ -219,44 +229,23 @@ export default function ProfileUpdateForm({
               )}
             />
 
-            <Controller
-              control={control}
-              name="lead_chapter"
-              render={({ field }) => (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">
+            <div className="rounded-lg border border-border/60 bg-muted/30 p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-foreground">
                     {t('personalInfo.leadChapter')}
-                  </label>
-
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  >
-                    <SelectTrigger className="h-11" aria-label={t('personalInfo.leadChapter')}>
-                      <SelectValue placeholder={t('personalInfo.selectChapter')} />
-                    </SelectTrigger>
-
-                    <SelectContent>
-                      {translatedChapters.map((option) => (
-                        <SelectItem
-                          key={option.value}
-                          value={option.value}
-                        >
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  {errors.lead_chapter && (
-                    <p className="flex items-center gap-1.5 text-sm text-destructive">
-                      <X className="h-3.5 w-3.5" />
-                      {errors.lead_chapter.message}
-                    </p>
-                  )}
+                  </p>
+                  <p className="text-base font-semibold text-foreground">{chapterLabel}</p>
+                  <p className="text-xs leading-relaxed text-muted-foreground">
+                    Tu capitulo y estado de membresia se gestionan mediante revision del equipo.
+                    Si necesitas corregirlo, contacta a tu chapter leader o a operaciones.
+                  </p>
                 </div>
-              )}
-            />
+                <Badge variant={membershipStatus === 'approved' ? 'success' : 'secondary'}>
+                  {membershipStatusLabels[membershipStatus]}
+                </Badge>
+              </div>
+            </div>
           </div>
         </div>
 

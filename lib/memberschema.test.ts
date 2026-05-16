@@ -84,7 +84,6 @@ describe('member schema URL helpers', () => {
   it('allows clearing portfolio URL in the profile update schema', () => {
     const parsed = createProfileUpdateSchema(t).safeParse({
       ...validProfileData,
-      lead_chapter: 'leaduni',
       portfolio_url: '',
     })
 
@@ -97,7 +96,6 @@ describe('member schema URL helpers', () => {
   it('rejects invalid portfolio URLs in the profile update schema', () => {
     const parsed = createProfileUpdateSchema(t).safeParse({
       ...validProfileData,
-      lead_chapter: 'leaduni',
       portfolio_url: 'not a url',
     })
 
@@ -112,5 +110,18 @@ describe('member schema URL helpers', () => {
         }),
       ])
     )
+  })
+
+  it('does not include chapter changes in the profile update schema', () => {
+    const parsed = createProfileUpdateSchema(t).safeParse({
+      ...validProfileData,
+      lead_chapter: 'leadutec',
+      portfolio_url: '',
+    })
+
+    expect(parsed.success).toBe(true)
+    if (!parsed.success) return
+
+    expect(parsed.data).not.toHaveProperty('lead_chapter')
   })
 })

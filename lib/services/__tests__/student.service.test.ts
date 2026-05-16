@@ -42,6 +42,7 @@ describe('StudentService', () => {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         single: vi.fn(),
+        update: vi.fn(),
         upsert: vi.fn(),
         maybeSingle: vi.fn().mockResolvedValue({ data: { user_id: 'user-123' }, error: null }),
       },
@@ -50,6 +51,7 @@ describe('StudentService', () => {
         eq: vi.fn().mockReturnThis(),
         match: vi.fn().mockReturnThis(),
         single: vi.fn(),
+        update: vi.fn(),
         upsert: vi.fn(),
         insert: vi.fn().mockResolvedValue({ error: null }),
         maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
@@ -153,7 +155,6 @@ describe('StudentService', () => {
       portfolioUrl: 'https://portfolio.example.com/janedoe',
       consentRecruiterVisibility: true,
       emailNotificationsEnabled: true,
-      chapter_id: 'chapter-1',
     };
 
     it('should update user table AND person_profile table', async () => {
@@ -163,8 +164,6 @@ describe('StudentService', () => {
       tableMocks.user.eq.mockResolvedValue({ error: null });
       // 2. Profile upsert succeeds
       tableMocks.person_profile.upsert.mockResolvedValue({ error: null });
-      // 3. Membership upsert succeeds
-      tableMocks.chapter_membership.upsert.mockResolvedValue({ error: null });
       tableMocks.newsletter_subscription.maybeSingle.mockResolvedValue({ data: null, error: null });
       tableMocks.newsletter_subscription.insert.mockResolvedValue({ error: null });
 
@@ -198,14 +197,10 @@ describe('StudentService', () => {
         { onConflict: 'user_id' }
       );
 
-      // Verify chapter_membership application was inserted
-      expect(mockSupabase.from).toHaveBeenCalledWith('chapter_membership');
-      expect(tableMocks.chapter_membership.insert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          user_id: 'user-123',
-          chapter_id: 'chapter-1',
-        })
-      );
+      // Profile edits must not create or modify chapter membership.
+      expect(tableMocks.chapter_membership.insert).not.toHaveBeenCalled();
+      expect(tableMocks.chapter_membership.upsert).not.toHaveBeenCalled();
+      expect(tableMocks.chapter_membership.update).not.toHaveBeenCalled();
     });
 
     it('should throw when user update fails', async () => {
@@ -242,7 +237,6 @@ describe('StudentService', () => {
 
       tableMocks.user.eq.mockResolvedValue({ error: null });
       tableMocks.person_profile.upsert.mockResolvedValue({ error: null });
-      tableMocks.chapter_membership.upsert.mockResolvedValue({ error: null });
       tableMocks.newsletter_subscription.maybeSingle.mockResolvedValue({ data: null, error: null });
       tableMocks.newsletter_subscription.insert.mockResolvedValue({ error: null });
 
@@ -259,15 +253,8 @@ describe('StudentService', () => {
           status: 'active',
         })
       );
-      expect(tableMocks.newsletter_subscription.insert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          user_id: 'user-123',
-          scope: 'chapter',
-          chapter_id: 'chapter-1',
-          source: 'onboarding',
-          status: 'active',
-        })
-      );
+      expect(tableMocks.newsletter_subscription.insert).toHaveBeenCalledTimes(1);
+      expect(tableMocks.chapter_membership.insert).not.toHaveBeenCalled();
     });
 
     it('should skip newsletter subscriptions when opted out', async () => {
@@ -275,7 +262,6 @@ describe('StudentService', () => {
 
       tableMocks.user.eq.mockResolvedValue({ error: null });
       tableMocks.person_profile.upsert.mockResolvedValue({ error: null });
-      tableMocks.chapter_membership.upsert.mockResolvedValue({ error: null });
 
       const result = await StudentService.updateProfile(mockSupabase as unknown as SupabaseClient, {
         ...baseParams,
@@ -291,7 +277,6 @@ describe('StudentService', () => {
 
       tableMocks.user.eq.mockResolvedValue({ error: null });
       tableMocks.person_profile.upsert.mockResolvedValue({ error: null });
-      tableMocks.chapter_membership.upsert.mockResolvedValue({ error: null });
 
       const result = await StudentService.updateProfile(mockSupabase as unknown as SupabaseClient, {
         ...baseParams,
@@ -315,7 +300,6 @@ describe('StudentService', () => {
 
       tableMocks.user.eq.mockResolvedValue({ error: null });
       tableMocks.person_profile.upsert.mockResolvedValue({ error: null });
-      tableMocks.chapter_membership.upsert.mockResolvedValue({ error: null });
       tableMocks.newsletter_subscription.maybeSingle.mockResolvedValue({ data: null, error: null });
       tableMocks.newsletter_subscription.insert.mockResolvedValue({ error: null });
       mockSupabase.storage.upload.mockResolvedValue({ error: null });

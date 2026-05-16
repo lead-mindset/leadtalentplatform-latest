@@ -143,7 +143,7 @@ export function createFullMemberSchemaFrontend(t: Translator) {
 }
 
 export function createProfileUpdateSchema(t: Translator) {
-  return createMemberProfileSchema(t).extend({
+  return createBaseProfileSchema(t).extend({
     portfolio_url: optionalUrl(t).optional(),
     resume_pdf: resumeSchema(t).optional(),
 
