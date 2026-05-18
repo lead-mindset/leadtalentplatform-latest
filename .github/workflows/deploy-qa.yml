@@ -37,3 +37,13 @@ jobs:
           QA_DB_PASSWORD: ${{ secrets.QA_DB_PASSWORD }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.QA_SUPABASE_SERVICE_ROLE_KEY }}
         if: vars.QA_DB_HOST != ''
+
+      - name: Seed QA data
+        run: |
+          PGPASSWORD="${QA_DB_PASSWORD}" psql -h "${QA_DB_HOST}" -p "${QA_DB_PORT}" -U "${QA_DB_USER}" -d postgres -f supabase/qa.seed.sql
+        env:
+          QA_DB_HOST: ${{ vars.QA_DB_HOST }}
+          QA_DB_PORT: ${{ vars.QA_DB_PORT }}
+          QA_DB_USER: ${{ vars.QA_DB_USER }}
+          QA_DB_PASSWORD: ${{ secrets.QA_DB_PASSWORD }}
+        if: vars.QA_DB_HOST != ''
