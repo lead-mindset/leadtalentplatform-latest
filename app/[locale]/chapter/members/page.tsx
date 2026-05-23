@@ -48,37 +48,6 @@ function getVisibleStatuses(permissions: ChapterMemberPermissionFlags): MemberFi
   return statuses
 }
 
-function SummaryBlock({
-  label,
-  value,
-  helper,
-  variant = 'default',
-}: {
-  label: string
-  value: number
-  helper: string
-  variant?: 'default' | 'warning' | 'success' | 'destructive' | 'neutral'
-}) {
-  const valueClass =
-    variant === 'warning'
-      ? 'text-warning'
-      : variant === 'success'
-      ? 'text-success'
-      : variant === 'destructive'
-      ? 'text-destructive'
-      : variant === 'neutral'
-      ? 'text-muted-foreground'
-      : 'text-foreground'
-
-  return (
-    <div className="rounded-lg border bg-card p-4">
-      <p className="text-sm font-medium text-muted-foreground">{label}</p>
-      <p className={`mt-3 text-2xl font-semibold tracking-tight ${valueClass}`}>{value}</p>
-      <p className="mt-1 text-xs text-muted-foreground">{helper}</p>
-    </div>
-  )
-}
-
 export default async function ChapterMembersPage({
   searchParams,
 }: {
@@ -151,7 +120,7 @@ export default async function ChapterMembersPage({
   const displayMembers = filterMembers(allMembers, safeStatus)
 
   return (
-    <MainContainer className="py-8 space-y-8">
+    <MainContainer className="py-8 space-y-6">
       <Breadcrumb
         items={[
           { label: 'Resumen', href: '/chapter' },
@@ -163,56 +132,7 @@ export default async function ChapterMembersPage({
         eyebrow="Herramientas del capitulo"
         title="Miembros del capitulo"
         badge={<Badge variant="outline">{chapter.name}</Badge>}
-        description={`Revisa postulantes pendientes y gestiona el estado de membresia para ${chapter.university}.`}
       />
-
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        {visibleStatuses.includes('pending') ? (
-          <SummaryBlock
-            label="Pendientes"
-            value={stats.pending}
-            helper="Necesitan revision"
-            variant="warning"
-          />
-        ) : null}
-        {visibleStatuses.includes('active') ? (
-          <SummaryBlock
-            label="Aprobados"
-            value={stats.approved}
-            helper="Miembros activos del capitulo"
-            variant="success"
-          />
-        ) : null}
-        {visibleStatuses.includes('rejected') ? (
-          <SummaryBlock
-            label="Rechazados"
-            value={stats.rejected}
-            helper="Postulaciones rechazadas"
-            variant="destructive"
-          />
-        ) : null}
-        {visibleStatuses.includes('inactive') ? (
-          <SummaryBlock
-            label="Inactivos"
-            value={stats.inactive}
-            helper="Membresias revocadas"
-            variant="neutral"
-          />
-        ) : null}
-        {visibleStatuses.includes('alumni') ? (
-          <SummaryBlock
-            label="Alumni"
-            value={stats.alumni}
-            helper="Exmiembros"
-            variant="neutral"
-          />
-        ) : null}
-        <SummaryBlock
-          label="Total"
-          value={stats.total}
-          helper="Todos los registros"
-        />
-      </div>
 
       <div className="space-y-4">
         <MembersTabs currentStatus={safeStatus} counts={counts} visibleStatuses={visibleStatuses} />

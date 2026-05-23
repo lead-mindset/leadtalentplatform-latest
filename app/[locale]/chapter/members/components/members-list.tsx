@@ -138,22 +138,30 @@ export function MembersList({
         </Alert>
       ) : null}
 
-      <div className="divide-y overflow-hidden rounded-lg border bg-card">
-        {members.map((member) => (
-          <MemberCard
-            key={member.id}
-            member={member}
-            showSelector={
-              permissions.canManageApplications &&
-              status === 'pending' &&
-              member.chapter_membership?.status === 'pending' &&
-              Boolean(member.person_profile)
-            }
-            selected={selectedUserIds.includes(member.id)}
-            onSelectChange={(checked) => onToggle(member.id, checked)}
-            permissions={permissions}
-          />
-        ))}
+      <div className="overflow-hidden rounded-lg border bg-card">
+        <div className="hidden min-w-0 border-b bg-muted/10 px-4 py-2 text-[11px] font-medium uppercase text-muted-foreground min-[1100px]:grid min-[1100px]:grid-cols-[minmax(9.5rem,0.9fr)_minmax(13rem,1.35fr)_minmax(10rem,0.8fr)] min-[1100px]:gap-4">
+          <span>Miembro</span>
+          <span>Perfil</span>
+          <span className="text-right">Rol</span>
+        </div>
+
+        <div className="divide-y">
+          {members.map((member) => (
+            <MemberCard
+              key={member.id}
+              member={member}
+              showSelector={
+                permissions.canManageApplications &&
+                status === 'pending' &&
+                member.chapter_membership?.status === 'pending' &&
+                Boolean(member.person_profile)
+              }
+              selected={selectedUserIds.includes(member.id)}
+              onSelectChange={(checked) => onToggle(member.id, checked)}
+              permissions={permissions}
+            />
+          ))}
+        </div>
       </div>
     </div>
   )

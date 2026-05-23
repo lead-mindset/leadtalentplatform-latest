@@ -41,7 +41,7 @@ export function MembersTabs({
   return (
     <Tabs value={currentStatus} onValueChange={handleTabChange} className="w-full">
       <div className="-mx-1 overflow-x-auto px-1 pb-1 sm:mx-0 sm:overflow-visible sm:px-0 sm:pb-0">
-        <TabsList className="flex min-w-max justify-start gap-1 sm:grid sm:w-full sm:min-w-0 sm:grid-cols-5 lg:w-auto">
+        <TabsList className="flex min-w-max justify-start gap-1 sm:w-full sm:min-w-0">
           {visibleStatuses.map((status) => (
             <TabsTrigger key={status} value={status} className="flex-none gap-2 sm:flex-1">
               {tabLabels[status]}
