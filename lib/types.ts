@@ -103,6 +103,7 @@ export type ChapterRow = Database["public"]["Tables"]["chapter"]["Row"];
 
 export type PersonProfileRow = Database["public"]["Tables"]["person_profile"]["Row"];
 export type ChapterMembershipRow = Database["public"]["Tables"]["chapter_membership"]["Row"];
+export type ChapterRoleAssignmentRow = Database["public"]["Tables"]["chapter_role_assignment"]["Row"];
 export type LeadIdentityRow = Database["public"]["Tables"]["lead_identity"]["Row"];
 export type IdentityType = Database["public"]["Enums"]["identity_type"];
 export type IdentityStatus = Database["public"]["Enums"]["identity_status"];
@@ -146,12 +147,27 @@ export type UserWithChapter = UserRow & {
   chapter: ChapterRow | null
 };
 
+export type ActiveChapterRoleAssignment = Pick<
+  ChapterRoleAssignmentRow,
+  | 'id'
+  | 'chapter_id'
+  | 'role_level'
+  | 'functional_area'
+  | 'display_title'
+  | 'status'
+  | 'is_primary'
+  | 'starts_at'
+  | 'ends_at'
+  | 'assigned_by_id'
+>
+
 export type MemberWithProfile = UserRow & {
   person_profile: PersonProfileRow | null;
   chapter_membership: Pick<
     ChapterMembershipRow,
     'chapter_id' | 'status' | 'position' | 'member_id' | 'joined_at'
   > | null;
+  chapter_role_assignment: ActiveChapterRoleAssignment | null;
   chapter: ChapterRow | null;
 };
 
@@ -334,6 +350,7 @@ export type UserWithFullProfile = UserRow & {
   > & {
     chapter: ChapterRow | null
   }) | null
+  chapter_role_assignment: ActiveChapterRoleAssignment | null
 }
 
 export type EventChapterWithChapter = EventChapterRow & {

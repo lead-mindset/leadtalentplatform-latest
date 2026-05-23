@@ -7,7 +7,8 @@ INSERT INTO "public"."chapter" ("id", "name", "university", "city", "region", "c
 -- Clean up existing persona users if running seed multiple times
 DELETE FROM auth.users WHERE email IN (
   'participant@test.com', 'member@test.com', 'editor@test.com',
-  'admin@test.com', 'staff@test.com', 'recruiter@test.com', 'alumni@test.com'
+  'admin@test.com', 'staff@test.com', 'recruiter@test.com', 'alumni@test.com',
+  'president@test.com', 'vp@test.com', 'eboard@test.com'
 );
 
 -- Insert Users into auth.users (Requires Supabase privileges to inject into auth schema)
@@ -19,7 +20,10 @@ VALUES
   ('44444444-4444-4444-4444-444444444444', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin@test.com', '$2b$10$d04rJdM2Gfm5OHSN2PpRzeYiXF00LKzkV//rhHDPW2CI07z/t8Wr.', NOW(), NOW(), NOW(), '', '', '', ''),
   ('55555555-5555-5555-5555-555555555555', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'staff@test.com', '$2b$10$d04rJdM2Gfm5OHSN2PpRzeYiXF00LKzkV//rhHDPW2CI07z/t8Wr.', NOW(), NOW(), NOW(), '', '', '', ''),
   ('66666666-6666-6666-6666-666666666666', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'recruiter@test.com', '$2b$10$d04rJdM2Gfm5OHSN2PpRzeYiXF00LKzkV//rhHDPW2CI07z/t8Wr.', NOW(), NOW(), NOW(), '', '', '', ''),
-  ('77777777-7777-7777-7777-777777777777', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'alumni@test.com', '$2b$10$d04rJdM2Gfm5OHSN2PpRzeYiXF00LKzkV//rhHDPW2CI07z/t8Wr.', NOW(), NOW(), NOW(), '', '', '', '');
+  ('77777777-7777-7777-7777-777777777777', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'alumni@test.com', '$2b$10$d04rJdM2Gfm5OHSN2PpRzeYiXF00LKzkV//rhHDPW2CI07z/t8Wr.', NOW(), NOW(), NOW(), '', '', '', ''),
+  ('81000000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'president@test.com', '$2b$10$d04rJdM2Gfm5OHSN2PpRzeYiXF00LKzkV//rhHDPW2CI07z/t8Wr.', NOW(), NOW(), NOW(), '', '', '', ''),
+  ('81000000-0000-4000-8000-000000000002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'vp@test.com', '$2b$10$d04rJdM2Gfm5OHSN2PpRzeYiXF00LKzkV//rhHDPW2CI07z/t8Wr.', NOW(), NOW(), NOW(), '', '', '', ''),
+  ('81000000-0000-4000-8000-000000000003', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'eboard@test.com', '$2b$10$d04rJdM2Gfm5OHSN2PpRzeYiXF00LKzkV//rhHDPW2CI07z/t8Wr.', NOW(), NOW(), NOW(), '', '', '', '');
 
 -- Align app-account rows created by public.handle_new_user().
 UPDATE public."user" SET name = 'Test Participant', role = 'member' WHERE id = '11111111-1111-1111-1111-111111111111';
@@ -29,6 +33,9 @@ UPDATE public."user" SET name = 'Test Admin', role = 'admin' WHERE id = '4444444
 UPDATE public."user" SET name = 'Test Staff', role = 'admin' WHERE id = '55555555-5555-5555-5555-555555555555';
 UPDATE public."user" SET name = 'Test Recruiter', role = 'recruiter' WHERE id = '66666666-6666-6666-6666-666666666666';
 UPDATE public."user" SET name = 'Test Alumni', role = 'member' WHERE id = '77777777-7777-7777-7777-777777777777';
+UPDATE public."user" SET name = 'Test President', role = 'member' WHERE id = '81000000-0000-4000-8000-000000000001';
+UPDATE public."user" SET name = 'Test Vice President', role = 'member' WHERE id = '81000000-0000-4000-8000-000000000002';
+UPDATE public."user" SET name = 'Test Eboard', role = 'member' WHERE id = '81000000-0000-4000-8000-000000000003';
 
 -- Insert Person Profiles (using user_id)
 INSERT INTO public.person_profile (
@@ -49,7 +56,10 @@ INSERT INTO public.person_profile (
   ('44444444-4444-4444-4444-444444444444', '44444444-4444-4444-4444-444444444444', 'LEAD Peru', 'Platform administration', null, 'https://linkedin.com/in/test-admin', null, ARRAY['Governance', 'Operations'], 'prefer_not_to_say', false),
   ('55555555-5555-5555-5555-555555555555', '55555555-5555-5555-5555-555555555555', 'LEAD Peru', 'Program operations', null, 'https://linkedin.com/in/test-staff', null, ARRAY['Programs', 'Community'], 'prefer_not_to_say', false),
   ('66666666-6666-6666-6666-666666666666', '66666666-6666-6666-6666-666666666666', 'Test Company', 'Recruiting', null, 'https://linkedin.com/in/test-recruiter', null, ARRAY['Hiring', 'Talent'], 'prefer_not_to_say', false),
-  ('77777777-7777-7777-7777-777777777777', '77777777-7777-7777-7777-777777777777', 'Universidad Nacional de Ingenieria', 'Finance', 2024, 'https://linkedin.com/in/test-alumni', 'https://test-alumni.dev', ARRAY['Finance', 'Mentorship'], 'woman', true);
+  ('77777777-7777-7777-7777-777777777777', '77777777-7777-7777-7777-777777777777', 'Universidad Nacional de Ingenieria', 'Finance', 2024, 'https://linkedin.com/in/test-alumni', 'https://test-alumni.dev', ARRAY['Finance', 'Mentorship'], 'woman', true),
+  ('81000000-0000-4000-8000-000000000001', '81000000-0000-4000-8000-000000000001', 'Universidad Nacional de Ingenieria', 'Industrial Engineering', 2026, 'https://linkedin.com/in/test-president', 'https://test-president.dev', ARRAY['Leadership', 'Strategy'], 'woman', true),
+  ('81000000-0000-4000-8000-000000000002', '81000000-0000-4000-8000-000000000002', 'Universidad Nacional de Ingenieria', 'Computer Science', 2026, 'https://linkedin.com/in/test-vp', 'https://test-vp.dev', ARRAY['Operations', 'Events'], 'man', true),
+  ('81000000-0000-4000-8000-000000000003', '81000000-0000-4000-8000-000000000003', 'Universidad Nacional de Ingenieria', 'Marketing', 2027, 'https://linkedin.com/in/test-eboard', 'https://test-eboard.dev', ARRAY['Marketing', 'Community'], 'prefer_not_to_say', true);
 
 -- Insert Chapter Memberships (using the layered membership model)
 INSERT INTO public.chapter_membership (
@@ -63,7 +73,10 @@ INSERT INTO public.chapter_membership (
 ) VALUES
   ('22222222-2222-2222-2222-222222222222', 'leaduni', 'member', 'approved', '44444444-4444-4444-4444-444444444444', 'LEAD-UNI-0001', NOW() - INTERVAL '180 days'),
   ('33333333-3333-3333-3333-333333333333', 'leaduni', 'editor', 'approved', '44444444-4444-4444-4444-444444444444', 'LEAD-UNI-0002', NOW() - INTERVAL '210 days'),
-  ('77777777-7777-7777-7777-777777777777', 'leaduni', 'member', 'alumni', '55555555-5555-5555-5555-555555555555', 'LEAD-UNI-0003', NOW() - INTERVAL '540 days');
+  ('77777777-7777-7777-7777-777777777777', 'leaduni', 'member', 'alumni', '55555555-5555-5555-5555-555555555555', 'LEAD-UNI-0003', NOW() - INTERVAL '540 days'),
+  ('81000000-0000-4000-8000-000000000001', 'leaduni', 'member', 'approved', '44444444-4444-4444-4444-444444444444', 'LEAD-UNI-0101', NOW() - INTERVAL '240 days'),
+  ('81000000-0000-4000-8000-000000000002', 'leaduni', 'member', 'approved', '44444444-4444-4444-4444-444444444444', 'LEAD-UNI-0102', NOW() - INTERVAL '230 days'),
+  ('81000000-0000-4000-8000-000000000003', 'leaduni', 'member', 'approved', '44444444-4444-4444-4444-444444444444', 'LEAD-UNI-0103', NOW() - INTERVAL '220 days');
 
 -- Insert Lead Identities (Global and membership-derived roles)
 INSERT INTO public.lead_identity (user_id, identity_type, chapter_id, issued_by_id, issued_at) VALUES
@@ -71,7 +84,234 @@ INSERT INTO public.lead_identity (user_id, identity_type, chapter_id, issued_by_
   ('33333333-3333-3333-3333-333333333333', 'chapter_editor', 'leaduni', '44444444-4444-4444-4444-444444444444', NOW() - INTERVAL '210 days'),
   ('44444444-4444-4444-4444-444444444444', 'founder', null, null, NOW() - INTERVAL '365 days'),
   ('55555555-5555-5555-5555-555555555555', 'staff', null, '44444444-4444-4444-4444-444444444444', NOW() - INTERVAL '300 days'),
-  ('77777777-7777-7777-7777-777777777777', 'alumni', 'leaduni', '55555555-5555-5555-5555-555555555555', NOW() - INTERVAL '540 days');
+  ('77777777-7777-7777-7777-777777777777', 'alumni', 'leaduni', '55555555-5555-5555-5555-555555555555', NOW() - INTERVAL '540 days'),
+  ('81000000-0000-4000-8000-000000000001', 'chapter_member', 'leaduni', '44444444-4444-4444-4444-444444444444', NOW() - INTERVAL '240 days'),
+  ('81000000-0000-4000-8000-000000000002', 'chapter_member', 'leaduni', '44444444-4444-4444-4444-444444444444', NOW() - INTERVAL '230 days'),
+  ('81000000-0000-4000-8000-000000000003', 'chapter_member', 'leaduni', '44444444-4444-4444-4444-444444444444', NOW() - INTERVAL '220 days');
+
+-- Seed explicit chapter-scoped e-board personas for permission regression tests.
+WITH seeded_roles(user_id, role_level, functional_area, display_title) AS (
+  VALUES
+    ('81000000-0000-4000-8000-000000000001'::uuid, 'president', 'general_leadership', 'Presidenta'),
+    ('81000000-0000-4000-8000-000000000002'::uuid, 'vice_president', 'general_leadership', 'Vicepresidente'),
+    ('81000000-0000-4000-8000-000000000003'::uuid, 'director', 'marketing_communications', 'Directora de Marketing')
+),
+seeded_assignments AS (
+  INSERT INTO public.chapter_role_assignment (
+    user_id,
+    chapter_id,
+    role_level,
+    functional_area,
+    display_title,
+    raw_title,
+    is_primary,
+    status,
+    assigned_by_id,
+    source,
+    source_preapproval_id
+  )
+  SELECT
+    sr.user_id,
+    'leaduni',
+    sr.role_level,
+    sr.functional_area,
+    sr.display_title,
+    sr.display_title,
+    true,
+    'active',
+    '44444444-4444-4444-4444-444444444444',
+    'manual_admin',
+    NULL::uuid
+  FROM seeded_roles sr
+  WHERE NOT EXISTS (
+    SELECT 1
+    FROM public.chapter_role_assignment existing
+    WHERE existing.user_id = sr.user_id
+      AND existing.chapter_id = 'leaduni'
+      AND existing.status = 'active'
+  )
+  RETURNING id, user_id, chapter_id, role_level
+),
+active_seeded_assignments AS (
+  SELECT id, user_id, chapter_id, role_level FROM seeded_assignments
+  UNION
+  SELECT cra.id, cra.user_id, cra.chapter_id, cra.role_level
+  FROM public.chapter_role_assignment cra
+  JOIN seeded_roles sr
+    ON sr.user_id = cra.user_id
+  WHERE cra.chapter_id = 'leaduni'
+    AND cra.status = 'active'
+),
+role_permission_keys(role_level, permission_key) AS (
+  VALUES
+    ('president', 'chapter.dashboard.access'),
+    ('president', 'chapter.members.view_approved'),
+    ('president', 'chapter.members.view_alumni'),
+    ('president', 'chapter.members.view_member_contact'),
+    ('president', 'chapter.members.view_applicants'),
+    ('president', 'chapter.members.view_rejected'),
+    ('president', 'chapter.members.view_inactive'),
+    ('president', 'chapter.members.manage_applications'),
+    ('president', 'chapter.members.revoke'),
+    ('president', 'chapter.roles.assign_eboard'),
+    ('president', 'chapter.events.manage'),
+    ('president', 'chapter.events.view_registrations'),
+    ('president', 'chapter.events.check_in'),
+    ('president', 'chapter.events.archive'),
+    ('vice_president', 'chapter.dashboard.access'),
+    ('vice_president', 'chapter.members.view_approved'),
+    ('vice_president', 'chapter.members.view_alumni'),
+    ('vice_president', 'chapter.members.view_member_contact'),
+    ('vice_president', 'chapter.members.view_applicants'),
+    ('vice_president', 'chapter.members.view_rejected'),
+    ('vice_president', 'chapter.members.view_inactive'),
+    ('vice_president', 'chapter.members.manage_applications'),
+    ('vice_president', 'chapter.members.revoke'),
+    ('vice_president', 'chapter.roles.assign_eboard'),
+    ('vice_president', 'chapter.events.manage'),
+    ('vice_president', 'chapter.events.view_registrations'),
+    ('vice_president', 'chapter.events.check_in'),
+    ('vice_president', 'chapter.events.archive'),
+    ('director', 'chapter.dashboard.access'),
+    ('director', 'chapter.members.view_approved'),
+    ('director', 'chapter.members.view_alumni'),
+    ('director', 'chapter.members.view_member_contact'),
+    ('director', 'chapter.events.manage'),
+    ('director', 'chapter.events.view_registrations'),
+    ('director', 'chapter.events.check_in')
+)
+INSERT INTO public.chapter_permission_grant (
+  user_id,
+  chapter_id,
+  permission_key,
+  source,
+  source_role_assignment_id,
+  granted_by_id
+)
+SELECT
+  asa.user_id,
+  asa.chapter_id,
+  rpk.permission_key,
+  'role_template',
+  asa.id,
+  '44444444-4444-4444-4444-444444444444'
+FROM active_seeded_assignments asa
+JOIN role_permission_keys rpk
+  ON rpk.role_level = asa.role_level
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM public.chapter_permission_grant existing
+  WHERE existing.user_id = asa.user_id
+    AND existing.chapter_id = asa.chapter_id
+    AND existing.permission_key = rpk.permission_key
+    AND existing.revoked_at IS NULL
+);
+
+-- Keep the seeded legacy editor compatible with the chapter-scoped role model.
+WITH legacy_seed_editor AS (
+  SELECT
+    u.id AS user_id,
+    cm.chapter_id,
+    cm.approved_by_id
+  FROM public."user" u
+  JOIN public.chapter_membership cm
+    ON cm.user_id = u.id
+   AND cm.status = 'approved'
+  WHERE u.email = 'editor@test.com'
+),
+inserted_assignment AS (
+  INSERT INTO public.chapter_role_assignment (
+    user_id,
+    chapter_id,
+    role_level,
+    functional_area,
+    display_title,
+    raw_title,
+    is_primary,
+    status,
+    assigned_by_id,
+    source,
+    source_preapproval_id
+  )
+  SELECT
+    lse.user_id,
+    lse.chapter_id,
+    'chief_of_staff',
+    'strategy_operations',
+    'Legacy Chapter Editor',
+    'legacy_editor',
+    true,
+    'active',
+    lse.approved_by_id,
+    'migration',
+    NULL::uuid
+  FROM legacy_seed_editor lse
+  WHERE NOT EXISTS (
+    SELECT 1
+    FROM public.chapter_role_assignment existing
+    WHERE existing.user_id = lse.user_id
+      AND existing.chapter_id = lse.chapter_id
+      AND existing.status = 'active'
+  )
+  RETURNING id, user_id, chapter_id
+),
+legacy_seed_assignment AS (
+  SELECT
+    ia.id,
+    ia.user_id,
+    ia.chapter_id
+  FROM inserted_assignment ia
+  UNION
+  SELECT
+    cra.id,
+    lse.user_id,
+    lse.chapter_id
+  FROM legacy_seed_editor lse
+  JOIN public.chapter_role_assignment cra
+    ON cra.user_id = lse.user_id
+   AND cra.chapter_id = lse.chapter_id
+   AND cra.status = 'active'
+),
+permission_keys(permission_key) AS (
+  VALUES
+    ('chapter.dashboard.access'),
+    ('chapter.members.view_approved'),
+    ('chapter.members.view_alumni'),
+    ('chapter.members.view_member_contact'),
+    ('chapter.members.view_applicants'),
+    ('chapter.members.view_rejected'),
+    ('chapter.members.view_inactive'),
+    ('chapter.members.manage_applications'),
+    ('chapter.events.manage'),
+    ('chapter.events.view_registrations'),
+    ('chapter.events.check_in'),
+    ('chapter.events.archive')
+)
+INSERT INTO public.chapter_permission_grant (
+  user_id,
+  chapter_id,
+  permission_key,
+  source,
+  source_role_assignment_id,
+  granted_by_id
+)
+SELECT DISTINCT
+  lsa.user_id,
+  lsa.chapter_id,
+  pk.permission_key,
+  'migration',
+  lsa.id,
+  NULL::uuid
+FROM legacy_seed_assignment lsa
+CROSS JOIN permission_keys pk
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM public.chapter_permission_grant existing
+  WHERE existing.user_id = lsa.user_id
+    AND existing.chapter_id = lsa.chapter_id
+    AND existing.permission_key = pk.permission_key
+    AND existing.revoked_at IS NULL
+);
 
 -- Insert accepted recruiter scope for recruiter persona.
 INSERT INTO public.company (id, name, created_by_id) VALUES

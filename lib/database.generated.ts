@@ -76,6 +76,64 @@ export type Database = {
         }
         Relationships: []
       }
+      chapter_audit_log: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          chapter_id: string | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          metadata: Json
+          target_user_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          chapter_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          metadata?: Json
+          target_user_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          chapter_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          metadata?: Json
+          target_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chapter_audit_log_actor_user_id_fkey"
+            columns: ["actor_user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_audit_log_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_audit_log_target_user_id_fkey"
+            columns: ["target_user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chapter_membership: {
         Row: {
           approved_by_id: string | null
@@ -119,6 +177,268 @@ export type Database = {
             columns: ["chapter_id"]
             isOneToOne: false
             referencedRelation: "chapter"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chapter_permission_grant: {
+        Row: {
+          chapter_id: string
+          created_at: string
+          granted_at: string
+          granted_by_id: string | null
+          id: string
+          permission_key: string
+          revoke_reason: string | null
+          revoked_at: string | null
+          revoked_by_id: string | null
+          source: string
+          source_role_assignment_id: string | null
+          user_id: string
+        }
+        Insert: {
+          chapter_id: string
+          created_at?: string
+          granted_at?: string
+          granted_by_id?: string | null
+          id?: string
+          permission_key: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by_id?: string | null
+          source: string
+          source_role_assignment_id?: string | null
+          user_id: string
+        }
+        Update: {
+          chapter_id?: string
+          created_at?: string
+          granted_at?: string
+          granted_by_id?: string | null
+          id?: string
+          permission_key?: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by_id?: string | null
+          source?: string
+          source_role_assignment_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chapter_permission_grant_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_permission_grant_granted_by_id_fkey"
+            columns: ["granted_by_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_permission_grant_revoked_by_id_fkey"
+            columns: ["revoked_by_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_permission_grant_source_role_assignment_id_fkey"
+            columns: ["source_role_assignment_id"]
+            isOneToOne: false
+            referencedRelation: "chapter_role_assignment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_permission_grant_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chapter_preapproval: {
+        Row: {
+          chapter_id: string
+          consumed_at: string | null
+          consumed_by_user_id: string | null
+          created_at: string
+          created_by_id: string | null
+          display_title: string | null
+          email: string
+          expires_at: string
+          functional_area: string | null
+          id: string
+          normalized_email: string
+          notes: string | null
+          preapproval_type: string
+          raw_title: string | null
+          revoked_at: string | null
+          revoked_by_id: string | null
+          role_level: string | null
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          chapter_id: string
+          consumed_at?: string | null
+          consumed_by_user_id?: string | null
+          created_at?: string
+          created_by_id?: string | null
+          display_title?: string | null
+          email: string
+          expires_at?: string
+          functional_area?: string | null
+          id?: string
+          normalized_email: string
+          notes?: string | null
+          preapproval_type: string
+          raw_title?: string | null
+          revoked_at?: string | null
+          revoked_by_id?: string | null
+          role_level?: string | null
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          chapter_id?: string
+          consumed_at?: string | null
+          consumed_by_user_id?: string | null
+          created_at?: string
+          created_by_id?: string | null
+          display_title?: string | null
+          email?: string
+          expires_at?: string
+          functional_area?: string | null
+          id?: string
+          normalized_email?: string
+          notes?: string | null
+          preapproval_type?: string
+          raw_title?: string | null
+          revoked_at?: string | null
+          revoked_by_id?: string | null
+          role_level?: string | null
+          source?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chapter_preapproval_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_preapproval_consumed_by_user_id_fkey"
+            columns: ["consumed_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_preapproval_created_by_id_fkey"
+            columns: ["created_by_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_preapproval_revoked_by_id_fkey"
+            columns: ["revoked_by_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chapter_role_assignment: {
+        Row: {
+          assigned_by_id: string | null
+          chapter_id: string
+          created_at: string
+          display_title: string
+          ends_at: string | null
+          functional_area: string
+          id: string
+          is_primary: boolean
+          raw_title: string | null
+          role_level: string
+          source: string
+          source_preapproval_id: string | null
+          starts_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_by_id?: string | null
+          chapter_id: string
+          created_at?: string
+          display_title: string
+          ends_at?: string | null
+          functional_area: string
+          id?: string
+          is_primary?: boolean
+          raw_title?: string | null
+          role_level: string
+          source?: string
+          source_preapproval_id?: string | null
+          starts_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_by_id?: string | null
+          chapter_id?: string
+          created_at?: string
+          display_title?: string
+          ends_at?: string | null
+          functional_area?: string
+          id?: string
+          is_primary?: boolean
+          raw_title?: string | null
+          role_level?: string
+          source?: string
+          source_preapproval_id?: string | null
+          starts_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chapter_role_assignment_assigned_by_id_fkey"
+            columns: ["assigned_by_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_role_assignment_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_role_assignment_source_preapproval_id_fkey"
+            columns: ["source_preapproval_id"]
+            isOneToOne: false
+            referencedRelation: "chapter_preapproval"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_role_assignment_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
             referencedColumns: ["id"]
           },
         ]
@@ -1226,6 +1546,10 @@ export type Database = {
         }
         Returns: Json
       }
+      can_access_event_with_permission: {
+        Args: { check_event_id: string; check_permission_key: string }
+        Returns: boolean
+      }
       check_is_admin: { Args: never; Returns: boolean }
       current_user_role: { Args: never; Returns: string }
       disablelongtransactions: { Args: never; Returns: string }
@@ -1371,6 +1695,10 @@ export type Database = {
       }
       get_user_role: { Args: { user_id: string }; Returns: string }
       gettransactionid: { Args: never; Returns: unknown }
+      has_chapter_permission: {
+        Args: { check_chapter_id: string; check_permission_key: string }
+        Returns: boolean
+      }
       is_admin: { Args: never; Returns: boolean }
       is_chapter_editor: {
         Args: { check_chapter_id: string }
