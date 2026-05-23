@@ -15,6 +15,7 @@ import {
   XCircle,
 } from 'lucide-react'
 import { getChapterById, getChapterMembers } from '@/lib/actions/admin/get-data'
+import { formatLeadDate } from '@/lib/utils/date-format'
 
 export default async function ChapterDetailPage({
   params,
@@ -84,10 +85,7 @@ export default async function ChapterDetailPage({
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {new Date(resolvedChapter.created_at).toLocaleDateString('en-US', {
-                    month: 'short',
-                    year: 'numeric',
-                  })}
+                  {formatLeadDate(resolvedChapter.created_at)}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">Chapter established</p>
               </CardContent>
@@ -109,11 +107,7 @@ export default async function ChapterDetailPage({
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Last Updated</p>
                 <p className="text-sm mt-1">
-                  {new Date(resolvedChapter.updated_at).toLocaleDateString('en-US', {
-                    month: 'long',
-                    day: 'numeric',
-                    year: 'numeric',
-                  })}
+                  {formatLeadDate(resolvedChapter.updated_at)}
                 </p>
               </div>
             </div>

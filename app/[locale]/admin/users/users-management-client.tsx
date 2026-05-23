@@ -42,6 +42,7 @@ import type {
 } from '@/lib/services/admin.service'
 import { getRoleColor } from '@/lib/options'
 import type { Role } from '@/lib/types'
+import { formatLeadDate } from '@/lib/utils/date-format'
 
 type ChapterOption = { id: string; name: string }
 
@@ -399,7 +400,7 @@ export function UsersManagementClient({
                       )}
                     </TableCell>
                     <TableCell className="p-2">{user.chapter_name ?? '—'}</TableCell>
-                    <TableCell className="p-2">{new Date(user.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell className="p-2">{formatLeadDate(user.created_at)}</TableCell>
                     <TableCell className="p-2">{formatProfileStatus(user.profile_status)}</TableCell>
                     <TableCell className="p-2">
                       <div className="flex flex-wrap gap-2">

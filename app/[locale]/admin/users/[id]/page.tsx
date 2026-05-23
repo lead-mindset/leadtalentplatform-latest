@@ -32,16 +32,10 @@ import { AdminChapterRoleCorrectionPanel } from '@/app/[locale]/admin/users/[id]
 import { LeadIdentityManager } from '@/app/[locale]/admin/users/[id]/_components/lead-identity-manager'
 import { RoleManagementPanel } from '@/app/[locale]/admin/users/[id]/_components/role-management-panel'
 import { getRoleColor } from '@/lib/options'
+import { formatLeadDate } from '@/lib/utils/date-format'
 
 function formatDate(value: string | null | undefined) {
-  if (!value) return 'Not set'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'Not set'
-  return date.toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
+  return formatLeadDate(value, 'Not set')
 }
 
 function EmptyState({
