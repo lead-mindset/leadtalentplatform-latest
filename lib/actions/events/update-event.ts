@@ -64,8 +64,8 @@ export async function updateEvent(input: UpdateEventInput): Promise<UpdateEventR
   if ('error' in access) return { error: access.error }
   const { supabase, user, event: existing } = access
 
-  if (user.role === 'editor' && parsed.data.chapter_id !== undefined && parsed.data.chapter_id !== existing.chapter_id) {
-    return { error: 'Editors cannot change chapter' }
+  if (user.role !== 'admin' && parsed.data.chapter_id !== undefined && parsed.data.chapter_id !== existing.chapter_id) {
+    return { error: 'Chapter users cannot change event chapter' }
   }
 
   const d = parsed.data

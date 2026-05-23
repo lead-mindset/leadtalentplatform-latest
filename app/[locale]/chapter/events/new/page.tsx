@@ -1,8 +1,10 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/server'
 import { EventForm } from '../_components/event-form'
 import { requireChapterEditor } from '@/lib/auth'
+import { ChapterPermissionService } from '@/lib/services/chapter-permission.service'
 import type { ChapterRow } from '@/lib/types'
 import { Breadcrumb } from '@/components/ui/breadcrumb'
 import { MainContainer } from '@/components/global/main-container'
@@ -10,7 +12,17 @@ import { Icons } from '@/components/ui/icons'
 
 export default async function NewChapterEventPage() {
   const supabase = await createClient()
-  const { chapter_id } = await requireChapterEditor()
+  const { user, chapter_id } = await requireChapterEditor()
+
+  if (user.role !== 'admin') {
+    if (!chapter_id) redirect('/student')
+    const permission = await ChapterPermissionService.requireChapterPermission(supabase, {
+      userId: user.id,
+      chapterId: chapter_id,
+      permissionKey: 'chapter.events.manage',
+    })
+    if (!permission.success) redirect('/chapter')
+  }
   
   let editorChapter: ChapterRow | null = null
   if (chapter_id) {

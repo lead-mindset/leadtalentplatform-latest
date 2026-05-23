@@ -82,11 +82,13 @@ export function EventForm({
   mode,
   initial,
   editorChapter,
+  canArchiveEvents = false,
   applicationQuestions = EMPTY_APPLICATION_QUESTIONS,
 }: {
   mode: Mode
   initial?: EventRow | null
   editorChapter?: ChapterRow | null
+  canArchiveEvents?: boolean
   applicationQuestions?: EventApplicationQuestionRow[]
 }) {
   const router = useRouter()
@@ -987,14 +989,16 @@ export function EventForm({
         <div className="sticky bottom-6 z-50 mt-12 rounded-lg border bg-card/95 p-4 shadow-lg backdrop-blur-md">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <Button
-                variant="destructive"
-                className="hidden sm:flex"
-                onClick={onDelete}
-                disabled={isPending}
-              >
-                <Trash2 className="w-4 h-4 mr-2" /> Delete
-              </Button>
+              {canArchiveEvents ? (
+                <Button
+                  variant="destructive"
+                  className="hidden sm:flex"
+                  onClick={onDelete}
+                  disabled={isPending}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" /> Delete
+                </Button>
+              ) : null}
               <div className="text-xs text-muted-foreground hidden md:block font-medium">
                 {isAutoSaving ? 'Auto-saving...' : lastSavedAt ? `Last saved at ${lastSavedAt}` : 'All changes saved.'}
               </div>

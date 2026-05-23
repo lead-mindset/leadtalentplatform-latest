@@ -6,7 +6,7 @@ import { MainContainer } from '@/components/global/main-container'
 import { Icons } from '@/components/ui/icons'
 import { CheckinScanner } from '../../_components/checkin-scanner'
 import { getCheckInCounter } from '@/lib/actions/events/checkin'
-import { assertCanManageEvent } from '@/lib/actions/events/access'
+import { assertCanAccessEvent } from '@/lib/actions/events/access'
 
 function CheckInSummary({
   checkedIn,
@@ -41,7 +41,7 @@ export default async function ChapterEventCheckinPage({
   params: Promise<{ id: string; locale: string }>
 }) {
   const { id, locale } = await params
-  const access = await assertCanManageEvent(id)
+  const access = await assertCanAccessEvent(id, 'chapter.events.check_in')
   const event = 'error' in access ? null : access.event
   const counter = event ? await getCheckInCounter(event.id) : null
 

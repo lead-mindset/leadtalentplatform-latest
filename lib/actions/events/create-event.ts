@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { requireChapterEditor } from '@/lib/auth';
 import { EventService } from '@/lib/services/event.service';
 import { EventApplicationService } from '@/lib/services/event-application.service';
+import { ChapterPermissionService } from '@/lib/services/chapter-permission.service';
 import type { EventRow } from '@/lib/types';
 
 const ApplicationQuestionSchema = z.object({
@@ -94,6 +95,13 @@ export async function createEvent(input: CreateEventInput): Promise<CreateEventR
       redirectPath = '/admin/events';
     } else {
       if (!chapter_id) return { error: 'No chapter assigned' };
+      const permission = await ChapterPermissionService.requireChapterPermission(supabase, {
+        userId: user.id,
+        chapterId: chapter_id,
+        permissionKey: 'chapter.events.manage',
+      });
+      if (!permission.success) return { error: permission.error };
+
       targetChapterId = chapter_id;
       redirectPath = '/chapter/events';
     }

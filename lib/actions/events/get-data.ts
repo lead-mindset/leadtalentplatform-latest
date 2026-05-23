@@ -3,9 +3,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { requireAdmin, requireChapterEditor, requireUser } from '@/lib/auth'
 import { EventService } from '@/lib/services/event.service'
-import { assertCanManageEvent } from './access'
+import { ChapterPermissionService, type ChapterPermissionKey } from '@/lib/services/chapter-permission.service'
+import { assertCanAccessEvent } from './access'
 import type {
-  EventRow,
   EventWithDetails,
   RegistrationWithUser,
   Role,
@@ -31,15 +31,65 @@ export async function getEditorChapterId(): Promise<string | null> {
   return chapter_id
 }
 
-export async function getChapterEvents(): Promise<(EventWithDetails & { is_owned_by_chapter: boolean })[]> {
-  const { supabase, chapter_id } = await requireChapterEditor()
+export async function getChapterEvents(
+  requiredPermission: ChapterPermissionKey = 'chapter.events.manage'
+): Promise<(EventWithDetails & { is_owned_by_chapter: boolean })[]> {
+  const { supabase, user, chapter_id } = await requireChapterEditor()
 
   if (!chapter_id) {
     console.error('[getChapterEvents] No chapter assigned')
     return []
   }
 
+  const permission = await ChapterPermissionService.requireChapterPermission(supabase, {
+    userId: user.id,
+    chapterId: chapter_id,
+    permissionKey: requiredPermission,
+  })
+  if (!permission.success) return []
+
   return EventService.getChapterEvents(supabase, chapter_id)
+}
+
+export type ChapterEventPermissionFlags = {
+  canManageEvents: boolean
+  canViewRegistrations: boolean
+  canCheckIn: boolean
+  canArchiveEvents: boolean
+}
+
+export async function getChapterEventPermissionFlags(): Promise<ChapterEventPermissionFlags> {
+  const { supabase, user, chapter_id } = await requireChapterEditor()
+
+  if (user.role === 'admin') {
+    return {
+      canManageEvents: true,
+      canViewRegistrations: true,
+      canCheckIn: true,
+      canArchiveEvents: true,
+    }
+  }
+
+  if (!chapter_id) {
+    return {
+      canManageEvents: false,
+      canViewRegistrations: false,
+      canCheckIn: false,
+      canArchiveEvents: false,
+    }
+  }
+
+  const permissions = await ChapterPermissionService.getChapterPermissionSet(supabase, {
+    userId: user.id,
+    chapterId: chapter_id,
+  })
+
+  return {
+    canManageEvents: permissions.includes('chapter.events.manage'),
+    canViewRegistrations: permissions.includes('chapter.events.view_registrations'),
+    canCheckIn: permissions.includes('chapter.events.check_in'),
+    canArchiveEvents: permissions.includes('chapter.events.archive'),
+  }
 }
 
 export async function getAllEventsAdmin(): Promise<EventWithDetails[]> {
@@ -48,7 +98,7 @@ export async function getAllEventsAdmin(): Promise<EventWithDetails[]> {
 }
 
 export async function getEventRegistrations(eventId: string): Promise<RegistrationWithUser[]> {
-  const access = await assertCanManageEvent(eventId)
+  const access = await assertCanAccessEvent(eventId, 'chapter.events.view_registrations')
   if ('error' in access) return []
   const { supabase } = access
 

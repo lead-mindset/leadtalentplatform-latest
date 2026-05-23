@@ -1,14 +1,13 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
-import { requireChapterEditor } from '@/lib/auth'
 import type { EventRow, ChapterRow, EventApplicationQuestionRow } from '@/lib/types'
 import { EventForm } from '../_components/event-form'
 import { Badge } from '@/components/ui/badge'
 import { Breadcrumb } from '@/components/ui/breadcrumb'
 import { MainContainer } from '@/components/global/main-container'
 import { Icons } from '@/components/ui/icons'
+import { assertCanAccessEvent, assertCanManageEvent } from '@/lib/actions/events/access'
 
 export default async function ChapterEventDetailPage({
   params,
@@ -16,31 +15,40 @@ export default async function ChapterEventDetailPage({
   params: Promise<{ id: string, locale: string }>
 }) {
   const { id, locale } = await params
-  const supabase = await createClient()
-  const { chapter_id } = await requireChapterEditor()
-  
+  const access = await assertCanManageEvent(id)
+  const supabase = 'error' in access ? null : access.supabase
+
+  const { data: event } = supabase
+    ? await supabase
+        .from('event')
+        .select('id, title, description, cover_image, start_at, end_at, location, meeting_url, event_type, capacity, is_published, chapter_id, created_by_id, created_at, updated_at, access_model, application_form_url, location_name, location_address, location_city, location_region, location_latitude, location_longitude')
+        .eq('id', id)
+        .maybeSingle<EventRow>()
+    : { data: null }
+
   let editorChapter: ChapterRow | null = null
-  if (chapter_id) {
+  if (supabase && event?.chapter_id) {
     const { data: chapter } = await supabase
       .from('chapter')
       .select('id, name, university, city, region, created_at, updated_at, instagram_url, latitude, longitude, location_point')
-      .eq('id', chapter_id)
+      .eq('id', event.chapter_id)
       .maybeSingle()
 
     editorChapter = chapter
   }
 
-  const { data: event } = await supabase
-    .from('event')
-    .select('id, title, description, cover_image, start_at, end_at, location, meeting_url, event_type, capacity, is_published, chapter_id, created_by_id, created_at, updated_at, access_model, application_form_url, location_name, location_address, location_city, location_region, location_latitude, location_longitude')
-    .eq('id', id)
-    .maybeSingle<EventRow>()
+  const { data: applicationQuestions } = supabase
+    ? await supabase
+        .from('event_application_question')
+        .select('*')
+        .eq('event_id', id)
+        .order('sort_order', { ascending: true })
+    : { data: [] }
 
-  const { data: applicationQuestions } = await supabase
-    .from('event_application_question')
-    .select('*')
-    .eq('event_id', id)
-    .order('sort_order', { ascending: true })
+  const archiveAccess = event
+    ? await assertCanAccessEvent(id, 'chapter.events.archive')
+    : null
+  const canArchiveEvents = Boolean(archiveAccess && !('error' in archiveAccess))
 
   if (!event) {
     return (
@@ -104,6 +112,7 @@ export default async function ChapterEventDetailPage({
         mode="edit"
         initial={event}
         editorChapter={editorChapter}
+        canArchiveEvents={canArchiveEvents}
         applicationQuestions={(applicationQuestions ?? []) as EventApplicationQuestionRow[]}
       />
     </MainContainer>
