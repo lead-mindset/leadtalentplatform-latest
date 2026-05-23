@@ -5,6 +5,8 @@ import { Link } from "@/i18n/routing";
 import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+const PUBLIC_HERO_VIDEO_SRC = "/video3.mp4";
+
 export function FinalCTA() {
   const locale = useLocale() === "en" ? "en" : "es";
   const copy = locale === "en"
@@ -36,10 +38,9 @@ export function FinalCTA() {
             muted
             loop
             playsInline
+            src={PUBLIC_HERO_VIDEO_SRC}
             className="w-full h-full object-cover"
-          >
-            <source src="/video3.mp4" type="video/mp4" />
-          </video>
+          />
         </div>
         
         <div className="absolute inset-0 bg-black/60 z-1"></div>

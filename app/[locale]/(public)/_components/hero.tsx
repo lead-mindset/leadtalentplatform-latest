@@ -7,6 +7,8 @@ import { MainContainer } from "@/components/global/main-container";
 import GradientText from "@/components/ui/gradient-text";
 import Aurora from "@/components/ui/aurora";
 
+const PUBLIC_HERO_VIDEO_SRC = "/video3.mp4";
+
 export function Hero() {
   const locale = useLocale();
   const isEnglish = locale === "en";
@@ -38,10 +40,9 @@ export function Hero() {
           muted
           loop
           playsInline
+          src={PUBLIC_HERO_VIDEO_SRC}
           className="w-full h-full object-cover"
-        >
-          <source src="/video3.mp4" type="video/mp4" />
-        </video>
+        />
       </div>
       <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/30 to-background z-10"></div>
       <div className="absolute inset-0 z-10 w-full h-full pointer-events-none">
