@@ -1,8 +1,6 @@
 'use server'
 
-import { isRedirectError } from 'next/dist/client/components/redirect-error'
 import { headers } from 'next/headers'
-import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { requireUser } from '@/lib/auth'
@@ -19,6 +17,8 @@ const ApplicationAnswerSchema = z.object({
 const SUPPORTED_LOCALES = new Set(['en', 'es'])
 
 export type RegisterForEventState = {
+  success?: boolean
+  redirectPath?: string
   error?: string
   /** True when the DB capacity trigger rejected the insert */
   capacityExceeded?: boolean
@@ -44,8 +44,8 @@ async function getRequestLocale() {
   }
 }
 
-function redirectToStudentEventQr(eventId: string, locale: string) {
-  redirect(`/${locale}/student/events?event=${eventId}`)
+function getStudentEventQrPath(eventId: string, locale: string) {
+  return `/${locale}/student/events?event=${encodeURIComponent(eventId)}`
 }
 
 export async function applyForEvent(
@@ -155,11 +155,8 @@ export async function registerForEvent(
     }
 
     revalidateEventRegistrationPaths(eventId)
-    redirectToStudentEventQr(eventId, locale)
-
-    return { error: 'Something went wrong. Please try again.' }
+    return { success: true, redirectPath: getStudentEventQrPath(eventId, locale) }
   } catch (err) {
-    if (isRedirectError(err)) throw err
     console.error('[registerForEvent]', err)
     return { error: 'Something went wrong. Please try again.' }
   }
