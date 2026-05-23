@@ -11,12 +11,12 @@ interface MemberData {
   user_id: string
   major: string
   member_id: string | null
-  user: { name: string | null; email: string } | { name: string | null; email: string }[]
+  user: { name: string | null } | { name: string | null }[]
 }
 
 function getMemberName(member: MemberData): string {
   const u = Array.isArray(member.user) ? member.user[0] : member.user
-  return u?.name || u?.email?.split('@')[0] || 'Member'
+  return u?.name || 'Member'
 }
 
 function getInitials(name: string): string {

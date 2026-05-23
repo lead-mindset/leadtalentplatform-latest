@@ -52,7 +52,7 @@ const UI_DIRECT_DB_ALLOWLIST = new Map([
   ['app/[locale]/admin/users/[id]/page.tsx', 'Existing admin user detail bootstrap lookup.'],
   ['app/[locale]/auth/callback/route.ts', 'Auth callback creates first-party user/profile records.'],
   ['app/[locale]/auth/confirm/route.ts', 'Auth confirm creates first-party user/profile records.'],
-  ['app/[locale]/chapter/[id]/page.tsx', 'Existing public chapter detail read path.'],
+  ['app/[locale]/(public)/chapter/[id]/page.tsx', 'Existing public chapter detail read path.'],
   ['app/[locale]/chapter/events/[id]/page.tsx', 'Existing chapter event editor bootstrap lookup.'],
   ['app/[locale]/chapter/events/new/page.tsx', 'Existing chapter event form bootstrap lookup.'],
   ['app/[locale]/chapter/layout.tsx', 'Existing chapter sidebar membership gate.'],

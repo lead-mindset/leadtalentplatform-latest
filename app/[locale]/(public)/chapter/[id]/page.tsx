@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
-import { Navbar } from '../../(public)/_components/navbar'
+import { Navbar } from '../../_components/navbar'
 import { ChapterPortalContent } from './_components/chapter-portal-content'
 import type { Metadata } from 'next'
 
@@ -74,7 +74,7 @@ export default async function ChapterDetailPage({ params }: ChapterDetailPagePro
     .select(`
       user_id,
       member_id,
-      user:user_id ( name, email )
+      user:user_id ( name )
     `)
     .eq('chapter_id', chapter.id)
     .eq('status', 'approved')

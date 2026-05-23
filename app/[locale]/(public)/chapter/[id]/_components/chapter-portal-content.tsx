@@ -36,7 +36,7 @@ interface MemberData {
   user_id: string
   major: string
   member_id: string | null
-  user: { name: string | null; email: string } | { name: string | null; email: string }[]
+  user: { name: string | null } | { name: string | null }[]
 }
 
 interface ChapterPortalContentProps {
