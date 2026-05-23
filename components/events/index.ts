@@ -12,6 +12,7 @@ export { MobileFilters } from "./mobile-filters"
 export { HostAvatars } from "./host-avatars"
 
 export { RegistrationCard } from "./registration-card"
+export { EventShareButton } from "./event-share-button"
 
 export { LocationDisplay } from "./location-display"
 export { RegistrationStatusBadge } from "./registration-status-badge"

@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/table'
 import { updateEvent } from '@/lib/actions/events/update-event'
 import { deleteEvent } from '@/lib/actions/events/delete-event'
+import { EventShareButton } from '@/components/events/event-share-button'
 import type { EventWithDetails } from '@/lib/types'
 import { useRouter } from 'next/navigation'
 import LocalDate from './local_date'
@@ -158,6 +159,15 @@ export function EventsTable({
                       <Button asChild size="sm" variant="outline">
                         <Link href={`/chapter/events/${event.id}`}>Editar</Link>
                       </Button>
+                      {event.is_published ? (
+                        <EventShareButton
+                          eventId={event.id}
+                          eventTitle={event.title}
+                          mode="copy"
+                          size="sm"
+                          variant="outline"
+                        />
+                      ) : null}
                       {event.access_model === 'application' ? (
                         <Button asChild size="sm" variant="outline">
                           <Link href={`/chapter/events/${event.id}/applications`}>
@@ -252,6 +262,15 @@ function MobileEventRow({
         <Button asChild size="sm" variant="outline">
           <Link href={`/chapter/events/${event.id}`}>Editar</Link>
         </Button>
+        {event.is_published ? (
+          <EventShareButton
+            eventId={event.id}
+            eventTitle={event.title}
+            mode="copy"
+            size="sm"
+            variant="outline"
+          />
+        ) : null}
         <Button asChild size="sm" variant="outline">
           <Link href={`/chapter/events/${event.id}/checkin`}>Check-in</Link>
         </Button>
