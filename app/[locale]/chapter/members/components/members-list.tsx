@@ -23,10 +23,12 @@ export function MembersList({
   members,
   status,
   permissions,
+  currentUserId,
 }: {
   members: MemberWithProfile[]
   status: MemberFilterStatus
   permissions: ChapterMemberPermissionFlags
+  currentUserId: string
 }) {
   const router = useRouter()
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([])
@@ -159,6 +161,7 @@ export function MembersList({
               selected={selectedUserIds.includes(member.id)}
               onSelectChange={(checked) => onToggle(member.id, checked)}
               permissions={permissions}
+              currentUserId={currentUserId}
             />
           ))}
         </div>

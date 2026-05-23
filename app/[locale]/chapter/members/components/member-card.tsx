@@ -27,12 +27,14 @@ export default function MemberCard({
   onSelectChange,
   showSelector = false,
   permissions,
+  currentUserId,
 }: {
   member: MemberWithProfile
   selected?: boolean
   onSelectChange?: (checked: boolean) => void
   showSelector?: boolean
   permissions: ChapterMemberPermissionFlags
+  currentUserId: string
 }) {
   const profile = member.person_profile
   const membership = member.chapter_membership
@@ -43,6 +45,7 @@ export default function MemberCard({
   const isRejected = status === 'rejected'
   const isAlumni = status === 'alumni'
   const isInactive = status === 'inactive'
+  const isCurrentUser = member.id === currentUserId
   const graduationYear = profile?.graduation_year ? `Prom. ${profile.graduation_year}` : null
   const joinedAt = formatJoinedAt(membership?.joined_at)
   const positionLabel = membership?.position && membership.position !== 'member'
@@ -175,7 +178,7 @@ export default function MemberCard({
           />
         ) : null}
 
-        {isApproved && permissions.canRevokeMembers ? (
+        {isApproved && permissions.canRevokeMembers && !isCurrentUser ? (
           <MemberActionButtons
             userId={member.id}
             userName={member.name ?? member.email}

@@ -398,6 +398,10 @@ export const ChapterMembershipService = {
       return { success: false, error: 'A revocation reason is required.' }
     }
 
+    if (params.managerId === params.userId) {
+      return { success: false, error: 'You cannot revoke your own chapter membership.' }
+    }
+
     const canRevoke = await canManageChapter(supabase, {
       managerId: params.managerId,
       chapterId: params.chapterId,

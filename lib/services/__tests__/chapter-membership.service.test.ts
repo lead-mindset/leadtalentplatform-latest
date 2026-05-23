@@ -504,6 +504,27 @@ describe('ChapterMembershipService', () => {
       expect(tableMocks.chapter_membership.update).not.toHaveBeenCalled()
     })
 
+    it('prevents chapter operators from revoking their own membership', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      const result = await ChapterMembershipService.revokeMembership(
+        mockSupabase as unknown as SupabaseClient,
+        {
+          userId: 'president-1',
+          chapterId: 'leaduni',
+          managerId: 'president-1',
+          reason: 'Accidental self-revoke',
+        }
+      )
+
+      expect(result).toEqual({
+        success: false,
+        error: 'You cannot revoke your own chapter membership.',
+      })
+      expect(ChapterPermissionService.hasChapterPermission).not.toHaveBeenCalled()
+      expect(tableMocks.chapter_membership.update).not.toHaveBeenCalled()
+    })
+
     it('denies revocation without the scoped revoke permission', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
       vi.mocked(ChapterPermissionService.hasChapterPermission).mockResolvedValue(false)

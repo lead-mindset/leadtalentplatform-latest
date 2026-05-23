@@ -54,7 +54,7 @@ export default async function ChapterMembersPage({
   searchParams: Promise<{ status?: MemberFilterStatus }>
 }) {
   const { status } = await searchParams
-  const { supabase, chapter_id } = await requireChapterMember()
+  const { supabase, user, chapter_id } = await requireChapterMember()
 
   const { data: chapter } = await supabase
     .from('chapter')
@@ -150,7 +150,12 @@ export default async function ChapterMembersPage({
             </CardContent>
           </Card>
         ) : (
-          <MembersList members={displayMembers} status={safeStatus} permissions={permissions} />
+          <MembersList
+            members={displayMembers}
+            status={safeStatus}
+            permissions={permissions}
+            currentUserId={user.id}
+          />
         )}
       </div>
     </MainContainer>

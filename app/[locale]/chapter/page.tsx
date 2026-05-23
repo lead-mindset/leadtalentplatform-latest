@@ -66,10 +66,12 @@ function PendingInbox({
   members,
   total,
   permissions,
+  currentUserId,
 }: {
   members: MemberWithProfile[]
   total: number
   permissions: ChapterMemberPermissionFlags
+  currentUserId: string
 }) {
   if (members.length === 0) {
     return (
@@ -97,6 +99,7 @@ function PendingInbox({
           key={member.id}
           member={member}
           permissions={permissions}
+          currentUserId={currentUserId}
         />
       ))}
       {remaining > 0 && (
@@ -241,7 +244,7 @@ function EventOpsList({
 }
 
 async function ChapterContent() {
-  const { supabase, chapter_id } = await requireChapterMember()
+  const { supabase, user, chapter_id } = await requireChapterMember()
 
   const { data: chapter } = await supabase
     .from('chapter')
@@ -375,6 +378,7 @@ async function ChapterContent() {
               <PendingInbox
                 members={pending_members}
                 total={stats.pending}
+                currentUserId={user.id}
                 permissions={memberPermissions ?? {
                   canViewApproved: false,
                   canViewAlumni: false,
