@@ -38,6 +38,7 @@ export default async function ChapterLayout({ children }: ChapterLayoutProps) {
           <StudentNavigation
             userRole={user.role}
             has_pending_approvals={has_pending_approvals}
+            canManageChapter
           />
         </BaseSidebar>
       }

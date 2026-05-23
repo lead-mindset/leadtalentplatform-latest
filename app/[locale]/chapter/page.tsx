@@ -5,7 +5,13 @@ import { Suspense } from 'react'
 import { Icons } from '@/components/ui/icons'
 import { requireChapterMember } from '@/lib/auth'
 import type { MemberWithProfile, RecentActivityMember } from '@/lib/types'
-import { getChapterMembers, getMemberStats, getRecentChapterActivity } from '@/lib/actions/chapter/get-data'
+import {
+  getChapterMemberPermissions,
+  getChapterMembers,
+  getMemberStats,
+  getRecentChapterActivity,
+} from '@/lib/actions/chapter/get-data'
+import type { ChapterMemberPermissionFlags } from '@/lib/services/chapter.service'
 import { getChapterEvents } from '@/lib/actions/events/get-data'
 import MemberCard from './members/components/member-card'
 import { Breadcrumb } from '@/components/ui/breadcrumb'
@@ -59,9 +65,11 @@ function StatCard({
 function PendingInbox({
   members,
   total,
+  permissions,
 }: {
   members: MemberWithProfile[]
   total: number
+  permissions: ChapterMemberPermissionFlags
 }) {
   if (members.length === 0) {
     return (
@@ -88,7 +96,7 @@ function PendingInbox({
         <MemberCard
           key={member.id}
           member={member}
-
+          permissions={permissions}
         />
       ))}
       {remaining > 0 && (
@@ -256,10 +264,11 @@ async function ChapterContent() {
     )
   }
 
-  const [allMembers, recentActivity, chapterEvents] = await Promise.all([
+  const [allMembers, recentActivity, chapterEvents, memberPermissions] = await Promise.all([
     getChapterMembers(chapter_id),
     getRecentChapterActivity(chapter_id, 4),
     getChapterEvents(),
+    getChapterMemberPermissions(chapter_id),
   ])
 
   const stats = getMemberStats(allMembers)
@@ -366,6 +375,17 @@ async function ChapterContent() {
               <PendingInbox
                 members={pending_members}
                 total={stats.pending}
+                permissions={memberPermissions ?? {
+                  canViewApproved: false,
+                  canViewAlumni: false,
+                  canViewMemberContact: false,
+                  canViewApplicants: false,
+                  canViewRejected: false,
+                  canViewInactive: false,
+                  canManageApplications: false,
+                  canRevokeMembers: false,
+                  canAssignEboard: false,
+                }}
               />
             </>
           )}

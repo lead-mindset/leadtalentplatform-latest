@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Icons } from '@/components/ui/icons'
 import MemberCard from './member-card'
 import type { MemberWithProfile } from '@/lib/types'
+import type { ChapterMemberPermissionFlags } from '@/lib/services/chapter.service'
 import type { MemberFilterStatus } from '../page'
 import { approveMembersBulk } from '@/lib/actions/chapter/check-students'
 
@@ -21,9 +22,11 @@ type Feedback = {
 export function MembersList({
   members,
   status,
+  permissions,
 }: {
   members: MemberWithProfile[]
   status: MemberFilterStatus
+  permissions: ChapterMemberPermissionFlags
 }) {
   const router = useRouter()
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([])
@@ -94,7 +97,7 @@ export function MembersList({
 
   return (
     <div className="space-y-4">
-      {status === 'pending' && selectableMembers.length > 0 && (
+      {status === 'pending' && permissions.canManageApplications && selectableMembers.length > 0 && (
         <div className="rounded-lg border bg-card p-3">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
@@ -140,9 +143,15 @@ export function MembersList({
           <MemberCard
             key={member.id}
             member={member}
-            showSelector={status === 'pending' && member.chapter_membership?.status === 'pending' && Boolean(member.person_profile)}
+            showSelector={
+              permissions.canManageApplications &&
+              status === 'pending' &&
+              member.chapter_membership?.status === 'pending' &&
+              Boolean(member.person_profile)
+            }
             selected={selectedUserIds.includes(member.id)}
             onSelectChange={(checked) => onToggle(member.id, checked)}
+            permissions={permissions}
           />
         ))}
       </div>

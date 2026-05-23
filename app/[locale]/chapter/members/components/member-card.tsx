@@ -1,8 +1,11 @@
 import type { MemberWithProfile } from "@/lib/types"
+import type { ChapterMemberPermissionFlags } from "@/lib/services/chapter.service"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Icons } from '@/components/ui/icons'
 import { MemberActionButtons } from "./member-actions"
+import { CHAPTER_ROLE_LEVEL_LABELS } from '@/lib/chapter-role-options'
+import { RoleAssignmentActions } from './role-assignment-actions'
 
 function statusConfig(status?: string | null) {
   if (status === 'approved') {
@@ -17,6 +20,10 @@ function statusConfig(status?: string | null) {
     return { label: 'Alumni', variant: 'neutral' as const }
   }
 
+  if (status === 'inactive') {
+    return { label: 'Inactivo', variant: 'neutral' as const }
+  }
+
   return { label: 'Pendiente', variant: 'warning' as const }
 }
 
@@ -29,19 +36,23 @@ export default function MemberCard({
   selected = false,
   onSelectChange,
   showSelector = false,
+  permissions,
 }: {
   member: MemberWithProfile
   selected?: boolean
   onSelectChange?: (checked: boolean) => void
   showSelector?: boolean
+  permissions: ChapterMemberPermissionFlags
 }) {
   const profile = member.person_profile
   const membership = member.chapter_membership
+  const roleAssignment = member.chapter_role_assignment
   const status = membership?.status
   const isPending = Boolean(profile) && status === 'pending'
   const isApproved = status === 'approved'
   const isRejected = status === 'rejected'
   const isAlumni = status === 'alumni'
+  const isInactive = status === 'inactive'
   const badge = statusConfig(status)
 
   return (
@@ -52,7 +63,7 @@ export default function MemberCard({
             className="mt-1"
             checked={selected}
             onCheckedChange={(checked) => onSelectChange?.(checked === true)}
-            aria-label={`Seleccionar ${member.name ?? member.email}`}
+            aria-label={`Seleccionar ${member.name ?? 'miembro'}`}
           />
         ) : null}
 
@@ -63,9 +74,13 @@ export default function MemberCard({
             </div>
             <div className="min-w-0">
               <h3 className="truncate font-semibold">{member.name ?? 'Sin nombre registrado'}</h3>
-              <p className="mt-0.5 break-all text-sm text-muted-foreground">{member.email}</p>
-              {member.phone ? (
-                <p className="mt-1 text-sm text-muted-foreground">{member.phone}</p>
+              {permissions.canViewMemberContact ? (
+                <>
+                  <p className="mt-0.5 break-all text-sm text-muted-foreground">{member.email}</p>
+                  {member.phone ? (
+                    <p className="mt-1 text-sm text-muted-foreground">{member.phone}</p>
+                  ) : null}
+                </>
               ) : null}
             </div>
           </div>
@@ -136,6 +151,11 @@ export default function MemberCard({
           {membership?.position ? (
             <Badge variant="secondary">{formatPosition(membership.position)}</Badge>
           ) : null}
+          {roleAssignment ? (
+            <Badge variant="info">
+              {CHAPTER_ROLE_LEVEL_LABELS[roleAssignment.role_level as keyof typeof CHAPTER_ROLE_LEVEL_LABELS] ?? roleAssignment.role_level}
+            </Badge>
+          ) : null}
           {membership?.member_id ? (
             <Badge variant="student">
               <Icons.IdCard className="h-3 w-3" />
@@ -154,7 +174,7 @@ export default function MemberCard({
           </p>
         ) : null}
 
-        {isPending ? (
+        {isPending && permissions.canManageApplications ? (
           <MemberActionButtons
             userId={member.id}
             userName={member.name ?? member.email}
@@ -162,7 +182,7 @@ export default function MemberCard({
           />
         ) : null}
 
-        {isApproved ? (
+        {isApproved && permissions.canRevokeMembers ? (
           <MemberActionButtons
             userId={member.id}
             userName={member.name ?? member.email}
@@ -170,17 +190,25 @@ export default function MemberCard({
           />
         ) : null}
 
-        {isRejected ? (
-          <MemberActionButtons
-            userId={member.id}
-            userName={member.name ?? member.email}
-            currentState="rejected"
+        {isApproved && permissions.canAssignEboard ? (
+          <RoleAssignmentActions
+            targetUserId={member.id}
+            targetName={member.name ?? member.email}
+            assignment={roleAssignment}
           />
         ) : null}
 
-        {isAlumni ? (
+        {isRejected ? (
           <p className="rounded-lg border bg-muted/40 p-3 text-left text-xs text-muted-foreground lg:text-right">
-            Los registros alumni son de solo lectura en esta vista.
+            Las postulaciones rechazadas son de solo lectura en esta vista.
+          </p>
+        ) : null}
+
+        {isAlumni || isInactive ? (
+          <p className="rounded-lg border bg-muted/40 p-3 text-left text-xs text-muted-foreground lg:text-right">
+            {isAlumni
+              ? 'Los registros alumni son de solo lectura en esta vista.'
+              : 'Las membresias inactivas son de solo lectura en esta vista.'}
           </p>
         ) : null}
       </div>

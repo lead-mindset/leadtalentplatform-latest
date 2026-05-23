@@ -3,18 +3,15 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Icons } from '@/components/ui/icons'
 import type { MemberWithProfile } from '@/lib/types'
-import { getChapterMembers, getMemberStats } from '@/lib/actions/chapter/get-data'
+import { getChapterMemberPermissions, getChapterMembers, getMemberStats } from '@/lib/actions/chapter/get-data'
+import type { ChapterMemberPermissionFlags } from '@/lib/services/chapter.service'
 import { MembersList } from './components/members-list'
 import { Breadcrumb } from '@/components/ui/breadcrumb'
 import { MainContainer } from '@/components/global/main-container'
 import { MembersTabs, type MemberStatusCounts } from './components/member-tabs'
 import { PageHeader } from '@/components/ui/page-header'
 
-export type MemberFilterStatus = 'pending' | 'active' | 'rejected' | 'alumni'
-
-function alumniCount(members: MemberWithProfile[]) {
-  return members.filter(member => member.chapter_membership?.status === 'alumni').length
-}
+export type MemberFilterStatus = 'pending' | 'active' | 'rejected' | 'inactive' | 'alumni'
 
 export function filterMembers(members: MemberWithProfile[], status: MemberFilterStatus): MemberWithProfile[] {
   switch (status) {
@@ -30,11 +27,25 @@ export function filterMembers(members: MemberWithProfile[], status: MemberFilter
       return members.filter(
         member => member.chapter_membership?.status === 'rejected'
       )
+    case 'inactive':
+      return members.filter(
+        member => member.chapter_membership?.status === 'inactive'
+      )
     case 'alumni':
       return members.filter(
         member => member.chapter_membership?.status === 'alumni'
       )
   }
+}
+
+function getVisibleStatuses(permissions: ChapterMemberPermissionFlags): MemberFilterStatus[] {
+  const statuses: MemberFilterStatus[] = []
+  if (permissions.canManageApplications || permissions.canViewApplicants) statuses.push('pending')
+  if (permissions.canViewApproved) statuses.push('active')
+  if (permissions.canViewRejected) statuses.push('rejected')
+  if (permissions.canViewInactive) statuses.push('inactive')
+  if (permissions.canViewAlumni) statuses.push('alumni')
+  return statuses
 }
 
 function SummaryBlock({
@@ -100,18 +111,43 @@ export default async function ChapterMembersPage({
     )
   }
 
+  const permissions = await getChapterMemberPermissions(chapter_id)
+  if (!permissions) {
+    return (
+      <MainContainer className="py-8">
+        <Card>
+          <CardContent className="py-12 text-center">
+            <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-warning/10">
+              <Icons.AlertCircle className="h-5 w-5 text-warning" />
+            </div>
+            <h1 className="text-xl font-semibold">Sin permisos de miembros</h1>
+            <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+              Tu rol de capitulo no tiene permisos para ver esta lista.
+            </p>
+          </CardContent>
+        </Card>
+      </MainContainer>
+    )
+  }
+
   const allMembers = await getChapterMembers(chapter_id)
   const stats = getMemberStats(allMembers)
-  const alumni = alumniCount(allMembers)
   const counts: MemberStatusCounts = {
     pending: stats.pending,
     active: stats.approved,
     rejected: stats.rejected,
-    alumni,
+    inactive: stats.inactive,
+    alumni: stats.alumni,
   }
-  const validStatuses: MemberFilterStatus[] = ['pending', 'active', 'rejected', 'alumni']
-  const defaultStatus: MemberFilterStatus = stats.pending > 0 ? 'pending' : 'active'
-  const safeStatus: MemberFilterStatus = status && validStatuses.includes(status) ? status : defaultStatus
+  const visibleStatuses = getVisibleStatuses(permissions)
+  const defaultStatus: MemberFilterStatus =
+    visibleStatuses.includes('pending') && stats.pending > 0
+      ? 'pending'
+      : visibleStatuses.includes('active')
+        ? 'active'
+        : visibleStatuses[0] ?? 'active'
+  const safeStatus: MemberFilterStatus =
+    status && visibleStatuses.includes(status) ? status : defaultStatus
   const displayMembers = filterMembers(allMembers, safeStatus)
 
   return (
@@ -131,30 +167,46 @@ export default async function ChapterMembersPage({
       />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <SummaryBlock
-          label="Pendientes"
-          value={stats.pending}
-          helper="Necesitan revision"
-          variant="warning"
-        />
-        <SummaryBlock
-          label="Aprobados"
-          value={stats.approved}
-          helper="Miembros activos del capitulo"
-          variant="success"
-        />
-        <SummaryBlock
-          label="Rechazados"
-          value={stats.rejected}
-          helper="Postulaciones rechazadas"
-          variant="destructive"
-        />
-        <SummaryBlock
-          label="Alumni"
-          value={alumni}
-          helper="Exmiembros"
-          variant="neutral"
-        />
+        {visibleStatuses.includes('pending') ? (
+          <SummaryBlock
+            label="Pendientes"
+            value={stats.pending}
+            helper="Necesitan revision"
+            variant="warning"
+          />
+        ) : null}
+        {visibleStatuses.includes('active') ? (
+          <SummaryBlock
+            label="Aprobados"
+            value={stats.approved}
+            helper="Miembros activos del capitulo"
+            variant="success"
+          />
+        ) : null}
+        {visibleStatuses.includes('rejected') ? (
+          <SummaryBlock
+            label="Rechazados"
+            value={stats.rejected}
+            helper="Postulaciones rechazadas"
+            variant="destructive"
+          />
+        ) : null}
+        {visibleStatuses.includes('inactive') ? (
+          <SummaryBlock
+            label="Inactivos"
+            value={stats.inactive}
+            helper="Membresias revocadas"
+            variant="neutral"
+          />
+        ) : null}
+        {visibleStatuses.includes('alumni') ? (
+          <SummaryBlock
+            label="Alumni"
+            value={stats.alumni}
+            helper="Exmiembros"
+            variant="neutral"
+          />
+        ) : null}
         <SummaryBlock
           label="Total"
           value={stats.total}
@@ -163,7 +215,7 @@ export default async function ChapterMembersPage({
       </div>
 
       <div className="space-y-4">
-        <MembersTabs currentStatus={safeStatus} counts={counts} />
+        <MembersTabs currentStatus={safeStatus} counts={counts} visibleStatuses={visibleStatuses} />
 
         {displayMembers.length === 0 ? (
           <Card>
@@ -178,7 +230,7 @@ export default async function ChapterMembersPage({
             </CardContent>
           </Card>
         ) : (
-          <MembersList members={displayMembers} status={safeStatus} />
+          <MembersList members={displayMembers} status={safeStatus} permissions={permissions} />
         )}
       </div>
     </MainContainer>

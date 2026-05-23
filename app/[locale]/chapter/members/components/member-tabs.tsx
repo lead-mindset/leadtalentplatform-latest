@@ -11,6 +11,7 @@ const tabLabels: Record<MemberFilterStatus, string> = {
   pending: 'Pendientes',
   active: 'Aprobados',
   rejected: 'Rechazados',
+  inactive: 'Inactivos',
   alumni: 'Alumni',
 }
 
@@ -18,15 +19,18 @@ const badgeVariants: Record<MemberFilterStatus, 'warning' | 'success' | 'destruc
   pending: 'warning',
   active: 'success',
   rejected: 'destructive',
+  inactive: 'neutral',
   alumni: 'neutral',
 }
 
 export function MembersTabs({
   currentStatus,
   counts,
+  visibleStatuses,
 }: {
   currentStatus: MemberFilterStatus
   counts: MemberStatusCounts
+  visibleStatuses: MemberFilterStatus[]
 }) {
   const router = useRouter()
 
@@ -35,17 +39,19 @@ export function MembersTabs({
   }
 
   return (
-    <Tabs value={currentStatus} onValueChange={handleTabChange}>
-      <TabsList className="grid w-full grid-cols-2 gap-1 sm:grid-cols-4 lg:w-auto">
-        {(Object.keys(tabLabels) as MemberFilterStatus[]).map((status) => (
-          <TabsTrigger key={status} value={status} className="gap-2">
-            {tabLabels[status]}
-            <Badge variant={badgeVariants[status]} size="sm">
-              {counts[status]}
-            </Badge>
-          </TabsTrigger>
-        ))}
-      </TabsList>
+    <Tabs value={currentStatus} onValueChange={handleTabChange} className="w-full">
+      <div className="-mx-1 overflow-x-auto px-1 pb-1 sm:mx-0 sm:overflow-visible sm:px-0 sm:pb-0">
+        <TabsList className="flex min-w-max justify-start gap-1 sm:grid sm:w-full sm:min-w-0 sm:grid-cols-5 lg:w-auto">
+          {visibleStatuses.map((status) => (
+            <TabsTrigger key={status} value={status} className="flex-none gap-2 sm:flex-1">
+              {tabLabels[status]}
+              <Badge variant={badgeVariants[status]} size="sm">
+                {counts[status]}
+              </Badge>
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </div>
     </Tabs>
   )
 }
