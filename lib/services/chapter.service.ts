@@ -4,6 +4,7 @@ import { Database } from '@/lib/database.generated'
 import { generateUniqueMemberId } from '@/lib/utils/member-id'
 import type { ChapterRow, MemberWithProfile } from '@/lib/types'
 import { ChapterMembershipService } from '@/lib/services/chapter-membership.service'
+import type { ChapterPermissionKey } from '@/lib/services/chapter-permission.service'
 
 /**
  * Service Layer: Chapter Member Management
@@ -13,8 +14,55 @@ import { ChapterMembershipService } from '@/lib/services/chapter-membership.serv
  */
 
 type ApprovalResult = { success: true; member_id: string } | { success: false; error: string }
+export type ChapterMemberPermissionFlags = {
+  canViewApproved: boolean
+  canViewAlumni: boolean
+  canViewMemberContact: boolean
+  canViewApplicants: boolean
+  canViewRejected: boolean
+  canViewInactive: boolean
+  canManageApplications: boolean
+  canRevokeMembers: boolean
+  canAssignEboard: boolean
+}
 
 const CHAPTER_SELECT = 'id, name, university, city, region, created_at, updated_at, instagram_url, latitude, longitude, location_point'
+const permissionKeySet = (permissionKeys: readonly ChapterPermissionKey[]) => new Set(permissionKeys)
+
+export function getChapterMemberPermissionFlags(
+  permissionKeys: readonly ChapterPermissionKey[]
+): ChapterMemberPermissionFlags {
+  const permissions = permissionKeySet(permissionKeys)
+
+  return {
+    canViewApproved: permissions.has('chapter.members.view_approved'),
+    canViewAlumni: permissions.has('chapter.members.view_alumni'),
+    canViewMemberContact: permissions.has('chapter.members.view_member_contact'),
+    canViewApplicants: permissions.has('chapter.members.view_applicants'),
+    canViewRejected: permissions.has('chapter.members.view_rejected'),
+    canViewInactive: permissions.has('chapter.members.view_inactive'),
+    canManageApplications: permissions.has('chapter.members.manage_applications'),
+    canRevokeMembers: permissions.has('chapter.members.revoke'),
+    canAssignEboard: permissions.has('chapter.roles.assign_eboard'),
+  }
+}
+
+export function filterChapterMembersForPermissions(
+  members: MemberWithProfile[],
+  permissions: ChapterMemberPermissionFlags
+): MemberWithProfile[] {
+  return members.filter((member) => {
+    const status = member.chapter_membership?.status
+
+    if (status === 'approved') return permissions.canViewApproved
+    if (status === 'alumni') return permissions.canViewAlumni
+    if (status === 'pending') return permissions.canViewApplicants || permissions.canManageApplications
+    if (status === 'rejected') return permissions.canViewRejected
+    if (status === 'inactive') return permissions.canViewInactive
+
+    return false
+  })
+}
 
 export const ChapterService = {
   async getAllChapters(supabase: SupabaseClient<Database>): Promise<ChapterRow[]> {
@@ -65,6 +113,12 @@ export const ChapterService = {
     const rejected = members.filter(
       (member: MemberWithProfile) => member.chapter_membership?.status === 'rejected'
     )
+    const inactive = members.filter(
+      (member: MemberWithProfile) => member.chapter_membership?.status === 'inactive'
+    )
+    const alumni = members.filter(
+      (member: MemberWithProfile) => member.chapter_membership?.status === 'alumni'
+    )
 
     return {
       total: members.length,
@@ -72,9 +126,13 @@ export const ChapterService = {
       pending: pending.length,
       approved: approved.length,
       rejected: rejected.length,
+      inactive: inactive.length,
+      alumni: alumni.length,
       pending_members: pending,
       approved_members: approved,
       rejected_members: rejected,
+      inactive_members: inactive,
+      alumni_members: alumni,
       complete_profiles: members.filter((member: MemberWithProfile) => member.person_profile).length,
       visible_to_recruiters: members.filter((member: MemberWithProfile) => member.person_profile?.is_recruiter_visible).length,
     }
@@ -244,28 +302,20 @@ export const ChapterService = {
   async revokeApproval(
     supabase: SupabaseClient<Database>,
     userId: string,
-    chapterId?: string | null
+    managerId: string,
+    chapterId: string | null,
+    reason: string
   ): Promise<{ success: boolean; error?: string }> {
-    const targetChapterId = chapterId ?? await this.getStudentChapterId(supabase, userId)
-    if (!targetChapterId) {
+    if (!chapterId) {
       return { success: false, error: 'Membership application not found.' }
     }
 
-    const { error: updateError } = await supabase
-      .from('chapter_membership')
-      .update({
-        approved_by_id: null,
-        status: 'pending',
-        member_id: null,
-        updated_at: new Date().toISOString(),
-      })
-      .match({ user_id: userId, chapter_id: targetChapterId })
-
-    if (updateError) {
-      return { success: false, error: 'Failed to revoke approval' }
-    }
-
-    return { success: true }
+    return ChapterMembershipService.revokeMembership(supabase, {
+      userId,
+      chapterId,
+      managerId,
+      reason,
+    })
   },
 
   /**

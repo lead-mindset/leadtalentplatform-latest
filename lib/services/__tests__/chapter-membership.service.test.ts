@@ -1,6 +1,13 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { SupabaseClient } from '@supabase/supabase-js'
 import { ChapterMembershipService } from '../chapter-membership.service'
+import { ChapterPermissionService } from '@/lib/services/chapter-permission.service'
+
+vi.mock('@/lib/services/chapter-permission.service', () => ({
+  ChapterPermissionService: {
+    hasChapterPermission: vi.fn(),
+  },
+}))
 
 type MockFn = ReturnType<typeof vi.fn>
 
@@ -46,6 +53,15 @@ function buildMockSupabase(overrides: Record<string, TableMock> = {}) {
       eq: vi.fn().mockReturnThis(),
       maybeSingle: vi.fn(),
     },
+    chapter_role_assignment: {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
+    },
+    chapter_audit_log: {
+      insert: vi.fn().mockResolvedValue({ error: null }),
+    },
     ...overrides,
   }
 
@@ -57,6 +73,11 @@ function buildMockSupabase(overrides: Record<string, TableMock> = {}) {
 }
 
 describe('ChapterMembershipService', () => {
+  beforeEach(() => {
+    vi.mocked(ChapterPermissionService.hasChapterPermission).mockReset()
+    vi.mocked(ChapterPermissionService.hasChapterPermission).mockResolvedValue(true)
+  })
+
   describe('applyToChapter', () => {
     it('creates an explicit pending chapter membership application', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
@@ -198,10 +219,8 @@ describe('ChapterMembershipService', () => {
   describe('approveMembership', () => {
     it('approves the matching pending membership row by user and chapter', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
-      tableMocks.user.maybeSingle?.mockResolvedValue({ data: { id: 'editor-1', role: 'editor' }, error: null })
       tableMocks.chapter_membership.maybeSingle
-        ?.mockResolvedValueOnce({ data: { user_id: 'editor-1' }, error: null })
-        .mockResolvedValueOnce({
+        ?.mockResolvedValueOnce({
           data: { id: 'membership-1', status: 'pending', member_id: null },
           error: null,
         })
@@ -235,7 +254,6 @@ describe('ChapterMembershipService', () => {
 
     it('rejects approval when the matching membership does not exist', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
-      tableMocks.user.maybeSingle?.mockResolvedValue({ data: { id: 'admin-1', role: 'admin' }, error: null })
       tableMocks.chapter_membership.maybeSingle?.mockResolvedValue({ data: null, error: null })
 
       const result = await ChapterMembershipService.approveMembership(
@@ -254,8 +272,7 @@ describe('ChapterMembershipService', () => {
 
     it('denies approval for an editor from another chapter', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
-      tableMocks.user.maybeSingle?.mockResolvedValue({ data: { id: 'editor-1', role: 'editor' }, error: null })
-      tableMocks.chapter_membership.maybeSingle?.mockResolvedValue({ data: null, error: null })
+      vi.mocked(ChapterPermissionService.hasChapterPermission).mockResolvedValue(false)
 
       const result = await ChapterMembershipService.approveMembership(
         mockSupabase as unknown as SupabaseClient,
@@ -269,14 +286,13 @@ describe('ChapterMembershipService', () => {
 
       expect(result).toEqual({
         success: false,
-        error: 'Only admins and same-chapter editors can approve memberships.',
+        error: 'You do not have permission to approve chapter memberships.',
       })
       expect(tableMocks.chapter_membership.update).not.toHaveBeenCalled()
     })
 
     it('always approves applicants as member through the editor path', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
-      tableMocks.user.maybeSingle?.mockResolvedValue({ data: { id: 'admin-1', role: 'admin' }, error: null })
       tableMocks.chapter_membership.maybeSingle?.mockResolvedValue({
         data: { id: 'membership-1', status: 'pending', member_id: null },
         error: null,
@@ -301,10 +317,8 @@ describe('ChapterMembershipService', () => {
   describe('rejectMembership', () => {
     it('rejects a pending membership for a same-chapter editor', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
-      tableMocks.user.maybeSingle?.mockResolvedValue({ data: { id: 'editor-1', role: 'editor' }, error: null })
       tableMocks.chapter_membership.maybeSingle
-        ?.mockResolvedValueOnce({ data: { user_id: 'editor-1' }, error: null })
-        .mockResolvedValueOnce({ data: { id: 'membership-1', status: 'pending' }, error: null })
+        ?.mockResolvedValueOnce({ data: { id: 'membership-1', status: 'pending' }, error: null })
 
       const result = await ChapterMembershipService.rejectMembership(
         mockSupabase as unknown as SupabaseClient,
@@ -323,7 +337,6 @@ describe('ChapterMembershipService', () => {
 
     it('rejects rejection when the target membership is not pending', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
-      tableMocks.user.maybeSingle?.mockResolvedValue({ data: { id: 'admin-1', role: 'admin' }, error: null })
       tableMocks.chapter_membership.maybeSingle?.mockResolvedValue({
         data: { id: 'membership-1', status: 'approved' },
         error: null,
@@ -377,6 +390,26 @@ describe('ChapterMembershipService', () => {
         data: { id: 'leaduni', name: 'LEAD UNI', university: 'UNI', city: 'Lima', region: 'Lima', created_at: '2026-05-03', updated_at: '2026-05-03', instagram_url: null, latitude: null, longitude: null, location_point: null },
         error: null,
       })
+      tableMocks.chapter_role_assignment.order
+        ?.mockImplementationOnce(() => tableMocks.chapter_role_assignment)
+        .mockResolvedValueOnce({
+          data: [
+            {
+              id: 'role-1',
+              user_id: 'user-1',
+              chapter_id: 'leaduni',
+              role_level: 'director',
+              functional_area: 'marketing_communications',
+              display_title: 'Directora de Marketing',
+              status: 'active',
+              is_primary: true,
+              starts_at: '2026-05-03T00:00:00.000Z',
+              ends_at: null,
+              assigned_by_id: 'leader-1',
+            },
+          ],
+          error: null,
+        })
 
       const result = await ChapterMembershipService.getChapterRoster(
         mockSupabase as unknown as SupabaseClient,
@@ -393,10 +426,105 @@ describe('ChapterMembershipService', () => {
         })
       )
       expect(result[0].chapter?.name).toBe('LEAD UNI')
+      expect(result[0].chapter_role_assignment).toEqual(
+        expect.objectContaining({
+          id: 'role-1',
+          role_level: 'director',
+          functional_area: 'marketing_communications',
+          display_title: 'Directora de Marketing',
+        })
+      )
     })
   })
 
   describe('membership state helpers', () => {
+    it('revokes an approved membership into inactive status with an audit record', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+      tableMocks.chapter_membership.maybeSingle?.mockResolvedValue({
+        data: { id: 'membership-1', status: 'approved' },
+        error: null,
+      })
+
+      const result = await ChapterMembershipService.revokeMembership(
+        mockSupabase as unknown as SupabaseClient,
+        {
+          userId: 'user-1',
+          chapterId: 'leaduni',
+          managerId: 'president-1',
+          reason: 'No longer active in chapter',
+        }
+      )
+
+      expect(result).toEqual({ success: true })
+      expect(ChapterPermissionService.hasChapterPermission).toHaveBeenCalledWith(
+        mockSupabase,
+        {
+          userId: 'president-1',
+          chapterId: 'leaduni',
+          permissionKey: 'chapter.members.revoke',
+        }
+      )
+      expect(tableMocks.chapter_membership.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          approved_by_id: null,
+          status: 'inactive',
+          member_id: null,
+        })
+      )
+      expect(tableMocks.chapter_audit_log.insert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'chapter.membership.revoked',
+          actor_user_id: 'president-1',
+          target_user_id: 'user-1',
+          chapter_id: 'leaduni',
+          entity_type: 'chapter_membership',
+          entity_id: 'membership-1',
+          metadata: {
+            reason: 'No longer active in chapter',
+            previous_status: 'approved',
+          },
+        })
+      )
+    })
+
+    it('requires a reason to revoke membership', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      const result = await ChapterMembershipService.revokeMembership(
+        mockSupabase as unknown as SupabaseClient,
+        {
+          userId: 'user-1',
+          chapterId: 'leaduni',
+          managerId: 'president-1',
+          reason: '   ',
+        }
+      )
+
+      expect(result).toEqual({ success: false, error: 'A revocation reason is required.' })
+      expect(tableMocks.chapter_membership.update).not.toHaveBeenCalled()
+    })
+
+    it('denies revocation without the scoped revoke permission', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+      vi.mocked(ChapterPermissionService.hasChapterPermission).mockResolvedValue(false)
+
+      const result = await ChapterMembershipService.revokeMembership(
+        mockSupabase as unknown as SupabaseClient,
+        {
+          userId: 'user-1',
+          chapterId: 'leaduni',
+          managerId: 'coordinator-1',
+          reason: 'Not active',
+        }
+      )
+
+      expect(result).toEqual({
+        success: false,
+        error: 'You do not have permission to revoke chapter memberships.',
+      })
+      expect(tableMocks.chapter_membership.update).not.toHaveBeenCalled()
+    })
+
     it('marks a membership as alumni', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 

@@ -95,6 +95,12 @@ export type CreateEventParams = {
   createdById: string;
 };
 
+type DeleteEventAuditContext = {
+  actorUserId: string;
+  chapterId: string | null;
+  title?: string | null;
+};
+
 type EventNewsletterOptions = {
   subscribeToHostChapters?: boolean
   applicationAnswers?: EventApplicationAnswerInput[]
@@ -753,12 +759,34 @@ export const EventService = {
     return event as EventRow;
   },
 
-  async deleteEvent(supabase: SupabaseClient<Database>, eventId: string): Promise<{ success: boolean; error?: string }> {
+  async deleteEvent(
+    supabase: SupabaseClient<Database>,
+    eventId: string,
+    audit?: DeleteEventAuditContext
+  ): Promise<{ success: boolean; error?: string }> {
     const { error } = await supabase.from('event').delete().eq('id', eventId);
     if (error) {
       logger.error({ context: 'EventService.deleteEvent', error: error }, 'Error');
       return { success: false, error: 'Failed to delete event' };
     }
+
+    if (audit) {
+      const { error: auditError } = await supabase.from('chapter_audit_log').insert({
+        action: 'chapter.event.deleted',
+        actor_user_id: audit.actorUserId,
+        chapter_id: audit.chapterId,
+        entity_type: 'event',
+        entity_id: eventId,
+        metadata: {
+          title: audit.title ?? null,
+        },
+      });
+
+      if (auditError) {
+        logger.error({ context: 'EventService.deleteEvent.audit', error: auditError, eventId }, 'Error');
+      }
+    }
+
     return { success: true };
   },
 

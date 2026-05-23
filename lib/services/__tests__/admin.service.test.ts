@@ -1,6 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { AdminService } from '../admin.service'
 import { SupabaseClient } from '@supabase/supabase-js'
+import { ChapterRoleAssignmentService } from '@/lib/services/chapter-role-assignment.service'
+
+vi.mock('@/lib/services/chapter-role-assignment.service', () => ({
+  ChapterRoleAssignmentService: {
+    assignChapterRole: vi.fn(),
+  },
+}))
 
 interface MockBuilder {
   eq: ReturnType<typeof vi.fn>
@@ -87,6 +94,7 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
   const recruiterAccessBuilder = createBuilder()
   const chapterMembershipBuilder = createBuilder()
   const leadIdentityBuilder = createBuilder()
+  const chapterRoleAssignmentBuilder = createBuilder()
 
   const tableMocks: Record<string, TableMock> = {
     user: {
@@ -134,6 +142,13 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
       delete: vi.fn(() => leadIdentityBuilder),
       _builder: leadIdentityBuilder,
     },
+    chapter_role_assignment: {
+      select: vi.fn(() => chapterRoleAssignmentBuilder),
+      update: vi.fn(() => chapterRoleAssignmentBuilder),
+      insert: vi.fn(() => chapterRoleAssignmentBuilder),
+      delete: vi.fn(() => chapterRoleAssignmentBuilder),
+      _builder: chapterRoleAssignmentBuilder,
+    },
     ...overrides,
   }
 
@@ -147,6 +162,11 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
 describe('AdminService', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(ChapterRoleAssignmentService.assignChapterRole).mockResolvedValue({
+      success: true,
+      roleAssignmentId: 'role-1',
+      grantedPermissions: ['chapter.dashboard.access'],
+    })
   })
 
   // ───────────────────────────────────────────────────────────────
@@ -385,12 +405,34 @@ describe('AdminService', () => {
       tableMocks.user._builder._setThenValue({ data: baseUser, error: null })
       tableMocks.person_profile._builder._setThenValue({ data: null, error: null })
       tableMocks.chapter_membership._builder._setThenValue({ data: baseMembership, error: null })
+      tableMocks.chapter_role_assignment._builder._setThenValue({
+        data: {
+          id: 'role-1',
+          chapter_id: 'leaduni',
+          role_level: 'director',
+          functional_area: 'marketing_communications',
+          display_title: 'Directora de Marketing',
+          status: 'active',
+          is_primary: true,
+          starts_at: '2026-05-02T00:00:00.000Z',
+          ends_at: null,
+          assigned_by_id: 'admin-1',
+        },
+        error: null,
+      })
 
       const result = await AdminService.getUserById(mockSupabase as unknown as SupabaseClient, 'user-1')
 
       expect(result?.id).toBe('user-1')
       expect(result?.person_profile).toBeNull()
       expect(result?.chapter_membership?.chapter_id).toBe('leaduni')
+      expect(result?.chapter_role_assignment).toEqual(
+        expect.objectContaining({
+          id: 'role-1',
+          role_level: 'director',
+          display_title: 'Directora de Marketing',
+        })
+      )
     })
 
     it('returns a user detail row when chapter_membership is missing', async () => {
@@ -1073,17 +1115,16 @@ describe('AdminService', () => {
       expect(tableMocks.chapter_membership.update).not.toHaveBeenCalled()
       expect(tableMocks.user.update).not.toHaveBeenCalled()
       expect(tableMocks.lead_identity.insert).not.toHaveBeenCalled()
+      expect(ChapterRoleAssignmentService.assignChapterRole).not.toHaveBeenCalled()
     })
 
-    it('promotes an approved member and issues a primary chapter editor identity', async () => {
+    it('grants legacy editor compatibility without overwriting membership position', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
       tableMocks.chapter_membership._builder._setThenValue({
         data: { user_id: 'user-1', chapter_id: 'leaduni', status: 'approved' },
         error: null,
       })
-      tableMocks.chapter_membership._builder._setThenValue({ data: null, error: null })
-      tableMocks.user._builder._setThenValue({ data: null, error: null })
       tableMocks.chapter_membership._builder._setThenValue({
         data: { user_id: 'user-1', chapter_id: 'leaduni', status: 'approved' },
         error: null,
@@ -1120,10 +1161,20 @@ describe('AdminService', () => {
       )
 
       expect(result.success).toBe(true)
-      expect(tableMocks.chapter_membership.update).toHaveBeenCalledWith(
-        expect.objectContaining({ position: 'editor' })
+      expect(tableMocks.chapter_membership.update).not.toHaveBeenCalled()
+      expect(tableMocks.user.update).not.toHaveBeenCalled()
+      expect(ChapterRoleAssignmentService.assignChapterRole).toHaveBeenCalledWith(
+        mockSupabase,
+        {
+          actorUserId: 'admin-1',
+          targetUserId: 'user-1',
+          chapterId: 'leaduni',
+          roleLevel: 'chief_of_staff',
+          functionalArea: 'strategy_operations',
+          displayTitle: 'Legacy Chapter Editor',
+          rawTitle: 'legacy_editor',
+        }
       )
-      expect(tableMocks.user.update).toHaveBeenCalledWith({ role: 'editor' })
       expect(tableMocks.lead_identity.insert).toHaveBeenCalledWith(
         expect.objectContaining({
           user_id: 'user-1',

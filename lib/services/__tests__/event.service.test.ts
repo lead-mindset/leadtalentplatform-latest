@@ -88,6 +88,7 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
       _selectChain: selectChain,
       _updateChain: updateChain,
       _insertChain: insertChain,
+      _deleteChain: deleteChain,
     },
     event_registration: {
       select: vi.fn().mockReturnValue(selectChain),
@@ -114,6 +115,9 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
       _selectChain: selectChain,
       _insertChain: insertChain,
       _deleteChain: deleteChain,
+    },
+    chapter_audit_log: {
+      insert: vi.fn().mockResolvedValue({ error: null }),
     },
     event_application_question: {
       select: vi.fn().mockReturnValue({
@@ -1011,6 +1015,41 @@ describe('EventService', () => {
   })
 
   // ───────────────────────────────────────────────────────────────
+  describe('deleteEvent', () => {
+    it('should delete an event without audit context', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      const result = await EventService.deleteEvent(mockSupabase as unknown as SupabaseClient, 'evt-1')
+
+      expect(result).toEqual({ success: true })
+      expect(tableMocks.event.delete).toHaveBeenCalled()
+      expect(tableMocks.event._deleteChain?.eq).toHaveBeenCalledWith('id', 'evt-1')
+      expect(tableMocks.chapter_audit_log.insert).not.toHaveBeenCalled()
+    })
+
+    it('should write an audit record when deleting with archive context', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      const result = await EventService.deleteEvent(mockSupabase as unknown as SupabaseClient, 'evt-1', {
+        actorUserId: 'leader-1',
+        chapterId: 'leaduni',
+        title: 'Launch Night',
+      })
+
+      expect(result).toEqual({ success: true })
+      expect(tableMocks.chapter_audit_log.insert).toHaveBeenCalledWith({
+        action: 'chapter.event.deleted',
+        actor_user_id: 'leader-1',
+        chapter_id: 'leaduni',
+        entity_type: 'event',
+        entity_id: 'evt-1',
+        metadata: {
+          title: 'Launch Night',
+        },
+      })
+    })
+  })
+
   // getPublishedEvents
   // ───────────────────────────────────────────────────────────────
   describe('getPublishedEvents', () => {

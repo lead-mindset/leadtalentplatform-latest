@@ -1,11 +1,16 @@
 import { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.generated'
 import type {
+  ActiveChapterRoleAssignment,
   ChapterMembershipRow,
   ChapterRow,
   MemberWithProfile,
   PersonProfileRow,
 } from '@/lib/types'
+import {
+  ChapterPermissionService,
+  type ChapterPermissionKey,
+} from '@/lib/services/chapter-permission.service'
 
 type ActionResult = { success: true } | { success: false; error: string }
 type ApprovalResult = { success: true; member_id: string } | { success: false; error: string }
@@ -40,18 +45,15 @@ type RejectMembershipParams = MembershipTarget & {
   managerId: string
 }
 
+type RevokeMembershipParams = MembershipTarget & {
+  managerId: string
+  reason: string
+}
+
 type EditorEligibilityParams = {
   userId: string
   chapterId?: string
 }
-
-const CHAPTER_MANAGER_POSITIONS: MembershipPosition[] = [
-  'editor',
-  'president',
-  'vice_president',
-  'secretary',
-  'treasurer',
-]
 
 function isOneApprovedMembershipError(error: { code?: string; message?: string } | null): boolean {
   return Boolean(
@@ -84,30 +86,13 @@ async function hasPersonProfile(
 
 async function canManageChapter(
   supabase: SupabaseClient<Database>,
-  params: { managerId: string; chapterId: string }
+  params: { managerId: string; chapterId: string; permissionKey: ChapterPermissionKey }
 ): Promise<boolean> {
-  const { data: manager, error: managerError } = await supabase
-    .from('user')
-    .select('id, role')
-    .eq('id', params.managerId)
-    .maybeSingle()
-
-  if (managerError || !manager) return false
-  if (manager.role === 'admin') return true
-  if (manager.role !== 'editor') return false
-
-  const { data: membership, error: membershipError } = await supabase
-    .from('chapter_membership')
-    .select('user_id')
-    .match({
-      user_id: params.managerId,
-      chapter_id: params.chapterId,
-      status: 'approved',
-    })
-    .in('position', CHAPTER_MANAGER_POSITIONS)
-    .maybeSingle()
-
-  return !membershipError && Boolean(membership)
+  return ChapterPermissionService.hasChapterPermission(supabase, {
+    userId: params.managerId,
+    chapterId: params.chapterId,
+    permissionKey: params.permissionKey,
+  })
 }
 
 export const ChapterMembershipService = {
@@ -206,7 +191,7 @@ export const ChapterMembershipService = {
     const userIds = memberships.map((membership) => membership.user_id)
     if (userIds.length === 0) return []
 
-    const [usersResult, profilesResult, chapterResult] = await Promise.all([
+    const [usersResult, profilesResult, chapterResult, roleAssignmentsResult] = await Promise.all([
       supabase
         .from('user')
         .select('id, email, name, phone, role, created_at, updated_at, deactivated_at')
@@ -245,6 +230,14 @@ export const ChapterMembershipService = {
         `)
         .eq('id', chapterId)
         .maybeSingle(),
+      supabase
+        .from('chapter_role_assignment')
+        .select('id, user_id, chapter_id, role_level, functional_area, display_title, status, is_primary, starts_at, ends_at, assigned_by_id')
+        .eq('chapter_id', chapterId)
+        .eq('status', 'active')
+        .in('user_id', userIds)
+        .order('is_primary', { ascending: false })
+        .order('starts_at', { ascending: false }),
     ])
 
     if (usersResult.error) return []
@@ -254,6 +247,24 @@ export const ChapterMembershipService = {
       (profilesResult.data ?? []).map((profile) => [profile.user_id, profile])
     )
     const chapter = (chapterResult.data ?? null) as ChapterRow | null
+    const roleAssignmentsByUserId = new Map<string, ActiveChapterRoleAssignment>()
+
+    for (const assignment of roleAssignmentsResult.data ?? []) {
+      if (!roleAssignmentsByUserId.has(assignment.user_id)) {
+        roleAssignmentsByUserId.set(assignment.user_id, {
+          id: assignment.id,
+          chapter_id: assignment.chapter_id,
+          role_level: assignment.role_level,
+          functional_area: assignment.functional_area,
+          display_title: assignment.display_title,
+          status: assignment.status,
+          is_primary: assignment.is_primary,
+          starts_at: assignment.starts_at,
+          ends_at: assignment.ends_at,
+          assigned_by_id: assignment.assigned_by_id,
+        })
+      }
+    }
 
     return memberships
       .map((membership): MemberWithProfile | null => {
@@ -270,6 +281,7 @@ export const ChapterMembershipService = {
             member_id: membership.member_id,
             joined_at: membership.joined_at,
           } as MemberWithProfile['chapter_membership'],
+          chapter_role_assignment: roleAssignmentsByUserId.get(membership.user_id) ?? null,
           chapter,
         }
       })
@@ -283,10 +295,11 @@ export const ChapterMembershipService = {
     const canManage = await canManageChapter(supabase, {
       managerId: params.approverId,
       chapterId: params.chapterId,
+      permissionKey: 'chapter.members.manage_applications',
     })
 
     if (!canManage) {
-      return { success: false, error: 'Only admins and same-chapter editors can approve memberships.' }
+      return { success: false, error: 'You do not have permission to approve chapter memberships.' }
     }
 
     const { data: membership, error: membershipError } = await supabase
@@ -341,10 +354,11 @@ export const ChapterMembershipService = {
     const canManage = await canManageChapter(supabase, {
       managerId: params.managerId,
       chapterId: params.chapterId,
+      permissionKey: 'chapter.members.manage_applications',
     })
 
     if (!canManage) {
-      return { success: false, error: 'Only admins and same-chapter editors can reject memberships.' }
+      return { success: false, error: 'You do not have permission to reject chapter memberships.' }
     }
 
     const { data: membership, error: membershipError } = await supabase
@@ -372,6 +386,76 @@ export const ChapterMembershipService = {
       .match({ user_id: params.userId, chapter_id: params.chapterId })
 
     if (error) return { success: false, error: friendlyMembershipError(error) }
+    return { success: true }
+  },
+
+  async revokeMembership(
+    supabase: SupabaseClient<Database>,
+    params: RevokeMembershipParams
+  ): Promise<ActionResult> {
+    const reason = params.reason.trim()
+    if (!reason) {
+      return { success: false, error: 'A revocation reason is required.' }
+    }
+
+    const canRevoke = await canManageChapter(supabase, {
+      managerId: params.managerId,
+      chapterId: params.chapterId,
+      permissionKey: 'chapter.members.revoke',
+    })
+
+    if (!canRevoke) {
+      return { success: false, error: 'You do not have permission to revoke chapter memberships.' }
+    }
+
+    const { data: membership, error: membershipError } = await supabase
+      .from('chapter_membership')
+      .select('id, status')
+      .match({ user_id: params.userId, chapter_id: params.chapterId })
+      .maybeSingle()
+
+    if (membershipError || !membership) {
+      return { success: false, error: 'Membership application not found.' }
+    }
+
+    if (membership.status !== 'approved') {
+      return { success: false, error: 'Only approved memberships can be revoked.' }
+    }
+
+    const now = new Date().toISOString()
+    const { error: updateError } = await supabase
+      .from('chapter_membership')
+      .update({
+        approved_by_id: null,
+        status: 'inactive',
+        member_id: null,
+        updated_at: now,
+      })
+      .match({ user_id: params.userId, chapter_id: params.chapterId })
+
+    if (updateError) {
+      return { success: false, error: friendlyMembershipError(updateError) }
+    }
+
+    const { error: auditError } = await supabase
+      .from('chapter_audit_log')
+      .insert({
+        action: 'chapter.membership.revoked',
+        actor_user_id: params.managerId,
+        target_user_id: params.userId,
+        chapter_id: params.chapterId,
+        entity_type: 'chapter_membership',
+        entity_id: membership.id,
+        metadata: {
+          reason,
+          previous_status: membership.status,
+        },
+      })
+
+    if (auditError) {
+      return { success: false, error: 'Membership was revoked, but audit logging failed.' }
+    }
+
     return { success: true }
   },
 
