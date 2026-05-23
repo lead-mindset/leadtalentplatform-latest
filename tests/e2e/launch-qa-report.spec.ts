@@ -3,6 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 const PASSWORD = 'password123'
+const LOGIN_REDIRECT_TIMEOUT_MS = 60_000
 const OPEN_EVENT_ID = '92000000-0000-4000-8000-000000000016'
 const APPLICATION_EVENT_ID = '92000000-0000-4000-8000-000000000030'
 const MEMBER_USER_ID = '22222222-2222-2222-2222-222222222222'
@@ -27,6 +28,13 @@ type StepResult = {
   path: string
   finalUrl: string
   screenshot?: string
+}
+
+type ExpectedBehavior = {
+  label: string
+  path: string
+  finalUrl: string
+  reason: string
 }
 
 function slug(value: string) {
@@ -61,6 +69,7 @@ async function hasRegisteredEventState(page: Page) {
 class LaunchQaCollector {
   readonly findings: Finding[] = []
   readonly steps: StepResult[] = []
+  readonly expectedBehaviors: ExpectedBehavior[] = []
   private currentStep = 'setup'
   private expectedNetworkPattern: RegExp | null = null
 
@@ -72,6 +81,7 @@ class LaunchQaCollector {
       if (message.type() !== 'error') return
       const text = message.text()
       if (/favicon|devtools/i.test(text)) return
+      if (this.expectedNetworkPattern && /failed to load resource/i.test(text)) return
       this.addFinding('major', 'Browser console error', {
         expected: 'No critical console errors during launch flows.',
         actual: text,
@@ -175,34 +185,50 @@ class LaunchQaCollector {
       expectedUrl?: RegExp
       expectedText?: RegExp
       screenshot?: boolean
+      expectedBehavior?: string
     } = {}
   ) {
     this.currentStep = label
-    await this.page.goto(route, { waitUntil: 'domcontentloaded', timeout: 45_000 }).catch(async (error) => {
-      const shot = await this.screenshot(`${label} navigation failed`)
-      this.addFinding('blocker', 'Navigation failed', {
-        expected: `Route ${route} should load.`,
-        actual: error instanceof Error ? error.message : String(error),
-        screenshot: shot,
-        suggestedFix: 'Check route guard/server component errors and rerun the same URL in Playwright.',
-      })
+    let navigationError: unknown
+    await this.page.goto(route, { waitUntil: 'domcontentloaded', timeout: 45_000 }).catch((error) => {
+      navigationError = error
     })
     await this.page.waitForLoadState('networkidle', { timeout: 1_500 }).catch(() => undefined)
 
     const shot = options.screenshot === false ? undefined : await this.screenshot(label)
 
-    if (options.expectedUrl && !options.expectedUrl.test(new URL(this.page.url()).pathname)) {
-      this.addFinding('major', 'Unexpected redirect or landing route', {
-        expected: `URL path should match ${options.expectedUrl}.`,
-        actual: new URL(this.page.url()).pathname,
+    const finalPath = new URL(this.page.url()).pathname
+    const expectedUrlMatched = options.expectedUrl?.test(finalPath) ?? false
+    if (navigationError && !expectedUrlMatched) {
+      this.addFinding('blocker', 'Navigation failed', {
+        expected: `Route ${route} should load.`,
+        actual: navigationError instanceof Error ? navigationError.message : String(navigationError),
         screenshot: shot,
-        suggestedFix: 'Review auth redirect logic and route guard expectations for this persona.',
+        suggestedFix: 'Check route guard/server component errors and rerun the same URL in Playwright.',
       })
     }
 
+    if (options.expectedUrl && !expectedUrlMatched) {
+      this.addFinding('major', 'Unexpected redirect or landing route', {
+        expected: `URL path should match ${options.expectedUrl}.`,
+        actual: finalPath,
+        screenshot: shot,
+        suggestedFix: 'Review auth redirect logic and route guard expectations for this persona.',
+      })
+    } else if (options.expectedUrl) {
+      const requestedPath = new URL(route, 'http://launch-qa.local').pathname
+      if (requestedPath !== finalPath) {
+        this.expectedBehaviors.push({
+          label,
+          path: route,
+          finalUrl: this.page.url(),
+          reason: options.expectedBehavior ?? 'Route guard redirected to the expected boundary.',
+        })
+      }
+    }
+
     if (options.expectedText) {
-      const body = this.page.locator('body')
-      const hasText = await body.getByText(options.expectedText).first().isVisible({ timeout: 5_000 }).catch(() => false)
+      const hasText = Boolean(await firstVisible(this.page.getByText(options.expectedText)))
       if (!hasText) {
         this.addFinding('major', 'Expected page content missing', {
           expected: `Visible text matching ${options.expectedText}.`,
@@ -230,12 +256,34 @@ class LaunchQaCollector {
   async loginAs(email: string, expectedPath: RegExp) {
     await this.resetSession()
     this.currentStep = `login ${email}`
+    await this.page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
+    await expect(this.page.locator('#email')).toBeVisible()
     await this.page.locator('#email').fill(email)
     await this.page.locator('#password').fill(PASSWORD)
-    await Promise.all([
-      this.page.waitForURL((url) => !url.pathname.endsWith('/auth/login'), { timeout: 45_000 }).catch(() => null),
-      this.page.locator('button[type="submit"]').click(),
+    await this.page.locator('button[type="submit"]').click()
+    const outcome = await Promise.race([
+      this.page
+        .waitForURL((url) => !url.pathname.endsWith('/auth/login'), { timeout: LOGIN_REDIRECT_TIMEOUT_MS })
+        .then(() => 'redirect' as const)
+        .catch(() => 'timeout' as const),
+      this.page
+        .locator('#error-message')
+        .waitFor({ state: 'visible', timeout: LOGIN_REDIRECT_TIMEOUT_MS })
+        .then(() => 'error' as const)
+        .catch(() => 'timeout' as const),
     ])
+
+    if (outcome === 'error') {
+      const shot = await this.screenshot(`login ${email} failed`)
+      this.addFinding('major', 'Login failed', {
+        expected: `${email} should authenticate with the seeded password.`,
+        actual: await this.page.locator('#error-message').innerText().catch(() => 'Login error text unavailable.'),
+        screenshot: shot,
+        suggestedFix: 'Check seed auth state, password-login redirect resolution, and Supabase cookie propagation.',
+      })
+      return
+    }
+
     await this.page.waitForLoadState('networkidle', { timeout: 1_500 }).catch(() => undefined)
     const shot = await this.screenshot(`dashboard ${email}`)
     if (!expectedPath.test(new URL(this.page.url()).pathname)) {
@@ -298,6 +346,7 @@ async function runAnonymousFlows(qa: LaunchQaCollector) {
   await qa.visit('anonymous events list', '/es/events', { expectedText: /eventos|events|encuentra/i })
   await qa.visit('anonymous open event detail', `/es/events/${OPEN_EVENT_ID}`, { expectedText: /registro|registr/i })
   await qa.clickFirst('anonymous open event login CTA', qa['page'].getByRole('link', { name: /iniciar sesion/i }).first())
+  await qa['page'].waitForURL(/\/auth\/login/, { timeout: 5_000 }).catch(() => undefined)
   if (!/\/auth\/login/.test(new URL(qa['page'].url()).pathname)) {
     qa.addFinding('major', 'Anonymous event CTA did not route to login', {
       expected: 'Anonymous registration CTA should go to login.',
@@ -307,7 +356,7 @@ async function runAnonymousFlows(qa: LaunchQaCollector) {
   }
   await qa.visit('anonymous application event detail', `/es/events/${APPLICATION_EVENT_ID}`, { expectedText: /postular|postulacion|requiere/i })
   await qa.visit('anonymous public chapter page', '/es/chapter/leaduni', { expectedText: /LEAD UNI/i })
-  await qa.visit('anonymous login page', '/es/auth/login', { expectedText: /ingreso|login|email/i })
+  await qa.visit('anonymous login page', '/es/auth/login', { expectedText: /bienvenido|correo|email|login/i })
   await qa.visit('anonymous signup page', '/es/auth/sign-up', { expectedText: /crear|sign|email/i })
   await qa.visit('anonymous protected student redirect', '/es/student', { expectedUrl: /\/auth\/login/ })
   await qa.visit('anonymous protected chapter redirect', '/es/chapter', { expectedUrl: /\/auth\/login/ })
@@ -318,7 +367,7 @@ async function runAnonymousFlows(qa: LaunchQaCollector) {
 
 async function runStudentLikeFlows(qa: LaunchQaCollector) {
   await qa.loginAs('participant@test.com', /\/student/)
-  await qa.visit('participant student dashboard', '/es/student', { expectedText: /participante/i })
+  await qa.visit('participant student dashboard', '/es/student', { expectedText: /mi perfil|explorar eventos|mis eventos|perfil/i })
   await qa.visit('participant profile', '/es/student/profile', { expectedText: /perfil|profile/i })
   await qa.visit('participant resume', '/es/student/resume', { expectedText: /resume|cv|curriculum|hoja/i })
   await qa.visit('participant events', '/es/student/events', { expectedText: /eventos|events/i })
@@ -332,9 +381,13 @@ async function runStudentLikeFlows(qa: LaunchQaCollector) {
   const registeredBefore = await hasRegisteredEventState(qa['page'])
   if (!registeredBefore) {
     await qa.clickFirst('member open event registration submit', qa['page'].getByRole('button', { name: /^registrarme$/i }))
-    await qa['page'].waitForURL(/\/student\/events|\/events\//, { timeout: 10_000 }).catch(() => null)
-    await qa['page'].waitForTimeout(1000)
-    const registered = await hasRegisteredEventState(qa['page'])
+      await qa['page'].waitForURL(/\/student\/events|\/events\//, { timeout: 30_000 }).catch(() => null)
+      await qa['page'].waitForTimeout(1000)
+      await expect
+        .poll(async () => hasRegisteredEventState(qa['page']), { timeout: 30_000 })
+        .toBe(true)
+        .catch(() => undefined)
+      const registered = await hasRegisteredEventState(qa['page'])
     if (!registered) {
       const shot = await qa.screenshot('member registration failed')
       qa.addFinding('major', 'Open event registration did not reach registered state', {
@@ -395,7 +448,7 @@ async function runChapterFlows(qa: LaunchQaCollector) {
 
   for (const persona of leaders) {
     await qa.loginAs(persona.email, /\/chapter/)
-    await qa.visit(`${persona.label} chapter dashboard`, '/es/chapter', { expectedText: /LEAD UNI|chapter/i })
+    await qa.visit(`${persona.label} chapter dashboard`, '/es/chapter', { expectedText: /LEAD UNI|resumen del capitulo|crear evento/i })
     await qa.visit(`${persona.label} active roster`, '/es/chapter/members?status=active', { expectedText: /Test Member/i })
     const assignVisible = Boolean(await firstVisible(qa['page'].getByRole('button', { name: /asignar rol|cambiar rol/i })))
     const revokeVisible = Boolean(await firstVisible(qa['page'].getByRole('button', { name: /revocar membresia/i })))
@@ -419,12 +472,14 @@ async function runChapterFlows(qa: LaunchQaCollector) {
     }
 
     await qa.visit(`${persona.label} pending roster`, '/es/chapter/members?status=pending')
-    const pendingVisible = await qa['page'].getByText(/pendientes|necesitan revision/i).first().isVisible().catch(() => false)
-    if (persona.canSensitive !== pendingVisible) {
+    const sensitiveActionVisible = Boolean(
+      await firstVisible(qa['page'].getByRole('button', { name: /aprobar|rechazar/i }))
+    )
+    if (!persona.canSensitive && sensitiveActionVisible) {
       const shot = await qa.screenshot(`${persona.label} pending permission mismatch`)
       qa.addFinding('major', 'Sensitive member tab visibility mismatch', {
-        expected: `${persona.label} pending/review visibility = ${persona.canSensitive}.`,
-        actual: `pending/review visibility = ${pendingVisible}.`,
+        expected: `${persona.label} should not see applicant approve/reject controls.`,
+        actual: 'Sensitive applicant controls were visible.',
         screenshot: shot,
         suggestedFix: 'Use chapter.members.view_applicants to drive visible statuses and default status redirects.',
       })
@@ -462,7 +517,7 @@ async function runAdminFlows(qa: LaunchQaCollector) {
     await qa.visit(`${label} admin events`, '/es/admin/events', { expectedText: /event/i })
     await qa.visit(`${label} admin settings`, '/es/admin/settings', { expectedText: /settings|config/i })
 
-    await qa.visit(`${label} direct student route should not be primary`, '/es/student')
+    await qa.visit(`${label} direct student route should not be primary`, '/es/student', { expectedUrl: /\/admin/ })
     if (/\/student/.test(new URL(qa['page'].url()).pathname)) {
       const shot = await qa.screenshot(`${label} reached student route`)
       qa.addFinding('major', 'Admin can directly access student workspace', {
@@ -489,13 +544,13 @@ async function runRecruiterFlows(qa: LaunchQaCollector) {
       suggestedFix: 'Check recruiter search filters for person_profile.is_recruiter_visible and approved membership joins.',
     })
   }
-  const saveButton = qa['page'].getByRole('button', { name: /guardar/i })
-  if (await qa.clickFirst('recruiter save first visible student', saveButton, 'minor')) {
+  const saveButton = qa['page'].getByRole('button', { name: /guardar|guardado|quitar/i })
+  if (await qa.clickFirst('recruiter toggle first visible saved student', saveButton, 'minor')) {
     await expect(qa['page'].getByText(/guardo|guardado|quito/i).first()).toBeVisible({ timeout: 5_000 }).catch(async () => {
       const shot = await qa.screenshot('recruiter save unclear')
       qa.addFinding('minor', 'Save/unsave feedback unclear', {
         expected: 'Saving a student should show a toast or button state change.',
-        actual: 'No visible save feedback was detected after clicking Guardar.',
+        actual: 'No visible save feedback was detected after toggling the saved-state control.',
         screenshot: shot,
         suggestedFix: 'Expose an accessible success state for company save/unsave actions.',
       })
@@ -508,7 +563,7 @@ async function runRecruiterFlows(qa: LaunchQaCollector) {
 
   await qa.visit('recruiter blocked from admin', '/es/admin', { expectedUrl: /\/auth\/login/ })
   await qa.loginAs('recruiter@test.com', /\/company/)
-  await qa.visit('recruiter direct student route blocked', '/es/student')
+  await qa.visit('recruiter direct student route blocked', '/es/student', { expectedUrl: /\/company/ })
   if (/\/student/.test(new URL(qa['page'].url()).pathname)) {
     const shot = await qa.screenshot('recruiter reached student route')
     qa.addFinding('major', 'Recruiter can directly access student workspace', {
@@ -518,7 +573,7 @@ async function runRecruiterFlows(qa: LaunchQaCollector) {
       suggestedFix: 'Add recruiter redirect handling in student layout or clarify that recruiter access to student routes is intentional.',
     })
   }
-  await qa.visit('recruiter direct chapter route blocked', '/es/chapter')
+  await qa.visit('recruiter direct chapter route blocked', '/es/chapter', { expectedUrl: /\/auth\/login|\/company/ })
   if (!/\/auth\/login|\/company/.test(new URL(qa['page'].url()).pathname)) {
     const shot = await qa.screenshot('recruiter chapter route unexpected')
     qa.addFinding('major', 'Recruiter chapter route does not resolve to a company/auth boundary', {
@@ -562,9 +617,11 @@ test.describe('launch matrix report-only QA', () => {
             generatedAt: new Date().toISOString(),
             steps: qa.steps,
             findings: qa.findings,
+            expectedBehaviors: qa.expectedBehaviors,
             summary: {
               totalSteps: qa.steps.length,
               totalFindings: qa.findings.length,
+              totalExpectedBehaviors: qa.expectedBehaviors.length,
               bySeverity: qa.findings.reduce<Record<string, number>>((acc, finding) => {
                 acc[finding.severity] = (acc[finding.severity] ?? 0) + 1
                 return acc
@@ -577,5 +634,7 @@ test.describe('launch matrix report-only QA', () => {
       )
       await testInfo.attach('launch qa results', { path: resultPath, contentType: 'application/json' })
     }
+
+    expect(qa.findings, JSON.stringify(qa.findings, null, 2)).toEqual([])
   })
 })

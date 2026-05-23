@@ -1,13 +1,15 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useLocale } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const PUBLIC_HERO_VIDEO_SRC = "/video3.mp4";
+const PUBLIC_HERO_VIDEO_PATH = "/video3.mp4";
 
 export function FinalCTA() {
+  const [videoSrc, setVideoSrc] = useState<string | undefined>();
   const locale = useLocale() === "en" ? "en" : "es";
   const copy = locale === "en"
     ? {
@@ -29,6 +31,10 @@ export function FinalCTA() {
         secondaryHref: "/events",
       };
 
+  useEffect(() => {
+    setVideoSrc(new URL(PUBLIC_HERO_VIDEO_PATH, window.location.origin).toString());
+  }, []);
+
   return (
     <section className="p-4 sm:p-6 lg:p-8 h-screen">
       <div className="bg-background w-full h-full rounded-[2rem] relative overflow-hidden shadow-2xl">
@@ -38,7 +44,7 @@ export function FinalCTA() {
             muted
             loop
             playsInline
-            src={PUBLIC_HERO_VIDEO_SRC}
+            src={videoSrc}
             className="w-full h-full object-cover"
           />
         </div>

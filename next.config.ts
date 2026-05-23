@@ -4,6 +4,14 @@ import createNextIntlPlugin from 'next-intl/plugin';
 const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
+  async rewrites() {
+    return [
+      {
+        source: '/:locale(en|es)/video3.mp4',
+        destination: '/video3.mp4',
+      },
+    ];
+  },
   images: {
     dangerouslyAllowLocalIP: true,
     remotePatterns: [

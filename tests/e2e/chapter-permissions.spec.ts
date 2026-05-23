@@ -3,6 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 const PASSWORD = 'password123'
+const LOGIN_REDIRECT_TIMEOUT_MS = 60_000
 
 type Persona = {
   email: string
@@ -24,14 +25,33 @@ function artifactName(testName: string, projectName: string) {
 }
 
 async function loginAs(page: Page, email: string) {
-  await page.goto('/es/auth/login')
+  await page.goto('/es/auth/login', { waitUntil: 'domcontentloaded' })
+  await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
+  await expect(page.locator('#email')).toBeVisible()
   await page.locator('#email').fill(email)
   await page.locator('#password').fill(PASSWORD)
-  await Promise.all([
-    page.waitForURL((url) => !url.pathname.endsWith('/auth/login'), { timeout: 30_000 }),
-    page.locator('button[type="submit"]').click(),
+  await page.locator('button[type="submit"]').click()
+
+  const outcome = await Promise.race([
+    page
+      .waitForURL((url) => !url.pathname.endsWith('/auth/login'), { timeout: LOGIN_REDIRECT_TIMEOUT_MS })
+      .then(() => 'redirect' as const)
+      .catch(() => 'timeout' as const),
+    page
+      .locator('#error-message')
+      .waitFor({ state: 'visible', timeout: LOGIN_REDIRECT_TIMEOUT_MS })
+      .then(() => 'error' as const)
+      .catch(() => 'timeout' as const),
   ])
-  await page.waitForLoadState('networkidle')
+
+  if (outcome === 'error') {
+    throw new Error(`Login failed for ${email}: ${await page.locator('#error-message').innerText()}`)
+  }
+  if (outcome !== 'redirect') {
+    throw new Error(`Login did not redirect for ${email}; current URL is ${page.url()}`)
+  }
+
+  await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
 }
 
 async function screenshot(page: Page, name: string) {

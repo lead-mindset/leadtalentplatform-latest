@@ -20,6 +20,28 @@ import { GoogleButton } from "./google-button";
 import { useLocale, useTranslations } from 'next-intl';
 import { getAuthErrorKey } from '@/lib/auth-errors'
 import { resolvePostLoginRedirect } from '@/lib/actions/auth/resolve-post-login-redirect'
+
+const POST_LOGIN_REDIRECT_RETRY_DELAYS_MS = [0, 250, 750]
+
+async function resolvePostLoginRedirectWithRetry() {
+  let lastResult: Awaited<ReturnType<typeof resolvePostLoginRedirect>> | null = null
+
+  for (const delayMs of POST_LOGIN_REDIRECT_RETRY_DELAYS_MS) {
+    if (delayMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs))
+    }
+
+    const result = await resolvePostLoginRedirect()
+    if (result.success) return result
+    lastResult = result
+  }
+
+  return lastResult ?? {
+    success: false as const,
+    error: 'We could not load your account destination. Please try signing in again.',
+  }
+}
+
 export function LoginForm({
   className,
   ...props
@@ -51,7 +73,7 @@ export function LoginForm({
         return;
       }
 
-      const redirectResult = await resolvePostLoginRedirect()
+      const redirectResult = await resolvePostLoginRedirectWithRetry()
       if (!redirectResult.success) {
         setError(redirectResult.error);
         return;

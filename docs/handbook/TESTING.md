@@ -199,6 +199,44 @@ it('prevents registering over capacity via concurrent requests', async () => {
 });
 ```
 
+## Launch QA Matrix
+
+Use this pass before launch/stabilization reviews when the goal is to verify the seeded user journeys end-to-end. It depends on local Docker Supabase and the deterministic accounts above.
+
+All seeded launch personas use:
+
+```text
+password123
+```
+
+Run the reset first:
+
+```bash
+pnpm run supabase:reset
+```
+
+Run the chapter permission baseline:
+
+```bash
+pnpm exec playwright test tests/e2e/chapter-permissions.spec.ts --reporter=line
+```
+
+Run the full launch matrix on desktop and mobile Chromium:
+
+```bash
+pnpm exec playwright test tests/e2e/launch-qa-report.spec.ts --reporter=line
+```
+
+For faster debugging, run one launch scope at a time:
+
+```bash
+$env:LAUNCH_QA_SCOPE='public-student'; pnpm exec playwright test tests/e2e/launch-qa-report.spec.ts --reporter=line
+$env:LAUNCH_QA_SCOPE='chapter'; pnpm exec playwright test tests/e2e/launch-qa-report.spec.ts --reporter=line
+$env:LAUNCH_QA_SCOPE='admin-recruiter'; pnpm exec playwright test tests/e2e/launch-qa-report.spec.ts --reporter=line
+```
+
+The launch matrix writes JSON and screenshots to `outputs/launch-qa/`. Confirmed findings fail the Playwright test. Expected route-guard redirects, such as anonymous access to protected routes, are recorded separately as `expectedBehaviors` in the JSON output and should not be triaged as bugs.
+
 ## Running Tests
 
 ```bash
