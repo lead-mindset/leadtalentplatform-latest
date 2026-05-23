@@ -12,14 +12,14 @@ import { STUDENT_NAV, CHAPTER_NAV } from '@/lib/nav-config'
 interface StudentNavigationProps {
   userRole: string
   has_pending_approvals: boolean
+  canManageChapter?: boolean
 }
 
 export function StudentNavigation({ 
   userRole, 
-  has_pending_approvals 
+  has_pending_approvals,
+  canManageChapter = userRole === 'editor',
 }: StudentNavigationProps) {
-  const isEditor = userRole === 'editor'
-
   return (
     <>
       <SidebarGroup>
@@ -36,7 +36,7 @@ export function StudentNavigation({
         </SidebarGroupContent>
       </SidebarGroup>
 
-      {isEditor && (
+      {canManageChapter && (
         <SidebarGroup>
           <SidebarGroupLabel className="text-sidebar-foreground font-medium">Gestion de capitulo</SidebarGroupLabel>
           <SidebarGroupContent>

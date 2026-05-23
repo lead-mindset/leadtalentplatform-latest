@@ -2,9 +2,11 @@ import { describe, expect, it, vi } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {
   COMPANY_ACCESS_HELP_PATH,
+  canUserAccessEventWithPermission,
   canUserAccessChapter,
   canUserManageEvent,
   getApprovedChapterMembership,
+  getChapterDashboardMembership,
   resolveRecruiterAccess,
 } from './auth'
 import type { UserRow } from './types'
@@ -12,6 +14,8 @@ import type { UserRow } from './types'
 type TableMock = {
   select: ReturnType<typeof vi.fn>
   eq: ReturnType<typeof vi.fn>
+  match: ReturnType<typeof vi.fn>
+  is: ReturnType<typeof vi.fn>
   maybeSingle: ReturnType<typeof vi.fn>
 }
 
@@ -20,24 +24,62 @@ function buildMockSupabase(overrides: Partial<Record<string, Partial<TableMock>>
     chapter_membership: {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
+      match: vi.fn().mockReturnThis(),
+      is: vi.fn().mockReturnThis(),
       maybeSingle: vi.fn(),
     },
     event: {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
+      match: vi.fn().mockReturnThis(),
+      is: vi.fn().mockReturnThis(),
       maybeSingle: vi.fn(),
     },
     event_chapter: {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
+      match: vi.fn().mockReturnThis(),
+      is: vi.fn().mockReturnThis(),
       maybeSingle: vi.fn(),
     },
     recruiter_access: {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
+      match: vi.fn().mockReturnThis(),
+      is: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn(),
+    },
+    user: {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      match: vi.fn().mockReturnThis(),
+      is: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: { id: 'editor-1', role: 'editor' },
+        error: null,
+      }),
+    },
+    chapter_permission_grant: {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      match: vi.fn().mockReturnThis(),
+      is: vi.fn().mockReturnThis(),
       maybeSingle: vi.fn(),
     },
   }
+
+  for (const table of Object.values(tableMocks)) {
+    table.maybeSingle.mockResolvedValue({ data: null, error: null })
+  }
+
+  tableMocks.user.maybeSingle.mockResolvedValue({
+    data: { id: 'editor-1', role: 'editor' },
+    error: null,
+  })
+  tableMocks.chapter_permission_grant.maybeSingle.mockResolvedValue({
+    data: { permission_key: 'chapter.dashboard.access' },
+    error: null,
+  })
 
   for (const [table, override] of Object.entries(overrides)) {
     tableMocks[table] = {
@@ -84,6 +126,34 @@ describe('auth chapter and event access helpers', () => {
     expect(tableMocks.chapter_membership.eq).toHaveBeenCalledWith('status', 'approved')
   })
 
+  it('returns dashboard membership only when a scoped dashboard grant exists', async () => {
+    const { mockSupabase, tableMocks } = buildMockSupabase({
+      user: {
+        maybeSingle: vi.fn().mockResolvedValue({
+          data: { id: 'member-1', role: 'member' },
+          error: null,
+        }),
+      },
+    })
+    tableMocks.chapter_membership.maybeSingle.mockResolvedValue({
+      data: { chapter_id: 'leaduni', position: 'member', member_id: 'LEAD-123456' },
+      error: null,
+    })
+    tableMocks.chapter_permission_grant.maybeSingle.mockResolvedValue({
+      data: { permission_key: 'chapter.dashboard.access' },
+      error: null,
+    })
+
+    const result = await getChapterDashboardMembership(mockSupabase, 'member-1')
+
+    expect(result).toMatchObject({ chapter_id: 'leaduni' })
+    expect(tableMocks.chapter_permission_grant.match).toHaveBeenCalledWith({
+      user_id: 'member-1',
+      chapter_id: 'leaduni',
+      permission_key: 'chapter.dashboard.access',
+    })
+  })
+
   it('allows admins to manage any event without chapter membership', async () => {
     const { mockSupabase, tableMocks } = buildMockSupabase()
     tableMocks.event.maybeSingle.mockResolvedValue({
@@ -121,6 +191,41 @@ describe('auth chapter and event access helpers', () => {
     expect(mockSupabase.from).not.toHaveBeenCalledWith('event_chapter')
   })
 
+  it('allows member-role e-board users to manage events with scoped event permission', async () => {
+    const { mockSupabase, tableMocks } = buildMockSupabase({
+      user: {
+        maybeSingle: vi.fn().mockResolvedValue({
+          data: { id: 'member-1', role: 'member' },
+          error: null,
+        }),
+      },
+    })
+    tableMocks.event.maybeSingle.mockResolvedValue({
+      data: { id: 'event-1', chapter_id: 'leaduni', capacity: 20, title: 'Demo', access_model: 'open' },
+      error: null,
+    })
+    tableMocks.chapter_membership.maybeSingle.mockResolvedValue({
+      data: { chapter_id: 'leaduni', position: 'member', member_id: 'LEAD-123456' },
+      error: null,
+    })
+    tableMocks.chapter_permission_grant.maybeSingle.mockResolvedValue({
+      data: { permission_key: 'chapter.events.manage' },
+      error: null,
+    })
+
+    const result = await canUserManageEvent(mockSupabase, user('member', 'member-1'), 'event-1')
+
+    expect(result).toMatchObject({
+      allowed: true,
+      chapter_id: 'leaduni',
+    })
+    expect(tableMocks.chapter_permission_grant.match).toHaveBeenCalledWith({
+      user_id: 'member-1',
+      chapter_id: 'leaduni',
+      permission_key: 'chapter.events.manage',
+    })
+  })
+
   it('allows editors to manage events where their approved chapter collaborates', async () => {
     const { mockSupabase, tableMocks } = buildMockSupabase()
     tableMocks.event.maybeSingle.mockResolvedValue({
@@ -145,7 +250,73 @@ describe('auth chapter and event access helpers', () => {
     expect(tableMocks.event_chapter.eq).toHaveBeenCalledWith('chapter_id', 'leaduni')
   })
 
-  it('denies non-editors from managing events', async () => {
+  it('allows event access through a specific non-manage permission for collaborators', async () => {
+    const { mockSupabase, tableMocks } = buildMockSupabase()
+    tableMocks.event.maybeSingle.mockResolvedValue({
+      data: { id: 'event-1', chapter_id: 'leadpucp', capacity: 20, title: 'Demo', access_model: 'open' },
+      error: null,
+    })
+    tableMocks.chapter_membership.maybeSingle.mockResolvedValue({
+      data: { chapter_id: 'leaduni', position: 'director', member_id: 'LEAD-123456' },
+      error: null,
+    })
+    tableMocks.chapter_permission_grant.maybeSingle.mockResolvedValue({
+      data: { permission_key: 'chapter.events.check_in' },
+      error: null,
+    })
+    tableMocks.event_chapter.maybeSingle.mockResolvedValue({
+      data: { id: 'collab-1' },
+      error: null,
+    })
+
+    const result = await canUserAccessEventWithPermission(
+      mockSupabase,
+      user('member', 'member-1'),
+      'event-1',
+      'chapter.events.check_in'
+    )
+
+    expect(result).toMatchObject({
+      allowed: true,
+      chapter_id: 'leaduni',
+    })
+    expect(tableMocks.chapter_permission_grant.match).toHaveBeenCalledWith({
+      user_id: 'member-1',
+      chapter_id: 'leaduni',
+      permission_key: 'chapter.events.check_in',
+    })
+  })
+
+  it('denies archive access when the acting chapter lacks the archive grant', async () => {
+    const { mockSupabase, tableMocks } = buildMockSupabase()
+    tableMocks.event.maybeSingle.mockResolvedValue({
+      data: { id: 'event-1', chapter_id: 'leaduni', capacity: 20, title: 'Demo', access_model: 'open' },
+      error: null,
+    })
+    tableMocks.chapter_membership.maybeSingle.mockResolvedValue({
+      data: { chapter_id: 'leaduni', position: 'director', member_id: 'LEAD-123456' },
+      error: null,
+    })
+    tableMocks.chapter_permission_grant.maybeSingle.mockResolvedValue({
+      data: null,
+      error: null,
+    })
+
+    const result = await canUserAccessEventWithPermission(
+      mockSupabase,
+      user('member', 'member-1'),
+      'event-1',
+      'chapter.events.archive'
+    )
+
+    expect(result).toMatchObject({
+      allowed: false,
+      error: 'Insufficient permissions',
+    })
+    expect(mockSupabase.from).not.toHaveBeenCalledWith('event_chapter')
+  })
+
+  it('denies regular members without approved chapter permission from managing events', async () => {
     const { mockSupabase, tableMocks } = buildMockSupabase()
     tableMocks.event.maybeSingle.mockResolvedValue({
       data: { id: 'event-1', chapter_id: 'leaduni', capacity: 20, title: 'Demo', access_model: 'open' },
@@ -156,9 +327,8 @@ describe('auth chapter and event access helpers', () => {
 
     expect(result).toMatchObject({
       allowed: false,
-      error: 'Insufficient permissions',
+      error: 'No approved chapter assigned',
     })
-    expect(mockSupabase.from).not.toHaveBeenCalledWith('chapter_membership')
   })
 
   it('denies editors for other-chapter events without collaboration', async () => {
@@ -197,6 +367,29 @@ describe('auth chapter and event access helpers', () => {
     expect(mockSupabase.from).not.toHaveBeenCalledWith('event_chapter')
   })
 
+  it('allows chapter access for a member-role e-board user with dashboard permission', async () => {
+    const { mockSupabase, tableMocks } = buildMockSupabase({
+      user: {
+        maybeSingle: vi.fn().mockResolvedValue({
+          data: { id: 'member-1', role: 'member' },
+          error: null,
+        }),
+      },
+    })
+    tableMocks.chapter_membership.maybeSingle.mockResolvedValue({
+      data: { chapter_id: 'leaduni', position: 'member', member_id: 'LEAD-123456' },
+      error: null,
+    })
+    tableMocks.chapter_permission_grant.maybeSingle.mockResolvedValue({
+      data: { permission_key: 'chapter.dashboard.access' },
+      error: null,
+    })
+
+    const result = await canUserAccessChapter(mockSupabase, user('member', 'member-1'), 'leaduni')
+
+    expect(result).toBe(true)
+  })
+
   it('allows chapter access for an editor when their chapter collaborates on the event', async () => {
     const { mockSupabase, tableMocks } = buildMockSupabase()
     tableMocks.chapter_membership.maybeSingle.mockResolvedValue({
@@ -231,13 +424,25 @@ describe('auth chapter and event access helpers', () => {
     expect(result).toBe(false)
   })
 
-  it('denies chapter access for non-editors', async () => {
-    const { mockSupabase } = buildMockSupabase()
+  it('denies chapter access for approved members without dashboard permission', async () => {
+    const { mockSupabase, tableMocks } = buildMockSupabase({
+      user: {
+        maybeSingle: vi.fn().mockResolvedValue({
+          data: { id: 'member-1', role: 'member' },
+          error: null,
+        }),
+      },
+    })
+    tableMocks.chapter_membership.maybeSingle.mockResolvedValue({
+      data: { chapter_id: 'leaduni', position: 'member', member_id: 'LEAD-123456' },
+      error: null,
+    })
+    tableMocks.chapter_permission_grant.maybeSingle.mockResolvedValue({ data: null, error: null })
 
-    const result = await canUserAccessChapter(mockSupabase, user('member'), 'leaduni', 'event-1')
+    const result = await canUserAccessChapter(mockSupabase, user('member', 'member-1'), 'leaduni', 'event-1')
 
     expect(result).toBe(false)
-    expect(mockSupabase.from).not.toHaveBeenCalledWith('chapter_membership')
+    expect(mockSupabase.from).not.toHaveBeenCalledWith('event_chapter')
   })
 })
 

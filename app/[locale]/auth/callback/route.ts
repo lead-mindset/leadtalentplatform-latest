@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { routing } from '@/i18n/routing';
-import { getPostAuthRedirectPath } from '@/lib/auth-redirects'
+import { resolvePostAuthRedirectPath } from '@/lib/auth-redirects'
 
 export async function GET(
   request: Request,
@@ -61,7 +61,8 @@ const { data: profile } = await supabase
       .eq('user_id', user.id)
       .maybeSingle()
 
-  const redirectPath = getPostAuthRedirectPath({
+  const redirectPath = await resolvePostAuthRedirectPath(supabase, {
+    userId: user.id,
     hasProfile: Boolean(profile),
     role: userData?.role,
   })

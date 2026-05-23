@@ -2,7 +2,7 @@ import { SidebarLayout } from '@/components/ui/sidebars/sidebar-layout'
 import { BaseSidebar } from '@/components/ui/sidebars/base-sidebar'
 import { StudentNavigation } from '@/components/ui/sidebars/student-sidebar'
 import { MobileUserBadge } from '@/components/ui/sidebars/mobile-user-badge'
-import { requireUser, getSidebarStatsForEditor } from '@/lib/auth'
+import { requireUser, getSidebarStatsForEditor, getChapterDashboardMembership } from '@/lib/auth'
 import type { ReactNode } from 'react'
 
 interface StudentLayoutProps {
@@ -25,9 +25,12 @@ export default async function StudentLayout({
     .eq('status', 'approved')
     .maybeSingle()
 
+  const dashboardMembership = await getChapterDashboardMembership(supabase, user.id)
+  const canManageChapter = Boolean(dashboardMembership?.chapter_id)
+
   let has_pending_approvals = false
-  if (user.role === 'editor' && membership?.chapter_id) {
-    const stats = await getSidebarStatsForEditor(supabase, membership.chapter_id)
+  if (dashboardMembership?.chapter_id) {
+    const stats = await getSidebarStatsForEditor(supabase, dashboardMembership.chapter_id)
     has_pending_approvals = stats.has_pending_approvals
   }
 
@@ -51,6 +54,7 @@ export default async function StudentLayout({
           <StudentNavigation
             userRole={user.role}
             has_pending_approvals={has_pending_approvals}
+            canManageChapter={canManageChapter}
           />
         </BaseSidebar>
       }
