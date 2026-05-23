@@ -3,6 +3,8 @@ import { BaseSidebar } from '@/components/ui/sidebars/base-sidebar'
 import { StudentNavigation } from '@/components/ui/sidebars/student-sidebar'
 import { MobileUserBadge } from '@/components/ui/sidebars/mobile-user-badge'
 import { requireUser, getSidebarStatsForEditor, getChapterDashboardMembership } from '@/lib/auth'
+import { getStudentWorkspaceRedirectPath } from '@/lib/auth-redirects'
+import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
 
 interface StudentLayoutProps {
@@ -17,6 +19,10 @@ export default async function StudentLayout({
   await params
 
   const { supabase, user } = await requireUser()
+  const workspaceRedirect = getStudentWorkspaceRedirectPath(user.role)
+  if (workspaceRedirect) {
+    redirect(workspaceRedirect)
+  }
 
   const { data: membership } = await supabase
     .from('chapter_membership')

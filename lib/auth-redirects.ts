@@ -5,6 +5,15 @@ import { ChapterPermissionService } from '@/lib/services/chapter-permission.serv
 
 const CHAPTER_DASHBOARD_PATH = '/chapter'
 
+export function getStudentWorkspaceRedirectPath(role: Role | null | undefined) {
+  if (role === 'recruiter') return '/company'
+  if (role === 'admin') return '/admin'
+  if (role === 'member' || role === 'editor') return null
+  if (!role) return null
+
+  return '/auth/error'
+}
+
 export function getPostAuthRedirectPath({
   hasProfile,
   role,

@@ -2,7 +2,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/database.generated'
 import { ChapterPermissionService } from '@/lib/services/chapter-permission.service'
-import { getPostAuthRedirectPath, resolvePostAuthRedirectPath } from './auth-redirects'
+import {
+  getPostAuthRedirectPath,
+  getStudentWorkspaceRedirectPath,
+  resolvePostAuthRedirectPath,
+} from './auth-redirects'
 
 vi.mock('@/lib/services/chapter-permission.service', () => ({
   ChapterPermissionService: {
@@ -101,5 +105,22 @@ describe('getPostAuthRedirectPath', () => {
 
     expect(result).toBe('/company')
     expect(ChapterPermissionService.hasChapterPermission).not.toHaveBeenCalled()
+  })
+})
+
+describe('getStudentWorkspaceRedirectPath', () => {
+  it('redirects workspace-specific roles away from the student area', () => {
+    expect(getStudentWorkspaceRedirectPath('recruiter')).toBe('/company')
+    expect(getStudentWorkspaceRedirectPath('admin')).toBe('/admin')
+  })
+
+  it('allows student and chapter-operator account lanes into the student area', () => {
+    expect(getStudentWorkspaceRedirectPath('member')).toBeNull()
+    expect(getStudentWorkspaceRedirectPath('editor')).toBeNull()
+    expect(getStudentWorkspaceRedirectPath(null)).toBeNull()
+  })
+
+  it('fails closed for unknown non-empty roles', () => {
+    expect(getStudentWorkspaceRedirectPath('unknown' as never)).toBe('/auth/error')
   })
 })
