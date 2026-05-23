@@ -41,7 +41,7 @@ export function BaseSidebar({
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-4">
-        <LogoutButton className="w-full" />
+        <LogoutButton className="w-full" label="Cerrar sesión" />
       </SidebarFooter>
     </Sidebar>
   )
