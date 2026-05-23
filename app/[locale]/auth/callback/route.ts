@@ -49,17 +49,23 @@ export async function GET(
     return NextResponse.redirect(`${siteUrl}/${locale}${next}`)
   }
 
-  const { data: userData } = await supabase
-    .from('user')
-    .select('role')
-    .eq('id', user.id)
-    .maybeSingle()
+  const [{ data: userData, error: userDataError }, { data: profile, error: profileError }] =
+    await Promise.all([
+      supabase
+        .from('user')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle(),
+      supabase
+        .from('person_profile')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .maybeSingle(),
+    ])
 
-const { data: profile } = await supabase
-      .from('person_profile')
-      .select('user_id')
-      .eq('user_id', user.id)
-      .maybeSingle()
+  if (userDataError || profileError || !userData?.role) {
+    return NextResponse.redirect(`${siteUrl}/${locale}/auth/error`)
+  }
 
   const redirectPath = await resolvePostAuthRedirectPath(supabase, {
     userId: user.id,

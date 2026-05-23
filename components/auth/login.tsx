@@ -19,7 +19,7 @@ import { useState } from "react";
 import { GoogleButton } from "./google-button";
 import { useLocale, useTranslations } from 'next-intl';
 import { getAuthErrorKey } from '@/lib/auth-errors'
-import { getPostAuthRedirectPath } from '@/lib/auth-redirects'
+import { resolvePostLoginRedirect } from '@/lib/actions/auth/resolve-post-login-redirect'
 export function LoginForm({
   className,
   ...props
@@ -46,21 +46,18 @@ export function LoginForm({
       });
       if (error) throw error;
 
-      const userId = data.user?.id
-      if (!userId) {
-        router.push("/onboarding");
+      if (!data.user?.id) {
+        setError(t('anErrorOccurred'));
         return;
       }
 
-      const [{ data: userData }, { data: profile }] = await Promise.all([
-        supabase.from('user').select('role').eq('id', userId).maybeSingle(),
-        supabase.from('person_profile').select('user_id').eq('user_id', userId).maybeSingle(),
-      ])
+      const redirectResult = await resolvePostLoginRedirect()
+      if (!redirectResult.success) {
+        setError(redirectResult.error);
+        return;
+      }
 
-      router.push(getPostAuthRedirectPath({
-        hasProfile: Boolean(profile),
-        role: userData?.role,
-      }));
+      router.push(redirectResult.path);
     } catch (error: unknown) {
       setError(t(getAuthErrorKey(error)));
     } finally {

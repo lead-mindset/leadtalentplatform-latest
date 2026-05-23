@@ -4,7 +4,19 @@ Source PRD: `.github/PRDs/launch-user-flow-qa-fixes.prd.md`
 
 Source QA report: `.github/reports/launch-user-flow-playwright-qa-report.md`
 
-GitHub integration status: local issue specifications only; not uploaded yet.
+GitHub integration status: created with `gh` CLI on branch `codex/chapter-scoped-roles-permissions`.
+
+## Created GitHub Issues
+
+| Local Issue | GitHub Issue | Title | URL |
+| --- | --- | --- | --- |
+| 1 | #207 | Stabilize password-login redirect resolution | https://github.com/lead-mindset/leadtalentplatform-latest/issues/207 |
+| 2 | #208 | Enforce student workspace role boundaries | https://github.com/lead-mindset/leadtalentplatform-latest/issues/208 |
+| 3 | #209 | Split public chapter pages from protected chapter operations | https://github.com/lead-mindset/leadtalentplatform-latest/issues/209 |
+| 4 | #210 | Fix open event registration and anonymous registration CTA | https://github.com/lead-mindset/leadtalentplatform-latest/issues/210 |
+| 5 | #211 | Make admin date rendering hydration-safe | https://github.com/lead-mindset/leadtalentplatform-latest/issues/211 |
+| 6 | #212 | Clean public homepage asset and hydration warnings | https://github.com/lead-mindset/leadtalentplatform-latest/issues/212 |
+| 7 | #213 | Harden and re-run the launch QA matrix | https://github.com/lead-mindset/leadtalentplatform-latest/issues/213 |
 
 ## Proposed GitHub Issues
 
@@ -211,10 +223,10 @@ After the confirmed fixes land, promote the useful parts of the report-only laun
 
 | Issue | Title | Complexity | Dependency |
 | --- | --- | --- | --- |
-| TBD | Stabilize password-login redirect resolution | Medium | None |
-| TBD | Enforce student workspace role boundaries | Medium | Issue 1 |
-| TBD | Split public chapter pages from protected chapter operations | Medium | None |
-| TBD | Fix open event registration and anonymous registration CTA | Medium | None |
-| TBD | Make admin date rendering hydration-safe | Small | None |
-| TBD | Clean public homepage asset and hydration warnings | Small | None |
-| TBD | Harden and re-run the launch QA matrix | Medium | Issues 1-6 |
+| [#207](https://github.com/lead-mindset/leadtalentplatform-latest/issues/207) | Stabilize password-login redirect resolution | Medium | None |
+| [#208](https://github.com/lead-mindset/leadtalentplatform-latest/issues/208) | Enforce student workspace role boundaries | Medium | #207 |
+| [#209](https://github.com/lead-mindset/leadtalentplatform-latest/issues/209) | Split public chapter pages from protected chapter operations | Medium | None |
+| [#210](https://github.com/lead-mindset/leadtalentplatform-latest/issues/210) | Fix open event registration and anonymous registration CTA | Medium | None |
+| [#211](https://github.com/lead-mindset/leadtalentplatform-latest/issues/211) | Make admin date rendering hydration-safe | Small | None |
+| [#212](https://github.com/lead-mindset/leadtalentplatform-latest/issues/212) | Clean public homepage asset and hydration warnings | Small | None |
+| [#213](https://github.com/lead-mindset/leadtalentplatform-latest/issues/213) | Harden and re-run the launch QA matrix | Medium | #207-#212 |
