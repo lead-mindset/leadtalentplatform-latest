@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { getMyRegistrations } from '@/lib/actions/events/get-data'
 import { CancelRegistrationDialog } from '@/components/events/cancel-registration-dialog'
+import { EventCalendarActions } from '@/components/events/event-calendar-actions'
+import { EventDayGuidance } from '@/components/events/event-day-guidance'
 import { ScrollToHighlightedEvent } from '@/components/events/scroll-to-highlighted-event'
 import { RegistrationStatusBadge } from '@/components/events/registration-status-badge'
 import type { RegistrationStatus } from '@/lib/types'
@@ -15,6 +17,7 @@ import { Link } from '@/i18n/routing'
 import { Icons } from '@/components/ui/icons'
 import { MainContainer } from '@/components/global/main-container'
 import { PageHeader } from '@/components/ui/page-header'
+import { getEventLifecycle } from '@/lib/events/lifecycle'
 
 type RegistrationWithEvent = Awaited<ReturnType<typeof getMyRegistrations>>[number]
 
@@ -61,11 +64,42 @@ function reflectionHref(registration: RegistrationWithEvent) {
   return `/student/growth-reflection?${params.toString()}`
 }
 
+function getCalendarEvent(registration: RegistrationWithEvent) {
+  const event = registration.event
+  if (!event?.start_at || !event?.end_at) return null
+
+  return {
+    title: event.title ?? 'Evento LEAD',
+    description: event.description,
+    startAt: event.start_at,
+    endAt: event.end_at,
+    location: event.location,
+    meetingUrl: event.meeting_url,
+    detailUrl: `/es/events/${registration.event_id}`,
+  }
+}
+
+function getLifecycleForRegistration(registration: RegistrationWithEvent) {
+  const event = registration.event
+  if (!event) return null
+
+  return getEventLifecycle({
+    startAt: event.start_at,
+    endAt: event.end_at,
+    accessModel: event.access_model === 'application' ? 'application' : 'open',
+    capacity: event.capacity,
+    registrationStatus: registration.status as RegistrationStatus,
+    checkedInAt: registration.checked_in_at,
+  })
+}
+
 function getRegistrationMessage(registration: RegistrationWithEvent, qrDataUrl: string | null) {
+  const lifecycle = getLifecycleForRegistration(registration)
+
   if (isCheckedIn(registration)) {
     return {
-      title: 'Check-in realizado',
-      body: 'Tu asistencia ya fue registrada para este evento.',
+      title: lifecycle?.label ?? 'Check-in realizado',
+      body: lifecycle?.description ?? 'Tu asistencia ya fue registrada para este evento.',
       variant: 'success' as const,
     }
   }
@@ -73,36 +107,36 @@ function getRegistrationMessage(registration: RegistrationWithEvent, qrDataUrl: 
   if (registration.status === 'registered') {
     return qrDataUrl
       ? {
-          title: 'QR listo',
+          title: 'Codigo listo',
           body: 'Muestra este codigo al llegar. Mantén el brillo alto para facilitar el check-in.',
           variant: 'success' as const,
         }
       : {
-          title: 'Registro confirmado',
-          body: 'Ya estas registrado. Los detalles del QR apareceran aqui cuando esten disponibles.',
+          title: lifecycle?.label ?? 'Registro confirmado',
+          body: lifecycle?.description ?? 'Ya estas registrado. Los detalles del QR apareceran aqui cuando esten disponibles.',
           variant: 'info' as const,
         }
   }
 
   if (registration.status === 'pending_review') {
     return {
-      title: 'Postulacion enviada',
-      body: 'El equipo te escribira por correo despues de revisarla.',
+      title: lifecycle?.label ?? 'Postulacion enviada',
+      body: lifecycle?.description ?? 'El equipo te escribira por correo despues de revisarla.',
       variant: 'warning' as const,
     }
   }
 
   if (registration.status === 'rejected') {
     return {
-      title: 'No seleccionado',
-      body: 'No fuiste seleccionado para este evento.',
+      title: lifecycle?.label ?? 'No seleccionado',
+      body: lifecycle?.description ?? 'No fuiste seleccionado para este evento.',
       variant: 'destructive' as const,
     }
   }
 
   return {
-    title: 'Cancelado',
-    body: 'Este registro esta inactivo.',
+    title: lifecycle?.label ?? 'Cancelado',
+    body: lifecycle?.description ?? 'Este registro esta inactivo.',
     variant: 'neutral' as const,
   }
 }
@@ -142,7 +176,7 @@ function QrPanel({ qrDataUrl }: { qrDataUrl: string }) {
         />
       </div>
       <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-[#111827]">
-        Listo para check-in
+        Codigo de check-in del evento
       </p>
     </div>
   )
@@ -157,6 +191,7 @@ function EventRegistrationCard({
   const message = getRegistrationMessage(registration, qrDataUrl)
   const canCancel = registration.status === 'registered' && !registration.checked_in_at
   const canShowQr = showQr && registration.status === 'registered' && Boolean(qrDataUrl)
+  const calendarEvent = canShowQr && isFutureEvent(registration) ? getCalendarEvent(registration) : null
 
   return (
     <Card
@@ -188,7 +223,13 @@ function EventRegistrationCard({
           </div>
         </div>
 
-        {canShowQr && qrDataUrl ? <QrPanel qrDataUrl={qrDataUrl} /> : null}
+        {canShowQr && qrDataUrl ? (
+          <div className="space-y-3">
+            <QrPanel qrDataUrl={qrDataUrl} />
+            <EventDayGuidance compact />
+            {calendarEvent ? <EventCalendarActions event={calendarEvent} layout="stack" /> : null}
+          </div>
+        ) : null}
 
         {canReflectOnEvent(registration) ? (
           <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
@@ -281,6 +322,9 @@ function CurrentTicket({
 }) {
   const message = getRegistrationMessage(registration, qrDataUrl)
   const canCancel = registration.status === 'registered' && !registration.checked_in_at
+  const calendarEvent = registration.status === 'registered' && isFutureEvent(registration)
+    ? getCalendarEvent(registration)
+    : null
 
   return (
     <Card className="rounded-lg">
@@ -315,6 +359,13 @@ function CurrentTicket({
             </div>
           </div>
 
+          {calendarEvent ? (
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-foreground">Agendalo antes de cerrar esta pagina</p>
+              <EventCalendarActions event={calendarEvent} />
+            </div>
+          ) : null}
+
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button asChild className="w-full sm:w-auto">
               <Link href={`/events/${registration.event_id}`}>Ver detalle</Link>
@@ -331,13 +382,16 @@ function CurrentTicket({
         </div>
 
         {qrDataUrl ? (
-          <QrPanel qrDataUrl={qrDataUrl} />
+          <div className="space-y-3">
+            <QrPanel qrDataUrl={qrDataUrl} />
+            <EventDayGuidance compact />
+          </div>
         ) : (
           <div className="flex min-h-64 flex-col items-center justify-center rounded-lg border border-dashed border-border bg-muted/30 p-6 text-center">
             <QrCode className="mb-3 h-8 w-8 text-muted-foreground" />
             <p className="text-sm font-medium text-foreground">QR aun no disponible</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Los registros confirmados muestran aqui su codigo QR.
+              Solo los registros confirmados muestran aqui su codigo de check-in del evento.
             </p>
           </div>
         )}
@@ -535,20 +589,7 @@ export default async function StudentEventsPage({
                 <CardDescription>Detalles simples para entrar mas rapido al evento.</CardDescription>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-3 text-sm leading-6 text-muted-foreground">
-                  <li className="flex gap-3">
-                    <Icons.CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                    <span>Usa el QR del ticket actual cuando llegues.</span>
-                  </li>
-                  <li className="flex gap-3">
-                    <Icons.CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                    <span>Las postulaciones pendientes no tienen QR hasta ser aprobadas.</span>
-                  </li>
-                  <li className="flex gap-3">
-                    <Icons.CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                    <span>Los registros cancelados o rechazados quedan inactivos.</span>
-                  </li>
-                </ul>
+                <EventDayGuidance compact className="border-0 bg-transparent p-0" />
               </CardContent>
             </Card>
           </aside>

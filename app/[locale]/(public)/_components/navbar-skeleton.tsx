@@ -11,19 +11,19 @@ export function NavbarSkeleton() {
             </div>
           </div>
 
-          <nav className="hidden flex-1 items-center gap-1 px-2 md:flex">
+          <nav className="hidden flex-1 items-center gap-1 px-2 lg:flex">
             {[...Array(4)].map((_, index) => (
               <div key={index} className="h-8 w-16 animate-pulse rounded-md bg-muted" />
             ))}
           </nav>
 
-          <div className="hidden items-center gap-2 md:flex">
+          <div className="hidden items-center gap-2 lg:flex">
             <div className="h-8 w-20 animate-pulse rounded-md bg-muted" />
             <div className="h-8 w-16 animate-pulse rounded-md bg-muted" />
             <div className="h-8 w-20 animate-pulse rounded-md bg-muted" />
           </div>
 
-          <div className="h-8 w-8 animate-pulse rounded-md bg-muted md:hidden" />
+          <div className="h-8 w-8 animate-pulse rounded-md bg-muted lg:hidden" />
         </div>
       </div>
     </header>
