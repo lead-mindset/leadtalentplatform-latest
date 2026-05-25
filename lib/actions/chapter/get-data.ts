@@ -57,6 +57,32 @@ export async function getChapterMemberPermissions(
   return auth?.permissions ?? null
 }
 
+export async function getChapterOverviewRoster(
+  chapter_id: string,
+  recentLimit: number = 5
+): Promise<{
+  members: MemberWithProfile[]
+  recentActivity: MemberWithProfile[]
+  permissions: ChapterMemberPermissionFlags
+} | null> {
+  const auth = await authorizeChapterRosterRead(chapter_id)
+  if (!auth) return null
+
+  const members = filterChapterMembersForPermissions(
+    await ChapterService.getChapterMembers(auth.supabase, chapter_id),
+    auth.permissions
+  )
+  const recentActivity = auth.permissions.canViewApproved
+    ? ChapterService.getRecentChapterActivityFromMembers(members, recentLimit)
+    : []
+
+  return {
+    members,
+    recentActivity,
+    permissions: auth.permissions,
+  }
+}
+
 export function getMemberStats(members: MemberWithProfile[]) {
   return ChapterService.getMemberStats(members)
 }

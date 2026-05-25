@@ -145,6 +145,13 @@ export const ChapterService = {
   ): Promise<MemberWithProfile[]> {
     const members = await ChapterMembershipService.getChapterRoster(supabase, chapter_id)
 
+    return ChapterService.getRecentChapterActivityFromMembers(members, limit)
+  },
+
+  getRecentChapterActivityFromMembers(
+    members: MemberWithProfile[],
+    limit: number = 5
+  ): MemberWithProfile[] {
     return members
       .filter((member) => member.chapter_membership?.status === 'approved')
       .sort((a, b) => {

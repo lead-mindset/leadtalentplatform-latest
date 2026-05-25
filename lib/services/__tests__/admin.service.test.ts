@@ -225,17 +225,20 @@ describe('AdminService', () => {
         error: null,
       })
 
-      tableMocks.chapter_membership._builder._setThenValue({ data: [], error: null, count: 3 })
-      tableMocks.chapter_membership._builder._setThenValue({ data: [], error: null, count: 0 })
-      tableMocks.chapter_membership._builder._setThenValue({ data: [], error: null, count: 1 })
-      tableMocks.chapter_membership._builder._setThenValue({ data: [], error: null, count: 1 })
-
-      tableMocks.event._builder._setThenValue({
-        data: { start_at: '2026-11-21T09:00:00.000Z' },
+      tableMocks.chapter_membership._builder._setThenValue({
+        data: [
+          { chapter_id: 'leaduni', status: 'approved' },
+          { chapter_id: 'leaduni', status: 'approved' },
+          { chapter_id: 'leaduni', status: 'approved' },
+          { chapter_id: 'leadtecsup', status: 'pending' },
+        ],
         error: null,
       })
+
       tableMocks.event._builder._setThenValue({
-        data: null,
+        data: [
+          { chapter_id: 'leaduni', start_at: '2026-11-21T09:00:00.000Z' },
+        ],
         error: null,
       })
 
@@ -712,6 +715,40 @@ describe('AdminService', () => {
   // ───────────────────────────────────────────────────────────────
   // getCompaniesList
   // ───────────────────────────────────────────────────────────────
+  describe('getAvailableEditorsByChapterIds', () => {
+    it('returns approved member/editor candidates grouped by chapter', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.chapter_membership._builder._setThenValue({
+        data: [
+          { chapter_id: 'ch-1', user_id: 'user-1' },
+          { chapter_id: 'ch-2', user_id: 'user-2' },
+          { chapter_id: 'ch-2', user_id: 'user-3' },
+        ],
+        error: null,
+      })
+      tableMocks.user._builder._setThenValue({
+        data: [
+          { id: 'user-1', name: 'Member One', email: 'one@test.com', role: 'member' },
+          { id: 'user-2', name: 'Editor Two', email: 'two@test.com', role: 'editor' },
+          { id: 'user-3', name: 'Admin Three', email: 'three@test.com', role: 'admin' },
+        ],
+        error: null,
+      })
+
+      const result = await AdminService.getAvailableEditorsByChapterIds(
+        mockSupabase as unknown as SupabaseClient,
+        ['ch-1', 'ch-2']
+      )
+
+      expect(result).toEqual({
+        'ch-1': [{ id: 'user-1', name: 'Member One', email: 'one@test.com', role: 'member' }],
+        'ch-2': [{ id: 'user-2', name: 'Editor Two', email: 'two@test.com', role: 'editor' }],
+      })
+      expect(tableMocks.chapter_membership._builder.in).toHaveBeenCalledWith('chapter_id', ['ch-1', 'ch-2'])
+    })
+  })
+
   describe('getCompaniesList', () => {
     it('should return paginated companies', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()

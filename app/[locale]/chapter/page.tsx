@@ -6,10 +6,8 @@ import { Icons } from '@/components/ui/icons'
 import { requireChapterMember } from '@/lib/auth'
 import type { MemberWithProfile, RecentActivityMember } from '@/lib/types'
 import {
-  getChapterMemberPermissions,
-  getChapterMembers,
+  getChapterOverviewRoster,
   getMemberStats,
-  getRecentChapterActivity,
 } from '@/lib/actions/chapter/get-data'
 import type { ChapterMemberPermissionFlags } from '@/lib/services/chapter.service'
 import { getChapterEvents } from '@/lib/actions/events/get-data'
@@ -267,12 +265,13 @@ async function ChapterContent() {
     )
   }
 
-  const [allMembers, recentActivity, chapterEvents, memberPermissions] = await Promise.all([
-    getChapterMembers(chapter_id),
-    getRecentChapterActivity(chapter_id, 4),
+  const [overviewRoster, chapterEvents] = await Promise.all([
+    getChapterOverviewRoster(chapter_id, 4),
     getChapterEvents(),
-    getChapterMemberPermissions(chapter_id),
   ])
+  const allMembers = overviewRoster?.members ?? []
+  const recentActivity = overviewRoster?.recentActivity ?? []
+  const memberPermissions = overviewRoster?.permissions ?? null
 
   const stats = getMemberStats(allMembers)
   const approvalRate =
