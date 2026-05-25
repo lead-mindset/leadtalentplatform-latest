@@ -73,12 +73,12 @@ export default async function ChapterCheckinPage({
       />
 
       <PageHeader
-        eyebrow="Herramientas del chapter"
+        eyebrow="Herramientas del capítulo"
         title="Check-in"
-        description="Escanea codigos QR, busca asistentes o pega un token para el evento seleccionado."
+        description="Escanea códigos QR, busca asistentes o pega un token para el evento seleccionado."
         actions={
           <Button asChild variant="outline">
-          <Link href="/chapter/events">Eventos del chapter</Link>
+          <Link href="/chapter/events">Eventos del capítulo</Link>
         </Button>
         }
       />
@@ -109,7 +109,7 @@ export default async function ChapterCheckinPage({
               <div className="rounded-lg border bg-card p-4">
                 <h3 className="font-semibold">Selector de evento</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Cambia rapidamente si estas operando varios eventos del chapter.
+                  Cambia rápidamente si estás operando varios eventos del capítulo.
                 </p>
               </div>
               <div className="divide-y overflow-hidden rounded-lg border bg-card">
@@ -141,7 +141,7 @@ export default async function ChapterCheckinPage({
             </div>
             <h2 className="text-xl font-semibold">No hay eventos activos para check-in</h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-              Crea o publica un evento proximo antes de abrir el check-in.
+              Crea o publica un evento próximo antes de abrir el check-in.
             </p>
             <Button asChild className="mt-6">
               <Link href="/chapter/events">Gestionar eventos</Link>

@@ -15,7 +15,7 @@ export default async function StudentResumePage() {
       <PageHeader
         eyebrow="Mi LEAD"
         title="Mi CV"
-        description="Manten actualizado tu CV para futuras oportunidades con empresas aliadas. Solo se comparte cuando tu perfil profesional esta habilitado."
+        description="Mantén actualizado tu CV para futuras oportunidades con empresas aliadas. Solo se comparte cuando tu perfil profesional está habilitado."
         badge={
           resume ? (
             <Badge variant="success" size="lg">
@@ -41,15 +41,15 @@ export default async function StudentResumePage() {
                 <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
                   <Icons.Crown className="h-4 w-4 text-primary" />
                 </span>
-                Consejos rapidos
+                Consejos rápidos
               </CardTitle>
             </CardHeader>
             <CardContent>
               <ul className="space-y-3">
                 {[
-                  'Empieza tus logros con verbos de accion.',
-                  'Usa un formato claro y facil de escanear.',
-                  'Cuantifica impacto con metricas cuando sea posible.',
+                  'Empieza tus logros con verbos de acción.',
+                  'Usa un formato claro y fácil de escanear.',
+                  'Cuantifica impacto con métricas cuando sea posible.',
                   'Ajusta habilidades y proyectos a la oportunidad.',
                 ].map((tip) => (
                   <li key={tip} className="flex gap-3">
@@ -72,12 +72,12 @@ export default async function StudentResumePage() {
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-sm leading-6 text-muted-foreground">
-                Estos recursos se agregaran pronto. Por ahora, enfocate en subir un PDF claro y actualizado.
+                Estos recursos se agregarán pronto. Por ahora, enfócate en subir un PDF claro y actualizado.
               </p>
               <div className="space-y-2">
                 {[
                   { label: 'Plantilla de CV', icon: 'FileText' as const },
-                  { label: 'Guia de verbos de accion', icon: 'BookOpen' as const },
+                  { label: 'Guía de verbos de acción', icon: 'BookOpen' as const },
                 ].map(({ label, icon }) => {
                   const IconComponent = Icons[icon]
                   return (
