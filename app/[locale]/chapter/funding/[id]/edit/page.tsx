@@ -62,13 +62,13 @@ export default async function EditChapterFundingRequestPage({
       />
 
       <PageHeader
-        eyebrow="Financiamiento del chapter"
+        eyebrow="Financiamiento del capítulo"
         title="Editar solicitud"
         description="Ajusta el borrador antes de enviarlo o responde a cambios solicitados."
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <FundingStatusBadge status={status} />
-            {request.is_late_request && <Badge variant="warning">Solicitud tardia</Badge>}
+            {request.is_late_request && <Badge variant="warning">Solicitud tardía</Badge>}
             <Button asChild variant="outline">
               <Link href={`/${locale}/chapter/funding`}>
                 <Icons.ChevronLeft className="mr-2 h-4 w-4" />
@@ -89,7 +89,7 @@ export default async function EditChapterFundingRequestPage({
             </div>
             <h2 className="text-xl font-semibold">Esta solicitud ya no se puede editar</h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-              Solo los borradores o solicitudes con cambios solicitados pueden modificarse desde el chapter.
+              Solo los borradores o solicitudes con cambios solicitados pueden modificarse desde el capítulo.
             </p>
             <Button asChild className="mt-6">
               <Link href={`/${locale}/chapter/funding`}>Ver solicitudes</Link>

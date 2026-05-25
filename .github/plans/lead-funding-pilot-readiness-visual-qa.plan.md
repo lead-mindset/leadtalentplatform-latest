@@ -75,17 +75,17 @@ For each screenshot, check:
 ## Tasks
 
 - [x] Create a GitHub issue for the pilot-readiness visual QA pass and link this plan.
-- [ ] Start from clean `dev` on a branch such as `codex/lead-funding-pilot-visual-qa`.
-- [ ] Confirm local Supabase seed state is ready for the funding spec.
-- [ ] Run `PLAYWRIGHT_BASE_URL=http://localhost:3100 pnpm exec playwright test tests/e2e/lead-funding.spec.ts --project=desktop-chromium --project=mobile-chromium --reporter=line` or let Playwright start the local dev server.
-- [ ] Inspect generated screenshots in `outputs/` for the chapter list, new request form, accountability detail, admin review queue, and admin close controls.
-- [ ] Create a short screenshot review note under `docs/runbooks/lead-funding-validation-report.md` or a new dated QA report if the findings are substantial.
-- [ ] Patch only high-confidence UI/copy issues found in the screenshots.
-- [ ] Rerun the focused Playwright spec after each patch group.
-- [ ] Run `pnpm lint`.
-- [ ] Run focused service tests if behavior changes; otherwise document that the change is visual/copy-only.
-- [ ] Update the validation report verdict and remaining pilot gates.
-- [ ] Open a PR to `dev` with screenshot findings summarized; do not commit raw screenshots.
+- [x] Start from clean `dev` on a branch such as `codex/lead-funding-pilot-visual-qa`.
+- [x] Confirm local Supabase seed state is ready for the funding spec.
+- [x] Run `PLAYWRIGHT_BASE_URL=http://localhost:3100 pnpm exec playwright test tests/e2e/lead-funding.spec.ts --project=desktop-chromium --project=mobile-chromium --reporter=line` or let Playwright start the local dev server.
+- [x] Inspect generated screenshots in `outputs/` for the chapter list, new request form, accountability detail, admin review queue, and admin close controls.
+- [x] Create a short screenshot review note under `docs/runbooks/lead-funding-validation-report.md` or a new dated QA report if the findings are substantial.
+- [x] Patch only high-confidence UI/copy issues found in the screenshots.
+- [x] Rerun the focused Playwright spec after each patch group.
+- [x] Run `pnpm lint`.
+- [x] Run focused service tests if behavior changes; otherwise document that the change is visual/copy-only.
+- [x] Update the validation report verdict and remaining pilot gates.
+- [x] Open a PR to `dev` with screenshot findings summarized; do not commit raw screenshots.
 
 ## Candidate Fix Areas
 

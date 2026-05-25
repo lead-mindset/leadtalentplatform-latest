@@ -69,13 +69,13 @@ async function assertNoHorizontalOverflow(page: Page) {
 
 test.describe.serial('Lead Funding v1', () => {
   test('chapter president can submit a request and upload accountability evidence', async ({ page }, testInfo) => {
-    const title = `QA Funding ${testInfo.project.name} ${Date.now()}`
+    const title = `QA financiamiento ${testInfo.project.name} ${Date.now()}`
     const fileName = `receipt-${testInfo.project.name}.pdf`
 
     await loginAs(page, 'president@test.com')
 
     await page.goto('/es/chapter/funding', { waitUntil: 'networkidle' })
-    await expect(page.getByRole('heading', { name: 'Financiamiento' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Financiamiento', exact: true })).toBeVisible()
     await expect(page.getByRole('link', { name: /Nueva solicitud/i })).toBeVisible()
     await screenshot(page, testInfo, 'chapter-list')
     await assertNoHorizontalOverflow(page)
@@ -86,23 +86,23 @@ test.describe.serial('Lead Funding v1', () => {
     await page.locator('#purpose').fill('Validar el flujo completo de financiamiento para el piloto controlado.')
     await page.locator('#eventDate').fill('2030-08-15')
     await page.locator('#attendees').fill('45')
-    await page.locator('#audience').fill('Estudiantes miembros y potenciales miembros del chapter.')
+    await page.locator('#audience').fill('Estudiantes miembros y potenciales miembros del capítulo.')
     await page.getByText('Empower', { exact: true }).click()
-    await page.getByText('Excelencia academica', { exact: true }).click()
+    await page.getByText('Excelencia académica', { exact: true }).click()
     await page.locator('#amount').fill('150')
-    await page.locator('#budget-label-0').fill('Materiales para dinamica de liderazgo')
+    await page.locator('#budget-label-0').fill('Materiales para dinámica de liderazgo')
     await page.locator('#budget-amount-0').fill('150')
     await screenshot(page, testInfo, 'chapter-new')
     await assertNoHorizontalOverflow(page)
     await page.getByRole('button', { name: /Enviar solicitud/i }).click()
 
     await page.getByText(title).waitFor({ state: 'visible', timeout: 30_000 })
-    await expect(page.getByText('En revision').first()).toBeVisible()
+    await expect(page.getByText('En revisión').first()).toBeVisible()
 
     await page.goto(`/es/chapter/funding/${APPROVED_REQUEST_ID}`, { waitUntil: 'networkidle' })
-    await expect(page.getByRole('heading', { name: /Refreshments para Career Readiness Clinic/i })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /Refrigerios para Career Readiness Clinic/i })).toBeVisible()
     await page.locator('#actual-spend').fill('345')
-    await page.locator('#result-summary').fill('QA: se valida que el chapter pueda registrar resultado e impacto.')
+    await page.locator('#result-summary').fill('QA: se valida que el capítulo pueda registrar resultado e impacto.')
     await page.locator('#accountability-note').fill('QA: evidencia de comprobante para piloto controlado.')
     await page.getByRole('button', { name: /Guardar seguimiento/i }).click()
     await page.waitForTimeout(1_000)
@@ -113,7 +113,7 @@ test.describe.serial('Lead Funding v1', () => {
     })
     await page.locator('#file-notes').fill('Comprobante de QA para flujo de evidencia.')
     await page.getByRole('button', { name: /Subir archivo/i }).click()
-    await page.getByText(fileName).last().waitFor({ state: 'visible', timeout: 30_000 })
+    await expect(page.getByText('Comprobante de QA para flujo de evidencia.')).toBeVisible({ timeout: 30_000 })
     await screenshot(page, testInfo, 'chapter-accountability')
     await assertNoHorizontalOverflow(page)
   })
@@ -122,15 +122,15 @@ test.describe.serial('Lead Funding v1', () => {
     await loginAs(page, 'admin@test.com')
 
     await page.goto('/es/admin/funding', { waitUntil: 'networkidle' })
-    await expect(page.getByRole('heading', { name: 'Financiamiento' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Financiamiento', exact: true })).toBeVisible()
     await expect(page.getByText('Materiales para taller de liderazgo')).toBeVisible()
     await expect(page.getByRole('button', { name: /Aprobar completo/i }).first()).toBeVisible()
     await screenshot(page, testInfo, 'admin-review')
     await assertNoHorizontalOverflow(page)
 
     await page.goto('/es/admin/funding?status=approved', { waitUntil: 'networkidle' })
-    await expect(page.getByText('Refreshments para Career Readiness Clinic')).toBeVisible()
-    await expect(page.getByText('Cierre y regularizacion')).toBeVisible()
+    await expect(page.getByText('Refrigerios para Career Readiness Clinic')).toBeVisible()
+    await expect(page.getByText('Cierre y regularización')).toBeVisible()
     await expect(page.getByRole('button', { name: /Cerrar solicitud/i })).toBeVisible()
     await screenshot(page, testInfo, 'admin-close')
     await assertNoHorizontalOverflow(page)

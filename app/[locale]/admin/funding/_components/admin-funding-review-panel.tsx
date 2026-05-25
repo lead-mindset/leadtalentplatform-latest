@@ -71,7 +71,7 @@ export function AdminFundingReviewPanel({
           return
         }
 
-        toast.success('Decision guardada.')
+        toast.success('Decisión guardada.')
         router.refresh()
       })()
     })
@@ -120,7 +120,7 @@ export function AdminFundingReviewPanel({
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Decision de admin</CardTitle>
+          <CardTitle>Decisión de admin</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
@@ -143,14 +143,14 @@ export function AdminFundingReviewPanel({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor={`decision-note-${request.id}`}>Nota de decision</Label>
+            <Label htmlFor={`decision-note-${request.id}`}>Nota de decisión</Label>
             <Textarea
               id={`decision-note-${request.id}`}
               value={note}
               onChange={(event) => setNote(event.target.value)}
               rows={3}
               disabled={!canReview || isPending}
-              placeholder="Obligatoria para aprobacion parcial, cambios o rechazo."
+              placeholder="Obligatoria para aprobación parcial, cambios o rechazo."
             />
           </div>
 
@@ -172,7 +172,7 @@ export function AdminFundingReviewPanel({
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
-              Las decisiones solo estan disponibles para solicitudes enviadas a revision.
+              Las decisiones solo están disponibles para solicitudes enviadas a revisión.
             </p>
           )}
         </CardContent>
@@ -224,7 +224,7 @@ export function AdminFundingReviewPanel({
       {canClose && (
         <Card>
           <CardHeader>
-            <CardTitle>Cierre y regularizacion</CardTitle>
+            <CardTitle>Cierre y regularización</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -235,7 +235,7 @@ export function AdminFundingReviewPanel({
                 onChange={(event) => setClosureNote(event.target.value)}
                 rows={3}
                 disabled={isPending}
-                placeholder="Usa esto para excepciones justificadas o regularizacion manual."
+                placeholder="Usa esto para excepciones justificadas o regularización manual."
               />
             </div>
             <Button type="button" variant="outline" className="w-full" onClick={runClose} disabled={isPending}>
