@@ -1,11 +1,12 @@
 'use server';
 
 import { z } from 'zod';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { requireChapterEditor } from '@/lib/auth';
 import { EventService } from '@/lib/services/event.service';
 import { EventApplicationService } from '@/lib/services/event-application.service';
 import { ChapterPermissionService } from '@/lib/services/chapter-permission.service';
+import { PUBLIC_EVENTS_CACHE_TAG } from '@/lib/data/public-events';
 import type { EventRow } from '@/lib/types';
 
 const ApplicationQuestionSchema = z.object({
@@ -41,7 +42,7 @@ const EventInputSchema = z
   })
   .refine(
     (data) => {
-      if (data.accessModel === 'application') {
+      if (data.isPublished === true && data.accessModel === 'application') {
         return Boolean(data.applicationQuestions?.length);
       }
       return true;
@@ -53,7 +54,7 @@ const EventInputSchema = z
   )
   .refine(
     (data) => {
-      if (data.eventType !== 'in_person') {
+      if (data.isPublished === true && data.eventType !== 'in_person') {
         return data.meetingUrl && data.meetingUrl.trim().length > 0;
       }
       return true;
@@ -117,6 +118,7 @@ export async function createEvent(input: CreateEventInput): Promise<CreateEventR
       const questionsResult = await EventApplicationService.upsertQuestionsForEvent(supabase, {
         eventId: event.id,
         questions: data.applicationQuestions ?? [],
+        requireCompleteQuestions: data.isPublished === true,
       });
 
       if (!questionsResult.success) {
@@ -125,6 +127,7 @@ export async function createEvent(input: CreateEventInput): Promise<CreateEventR
       }
     }
 
+    revalidateTag(PUBLIC_EVENTS_CACHE_TAG, { expire: 0 });
     revalidatePath(redirectPath);
     return { success: true, event };
   } catch (err) {

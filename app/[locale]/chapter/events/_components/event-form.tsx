@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -61,6 +62,37 @@ const accessModelLabels: Record<EventAccessModel, string> = {
 }
 
 const EMPTY_APPLICATION_QUESTIONS: EventApplicationQuestionRow[] = []
+
+function RequirementBadge({ required, label }: { required: boolean; label?: string }) {
+  return (
+    <Badge variant={required ? 'default' : 'outline'} size="sm">
+      {label ?? (required ? 'Obligatorio' : 'Opcional')}
+    </Badge>
+  )
+}
+
+function FieldLabel({
+  htmlFor,
+  children,
+  required,
+  badgeLabel,
+  className,
+}: {
+  htmlFor?: string
+  children: React.ReactNode
+  required: boolean
+  badgeLabel?: string
+  className?: string
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Label htmlFor={htmlFor} className={className ?? 'text-sm font-semibold tracking-wide text-muted-foreground uppercase'}>
+        {children}
+      </Label>
+      <RequirementBadge required={required} label={badgeLabel} />
+    </div>
+  )
+}
 
 function toEditableQuestion(question: EventApplicationQuestionRow): EditableApplicationQuestion {
   return {
@@ -223,7 +255,7 @@ export function EventForm({
     }
   }
 
-  const validateFields = (checkMode: 'step' | 'all', currentStep?: number) => {
+  const validateFields = (checkMode: 'step' | 'all', currentStep?: number, targetPublished = true) => {
     setFieldErrors({})
     let isValid = true
     const errors: Record<string, string> = {}
@@ -246,15 +278,15 @@ export function EventForm({
         errors.end_at = 'La fecha de fin debe ser posterior al inicio'
         isValid = false
       }
-      if (eventType === 'in_person' && !location?.trim()) {
+      if (targetPublished && eventType === 'in_person' && !location?.trim()) {
         errors.location = 'La ubicación es obligatoria para eventos presenciales'
         isValid = false
       }
-      if (eventType === 'online' && !meetingUrl?.trim()) {
+      if (targetPublished && eventType === 'online' && !meetingUrl?.trim()) {
         errors.meeting_url = 'El enlace de reunión es obligatorio para eventos virtuales'
         isValid = false
       }
-      if (eventType === 'hybrid') {
+      if (targetPublished && eventType === 'hybrid') {
         if (!location?.trim()) { errors.location = 'La ubicación es obligatoria para eventos híbridos'; isValid = false }
         if (!meetingUrl?.trim()) { errors.meeting_url = 'El enlace de reunión es obligatorio para eventos híbridos'; isValid = false }
       }
@@ -265,7 +297,7 @@ export function EventForm({
         errors.capacity = 'La capacidad debe ser un número mayor que 0'
         isValid = false
       }
-      if (accessModel === 'application' && !applicationFormUrl?.trim()) {
+      if (targetPublished && accessModel === 'application' && !applicationFormUrl?.trim()) {
         const hasQuestions = applicationQuestionsState.some((question) => question.questionText.trim())
         if (!hasQuestions) {
           errors.application_questions = 'Agrega al menos una pregunta de postulación'
@@ -273,7 +305,7 @@ export function EventForm({
         }
       }
 
-      if (accessModel === 'application') {
+      if (targetPublished && accessModel === 'application') {
         applicationQuestionsState.forEach((question, index) => {
           if (!question.questionText.trim()) {
             errors.application_questions = `La pregunta ${index + 1} necesita texto`
@@ -293,13 +325,13 @@ export function EventForm({
 
     if (!isValid) {
       setFieldErrors(errors)
-      toast.error('Corrige los campos marcados antes de guardar')
+      toast.error(targetPublished ? 'Corrige los campos obligatorios antes de publicar' : 'Corrige los campos mínimos antes de guardar el borrador')
     }
     return isValid
   }
 
   const handleNext = () => {
-    if (validateFields('step', step)) {
+    if (validateFields('step', step, false)) {
       setStep(s => Math.min(s + 1, 4))
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
@@ -311,7 +343,7 @@ export function EventForm({
   }
 
   async function submitEvent(targetPublished: boolean) {
-    if (!validateFields('all')) {
+    if (!validateFields('all', undefined, targetPublished)) {
       return
     }
 
@@ -507,7 +539,7 @@ export function EventForm({
         </div>
         <div className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="title" className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">Título del evento</Label>
+            <FieldLabel htmlFor="title" required>Título del evento</FieldLabel>
             <Input
               id="title"
               value={title}
@@ -524,7 +556,7 @@ export function EventForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description" className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">Descripción</Label>
+            <FieldLabel htmlFor="description" required={false}>Descripción</FieldLabel>
             <Textarea
               id="description"
               className={fieldErrors.description ? 'min-h-32 border-destructive focus-visible:ring-destructive' : 'min-h-32'}
@@ -538,7 +570,9 @@ export function EventForm({
       </section>
 
       <section className="bg-card border rounded-lg p-6 md:p-8 shadow-sm">
-        <Label className="text-sm font-semibold tracking-wide text-muted-foreground uppercase mb-4 block">Imagen de portada</Label>
+        <div className="mb-4">
+          <FieldLabel required={false}>Imagen de portada</FieldLabel>
+        </div>
         <div
           onDragOver={(event) => {
             event.preventDefault()
@@ -560,6 +594,7 @@ export function EventForm({
             ref={fileInputRef}
             type="file"
             accept="image/*"
+            aria-label="Subir imagen de portada del evento"
             className="sr-only"
             onChange={async (event) => handleCoverFile(event.target.files?.[0] ?? null)}
           />
@@ -643,7 +678,7 @@ export function EventForm({
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label htmlFor="startAt" className="text-sm font-semibold text-muted-foreground ml-1">Inicio</Label>
+            <FieldLabel htmlFor="startAt" required className="text-sm font-semibold text-muted-foreground">Inicio</FieldLabel>
             <Input
               id="startAt"
               type="datetime-local"
@@ -654,7 +689,7 @@ export function EventForm({
             {fieldErrors.start_at && <div className="ml-1 text-xs text-destructive">{fieldErrors.start_at}</div>}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="endAt" className="text-sm font-semibold text-muted-foreground ml-1">Fin</Label>
+            <FieldLabel htmlFor="endAt" required className="text-sm font-semibold text-muted-foreground">Fin</FieldLabel>
             <Input
               id="endAt"
               type="datetime-local"
@@ -676,7 +711,14 @@ export function EventForm({
             <div className="text-xl font-semibold">Lugar</div>
           </div>
           <div className="space-y-2 relative z-50">
-            <Label htmlFor="location" className="text-sm font-semibold text-muted-foreground ml-1">Ubicación / dirección</Label>
+            <FieldLabel
+              htmlFor="location"
+              required={eventType === 'in_person' || eventType === 'hybrid'}
+              badgeLabel="Para publicar"
+              className="text-sm font-semibold text-muted-foreground"
+            >
+              Ubicación / dirección
+            </FieldLabel>
             <LocationAutocomplete
               value={location}
               onChange={(data) => {
@@ -723,7 +765,14 @@ export function EventForm({
             <div className="text-xl font-semibold">Conexion virtual</div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="meetingUrl" className="text-sm font-semibold text-muted-foreground ml-1">Enlace de reunión</Label>
+            <FieldLabel
+              htmlFor="meetingUrl"
+              required={eventType === 'online' || eventType === 'hybrid'}
+              badgeLabel="Para publicar"
+              className="text-sm font-semibold text-muted-foreground"
+            >
+              Enlace de reunión
+            </FieldLabel>
             <Input
               id="meetingUrl"
               type="url"
@@ -776,10 +825,18 @@ export function EventForm({
         </div>
 
         {accessModel === 'application' && (
-          <div className="mt-6 rounded-xl border-l-4 border-l-primary bg-muted/50 p-5 animate-in fade-in slide-in-from-left-4 md:ml-10">
-            <div className="space-y-3">
-              <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <Label className="text-sm font-semibold">Preguntas de postulación</Label>
+          <div className="mt-6 rounded-lg border bg-muted/30 p-4 md:p-5">
+            <div className="space-y-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Label className="text-sm font-semibold">Preguntas de postulación</Label>
+                    <RequirementBadge required label="Para publicar" />
+                  </div>
+                  <div className="text-xs leading-relaxed text-muted-foreground">
+                    El borrador se puede guardar incompleto. Para publicar, cada pregunta debe tener texto y las preguntas de selección deben tener opciones.
+                  </div>
+                </div>
                 <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto" onClick={addApplicationQuestion}>
                   <Plus className="h-4 w-4 mr-2" />
                   Agregar pregunta
@@ -793,68 +850,76 @@ export function EventForm({
               ) : (
                 <div className="space-y-3">
                   {applicationQuestionsState.map((question, index) => (
-                    <div key={question.id ?? index} className="rounded-lg border bg-background p-4 space-y-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    <div key={question.id ?? index} className="space-y-3 rounded-lg border bg-background p-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                           <GripVertical className="h-4 w-4" />
                           Pregunta {index + 1}
+                          <Badge variant={question.isRequired ? 'default' : 'outline'} size="sm">
+                            {question.isRequired ? 'Obligatoria' : 'Opcional'}
+                          </Badge>
                         </div>
-                        <div className="flex shrink-0 items-center gap-1">
-                          <Button type="button" variant="ghost" size="icon" aria-label="Subir pregunta" onClick={() => moveApplicationQuestion(index, -1)} disabled={index === 0}>
+
+                        <div className="flex flex-wrap items-center gap-1">
+                          <label className="inline-flex min-h-7 items-center gap-1.5 rounded-md border bg-muted/20 px-2 text-xs font-medium text-muted-foreground">
+                            <Checkbox
+                              checked={question.isRequired}
+                              onCheckedChange={(checked) => updateApplicationQuestion(index, { isRequired: checked === true })}
+                            />
+                            Requerir
+                          </label>
+                          <Button type="button" variant="ghost" size="icon-xs" aria-label="Subir pregunta" onClick={() => moveApplicationQuestion(index, -1)} disabled={index === 0}>
                             <ChevronUp className="h-4 w-4" />
                           </Button>
-                          <Button type="button" variant="ghost" size="icon" aria-label="Bajar pregunta" onClick={() => moveApplicationQuestion(index, 1)} disabled={index === applicationQuestionsState.length - 1}>
+                          <Button type="button" variant="ghost" size="icon-xs" aria-label="Bajar pregunta" onClick={() => moveApplicationQuestion(index, 1)} disabled={index === applicationQuestionsState.length - 1}>
                             <ChevronDown className="h-4 w-4" />
                           </Button>
-                          <Button type="button" variant="ghost" size="icon" aria-label="Eliminar pregunta" onClick={() => removeApplicationQuestion(index)}>
+                          <Button type="button" variant="ghost" size="icon-xs" aria-label="Eliminar pregunta" onClick={() => removeApplicationQuestion(index)}>
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </div>
                       </div>
 
-                      <div className="grid gap-3 md:grid-cols-2">
+                      <div className="grid gap-3 2xl:grid-cols-[minmax(0,1fr)_14rem]">
                         <Input
                           value={question.questionText}
                           onChange={(event) => updateApplicationQuestion(index, { questionText: event.target.value })}
-                          placeholder={`Pregunta ${index + 1}`}
+                          placeholder="Ej. ¿Por qué quieres asistir?"
                           className="bg-muted/40"
+                          aria-label={`Texto de pregunta ${index + 1}`}
                         />
-                        <Select
-                          value={question.questionType}
-                          onValueChange={(value) => updateApplicationQuestion(index, {
-                            questionType: value as EventApplicationQuestionType,
-                            optionsText: ['single_select', 'checkbox'].includes(value)
-                              ? question.optionsText
-                              : '',
-                          })}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {questionTypeOptions.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+
+                        <div className="min-w-0">
+                          <Select
+                            value={question.questionType}
+                            onValueChange={(value) => updateApplicationQuestion(index, {
+                              questionType: value as EventApplicationQuestionType,
+                              optionsText: ['single_select', 'checkbox'].includes(value)
+                                ? question.optionsText
+                                : '',
+                            })}
+                          >
+                            <SelectTrigger className="w-full" aria-label={`Tipo de respuesta para pregunta ${index + 1}`}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {questionTypeOptions.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
 
                       {['single_select', 'checkbox'].includes(question.questionType) ? (
                         <Textarea
                           value={question.optionsText}
                           onChange={(event) => updateApplicationQuestion(index, { optionsText: event.target.value })}
-                          placeholder="Una opción por línea"
+                          placeholder="Opciones, una por línea"
                           className="min-h-20 bg-muted/40"
+                          aria-label={`Opciones de pregunta ${index + 1}`}
                         />
                       ) : null}
-
-                      <label className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-                        <Checkbox
-                          checked={question.isRequired}
-                          onCheckedChange={(checked) => updateApplicationQuestion(index, { isRequired: checked === true })}
-                        />
-                        Obligatoria
-                      </label>
                     </div>
                   ))}
                 </div>
@@ -876,6 +941,11 @@ export function EventForm({
           <div className="text-xl font-semibold">Límite de capacidad</div>
         </div>
         <div className="relative max-w-md">
+          <div className="mb-2">
+            <FieldLabel htmlFor="capacity" required={false} className="text-sm font-semibold text-muted-foreground">
+              Cupos disponibles
+            </FieldLabel>
+          </div>
           <Input
             id="capacity"
             inputMode="numeric"
@@ -948,10 +1018,10 @@ export function EventForm({
             <div className="font-semibold mb-4 flex items-center gap-2"><Check className="w-5 h-5 text-success" /> Checklist de publicación</div>
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
-                {title && description ? <Check className="w-5 h-5 text-success mt-0.5" /> : <div className="w-5 h-5 rounded-full border-2 mt-0.5" />}
+                {title ? <Check className="w-5 h-5 text-success mt-0.5" /> : <div className="w-5 h-5 rounded-full border-2 mt-0.5" />}
                 <div>
                   <div className="text-sm font-medium">Datos básicos completos</div>
-                  <div className="text-xs text-muted-foreground">Título y descripción definidos</div>
+                  <div className="text-xs text-muted-foreground">Título definido; la descripción es opcional</div>
                 </div>
               </li>
               <li className="flex items-start gap-3">
@@ -1029,7 +1099,7 @@ export function EventForm({
 
             <div className="flex items-center gap-3 w-full sm:w-auto">
               <Button
-                variant="outline"
+                variant="secondary"
                 className="flex-1 sm:flex-none font-semibold"
                 onClick={() => submitEvent(false)}
                 disabled={isPending}
