@@ -1,12 +1,24 @@
 ﻿import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { ChapterService } from '../chapter.service'
+import {
+  ChapterService,
+  filterChapterMembersForPermissions,
+  getChapterMemberPermissionFlags,
+} from '../chapter.service'
 import { SupabaseClient } from '@supabase/supabase-js'
+import { ChapterPermissionService } from '@/lib/services/chapter-permission.service'
+import type { MemberWithProfile } from '@/lib/types'
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Mock generateUniqueMemberId
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 vi.mock('@/lib/utils/member-id', () => ({
   generateUniqueMemberId: vi.fn(),
+}))
+
+vi.mock('@/lib/services/chapter-permission.service', () => ({
+  ChapterPermissionService: {
+    hasChapterPermission: vi.fn(),
+  },
 }))
 
 import { generateUniqueMemberId } from '@/lib/utils/member-id'
@@ -26,6 +38,8 @@ describe('ChapterService', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(generateUniqueMemberId).mockReset()
+    vi.mocked(ChapterPermissionService.hasChapterPermission).mockReset()
+    vi.mocked(ChapterPermissionService.hasChapterPermission).mockResolvedValue(true)
   })
 
   // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -94,6 +108,10 @@ describe('ChapterService', () => {
         select: vi.fn().mockReturnValue(selectChain),
         _selectChain: selectChain,
       },
+      chapter_audit_log: {
+        upsert: vi.fn(),
+        insert: vi.fn().mockResolvedValue({ error: null }),
+      },
       ...overrides,
     }
 
@@ -116,7 +134,6 @@ describe('ChapterService', () => {
         error: null,
       })
       tableMocks.chapter_membership._selectChain.maybeSingle
-        .mockResolvedValueOnce({ data: { id: 'approver-1', role: 'admin' }, error: null })
         .mockResolvedValueOnce({ data: { id: 'membership-1', status: 'pending', member_id: null }, error: null })
 
       vi.mocked(generateUniqueMemberId).mockResolvedValue('LEAD-123456')
@@ -163,7 +180,6 @@ describe('ChapterService', () => {
         error: null,
       })
       tableMocks.chapter_membership._selectChain.maybeSingle
-        .mockResolvedValueOnce({ data: { id: 'approver-1', role: 'admin' }, error: null })
         .mockResolvedValueOnce({ data: { id: 'membership-1', status: 'pending', member_id: null }, error: null })
 
       vi.mocked(generateUniqueMemberId).mockResolvedValue('LEAD-123456')
@@ -182,7 +198,6 @@ describe('ChapterService', () => {
         error: null,
       })
       tableMocks.chapter_membership._selectChain.maybeSingle
-        .mockResolvedValueOnce({ data: { id: 'approver-1', role: 'admin' }, error: null })
         .mockResolvedValueOnce({ data: { id: 'membership-1', status: 'pending', member_id: null }, error: null })
 
       vi.mocked(generateUniqueMemberId).mockRejectedValue(new Error('Too many collisions'))
@@ -203,7 +218,6 @@ describe('ChapterService', () => {
         error: null,
       })
       tableMocks.chapter_membership._selectChain.maybeSingle
-        .mockResolvedValueOnce({ data: { id: 'approver-1', role: 'admin' }, error: null })
         .mockResolvedValueOnce({ data: { id: 'membership-1', status: 'pending', member_id: null }, error: null })
 
       vi.mocked(generateUniqueMemberId).mockResolvedValue('LEAD-123456')
@@ -245,9 +259,7 @@ describe('ChapterService', () => {
         .mockResolvedValueOnce({ data: { is_filled: true, chapter_id: 'ch-1' }, error: null })
         .mockResolvedValueOnce({ data: { is_filled: true, chapter_id: 'ch-1' }, error: null })
       tableMocks.chapter_membership._selectChain.maybeSingle
-        .mockResolvedValueOnce({ data: { id: 'approver-1', role: 'admin' }, error: null })
         .mockResolvedValueOnce({ data: { id: 'membership-1', status: 'pending', member_id: null }, error: null })
-        .mockResolvedValueOnce({ data: { id: 'approver-1', role: 'admin' }, error: null })
         .mockResolvedValueOnce({ data: { id: 'membership-2', status: 'pending', member_id: null }, error: null })
 
       vi.mocked(generateUniqueMemberId)
@@ -290,7 +302,6 @@ describe('ChapterService', () => {
         error: null,
       })
       tableMocks.chapter_membership._selectChain.maybeSingle
-        .mockResolvedValueOnce({ data: { id: 'approver-1', role: 'admin' }, error: null })
         .mockResolvedValueOnce({ data: { id: 'membership-1', status: 'pending', member_id: null }, error: null })
 
       vi.mocked(generateUniqueMemberId).mockResolvedValueOnce('LEAD-111111')
@@ -329,7 +340,6 @@ describe('ChapterService', () => {
         error: null,
       })
       tableMocks.chapter_membership._selectChain.maybeSingle
-        .mockResolvedValueOnce({ data: { id: 'approver-1', role: 'admin' }, error: null })
         .mockResolvedValueOnce({ data: { id: 'membership-1', status: 'pending', member_id: null }, error: null })
 
       vi.mocked(generateUniqueMemberId).mockResolvedValueOnce('LEAD-111111')
@@ -413,9 +423,7 @@ describe('ChapterService', () => {
         .mockResolvedValueOnce({ data: { is_filled: true, chapter_id: 'ch-1' }, error: null })
         .mockResolvedValueOnce({ data: { is_filled: true, chapter_id: 'ch-1' }, error: null })
       tableMocks.chapter_membership._selectChain.maybeSingle
-        .mockResolvedValueOnce({ data: { id: 'approver-1', role: 'admin' }, error: null })
         .mockResolvedValueOnce({ data: { id: 'membership-1', status: 'pending', member_id: null }, error: null })
-        .mockResolvedValueOnce({ data: { id: 'approver-1', role: 'admin' }, error: null })
         .mockResolvedValueOnce({ data: { id: 'membership-2', status: 'pending', member_id: null }, error: null })
 
       vi.mocked(generateUniqueMemberId)
@@ -447,7 +455,6 @@ describe('ChapterService', () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
       tableMocks.chapter_membership._selectChain.maybeSingle
-        .mockResolvedValueOnce({ data: { id: 'approver-1', role: 'admin' }, error: null })
         .mockResolvedValueOnce({ data: { id: 'membership-1', status: 'pending' }, error: null })
 
       const result = await ChapterService.rejectMember(mockSupabase as unknown as SupabaseClient, 'user-123', 'approver-1', 'ch-1')
@@ -473,7 +480,6 @@ describe('ChapterService', () => {
       })
 
       tableMocks.chapter_membership._selectChain.maybeSingle
-        .mockResolvedValueOnce({ data: { id: 'approver-1', role: 'admin' }, error: null })
         .mockResolvedValueOnce({ data: { id: 'membership-1', status: 'pending' }, error: null })
 
       const result = await ChapterService.rejectMember(mockSupabase as unknown as SupabaseClient, 'user-123', 'approver-1', 'ch-1')
@@ -488,14 +494,24 @@ describe('ChapterService', () => {
   describe('revokeApproval', () => {
     it('should revoke approval successfully', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
+      tableMocks.chapter_membership._selectChain.maybeSingle.mockResolvedValueOnce({
+        data: { id: 'membership-1', status: 'approved' },
+        error: null,
+      })
 
-      const result = await ChapterService.revokeApproval(mockSupabase as unknown as SupabaseClient, 'user-123', 'ch-1')
+      const result = await ChapterService.revokeApproval(
+        mockSupabase as unknown as SupabaseClient,
+        'user-123',
+        'president-1',
+        'ch-1',
+        'No longer active'
+      )
 
       expect(result).toEqual({ success: true })
       expect(tableMocks.chapter_membership.update).toHaveBeenCalledWith(
         expect.objectContaining({
           approved_by_id: null,
-          status: 'pending',
+          status: 'inactive',
           member_id: null,
         })
       )
@@ -507,14 +523,95 @@ describe('ChapterService', () => {
 
     it('should return error when update fails', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
+      tableMocks.chapter_membership._selectChain.maybeSingle.mockResolvedValueOnce({
+        data: { id: 'membership-1', status: 'approved' },
+        error: null,
+      })
 
       tableMocks.chapter_membership._updateChain.match.mockResolvedValueOnce({
         error: { message: 'Database error' },
       })
 
-      const result = await ChapterService.revokeApproval(mockSupabase as unknown as SupabaseClient, 'user-123', 'ch-1')
+      const result = await ChapterService.revokeApproval(
+        mockSupabase as unknown as SupabaseClient,
+        'user-123',
+        'president-1',
+        'ch-1',
+        'No longer active'
+      )
 
-      expect(result).toEqual({ success: false, error: 'Failed to revoke approval' })
+      expect(result).toEqual({ success: false, error: 'Database error' })
+    })
+  })
+
+  describe('roster permission helpers', () => {
+    function rosterMember(id: string, status: string): MemberWithProfile {
+      return {
+        id,
+        email: `${id}@test.com`,
+        name: id,
+        phone: null,
+        role: 'member',
+        created_at: '2026-05-03',
+        updated_at: '2026-05-03',
+        deactivated_at: null,
+        person_profile: null,
+        chapter: null,
+        chapter_membership: {
+          chapter_id: 'leaduni',
+          status,
+          position: 'member',
+          member_id: status === 'approved' ? 'LEAD-123456' : null,
+          joined_at: null,
+        },
+      } as unknown as MemberWithProfile
+    }
+
+    it('lets regular e-board see approved and alumni members only', () => {
+      const permissions = getChapterMemberPermissionFlags([
+        'chapter.members.view_approved',
+        'chapter.members.view_alumni',
+        'chapter.members.view_member_contact',
+      ])
+      const members = [
+        rosterMember('approved-1', 'approved'),
+        rosterMember('pending-1', 'pending'),
+        rosterMember('rejected-1', 'rejected'),
+        rosterMember('inactive-1', 'inactive'),
+        rosterMember('alumni-1', 'alumni'),
+      ]
+
+      const result = filterChapterMembersForPermissions(members, permissions)
+
+      expect(result.map((member) => member.id)).toEqual(['approved-1', 'alumni-1'])
+    })
+
+    it('lets operations roles see applicant and inactive workflows when granted', () => {
+      const permissions = getChapterMemberPermissionFlags([
+        'chapter.members.view_approved',
+        'chapter.members.view_alumni',
+        'chapter.members.view_applicants',
+        'chapter.members.view_rejected',
+        'chapter.members.view_inactive',
+        'chapter.members.manage_applications',
+      ])
+      const members = [
+        rosterMember('approved-1', 'approved'),
+        rosterMember('pending-1', 'pending'),
+        rosterMember('rejected-1', 'rejected'),
+        rosterMember('inactive-1', 'inactive'),
+        rosterMember('alumni-1', 'alumni'),
+      ]
+
+      const result = filterChapterMembersForPermissions(members, permissions)
+
+      expect(result.map((member) => member.id)).toEqual([
+        'approved-1',
+        'pending-1',
+        'rejected-1',
+        'inactive-1',
+        'alumni-1',
+      ])
     })
   })
 

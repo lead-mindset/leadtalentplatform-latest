@@ -55,7 +55,7 @@ export default async function ChapterCheckinPage({
 }) {
   const { eventId } = await searchParams
   const now = new Date()
-  const events = await getChapterEvents()
+  const events = await getChapterEvents('chapter.events.check_in')
   const upcomingOrLive = events.filter((event) => new Date(event.end_at) >= now)
   const selectedEvent =
     upcomingOrLive.find((event) => event.id === eventId) ??

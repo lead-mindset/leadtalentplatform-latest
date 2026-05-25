@@ -2,9 +2,13 @@
 
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
-import { requireUser } from '@/lib/auth'
+import { getApprovedChapterMembership, requireUser } from '@/lib/auth'
 import { ChapterService } from '@/lib/services/chapter.service'
-import { sendChapterApplicationRejectedEmail, sendMemberApprovalEmail } from '@/lib/emails/send-email'
+import {
+  ChapterPermissionService,
+  type ChapterPermissionKey,
+} from '@/lib/services/chapter-permission.service'
+import { sendMemberApprovalEmail } from '@/lib/emails/send-email'
 
 // ───────────────────────────────────────────────────────────────
 // Zod schemas (input validation at the controller boundary)
@@ -12,37 +16,51 @@ import { sendChapterApplicationRejectedEmail, sendMemberApprovalEmail } from '@/
 
 const UserIdSchema = z.string().trim().min(1, 'User ID is required')
 const UserIdsSchema = z.array(UserIdSchema).min(1, 'At least one member is required')
+const RevokeReasonSchema = z.string().trim().min(1, 'A revocation reason is required.')
 
 // ───────────────────────────────────────────────────────────────
 // Auth helper (thin — delegates to requireUser, adds chapter guard)
 // ───────────────────────────────────────────────────────────────
 
 async function assertCanManageMember(
-  targetUserId?: string
+  targetUserId: string | undefined,
+  permissionKey: ChapterPermissionKey,
+  targetStatus: 'pending' | 'approved' = 'pending'
 ): Promise<
   | { success: true; supabase: Awaited<ReturnType<typeof requireUser>>['supabase']; user: Awaited<ReturnType<typeof requireUser>>['user']; chapterId: string | null; targetChapterId: string | null }
   | { success: false; error: string }
 > {
   const { supabase, user } = await requireUser()
 
-  if (user.role !== 'admin' && user.role !== 'editor') {
-    return { success: false, error: 'Only admins and editors can manage members' }
-  }
-
   let chapterId: string | null = null
   let targetChapterId: string | null = null
 
-  if (user.role === 'editor') {
-    chapterId = await ChapterService.getStudentChapterId(supabase, user.id)
+  if (user.role === 'admin') {
+    if (targetUserId) {
+      targetChapterId = targetStatus === 'approved'
+        ? await ChapterService.getStudentChapterId(supabase, targetUserId)
+        : await ChapterService.getPendingMembershipChapterId(supabase, targetUserId)
+    }
+  } else {
+    const membership = await getApprovedChapterMembership(supabase, user.id)
+    chapterId = membership?.chapter_id ?? null
     if (!chapterId) {
       return { success: false, error: 'No chapter assigned' }
+    }
+
+    const hasPermission = await ChapterPermissionService.hasChapterPermission(supabase, {
+      userId: user.id,
+      chapterId,
+      permissionKey,
+    })
+
+    if (!hasPermission) {
+      return { success: false, error: 'You do not have permission to manage this member workflow.' }
     }
 
     if (targetUserId) {
       targetChapterId = chapterId
     }
-  } else if (targetUserId) {
-    targetChapterId = await ChapterService.getPendingMembershipChapterId(supabase, targetUserId)
   }
 
   if (targetUserId && !targetChapterId) {
@@ -71,7 +89,7 @@ export async function approveMember(user_id: string) {
       return { success: false, error: parsed.error.issues[0]?.message ?? 'Invalid user ID' }
     }
 
-    const auth = await assertCanManageMember(parsed.data)
+    const auth = await assertCanManageMember(parsed.data, 'chapter.members.manage_applications')
     if (!auth.success) return auth
 
     const result = await ChapterService.approveMember(
@@ -98,11 +116,7 @@ export async function approveMember(user_id: string) {
         userData.name || userData.email.split('@')[0],
         result.member_id,
         chapterName
-      ).then((emailResult) => {
-        if (!emailResult.success) {
-          console.error('Failed to send member approval email:', emailResult.error)
-        }
-      }).catch((error: Error) => console.error('Failed to send member approval email:', error))
+      ).catch(() => {})
     }
 
     return { success: true, member_id: result.member_id }
@@ -118,7 +132,7 @@ export async function approveMembersBulk(user_ids: string[]) {
       return { success: false, error: parsed.error.issues[0]?.message ?? 'Invalid member list' }
     }
 
-    const auth = await assertCanManageMember()
+    const auth = await assertCanManageMember(undefined, 'chapter.members.manage_applications')
     if (!auth.success) return auth
 
     const result = await ChapterService.approveMembersBulk(
@@ -148,7 +162,7 @@ export async function rejectMember(user_id: string, _reason?: string) {
       return { success: false, error: parsed.error.issues[0]?.message ?? 'Invalid user ID' }
     }
 
-    const auth = await assertCanManageMember(parsed.data)
+    const auth = await assertCanManageMember(parsed.data, 'chapter.members.manage_applications')
     if (!auth.success) return auth
 
     const result = await ChapterService.rejectMember(
@@ -162,37 +176,34 @@ export async function rejectMember(user_id: string, _reason?: string) {
     }
 
     revalidateMemberPaths(parsed.data)
-
-    const [userData, chapterName] = await Promise.all([
-      ChapterService.getUserBasicInfo(auth.supabase, parsed.data),
-      auth.targetChapterId ? ChapterService.getChapterName(auth.supabase, auth.targetChapterId) : Promise.resolve(null),
-    ])
-
-    if (userData?.email && chapterName) {
-      void sendChapterApplicationRejectedEmail(
-        userData.email,
-        userData.name || userData.email.split('@')[0],
-        chapterName
-      ).catch((error: Error) => console.error('Failed to send chapter rejection email:', error))
-    }
-
     return { success: true }
   } catch {
     return { success: false, error: 'An unexpected error occurred' }
   }
 }
 
-export async function revokeApproval(user_id: string) {
+export async function revokeApproval(user_id: string, reason: string) {
   try {
     const parsed = UserIdSchema.safeParse(user_id)
     if (!parsed.success) {
       return { success: false, error: parsed.error.issues[0]?.message ?? 'Invalid user ID' }
     }
 
-    const auth = await assertCanManageMember(parsed.data)
+    const parsedReason = RevokeReasonSchema.safeParse(reason)
+    if (!parsedReason.success) {
+      return { success: false, error: parsedReason.error.issues[0]?.message ?? 'A revocation reason is required.' }
+    }
+
+    const auth = await assertCanManageMember(parsed.data, 'chapter.members.revoke', 'approved')
     if (!auth.success) return auth
 
-    const result = await ChapterService.revokeApproval(auth.supabase, parsed.data, auth.targetChapterId)
+    const result = await ChapterService.revokeApproval(
+      auth.supabase,
+      parsed.data,
+      auth.user.id,
+      auth.targetChapterId,
+      parsedReason.data
+    )
     if (!result.success) {
       return { success: false, error: result.error }
     }

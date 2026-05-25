@@ -21,7 +21,10 @@ We maintain standard local accounts in `supabase/seed.sql` pre-loaded with the n
 |---------|-------|-------------------------|
 | **Public Participant** | `participant@test.com` | `public.user.role='member'`, `person_profile` |
 | **Member** | `member@test.com` | `public.user.role='member'`, `person_profile`, `chapter_membership` (`position='member'`, `status='approved'`) |
-| **Editor** | `editor@test.com` | `public.user.role='editor'`, `person_profile`, `chapter_membership` (`position='editor'`, `status='approved'`) |
+| **Legacy Editor** | `editor@test.com` | `public.user.role='editor'`, `person_profile`, approved `chapter_membership`; must remain supported while legacy editor access is backfilled into `chapter_role_assignment` and `chapter_permission_grant` |
+| **Chapter President** | `president@test.com` | `public.user.role='member'`, approved LEAD UNI membership, active `chapter_role_assignment.role_level='president'`, full launch grants |
+| **Chapter Vice President** | `vp@test.com` | `public.user.role='member'`, approved LEAD UNI membership, active `chapter_role_assignment.role_level='vice_president'`, full launch grants |
+| **Regular Chapter E-board** | `eboard@test.com` | `public.user.role='member'`, approved LEAD UNI membership, active `chapter_role_assignment.role_level='director'`, common e-board grants only |
 | **Admin** | `admin@test.com` | `public.user.role='admin'`, `person_profile`, `lead_identity` (`identity_type='founder'`) |
 | **Staff** | `staff@test.com` | `public.user.role='admin'`, `person_profile`, `lead_identity` (`identity_type='staff'`) |
 | **Company Representative** | `recruiter@test.com` | `public.user.role='recruiter'`, `person_profile`, active accepted `recruiter_access` |
@@ -102,9 +105,23 @@ Chapter affiliation is explicit and separate from basic profile data:
 
 - Applying to a chapter must create or reuse a `chapter_membership` row with `status='pending'` and `position='member'`.
 - Approval must update the specific `(user_id, chapter_id)` membership row to `status='approved'`, assign `member_id`, set `approved_by_id`, and preserve one approved chapter membership per user.
-- Editor promotion must require an approved membership first; assigning a chapter editor should set membership `position='editor'`.
+- Legacy editor promotion must require an approved membership first while compatibility remains.
+- New chapter e-board access should create or update `chapter_role_assignment` and `chapter_permission_grant`; do not grant chapter dashboard access by overwriting real `chapter_membership.position`.
 - Alumni should be represented as `chapter_membership.status='alumni'` with a valid position such as `member`; do not encode alumni as a position.
-- Manual validation should use `member@test.com`, `editor@test.com`, and `alumni@test.com` to confirm roster tabs, member IDs, positions, and pending approval counts come from `chapter_membership`.
+- Inactive/removed members should use `chapter_membership.status='inactive'` unless a later migration deliberately changes the status model.
+- Manual validation should use `member@test.com`, `editor@test.com`, `president@test.com`, `vp@test.com`, `eboard@test.com`, and `alumni@test.com` to confirm roster tabs, member IDs, positions, pending approval counts, chapter-scoped grants, and legacy editor compatibility.
+
+### Chapter-Scoped Permission Flow
+
+Chapter operations must separate membership, responsibility, and product capability:
+
+- `chapter_membership` verifies the user belongs to a chapter and has the right lifecycle state.
+- `chapter_role_assignment` records the official chapter responsibility, such as president, vice president, chief of staff, director, coordinator, or member.
+- `chapter_permission_grant` authorizes product actions, such as chapter dashboard access, applicant approval, member revoke, event management, registration visibility, and check-in.
+- Service tests should verify that most e-board users can remain `public.user.role='member'` while receiving chapter dashboard access from active grants.
+- Company representative tests must continue to authorize through `public.user.role='recruiter'` plus active accepted `recruiter_access`; recruiters do not need chapter permission grants.
+- Local Playwright permission checks should run against seeded personas after `pnpm run supabase:reset` and assert that president/VP, regular e-board, approved member, admin, and recruiter accounts reach only their expected dashboards and actions.
+- Real launch activation should follow `docs/runbooks/chapter-activation-runbook.md`; do not commit real chapter leader or member emails to migrations, seeds, issues, or docs.
 
 ### Newsletter Subscription Flow (LEAD-008)
 
@@ -193,6 +210,60 @@ it('prevents registering over capacity via concurrent requests', async () => {
 
   expect(successes.length).toBe(1); // Only one should succeed
 });
+```
+
+## Launch QA Matrix
+
+Use this pass before launch/stabilization reviews when the goal is to verify the seeded user journeys end-to-end. It depends on local Docker Supabase and the deterministic accounts above.
+
+All seeded launch personas use:
+
+```text
+password123
+```
+
+Run the reset first:
+
+```bash
+pnpm run supabase:reset
+```
+
+Run the chapter permission baseline:
+
+```bash
+pnpm exec playwright test tests/e2e/chapter-permissions.spec.ts --reporter=line
+```
+
+Run the full launch matrix on desktop and mobile Chromium:
+
+```bash
+pnpm exec playwright test tests/e2e/launch-qa-report.spec.ts --reporter=line
+```
+
+For faster debugging, run one launch scope at a time:
+
+```bash
+$env:LAUNCH_QA_SCOPE='public-student'; pnpm exec playwright test tests/e2e/launch-qa-report.spec.ts --reporter=line
+$env:LAUNCH_QA_SCOPE='chapter'; pnpm exec playwright test tests/e2e/launch-qa-report.spec.ts --reporter=line
+$env:LAUNCH_QA_SCOPE='admin-recruiter'; pnpm exec playwright test tests/e2e/launch-qa-report.spec.ts --reporter=line
+```
+
+The launch matrix writes JSON and screenshots to `outputs/launch-qa/`. Confirmed findings fail the Playwright test. Expected route-guard redirects, such as anonymous access to protected routes, are recorded separately as `expectedBehaviors` in the JSON output and should not be triaged as bugs.
+
+## Production Readiness Validation
+
+Before inviting real chapter leaders or expanding beyond a controlled pilot, use the production-readiness runbook:
+
+```text
+docs/runbooks/production-readiness-validation.md
+```
+
+The production-readiness pass extends seeded launch QA with provider-backed email delivery, Supabase Storage upload/access checks, axe accessibility, performance budgets, and a chapter leader training dry run. Raw screenshots, traces, provider logs, and storage evidence should stay in ignored artifact folders such as `outputs/`, `test-results/`, or `playwright-report/` unless they are sanitized for commit.
+
+The founder-facing report template lives at:
+
+```text
+.github/reports/production-readiness-validation-report.md
 ```
 
 ## Running Tests

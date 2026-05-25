@@ -106,8 +106,8 @@ p { font-size: var(--fluid-body); line-height: 1.7; font-family: var(--font-mont
   /* Brand Colors - Dark Mode First */
   --brand-background: #080D3B; /* Deep Midnight Blue */
   --brand-foreground: #FFFFFF; /* Clean White */
-  --brand-accent: #7A57D1; /* Medium Lavender / Periwinkle */
-  --brand-header-warm-red: #D84C4C;
+  --brand-accent: #A18BFF; /* Accessible lavender on dark surfaces */
+  --brand-header-warm-red: #C43D45;
   --brand-header-muted-coral: #BA4E5E;
   --brand-header-deep-magenta: #9B2E8B;
   --brand-header-vibrant-purple: #7E56E2;
@@ -116,8 +116,8 @@ p { font-size: var(--fluid-body); line-height: 1.7; font-family: var(--font-mont
   --brand-logo-magenta: #9F258C;
   
   /* M3 Color Roles - Dark Theme (Your Brand) */
-  --md-sys-color-primary: #7A57D1; /* Your accent color */
-  --md-sys-color-on-primary: #FFFFFF; /* White text on primary */
+  --md-sys-color-primary: #A18BFF; /* Accessible lavender on dark surfaces */
+  --md-sys-color-on-primary: #080D3B; /* Dark text on primary */
   --md-sys-color-primary-container: #5D41B0; /* Darker variant for containers */
   --md-sys-color-on-primary-container: #E6DEFF; /* Light text on primary container */
   --md-sys-color-secondary: #BA4E5E; /* Muted Coral from header */
@@ -134,7 +134,7 @@ p { font-size: var(--fluid-body); line-height: 1.7; font-family: var(--font-mont
   --md-sys-color-on-surface: #FFFFFF; /* Your brand foreground */
   --md-sys-color-surface-variant: #1A1F4B; /* Slightly lighter than background */
   --md-sys-color-on-surface-variant: #E0E0FF; /* Light text for variants */
-  --md-sys-color-outline: #7A57D1; /* Your accent color for outlines */
+  --md-sys-color-outline: #A18BFF; /* Accessible accent color for outlines */
   --md-sys-color-outline-variant: #5D41B0; /* Darker variant */
   --md-sys-color-shadow: #000000;
   --md-sys-color-scrim: #000000;
@@ -158,28 +158,28 @@ p { font-size: var(--fluid-body); line-height: 1.7; font-family: var(--font-mont
   --card-foreground: #FFFFFF;
   --popover: #1A1F4B; /* Surface variant */
   --popover-foreground: #FFFFFF;
-  --primary: #7A57D1; /* Your accent color */
-  --primary-foreground: #FFFFFF;
+  --primary: #A18BFF; /* Accessible accent color */
+  --primary-foreground: #080D3B;
   --secondary: #BA4E5E; /* Muted Coral */
   --secondary-foreground: #FFFFFF;
   --muted: #1A1F4B; /* Surface variant */
   --muted-foreground: #E0E0FF; /* On surface variant */
   --accent: #7E56E2; /* Vibrant Purple */
   --accent-foreground: #FFFFFF;
-  --destructive: #D84C4C; /* Warm Red from header */
+  --destructive: #C43D45; /* Accessible warm red from header */
   --destructive-foreground: #FFFFFF;
   --border: #2A2F5B; /* Much subtler border color */
   --input: #1A1F4B; /* Surface variant */
-  --ring: #7A57D1; /* Your accent color */
+  --ring: #A18BFF; /* Accessible accent color */
   --radius: 0.625rem; /* LEAD app default radius */
   --sidebar: #060A2E;
   --sidebar-foreground: #FFFFFF;
-  --sidebar-primary: #7A57D1;
-  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-primary: #A18BFF;
+  --sidebar-primary-foreground: #080D3B;
   --sidebar-accent: #1A1F4B;
   --sidebar-accent-foreground: #FFFFFF;
   --sidebar-border: #2A2F5B;
-  --sidebar-ring: #7A57D1;
+  --sidebar-ring: #A18BFF;
   
   /* Elevation Scale (Mapped to Tailwind shadows with MD3 tinting) */
   --md-sys-elevation-0: none;
@@ -328,12 +328,12 @@ p { font-size: var(--fluid-body); line-height: 1.7; font-family: var(--font-mont
   --color-ring: var(--ring);
   --color-sidebar: #060A2E;
   --color-sidebar-foreground: #FFFFFF;
-  --color-sidebar-primary: #7A57D1;
-  --color-sidebar-primary-foreground: #FFFFFF;
+  --color-sidebar-primary: #A18BFF;
+  --color-sidebar-primary-foreground: #080D3B;
   --color-sidebar-accent: #1A1F4B;
   --color-sidebar-accent-foreground: #FFFFFF;
   --color-sidebar-border: #2A2F5B;
-  --color-sidebar-ring: #7A57D1;
+  --color-sidebar-ring: #A18BFF;
   --radius: var(--radius);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -397,8 +397,8 @@ p { font-size: var(--fluid-body); line-height: 1.7; font-family: var(--font-mont
   --muted-foreground: var(--md-sys-color-on-surface-variant);
   --accent: var(--md-sys-color-tertiary);
   --accent-foreground: var(--md-sys-color-on-tertiary);
-  --destructive: oklch(0.65 0.25 22);
-  --destructive-foreground: oklch(0.97 0.012 265);
+  --destructive: #C43D45;
+  --destructive-foreground: #FFFFFF;
   --border: color-mix(in oklab, var(--md-sys-color-outline) 30%, transparent);
   --input: var(--md-sys-color-surface-container-high);
   --ring: oklch(0.75 0.18 2 / 0.45);
@@ -407,8 +407,8 @@ p { font-size: var(--fluid-body); line-height: 1.7; font-family: var(--font-mont
 /* Dark Theme Overrides - Your Brand Colors */
 .dark {
   /* M3 Color Roles - Dark Theme (Your Brand) */
-  --md-sys-color-primary: #7A57D1; /* Your accent color */
-  --md-sys-color-on-primary: #FFFFFF; /* White text on primary */
+  --md-sys-color-primary: #A18BFF; /* Accessible lavender on dark surfaces */
+  --md-sys-color-on-primary: #080D3B; /* Dark text on primary */
   --md-sys-color-primary-container: #5D41B0; /* Darker variant for containers */
   --md-sys-color-on-primary-container: #E6DEFF; /* Light text on primary container */
   --md-sys-color-secondary: #BA4E5E; /* Muted Coral from header */
@@ -425,7 +425,7 @@ p { font-size: var(--fluid-body); line-height: 1.7; font-family: var(--font-mont
   --md-sys-color-on-surface: #FFFFFF; /* Your brand foreground */
   --md-sys-color-surface-variant: #1A1F4B; /* Slightly lighter than background */
   --md-sys-color-on-surface-variant: #E0E0FF; /* Light text for variants */
-  --md-sys-color-outline: #7A57D1; /* Your accent color for outlines */
+  --md-sys-color-outline: #A18BFF; /* Accessible accent color for outlines */
   --md-sys-color-outline-variant: #5D41B0; /* Darker variant */
   --md-sys-color-inverse-surface: #FFFFFF; /* Inverse of your background */
   --md-sys-color-inverse-on-surface: #080D3B; /* Inverse of your foreground */
@@ -447,28 +447,28 @@ p { font-size: var(--fluid-body); line-height: 1.7; font-family: var(--font-mont
   --card-foreground: #FFFFFF;
   --popover: #1A1F4B; /* Surface variant */
   --popover-foreground: #FFFFFF;
-  --primary: #7A57D1; /* Your accent color */
-  --primary-foreground: #FFFFFF;
+  --primary: #A18BFF; /* Accessible accent color */
+  --primary-foreground: #080D3B;
   --secondary: #BA4E5E; /* Muted Coral */
   --secondary-foreground: #FFFFFF;
   --muted: #1A1F4B; /* Surface variant */
   --muted-foreground: #E0E0FF; /* On surface variant */
   --accent: #7E56E2; /* Vibrant Purple */
   --accent-foreground: #FFFFFF;
-  --destructive: #D84C4C; /* Warm Red from header */
+  --destructive: #C43D45; /* Accessible warm red from header */
   --destructive-foreground: #FFFFFF;
   --border: #2A2F5B; /* Much subtler border color */
   --input: #1A1F4B; /* Surface variant */
-  --ring: #7A57D1; /* Your accent color */
+  --ring: #A18BFF; /* Accessible accent color */
   --radius: 0.625rem; /* LEAD app default radius */
   --sidebar: #060A2E;
   --sidebar-foreground: #FFFFFF;
-  --sidebar-primary: #7A57D1;
-  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-primary: #A18BFF;
+  --sidebar-primary-foreground: #080D3B;
   --sidebar-accent: #1A1F4B;
   --sidebar-accent-foreground: #FFFFFF;
   --sidebar-border: #2A2F5B;
-  --sidebar-ring: #7A57D1;
+  --sidebar-ring: #A18BFF;
 }
 
 @layer base {

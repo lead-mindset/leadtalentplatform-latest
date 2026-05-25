@@ -40,7 +40,7 @@ export function MobileUserBadge({ name, memberId }: MobileUserBadgeProps) {
           <p className="text-sm font-semibold">{name}</p>
           {memberId && (
             <div className="flex items-center gap-1 mt-1">
-              <span className="text-xs text-muted-foreground">Member ID:</span>
+              <span className="text-xs text-muted-foreground">ID de miembro:</span>
               <span className="text-xs font-mono text-primary font-semibold">{memberId}</span>
             </div>
           )}
@@ -49,7 +49,7 @@ export function MobileUserBadge({ name, memberId }: MobileUserBadgeProps) {
         <DropdownMenuItem asChild>
           <div className="flex items-center gap-2 cursor-pointer">
             <Icons.LogOut className="mr-2 h-4 w-4" />
-            <LogoutButton />
+            <LogoutButton label="Cerrar sesión" />
           </div>
         </DropdownMenuItem>
       </DropdownMenuContent>

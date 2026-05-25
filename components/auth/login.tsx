@@ -19,7 +19,29 @@ import { useState } from "react";
 import { GoogleButton } from "./google-button";
 import { useLocale, useTranslations } from 'next-intl';
 import { getAuthErrorKey } from '@/lib/auth-errors'
-import { getPostAuthRedirectPath } from '@/lib/auth-redirects'
+import { resolvePostLoginRedirect } from '@/lib/actions/auth/resolve-post-login-redirect'
+
+const POST_LOGIN_REDIRECT_RETRY_DELAYS_MS = [0, 250, 750]
+
+async function resolvePostLoginRedirectWithRetry() {
+  let lastResult: Awaited<ReturnType<typeof resolvePostLoginRedirect>> | null = null
+
+  for (const delayMs of POST_LOGIN_REDIRECT_RETRY_DELAYS_MS) {
+    if (delayMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs))
+    }
+
+    const result = await resolvePostLoginRedirect()
+    if (result.success) return result
+    lastResult = result
+  }
+
+  return lastResult ?? {
+    success: false as const,
+    error: 'We could not load your account destination. Please try signing in again.',
+  }
+}
+
 export function LoginForm({
   className,
   ...props
@@ -46,21 +68,18 @@ export function LoginForm({
       });
       if (error) throw error;
 
-      const userId = data.user?.id
-      if (!userId) {
-        router.push("/onboarding");
+      if (!data.user?.id) {
+        setError(t('anErrorOccurred'));
         return;
       }
 
-      const [{ data: userData }, { data: profile }] = await Promise.all([
-        supabase.from('user').select('role').eq('id', userId).maybeSingle(),
-        supabase.from('person_profile').select('user_id').eq('user_id', userId).maybeSingle(),
-      ])
+      const redirectResult = await resolvePostLoginRedirectWithRetry()
+      if (!redirectResult.success) {
+        setError(redirectResult.error);
+        return;
+      }
 
-      router.push(getPostAuthRedirectPath({
-        hasProfile: Boolean(profile),
-        role: userData?.role,
-      }));
+      router.push(redirectResult.path);
     } catch (error: unknown) {
       setError(t(getAuthErrorKey(error)));
     } finally {

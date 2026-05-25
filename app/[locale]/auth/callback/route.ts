@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { routing } from '@/i18n/routing';
-import { getPostAuthRedirectPath } from '@/lib/auth-redirects'
+import { resolvePostAuthRedirectPath } from '@/lib/auth-redirects'
 
 export async function GET(
   request: Request,
@@ -49,19 +49,26 @@ export async function GET(
     return NextResponse.redirect(`${siteUrl}/${locale}${next}`)
   }
 
-  const { data: userData } = await supabase
-    .from('user')
-    .select('role')
-    .eq('id', user.id)
-    .maybeSingle()
+  const [{ data: userData, error: userDataError }, { data: profile, error: profileError }] =
+    await Promise.all([
+      supabase
+        .from('user')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle(),
+      supabase
+        .from('person_profile')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .maybeSingle(),
+    ])
 
-const { data: profile } = await supabase
-      .from('person_profile')
-      .select('user_id')
-      .eq('user_id', user.id)
-      .maybeSingle()
+  if (userDataError || profileError || !userData?.role) {
+    return NextResponse.redirect(`${siteUrl}/${locale}/auth/error`)
+  }
 
-  const redirectPath = getPostAuthRedirectPath({
+  const redirectPath = await resolvePostAuthRedirectPath(supabase, {
+    userId: user.id,
     hasProfile: Boolean(profile),
     role: userData?.role,
   })

@@ -1,6 +1,7 @@
 'use server'
 
-import { canUserManageEvent, requireUser } from '@/lib/auth'
+import { canUserAccessEventWithPermission, canUserManageEvent, requireUser } from '@/lib/auth'
+import type { ChapterPermissionKey } from '@/lib/services/chapter-permission.service'
 import type { EventRow, Role } from '@/lib/types'
 
 type EventManager = {
@@ -22,6 +23,27 @@ export async function assertCanManageEvent(eventId: string): Promise<EventAccess
   const { supabase, user } = await requireUser()
 
   const access = await canUserManageEvent(supabase, user, eventId)
+  if (!access.allowed) {
+    return { error: access.error }
+  }
+
+  return {
+    supabase,
+    user: {
+      id: user.id,
+      role: user.role,
+    },
+    event: access.event,
+  }
+}
+
+export async function assertCanAccessEvent(
+  eventId: string,
+  permissionKey: ChapterPermissionKey
+): Promise<EventAccessSuccess | EventAccessFailure> {
+  const { supabase, user } = await requireUser()
+
+  const access = await canUserAccessEventWithPermission(supabase, user, eventId, permissionKey)
   if (!access.allowed) {
     return { error: access.error }
   }

@@ -36,6 +36,23 @@ export type UpdateProfileParams = {
   resumePdf?: File;
 };
 
+const RESUME_PUBLIC_URL_MARKER = '/storage/v1/object/public/resumes/';
+
+function getResumeStoragePath(fileUrl: string | null): string | null {
+  if (!fileUrl) return null;
+
+  const markerIndex = fileUrl.indexOf(RESUME_PUBLIC_URL_MARKER);
+  if (markerIndex >= 0) {
+    return decodeURIComponent(fileUrl.slice(markerIndex + RESUME_PUBLIC_URL_MARKER.length));
+  }
+
+  if (fileUrl.startsWith('resumes/')) {
+    return fileUrl.slice('resumes/'.length);
+  }
+
+  return null;
+}
+
 export const StudentService = {
   async getProfile(supabase: SupabaseClient<Database>, userId: string) {
     const { data: profile, error } = await supabase
@@ -134,6 +151,20 @@ export const StudentService = {
 
     if (error) return null;
     return resume;
+  },
+
+  async createResumeSignedUrl(
+    supabase: SupabaseClient<Database>,
+    fileUrl: string | null,
+    expiresIn = 60 * 5
+  ): Promise<string | null> {
+    const storagePath = getResumeStoragePath(fileUrl);
+    if (!storagePath) return null;
+
+    const { data, error } = await supabase.storage.from('resumes').createSignedUrl(storagePath, expiresIn);
+    if (error || !data?.signedUrl) return null;
+
+    return data.signedUrl;
   },
 
   async uploadResume(supabase: SupabaseClient<Database>, userId: string, file: File) {

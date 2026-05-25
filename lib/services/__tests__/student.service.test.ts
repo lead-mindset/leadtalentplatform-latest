@@ -76,6 +76,7 @@ describe('StudentService', () => {
       storage: {
         from: vi.fn().mockReturnThis(),
         upload: vi.fn(),
+        createSignedUrl: vi.fn().mockResolvedValue({ data: { signedUrl: 'https://example.com/signed-resume.pdf' }, error: null }),
         getPublicUrl: vi.fn().mockReturnValue({ data: { publicUrl: 'https://example.com/resume.pdf' } }),
       },
     } as unknown as SupabaseClient;
@@ -371,6 +372,35 @@ describe('StudentService', () => {
   });
 
   // ───────────────────────────────────────────────────────────────
+  // createResumeSignedUrl
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  describe('createResumeSignedUrl', () => {
+    it('creates a signed URL from a stored Supabase public-style resume URL', async () => {
+      const { mockSupabase } = buildMockSupabase();
+
+      const result = await StudentService.createResumeSignedUrl(
+        mockSupabase as unknown as SupabaseClient,
+        'https://example.supabase.co/storage/v1/object/public/resumes/user-123/resume.pdf'
+      );
+
+      expect(result).toBe('https://example.com/signed-resume.pdf');
+      expect(mockSupabase.storage.from).toHaveBeenCalledWith('resumes');
+      expect(mockSupabase.storage.createSignedUrl).toHaveBeenCalledWith('user-123/resume.pdf', 300);
+    });
+
+    it('returns null for an invalid resume file URL', async () => {
+      const { mockSupabase } = buildMockSupabase();
+
+      const result = await StudentService.createResumeSignedUrl(
+        mockSupabase as unknown as SupabaseClient,
+        'https://example.com/not-a-resume.pdf'
+      );
+
+      expect(result).toBeNull();
+      expect(mockSupabase.storage.createSignedUrl).not.toHaveBeenCalled();
+    });
+  });
+
   // uploadResume
   // ───────────────────────────────────────────────────────────────
   describe('uploadResume', () => {

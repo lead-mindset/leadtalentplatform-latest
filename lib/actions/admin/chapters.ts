@@ -106,6 +106,11 @@ export async function getAvailableEditors(chapter_id: string) {
   return AdminService.getAvailableEditors(supabase, chapter_id)
 }
 
+export async function getAvailableEditorsByChapterIds(chapter_ids: string[]) {
+  const { supabase } = await requireAdmin()
+  return AdminService.getAvailableEditorsByChapterIds(supabase, chapter_ids)
+}
+
 export async function assignEditor(userId: string, chapter_id: string): Promise<ActionResult> {
   const { supabase, user } = await requireAdmin()
   const result = await AdminService.assignEditor(supabase, userId, chapter_id, user.id)

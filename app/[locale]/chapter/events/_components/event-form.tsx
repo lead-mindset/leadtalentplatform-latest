@@ -3,14 +3,17 @@
 import React, { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { createEvent, type CreateEventInput } from '@/lib/actions/events/create-event'
 import { updateEvent, type UpdateEventInput } from '@/lib/actions/events/update-event'
 import { deleteEvent } from '@/lib/actions/events/delete-event'
 import { addEventCollaborators } from '@/lib/actions/events/add-event-collaborators'
 import type { EventRow, EventType, EventAccessModel, ChapterRow, EventApplicationQuestionRow, EventApplicationQuestionType } from '@/lib/types'
-import { EVENT_ACCESS_MODEL_OPTIONS } from '@/lib/constants'
 import { useRouter } from 'next/navigation'
 import { useLocale } from 'next-intl'
 import { uploadEventCover } from '@/lib/actions/events/upload-cover'
@@ -29,14 +32,67 @@ type EditableApplicationQuestion = {
 }
 
 const questionTypeOptions: Array<{ value: EventApplicationQuestionType; label: string }> = [
-  { value: 'short_text', label: 'Texto corto' },
-  { value: 'long_text', label: 'Texto largo' },
-  { value: 'single_select', label: 'Seleccion unica' },
-  { value: 'checkbox', label: 'Checkbox' },
+  { value: 'short_text', label: 'Respuesta corta' },
+  { value: 'long_text', label: 'Respuesta larga' },
+  { value: 'single_select', label: 'Selección única' },
+  { value: 'checkbox', label: 'Casillas' },
   { value: 'url', label: 'URL' },
 ]
 
+const EVENT_ACCESS_OPTIONS: Array<{ value: EventAccessModel; label: string }> = [
+  { value: 'open', label: 'Registro abierto' },
+  { value: 'application', label: 'Postulación requerida' },
+]
+
+const eventTypeOptions: Array<{ value: EventType; label: string; icon: typeof MapPin }> = [
+  { value: 'in_person', label: 'Presencial', icon: MapPin },
+  { value: 'online', label: 'Virtual', icon: Video },
+  { value: 'hybrid', label: 'Híbrido', icon: MonitorSmartphone },
+]
+
+const eventTypeLabels: Record<EventType, string> = {
+  in_person: 'Presencial',
+  online: 'Virtual',
+  hybrid: 'Híbrido',
+}
+
+const accessModelLabels: Record<EventAccessModel, string> = {
+  open: 'Registro abierto',
+  application: 'Postulación requerida',
+}
+
 const EMPTY_APPLICATION_QUESTIONS: EventApplicationQuestionRow[] = []
+
+function RequirementBadge({ required, label }: { required: boolean; label?: string }) {
+  return (
+    <Badge variant={required ? 'default' : 'outline'} size="sm">
+      {label ?? (required ? 'Obligatorio' : 'Opcional')}
+    </Badge>
+  )
+}
+
+function FieldLabel({
+  htmlFor,
+  children,
+  required,
+  badgeLabel,
+  className,
+}: {
+  htmlFor?: string
+  children: React.ReactNode
+  required: boolean
+  badgeLabel?: string
+  className?: string
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Label htmlFor={htmlFor} className={className ?? 'text-sm font-semibold tracking-wide text-muted-foreground uppercase'}>
+        {children}
+      </Label>
+      <RequirementBadge required={required} label={badgeLabel} />
+    </div>
+  )
+}
 
 function toEditableQuestion(question: EventApplicationQuestionRow): EditableApplicationQuestion {
   return {
@@ -82,11 +138,13 @@ export function EventForm({
   mode,
   initial,
   editorChapter,
+  canArchiveEvents = false,
   applicationQuestions = EMPTY_APPLICATION_QUESTIONS,
 }: {
   mode: Mode
   initial?: EventRow | null
   editorChapter?: ChapterRow | null
+  canArchiveEvents?: boolean
   applicationQuestions?: EventApplicationQuestionRow[]
 }) {
   const router = useRouter()
@@ -175,29 +233,29 @@ export function EventForm({
   async function handleCoverFile(file: File | null) {
     if (!file) return
     if (!file.type.startsWith('image/')) {
-      setCoverError('Only image files are allowed')
+      setCoverError('Solo se permiten archivos de imagen')
       return
     }
     if (file.size > 2 * 1024 * 1024) {
-      setCoverError('Cover image must be 2MB or smaller')
+      setCoverError('La imagen de portada debe pesar 2 MB o menos')
       return
     }
 
     setCoverError(null)
     const formData = new FormData()
     formData.set('cover', file)
-    const toastId = toast.loading('Uploading image...')
+    const toastId = toast.loading('Subiendo imagen...')
     try {
       const result = await uploadEventCover(formData)
       setCoverImage(result.publicUrl)
-      toast.success('Image uploaded successfully', { id: toastId })
+      toast.success('Imagen subida correctamente', { id: toastId })
     } catch (uploadError) {
-      setCoverError(uploadError instanceof Error ? uploadError.message : 'Failed to upload image')
-      toast.error('Failed to upload image', { id: toastId })
+      setCoverError(uploadError instanceof Error ? uploadError.message : 'No se pudo subir la imagen')
+      toast.error('No se pudo subir la imagen', { id: toastId })
     }
   }
 
-  const validateFields = (checkMode: 'step' | 'all', currentStep?: number) => {
+  const validateFields = (checkMode: 'step' | 'all', currentStep?: number, targetPublished = true) => {
     setFieldErrors({})
     let isValid = true
     const errors: Record<string, string> = {}
@@ -207,10 +265,10 @@ export function EventForm({
     const checkAccess = checkMode === 'all' || currentStep === 3
 
     if (checkBasics) {
-      if (!title.trim()) { errors.title = 'El titulo es obligatorio'; isValid = false }
-      if (title.length > 100) { errors.title = 'El titulo debe tener menos de 100 caracteres'; isValid = false }
-      if (description.length > 2000) { errors.description = 'La descripcion debe tener menos de 2000 caracteres'; isValid = false }
-      if (coverImage && !coverImage.startsWith('http')) { errors.cover_image = 'El URL de imagen no es valido'; isValid = false }
+      if (!title.trim()) { errors.title = 'El título es obligatorio'; isValid = false }
+      if (title.length > 100) { errors.title = 'El título debe tener menos de 100 caracteres'; isValid = false }
+      if (description.length > 2000) { errors.description = 'La descripción debe tener menos de 2000 caracteres'; isValid = false }
+      if (coverImage && !coverImage.startsWith('http')) { errors.cover_image = 'La URL de imagen no es valida'; isValid = false }
     }
 
     if (checkLogistics) {
@@ -220,34 +278,34 @@ export function EventForm({
         errors.end_at = 'La fecha de fin debe ser posterior al inicio'
         isValid = false
       }
-      if (eventType === 'in_person' && !location?.trim()) {
-        errors.location = 'El lugar es obligatorio para eventos presenciales'
+      if (targetPublished && eventType === 'in_person' && !location?.trim()) {
+        errors.location = 'La ubicación es obligatoria para eventos presenciales'
         isValid = false
       }
-      if (eventType === 'online' && !meetingUrl?.trim()) {
-        errors.meeting_url = 'El link es obligatorio para eventos virtuales'
+      if (targetPublished && eventType === 'online' && !meetingUrl?.trim()) {
+        errors.meeting_url = 'El enlace de reunión es obligatorio para eventos virtuales'
         isValid = false
       }
-      if (eventType === 'hybrid') {
-        if (!location?.trim()) { errors.location = 'El lugar es obligatorio para eventos hibridos'; isValid = false }
-        if (!meetingUrl?.trim()) { errors.meeting_url = 'El link es obligatorio para eventos hibridos'; isValid = false }
+      if (targetPublished && eventType === 'hybrid') {
+        if (!location?.trim()) { errors.location = 'La ubicación es obligatoria para eventos híbridos'; isValid = false }
+        if (!meetingUrl?.trim()) { errors.meeting_url = 'El enlace de reunión es obligatorio para eventos híbridos'; isValid = false }
       }
     }
 
     if (checkAccess) {
       if (capacity && (isNaN(Number(capacity)) || Number(capacity) <= 0)) {
-        errors.capacity = 'El cupo debe ser un numero mayor que 0'
+        errors.capacity = 'La capacidad debe ser un número mayor que 0'
         isValid = false
       }
-      if (accessModel === 'application' && !applicationFormUrl?.trim()) {
+      if (targetPublished && accessModel === 'application' && !applicationFormUrl?.trim()) {
         const hasQuestions = applicationQuestionsState.some((question) => question.questionText.trim())
         if (!hasQuestions) {
-          errors.application_questions = 'Agrega al menos una pregunta de postulacion'
+          errors.application_questions = 'Agrega al menos una pregunta de postulación'
           isValid = false
         }
       }
 
-      if (accessModel === 'application') {
+      if (targetPublished && accessModel === 'application') {
         applicationQuestionsState.forEach((question, index) => {
           if (!question.questionText.trim()) {
             errors.application_questions = `La pregunta ${index + 1} necesita texto`
@@ -258,7 +316,7 @@ export function EventForm({
             ['single_select', 'checkbox'].includes(question.questionType) &&
             !question.optionsText.split('\n').some((option) => option.trim())
           ) {
-            errors.application_questions = `La pregunta ${index + 1} necesita al menos una opcion`
+            errors.application_questions = `La pregunta ${index + 1} necesita al menos una opción`
             isValid = false
           }
         })
@@ -267,13 +325,13 @@ export function EventForm({
 
     if (!isValid) {
       setFieldErrors(errors)
-      toast.error('Revisa los campos marcados antes de continuar')
+      toast.error(targetPublished ? 'Corrige los campos obligatorios antes de publicar' : 'Corrige los campos mínimos antes de guardar el borrador')
     }
     return isValid
   }
 
   const handleNext = () => {
-    if (validateFields('step', step)) {
+    if (validateFields('step', step, false)) {
       setStep(s => Math.min(s + 1, 4))
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
@@ -285,7 +343,7 @@ export function EventForm({
   }
 
   async function submitEvent(targetPublished: boolean) {
-    if (!validateFields('all')) {
+    if (!validateFields('all', undefined, targetPublished)) {
       return
     }
 
@@ -331,11 +389,11 @@ export function EventForm({
         if (mode === 'edit' && pendingCollaboratorIds.length > 0) {
           const collaboratorResult = await addEventCollaborators(res.event.id, pendingCollaboratorIds)
           if ('error' in collaboratorResult) {
-            toast.error(`Event updated but failed to add collaborators: ${collaboratorResult.error}`)
+            toast.error(`El evento se actualizó, pero no se pudieron agregar colaboradores: ${collaboratorResult.error}`)
           }
         }
-        toast.success(mode === 'create' ? 'Event created successfully!' : 'Event updated successfully!')
-        setLastSavedAt(new Date().toLocaleTimeString())
+        toast.success(mode === 'create' ? 'Evento creado correctamente' : 'Evento actualizado correctamente')
+        setLastSavedAt(new Date().toLocaleTimeString('es-PE'))
         setIsPublished(res.event.is_published)
 
         if (mode === 'create') {
@@ -344,7 +402,7 @@ export function EventForm({
           router.refresh()
         }
       } catch {
-        toast.error('An unexpected error occurred. Please try again.')
+        toast.error('Ocurrió un error inesperado. Inténtalo nuevamente.')
       }
     })
   }
@@ -382,7 +440,7 @@ export function EventForm({
       }
       const res = await updateEvent(payload as UpdateEventInput)
       if (!('error' in res)) {
-        setLastSavedAt(new Date().toLocaleTimeString())
+        setLastSavedAt(new Date().toLocaleTimeString('es-PE'))
       }
       setIsAutoSaving(false)
     }, 30000)
@@ -444,95 +502,19 @@ export function EventForm({
   }
 
   const steps = [
-    { num: 1, title: 'Basico', shortTitle: 'Basico', helper: 'Nombre, descripcion e imagen' },
-    { num: 2, title: 'Logistica', shortTitle: 'Logistica', helper: 'Fecha, hora y lugar' },
-    { num: 3, title: 'Registro', shortTitle: 'Registro', helper: 'Acceso, preguntas y cupos' },
-    { num: 4, title: 'Revision', shortTitle: 'Revision', helper: 'Confirmar y publicar' },
+    { num: 1, title: 'Datos' },
+    { num: 2, title: 'Logística' },
+    { num: 3, title: 'Acceso' },
+    { num: 4, title: 'Revisión' },
   ]
-  const currentStep = steps.find((item) => item.num === step) ?? steps[0]
   const fieldErrorEntries = Object.entries(fieldErrors).filter(([, message]) => message)
-
-  const StepProgress = () => (
-    <nav aria-label="Progreso de creacion de evento" className="rounded-lg border bg-card px-4 py-4 shadow-sm">
-      <div className="space-y-3 md:hidden">
-        <div className="space-y-1">
-          <p className="text-xs font-semibold uppercase tracking-wide text-primary">Paso {step} de 4</p>
-          <p className="font-semibold">{currentStep.title}</p>
-          <p className="text-xs leading-5 text-muted-foreground">{currentStep.helper}</p>
-        </div>
-        <div className="h-2 overflow-hidden rounded-full bg-muted">
-          <div className="h-full rounded-full bg-primary transition-all duration-300" style={{ width: `${(step / steps.length) * 100}%` }} />
-        </div>
-      </div>
-
-      <ol className="hidden grid-cols-4 gap-2 md:grid">
-        {steps.map((item) => {
-          const isComplete = step > item.num
-          const isCurrent = step === item.num
-
-          return (
-            <li key={item.num}>
-              <div
-                className={`flex min-h-16 flex-col justify-between rounded-md border px-3 py-2 transition-colors ${
-                  isCurrent
-                    ? 'border-primary bg-primary/10 text-primary'
-                    : isComplete
-                      ? 'border-primary/30 bg-primary/5 text-foreground'
-                      : 'border-border/70 bg-muted/20 text-muted-foreground'
-                }`}
-                aria-current={isCurrent ? 'step' : undefined}
-              >
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`flex size-6 items-center justify-center rounded-full text-xs font-semibold ${
-                      isCurrent || isComplete ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                    }`}
-                  >
-                    {isComplete ? <Check className="size-3.5" /> : item.num}
-                  </span>
-                  <span className="text-xs font-semibold uppercase tracking-wide">{item.shortTitle}</span>
-                </div>
-                <span className="hidden text-xs leading-snug text-muted-foreground md:block">{item.helper}</span>
-              </div>
-            </li>
-          )
-        })}
-      </ol>
-    </nav>
-  )
-
-  function SectionHeader({
-    icon: Icon,
-    title,
-    description,
-  }: {
-    icon: typeof Lightbulb
-    title: string
-    description: string
-  }) {
-    return (
-      <div className="flex items-start gap-3">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-          <Icon className="size-5" />
-        </div>
-        <div className="space-y-1">
-          <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
-          <p className="text-sm leading-6 text-muted-foreground">{description}</p>
-        </div>
-      </div>
-    )
-  }
-
-  function RequiredMark() {
-    return <span className="ml-1 text-primary" aria-hidden="true">*</span>
-  }
 
   const renderErrorSummary = () => {
     if (!error && fieldErrorEntries.length === 0) return null
 
     return (
       <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-        {error && <p className="font-medium">{error}</p>}
+        {error && <div className="font-medium">{error}</div>}
         {fieldErrorEntries.length > 0 && (
           <ul className={error ? 'mt-2 list-disc space-y-1 pl-5' : 'list-disc space-y-1 pl-5'}>
             {fieldErrorEntries.slice(0, 4).map(([field, message]) => (
@@ -547,19 +529,17 @@ export function EventForm({
   // --- RENDER FUNCTIONS FOR UI SECTIONS ---
 
   const renderBasics = () => (
-    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <section className="rounded-lg border bg-card p-5 shadow-sm md:p-6">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <section className="bg-card border rounded-lg p-6 md:p-8 space-y-8 shadow-sm">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-2 bg-primary/10 rounded-lg text-primary">
+            <Lightbulb className="w-5 h-5" />
+          </div>
+          <div className="text-xl font-semibold">Datos del evento</div>
+        </div>
         <div className="space-y-6">
-          <SectionHeader
-            icon={Lightbulb}
-            title="Informacion principal"
-            description="Escribe lo minimo que un estudiante necesita para entender si este evento es para el."
-          />
           <div className="space-y-2">
-            <Label htmlFor="title" className="text-sm font-medium">
-              Titulo del evento
-              <RequiredMark />
-            </Label>
+            <FieldLabel htmlFor="title" required>Título del evento</FieldLabel>
             <Input
               id="title"
               value={title}
@@ -569,37 +549,29 @@ export function EventForm({
                   setFieldErrors(prev => ({ ...prev, title: '' }))
                 }
               }}
-              placeholder="Ej. LEAD Spark: Career Night"
-              className={`h-11 bg-muted/40 focus-visible:bg-background ${fieldErrors.title ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+              placeholder="Ej. LEAD Spark: Tech & Careers"
+              className={fieldErrors.title ? 'border-destructive focus-visible:ring-destructive' : ''}
             />
-            {fieldErrors.title && <p className="text-sm text-destructive">{fieldErrors.title}</p>}
+            {fieldErrors.title && <div className="text-sm text-destructive">{fieldErrors.title}</div>}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description" className="text-sm font-medium">Descripcion para participantes</Label>
-            <div className={`overflow-hidden rounded-md border bg-muted/40 transition-all focus-within:ring-2 focus-within:ring-primary focus-within:bg-background ${fieldErrors.description ? 'border-destructive focus-within:ring-destructive' : 'border-input'}`}>
-              <textarea
-                id="description"
-                className="min-h-32 w-full resize-y border-none bg-transparent px-3 py-3 text-sm leading-6 text-foreground outline-none placeholder:text-muted-foreground"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Cuenta que pasara, para quien es y que se llevara la persona al asistir."
-              />
-            </div>
-            {fieldErrors.description && <p className="text-sm text-destructive">{fieldErrors.description}</p>}
+            <FieldLabel htmlFor="description" required={false}>Descripción</FieldLabel>
+            <Textarea
+              id="description"
+              className={fieldErrors.description ? 'min-h-32 border-destructive focus-visible:ring-destructive' : 'min-h-32'}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Explica el propósito, la audiencia y qué deben esperar los participantes."
+            />
+            {fieldErrors.description && <div className="text-sm text-destructive">{fieldErrors.description}</div>}
           </div>
         </div>
       </section>
 
-      <section className="rounded-lg border bg-card p-5 shadow-sm md:p-6">
-        <div className="mb-4 flex items-start justify-between gap-4">
-          <div className="space-y-1">
-            <Label className="text-sm font-medium">Imagen de portada</Label>
-            <p className="text-sm leading-6 text-muted-foreground">
-              Opcional, pero ayuda a que el evento se vea mejor en la pagina publica.
-            </p>
-          </div>
-          <span className="rounded-md border bg-muted/30 px-2 py-1 text-xs text-muted-foreground">Opcional</span>
+      <section className="bg-card border rounded-lg p-6 md:p-8 shadow-sm">
+        <div className="mb-4">
+          <FieldLabel required={false}>Imagen de portada</FieldLabel>
         </div>
         <div
           onDragOver={(event) => {
@@ -615,13 +587,14 @@ export function EventForm({
             setIsDraggingCover(false)
             await handleCoverFile(event.dataTransfer.files[0] ?? null)
           }}
-          className={`group relative flex min-h-40 w-full cursor-pointer flex-col items-center justify-center gap-3 overflow-hidden rounded-lg border border-dashed transition-all md:aspect-[21/8] md:min-h-0 ${isDraggingCover ? 'border-primary bg-primary/5' : 'border-border bg-muted/25 hover:bg-muted/45'}`}
+          className={`relative flex aspect-video w-full cursor-pointer flex-col items-center justify-center gap-4 overflow-hidden rounded-lg border border-dashed transition-all group ${isDraggingCover ? 'border-primary bg-primary/5' : 'border-border bg-muted/30 hover:bg-muted/60'}`}
           onClick={() => !coverImage && fileInputRef.current?.click()}
         >
           <input
             ref={fileInputRef}
             type="file"
             accept="image/*"
+            aria-label="Subir imagen de portada del evento"
             className="sr-only"
             onChange={async (event) => handleCoverFile(event.target.files?.[0] ?? null)}
           />
@@ -630,40 +603,39 @@ export function EventForm({
             <>
               <Image
                 src={coverImage}
-                alt="Cover preview"
+                alt="Vista previa de la portada"
                 fill
                 sizes="(min-width: 1024px) 768px, 100vw"
                 className="object-cover"
               />
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+              <div className="absolute inset-0 flex items-center justify-center bg-background/70 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
                 <Button variant="secondary" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
-                  <ImagePlus className="w-4 h-4 mr-2" /> Change Cover
+                  <ImagePlus className="w-4 h-4 mr-2" /> Cambiar portada
                 </Button>
               </div>
             </>
           ) : (
             <>
-              <div className="rounded-md bg-primary/10 p-3 text-primary transition-transform group-hover:scale-105">
-                <UploadCloud className="size-6" />
+              <div className="p-4 rounded-full bg-primary/10 text-primary transition-transform group-hover:scale-110">
+                <UploadCloud className="w-8 h-8" />
               </div>
               <div className="text-center px-4">
-                <p className="font-semibold">Sube o arrastra una imagen</p>
-                <p className="text-sm text-muted-foreground">Recomendado: 1920x820px, maximo 2MB</p>
+                <div className="mb-1 text-lg font-semibold">Arrastra la portada aquí</div>
+                <div className="text-sm text-muted-foreground">Recomendado: 1920 x 1080 px. Máximo 2 MB.</div>
               </div>
             </>
           )}
         </div>
-        {coverError && <p className="text-sm text-destructive mt-2">{coverError}</p>}
-        {fieldErrors.cover_image && <p className="text-sm text-destructive mt-2">{fieldErrors.cover_image}</p>}
+        {coverError && <div className="mt-2 text-sm text-destructive">{coverError}</div>}
+        {fieldErrors.cover_image && <div className="mt-2 text-sm text-destructive">{fieldErrors.cover_image}</div>}
 
         <div className="mt-4 space-y-2">
-          <Label htmlFor="coverImageUrl" className="text-sm text-muted-foreground">O pega un URL de imagen</Label>
+          <Label htmlFor="coverImageUrl" className="text-sm text-muted-foreground">O pega una URL de imagen</Label>
           <Input
             id="coverImageUrl"
             value={coverImage}
             onChange={(e) => setCoverImage(e.target.value)}
             placeholder="https://..."
-            className="h-10 bg-muted/40 focus-visible:bg-background"
           />
         </div>
       </section>
@@ -671,153 +643,146 @@ export function EventForm({
   )
 
   const renderLogistics = () => (
-    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <section className="rounded-lg border bg-card p-5 shadow-sm md:p-6">
-        <div className="space-y-5">
-          <SectionHeader
-            icon={UserCheck}
-            title="Formato del evento"
-            description="Elige como participaran los estudiantes para mostrar solo los campos necesarios."
-          />
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-            {[
-              { value: 'in_person', label: 'Presencial', icon: MapPin },
-              { value: 'online', label: 'Virtual', icon: Video },
-              { value: 'hybrid', label: 'Hibrido', icon: MonitorSmartphone },
-            ].map((type) => (
-              <label key={type.value} className={`flex min-h-24 cursor-pointer flex-col items-center justify-center rounded-lg border p-4 text-center transition-all ${eventType === type.value ? 'border-primary bg-primary/10 text-primary shadow-sm' : 'border-border/70 bg-muted/20 text-muted-foreground hover:bg-muted/40 hover:text-foreground'}`}>
-                <input
-                  type="radio"
-                  name="attendance_type"
-                  value={type.value}
-                  checked={eventType === type.value}
-                  onChange={(e) => setEventType(e.target.value as EventType)}
-                  className="sr-only"
-                />
-                <type.icon className="mb-2 size-6" />
-                <span className="font-semibold">{type.label}</span>
-              </label>
-            ))}
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <section className="bg-card border rounded-lg p-6 md:p-8 space-y-6 shadow-sm">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-2 bg-primary/10 rounded-lg text-primary">
+            <UserCheck className="w-5 h-5" />
           </div>
+          <div className="text-xl font-semibold">Formato de asistencia</div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {eventTypeOptions.map((type) => (
+            <label key={type.value} className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border p-6 transition-colors ${eventType === type.value ? 'border-primary bg-primary/10 text-primary' : 'border-border/60 text-muted-foreground hover:bg-muted/40 hover:text-foreground'}`}>
+              <input
+                type="radio"
+                name="attendance_type"
+                value={type.value}
+                checked={eventType === type.value}
+                onChange={(e) => setEventType(e.target.value as EventType)}
+                className="sr-only"
+              />
+              <type.icon className="mb-3 w-8 h-8" />
+              <span className="font-bold">{type.label}</span>
+            </label>
+          ))}
         </div>
       </section>
 
-      <section className="rounded-lg border bg-card p-5 shadow-sm md:p-6">
-        <div className="space-y-5">
-          <SectionHeader
-            icon={Video}
-            title="Fecha y hora"
-            description="Confirma inicio y cierre para ordenar el calendario y habilitar check-in."
-          />
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="startAt" className="text-sm font-medium">
-                Inicio
-                <RequiredMark />
-              </Label>
-              <Input
-                id="startAt"
-                type="datetime-local"
-                value={startAt}
-                onChange={(e) => setStartAt(e.target.value)}
-                className={`h-11 bg-muted/40 focus-visible:bg-background ${fieldErrors.start_at ? 'border-destructive' : ''}`}
-              />
-              {fieldErrors.start_at && <p className="text-xs text-destructive">{fieldErrors.start_at}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="endAt" className="text-sm font-medium">
-                Fin
-                <RequiredMark />
-              </Label>
-              <Input
-                id="endAt"
-                type="datetime-local"
-                value={endAt}
-                onChange={(e) => setEndAt(e.target.value)}
-                className={`h-11 bg-muted/40 focus-visible:bg-background ${fieldErrors.end_at ? 'border-destructive' : ''}`}
-              />
-              {fieldErrors.end_at && <p className="text-xs text-destructive">{fieldErrors.end_at}</p>}
-            </div>
+      <section className="bg-card border rounded-lg p-6 md:p-8 space-y-6 shadow-sm">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-2 bg-primary/10 rounded-lg text-primary">
+            <Video className="w-5 h-5" />
+          </div>
+          <div className="text-xl font-semibold">Fecha y hora</div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <FieldLabel htmlFor="startAt" required className="text-sm font-semibold text-muted-foreground">Inicio</FieldLabel>
+            <Input
+              id="startAt"
+              type="datetime-local"
+              value={startAt}
+              onChange={(e) => setStartAt(e.target.value)}
+              className={fieldErrors.start_at ? 'border-destructive focus-visible:ring-destructive' : ''}
+            />
+            {fieldErrors.start_at && <div className="ml-1 text-xs text-destructive">{fieldErrors.start_at}</div>}
+          </div>
+          <div className="space-y-2">
+            <FieldLabel htmlFor="endAt" required className="text-sm font-semibold text-muted-foreground">Fin</FieldLabel>
+            <Input
+              id="endAt"
+              type="datetime-local"
+              value={endAt}
+              onChange={(e) => setEndAt(e.target.value)}
+              className={fieldErrors.end_at ? 'border-destructive focus-visible:ring-destructive' : ''}
+            />
+            {fieldErrors.end_at && <div className="ml-1 text-xs text-destructive">{fieldErrors.end_at}</div>}
           </div>
         </div>
       </section>
 
       {(eventType === 'in_person' || eventType === 'hybrid') && (
-        <section className="animate-in fade-in zoom-in-95 rounded-lg border bg-card p-5 shadow-sm md:p-6">
-          <div className="relative z-50 space-y-5">
-            <SectionHeader
-              icon={MapPin}
-              title="Lugar"
-              description="Busca el venue para guardar direccion, ciudad y coordenadas cuando sea posible."
-            />
-            <div className="space-y-2">
-              <Label htmlFor="location" className="text-sm font-medium">
-                Lugar o direccion
-                <RequiredMark />
-              </Label>
-              <LocationAutocomplete
-                value={location}
-                onChange={(data) => {
-                  setLocation(data.address || '')
-                  setLocationName(data.name || data.address?.split(',')[0]?.trim() || '')
-                  setLocationAddress(data.address || '')
-                  setLocationCity(data.city || '')
-                  setLocationRegion(data.region || '')
-                  setLocationLatitude(data.latitude ?? null)
-                  setLocationLongitude(data.longitude ?? null)
-                }}
-                onClear={() => {
-                  setLocation('')
-                  setLocationName('')
-                  setLocationAddress('')
-                  setLocationCity('')
-                  setLocationRegion('')
-                  setLocationLatitude(null)
-                  setLocationLongitude(null)
-                }}
-                placeholder="Busca universidad, venue o direccion..."
-                className={`h-11 w-full bg-muted/40 focus-visible:bg-background ${fieldErrors.location ? 'border-destructive' : ''}`}
-              />
-              {fieldErrors.location && <p className="text-xs text-destructive">{fieldErrors.location}</p>}
-
-              {(locationCity || locationRegion) && (
-                <div className="mt-2 inline-flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-                  <MapPin className="size-3" />
-                  <span>Detectado:</span>
-                  {locationCity && <span className="font-semibold text-foreground">{locationCity}</span>}
-                  {locationCity && locationRegion && <span>,</span>}
-                  {locationRegion && <span className="font-semibold text-foreground">{locationRegion}</span>}
-                </div>
-              )}
+        <section className="bg-card border rounded-lg p-6 md:p-8 space-y-6 shadow-sm animate-in fade-in zoom-in-95">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-primary/10 rounded-lg text-primary">
+              <MapPin className="w-5 h-5" />
             </div>
+            <div className="text-xl font-semibold">Lugar</div>
+          </div>
+          <div className="space-y-2 relative z-50">
+            <FieldLabel
+              htmlFor="location"
+              required={eventType === 'in_person' || eventType === 'hybrid'}
+              badgeLabel="Para publicar"
+              className="text-sm font-semibold text-muted-foreground"
+            >
+              Ubicación / dirección
+            </FieldLabel>
+            <LocationAutocomplete
+              value={location}
+              onChange={(data) => {
+                setLocation(data.address || '')
+                setLocationName(data.name || data.address?.split(',')[0]?.trim() || '')
+                setLocationAddress(data.address || '')
+                setLocationCity(data.city || '')
+                setLocationRegion(data.region || '')
+                setLocationLatitude(data.latitude ?? null)
+                setLocationLongitude(data.longitude ?? null)
+              }}
+              onClear={() => {
+                setLocation('')
+                setLocationName('')
+                setLocationAddress('')
+                setLocationCity('')
+                setLocationRegion('')
+                setLocationLatitude(null)
+                setLocationLongitude(null)
+              }}
+              placeholder="Busca el lugar con Google Places..."
+              className={`w-full ${fieldErrors.location ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+            />
+            {fieldErrors.location && <div className="ml-1 text-xs text-destructive">{fieldErrors.location}</div>}
+
+            {(locationCity || locationRegion) && (
+              <div className="ml-1 mt-2 inline-flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+                <span>Datos detectados:</span>
+                {locationCity && <span className="font-semibold text-foreground">{locationCity}</span>}
+                {locationCity && locationRegion && <span>,</span>}
+                {locationRegion && <span className="font-semibold text-foreground">{locationRegion}</span>}
+              </div>
+            )}
           </div>
         </section>
       )}
 
       {(eventType === 'online' || eventType === 'hybrid') && (
-        <section className="animate-in fade-in zoom-in-95 rounded-lg border bg-card p-5 shadow-sm md:p-6">
-          <div className="space-y-5">
-            <SectionHeader
-              icon={Video}
-              title="Conexion virtual"
-              description="Agrega el link que recibiran las personas registradas o aprobadas."
-            />
-            <div className="space-y-2">
-              <Label htmlFor="meetingUrl" className="text-sm font-medium">
-                Link de reunion
-                <RequiredMark />
-              </Label>
-              <Input
-                id="meetingUrl"
-                type="url"
-                value={meetingUrl}
-                onChange={(e) => setMeetingUrl(e.target.value)}
-                placeholder="https://zoom.us/j/..."
-                className={`h-11 bg-muted/40 focus-visible:bg-background ${fieldErrors.meeting_url ? 'border-destructive' : ''}`}
-              />
-              <p className="text-xs text-muted-foreground">El link se muestra solo a personas registradas o aprobadas.</p>
-              {fieldErrors.meeting_url && <p className="text-xs text-destructive">{fieldErrors.meeting_url}</p>}
+        <section className="bg-card border rounded-lg p-6 md:p-8 space-y-6 shadow-sm animate-in fade-in zoom-in-95">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-primary/10 rounded-lg text-primary">
+              <Video className="w-5 h-5" />
             </div>
+            <div className="text-xl font-semibold">Conexion virtual</div>
+          </div>
+          <div className="space-y-2">
+            <FieldLabel
+              htmlFor="meetingUrl"
+              required={eventType === 'online' || eventType === 'hybrid'}
+              badgeLabel="Para publicar"
+              className="text-sm font-semibold text-muted-foreground"
+            >
+              Enlace de reunión
+            </FieldLabel>
+            <Input
+              id="meetingUrl"
+              type="url"
+              value={meetingUrl}
+              onChange={(e) => setMeetingUrl(e.target.value)}
+              placeholder="https://zoom.us/j/..."
+              className={fieldErrors.meeting_url ? 'border-destructive focus-visible:ring-destructive' : ''}
+            />
+            <div className="ml-1 mt-1 text-xs text-muted-foreground">El enlace se compartira solo con asistentes aprobados.</div>
+            {fieldErrors.meeting_url && <div className="ml-1 text-xs text-destructive">{fieldErrors.meeting_url}</div>}
           </div>
         </section>
       )}
@@ -825,17 +790,17 @@ export function EventForm({
   )
 
   const renderAccess = () => (
-    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <section className="rounded-lg border bg-card p-5 shadow-sm md:p-6">
-        <div className="space-y-5">
-          <SectionHeader
-            icon={QrCode}
-            title="Modelo de registro"
-            description="Define si el registro sera inmediato o si el equipo debe revisar postulaciones."
-          />
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          {EVENT_ACCESS_MODEL_OPTIONS.map((option) => (
-            <label key={option.value} className={`flex cursor-pointer items-start gap-4 rounded-lg border p-4 transition-all ${accessModel === option.value ? 'border-primary bg-primary/10 shadow-sm' : 'border-border/70 bg-muted/20 hover:bg-muted/40'}`}>
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <section className="bg-card border rounded-lg p-6 md:p-8 space-y-6 shadow-sm">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 bg-primary/10 rounded-lg text-primary">
+            <QrCode className="w-5 h-5" />
+          </div>
+          <div className="text-xl font-semibold">Modelo de registro</div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {EVENT_ACCESS_OPTIONS.map((option) => (
+            <label key={option.value} className={`flex cursor-pointer items-start gap-4 rounded-lg border p-5 transition-colors ${accessModel === option.value ? 'border-primary bg-primary/10' : 'border-border/60 bg-muted/20 hover:bg-muted/40'}`}>
               <div className="mt-1">
                 <input
                   type="radio"
@@ -843,34 +808,36 @@ export function EventForm({
                   value={option.value}
                   checked={accessModel === option.value}
                   onChange={(e) => setAccessModel(e.target.value as EventAccessModel)}
-                  className="w-4 h-4 text-primary bg-background border-border focus:ring-primary focus:ring-2"
+                  className="h-4 w-4 accent-primary"
                 />
               </div>
               <div>
-                <span className={`block font-semibold ${accessModel === option.value ? 'text-primary' : 'text-foreground'}`}>
-                  {option.value === 'open' ? 'Registro abierto' : 'Con postulacion'}
-                </span>
+                <span className={`block font-semibold ${accessModel === option.value ? 'text-primary' : 'text-foreground'}`}>{option.label}</span>
                 <span className="text-sm text-muted-foreground mt-1 block leading-relaxed">
                   {option.value === 'open'
-                    ? 'Las personas se registran al instante y reciben su QR.'
-                    : 'El equipo revisa respuestas antes de aprobar asistencia.'
+                    ? 'Los estudiantes se registran al instante y reciben su QR de inmediato.'
+                    : 'Los participantes postulan y el chapter revisa las solicitudes antes de aprobarlas.'
                   }
                 </span>
               </div>
             </label>
           ))}
         </div>
-        </div>
 
         {accessModel === 'application' && (
-          <div className="mt-5 animate-in fade-in slide-in-from-left-4 rounded-lg border bg-muted/25 p-4">
-            <div className="space-y-3">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <Label className="text-sm font-semibold">Preguntas de postulacion</Label>
-                  <p className="mt-1 text-xs text-muted-foreground">Estas preguntas son exactamente lo que vera el participante al postular.</p>
+          <div className="mt-6 rounded-lg border bg-muted/30 p-4 md:p-5">
+            <div className="space-y-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Label className="text-sm font-semibold">Preguntas de postulación</Label>
+                    <RequirementBadge required label="Para publicar" />
+                  </div>
+                  <div className="text-xs leading-relaxed text-muted-foreground">
+                    El borrador se puede guardar incompleto. Para publicar, cada pregunta debe tener texto y las preguntas de selección deben tener opciones.
+                  </div>
                 </div>
-                <Button type="button" variant="outline" size="sm" onClick={addApplicationQuestion} className="w-full sm:w-auto">
+                <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto" onClick={addApplicationQuestion}>
                   <Plus className="h-4 w-4 mr-2" />
                   Agregar pregunta
                 </Button>
@@ -878,128 +845,131 @@ export function EventForm({
 
               {applicationQuestionsState.length === 0 ? (
                 <div className="rounded-lg border border-dashed bg-background p-4 text-sm text-muted-foreground">
-                  Agrega al menos una pregunta para que el equipo pueda revisar postulantes.
+                  Agrega al menos una pregunta. Los postulantes responderán dentro de LEAD.
                 </div>
               ) : (
                 <div className="space-y-3">
                   {applicationQuestionsState.map((question, index) => (
-                    <div key={question.id ?? index} className="space-y-4 rounded-lg border bg-background p-4">
+                    <div key={question.id ?? index} className="space-y-3 rounded-lg border bg-background p-4">
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="flex min-w-0 items-center gap-2">
-                          <GripVertical className="hidden h-4 w-4 shrink-0 text-muted-foreground sm:block" />
-                          <span className="rounded-md bg-primary/10 px-2 py-1 text-xs font-semibold text-primary">
-                            Pregunta {index + 1}
-                          </span>
-                          {question.isRequired ? (
-                            <span className="rounded-md border bg-muted/30 px-2 py-1 text-xs text-muted-foreground">Obligatoria</span>
-                          ) : null}
+                        <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          <GripVertical className="h-4 w-4" />
+                          Pregunta {index + 1}
+                          <Badge variant={question.isRequired ? 'default' : 'outline'} size="sm">
+                            {question.isRequired ? 'Obligatoria' : 'Opcional'}
+                          </Badge>
                         </div>
-                        <div className="flex items-center gap-1 self-end sm:self-auto">
-                          <Button type="button" variant="ghost" size="icon-sm" aria-label="Mover pregunta arriba" onClick={() => moveApplicationQuestion(index, -1)} disabled={index === 0}>
+
+                        <div className="flex flex-wrap items-center gap-1">
+                          <label className="inline-flex min-h-7 items-center gap-1.5 rounded-md border bg-muted/20 px-2 text-xs font-medium text-muted-foreground">
+                            <Checkbox
+                              checked={question.isRequired}
+                              onCheckedChange={(checked) => updateApplicationQuestion(index, { isRequired: checked === true })}
+                            />
+                            Requerir
+                          </label>
+                          <Button type="button" variant="ghost" size="icon-xs" aria-label="Subir pregunta" onClick={() => moveApplicationQuestion(index, -1)} disabled={index === 0}>
                             <ChevronUp className="h-4 w-4" />
                           </Button>
-                          <Button type="button" variant="ghost" size="icon-sm" aria-label="Mover pregunta abajo" onClick={() => moveApplicationQuestion(index, 1)} disabled={index === applicationQuestionsState.length - 1}>
+                          <Button type="button" variant="ghost" size="icon-xs" aria-label="Bajar pregunta" onClick={() => moveApplicationQuestion(index, 1)} disabled={index === applicationQuestionsState.length - 1}>
                             <ChevronDown className="h-4 w-4" />
                           </Button>
-                          <Button type="button" variant="ghost" size="icon-sm" aria-label="Eliminar pregunta" onClick={() => removeApplicationQuestion(index)}>
+                          <Button type="button" variant="ghost" size="icon-xs" aria-label="Eliminar pregunta" onClick={() => removeApplicationQuestion(index)}>
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </div>
                       </div>
 
-                      <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_180px]">
-                        <div className="space-y-2">
-                          <Label className="text-xs font-medium text-muted-foreground">Texto de la pregunta</Label>
-                          <Input
-                            value={question.questionText}
-                            onChange={(event) => updateApplicationQuestion(index, { questionText: event.target.value })}
-                            placeholder="Ej. Por que quieres participar?"
-                            className="h-10 bg-muted/40"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-xs font-medium text-muted-foreground">Tipo de respuesta</Label>
-                          <select
+                      <div className="grid gap-3 2xl:grid-cols-[minmax(0,1fr)_14rem]">
+                        <Input
+                          value={question.questionText}
+                          onChange={(event) => updateApplicationQuestion(index, { questionText: event.target.value })}
+                          placeholder="Ej. ¿Por qué quieres asistir?"
+                          className="bg-muted/40"
+                          aria-label={`Texto de pregunta ${index + 1}`}
+                        />
+
+                        <div className="min-w-0">
+                          <Select
                             value={question.questionType}
-                            onChange={(event) => updateApplicationQuestion(index, {
-                              questionType: event.target.value as EventApplicationQuestionType,
-                              optionsText: ['single_select', 'checkbox'].includes(event.target.value)
+                            onValueChange={(value) => updateApplicationQuestion(index, {
+                              questionType: value as EventApplicationQuestionType,
+                              optionsText: ['single_select', 'checkbox'].includes(value)
                                 ? question.optionsText
                                 : '',
                             })}
-                            className="h-10 w-full rounded-md border border-input bg-muted/40 px-3 text-sm"
                           >
-                            {questionTypeOptions.map((option) => (
-                              <option key={option.value} value={option.value}>{option.label}</option>
-                            ))}
-                          </select>
+                            <SelectTrigger className="w-full" aria-label={`Tipo de respuesta para pregunta ${index + 1}`}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {questionTypeOptions.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
 
                       {['single_select', 'checkbox'].includes(question.questionType) ? (
-                        <div className="space-y-2">
-                          <Label className="text-xs font-medium text-muted-foreground">Opciones</Label>
-                          <textarea
-                            value={question.optionsText}
-                            onChange={(event) => updateApplicationQuestion(index, { optionsText: event.target.value })}
-                            placeholder="Una opcion por linea"
-                            className="min-h-24 w-full rounded-md border border-input bg-muted/40 px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                          />
-                        </div>
-                      ) : null}
-
-                      <label className="inline-flex min-h-9 items-center gap-2 rounded-md border bg-muted/20 px-3 text-sm text-muted-foreground">
-                        <input
-                          type="checkbox"
-                          checked={question.isRequired}
-                          onChange={(event) => updateApplicationQuestion(index, { isRequired: event.target.checked })}
-                          className="h-4 w-4 rounded border-border"
+                        <Textarea
+                          value={question.optionsText}
+                          onChange={(event) => updateApplicationQuestion(index, { optionsText: event.target.value })}
+                          placeholder="Opciones, una por línea"
+                          className="min-h-20 bg-muted/40"
+                          aria-label={`Opciones de pregunta ${index + 1}`}
                         />
-                        Obligatoria
-                      </label>
+                      ) : null}
                     </div>
                   ))}
                 </div>
               )}
 
               {fieldErrors.application_questions && (
-                <p className="text-xs text-destructive">{fieldErrors.application_questions}</p>
+                <div className="text-xs text-destructive">{fieldErrors.application_questions}</div>
               )}
             </div>
           </div>
         )}
       </section>
 
-      <section className="rounded-lg border bg-card p-5 shadow-sm md:p-6">
-        <SectionHeader
-          icon={UserCheck}
-          title="Cupo"
-          description="Usa un limite si el espacio o el equipo de check-in lo necesita."
-        />
+      <section className="bg-card border rounded-lg p-6 md:p-8 shadow-sm">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-primary/10 rounded-lg text-primary">
+            <UserCheck className="w-5 h-5" />
+          </div>
+          <div className="text-xl font-semibold">Límite de capacidad</div>
+        </div>
         <div className="relative max-w-md">
+          <div className="mb-2">
+            <FieldLabel htmlFor="capacity" required={false} className="text-sm font-semibold text-muted-foreground">
+              Cupos disponibles
+            </FieldLabel>
+          </div>
           <Input
             id="capacity"
             inputMode="numeric"
             value={capacity}
             onChange={(e) => setCapacity(e.target.value)}
             placeholder="Ej. 150"
-            className={`mt-5 h-11 bg-muted/40 focus-visible:bg-background ${fieldErrors.capacity ? 'border-destructive' : ''}`}
+            className={fieldErrors.capacity ? 'border-destructive focus-visible:ring-destructive' : ''}
           />
           <div className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
             <UserCheck className="w-5 h-5 opacity-50" />
           </div>
         </div>
-        <p className="mt-2 text-sm text-muted-foreground">Dejalo vacio si el evento no tiene limite.</p>
-        {fieldErrors.capacity && <p className="text-xs text-destructive mt-1">{fieldErrors.capacity}</p>}
+        <div className="mt-2 text-sm text-muted-foreground">Déjalo en blanco si no hay límite de cupos.</div>
+        {fieldErrors.capacity && <div className="mt-1 text-xs text-destructive">{fieldErrors.capacity}</div>}
       </section>
 
       {mode === 'edit' && initial?.id && (
-        <section className="rounded-lg border bg-card p-5 shadow-sm md:p-6">
-          <SectionHeader
-            icon={MapPin}
-            title="Chapters colaboradores"
-            description="Agrega otros chapters cuando el evento se opera en conjunto."
-          />
+        <section className="bg-card border rounded-lg p-6 md:p-8 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-primary/10 rounded-lg text-primary">
+              <MapPin className="w-5 h-5" />
+            </div>
+            <div className="text-xl font-semibold">Chapters colaboradores</div>
+          </div>
           <CollaboratorManager
             eventId={initial.id}
             ownerChapterId={editorChapter?.id || null}
@@ -1014,58 +984,58 @@ export function EventForm({
   const renderReview = () => (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
       <section className="bg-card border rounded-lg p-6 md:p-8 space-y-8 shadow-sm">
-        <h2 className="text-2xl font-bold mb-6 border-b pb-4">Event Summary</h2>
+        <div className="mb-6 border-b pb-4 text-2xl font-semibold">Resumen del evento</div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-6">
             <div className="space-y-1">
-              <span className="text-sm text-muted-foreground uppercase tracking-wide font-semibold">Title</span>
-              <p className="text-lg font-medium">{title || <span className="text-muted-foreground italic">Untitled Event</span>}</p>
+              <span className="text-sm text-muted-foreground uppercase tracking-wide font-semibold">Título</span>
+              <div className="text-lg font-medium">{title || <span className="text-muted-foreground italic">Evento sin título</span>}</div>
             </div>
             <div className="space-y-1">
-              <span className="text-sm text-muted-foreground uppercase tracking-wide font-semibold">Type & Access</span>
-              <p className="font-medium capitalize">{eventType.replace('_', ' ')} • {accessModel === 'open' ? 'Open Enrollment' : 'Application Required'}</p>
+              <span className="text-sm text-muted-foreground uppercase tracking-wide font-semibold">Formato y acceso</span>
+              <div className="font-medium">{eventTypeLabels[eventType]} · {accessModelLabels[accessModel]}</div>
             </div>
             <div className="space-y-1">
-              <span className="text-sm text-muted-foreground uppercase tracking-wide font-semibold">Date & Time</span>
-              <p className="font-medium">
-                {startAt ? new Date(fromDateTimeLocal(startAt)).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : <span className="text-muted-foreground italic">Not set</span>}
+              <span className="text-sm text-muted-foreground uppercase tracking-wide font-semibold">Fecha y hora</span>
+              <div className="font-medium">
+                {startAt ? new Date(fromDateTimeLocal(startAt)).toLocaleString('es-PE', { dateStyle: 'medium', timeStyle: 'short' }) : <span className="text-muted-foreground italic">Sin definir</span>}
                 {' - '}
-                {endAt ? new Date(fromDateTimeLocal(endAt)).toLocaleTimeString(undefined, { timeStyle: 'short' }) : ''}
-              </p>
+                {endAt ? new Date(fromDateTimeLocal(endAt)).toLocaleTimeString('es-PE', { timeStyle: 'short' }) : ''}
+              </div>
             </div>
             <div className="space-y-1">
-              <span className="text-sm text-muted-foreground uppercase tracking-wide font-semibold">Location/Meeting</span>
-              <p className="font-medium max-w-[300px] truncate">
-                {eventType === 'in_person' || eventType === 'hybrid' ? location || <span className="text-muted-foreground italic">No location set</span> : null}
+              <span className="text-sm text-muted-foreground uppercase tracking-wide font-semibold">Ubicación / enlace</span>
+              <div className="max-w-sm truncate font-medium">
+                {eventType === 'in_person' || eventType === 'hybrid' ? location || <span className="text-muted-foreground italic">Sin ubicación</span> : null}
                 {eventType === 'hybrid' && <span className="mx-2 text-muted-foreground">|</span>}
-                {eventType === 'online' || eventType === 'hybrid' ? meetingUrl || <span className="text-muted-foreground italic">No meeting link set</span> : null}
-              </p>
+                {eventType === 'online' || eventType === 'hybrid' ? meetingUrl || <span className="text-muted-foreground italic">Sin enlace</span> : null}
+              </div>
             </div>
           </div>
 
           <div className="bg-muted/30 rounded-xl p-5 border">
-            <h3 className="font-semibold mb-4 flex items-center gap-2"><Check className="w-5 h-5 text-success" /> Readiness Checklist</h3>
+            <div className="font-semibold mb-4 flex items-center gap-2"><Check className="w-5 h-5 text-success" /> Checklist de publicación</div>
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
-                {title && description ? <Check className="w-5 h-5 text-success mt-0.5" /> : <div className="w-5 h-5 rounded-full border-2 mt-0.5" />}
+                {title ? <Check className="w-5 h-5 text-success mt-0.5" /> : <div className="w-5 h-5 rounded-full border-2 mt-0.5" />}
                 <div>
-                  <p className="font-medium text-sm">Basic details completed</p>
-                  <p className="text-xs text-muted-foreground">Title and description provided</p>
+                  <div className="text-sm font-medium">Datos básicos completos</div>
+                  <div className="text-xs text-muted-foreground">Título definido; la descripción es opcional</div>
                 </div>
               </li>
               <li className="flex items-start gap-3">
                 {coverImage ? <Check className="w-5 h-5 text-success mt-0.5" /> : <div className="w-5 h-5 rounded-full border-2 mt-0.5" />}
                 <div>
-                  <p className="font-medium text-sm">Cover image uploaded</p>
-                  <p className="text-xs text-muted-foreground">Helps attract more attendees</p>
+                  <div className="text-sm font-medium">Portada lista</div>
+                  <div className="text-xs text-muted-foreground">Ayuda a comunicar mejor el evento</div>
                 </div>
               </li>
               <li className="flex items-start gap-3">
                 {startAt && endAt && (location || meetingUrl) ? <Check className="w-5 h-5 text-success mt-0.5" /> : <div className="w-5 h-5 rounded-full border-2 mt-0.5" />}
                 <div>
-                  <p className="font-medium text-sm">Logistics confirmed</p>
-                  <p className="text-xs text-muted-foreground">Date, time, and location set</p>
+                  <div className="text-sm font-medium">Logística confirmada</div>
+                  <div className="text-xs text-muted-foreground">Fecha, hora y acceso definidos</div>
                 </div>
               </li>
             </ul>
@@ -1079,14 +1049,14 @@ export function EventForm({
             disabled={isPending}
           >
             <Rocket className="w-5 h-5 mr-2" />
-            Publicar evento
+            Publicar evento ahora
           </Button>
-          <p className="text-center text-xs text-muted-foreground">
-            Al publicar, el evento sera visible segun su configuracion.
-          </p>
+          <div className="text-center text-xs text-muted-foreground">
+            Al publicar, el evento será visible para la comunidad según el modelo de registro elegido.
+          </div>
           <div className="flex gap-4 pt-2">
             <Button variant="secondary" className="flex-1" onClick={() => submitEvent(false)} disabled={isPending}>
-              Guardar borrador
+              Guardar como borrador
             </Button>
           </div>
         </div>
@@ -1112,22 +1082,24 @@ export function EventForm({
         <div className="sticky bottom-6 z-50 mt-12 rounded-lg border bg-card/95 p-4 shadow-lg backdrop-blur-md">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <Button
-                variant="destructive"
-                className="hidden sm:flex"
-                onClick={onDelete}
-                disabled={isPending}
-              >
-                <Trash2 className="w-4 h-4 mr-2" /> Eliminar
-              </Button>
+              {canArchiveEvents ? (
+                <Button
+                  variant="destructive"
+                  className="hidden sm:flex"
+                  onClick={onDelete}
+                  disabled={isPending}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" /> Eliminar
+                </Button>
+              ) : null}
               <div className="text-xs text-muted-foreground hidden md:block font-medium">
-                {isAutoSaving ? 'Guardando...' : lastSavedAt ? `Guardado a las ${lastSavedAt}` : 'Cambios guardados.'}
+                {isAutoSaving ? 'Guardando automáticamente...' : lastSavedAt ? `Último guardado: ${lastSavedAt}` : 'Todos los cambios están guardados.'}
               </div>
             </div>
 
             <div className="flex items-center gap-3 w-full sm:w-auto">
               <Button
-                variant="outline"
+                variant="secondary"
                 className="flex-1 sm:flex-none font-semibold"
                 onClick={() => submitEvent(false)}
                 disabled={isPending}
@@ -1150,108 +1122,128 @@ export function EventForm({
 
   // Create Mode Wizard
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-6 pb-28">
-      <StepProgress />
+    <div className="w-full max-w-6xl mx-auto space-y-8 pb-16">
+      <div className="mb-12">
+        <div className="flex justify-between items-center mb-8 max-w-2xl mx-auto px-4">
+          {steps.map((s, i) => (
+            <React.Fragment key={s.num}>
+              <div className="flex flex-col items-center gap-2 relative z-10">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 ${
+                  step === s.num ? 'bg-primary text-primary-foreground ring-4 ring-primary/20 shadow-lg' :
+                  step > s.num ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                }`}>
+                  {step > s.num ? <Check className="w-5 h-5" /> : s.num}
+                </div>
+                <span className={`text-xs font-medium uppercase tracking-wider transition-colors ${step === s.num ? 'text-primary' : 'text-muted-foreground'}`}>
+                  {s.title}
+                </span>
+              </div>
+              {i < steps.length - 1 && (
+                <div className="relative mx-2 h-0.5 flex-1 overflow-hidden bg-muted">
+                  <div className={`absolute top-0 left-0 h-full bg-primary transition-all duration-500 ease-in-out ${step > s.num ? 'w-full' : 'w-0'}`} />
+                </div>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
 
       {renderErrorSummary()}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
-        <div className="min-w-0">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="lg:col-span-8">
           {step === 1 && renderBasics()}
           {step === 2 && renderLogistics()}
           {step === 3 && renderAccess()}
           {step === 4 && renderReview()}
+
+          {/* Form Navigation for Create Mode */}
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-6 border-t mt-8">
+            <Button
+              variant="outline"
+              size="lg"
+              className={step === 1 ? 'invisible' : ''}
+              onClick={handleBack}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" /> Atrás
+            </Button>
+
+            {step < 4 ? (
+              <Button
+                size="lg"
+                className="min-w-36"
+                onClick={handleNext}
+              >
+                Siguiente <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            ) : (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                {isAutoSaving ? 'Guardando borrador...' : lastSavedAt ? `Borrador guardado: ${lastSavedAt}` : ''}
+              </div>
+            )}
+          </div>
         </div>
 
-        <aside className="hidden lg:block">
-          <div className="sticky top-24 rounded-lg border bg-card p-5 shadow-sm">
-            <div className="mb-5 flex items-start gap-3">
-              <div className="flex size-9 items-center justify-center rounded-md bg-primary/10 text-primary">
-                <Lightbulb className="size-4" />
+        {/* Right Sidebar Tips */}
+        <aside className="lg:col-span-4 hidden lg:block">
+          <div className="sticky top-24 space-y-6">
+            <div className="rounded-lg border bg-card p-6 shadow-sm">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Lightbulb className="w-5 h-5" />
+                </div>
+                <div className="text-lg font-semibold">Consejos para editar</div>
               </div>
-              <div>
-                <h3 className="font-semibold">Paso {currentStep.num}: {currentStep.title}</h3>
-                <p className="mt-1 text-xs leading-5 text-muted-foreground">{currentStep.helper}</p>
-              </div>
-            </div>
 
-              <ul className="space-y-4">
+              <ul className="space-y-6">
                 {step === 1 && (
                   <>
                     <li className="space-y-1">
-                      <p className="font-semibold text-sm">Lo obligatorio</p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">Titulo claro. La descripcion puede mejorar despues.</p>
+                      <div className="text-sm font-semibold">Títulos claros</div>
+                      <div className="text-xs leading-relaxed text-muted-foreground">Usa un título específico y fácil de escanear para que el público correcto entienda el valor rápido.</div>
                     </li>
                     <li className="space-y-1">
-                      <p className="font-semibold text-sm">Portada opcional</p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">No bloquea el avance. Sube imagen si ya la tienes.</p>
+                      <div className="text-sm font-semibold">Portada útil</div>
+                      <div className="text-xs leading-relaxed text-muted-foreground">Elige una imagen clara del tema, lugar o comunidad. Evita gráficas con demasiado texto.</div>
                     </li>
                   </>
                 )}
                 {step === 2 && (
                   <>
                     <li className="space-y-1">
-                      <p className="font-semibold text-sm">Primero fecha</p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">Sin fecha y hora no se puede ordenar calendario ni check-in.</p>
+                      <div className="text-sm font-semibold">Zona horaria</div>
+                      <div className="text-xs leading-relaxed text-muted-foreground">Si el evento es virtual o regional, menciona la zona horaria en la descripción.</div>
                     </li>
                     <li className="space-y-1">
-                      <p className="font-semibold text-sm">Lugar o link</p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">El formulario cambia segun presencial, virtual o hibrido.</p>
+                      <div className="text-sm font-semibold">Acceso híbrido</div>
+                      <div className="text-xs leading-relaxed text-muted-foreground">Un enlace virtual puede ayudar a chapters aliados o miembros fuera de la ciudad.</div>
                     </li>
                   </>
                 )}
                 {step === 3 && (
                   <>
                     <li className="space-y-1">
-                      <p className="font-semibold text-sm">Registro abierto</p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">Mas rapido para eventos generales y comunidad amplia.</p>
+                      <div className="text-sm font-semibold">Registro vs. postulación</div>
+                      <div className="text-xs leading-relaxed text-muted-foreground">El registro abierto reduce fricción. La postulación ayuda cuando necesitas curar cupos.</div>
                     </li>
                     <li className="space-y-1">
-                      <p className="font-semibold text-sm">Con postulacion</p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">Mejor cuando necesitas revisar respuestas antes de aprobar.</p>
+                      <div className="text-sm font-semibold">Cupos reales</div>
+                      <div className="text-xs leading-relaxed text-muted-foreground">Deja margen si el espacio necesita circulación, networking o equipos de apoyo.</div>
                     </li>
                   </>
                 )}
                 {step === 4 && (
                   <>
                     <li className="space-y-1">
-                      <p className="font-semibold text-sm">Publicar o guardar</p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">Publica si ya esta listo. Guarda borrador si falta confirmar algo.</p>
+                      <div className="text-sm font-semibold">Revisión final</div>
+                      <div className="text-xs leading-relaxed text-muted-foreground">Confirma fecha, acceso, cupos y preguntas antes de publicar.</div>
                     </li>
                   </>
                 )}
               </ul>
+            </div>
           </div>
         </aside>
-      </div>
-
-      <div className="sticky bottom-4 z-40 rounded-lg border bg-card/95 p-3 shadow-lg backdrop-blur-md">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">Paso {step} de 4</span>
-            <span className="mx-2">·</span>
-            {currentStep.helper}
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              className={step === 1 ? 'invisible flex-1 sm:flex-none' : 'flex-1 sm:flex-none'}
-              onClick={handleBack}
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" /> Atras
-            </Button>
-
-            {step < 4 ? (
-              <Button className="flex-1 sm:flex-none sm:min-w-[150px]" onClick={handleNext}>
-                Continuar <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            ) : (
-              <Button variant="secondary" className="flex-1 sm:flex-none" onClick={() => submitEvent(false)} disabled={isPending}>
-                Guardar borrador
-              </Button>
-            )}
-          </div>
-        </div>
       </div>
     </div>
   )

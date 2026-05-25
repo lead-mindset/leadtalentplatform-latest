@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useLocale } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
@@ -7,11 +8,11 @@ import { MainContainer } from "@/components/global/main-container";
 import GradientText from "@/components/ui/gradient-text";
 import Aurora from "@/components/ui/aurora";
 
-const HOME_VIDEO_URL =
-  "https://sboibxszratyaswwursb.supabase.co/storage/v1/object/sign/video/video3.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV81MzNiYjliNy03NjlkLTRhZjMtOTQ3MC0yMGM2NmJjYTI3OWIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ2aWRlby92aWRlbzMubXA0IiwiaWF0IjoxNzc4MzI4NjAyLCJleHAiOjIwOTM2ODg2MDJ9.wAIIA6UgDmn-oQNMbUELEW8UHbawTVgM740jhf_SMbk";
+const PUBLIC_HERO_VIDEO_PATH = "/video3.mp4";
 
 export function Hero() {
   const locale = useLocale();
+  const [videoSrc, setVideoSrc] = useState<string | undefined>();
   const isEnglish = locale === "en";
   const copy = isEnglish
     ? {
@@ -33,6 +34,10 @@ export function Hero() {
         secondary: "Explorar eventos",
       };
 
+  useEffect(() => {
+    setVideoSrc(new URL(PUBLIC_HERO_VIDEO_PATH, window.location.origin).toString());
+  }, []);
+
   return (
     <section className="relative h-screen flex flex-col items-center justify-center text-center overflow-hidden bg-background">
       <div className="absolute inset-0 z-0">
@@ -41,10 +46,9 @@ export function Hero() {
           muted
           loop
           playsInline
+          src={videoSrc}
           className="w-full h-full object-cover"
-        >
-          <source src={HOME_VIDEO_URL} type="video/mp4" />
-        </video>
+        />
       </div>
       <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/30 to-background z-10"></div>
       <div className="absolute inset-0 z-10 w-full h-full pointer-events-none">

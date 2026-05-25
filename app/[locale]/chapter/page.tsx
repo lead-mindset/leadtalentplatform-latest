@@ -5,38 +5,15 @@ import { Suspense } from 'react'
 import { Icons } from '@/components/ui/icons'
 import { requireChapterMember } from '@/lib/auth'
 import type { MemberWithProfile, RecentActivityMember } from '@/lib/types'
-import { getChapterMembers, getMemberStats, getRecentChapterActivity } from '@/lib/actions/chapter/get-data'
+import {
+  getChapterOverviewRoster,
+  getMemberStats,
+} from '@/lib/actions/chapter/get-data'
+import type { ChapterMemberPermissionFlags } from '@/lib/services/chapter.service'
 import { getChapterEvents } from '@/lib/actions/events/get-data'
 import MemberCard from './members/components/member-card'
 import { Breadcrumb } from '@/components/ui/breadcrumb'
 import { MainContainer } from '@/components/global/main-container'
-import {
-  PathwayCheckInService,
-  type ChapterAggregateTrend,
-  type ChapterPathwayInsights,
-} from '@/lib/services/pathway-check-in.service'
-
-const INSIGHT_LABELS: Record<string, string> = {
-  explore_career_paths: 'Explorar caminos de carrera',
-  build_technical_experience: 'Construir experiencia tecnica',
-  prepare_for_opportunities: 'Prepararse para oportunidades',
-  find_community_mentorship: 'Encontrar comunidad y mentoria',
-  start_leading: 'Empezar a liderar',
-  dont_know_where_to_start: 'No saben por donde empezar',
-  need_more_experience: 'Necesitan mas experiencia',
-  need_people_to_guide_me: 'Necesitan guia y mentoria',
-  need_career_prep: 'Necesitan preparacion profesional',
-  explorer: 'Explorer',
-  builder: 'Builder',
-  leader: 'Leader',
-  candidate: 'Candidate',
-  emerging_professional: 'Emerging Professional',
-  career_exploration: 'Career exploration',
-  technical_experience: 'Technical experience',
-  opportunity_readiness: 'Opportunity readiness',
-  community_mentorship: 'Community and mentorship',
-  leadership: 'Leadership',
-}
 
 function StatCard({
   label,
@@ -86,9 +63,13 @@ function StatCard({
 function PendingInbox({
   members,
   total,
+  permissions,
+  currentUserId,
 }: {
   members: MemberWithProfile[]
   total: number
+  permissions: ChapterMemberPermissionFlags
+  currentUserId: string
 }) {
   if (members.length === 0) {
     return (
@@ -115,7 +96,8 @@ function PendingInbox({
         <MemberCard
           key={member.id}
           member={member}
-
+          permissions={permissions}
+          currentUserId={currentUserId}
         />
       ))}
       {remaining > 0 && (
@@ -191,86 +173,6 @@ function QuickLinks({
   )
 }
 
-function InsightTrendList({
-  title,
-  items,
-}: {
-  title: string
-  items: ChapterAggregateTrend[]
-}) {
-  return (
-    <div className="rounded-lg border border-border/70 bg-muted/25 p-3">
-      <p className="text-sm font-semibold text-foreground">{title}</p>
-      {items.length > 0 ? (
-        <div className="mt-3 space-y-2">
-          {items.map((item) => (
-            <div key={item.value} className="flex items-center justify-between gap-3 text-sm">
-              <span className="min-w-0 truncate text-muted-foreground">
-                {INSIGHT_LABELS[item.value] ?? item.value}
-              </span>
-              <span className="rounded-md bg-background px-2 py-1 text-xs font-semibold text-foreground">
-                {item.count}
-              </span>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p className="mt-2 text-sm text-muted-foreground">Todavia no hay suficientes senales.</p>
-      )}
-    </div>
-  )
-}
-
-function PathwayInsightsCard({ insights }: { insights: ChapterPathwayInsights }) {
-  return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Icons.TrendingUp className="h-4 w-4 text-primary" />
-          Senales de crecimiento del capitulo
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <p className="text-sm leading-6 text-muted-foreground">
-          Vista agregada para planear mejor. No muestra respuestas individuales ni contenido privado
-          de Growth Reflections.
-        </p>
-        <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-lg border border-border/70 bg-muted/25 p-3">
-            <p className="text-xs font-medium text-muted-foreground">Check-Ins completados</p>
-            <p className="mt-1 text-2xl font-semibold text-foreground">
-              {insights.completedCheckIns}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {insights.completionRate}% de miembros aprobados
-            </p>
-          </div>
-          <div className="rounded-lg border border-border/70 bg-muted/25 p-3">
-            <p className="text-xs font-medium text-muted-foreground">Reflections completadas</p>
-            <p className="mt-1 text-2xl font-semibold text-foreground">
-              {insights.completedReflections}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">Aprendizajes convertidos en claridad</p>
-          </div>
-          <div className="rounded-lg border border-border/70 bg-muted/25 p-3">
-            <p className="text-xs font-medium text-muted-foreground">Proof items creados</p>
-            <p className="mt-1 text-2xl font-semibold text-foreground">
-              {insights.proofItemsCreated}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">Evidencia de crecimiento privada</p>
-          </div>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <InsightTrendList title="Necesidades mas comunes" items={insights.topNeeds} />
-          <InsightTrendList title="Blockers mas comunes" items={insights.topBlockers} />
-          <InsightTrendList title="Growth stages" items={insights.growthStages} />
-          <InsightTrendList title="Primary focus" items={insights.primaryFocuses} />
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
 function EventOpsList({
   events,
 }: {
@@ -280,7 +182,7 @@ function EventOpsList({
     return (
       <Card>
         <CardContent className="py-10 text-center text-sm text-muted-foreground">
-          Todavia no hay eventos proximos del chapter. Crea el primero para abrir registros.
+          Todavia no hay eventos proximos del capitulo. Crea el primero para abrir registros.
         </CardContent>
       </Card>
     )
@@ -298,7 +200,7 @@ function EventOpsList({
         return (
           <Card key={event.id}>
             <CardContent className="py-4 space-y-2">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="font-medium truncate">{event.title}</p>
                   <p className="text-xs text-muted-foreground">
@@ -310,12 +212,12 @@ function EventOpsList({
                     })}
                   </p>
                 </div>
-                <div className="grid shrink-0 gap-2 sm:flex">
-                  <Button asChild size="sm" variant="outline" className="w-full sm:w-auto">
+                <div className="flex shrink-0 gap-2">
+                  <Button asChild size="sm" variant="outline">
                       <Link href={`/chapter/events/${event.id}`}>Gestionar</Link>
                   </Button>
                   {event.is_published && (
-                    <Button asChild size="sm" variant="outline" className="w-full sm:w-auto">
+                    <Button asChild size="sm" variant="outline">
                       <Link href={`/chapter/events/${event.id}/checkin`}>Check-in</Link>
                     </Button>
                   )}
@@ -340,7 +242,7 @@ function EventOpsList({
 }
 
 async function ChapterContent() {
-  const { supabase, chapter_id } = await requireChapterMember()
+  const { supabase, user, chapter_id } = await requireChapterMember()
 
   const { data: chapter } = await supabase
     .from('chapter')
@@ -352,23 +254,24 @@ async function ChapterContent() {
     return (
       <Card className="max-w-md mx-auto mt-20">
         <CardHeader>
-          <CardTitle>Sin chapter asignado</CardTitle>
+          <CardTitle>Sin capitulo asignado</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            No tienes un chapter asignado. Contacta a una persona administradora.
+            No tienes un capitulo asignado. Contacta a una persona administradora.
           </p>
         </CardContent>
       </Card>
     )
   }
 
-  const [allMembers, recentActivity, chapterEvents, pathwayInsights] = await Promise.all([
-    getChapterMembers(chapter_id),
-    getRecentChapterActivity(chapter_id, 4),
+  const [overviewRoster, chapterEvents] = await Promise.all([
+    getChapterOverviewRoster(chapter_id, 4),
     getChapterEvents(),
-    PathwayCheckInService.getChapterAggregateInsights(supabase, chapter_id),
   ])
+  const allMembers = overviewRoster?.members ?? []
+  const recentActivity = overviewRoster?.recentActivity ?? []
+  const memberPermissions = overviewRoster?.permissions ?? null
 
   const stats = getMemberStats(allMembers)
   const approvalRate =
@@ -380,13 +283,13 @@ async function ChapterContent() {
   const upcomingEventsCount = chapterEvents.filter((event) => new Date(event.end_at) >= new Date()).length
 
   return (
-    <MainContainer className="w-full max-w-full py-8 space-y-8">
+    <MainContainer className="py-8 space-y-8">
       {/* Breadcrumb Navigation */}
       <Breadcrumb items={[{ label: 'Resumen', href: '/chapter' }]} />
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Resumen del chapter</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Resumen del capitulo</h1>
           <p className="max-w-2xl text-muted-foreground">
             {chapter?.name} - {chapter?.university}
           </p>
@@ -407,7 +310,7 @@ async function ChapterContent() {
       {stats.total === 0 && (
         <Card>
           <CardContent className="py-8 text-center space-y-3">
-            <p className="font-medium">Tu chapter todavia no tiene miembros.</p>
+            <p className="font-medium">Tu capitulo todavia no tiene miembros.</p>
             <p className="text-sm text-muted-foreground">
               Comparte las indicaciones de postulacion para que estudiantes completen su perfil y aparezcan aqui.
             </p>
@@ -422,7 +325,7 @@ async function ChapterContent() {
         <StatCard
           label="Miembros"
           value={stats.total}
-          sub="En tu chapter"
+          sub="En tu capitulo"
           icon={Icons.Users}
         />
         <StatCard
@@ -448,21 +351,19 @@ async function ChapterContent() {
         />
       </div>
 
-      <div className="grid min-w-0 gap-6 lg:grid-cols-3">
-        <div className="min-w-0 space-y-4 lg:col-span-2">
-          <PathwayInsightsCard insights={pathwayInsights} />
-
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-4">
           {stats.pending > 0 && (
             <>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
+              <div className="flex items-center justify-between">
+                <div>
                   <h2 className="text-base font-semibold">Aprobaciones pendientes</h2>
                   <p className="text-sm text-muted-foreground">
                     {stats.pending} miembro{stats.pending > 1 ? 's' : ''} esperando tu decision
                   </p>
                 </div>
                 {stats.pending > 3 && (
-                  <Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
+                  <Button asChild variant="outline" size="sm">
                     <Link href="/chapter/members?status=pending">
                       <span className="flex items-center">
                         Ver todo
@@ -476,6 +377,18 @@ async function ChapterContent() {
               <PendingInbox
                 members={pending_members}
                 total={stats.pending}
+                currentUserId={user.id}
+                permissions={memberPermissions ?? {
+                  canViewApproved: false,
+                  canViewAlumni: false,
+                  canViewMemberContact: false,
+                  canViewApplicants: false,
+                  canViewRejected: false,
+                  canViewInactive: false,
+                  canManageApplications: false,
+                  canRevokeMembers: false,
+                  canAssignEboard: false,
+                }}
               />
             </>
           )}
@@ -487,7 +400,7 @@ async function ChapterContent() {
           <EventOpsList events={chapterEvents.filter((event) => new Date(event.end_at) >= new Date())} />
         </div>
 
-        <div className="min-w-0 space-y-4">
+        <div className="space-y-4">
           <Card>
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">

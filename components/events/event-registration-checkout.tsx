@@ -1,7 +1,8 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useEffect } from 'react'
 import { useFormStatus } from 'react-dom'
+import { useRouter } from 'next/navigation'
 import { Icons } from '@/components/ui/icons'
 import { registerForEvent, type RegisterForEventState } from '@/lib/actions/events/register'
 import { Badge } from '@/components/ui/badge'
@@ -59,14 +60,23 @@ export function EventRegistrationCheckout({
   capacity,
   registeredCount,
 }: Props) {
+  const router = useRouter()
   const [state, formAction] = useActionState(registerForEvent, null as RegisterForEventState | null)
 
   const spotsLeft = capacity !== null ? Math.max(0, capacity - registeredCount) : null
   const isFull = capacity !== null && registeredCount >= capacity
   const showLowSpots = spotsLeft !== null && spotsLeft > 0 && spotsLeft <= 10 && !isRegistered
+  const isRedirecting = Boolean(state?.success && state.redirectPath)
 
-  const registerDisabled = registrationClosed || isFull || isRegistered || !isLoggedIn || !hasBasicProfile
+  const registerDisabled =
+    registrationClosed || isFull || isRegistered || !isLoggedIn || !hasBasicProfile || isRedirecting
   const qrHref = `/student/events?event=${eventId}`
+
+  useEffect(() => {
+    if (state?.success && state.redirectPath) {
+      router.push(state.redirectPath)
+    }
+  }, [router, state?.redirectPath, state?.success])
 
   const statusMessages =
     isLoggedIn && !isRegistered ? (
@@ -155,7 +165,15 @@ export function EventRegistrationCheckout({
           </label>
 
           <div className="hidden space-y-2 md:block">
-            <SubmitButton disabled={registerDisabled} label="Registrarme" />
+            <SubmitButton
+              disabled={registerDisabled}
+              label={isRedirecting ? 'Abriendo mi QR...' : 'Registrarme'}
+            />
+            {isRedirecting ? (
+              <p className="text-sm text-muted-foreground" role="status">
+                Registro confirmado. Estamos abriendo tu codigo QR.
+              </p>
+            ) : null}
             {state?.error ? (
               <p
                 className={cn(
@@ -202,7 +220,16 @@ export function EventRegistrationCheckout({
               </p>
             ) : null}
 
-            <SubmitButton disabled={registerDisabled} label="Registrarme" />
+            {isRedirecting ? (
+              <p className="mb-2 text-center text-xs text-muted-foreground" role="status">
+                Registro confirmado. Abriendo tu QR.
+              </p>
+            ) : null}
+
+            <SubmitButton
+              disabled={registerDisabled}
+              label={isRedirecting ? 'Abriendo mi QR...' : 'Registrarme'}
+            />
           </div>
         </form>
       )}

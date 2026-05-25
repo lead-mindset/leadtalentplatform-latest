@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import Link from 'next/link'
-import { getChapterEvents } from '@/lib/actions/events/get-data'
+import { getChapterEventPermissionFlags, getChapterEvents } from '@/lib/actions/events/get-data'
 import { EventsTable } from './_components/events-table'
 import { Icons } from '@/components/ui/icons'
 import { Breadcrumb } from '@/components/ui/breadcrumb'
@@ -34,6 +34,7 @@ function StatBlock({
 
 export default async function ChapterEventsPage() {
   const events = await getChapterEvents()
+  const permissions = await getChapterEventPermissionFlags()
   const now = new Date()
   const activeEvents = events.filter(event => event.is_published && new Date(event.end_at) >= now)
   const draftEvents = events.filter(event => !event.is_published && new Date(event.end_at) >= now)
@@ -114,7 +115,7 @@ export default async function ChapterEventsPage() {
           </CardContent>
         </Card>
       ) : (
-        <EventsTable events={events} />
+        <EventsTable events={events} canArchiveEvents={permissions.canArchiveEvents} />
       )}
     </MainContainer>
   )

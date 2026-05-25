@@ -78,14 +78,19 @@ export const EventApplicationService = {
     }))
   },
 
-  validateQuestions(questions: EventApplicationQuestionInput[]): ActionResult {
+  validateQuestions(
+    questions: EventApplicationQuestionInput[],
+    options: { requireCompleteQuestions?: boolean } = {}
+  ): ActionResult {
+    const requireCompleteQuestions = options.requireCompleteQuestions ?? true
+
     for (const [index, question] of questions.entries()) {
       if (!question.questionText.trim()) {
         return { success: false, error: `Question ${index + 1} needs text.` }
       }
 
-      const options = cleanOptions(question.options)
-      if (optionQuestionTypes.has(question.questionType) && !options) {
+      const cleanedOptions = cleanOptions(question.options)
+      if (requireCompleteQuestions && optionQuestionTypes.has(question.questionType) && !cleanedOptions) {
         return {
           success: false,
           error: `Question ${index + 1} needs at least one option.`,
@@ -112,9 +117,15 @@ export const EventApplicationService = {
 
   async upsertQuestionsForEvent(
     supabase: SupabaseClient<Database>,
-    params: { eventId: string; questions: EventApplicationQuestionInput[] }
+    params: {
+      eventId: string
+      questions: EventApplicationQuestionInput[]
+      requireCompleteQuestions?: boolean
+    }
   ): Promise<ActionResult> {
-    const validation = this.validateQuestions(params.questions)
+    const validation = this.validateQuestions(params.questions, {
+      requireCompleteQuestions: params.requireCompleteQuestions,
+    })
     if (!validation.success) return validation
 
     const normalized = this.normalizeQuestions(params.eventId, params.questions)
