@@ -807,6 +807,332 @@ export type Database = {
           },
         ]
       }
+      funding_request: {
+        Row: {
+          accountability_due_at: string | null
+          accountability_note: string | null
+          accountability_submitted_at: string | null
+          actual_spend_amount: number | null
+          admin_decision_note: string | null
+          approved_amount: number | null
+          chapter_id: string
+          closed_at: string | null
+          closed_by_id: string | null
+          closure_note: string | null
+          created_at: string
+          currency: string
+          event_date: string
+          event_id: string | null
+          expected_attendee_count: number | null
+          expected_audience: string
+          id: string
+          internal_funding_source: string | null
+          internal_funding_source_note: string | null
+          is_late_request: boolean
+          okr_keys: string[]
+          partner_details: string | null
+          partner_name: string | null
+          pillar_keys: string[]
+          purpose: string
+          requested_amount: number
+          requester_user_id: string
+          result_summary: string | null
+          reviewed_at: string | null
+          reviewed_by_id: string | null
+          status: string
+          submitted_at: string | null
+          supporting_notes: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          accountability_due_at?: string | null
+          accountability_note?: string | null
+          accountability_submitted_at?: string | null
+          actual_spend_amount?: number | null
+          admin_decision_note?: string | null
+          approved_amount?: number | null
+          chapter_id: string
+          closed_at?: string | null
+          closed_by_id?: string | null
+          closure_note?: string | null
+          created_at?: string
+          currency?: string
+          event_date: string
+          event_id?: string | null
+          expected_attendee_count?: number | null
+          expected_audience: string
+          id?: string
+          internal_funding_source?: string | null
+          internal_funding_source_note?: string | null
+          is_late_request?: boolean
+          okr_keys?: string[]
+          partner_details?: string | null
+          partner_name?: string | null
+          pillar_keys?: string[]
+          purpose: string
+          requested_amount: number
+          requester_user_id: string
+          result_summary?: string | null
+          reviewed_at?: string | null
+          reviewed_by_id?: string | null
+          status?: string
+          submitted_at?: string | null
+          supporting_notes?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          accountability_due_at?: string | null
+          accountability_note?: string | null
+          accountability_submitted_at?: string | null
+          actual_spend_amount?: number | null
+          admin_decision_note?: string | null
+          approved_amount?: number | null
+          chapter_id?: string
+          closed_at?: string | null
+          closed_by_id?: string | null
+          closure_note?: string | null
+          created_at?: string
+          currency?: string
+          event_date?: string
+          event_id?: string | null
+          expected_attendee_count?: number | null
+          expected_audience?: string
+          id?: string
+          internal_funding_source?: string | null
+          internal_funding_source_note?: string | null
+          is_late_request?: boolean
+          okr_keys?: string[]
+          partner_details?: string | null
+          partner_name?: string | null
+          pillar_keys?: string[]
+          purpose?: string
+          requested_amount?: number
+          requester_user_id?: string
+          result_summary?: string | null
+          reviewed_at?: string | null
+          reviewed_by_id?: string | null
+          status?: string
+          submitted_at?: string | null
+          supporting_notes?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funding_request_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_request_closed_by_id_fkey"
+            columns: ["closed_by_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_request_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_request_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event_with_chapter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_request_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "published_event_listing"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_request_requester_user_id_fkey"
+            columns: ["requester_user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_request_reviewed_by_id_fkey"
+            columns: ["reviewed_by_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funding_request_budget_item: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          funding_request_id: string
+          id: string
+          label: string
+          notes: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          category?: string
+          created_at?: string
+          funding_request_id: string
+          id?: string
+          label: string
+          notes?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          funding_request_id?: string
+          id?: string
+          label?: string
+          notes?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funding_request_budget_item_funding_request_id_fkey"
+            columns: ["funding_request_id"]
+            isOneToOne: false
+            referencedRelation: "funding_request"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funding_request_file: {
+        Row: {
+          chapter_id: string
+          created_at: string
+          external_url: string | null
+          file_size_bytes: number | null
+          file_type: string
+          funding_request_id: string
+          id: string
+          mime_type: string | null
+          notes: string | null
+          original_name: string | null
+          storage_bucket: string
+          storage_path: string | null
+          uploaded_by_id: string | null
+        }
+        Insert: {
+          chapter_id: string
+          created_at?: string
+          external_url?: string | null
+          file_size_bytes?: number | null
+          file_type: string
+          funding_request_id: string
+          id?: string
+          mime_type?: string | null
+          notes?: string | null
+          original_name?: string | null
+          storage_bucket?: string
+          storage_path?: string | null
+          uploaded_by_id?: string | null
+        }
+        Update: {
+          chapter_id?: string
+          created_at?: string
+          external_url?: string | null
+          file_size_bytes?: number | null
+          file_type?: string
+          funding_request_id?: string
+          id?: string
+          mime_type?: string | null
+          notes?: string | null
+          original_name?: string | null
+          storage_bucket?: string
+          storage_path?: string | null
+          uploaded_by_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funding_request_file_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_request_file_funding_request_id_fkey"
+            columns: ["funding_request_id"]
+            isOneToOne: false
+            referencedRelation: "funding_request"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_request_file_uploaded_by_id_fkey"
+            columns: ["uploaded_by_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funding_request_status_event: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          from_status: string | null
+          funding_request_id: string
+          id: string
+          metadata: Json
+          note: string | null
+          to_status: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          from_status?: string | null
+          funding_request_id: string
+          id?: string
+          metadata?: Json
+          note?: string | null
+          to_status: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          from_status?: string | null
+          funding_request_id?: string
+          id?: string
+          metadata?: Json
+          note?: string | null
+          to_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funding_request_status_event_actor_user_id_fkey"
+            columns: ["actor_user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_request_status_event_funding_request_id_fkey"
+            columns: ["funding_request_id"]
+            isOneToOne: false
+            referencedRelation: "funding_request"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_identity: {
         Row: {
           chapter_id: string | null
@@ -1624,6 +1950,14 @@ export type Database = {
       }
       can_access_event_with_permission: {
         Args: { check_event_id: string; check_permission_key: string }
+        Returns: boolean
+      }
+      can_access_funding_file_object: {
+        Args: { check_permission_key: string; object_name: string }
+        Returns: boolean
+      }
+      can_access_funding_request: {
+        Args: { check_permission_key: string; check_request_id: string }
         Returns: boolean
       }
       can_access_resume_object: {
@@ -2620,3 +2954,4 @@ export const Constants = {
     },
   },
 } as const
+
