@@ -20,6 +20,14 @@ export async function getAdminFundingData(status?: FundingRequestStatus | 'all' 
   })
 }
 
+export async function getAdminFundingReviewData(status?: FundingRequestStatus | 'all' | null) {
+  const { supabase, user } = await requireAdmin()
+  return FundingService.listAdminRequestContexts(supabase, {
+    actorUserId: user.id,
+    status,
+  })
+}
+
 export async function getFundingRequestDetail(requestId: string) {
   const { supabase, user } = await requireUser()
   const result = await FundingService.getRequestDetail(supabase, {
@@ -33,4 +41,3 @@ export async function getFundingRequestDetail(requestId: string) {
 
   return result
 }
-

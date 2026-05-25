@@ -19,6 +19,7 @@ type MockBuilder = {
   update: MockFn
   delete: MockFn
   eq: MockFn
+  in: MockFn
   order: MockFn
   single: MockFn
   maybeSingle: MockFn
@@ -28,6 +29,7 @@ type MockBuilder = {
 
 type TableName =
   | 'user'
+  | 'chapter'
   | 'funding_request'
   | 'funding_request_budget_item'
   | 'funding_request_file'
@@ -48,6 +50,7 @@ function createBuilder(defaultValue: QueryResult = { data: null, error: null }):
     update: vi.fn(() => builder),
     delete: vi.fn(() => builder),
     eq: vi.fn(() => builder),
+    in: vi.fn(() => builder),
     order: vi.fn(() => builder),
     single: vi.fn(() => Promise.resolve(shiftValue())),
     maybeSingle: vi.fn(() => Promise.resolve(shiftValue())),
@@ -64,6 +67,7 @@ function createBuilder(defaultValue: QueryResult = { data: null, error: null }):
 function buildMockSupabase() {
   const tableMocks: Record<TableName, MockBuilder> = {
     user: createBuilder(),
+    chapter: createBuilder({ data: [], error: null }),
     funding_request: createBuilder(),
     funding_request_budget_item: createBuilder(),
     funding_request_file: createBuilder({ data: [], error: null }),
@@ -255,6 +259,52 @@ describe('FundingService', () => {
     )
   })
 
+  it('loads admin request context with chapter, requester, and budget rows', async () => {
+    const { mockSupabase, tableMocks } = buildMockSupabase()
+    const request = buildRequest({ status: 'submitted' })
+    const budgetItem = {
+      id: 'item-1',
+      funding_request_id: request.id,
+      label: 'Materiales',
+      category: 'event_materials',
+      amount: 300,
+      notes: null,
+      sort_order: 1,
+    }
+    tableMocks.user._setResult({ data: { id: 'admin-1', role: 'admin' }, error: null })
+    tableMocks.user._setResult({
+      data: [{ id: 'president-1', name: 'Test President', email: 'president@test.com' }],
+      error: null,
+    })
+    tableMocks.funding_request._setResult({ data: [request], error: null })
+    tableMocks.funding_request_budget_item._setResult({ data: [budgetItem], error: null })
+    tableMocks.chapter._setResult({
+      data: [{ id: 'leaduni', name: 'LEAD UNI', university: 'Universidad Nacional de Ingenieria' }],
+      error: null,
+    })
+
+    const result = await FundingService.listAdminRequestContexts(mockSupabase, {
+      actorUserId: 'admin-1',
+      status: 'submitted',
+    })
+
+    expect(result).toEqual({
+      success: true,
+      data: [
+        {
+          request,
+          budgetItems: [budgetItem],
+          chapter: { id: 'leaduni', name: 'LEAD UNI', university: 'Universidad Nacional de Ingenieria' },
+          requester: { id: 'president-1', name: 'Test President', email: 'president@test.com' },
+        },
+      ],
+    })
+    expect(tableMocks.funding_request.eq).toHaveBeenCalledWith('status', 'submitted')
+    expect(tableMocks.funding_request_budget_item.in).toHaveBeenCalledWith('funding_request_id', [request.id])
+    expect(tableMocks.chapter.in).toHaveBeenCalledWith('id', ['leaduni'])
+    expect(tableMocks.user.in).toHaveBeenCalledWith('id', ['president-1'])
+  })
+
   it('rejects admin review by non-admin users', async () => {
     const { mockSupabase } = buildMockSupabase()
     mockSupabase.from('user').select().eq().maybeSingle = vi
@@ -346,4 +396,3 @@ describe('FundingService', () => {
     expect(tableMocks.funding_request.update).not.toHaveBeenCalled()
   })
 })
-

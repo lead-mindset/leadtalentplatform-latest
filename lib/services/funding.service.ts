@@ -55,6 +55,12 @@ export type FundingRequestRow = Database['public']['Tables']['funding_request'][
 export type FundingBudgetItemRow = Database['public']['Tables']['funding_request_budget_item']['Row']
 export type FundingFileRow = Database['public']['Tables']['funding_request_file']['Row']
 export type FundingStatusEventRow = Database['public']['Tables']['funding_request_status_event']['Row']
+export type FundingAdminRequestContext = {
+  request: FundingRequestRow
+  budgetItems: FundingBudgetItemRow[]
+  chapter: Pick<Database['public']['Tables']['chapter']['Row'], 'id' | 'name' | 'university'> | null
+  requester: Pick<Database['public']['Tables']['user']['Row'], 'id' | 'name' | 'email'> | null
+}
 
 type FundingRequestInsert = Database['public']['Tables']['funding_request']['Insert']
 type FundingRequestUpdate = Database['public']['Tables']['funding_request']['Update']
@@ -488,6 +494,71 @@ export const FundingService = {
     return { success: true, data: data ?? [] }
   },
 
+  async listAdminRequestContexts(
+    supabase: SupabaseClient<Database>,
+    params: { actorUserId: string; status?: FundingRequestStatus | 'all' | null }
+  ): Promise<ServiceResult<FundingAdminRequestContext[]>> {
+    const requests = await this.listAdminRequests(supabase, params)
+    if (!requests.success) return requests
+
+    if (requests.data.length === 0) return { success: true, data: [] }
+
+    const requestIds = requests.data.map((request) => request.id)
+    const chapterIds = Array.from(new Set(requests.data.map((request) => request.chapter_id)))
+    const requesterIds = Array.from(new Set(requests.data.map((request) => request.requester_user_id)))
+
+    const [budgetResult, chapterResult, requesterResult] = await Promise.all([
+      supabase
+        .from('funding_request_budget_item')
+        .select('*')
+        .in('funding_request_id', requestIds)
+        .order('sort_order', { ascending: true }),
+      supabase
+        .from('chapter')
+        .select('id, name, university')
+        .in('id', chapterIds),
+      supabase
+        .from('user')
+        .select('id, name, email')
+        .in('id', requesterIds),
+    ])
+
+    if (budgetResult.error) {
+      logger.error({ context: 'funding/admin-budget-context', error: budgetResult.error }, 'Failed to load admin funding budget context')
+      return { success: false, error: 'Failed to load funding budget context.' }
+    }
+
+    if (chapterResult.error) {
+      logger.error({ context: 'funding/admin-chapter-context', error: chapterResult.error }, 'Failed to load admin funding chapter context')
+      return { success: false, error: 'Failed to load funding chapter context.' }
+    }
+
+    if (requesterResult.error) {
+      logger.error({ context: 'funding/admin-requester-context', error: requesterResult.error }, 'Failed to load admin funding requester context')
+      return { success: false, error: 'Failed to load funding requester context.' }
+    }
+
+    const budgetItemsByRequest = new Map<string, FundingBudgetItemRow[]>()
+    for (const item of budgetResult.data ?? []) {
+      const requestItems = budgetItemsByRequest.get(item.funding_request_id) ?? []
+      requestItems.push(item)
+      budgetItemsByRequest.set(item.funding_request_id, requestItems)
+    }
+
+    const chaptersById = new Map((chapterResult.data ?? []).map((chapter) => [chapter.id, chapter]))
+    const requestersById = new Map((requesterResult.data ?? []).map((requester) => [requester.id, requester]))
+
+    return {
+      success: true,
+      data: requests.data.map((request) => ({
+        request,
+        budgetItems: budgetItemsByRequest.get(request.id) ?? [],
+        chapter: chaptersById.get(request.chapter_id) ?? null,
+        requester: requestersById.get(request.requester_user_id) ?? null,
+      })),
+    }
+  },
+
   async getRequestDetail(
     supabase: SupabaseClient<Database>,
     params: { actorUserId: string; requestId: string }
@@ -900,4 +971,3 @@ export const FundingService = {
     return { success: true, data: updated }
   },
 }
-
