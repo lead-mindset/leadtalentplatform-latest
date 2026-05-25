@@ -123,7 +123,7 @@ export function CheckinScanner({
       }, 350)
     } catch {
       setScanStatus('error')
-      showStatus('error', 'No se pudo acceder a la camara', false)
+      showStatus('error', 'No se pudo acceder a la cámara', false)
       await stopCamera()
     }
   }
@@ -231,7 +231,7 @@ export function CheckinScanner({
       setCounter(result.counter)
       setQrToken('')
       if (result.state === 'already_checked_in') {
-        showStatus('neutral', `${result.attendee.name} ya tenia check-in`)
+        showStatus('neutral', `${result.attendee.name} ya tenía check-in`)
       } else {
         showStatus('success', `${result.attendee.name} marcado como asistente`)
       }
@@ -334,7 +334,7 @@ export function CheckinScanner({
             <p>{status.text}</p>
             {status.type === 'error' && (
               <p className="font-normal text-muted-foreground">
-                Revisa que la persona este registrada para este evento y no este pendiente, rechazada, cancelada o ya marcada.
+                Revisa que la persona esté registrada para este evento y no esté pendiente, rechazada, cancelada o ya marcada.
               </p>
             )}
           </div>
@@ -392,7 +392,7 @@ export function CheckinScanner({
               </div>
               <div>
                 <CardTitle className="text-lg">Buscar asistente</CardTitle>
-                <p className="mt-1 text-sm text-muted-foreground">Usa nombre o correo cuando el QR no este disponible.</p>
+                <p className="mt-1 text-sm text-muted-foreground">Usa nombre o correo cuando el QR no esté disponible.</p>
               </div>
             </div>
           </CardHeader>
@@ -433,7 +433,7 @@ export function CheckinScanner({
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
                         <Badge variant={result.status === 'attended' ? 'success' : 'outline'}>
-                          {result.status === 'attended' ? 'Asistio' : 'Registrado'}
+                          {result.status === 'attended' ? 'Asistió' : 'Registrado'}
                         </Badge>
                         <Button
                           size="sm"
@@ -461,7 +461,7 @@ export function CheckinScanner({
                 </div>
                 <div>
                   <CardTitle className="text-lg">Escanear QR</CardTitle>
-                  <p className="mt-1 text-sm text-muted-foreground">Usa la camara trasera cuando el navegador lo permita.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Usa la cámara trasera cuando el navegador lo permita.</p>
                 </div>
               </div>
             </CardHeader>
@@ -473,7 +473,7 @@ export function CheckinScanner({
               )}
               {!hasBarcodeDetector && (
                 <p className="rounded-lg border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
-                  El escaneo con camara no esta disponible en este navegador. Busca a la persona o pega el token QR.
+                  El escaneo con cámara no está disponible en este navegador. Busca a la persona o pega el token QR.
                 </p>
               )}
               {hasBarcodeDetector && (
@@ -484,7 +484,7 @@ export function CheckinScanner({
                   onClick={scanStatus === 'scanning' ? stopCamera : startCamera}
                   disabled={isPending}
                 >
-                  {scanStatus === 'scanning' ? 'Detener camara' : 'Iniciar camara'}
+                  {scanStatus === 'scanning' ? 'Detener cámara' : 'Iniciar cámara'}
                 </Button>
               )}
             </CardContent>
