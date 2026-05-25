@@ -19,7 +19,7 @@ export async function getCurrentUserResume() {
       id: resume.id,
       fileName: resume.file_name,
       fileSize: resume.file_size,
-      fileUrl: resume.file_url,
+      fileUrl: await StudentService.createResumeSignedUrl(supabase, resume.file_url),
       uploadedAt: resume.uploaded_at,
     };
   } catch (error) {

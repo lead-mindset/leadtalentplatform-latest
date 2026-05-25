@@ -12,9 +12,11 @@ interface Resume {
   id: string
   fileName: string
   fileSize: number
-  fileUrl: string
+  fileUrl: string | null
   uploadedAt: string
 }
+
+const MAX_RESUME_SIZE_BYTES = 10 * 1024 * 1024
 
 export default function ResumeClient({
   resume,
@@ -94,7 +96,7 @@ export default function ResumeClient({
           </div>
           <div>
             <h2 className="font-bold text-base text-foreground">Upload New Version</h2>
-            <p className="text-xs text-muted-foreground">PDF only · Max 5 MB · ATS optimized</p>
+            <p className="text-xs text-muted-foreground">PDF only · Max 10 MB · ATS optimized</p>
           </div>
         </div>
 
@@ -213,7 +215,7 @@ export default function ResumeClient({
                       PDF ONLY
                     </span>
                     <span className="px-3 py-1 bg-muted rounded-full text-xs font-medium text-muted-foreground border border-border">
-                      MAX 5 MB
+                      MAX 10 MB
                     </span>
                     <span className="px-3 py-1 bg-primary/10 rounded-full text-xs font-semibold text-primary border border-primary/20">
                       ATS OPTIMIZED
@@ -224,7 +226,7 @@ export default function ResumeClient({
             </div>
 
             {/* File size error */}
-            {selectedFile && selectedFile.size > 5 * 1024 * 1024 && (
+            {selectedFile && selectedFile.size > MAX_RESUME_SIZE_BYTES && (
               <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-destructive/10 border border-destructive/20">
                 <Icons.AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
                 <p className="text-sm text-destructive font-medium">{t('fileTooLarge')}</p>
@@ -248,7 +250,7 @@ export default function ResumeClient({
             )}
 
             {/* Submit button */}
-            {selectedFile && selectedFile.size <= 5 * 1024 * 1024 && (
+            {selectedFile && selectedFile.size <= MAX_RESUME_SIZE_BYTES && (
               <Button
                 type="submit"
                 disabled={isPending}
