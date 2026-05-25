@@ -9,7 +9,7 @@ import type {
 
 export const FUNDING_STATUS_LABELS: Record<FundingRequestStatus, string> = {
   draft: 'Borrador',
-  submitted: 'En revision',
+  submitted: 'En revisión',
   changes_requested: 'Cambios solicitados',
   approved: 'Aprobada',
   rejected: 'Rechazada',
@@ -18,11 +18,11 @@ export const FUNDING_STATUS_LABELS: Record<FundingRequestStatus, string> = {
 }
 
 export const FUNDING_STATUS_HELPER: Record<FundingRequestStatus, string> = {
-  draft: 'Aun no fue enviada a revision.',
+  draft: 'Aún no fue enviada a revisión.',
   submitted: 'Admin/finanzas debe revisarla.',
   changes_requested: 'Necesita ajustes antes de reenviar.',
   approved: 'Lista para seguimiento posterior al evento.',
-  rejected: 'No fue aprobada en esta revision.',
+  rejected: 'No fue aprobada en esta revisión.',
   receipts_due: 'Falta regularizar comprobantes o evidencia.',
   closed: 'Solicitud regularizada y cerrada.',
 }
@@ -36,18 +36,18 @@ export const FUNDING_OKR_LABELS: Record<FundingOkrKey, string> = {
 
 export const FUNDING_PILLAR_LABELS: Record<FundingPillarKey, string> = {
   lead_academia: 'LEAD Academia',
-  academic_excellence: 'Excelencia academica',
+  academic_excellence: 'Excelencia académica',
   womens_excellence: 'Excelencia femenina',
   professional_development: 'Desarrollo profesional',
   leadership_development: 'Liderazgo',
   community_outreach: 'Impacto comunitario',
-  chapter_development: 'Desarrollo de chapter',
+  chapter_development: 'Desarrollo de capítulo',
 }
 
 export const FUNDING_BUDGET_CATEGORY_LABELS: Record<FundingBudgetCategory, string> = {
-  food_refreshments: 'Comida o refreshments',
+  food_refreshments: 'Comida o refrigerios',
   event_materials: 'Materiales del evento',
-  minimal_decorations: 'Decoracion minima',
+  minimal_decorations: 'Decoración mínima',
   learning_materials: 'Materiales de aprendizaje',
   recognition_items: 'Certificados o reconocimientos',
   software_platforms: 'Software o plataforma',
@@ -57,8 +57,8 @@ export const FUNDING_BUDGET_CATEGORY_LABELS: Record<FundingBudgetCategory, strin
 }
 
 export const FUNDING_SOURCE_LABELS: Record<FundingSourceKey, string> = {
-  lead_peru_chapter_budget: 'Budget de chapters LEAD Peru',
-  lead_wide_event_budget: 'Budget de evento LEAD-wide',
+  lead_peru_chapter_budget: 'Presupuesto de capítulos LEAD Perú',
+  lead_wide_event_budget: 'Presupuesto de eventos LEAD-wide',
   sponsor_partner: 'Sponsor o partner',
   hola_benevity: 'HOLA/Benevity o volunteer matching',
   other: 'Otra fuente',

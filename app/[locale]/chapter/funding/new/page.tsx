@@ -26,7 +26,7 @@ export default async function NewChapterFundingRequestPage() {
       />
 
       <PageHeader
-        eyebrow="Financiamiento del chapter"
+        eyebrow="Financiamiento del capítulo"
         title="Nueva solicitud"
         description="Conecta el monto solicitado con proposito, OKRs, pilares y desglose del presupuesto."
         actions={

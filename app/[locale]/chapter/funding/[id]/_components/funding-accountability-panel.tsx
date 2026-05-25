@@ -287,7 +287,7 @@ export function FundingAccountabilityPanel({
           <div className="space-y-3">
             {detail.files.length === 0 ? (
               <p className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
-                Todavia no hay comprobantes ni evidencia registrados.
+                Todavía no hay comprobantes ni evidencia registrados.
               </p>
             ) : (
               detail.files.map(item => (
