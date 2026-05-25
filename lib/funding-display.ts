@@ -1,5 +1,6 @@
 import type {
   FundingBudgetCategory,
+  FundingFileType,
   FundingOkrKey,
   FundingPillarKey,
   FundingRequestStatus,
@@ -63,6 +64,12 @@ export const FUNDING_SOURCE_LABELS: Record<FundingSourceKey, string> = {
   other: 'Otra fuente',
 }
 
+export const FUNDING_FILE_TYPE_LABELS: Record<FundingFileType, string> = {
+  supporting_material: 'Material de soporte',
+  receipt: 'Comprobante',
+  evidence: 'Evidencia',
+}
+
 export function formatFundingCurrency(value: number | string | null, currency = 'PEN') {
   const amount = Number(value ?? 0)
   return new Intl.NumberFormat('es-PE', {
@@ -87,4 +94,3 @@ export function isLateFundingDate(value: string) {
   if (Number.isNaN(eventDate.getTime())) return false
   return (eventDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000) < 14
 }
-

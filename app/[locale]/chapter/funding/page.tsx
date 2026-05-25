@@ -72,15 +72,21 @@ function FundingRequestCard({ request }: { request: FundingRequestRow }) {
           </div>
         </div>
 
-        {canEdit && (
-          <div className="flex justify-end border-t pt-4">
+        <div className="flex justify-end border-t pt-4">
+          {canEdit ? (
             <Button asChild variant="outline" size="sm">
               <Link href={`/chapter/funding/${request.id}/edit`}>
                 Continuar solicitud
               </Link>
             </Button>
-          </div>
-        )}
+          ) : (
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/chapter/funding/${request.id}`}>
+                Ver seguimiento
+              </Link>
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   )
