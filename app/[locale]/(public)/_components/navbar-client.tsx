@@ -92,7 +92,7 @@ export function NavbarClient({ visibleLinks, user, dashboardHref }: Props) {
           </Link>
 
           <nav
-            className="hidden flex-1 items-center gap-1 px-2 md:flex"
+            className="hidden flex-1 items-center gap-1 px-2 lg:flex"
             aria-label={authLabels.primaryNav}
           >
             {visibleLinks.map((link) => (
@@ -112,7 +112,7 @@ export function NavbarClient({ visibleLinks, user, dashboardHref }: Props) {
             ))}
           </nav>
 
-          <div className="hidden items-center gap-2 md:flex">
+          <div className="hidden items-center gap-2 lg:flex">
             {user ? (
               <UserButton
                 email={user.email}
@@ -142,7 +142,7 @@ export function NavbarClient({ visibleLinks, user, dashboardHref }: Props) {
             type="button"
             variant="ghost"
             size="icon-sm"
-            className="-mr-1 md:hidden"
+            className="-mr-1 lg:hidden"
             onClick={() => setMobileOpen((open) => !open)}
             aria-label={mobileOpen ? authLabels.closeMenu : authLabels.openMenu}
             aria-expanded={mobileOpen}
@@ -154,7 +154,7 @@ export function NavbarClient({ visibleLinks, user, dashboardHref }: Props) {
 
       {mobileOpen && (
         <div
-          className="mx-2 mb-2 flex flex-col gap-3 rounded-b-lg border border-border bg-background/95 px-4 py-4 shadow-sm backdrop-blur md:hidden"
+          className="mx-2 mb-2 flex flex-col gap-3 rounded-b-lg border border-border bg-background/95 px-4 py-4 shadow-sm backdrop-blur lg:hidden"
           role="dialog"
           aria-label={authLabels.navMenu}
         >
