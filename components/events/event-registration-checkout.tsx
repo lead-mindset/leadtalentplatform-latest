@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Link } from '@/i18n/routing'
 import { CancelRegistrationDialog } from '@/components/events/cancel-registration-dialog'
+import { EventCalendarActions } from '@/components/events/event-calendar-actions'
 import { cn } from '@/lib/utils'
 
 function SubmitButton({ disabled, label }: { disabled?: boolean; label: string }) {
@@ -43,6 +44,12 @@ type Props = {
   registrationId: string | null
   capacity: number | null
   registeredCount: number
+  startAt: string
+  endAt: string
+  location?: string | null
+  meetingUrl?: string | null
+  detailUrl: string
+  description?: string | null
 }
 
 export function EventRegistrationCheckout({
@@ -59,6 +66,12 @@ export function EventRegistrationCheckout({
   registrationId,
   capacity,
   registeredCount,
+  startAt,
+  endAt,
+  location,
+  meetingUrl,
+  detailUrl,
+  description,
 }: Props) {
   const router = useRouter()
   const [state, formAction] = useActionState(registerForEvent, null as RegisterForEventState | null)
@@ -67,6 +80,15 @@ export function EventRegistrationCheckout({
   const isFull = capacity !== null && registeredCount >= capacity
   const showLowSpots = spotsLeft !== null && spotsLeft > 0 && spotsLeft <= 10 && !isRegistered
   const isRedirecting = Boolean(state?.success && state.redirectPath)
+  const calendarEvent = {
+    title: eventTitle,
+    description,
+    startAt,
+    endAt,
+    location,
+    meetingUrl,
+    detailUrl,
+  }
 
   const registerDisabled =
     registrationClosed || isFull || isRegistered || !isLoggedIn || !hasBasicProfile || isRedirecting
@@ -164,15 +186,19 @@ export function EventRegistrationCheckout({
             </span>
           </label>
 
-          <div className="hidden space-y-2 md:block">
+          <div className="hidden space-y-3 md:block">
             <SubmitButton
               disabled={registerDisabled}
               label={isRedirecting ? 'Abriendo mi QR...' : 'Registrarme'}
             />
             {isRedirecting ? (
-              <p className="text-sm text-muted-foreground" role="status">
-                Registro confirmado. Estamos abriendo tu codigo QR.
-              </p>
+              <div className="rounded-lg border border-success/30 bg-success/10 p-3" role="status">
+                <p className="text-sm font-semibold text-foreground">Registro confirmado</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Estamos abriendo tu codigo QR. Tambien puedes agregar el evento a tu calendario.
+                </p>
+                <EventCalendarActions event={calendarEvent} layout="stack" className="mt-3" />
+              </div>
             ) : null}
             {state?.error ? (
               <p
@@ -221,9 +247,10 @@ export function EventRegistrationCheckout({
             ) : null}
 
             {isRedirecting ? (
-              <p className="mb-2 text-center text-xs text-muted-foreground" role="status">
-                Registro confirmado. Abriendo tu QR.
-              </p>
+              <div className="mb-2 rounded-md border border-success/30 bg-success/10 px-3 py-2 text-center" role="status">
+                <p className="text-xs font-semibold text-foreground">Registro confirmado</p>
+                <p className="mt-1 text-xs text-muted-foreground">Abriendo tu QR de check-in.</p>
+              </div>
             ) : null}
 
             <SubmitButton
