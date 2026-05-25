@@ -1,6 +1,6 @@
 'use client'
 
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { useRouter } from 'next/navigation'
 import type { MemberFilterStatus } from '../page'
@@ -51,6 +51,13 @@ export function MembersTabs({
             </TabsTrigger>
           ))}
         </TabsList>
+      </div>
+      <div className="sr-only">
+        {visibleStatuses.map((status) => (
+          <TabsContent key={status} value={status} forceMount>
+            {tabLabels[status]} members
+          </TabsContent>
+        ))}
       </div>
     </Tabs>
   )

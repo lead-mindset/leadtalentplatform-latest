@@ -194,7 +194,7 @@ export default function ProfileUpdateForm({
                     {t('personalInfo.gender')}
                   </label>
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger className="h-11">
+                    <SelectTrigger className="h-11" aria-label={t('personalInfo.gender')}>
                       <SelectValue placeholder={t('personalInfo.selectGender')} />
                     </SelectTrigger>
                     <SelectContent>
@@ -228,7 +228,7 @@ export default function ProfileUpdateForm({
                     value={field.value}
                     onValueChange={field.onChange}
                   >
-                    <SelectTrigger className="h-11">
+                    <SelectTrigger className="h-11" aria-label={t('personalInfo.leadChapter')}>
                       <SelectValue placeholder={t('personalInfo.selectChapter')} />
                     </SelectTrigger>
 

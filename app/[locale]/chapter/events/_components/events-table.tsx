@@ -110,7 +110,7 @@ export function EventsTable({
                 : null
 
               return (
-                <TableRow key={event.id} className={status.label === 'Finalizado' ? 'opacity-75' : ''}>
+                <TableRow key={event.id} className={status.label === 'Finalizado' ? 'bg-muted/10' : ''}>
                   <TableCell className="pl-4 align-top">
                     <div className="min-w-0 space-y-2">
                       <div className="flex min-w-0 items-center gap-2">
@@ -306,7 +306,13 @@ function DeleteEventButton({
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button size="sm" variant="destructive" disabled={disabled}>
+        <Button
+          size="sm"
+          variant="destructive"
+          aria-disabled={disabled}
+          tabIndex={disabled ? -1 : undefined}
+          className={disabled ? 'pointer-events-none bg-muted! text-muted-foreground! hover:bg-muted!' : undefined}
+        >
           Eliminar
         </Button>
       </AlertDialogTrigger>
