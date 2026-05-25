@@ -158,6 +158,8 @@ role_permission_keys(role_level, permission_key) AS (
     ('president', 'chapter.events.view_registrations'),
     ('president', 'chapter.events.check_in'),
     ('president', 'chapter.events.archive'),
+    ('president', 'chapter.funding.view'),
+    ('president', 'chapter.funding.submit'),
     ('vice_president', 'chapter.dashboard.access'),
     ('vice_president', 'chapter.members.view_approved'),
     ('vice_president', 'chapter.members.view_alumni'),
@@ -172,13 +174,17 @@ role_permission_keys(role_level, permission_key) AS (
     ('vice_president', 'chapter.events.view_registrations'),
     ('vice_president', 'chapter.events.check_in'),
     ('vice_president', 'chapter.events.archive'),
+    ('vice_president', 'chapter.funding.view'),
+    ('vice_president', 'chapter.funding.submit'),
     ('director', 'chapter.dashboard.access'),
     ('director', 'chapter.members.view_approved'),
     ('director', 'chapter.members.view_alumni'),
     ('director', 'chapter.members.view_member_contact'),
     ('director', 'chapter.events.manage'),
     ('director', 'chapter.events.view_registrations'),
-    ('director', 'chapter.events.check_in')
+    ('director', 'chapter.events.check_in'),
+    ('director', 'chapter.funding.view'),
+    ('director', 'chapter.funding.submit')
 )
 INSERT INTO public.chapter_permission_grant (
   user_id,
@@ -285,7 +291,9 @@ permission_keys(permission_key) AS (
     ('chapter.events.manage'),
     ('chapter.events.view_registrations'),
     ('chapter.events.check_in'),
-    ('chapter.events.archive')
+    ('chapter.events.archive'),
+    ('chapter.funding.view'),
+    ('chapter.funding.submit')
 )
 INSERT INTO public.chapter_permission_grant (
   user_id,

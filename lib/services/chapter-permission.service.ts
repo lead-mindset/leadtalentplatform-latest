@@ -74,6 +74,8 @@ const COMMON_EBOARD_PERMISSIONS = [
   'chapter.events.manage',
   'chapter.events.view_registrations',
   'chapter.events.check_in',
+  'chapter.funding.view',
+  'chapter.funding.submit',
 ] as const satisfies readonly ChapterPermissionKey[]
 
 const CHAPTER_OPERATIONS_PERMISSIONS = [

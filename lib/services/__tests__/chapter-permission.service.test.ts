@@ -89,6 +89,8 @@ describe('ChapterPermissionService', () => {
         'chapter.events.view_registrations',
         'chapter.events.check_in',
         'chapter.events.archive',
+        'chapter.funding.view',
+        'chapter.funding.submit',
       ] as const) {
         expect(presidentPermissions).toContain(permission)
         expect(vicePresidentPermissions).toContain(permission)
@@ -101,6 +103,7 @@ describe('ChapterPermissionService', () => {
       expect(permissions).toContain('chapter.members.view_applicants')
       expect(permissions).toContain('chapter.members.manage_applications')
       expect(permissions).toContain('chapter.events.archive')
+      expect(permissions).toContain('chapter.funding.submit')
       expect(permissions).not.toContain('chapter.members.revoke')
       expect(permissions).not.toContain('chapter.roles.assign_eboard')
     })
@@ -116,6 +119,8 @@ describe('ChapterPermissionService', () => {
         'chapter.events.manage',
         'chapter.events.view_registrations',
         'chapter.events.check_in',
+        'chapter.funding.view',
+        'chapter.funding.submit',
       ])
       expect(permissions).not.toContain('chapter.members.view_applicants')
       expect(permissions).not.toContain('chapter.members.revoke')
