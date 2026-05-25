@@ -27,6 +27,12 @@ type MockBuilder = {
   _setResult: (value: QueryResult) => void
 }
 
+type StorageMock = {
+  upload: MockFn
+  remove: MockFn
+  createSignedUrl: MockFn
+}
+
 type TableName =
   | 'user'
   | 'chapter'
@@ -73,12 +79,22 @@ function buildMockSupabase() {
     funding_request_file: createBuilder({ data: [], error: null }),
     funding_request_status_event: createBuilder({ data: [], error: null }),
   }
+  const storageMocks: Record<string, StorageMock> = {
+    'funding-files': {
+      upload: vi.fn(() => Promise.resolve({ error: null })),
+      remove: vi.fn(() => Promise.resolve({ error: null })),
+      createSignedUrl: vi.fn(() => Promise.resolve({ data: { signedUrl: 'https://signed.example/file' }, error: null })),
+    },
+  }
 
   const mockSupabase = {
     from: vi.fn((table: TableName) => tableMocks[table]),
+    storage: {
+      from: vi.fn((bucket: string) => storageMocks[bucket]),
+    },
   } as unknown as SupabaseClient<Database>
 
-  return { mockSupabase, tableMocks }
+  return { mockSupabase, tableMocks, storageMocks }
 }
 
 function buildRequest(overrides: Partial<FundingRequestRow> = {}): FundingRequestRow {
@@ -303,6 +319,93 @@ describe('FundingService', () => {
     expect(tableMocks.funding_request_budget_item.in).toHaveBeenCalledWith('funding_request_id', [request.id])
     expect(tableMocks.chapter.in).toHaveBeenCalledWith('id', ['leaduni'])
     expect(tableMocks.user.in).toHaveBeenCalledWith('id', ['president-1'])
+  })
+
+  it('uploads funding files only after submit permission and writes metadata', async () => {
+    const { mockSupabase, tableMocks, storageMocks } = buildMockSupabase()
+    const request = buildRequest({ status: 'approved' })
+    const file = new File(['receipt'], 'receipt.pdf', { type: 'application/pdf' })
+    const fileRow = {
+      id: 'file-1',
+      funding_request_id: request.id,
+      chapter_id: request.chapter_id,
+      uploaded_by_id: 'president-1',
+      file_type: 'receipt',
+      storage_bucket: 'funding-files',
+      storage_path: `${request.id}/receipt.pdf`,
+      external_url: null,
+      original_name: 'receipt.pdf',
+      mime_type: 'application/pdf',
+      file_size_bytes: file.size,
+      notes: 'Boleta',
+      created_at: '2026-05-25T00:00:00.000Z',
+    }
+    tableMocks.funding_request._setResult({ data: request, error: null })
+    tableMocks.funding_request_file._setResult({ data: fileRow, error: null })
+
+    const result = await FundingService.uploadFundingFile(mockSupabase, {
+      actorUserId: 'president-1',
+      requestId: request.id,
+      fileType: 'receipt',
+      file,
+      notes: 'Boleta',
+    })
+
+    expect(result).toEqual({ success: true, data: fileRow })
+    expect(ChapterPermissionService.requireChapterPermission).toHaveBeenCalledWith(mockSupabase, {
+      userId: 'president-1',
+      chapterId: 'leaduni',
+      permissionKey: 'chapter.funding.submit',
+    })
+    expect(mockSupabase.storage.from).toHaveBeenCalledWith('funding-files')
+    expect(storageMocks['funding-files'].upload).toHaveBeenCalledWith(
+      expect.stringMatching(new RegExp(`^${request.id}/`)),
+      file,
+      expect.objectContaining({ contentType: 'application/pdf', upsert: false })
+    )
+    expect(tableMocks.funding_request_file.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        funding_request_id: request.id,
+        chapter_id: 'leaduni',
+        file_type: 'receipt',
+        original_name: 'receipt.pdf',
+        notes: 'Boleta',
+      })
+    )
+  })
+
+  it('does not sign funding files when the viewer lacks chapter access', async () => {
+    const { mockSupabase, tableMocks, storageMocks } = buildMockSupabase()
+    vi.mocked(ChapterPermissionService.requireChapterPermission).mockResolvedValue({
+      success: false,
+      error: 'No permission.',
+    })
+    tableMocks.funding_request_file._setResult({
+      data: {
+        id: 'file-1',
+        funding_request_id: 'request-1',
+        chapter_id: 'leaduni',
+        uploaded_by_id: 'president-1',
+        file_type: 'receipt',
+        storage_bucket: 'funding-files',
+        storage_path: 'request-1/file.pdf',
+        external_url: null,
+        original_name: 'file.pdf',
+        mime_type: 'application/pdf',
+        file_size_bytes: 120,
+        notes: null,
+        created_at: '2026-05-25T00:00:00.000Z',
+      },
+      error: null,
+    })
+
+    const result = await FundingService.createFundingFileAccessUrl(mockSupabase, {
+      actorUserId: 'other-member',
+      fileId: 'file-1',
+    })
+
+    expect(result).toEqual({ success: false, error: 'No permission.' })
+    expect(storageMocks['funding-files'].createSignedUrl).not.toHaveBeenCalled()
   })
 
   it('rejects admin review by non-admin users', async () => {

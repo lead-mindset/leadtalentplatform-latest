@@ -45,11 +45,14 @@ export const FUNDING_SOURCE_KEYS = [
   'other',
 ] as const
 
+export const FUNDING_FILE_TYPES = ['supporting_material', 'receipt', 'evidence'] as const
+
 export type FundingRequestStatus = (typeof FUNDING_REQUEST_STATUSES)[number]
 export type FundingOkrKey = (typeof FUNDING_OKR_KEYS)[number]
 export type FundingPillarKey = (typeof FUNDING_PILLAR_KEYS)[number]
 export type FundingBudgetCategory = (typeof FUNDING_BUDGET_CATEGORIES)[number]
 export type FundingSourceKey = (typeof FUNDING_SOURCE_KEYS)[number]
+export type FundingFileType = (typeof FUNDING_FILE_TYPES)[number]
 
 export type FundingRequestRow = Database['public']['Tables']['funding_request']['Row']
 export type FundingBudgetItemRow = Database['public']['Tables']['funding_request_budget_item']['Row']
@@ -65,6 +68,7 @@ export type FundingAdminRequestContext = {
 type FundingRequestInsert = Database['public']['Tables']['funding_request']['Insert']
 type FundingRequestUpdate = Database['public']['Tables']['funding_request']['Update']
 type FundingBudgetItemInsert = Database['public']['Tables']['funding_request_budget_item']['Insert']
+type FundingFileInsert = Database['public']['Tables']['funding_request_file']['Insert']
 
 export type FundingBudgetItemInput = {
   label: string
@@ -139,6 +143,28 @@ export type CloseFundingRequestInput = {
   closureNote?: string | null
 }
 
+export type UploadFundingFileInput = {
+  actorUserId: string
+  requestId: string
+  fileType: FundingFileType
+  file: File
+  notes?: string | null
+}
+
+export type AddFundingFileLinkInput = {
+  actorUserId: string
+  requestId: string
+  fileType: FundingFileType
+  externalUrl: string
+  notes?: string | null
+}
+
+export type FundingFileSignedUrlInput = {
+  actorUserId: string
+  fileId: string
+  expiresIn?: number
+}
+
 export type FundingRequestDetail = {
   request: FundingRequestRow
   budgetItems: FundingBudgetItemRow[]
@@ -151,10 +177,48 @@ type EmptyResult = { success: true } | { success: false; error: string }
 
 const MONEY_EPSILON = 0.01
 const DAY_IN_MS = 24 * 60 * 60 * 1000
+const FUNDING_FILE_BUCKET = 'funding-files'
+const MAX_FUNDING_FILE_SIZE_BYTES = 10 * 1024 * 1024
+const ALLOWED_FUNDING_FILE_MIME_TYPES = new Set([
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+])
 
 function normalizeOptionalText(value?: string | null): string | null {
   const trimmed = value?.trim()
   return trimmed ? trimmed : null
+}
+
+function sanitizeStorageName(fileName: string): string {
+  const sanitized = fileName
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 120)
+  return sanitized || 'funding-file'
+}
+
+function validateFundingFile(file: File): string | null {
+  if (file.size <= 0) return 'File cannot be empty.'
+  if (file.size > MAX_FUNDING_FILE_SIZE_BYTES) return 'File must be 10MB or smaller.'
+  if (!ALLOWED_FUNDING_FILE_MIME_TYPES.has(file.type)) {
+    return 'Only PDF, JPG, PNG, or WebP files are allowed.'
+  }
+  return null
+}
+
+function validateExternalUrl(value: string): string | null {
+  try {
+    const parsed = new URL(value)
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+      return 'Evidence link must be an http or https URL.'
+    }
+    return null
+  } catch {
+    return 'Evidence link must be a valid URL.'
+  }
 }
 
 function requireText(value: string, label: string): string | null {
@@ -913,6 +977,157 @@ export const FundingService = {
     }
 
     return { success: true, data: updated }
+  },
+
+  async uploadFundingFile(
+    supabase: SupabaseClient<Database>,
+    params: UploadFundingFileInput
+  ): Promise<ServiceResult<FundingFileRow>> {
+    const loaded = await fetchRequestById(supabase, params.requestId)
+    if (!loaded.success) return loaded
+
+    const permission = await requireFundingPermission(supabase, {
+      userId: params.actorUserId,
+      chapterId: loaded.data.chapter_id,
+      permissionKey: 'chapter.funding.submit',
+    })
+    if (!permission.success) return permission
+
+    if (['rejected', 'closed'].includes(loaded.data.status)) {
+      return { success: false, error: 'Files cannot be added to rejected or closed funding requests.' }
+    }
+
+    const fileError = validateFundingFile(params.file)
+    if (fileError) return { success: false, error: fileError }
+
+    const storagePath = `${params.requestId}/${crypto.randomUUID()}-${sanitizeStorageName(params.file.name)}`
+    const { error: uploadError } = await supabase.storage
+      .from(FUNDING_FILE_BUCKET)
+      .upload(storagePath, params.file, {
+        contentType: params.file.type,
+        upsert: false,
+      })
+
+    if (uploadError) {
+      logger.error({ context: 'funding/file-upload', error: uploadError, requestId: params.requestId }, 'Failed to upload funding file')
+      return { success: false, error: 'Failed to upload funding file.' }
+    }
+
+    const insertRow: FundingFileInsert = {
+      funding_request_id: params.requestId,
+      chapter_id: loaded.data.chapter_id,
+      uploaded_by_id: params.actorUserId,
+      file_type: params.fileType,
+      storage_bucket: FUNDING_FILE_BUCKET,
+      storage_path: storagePath,
+      external_url: null,
+      original_name: params.file.name,
+      mime_type: params.file.type,
+      file_size_bytes: params.file.size,
+      notes: normalizeOptionalText(params.notes),
+    }
+
+    const { data, error } = await supabase
+      .from('funding_request_file')
+      .insert(insertRow)
+      .select('*')
+      .single()
+
+    if (error || !data) {
+      await supabase.storage.from(FUNDING_FILE_BUCKET).remove([storagePath])
+      logger.error({ context: 'funding/file-metadata', error, requestId: params.requestId }, 'Failed to save funding file metadata')
+      return { success: false, error: 'Failed to save funding file metadata.' }
+    }
+
+    return { success: true, data }
+  },
+
+  async addFundingFileLink(
+    supabase: SupabaseClient<Database>,
+    params: AddFundingFileLinkInput
+  ): Promise<ServiceResult<FundingFileRow>> {
+    const loaded = await fetchRequestById(supabase, params.requestId)
+    if (!loaded.success) return loaded
+
+    const permission = await requireFundingPermission(supabase, {
+      userId: params.actorUserId,
+      chapterId: loaded.data.chapter_id,
+      permissionKey: 'chapter.funding.submit',
+    })
+    if (!permission.success) return permission
+
+    if (['rejected', 'closed'].includes(loaded.data.status)) {
+      return { success: false, error: 'Links cannot be added to rejected or closed funding requests.' }
+    }
+
+    const urlError = validateExternalUrl(params.externalUrl)
+    if (urlError) return { success: false, error: urlError }
+
+    const insertRow: FundingFileInsert = {
+      funding_request_id: params.requestId,
+      chapter_id: loaded.data.chapter_id,
+      uploaded_by_id: params.actorUserId,
+      file_type: params.fileType,
+      storage_bucket: FUNDING_FILE_BUCKET,
+      storage_path: null,
+      external_url: params.externalUrl.trim(),
+      original_name: null,
+      mime_type: null,
+      file_size_bytes: null,
+      notes: normalizeOptionalText(params.notes),
+    }
+
+    const { data, error } = await supabase
+      .from('funding_request_file')
+      .insert(insertRow)
+      .select('*')
+      .single()
+
+    if (error || !data) {
+      logger.error({ context: 'funding/file-link', error, requestId: params.requestId }, 'Failed to save funding file link')
+      return { success: false, error: 'Failed to save funding file link.' }
+    }
+
+    return { success: true, data }
+  },
+
+  async createFundingFileAccessUrl(
+    supabase: SupabaseClient<Database>,
+    params: FundingFileSignedUrlInput
+  ): Promise<ServiceResult<{ url: string }>> {
+    const { data: file, error } = await supabase
+      .from('funding_request_file')
+      .select('*')
+      .eq('id', params.fileId)
+      .maybeSingle()
+
+    if (error) {
+      logger.error({ context: 'funding/file-load', error, fileId: params.fileId }, 'Failed to load funding file')
+      return { success: false, error: 'Failed to load funding file.' }
+    }
+
+    if (!file) return { success: false, error: 'Funding file not found.' }
+
+    const permission = await requireFundingPermission(supabase, {
+      userId: params.actorUserId,
+      chapterId: file.chapter_id,
+      permissionKey: 'chapter.funding.view',
+    })
+    if (!permission.success) return permission
+
+    if (file.external_url) return { success: true, data: { url: file.external_url } }
+    if (!file.storage_path) return { success: false, error: 'Funding file has no accessible URL.' }
+
+    const { data, error: signedUrlError } = await supabase.storage
+      .from(FUNDING_FILE_BUCKET)
+      .createSignedUrl(file.storage_path, params.expiresIn ?? 60 * 5)
+
+    if (signedUrlError || !data?.signedUrl) {
+      logger.error({ context: 'funding/file-signed-url', error: signedUrlError, fileId: params.fileId }, 'Failed to create funding file signed URL')
+      return { success: false, error: 'Failed to create funding file access URL.' }
+    }
+
+    return { success: true, data: { url: data.signedUrl } }
   },
 
   async closeRequest(

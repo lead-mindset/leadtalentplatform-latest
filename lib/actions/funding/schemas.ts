@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import {
   FUNDING_BUDGET_CATEGORIES,
+  FUNDING_FILE_TYPES,
   FUNDING_OKR_KEYS,
   FUNDING_PILLAR_KEYS,
   FUNDING_REQUEST_STATUSES,
@@ -57,6 +58,17 @@ export const FundingSourceSchema = z.object({
   fundingSourceNote: z.string().trim().max(1000).optional().nullable(),
 })
 
+export const FundingFileLinkSchema = z.object({
+  requestId: z.string().uuid(),
+  fileType: z.enum(FUNDING_FILE_TYPES),
+  externalUrl: z.string().trim().url().max(2000),
+  notes: z.string().trim().max(1000).optional().nullable(),
+})
+
+export const FundingFileSignedUrlSchema = z.object({
+  fileId: z.string().uuid(),
+})
+
 export const FundingAccountabilitySchema = z.object({
   requestId: z.string().uuid(),
   actualSpendAmount: z.coerce.number().nonnegative().optional().nullable(),
@@ -69,4 +81,3 @@ export const CloseFundingRequestSchema = z.object({
   requestId: z.string().uuid(),
   closureNote: z.string().trim().max(1000).optional().nullable(),
 })
-
