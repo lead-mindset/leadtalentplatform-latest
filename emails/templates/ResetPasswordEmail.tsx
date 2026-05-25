@@ -15,15 +15,15 @@ type ResetPasswordEmailProps = {
 export default function ResetPasswordEmail({ resetUrl, locale = 'es' }: ResetPasswordEmailProps) {
   const t = {
     es: {
-      title: 'Restablece tu contrasena',
-      preview: 'Solicitud para restablecer tu contrasena en LEAD Talent Platform.',
+      title: 'Restablece tu contraseña',
+      preview: 'Solicitud para restablecer tu contraseña en LEAD Talent Platform.',
       greeting: 'Hola',
-      body: 'Recibimos una solicitud para restablecer la contrasena de tu cuenta en LEAD Talent Platform.',
-      cta: 'Usa este enlace seguro para crear una nueva contrasena.',
-      button: 'Restablecer contrasena',
+      body: 'Recibimos una solicitud para restablecer la contraseña de tu cuenta en LEAD Talent Platform.',
+      cta: 'Usa este enlace seguro para crear una nueva contraseña.',
+      button: 'Restablecer contraseña',
       securityTitle: 'Seguridad',
       security: 'Si no solicitaste este cambio, ignora este mensaje. Tu cuenta sigue protegida.',
-      help: 'Necesitas ayuda? Escribenos a',
+      help: '¿Necesitas ayuda? Escríbenos a',
     },
     en: {
       title: 'Reset your password',

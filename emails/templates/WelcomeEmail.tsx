@@ -25,7 +25,7 @@ const roleFeatures: Record<Role, Record<'en' | 'es', string[]>> = {
     es: [
       'Completar y mantener tu perfil profesional.',
       'Inscribirte a eventos de LEAD Americas.',
-      'Postular a capitulos y seguir tu estado.',
+      'Postular a capítulos y seguir tu estado.',
       'Preparar tu perfil para oportunidades con empresas aliadas.',
     ],
     en: [
@@ -39,7 +39,7 @@ const roleFeatures: Record<Role, Record<'en' | 'es', string[]>> = {
     es: [
       'Revisar talento autorizado por LEAD Americas.',
       'Guardar perfiles relevantes para seguimiento.',
-      'Trabajar con acceso seguro por invitacion.',
+      'Trabajar con acceso seguro por invitación.',
     ],
     en: [
       'Review talent authorized by LEAD Americas.',
@@ -49,8 +49,8 @@ const roleFeatures: Record<Role, Record<'en' | 'es', string[]>> = {
   },
   admin: {
     es: [
-      'Gestionar usuarios, capitulos e identidades.',
-      'Revisar actividad de eventos y membresias.',
+      'Gestionar usuarios, capítulos e identidades.',
+      'Revisar actividad de eventos y membresías.',
       'Administrar accesos de empresas aliadas.',
     ],
     en: [
@@ -69,16 +69,16 @@ export default function WelcomeEmail({
 }: WelcomeEmailProps) {
   const t = {
     es: {
-      title: 'Tu perfil esta listo',
+      title: 'Tu perfil está listo',
       preview: 'Ya puedes continuar en LEAD Talent Platform.',
       greeting: name ? `Hola, ${name}` : 'Hola',
-      intro: 'Tu perfil en LEAD Talent Platform esta listo. Desde aqui podras gestionar tu participacion en LEAD Americas.',
+      intro: 'Tu perfil en LEAD Talent Platform está listo. Desde aquí podrás gestionar tu participación en LEAD Americas.',
       listTitle: 'Ahora puedes',
-      tip: 'Mantener tu informacion actualizada ayuda a que el equipo LEAD y las empresas aliadas entiendan mejor tu perfil.',
+      tip: 'Mantener tu información actualizada ayuda a que el equipo LEAD y las empresas aliadas entiendan mejor tu perfil.',
       button: 'Ir a la plataforma',
       closing: 'Gracias por ser parte de LEAD Americas.',
       signature: 'Equipo LEAD Americas',
-      help: 'Necesitas ayuda?',
+      help: '¿Necesitas ayuda?',
     },
     en: {
       title: 'Your profile is ready',

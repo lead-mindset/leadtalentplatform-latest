@@ -23,7 +23,7 @@ export default function ConfirmSignupEmail({ confirmationUrl, locale = 'es' }: C
       button: 'Confirmar mi correo',
       noteTitle: 'Importante',
       note: 'Este enlace expira por seguridad. Si no creaste esta cuenta, puedes ignorar este mensaje.',
-      help: 'Necesitas ayuda? Escribenos a',
+      help: '¿Necesitas ayuda? Escríbenos a',
     },
     en: {
       title: 'Confirm your account',
