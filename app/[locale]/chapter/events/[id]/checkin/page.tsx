@@ -55,7 +55,7 @@ export default async function ChapterEventCheckinPage({
             </div>
             <h1 className="text-xl font-semibold">Check-in no disponible</h1>
             <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-              Este evento puede haber sido eliminado o tu chapter puede no tener acceso para gestionar el check-in.
+              Este evento puede haber sido eliminado o tu capítulo puede no tener acceso para gestionar el check-in.
             </p>
             <div className="mt-6 flex flex-col justify-center gap-2 sm:flex-row">
               <Button asChild>
@@ -126,7 +126,7 @@ export default async function ChapterEventCheckinPage({
               <div>
                 <h2 className="font-semibold">Notas para operar</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Solo asistentes registrados y aprobados pueden hacer check-in. Codigos pendientes, rechazados, cancelados, duplicados o de otro evento se bloquean.
+                  Solo asistentes registrados y aprobados pueden hacer check-in. Códigos pendientes, rechazados, cancelados, duplicados o de otro evento se bloquean.
                 </p>
               </div>
             </CardContent>
@@ -134,13 +134,13 @@ export default async function ChapterEventCheckinPage({
 
           <Card>
             <CardContent className="space-y-3 py-5">
-              <h2 className="font-semibold">Recuperacion rapida</h2>
+              <h2 className="font-semibold">Recuperación rápida</h2>
               <p className="text-sm text-muted-foreground">
                 Si el escaneo falla, busca por nombre o correo antes de pedirle a la persona que encuentre otro QR.
               </p>
               <Button asChild variant="outline" className="w-full">
                 <Link href={`/${locale}/chapter/events`}>
-                  Todos los eventos del chapter
+                  Todos los eventos del capítulo
                 </Link>
               </Button>
             </CardContent>
