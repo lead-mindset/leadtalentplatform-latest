@@ -31,6 +31,48 @@ Automated checks:
 
 Screenshot evidence is kept in ignored local paths under `outputs/`.
 
+## Pilot-Readiness Visual QA Loop - 2026-05-25
+
+Issue: #238.
+
+Result: `pass with issues`, unchanged from the original controlled-pilot verdict. The visual loop reduced copy/seed polish risk but did not change finance policy readiness.
+
+Run notes:
+
+- Initial focused Playwright attempt against `http://localhost:3100` hit a stale server and returned a 404 for `/es/auth/login`.
+- A clean Next.js dev server was started on `http://localhost:3101`.
+- `pnpm supabase:reset` was used before trusted screenshot runs so local QA-created rows did not pollute the review.
+- `PLAYWRIGHT_BASE_URL=http://localhost:3101 pnpm exec playwright test tests/e2e/lead-funding.spec.ts --project=desktop-chromium --project=mobile-chromium --reporter=line` passed: 8 tests.
+- `pnpm lint` passed with existing repo warnings only.
+
+Screenshots reviewed under ignored `outputs/`:
+
+- `lead-funding-chapter-list-desktop-chromium.png`
+- `lead-funding-chapter-new-desktop-chromium.png`
+- `lead-funding-chapter-accountability-desktop-chromium.png`
+- `lead-funding-admin-review-desktop-chromium.png`
+- `lead-funding-admin-close-desktop-chromium.png`
+- `lead-funding-chapter-list-mobile-chromium.png`
+- `lead-funding-chapter-new-mobile-chromium.png`
+- `lead-funding-chapter-accountability-mobile-chromium.png`
+- `lead-funding-admin-review-mobile-chromium.png`
+- `lead-funding-admin-close-mobile-chromium.png`
+
+High-confidence fixes made:
+
+- Replaced screenshot-facing Spanglish such as `chapter`, `Budget de chapters`, and `Refreshments para` with Spanish operational copy.
+- Added missing accents across funding status labels, form helper text, admin controls, seed demo rows, and Playwright-created QA copy.
+- Updated seed data so the clean local pilot review shows polished request titles, budget items, status history, and admin notes.
+- Tightened Playwright assertions that became ambiguous after Spanish QA titles were introduced.
+
+Visual review findings:
+
+- Chapter dashboard, request form, accountability detail, admin queue, and admin close controls render without horizontal overflow in the focused desktop/mobile screenshots.
+- Mobile admin close controls are long but usable; no clipped primary action was observed.
+- Remaining English terms are intentional product/proper nouns or existing broader seed content outside the funding slice, such as `Career Readiness Clinic`.
+
+Focused service tests were not rerun for this visual loop because the implementation changed UI copy, seed/demo text, and E2E assertions only; funding service behavior was not changed.
+
 ## Validated Flows
 
 Chapter:
