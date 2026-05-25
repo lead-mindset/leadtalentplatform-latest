@@ -104,6 +104,12 @@ export const ADMIN_NAV: NavItemConfig[] = [
     icon: CalendarDays,
   },
   {
+    id: 'funding',
+    label: 'Financiamiento',
+    href: '/admin/funding',
+    icon: HandCoins,
+  },
+  {
     id: 'chapters',
     label: 'Capitulos',
     href: '/admin/chapters',
