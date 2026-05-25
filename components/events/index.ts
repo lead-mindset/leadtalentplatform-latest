@@ -13,6 +13,8 @@ export { HostAvatars } from "./host-avatars"
 
 export { RegistrationCard } from "./registration-card"
 export { EventShareButton } from "./event-share-button"
+export { EventCalendarActions } from "./event-calendar-actions"
+export { EventDayGuidance } from "./event-day-guidance"
 
 export { LocationDisplay } from "./location-display"
 export { RegistrationStatusBadge } from "./registration-status-badge"
