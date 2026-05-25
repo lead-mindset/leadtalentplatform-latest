@@ -19,7 +19,7 @@ export async function getCurrentUserResume() {
       id: resume.id,
       fileName: resume.file_name,
       fileSize: resume.file_size,
-      fileUrl: resume.file_url,
+      fileUrl: await StudentService.createResumeSignedUrl(supabase, resume.file_url),
       uploadedAt: resume.uploaded_at,
     };
   } catch (error) {
@@ -67,7 +67,6 @@ export async function updateProfile(formData: FormData) {
       full_name: formData.get('full_name')?.toString() || '',
       phone: formData.get('phone')?.toString() || '',
       gender: formData.get('gender')?.toString() || undefined,
-      lead_chapter: formData.get('lead_chapter')?.toString() || '',
       career: formData.get('career')?.toString() || '',
       graduation_year: Number(formData.get('graduation_year') ?? 0),
       skills: JSON.parse(formData.get('skills')?.toString() || '[]'),
@@ -97,7 +96,6 @@ export async function updateProfile(formData: FormData) {
       portfolioUrl: data.portfolio_url ?? null,
       consentRecruiterVisibility: data.consentRecruiterVisibility,
       emailNotificationsEnabled: data.emailNotificationsEnabled,
-      chapter_id: data.lead_chapter,
       resumePdf: data.resume_pdf,
     });
 

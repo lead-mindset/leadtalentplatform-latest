@@ -1,10 +1,12 @@
 import { logger } from '@/lib/logger'
 import { ChapterMembershipService } from '@/lib/services/chapter-membership.service'
+import { ChapterRoleAssignmentService } from '@/lib/services/chapter-role-assignment.service'
 import { LeadIdentityService } from '@/lib/services/lead-identity.service'
 import { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.generated'
 import type {
   ActivityItem,
+  ActiveChapterRoleAssignment,
   ChapterMembershipRow,
   ChapterRow,
   Company,
@@ -34,6 +36,7 @@ type AdminUserByIdRow = UserRow & {
   chapter_membership?: (ChapterMembershipRow & {
     chapter: ChapterRow | ChapterRow[] | null
   }) | null
+  chapter_role_assignment?: ActiveChapterRoleAssignment | null
 }
 
 type AdminChapterSummary = Pick<ChapterRow, 'id' | 'name' | 'university'>
@@ -93,6 +96,7 @@ type AdminProfileSummaryRow = Pick<
       | Pick<ChapterRow, 'id' | 'name' | 'university' | 'city' | 'region' | 'created_at' | 'updated_at' | 'instagram_url' | 'latitude' | 'longitude' | 'location_point'>[]
       | null
   }
+  chapter_role_assignment?: ActiveChapterRoleAssignment | null
 }
 
 
@@ -394,6 +398,13 @@ export type ChapterListItem = {
   editors: { id: string; name: string; email: string }[]
 }
 
+export type AvailableChapterEditor = {
+  id: string
+  name: string
+  email: string
+  role: 'member' | 'editor'
+}
+
 export type ChaptersListResponse = {
   items: ChapterListItem[]
   total: number
@@ -560,6 +571,7 @@ function mapAdminProfile(profile: AdminProfileSummaryRow): MemberWithProfile | n
       member_id: profile.chapter_membership.member_id,
       joined_at: profile.chapter_membership.joined_at,
     },
+    chapter_role_assignment: profile.chapter_role_assignment ?? null,
     chapter: chapter ?? null,
   }
 }
@@ -767,39 +779,52 @@ export const AdminService = {
       return []
     }
 
-    const items = await Promise.all(
-      (chapters as AdminChapterSummary[]).map(async (chapter: AdminChapterSummary) => {
-        const [memberCountResult, pendingApprovalsResult, lastEventResult] = await Promise.all([
-          supabase
-            .from('chapter_membership')
-            .select('user_id', { count: 'exact', head: true })
-            .eq('chapter_id', chapter.id),
-          supabase
-            .from('chapter_membership')
-            .select('user_id', { count: 'exact', head: true })
-            .eq('chapter_id', chapter.id)
-            .eq('status', 'pending'),
-          supabase
-            .from('event')
-            .select('start_at')
-            .eq('chapter_id', chapter.id)
-            .order('start_at', { ascending: false })
-            .limit(1)
-            .maybeSingle(),
-        ])
+    const chapterRows = chapters as AdminChapterSummary[]
+    const chapterIds = chapterRows.map((chapter) => chapter.id)
+    if (chapterIds.length === 0) return []
 
-        return {
-          id: chapter.id,
-          name: chapter.name,
-          university: chapter.university,
-          member_count: memberCountResult.count ?? 0,
-          pending_approvals: pendingApprovalsResult.count ?? 0,
-          last_event_at: lastEventResult.data?.start_at ?? null,
-        }
-      })
-    )
+    const [{ data: memberships, error: membershipsError }, { data: events, error: eventsError }] = await Promise.all([
+      supabase
+        .from('chapter_membership')
+        .select('chapter_id, status')
+        .in('chapter_id', chapterIds),
+      supabase
+        .from('event')
+        .select('chapter_id, start_at')
+        .in('chapter_id', chapterIds)
+        .order('start_at', { ascending: false }),
+    ])
 
-    return items
+    if (membershipsError) {
+      logger.error({ context: 'getChapterActivityList', error: membershipsError }, 'Membership count query failed')
+    }
+    if (eventsError) {
+      logger.error({ context: 'getChapterActivityList', error: eventsError }, 'Latest event query failed')
+    }
+
+    const memberCountByChapter = new Map<string, number>()
+    const pendingCountByChapter = new Map<string, number>()
+    ;((memberships ?? []) as Pick<ChapterMembershipRow, 'chapter_id' | 'status'>[]).forEach((membership) => {
+      memberCountByChapter.set(membership.chapter_id, (memberCountByChapter.get(membership.chapter_id) ?? 0) + 1)
+      if (membership.status === 'pending') {
+        pendingCountByChapter.set(membership.chapter_id, (pendingCountByChapter.get(membership.chapter_id) ?? 0) + 1)
+      }
+    })
+
+    const lastEventByChapter = new Map<string, string>()
+    ;((events ?? []) as Pick<EventRow, 'chapter_id' | 'start_at'>[]).forEach((event) => {
+      if (!event.chapter_id || lastEventByChapter.has(event.chapter_id)) return
+      lastEventByChapter.set(event.chapter_id, event.start_at)
+    })
+
+    return chapterRows.map((chapter) => ({
+      id: chapter.id,
+      name: chapter.name,
+      university: chapter.university,
+      member_count: memberCountByChapter.get(chapter.id) ?? 0,
+      pending_approvals: pendingCountByChapter.get(chapter.id) ?? 0,
+      last_event_at: lastEventByChapter.get(chapter.id) ?? null,
+    }))
   },
 
   // ───────────────────────────────────────────────────────────────
@@ -1550,6 +1575,26 @@ export const AdminService = {
       ? chapterMembership[0]
       : chapterMembership
 
+    const { data: roleAssignment, error: roleAssignmentError } = membershipRow?.chapter_id
+      ? await supabase
+          .from('chapter_role_assignment')
+          .select('id, chapter_id, role_level, functional_area, display_title, status, is_primary, starts_at, ends_at, assigned_by_id')
+          .eq('user_id', id)
+          .eq('chapter_id', membershipRow.chapter_id)
+          .eq('status', 'active')
+          .eq('is_primary', true)
+          .order('starts_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      : { data: null, error: null }
+
+    if (roleAssignmentError) {
+      logger.error(
+        { context: 'getUserById/role-assignment', error: roleAssignmentError },
+        'Failed to fetch chapter role assignment'
+      )
+    }
+
     const result = {
       ...userRow,
       person_profile: profileError ? null : personProfile,
@@ -1561,6 +1606,7 @@ export const AdminService = {
             : (membershipRow.chapter ?? null),
         }
         : null,
+      chapter_role_assignment: roleAssignmentError ? null : roleAssignment,
     }
 
     return result as UserWithFullProfile
@@ -2113,37 +2159,52 @@ export const AdminService = {
   async getAvailableEditors(
     supabase: SupabaseClient<Database>,
     chapter_id: string
-  ): Promise<{ id: string; name: string; email: string; role: 'member' | 'editor' }[]> {
+  ): Promise<AvailableChapterEditor[]> {
+    const editorsByChapter = await AdminService.getAvailableEditorsByChapterIds(supabase, [chapter_id])
+    return editorsByChapter[chapter_id] ?? []
+  },
+
+  async getAvailableEditorsByChapterIds(
+    supabase: SupabaseClient<Database>,
+    chapter_ids: string[]
+  ): Promise<Record<string, AvailableChapterEditor[]>> {
+    const ids = uniqueStrings(chapter_ids)
+    if (ids.length === 0) return {}
+
     const { data, error } = await supabase
       .from('chapter_membership')
-      .select('user_id')
-      .eq('chapter_id', chapter_id)
+      .select('chapter_id, user_id')
+      .in('chapter_id', ids)
       .eq('status', 'approved')
 
     if (error) {
       logger.error({ context: 'admin/chapters', error: error }, 'getAvailableEditors error')
-      return []
+      return Object.fromEntries(ids.map((id) => [id, []]))
     }
 
-    const membershipRows = (data ?? []) as Pick<ChapterMembershipRow, 'user_id'>[]
+    const membershipRows = (data ?? []) as Pick<ChapterMembershipRow, 'chapter_id' | 'user_id'>[]
     const userMap = await fetchUserSummaryMap(
       supabase,
       membershipRows.map((row) => row.user_id)
     )
 
-    return membershipRows
-      .map((row) => {
-        const user = userMap.get(row.user_id)
-        if (!user) return null
-        if (user.role !== 'member' && user.role !== 'editor') return null
-        return {
-          id: user.id,
-          name: user.name ?? 'Unknown',
-          email: user.email,
-          role: user.role,
-        }
+    const editorsByChapter: Record<string, AvailableChapterEditor[]> = Object.fromEntries(
+      ids.map((id) => [id, []])
+    )
+
+    membershipRows.forEach((row) => {
+      const user = userMap.get(row.user_id)
+      if (!user || (user.role !== 'member' && user.role !== 'editor')) return
+      editorsByChapter[row.chapter_id] ??= []
+      editorsByChapter[row.chapter_id].push({
+        id: user.id,
+        name: user.name ?? 'Unknown',
+        email: user.email,
+        role: user.role,
       })
-      .filter((item): item is NonNullable<typeof item> => item !== null)
+    })
+
+    return editorsByChapter
   },
 
   // ───────────────────────────────────────────────────────────────
@@ -2166,21 +2227,18 @@ export const AdminService = {
       return { success: false, error: 'User must have an approved membership in this chapter.' }
     }
 
-    const { error: membershipError } = await supabase
-      .from('chapter_membership')
-      .update({ position: 'editor', updated_at: new Date().toISOString() })
-      .eq('user_id', userId)
-      .eq('chapter_id', chapter_id)
+    const roleAssignmentResult = await ChapterRoleAssignmentService.assignChapterRole(supabase, {
+      actorUserId: issuedById ?? userId,
+      targetUserId: userId,
+      chapterId: chapter_id,
+      roleLevel: 'chief_of_staff',
+      functionalArea: 'strategy_operations',
+      displayTitle: 'Legacy Chapter Editor',
+      rawTitle: 'legacy_editor',
+    })
 
-    if (membershipError) {
-      logger.error({ context: 'admin/chapters', error: membershipError }, 'assignEditor membership error')
-      return { success: false, error: 'Failed to assign editor.' }
-    }
-
-    const { error } = await supabase.from('user').update({ role: 'editor' }).eq('id', userId)
-    if (error) {
-      logger.error({ context: 'admin/chapters', error: error }, 'assignEditor error')
-      return { success: false, error: 'Failed to assign editor.' }
+    if (!roleAssignmentResult.success) {
+      return { success: false, error: roleAssignmentResult.error }
     }
 
     const identityResult = await LeadIdentityService.issueChapterEditorIdentity(supabase, {

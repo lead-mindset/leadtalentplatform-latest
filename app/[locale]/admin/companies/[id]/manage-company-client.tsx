@@ -13,6 +13,7 @@ import {
   revokeAccess,
 } from '@/lib/actions/admin/companies'
 import type { CompanyDetail } from '@/lib/services/admin.service'
+import { formatLeadDate } from '@/lib/utils/date-format'
 import { useRouter } from 'next/navigation'
 
 type Props = {
@@ -95,7 +96,7 @@ export function ManageCompanyClient({ company }: Props) {
               <div key={row.id} className="flex items-center justify-between border rounded p-2">
                 <div>
                   <p className="font-medium">{row.recruiter_email}</p>
-                  <p className="text-xs text-muted-foreground">Accepted {row.accepted_at ? new Date(row.accepted_at).toLocaleDateString() : '—'}</p>
+                  <p className="text-xs text-muted-foreground">Accepted {formatLeadDate(row.accepted_at, '-')}</p>
                 </div>
                 <Button
                   size="sm"
@@ -135,7 +136,7 @@ export function ManageCompanyClient({ company }: Props) {
                   <p className="font-medium">{row.recruiter_email}</p>
                   <div className="flex gap-2 mt-1">
                     <Badge variant="outline">
-                      {row.invite_expires_at ? `Expires ${new Date(row.invite_expires_at).toLocaleDateString()}` : 'No expiry'}
+                      {row.invite_expires_at ? `Expires ${formatLeadDate(row.invite_expires_at)}` : 'No expiry'}
                     </Badge>
                   </div>
                 </div>

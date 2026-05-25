@@ -28,19 +28,14 @@ import { createClient } from '@/lib/supabase/server'
 import { AdminService } from '@/lib/services/admin.service'
 import { LeadIdentityService } from '@/lib/services/lead-identity.service'
 import { MemberActionButtons } from '@/app/[locale]/chapter/members/components/member-actions'
+import { AdminChapterRoleCorrectionPanel } from '@/app/[locale]/admin/users/[id]/_components/admin-chapter-role-correction-panel'
 import { LeadIdentityManager } from '@/app/[locale]/admin/users/[id]/_components/lead-identity-manager'
 import { RoleManagementPanel } from '@/app/[locale]/admin/users/[id]/_components/role-management-panel'
 import { getRoleColor } from '@/lib/options'
+import { formatLeadDate } from '@/lib/utils/date-format'
 
 function formatDate(value: string | null | undefined) {
-  if (!value) return 'Not set'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'Not set'
-  return date.toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
+  return formatLeadDate(value, 'Not set')
 }
 
 function EmptyState({
@@ -136,7 +131,7 @@ export default async function UserDetailPage({
 
   const approvalStatus = membership?.status ?? null
   const actionableStatus =
-    approvalStatus === 'pending' || approvalStatus === 'approved' || approvalStatus === 'rejected'
+    approvalStatus === 'pending' || approvalStatus === 'approved'
       ? approvalStatus
       : null
 
@@ -323,7 +318,7 @@ export default async function UserDetailPage({
                         <p className="truncate text-sm text-muted-foreground">{access.recruiter_email}</p>
                         <p className="text-xs text-muted-foreground">
                           Granted {formatDate(access.granted_at)}
-                          {access.accepted_at ? ` · Accepted ${formatDate(access.accepted_at)}` : ''}
+                          {access.accepted_at ? ` / Accepted ${formatDate(access.accepted_at)}` : ''}
                         </p>
                       </div>
                       <Badge variant={companyAccessVariant(access.status)}>{access.status}</Badge>
@@ -360,10 +355,8 @@ export default async function UserDetailPage({
                 </CardTitle>
                 <CardDescription>
                   {actionableStatus === 'approved'
-                    ? 'This membership is approved. Revoke approval only when chapter status should change.'
-                    : actionableStatus === 'rejected'
-                      ? 'This membership was rejected. You can reconsider and approve it.'
-                      : 'Review this chapter membership application.'}
+                    ? 'This membership is approved. Revoke membership only when chapter status should change.'
+                    : 'Review this chapter membership application.'}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -374,6 +367,16 @@ export default async function UserDetailPage({
                 />
               </CardContent>
             </Card>
+          )}
+
+          {currentUserData?.role === 'admin' && membership?.status === 'approved' && (
+            <AdminChapterRoleCorrectionPanel
+              userId={resolvedUser.id}
+              userName={resolvedUser.name ?? resolvedUser.email}
+              chapters={chapters}
+              defaultChapterId={membership.chapter_id}
+              assignment={resolvedUser.chapter_role_assignment}
+            />
           )}
 
           <Card>

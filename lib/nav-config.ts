@@ -13,6 +13,7 @@ import {
   ScanLine,
   CalendarSearch,
   QrCode,
+  HandCoins,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -82,6 +83,12 @@ export const CHAPTER_NAV: NavItemConfig[] = [
     icon: UserCheck,
   },
   {
+    id: 'funding',
+    label: 'Financiamiento',
+    href: '/chapter/funding',
+    icon: HandCoins,
+  },
+  {
     id: 'my-profile',
     label: 'Mi perfil',
     href: '/student/profile',
@@ -101,6 +108,12 @@ export const ADMIN_NAV: NavItemConfig[] = [
     label: 'Eventos',
     href: '/admin/events',
     icon: CalendarDays,
+  },
+  {
+    id: 'funding',
+    label: 'Financiamiento',
+    href: '/admin/funding',
+    icon: HandCoins,
   },
   {
     id: 'chapters',

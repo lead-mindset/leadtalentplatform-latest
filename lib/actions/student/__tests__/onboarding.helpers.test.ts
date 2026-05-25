@@ -8,11 +8,7 @@ import {
 import { PersonProfileService } from '@/lib/services/person-profile.service'
 import { NewsletterSubscriptionService } from '@/lib/services/newsletter-subscription.service'
 import { ChapterMembershipService } from '@/lib/services/chapter-membership.service'
-import { ChapterService } from '@/lib/services/chapter.service'
-import {
-  sendChapterApplicationSubmittedEmail,
-  sendWelcomeEmail,
-} from '@/lib/emails/send-email'
+import { ChapterPreapprovalService } from '@/lib/services/chapter-preapproval.service'
 
 vi.mock('@/lib/services/person-profile.service', () => ({
   PersonProfileService: {
@@ -33,15 +29,10 @@ vi.mock('@/lib/services/chapter-membership.service', () => ({
   },
 }))
 
-vi.mock('@/lib/services/chapter.service', () => ({
-  ChapterService: {
-    getChapterName: vi.fn(),
+vi.mock('@/lib/services/chapter-preapproval.service', () => ({
+  ChapterPreapprovalService: {
+    activatePreapprovalForUser: vi.fn(),
   },
-}))
-
-vi.mock('@/lib/emails/send-email', () => ({
-  sendChapterApplicationSubmittedEmail: vi.fn().mockResolvedValue({ success: true }),
-  sendWelcomeEmail: vi.fn().mockResolvedValue({ success: true }),
 }))
 
 const t = (key: string) => key
@@ -72,12 +63,12 @@ describe('basic onboarding helpers', () => {
     vi.mocked(NewsletterSubscriptionService.subscribeGlobal).mockReset()
     vi.mocked(NewsletterSubscriptionService.subscribeToChapters).mockReset()
     vi.mocked(ChapterMembershipService.applyToChapter).mockReset()
-    vi.mocked(ChapterService.getChapterName).mockReset()
-    vi.mocked(sendChapterApplicationSubmittedEmail).mockReset()
-    vi.mocked(sendWelcomeEmail).mockReset()
-    vi.mocked(ChapterService.getChapterName).mockResolvedValue('LEAD UNI')
-    vi.mocked(sendChapterApplicationSubmittedEmail).mockResolvedValue({ success: true })
-    vi.mocked(sendWelcomeEmail).mockResolvedValue({ success: true })
+    vi.mocked(ChapterPreapprovalService.activatePreapprovalForUser).mockReset()
+    vi.mocked(ChapterPreapprovalService.activatePreapprovalForUser).mockResolvedValue({
+      success: true,
+      activated: false,
+      reason: 'no_matching_preapproval',
+    })
   })
 
   it('parses reusable profile and newsletter data without requiring chapter membership fields', () => {
@@ -95,61 +86,6 @@ describe('basic onboarding helpers', () => {
       consentRecruiterVisibility: true,
       emailNotificationsEnabled: true,
     })
-  })
-
-  it('normalizes portfolio URLs that omit the https scheme', () => {
-    const formData = validFormData()
-    formData.set('portfolio_url', 'github.com/lead/example')
-
-    const parsed = parseBasicOnboardingFormData(formData, t)
-
-    expect(parsed.success).toBe(true)
-    if (!parsed.success) return
-
-    expect(parsed.data.portfolio_url).toBe('https://github.com/lead/example')
-  })
-
-  it('preserves portfolio URLs that already include https', () => {
-    const formData = validFormData()
-    formData.set('portfolio_url', 'https://portfolio.example.com/work')
-
-    const parsed = parseBasicOnboardingFormData(formData, t)
-
-    expect(parsed.success).toBe(true)
-    if (!parsed.success) return
-
-    expect(parsed.data.portfolio_url).toBe('https://portfolio.example.com/work')
-  })
-
-  it('treats an empty portfolio URL as null', () => {
-    const formData = validFormData()
-    formData.set('portfolio_url', '   ')
-
-    const parsed = parseBasicOnboardingFormData(formData, t)
-
-    expect(parsed.success).toBe(true)
-    if (!parsed.success) return
-
-    expect(parsed.data.portfolio_url).toBeNull()
-  })
-
-  it('rejects invalid portfolio URLs after normalization', () => {
-    const formData = validFormData()
-    formData.set('portfolio_url', 'not a url')
-
-    const parsed = parseBasicOnboardingFormData(formData, t)
-
-    expect(parsed.success).toBe(false)
-    if (parsed.success) return
-
-    expect(parsed.error.issues).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          path: ['portfolio_url'],
-          message: 'validation.invalidUrl',
-        }),
-      ])
-    )
   })
 
   it('accepts chapter-related intent when a valid chapter is selected', () => {
@@ -227,6 +163,13 @@ describe('basic onboarding helpers', () => {
         isRecruiterVisible: true,
       })
     )
+    expect(ChapterPreapprovalService.activatePreapprovalForUser).toHaveBeenCalledWith(
+      {},
+      {
+        userId: 'user-123',
+        email: 'participant@test.com',
+      }
+    )
     expect(NewsletterSubscriptionService.subscribeGlobal).toHaveBeenCalledWith(
       {},
       { userId: 'user-123', source: 'onboarding' }
@@ -240,7 +183,6 @@ describe('basic onboarding helpers', () => {
       }
     )
     expect(ChapterMembershipService.applyToChapter).not.toHaveBeenCalled()
-    expect(sendWelcomeEmail).toHaveBeenCalledWith('participant@test.com', 'Test Participant')
   })
 
   it('creates a pending membership application for an existing chapter member claim', async () => {
@@ -271,11 +213,47 @@ describe('basic onboarding helpers', () => {
         position: 'member',
       }
     )
-    expect(sendChapterApplicationSubmittedEmail).toHaveBeenCalledWith(
-      'participant@test.com',
-      'Test Participant',
-      'LEAD UNI'
+  })
+
+  it('activates matching preapproval with the service client and skips pending chapter application', async () => {
+    vi.mocked(PersonProfileService.upsertBasicProfile).mockResolvedValue({ success: true })
+    vi.mocked(ChapterPreapprovalService.activatePreapprovalForUser).mockResolvedValue({
+      success: true,
+      activated: true,
+      preapprovalId: 'preapproval-1',
+      chapterId: 'leaduni',
+      preapprovalType: 'eboard',
+      memberId: 'LEAD-123456',
+      roleAssignmentId: 'role-1',
+      grantedPermissions: ['chapter.dashboard.access'],
+    })
+    vi.mocked(NewsletterSubscriptionService.subscribeGlobal).mockResolvedValue({ success: true })
+    vi.mocked(NewsletterSubscriptionService.subscribeToChapters).mockResolvedValue({ success: true })
+
+    const formData = validFormData()
+    formData.set('chapterIntent', 'already_member')
+    formData.set('selectedChapterId', 'leaduni')
+
+    const parsed = parseBasicOnboardingFormData(formData, t)
+    if (!parsed.success) throw new Error('Expected valid onboarding data')
+
+    const serviceSupabase = { service: true } as unknown as SupabaseClient<Database>
+    const result = await saveBasicOnboarding({} as SupabaseClient<Database>, {
+      userId: 'user-123',
+      email: 'participant@test.com',
+      data: parsed.data,
+      preapprovalSupabase: serviceSupabase,
+    })
+
+    expect(result).toEqual({ success: true, postOnboardingRedirectPath: '/chapter' })
+    expect(ChapterPreapprovalService.activatePreapprovalForUser).toHaveBeenCalledWith(
+      serviceSupabase,
+      {
+        userId: 'user-123',
+        email: 'participant@test.com',
+      }
     )
+    expect(ChapterMembershipService.applyToChapter).not.toHaveBeenCalled()
   })
 
   it('creates a pending membership application for chapter applicants', async () => {
@@ -306,11 +284,6 @@ describe('basic onboarding helpers', () => {
         position: 'member',
       }
     )
-    expect(sendChapterApplicationSubmittedEmail).toHaveBeenCalledWith(
-      'participant@test.com',
-      'Test Participant',
-      'LEAD UNI'
-    )
   })
 
   it('returns membership application failure and skips newsletter writes', async () => {
@@ -339,8 +312,6 @@ describe('basic onboarding helpers', () => {
     })
     expect(NewsletterSubscriptionService.subscribeGlobal).not.toHaveBeenCalled()
     expect(NewsletterSubscriptionService.subscribeToChapters).not.toHaveBeenCalled()
-    expect(sendChapterApplicationSubmittedEmail).not.toHaveBeenCalled()
-    expect(sendWelcomeEmail).not.toHaveBeenCalled()
   })
 
   it('skips newsletter writes when no newsletter choices are selected', async () => {

@@ -1,6 +1,6 @@
 import { ChaptersManagementClient } from './chapters-management-client'
 import {
-  getAvailableEditors,
+  getAvailableEditorsByChapterIds,
   getChaptersList,
 } from '@/lib/actions/admin/chapters'
 import type { ChapterSortKey, SortOrder } from '@/lib/services/admin.service'
@@ -30,16 +30,9 @@ export default async function AdminChaptersPage({
   const sortOrder = (params.sortOrder === 'desc' ? 'desc' : 'asc') as SortOrder
 
   const list = await getChaptersList({ search }, { page, pageSize, sortBy, sortOrder })
-  const availableEditorsEntries = await Promise.all(
-    list.items.map(async (chapter) => [
-      chapter.id,
-      (await getAvailableEditors(chapter.id)).map(e => ({
-        ...e,
-        role: e.role as 'member' | 'editor'
-      }))
-    ] as const)
+  const availableEditorsByChapter = await getAvailableEditorsByChapterIds(
+    list.items.map((chapter) => chapter.id)
   )
-  const availableEditorsByChapter = Object.fromEntries(availableEditorsEntries)
 
   return (
     <div className="space-y-6">

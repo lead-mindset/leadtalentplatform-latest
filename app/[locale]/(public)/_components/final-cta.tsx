@@ -1,14 +1,15 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useLocale } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const HOME_VIDEO_URL =
-  "https://sboibxszratyaswwursb.supabase.co/storage/v1/object/sign/video/video3.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV81MzNiYjliNy03NjlkLTRhZjMtOTQ3MC0yMGM2NmJjYTI3OWIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ2aWRlby92aWRlbzMubXA0IiwiaWF0IjoxNzc4MzI4NjAyLCJleHAiOjIwOTM2ODg2MDJ9.wAIIA6UgDmn-oQNMbUELEW8UHbawTVgM740jhf_SMbk";
+const PUBLIC_HERO_VIDEO_PATH = "/video3.mp4";
 
 export function FinalCTA() {
+  const [videoSrc, setVideoSrc] = useState<string | undefined>();
   const locale = useLocale() === "en" ? "en" : "es";
   const copy = locale === "en"
     ? {
@@ -30,6 +31,10 @@ export function FinalCTA() {
         secondaryHref: "/events",
       };
 
+  useEffect(() => {
+    setVideoSrc(new URL(PUBLIC_HERO_VIDEO_PATH, window.location.origin).toString());
+  }, []);
+
   return (
     <section className="p-4 sm:p-6 lg:p-8 h-screen">
       <div className="bg-background w-full h-full rounded-[2rem] relative overflow-hidden shadow-2xl">
@@ -39,10 +44,9 @@ export function FinalCTA() {
             muted
             loop
             playsInline
+            src={videoSrc}
             className="w-full h-full object-cover"
-          >
-            <source src={HOME_VIDEO_URL} type="video/mp4" />
-          </video>
+          />
         </div>
         
         <div className="absolute inset-0 bg-black/60 z-1"></div>

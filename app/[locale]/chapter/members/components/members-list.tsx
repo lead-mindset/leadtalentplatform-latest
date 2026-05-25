@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Icons } from '@/components/ui/icons'
 import MemberCard from './member-card'
 import type { MemberWithProfile } from '@/lib/types'
+import type { ChapterMemberPermissionFlags } from '@/lib/services/chapter.service'
 import type { MemberFilterStatus } from '../page'
 import { approveMembersBulk } from '@/lib/actions/chapter/check-students'
 
@@ -21,9 +22,13 @@ type Feedback = {
 export function MembersList({
   members,
   status,
+  permissions,
+  currentUserId,
 }: {
   members: MemberWithProfile[]
   status: MemberFilterStatus
+  permissions: ChapterMemberPermissionFlags
+  currentUserId: string
 }) {
   const router = useRouter()
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([])
@@ -94,7 +99,7 @@ export function MembersList({
 
   return (
     <div className="space-y-4">
-      {status === 'pending' && selectableMembers.length > 0 && (
+      {status === 'pending' && permissions.canManageApplications && selectableMembers.length > 0 && (
         <div className="rounded-lg border bg-card p-3">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
@@ -135,16 +140,31 @@ export function MembersList({
         </Alert>
       ) : null}
 
-      <div className="divide-y overflow-hidden rounded-lg border bg-card">
-        {members.map((member) => (
-          <MemberCard
-            key={member.id}
-            member={member}
-            showSelector={status === 'pending' && member.chapter_membership?.status === 'pending' && Boolean(member.person_profile)}
-            selected={selectedUserIds.includes(member.id)}
-            onSelectChange={(checked) => onToggle(member.id, checked)}
-          />
-        ))}
+      <div className="overflow-hidden rounded-lg border bg-card">
+        <div className="hidden min-w-0 border-b bg-muted/10 px-4 py-2 text-[11px] font-medium uppercase text-muted-foreground min-[1100px]:grid min-[1100px]:grid-cols-[minmax(9.5rem,0.9fr)_minmax(13rem,1.35fr)_minmax(10rem,0.8fr)] min-[1100px]:gap-4">
+          <span>Miembro</span>
+          <span>Perfil</span>
+          <span className="text-right">Rol</span>
+        </div>
+
+        <div className="divide-y">
+          {members.map((member) => (
+            <MemberCard
+              key={member.id}
+              member={member}
+              showSelector={
+                permissions.canManageApplications &&
+                status === 'pending' &&
+                member.chapter_membership?.status === 'pending' &&
+                Boolean(member.person_profile)
+              }
+              selected={selectedUserIds.includes(member.id)}
+              onSelectChange={(checked) => onToggle(member.id, checked)}
+              permissions={permissions}
+              currentUserId={currentUserId}
+            />
+          ))}
+        </div>
       </div>
     </div>
   )

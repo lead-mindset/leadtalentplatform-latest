@@ -4,16 +4,12 @@ import { createBasicOnboardingSchema } from '@/lib/memberschema'
 import type { Database } from '@/lib/database.generated'
 import { PersonProfileService } from '@/lib/services/person-profile.service'
 import { ChapterMembershipService } from '@/lib/services/chapter-membership.service'
+import { ChapterPreapprovalService } from '@/lib/services/chapter-preapproval.service'
 import { NewsletterSubscriptionService } from '@/lib/services/newsletter-subscription.service'
-import { ChapterService } from '@/lib/services/chapter.service'
-import {
-  sendChapterApplicationSubmittedEmail,
-  sendWelcomeEmail,
-} from '@/lib/emails/send-email'
 
 type BasicOnboardingData = z.infer<ReturnType<typeof createBasicOnboardingSchema>>
 type ActionResult =
-  | { success: true }
+  | { success: true; postOnboardingRedirectPath?: '/chapter' }
   | { success: false; error: string; details?: unknown }
 
 function parseJsonStringArray(rawValue: FormDataEntryValue | null): string[] {
@@ -63,6 +59,7 @@ export async function saveBasicOnboarding(
     userId: string
     email: string
     data: BasicOnboardingData
+    preapprovalSupabase?: SupabaseClient<Database>
   }
 ): Promise<ActionResult> {
   const profileResult = await PersonProfileService.upsertBasicProfile(supabase, {
@@ -74,7 +71,7 @@ export async function saveBasicOnboarding(
     majorOrInterest: params.data.career,
     graduationYear: params.data.graduation_year,
     linkedinUrl: params.data.linkedin_url,
-    portfolioUrl: params.data.portfolio_url ?? null,
+    portfolioUrl: params.data.portfolio_url || null,
     skills: params.data.skills,
     gender: params.data.gender,
     isRecruiterVisible: params.data.consentRecruiterVisibility,
@@ -82,8 +79,19 @@ export async function saveBasicOnboarding(
 
   if (!profileResult.success) return profileResult
 
+  const preapprovalResult = await ChapterPreapprovalService.activatePreapprovalForUser(
+    params.preapprovalSupabase ?? supabase,
+    {
+      userId: params.userId,
+      email: params.email,
+    }
+  )
+
+  if (!preapprovalResult.success) return preapprovalResult
+
   const shouldApplyToChapter =
-    params.data.chapterIntent === 'already_member' || params.data.chapterIntent === 'apply_to_chapter'
+    !preapprovalResult.activated &&
+    (params.data.chapterIntent === 'already_member' || params.data.chapterIntent === 'apply_to_chapter')
 
   if (shouldApplyToChapter) {
     const membershipResult = await ChapterMembershipService.applyToChapter(supabase, {
@@ -93,15 +101,6 @@ export async function saveBasicOnboarding(
     })
 
     if (!membershipResult.success) return membershipResult
-
-    const chapterName = await ChapterService.getChapterName(supabase, params.data.selectedChapterId)
-    if (chapterName) {
-      void sendChapterApplicationSubmittedEmail(
-        params.email,
-        params.data.full_name,
-        chapterName
-      ).catch((error: Error) => console.error('Failed to send chapter application email:', error))
-    }
   }
 
   if (params.data.emailNotificationsEnabled) {
@@ -123,9 +122,12 @@ export async function saveBasicOnboarding(
     if (!chapterResult.success) return chapterResult
   }
 
-  void sendWelcomeEmail(params.email, params.data.full_name).catch((error: Error) => {
-    console.error('Failed to send onboarding welcome email:', error)
-  })
+  if (
+    preapprovalResult.activated &&
+    preapprovalResult.grantedPermissions?.includes('chapter.dashboard.access')
+  ) {
+    return { success: true, postOnboardingRedirectPath: '/chapter' }
+  }
 
   return { success: true }
 }

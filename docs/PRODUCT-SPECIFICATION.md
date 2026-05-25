@@ -29,7 +29,7 @@ Build a professional, scalable platform that helps LEAD Americas turn motivated 
 1. **Identity is not membership.** Every authenticated account has a `user` row, but only approved chapter participants have chapter membership.
 2. **Public participation should be low-friction.** People can complete basic onboarding and register for events without pretending to belong to a chapter.
 3. **Membership should remain meaningful.** Chapter approval, positions, member IDs, and recruiter visibility must be explicit workflows.
-4. **Permissions must stay simple.** App access is controlled by `user.role`; organizational status is controlled by identity and membership records.
+4. **Permissions must stay scoped.** Global app roles stay broad; chapter operations are controlled by approved chapter membership plus chapter-scoped permission grants.
 5. **Bugs become system improvements.** Repeated failures should update tests, docs, agent instructions, or review checklists.
 
 ---
@@ -40,7 +40,7 @@ Build a professional, scalable platform that helps LEAD Americas turn motivated 
 |---|---|---|---|
 | Public participant | Interested student or community member who wants to attend public LEAD events | Low to medium | Fast registration, no forced chapter selection, event reminders |
 | Chapter applicant/member | Student who wants to join or belongs to a LEAD chapter | Medium | Membership approval, profile, event history, member ID |
-| Chapter editor | Approved chapter e-board member who manages events and members | Medium | Create/edit events, approve members, review applications, check in attendees |
+| Chapter leader / e-board | Approved chapter e-board member with chapter-scoped permissions | Medium | Create/edit events, approve members when permitted, review applications, check in attendees, manage regular e-board assignments when permitted |
 | Admin | Platform operator, founder, or central staff member | High | Manage users, roles, chapters, companies, identities, system health |
 | Founder/staff | Official LEAD organization member; may or may not need platform admin access | Medium | Official LEAD identity and ID card without forced chapter membership |
 | Alumni | Former approved member whose history/status remains valuable | Medium | Maintain identity/history without active member privileges |
@@ -151,7 +151,13 @@ person_profile
   Reusable basic profile for event registration and outreach.
 
 chapter_membership
-  Chapter relationship, approval status, and chapter position.
+  Chapter relationship, application/approval status, member ID, alumni/inactive state, and basic chapter membership context.
+
+chapter_role_assignment
+  Official chapter responsibility with role level, functional area, display title, and assignment lifecycle.
+
+chapter_permission_grant
+  Chapter-scoped product capability such as dashboard access, member approval, event management, or check-in.
 
 lead_identity
   Official LEAD ID/status/display identity; optional chapter relation.
@@ -180,7 +186,8 @@ recruiter_access
 
 ### Key Patterns
 
-- **Role vs identity separation:** `user.role` controls app access; `lead_identity` controls official display/status.
+- **Global role vs chapter access separation:** `user.role` controls broad app lanes such as admin and recruiter; chapter dashboard access comes from approved membership plus `chapter_permission_grant`.
+- **Role vs identity separation:** `chapter_role_assignment` controls official chapter responsibility; `lead_identity` controls official public LEAD display/status.
 - **Membership vs subscription separation:** `chapter_membership` means application/approval; `newsletter_subscription` means communication consent.
 - **Event application extensibility:** event-specific questions use question/answer rows, not new columns.
 - **Vertical slices:** database, service, action, UI, and tests should ship together.
@@ -213,17 +220,20 @@ Minimum basic onboarding fields:
 Chapter membership is created only when the user formally applies to or is added to a chapter.
 
 ```ts
-type ChapterMembershipStatus = "pending" | "approved" | "rejected" | "alumni";
+type ChapterMembershipStatus = "pending" | "approved" | "rejected" | "inactive" | "alumni";
 ```
 
 V1 rules:
 
-- One active approved chapter membership per member/editor.
-- Editors must be approved chapter members.
-- Only admins can promote/demote editors.
-- Editors can approve/reject/remove members in their own chapter.
+- One active approved chapter membership per member or chapter operator.
+- Chapter dashboard permissions are effective only for approved chapter members unless admin bypass applies.
+- Central/admin controls president and vice president assignment for launch.
+- Presidents and vice presidents can assign regular e-board roles only to approved members of their own chapter.
+- All official e-board can view approved members, alumni, approved member contact info, create/edit/publish events, view registrations, and check in attendees.
+- Applicant approval/rejection is limited to president, vice president, chief of staff, and admin.
+- Active member revocation is limited to president, vice president, and admin, and must be auditable.
 
-Chapter positions live on `chapter_membership.position`, not `user.role`.
+Chapter positions and imported labels must not be overloaded into `user.role`. Launch chapter leadership should use `chapter_role_assignment` for official responsibility and `chapter_permission_grant` for product access.
 
 Examples:
 
@@ -349,16 +359,23 @@ type Role = "member" | "editor" | "admin" | "recruiter";
 
 Role responsibilities:
 
-- `member`: basic account/event participant/chapter applicant/member.
-- `editor`: approved chapter e-board member with chapter tools.
+- `member`: basic account/event participant/chapter applicant/member; also the global role for most chapter e-board users.
+- `editor`: legacy/backcompat chapter-operator role while chapter code migrates to permission grants.
 - `admin`: global platform operator.
 - `recruiter`: invite-only company user.
+
+Chapter access responsibilities:
+
+- `chapter_membership`: membership lifecycle and approved chapter belonging.
+- `chapter_role_assignment`: official chapter responsibility such as president, vice president, chief of staff, director, coordinator, or member.
+- `chapter_permission_grant`: actual chapter-scoped capabilities such as dashboard access, applicant management, member revoke, event management, registration visibility, and check-in.
 
 ### RLS and Access Rules
 
 - Users can read/update their own basic profile.
-- Editors can manage only their own chapter members.
-- Editors can edit events created by their chapter or where their chapter is a collaborator.
+- Chapter permissions apply only inside the relevant chapter and require approved membership unless admin bypass applies.
+- All official e-board can manage normal event operations for their chapter; archive/cancel/delete remains restricted to president, vice president, chief of staff, and admin.
+- Member approval, rejection, inactive/rejected visibility, and active membership revocation are controlled by explicit permission keys.
 - Admins can manage all operational data.
 - Recruiters can access only approved recruiter-visible talent and only when `recruiter_access.is_active = true`.
 
@@ -470,7 +487,7 @@ Submit event application:
 
 ### MVP Success Definition
 
-The MVP is successful when a public participant can complete basic onboarding and register/apply for events, a chapter editor can manage their chapter members and events, and an admin can manage identities and roles without any route depending incorrectly on `student_profile`.
+The MVP is successful when a public participant can complete basic onboarding and register/apply for events, authorized chapter leaders/e-board can manage scoped chapter workflows, and an admin can manage identities and roles without any route depending incorrectly on `student_profile` or global editor-only assumptions.
 
 ### Functional Requirements
 
@@ -478,8 +495,8 @@ The MVP is successful when a public participant can complete basic onboarding an
 - [ ] Recruiter login remains invite-only and does not require student/profile onboarding.
 - [ ] Public event registration works for authenticated users with `person_profile`.
 - [ ] Chapter membership approval is separate from event registration.
-- [ ] Editors must have approved chapter membership.
-- [ ] Editors can manage events where their chapter is creator or collaborator.
+- [ ] Chapter dashboard access requires approved chapter membership plus chapter-scoped permission grants, with admin bypass.
+- [ ] Authorized e-board can manage events where their chapter is creator or collaborator.
 - [ ] LEAD IDs can be issued to chapter members, editors, staff, founders, and alumni.
 - [ ] Event applications support custom questions and answers.
 - [ ] Newsletter architecture is documented and schema-compatible.
@@ -489,7 +506,7 @@ The MVP is successful when a public participant can complete basic onboarding an
 - [ ] `pnpm typecheck` passes.
 - [ ] `pnpm lint` passes.
 - [ ] Service tests pass.
-- [ ] Critical auth, event, and editor flows have test coverage.
+- [ ] Critical auth, event, chapter permission, and company representative flows have test coverage.
 - [ ] Manual validation evidence appears in PRs.
 - [ ] RLS assumptions are documented.
 
@@ -615,7 +632,7 @@ Estimated timeline: ongoing after Phase 2.
 |---|---|---|
 | Schema migration breaks existing routes | High | Maintenance mode, migration plan, generated type updates, focused service tests |
 | Account model remains unclear to future agents/team members | High | Update PRD, AGENTS/CLAUDE rules, ADR, and issue templates with canonical vocabulary |
-| Editors accidentally get broader access than intended | High | Scope editor permissions by approved chapter membership and event collaboration |
+| Chapter leaders accidentally get broader access than intended | High | Scope chapter operations by approved membership, explicit permission grants, and audit logs |
 | Event registration becomes too heavy | Medium | Require only basic `person_profile`; keep chapter membership optional |
 | Newsletter consent becomes confusing | Medium | Store explicit subscription records and provide unsubscribe support |
 | Recruiter/company instability distracts from MVP | Medium | Place recruiter recovery after student/editor/event milestone |
@@ -651,7 +668,10 @@ Estimated timeline: ongoing after Phase 2.
 |---|---|
 | `user` | Every authenticated account |
 | `person_profile` | Reusable basic onboarding data |
-| `chapter_membership` | Chapter application, approval, status, and position |
+| `chapter_membership` | Chapter application, approval, status, member ID, and lifecycle |
+| `chapter_role_assignment` | Official chapter responsibility/title with role level and functional area |
+| `chapter_permission_grant` | Chapter-scoped product capability |
+| `chapter_audit_log` | Sensitive chapter operation history |
 | `lead_identity` | Official LEAD ID/display/status record |
 | `event_registration` | User relationship to one event |
 | `event_application_question` | Custom event application field |
@@ -663,7 +683,9 @@ Estimated timeline: ongoing after Phase 2.
 
 - The platform is in maintenance mode and bold database changes are acceptable.
 - One active approved chapter membership per user is sufficient for V1.
-- Editors are approved chapter e-board members for exactly one chapter in V1.
+- One primary active e-board role assignment per user/chapter is sufficient for launch.
+- Existing `editor` users are legacy/backcompat chapter operators until their access is backfilled into chapter role assignments and permission grants.
 - Founders should have admin app permissions.
 - Admin is an app role, not a public LEAD identity type.
+- Recruiter/company access stays separate from chapter membership and chapter permissions.
 - Newsletter implementation is not immediate MVP scope, but the database should support future global and chapter subscriptions.

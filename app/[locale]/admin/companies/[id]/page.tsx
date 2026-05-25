@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ArrowLeft } from 'lucide-react'
 import { getCompanyById, getCompanyStats } from '@/lib/actions/admin/companies'
+import { formatLeadDate } from '@/lib/utils/date-format'
 import { ManageCompanyClient } from './manage-company-client'
 
 export default async function CompanyManagePage({
@@ -28,7 +29,7 @@ export default async function CompanyManagePage({
           </Button>
           <h1 className="text-4xl font-bold tracking-tight">{resolvedCompany.name}</h1>
           <p className="text-muted-foreground mt-2">
-            Created {new Date(resolvedCompany.created_at).toLocaleDateString()} by {resolvedCompany.created_by_name ?? 'Unknown'}
+            Created {formatLeadDate(resolvedCompany.created_at)} by {resolvedCompany.created_by_name ?? 'Unknown'}
           </p>
         </div>
       </div>

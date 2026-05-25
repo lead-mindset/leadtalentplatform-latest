@@ -5,6 +5,7 @@ import { Activity, CheckCircle2, Mail, Calendar, XCircle } from 'lucide-react'
 import { getActivityLog } from '@/lib/actions/admin/get-data'
 import type { ActivityItem } from '@/lib/types'
 import { PageHeader } from '@/components/ui/page-header'
+import { formatLeadDate, formatLeadDateTime } from '@/lib/utils/date-format'
 
 function getActivityDescription(activity: ActivityItem) {
   const actorName = activity.actor?.name || activity.actor?.email || 'Desconocido'
@@ -71,7 +72,7 @@ function formatTimestamp(timestamp: string) {
   if (diffMins < 60) return `Hace ${diffMins} min`
   if (diffHours < 24) return `Hace ${diffHours} h`
   if (diffDays < 7) return `Hace ${diffDays} d`
-  return date.toLocaleDateString('es-PE')
+  return formatLeadDate(timestamp)
 }
 
 async function ActivityLog() {
@@ -129,7 +130,7 @@ async function ActivityLog() {
                     </div>
                     <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
                       <Calendar className="h-3 w-3" />
-                      <span>{new Date(activity.timestamp).toLocaleString('es-PE')}</span>
+                      <span>{formatLeadDateTime(activity.timestamp)}</span>
                     </div>
                   </div>
                 </div>

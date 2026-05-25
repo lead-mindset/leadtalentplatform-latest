@@ -8,10 +8,10 @@ import type {
   CheckInResponse,
   CheckInSearchResult,
 } from '@/lib/services/event.service'
-import { assertCanManageEvent } from './access'
+import { assertCanAccessEvent } from './access'
 
 async function assertEventAccess(eventId: string) {
-  const access = await assertCanManageEvent(eventId)
+  const access = await assertCanAccessEvent(eventId, 'chapter.events.check_in')
   if ('error' in access) {
     return { error: access.error }
   }

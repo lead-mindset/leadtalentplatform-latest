@@ -1,10 +1,11 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { sendApplicationApprovedEmail } from '@/lib/emails/send-email'
 import { sendApplicationRejectedEmail } from '@/lib/emails/send-email'
 import { assertCanManageEvent } from './access'
 import { EventService } from '@/lib/services/event.service'
+import { PUBLIC_EVENTS_CACHE_TAG } from '@/lib/data/public-events'
 
 export async function bulkApproveApplications(eventId: string, applicationIds: string[]) {
   const access = await assertCanManageEvent(eventId)
@@ -58,6 +59,7 @@ export async function bulkApproveApplications(eventId: string, applicationIds: s
     }
   })
 
+  revalidateTag(PUBLIC_EVENTS_CACHE_TAG, { expire: 0 })
   revalidatePath(`/chapter/events/${eventId}/applications`)
   revalidatePath(`/chapter/events`)
   revalidatePath(`/events/${eventId}`)
@@ -98,6 +100,7 @@ export async function bulkRejectApplications(eventId: string, applicationIds: st
     }
   })
 
+  revalidateTag(PUBLIC_EVENTS_CACHE_TAG, { expire: 0 })
   revalidatePath(`/chapter/events/${eventId}/applications`)
   revalidatePath(`/chapter/events`)
 

@@ -2,8 +2,6 @@ import Link from 'next/link'
 import type { ElementType } from 'react'
 import {
   Activity,
-  AlertTriangle,
-  BarChart3,
   Building2,
   CalendarDays,
   CheckCircle2,
@@ -18,21 +16,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import {
   getAdminDashboardStats,
   getChapterActivityList,
-  getPathwayPilotMetrics,
   getPendingRecruiterRequests,
   getRecentJoins,
   getSystemStats,
 } from '@/lib/actions/admin/get-data'
-import type { AdminPathwayPilotMetrics } from '@/lib/services/pathway-check-in.service'
+import { formatLeadDate } from '@/lib/utils/date-format'
 
 function formatDate(value: string | null) {
-  if (!value) return 'No activity'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'No activity'
-  return date.toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-  })
+  return formatLeadDate(value, 'No activity')
 }
 
 function StatTile({
@@ -126,76 +117,6 @@ function ManagementLink({
   )
 }
 
-function PilotMetricsCard({ metrics }: { metrics: AdminPathwayPilotMetrics }) {
-  const metricRows = [
-    {
-      label: 'Check-In completion',
-      value: `${metrics.checkInCompletionRate}%`,
-      helper: `${metrics.completedCheckIns} of ${metrics.totalApprovedMembers} approved members`,
-    },
-    {
-      label: 'Next moves within 14 days',
-      value: `${metrics.nextMoveCompletionRate14Days}%`,
-      helper: `${metrics.nextMovesCompletedWithin14Days} of ${metrics.totalNextMoves} moves`,
-    },
-    {
-      label: 'Growth Reflection completion',
-      value: `${metrics.growthReflectionCompletionRate}%`,
-      helper: `${metrics.completedReflections} completed from ${metrics.completedCheckIns} Check-Ins`,
-    },
-  ]
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <BarChart3 className="h-5 w-5 text-primary" />
-          Pathway Pilot Health
-        </CardTitle>
-        <CardDescription>
-          Measures whether the Personalized Growth layer is moving students from clarity to action.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid gap-3 md:grid-cols-3">
-          {metricRows.map((metric) => (
-            <div key={metric.label} className="rounded-lg border bg-muted/25 p-3">
-              <p className="text-sm font-medium text-muted-foreground">{metric.label}</p>
-              <p className="mt-2 text-2xl font-semibold tracking-tight tabular-nums">
-                {metric.value}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">{metric.helper}</p>
-            </div>
-          ))}
-        </div>
-        {metrics.riskSignals.length > 0 ? (
-          <div className="space-y-2">
-            {metrics.riskSignals.map((signal) => (
-              <div
-                key={signal.key}
-                className="flex items-start gap-3 rounded-lg border border-warning/40 bg-warning/10 p-3"
-              >
-                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground">{signal.label}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Current: {signal.value}% - Target: {signal.threshold}% -{' '}
-                    {signal.severity === 'risk' ? 'Needs intervention' : 'Watch closely'}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="rounded-lg border border-success/40 bg-success/10 p-3 text-sm text-success">
-            No pilot risk signals right now.
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  )
-}
-
 export default async function AdminOverviewPage() {
   const [
     dashboardStats,
@@ -203,14 +124,12 @@ export default async function AdminOverviewPage() {
     chapterActivity,
     recentJoins,
     pendingCompanyInvites,
-    pathwayPilotMetrics,
   ] = await Promise.all([
     getAdminDashboardStats(),
     getSystemStats(),
     getChapterActivityList(),
     getRecentJoins(8),
     getPendingRecruiterRequests(),
-    getPathwayPilotMetrics(),
   ])
 
   const pendingChapterApprovals = chapterActivity.reduce(
@@ -337,8 +256,6 @@ export default async function AdminOverviewPage() {
           </CardContent>
         </Card>
       </div>
-
-      <PilotMetricsCard metrics={pathwayPilotMetrics} />
 
       <div className="grid gap-4 xl:grid-cols-3">
         <Card className="xl:col-span-2">

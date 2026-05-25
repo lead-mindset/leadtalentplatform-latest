@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { EventRegistrationCheckout } from '@/components/events/event-registration-checkout'
+import { EventShareButton } from '@/components/events/event-share-button'
 import { ApplyModal } from '@/components/events/apply-modal'
 import { applyForEvent } from '@/lib/actions/events/register'
 import { Link } from '@/i18n/routing'
@@ -496,6 +497,12 @@ export function EventContent({
                     ) : null}
                   </div>
                 )}
+
+                <EventShareButton
+                  eventId={event.id}
+                  eventTitle={event.title}
+                  className="w-full"
+                />
               </CardContent>
             </Card>
           </aside>

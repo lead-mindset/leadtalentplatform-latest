@@ -5,29 +5,81 @@ import { ChapterEvents } from './chapter-events'
 import { ChapterTeam } from './chapter-team'
 import { ChapterSidebar } from './chapter-sidebar'
 import { ChapterFooter } from './chapter-footer'
-import type { PublicChapterProfile } from '@/lib/services/chapter-profile.service'
 
-interface ChapterPortalContentProps {
-  profile: PublicChapterProfile
+interface ChapterData {
+  id: string
+  name: string
+  university: string
+  city: string | null
+  region: string | null
+  instagram_url: string | null
+  latitude: number | null
+  longitude: number | null
 }
 
-export function ChapterPortalContent({ profile }: ChapterPortalContentProps) {
-  return (
-    <main className="min-h-screen overflow-x-hidden bg-background">
-      <ChapterHero profile={profile} />
+interface EventData {
+  id: string
+  title: string
+  description: string | null
+  start_at: string
+  end_at: string
+  location: string | null
+  location_name: string | null
+  location_city: string | null
+  cover_image: string | null
+  event_type: string
+  capacity: number | null
+  event_registration: { count: number }[]
+}
 
-      <section className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-4 py-10 sm:px-6 lg:grid-cols-12 lg:px-8 lg:py-12">
-        <div className="space-y-12 lg:col-span-8">
-          <ChapterEvents events={profile.events} />
-          <ChapterTeam members={profile.teamPreview} />
+interface MemberData {
+  user_id: string
+  major: string
+  member_id: string | null
+  user: { name: string | null } | { name: string | null }[]
+}
+
+interface ChapterPortalContentProps {
+  chapter: ChapterData
+  events: EventData[]
+  members: MemberData[]
+  member_count: number
+  pastEventsCount: number
+}
+
+export function ChapterPortalContent({
+  chapter,
+  events,
+  members,
+  member_count,
+  pastEventsCount,
+}: ChapterPortalContentProps) {
+  return (
+    <main className="min-h-screen bg-background">
+      {/* Hero Section */}
+      <ChapterHero chapter={chapter} member_count={member_count} />
+
+      {/* Content Grid */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Left Column */}
+        <div className="lg:col-span-8 space-y-12">
+          <ChapterEvents events={events} />
+          <ChapterTeam members={members} />
         </div>
 
-        <div className="space-y-6 lg:col-span-4">
-          <ChapterSidebar profile={profile} />
+        {/* Right Column */}
+        <div className="lg:col-span-4 space-y-8">
+          <ChapterSidebar
+            chapter={chapter}
+            member_count={member_count}
+            pastEventsCount={pastEventsCount}
+            upcomingEventsCount={events.length}
+          />
         </div>
       </section>
 
-      <ChapterFooter chapter={profile.chapter} />
+      {/* Footer */}
+      <ChapterFooter chapter={chapter} />
     </main>
   )
 }

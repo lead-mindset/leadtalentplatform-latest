@@ -1,59 +1,74 @@
 'use client'
 
-import { Users } from 'lucide-react'
-import { Card, CardContent } from '@/components/ui/card'
-import type { PublicChapterProfileMember } from '@/lib/services/chapter-profile.service'
+const ROLE_COLORS = [
+  'text-primary',
+  'text-accent',
+  'text-success',
+  'text-muted-foreground',
+]
+
+interface MemberData {
+  user_id: string
+  major: string
+  member_id: string | null
+  user: { name: string | null } | { name: string | null }[]
+}
+
+function getMemberName(member: MemberData): string {
+  const u = Array.isArray(member.user) ? member.user[0] : member.user
+  return u?.name || 'Member'
+}
 
 function getInitials(name: string): string {
   return name
     .split(' ')
-    .map((word) => word[0])
+    .map((w) => w[0])
     .join('')
     .slice(0, 2)
     .toUpperCase()
 }
 
-function getMemberContext(member: PublicChapterProfileMember) {
-  return member.chapter_position || member.major_or_interest || 'Chapter community'
-}
+export function ChapterTeam({ members }: { members: MemberData[] }) {
+  if (members.length === 0) return null
 
-export function ChapterTeam({ members }: { members: PublicChapterProfileMember[] }) {
+  const displayMembers = members.slice(0, 8)
+
   return (
-    <section className="space-y-5">
-      <div>
-        <h2 className="text-2xl font-semibold tracking-tight">Chapter community</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          A student-led community built around leadership, STEM, and opportunity access.
-        </p>
-      </div>
+    <div className="space-y-8">
+      <h2 className="!text-2xl sm:!text-3xl font-extrabold tracking-tight">Our Team</h2>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+        {displayMembers.map((member, i) => {
+          const name = getMemberName(member)
+          const colorClass = ROLE_COLORS[i % ROLE_COLORS.length]
 
-      {members.length > 0 ? (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {members.slice(0, 8).map((member) => (
-            <Card key={member.user_id} className="rounded-lg">
-              <CardContent className="flex flex-col items-center p-4 text-center">
-                <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full border bg-muted text-sm font-semibold">
-                  {getInitials(member.name)}
+          return (
+            <div
+              key={member.user_id}
+              className="flex flex-col items-center text-center space-y-3 group"
+            >
+              <div
+                className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full p-0.5 transition-transform group-hover:scale-105 ${
+                  i === 0
+                    ? 'gradient-luminescent'
+                    : 'bg-card border border-border'
+                }`}
+              >
+                <div className="w-full h-full rounded-full bg-background flex items-center justify-center border-4 border-background">
+                  <span className="text-lg sm:text-xl font-bold text-foreground">
+                    {getInitials(name)}
+                  </span>
                 </div>
-                <p className="line-clamp-1 text-sm font-medium">{member.name}</p>
-                <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                  {getMemberContext(member)}
+              </div>
+              <div>
+                <p className="font-bold text-foreground text-sm">{name}</p>
+                <p className={`text-[10px] font-bold uppercase tracking-widest ${colorClass}`}>
+                  {member.major}
                 </p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <Card className="rounded-lg">
-          <CardContent className="flex flex-col items-center justify-center px-6 py-10 text-center">
-            <Users className="mb-4 h-10 w-10 text-muted-foreground" />
-            <p className="font-medium">Community preview coming soon</p>
-            <p className="mt-1 max-w-md text-sm text-muted-foreground">
-              This chapter is preparing its public community preview. You can still explore events or express interest in joining.
-            </p>
-          </CardContent>
-        </Card>
-      )}
-    </section>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
   )
 }

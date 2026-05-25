@@ -48,6 +48,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       return (
         <input
           type={type}
+          suppressHydrationWarning
           data-slot="input"
           className={cn(inputVariants({ size, state: inputState }), className)}
           ref={ref}
@@ -72,6 +73,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           <input
             type={type}
             ref={ref}
+            suppressHydrationWarning
             data-slot="input"
             className={cn(
               inputVariants({ size, state: inputState }),

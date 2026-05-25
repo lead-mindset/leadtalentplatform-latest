@@ -11,7 +11,7 @@ const badgeVariants = cva(
       variant: {
         default: "bg-primary/10 text-primary ring-1 ring-primary/20 [a&]:hover:bg-primary/20",
         secondary:
-          "bg-secondary/10 text-secondary ring-1 ring-secondary/20 [a&]:hover:bg-secondary/20",
+          "bg-muted/60 text-muted-foreground ring-1 ring-border/70 [a&]:hover:bg-muted [a&]:hover:text-foreground",
         destructive:
           "bg-destructive/10 text-destructive ring-1 ring-destructive/30 focus-visible:ring-destructive/20 dark:bg-destructive/10 dark:focus-visible:ring-destructive/40 [a&]:hover:bg-destructive/20",
         success:
@@ -19,9 +19,9 @@ const badgeVariants = cva(
         warning:
           "bg-warning/10 text-warning ring-1 ring-warning/30 focus-visible:ring-warning/20 dark:bg-warning/10 dark:focus-visible:ring-warning/40 [a&]:hover:bg-warning/20",
         info:
-          "bg-info/10 text-info ring-1 ring-info/30 focus-visible:ring-info/20 dark:bg-info/10 dark:focus-visible:ring-info/40 [a&]:hover:bg-info/20",
+          "bg-primary/15 text-[var(--md-sys-color-on-primary-container)] ring-1 ring-primary/25 focus-visible:ring-primary/25 [a&]:hover:bg-primary/20",
         outline:
-          "border border-border bg-background text-muted-foreground [a&]:hover:bg-muted [a&]:hover:text-foreground",
+          "border border-border/55 bg-muted/20 text-muted-foreground [a&]:hover:border-border/75 [a&]:hover:bg-muted/35 [a&]:hover:text-foreground",
         ghost: "text-muted-foreground [a&]:hover:bg-muted [a&]:hover:text-foreground",
         neutral: "bg-muted text-muted-foreground ring-1 ring-border",
         live: "bg-primary/10 text-primary ring-1 ring-primary/30 animate-pulse",

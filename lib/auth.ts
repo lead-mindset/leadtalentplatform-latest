@@ -11,11 +11,20 @@ import type {
   RecruiterUser,
   UserRow,
 } from './types'
+import {
+  ChapterPermissionService,
+  type ChapterPermissionKey,
+} from './services/chapter-permission.service'
 
 const USER_SELECT = 'id, email, name, role, phone, created_at, updated_at, deactivated_at'
 const RECRUITER_ACCESS_SELECT =
   'id, company_id, is_active, granted_by_id, accepted_by_user_id, granted_at, accepted_at, revoked_at, invite_expires_at, recruiter_email, invite_token, revoked_by_id'
 export const COMPANY_ACCESS_HELP_PATH = '/company/onboard?access=missing'
+const CHAPTER_DASHBOARD_PERMISSION: ChapterPermissionKey = 'chapter.dashboard.access'
+const CHAPTER_EVENT_MANAGE_PERMISSION: ChapterPermissionKey = 'chapter.events.manage'
+const CHAPTER_EVENT_VIEW_REGISTRATIONS_PERMISSION: ChapterPermissionKey = 'chapter.events.view_registrations'
+const CHAPTER_EVENT_CHECK_IN_PERMISSION: ChapterPermissionKey = 'chapter.events.check_in'
+const CHAPTER_EVENT_ARCHIVE_PERMISSION: ChapterPermissionKey = 'chapter.events.archive'
 
 type ApprovedChapterMembership = {
   chapter_id: string
@@ -139,6 +148,33 @@ export async function getApprovedChapterMembership(
   }
 }
 
+export async function getChapterDashboardMembership(
+  supabase: SupabaseClient<Database>,
+  userId: string
+): Promise<ApprovedChapterMembership | null> {
+  const membership = await getApprovedChapterMembership(supabase, userId)
+  if (!membership?.chapter_id) return null
+
+  const hasDashboardAccess = await ChapterPermissionService.hasChapterPermission(supabase, {
+    userId,
+    chapterId: membership.chapter_id,
+    permissionKey: CHAPTER_DASHBOARD_PERMISSION,
+  })
+
+  return hasDashboardAccess ? membership : null
+}
+
+async function hasPermissionForApprovedMembership(
+  supabase: SupabaseClient<Database>,
+  params: {
+    userId: string
+    chapterId: string
+    permissionKey: ChapterPermissionKey
+  }
+) {
+  return ChapterPermissionService.hasChapterPermission(supabase, params)
+}
+
 export async function requireChapterMember(): Promise<{
   supabase: SupabaseClient<Database>
   user: UserRow
@@ -146,12 +182,12 @@ export async function requireChapterMember(): Promise<{
 }> {
   const { supabase, user } = await requireUser()
  
-  // Allow admin, editor, and member roles to access chapter resources
+  // Chapter access is scoped by approved membership plus explicit chapter grants.
   if (!['admin', 'editor', 'member'].includes(user.role)) {
     redirect('/student')
   }
 
-  const membership = await getApprovedChapterMembership(supabase, user.id)
+  const membership = await getChapterDashboardMembership(supabase, user.id)
 
   if (!membership?.chapter_id) {
     redirect('/student')
@@ -181,11 +217,11 @@ export async function requireChapterEditor(): Promise<{
     }
   }
 
-  if (user.role !== 'editor') {
+  if (!['editor', 'member'].includes(user.role)) {
     redirect('/student')
   }
 
-  const membership = await getApprovedChapterMembership(supabase, user.id)
+  const membership = await getChapterDashboardMembership(supabase, user.id)
   if (!membership?.chapter_id) {
     redirect('/student')
   }
@@ -209,7 +245,7 @@ export async function canUserAccessChapter(
     return true
   }
 
-  if (user.role !== 'editor') {
+  if (!['editor', 'member'].includes(user.role)) {
     return false
   }
 
@@ -219,13 +255,22 @@ export async function canUserAccessChapter(
     return false
   }
 
+  const hasDashboardAccess = await hasPermissionForApprovedMembership(supabase, {
+    userId: user.id,
+    chapterId: userChapterId,
+    permissionKey: CHAPTER_DASHBOARD_PERMISSION,
+  })
+  if (!hasDashboardAccess) {
+    return false
+  }
+
   // Check if user's chapter is the target chapter
   if (userChapterId === targetChapterId) {
     return true
   }
 
-  // Check if user's chapter is a collaborator on event (editors only)
-  if (eventId && user.role === 'editor') {
+  // Check if user's chapter is a collaborator on event
+  if (eventId) {
     const { data: collaboration } = await supabase
       .from('event_chapter')
       .select('id')
@@ -239,10 +284,11 @@ export async function canUserAccessChapter(
   return false
 }
 
-export async function canUserManageEvent(
+export async function canUserAccessEventWithPermission(
   supabase: SupabaseClient<Database>,
   user: UserRow,
-  eventId: string
+  eventId: string,
+  permissionKey: ChapterPermissionKey
 ): Promise<
   | { allowed: true; event: ManageableEvent; chapter_id: string | null }
   | { allowed: false; error: string; event?: ManageableEvent }
@@ -261,14 +307,23 @@ export async function canUserManageEvent(
     return { allowed: true, event: event as ManageableEvent, chapter_id: null }
   }
 
-  if (user.role !== 'editor') {
+  if (!['editor', 'member'].includes(user.role)) {
     return { allowed: false, error: 'Insufficient permissions', event: event as ManageableEvent }
   }
 
   const membership = await getApprovedChapterMembership(supabase, user.id)
   const chapterId = membership?.chapter_id
   if (!chapterId) {
-    return { allowed: false, error: 'No approved editor chapter assigned', event: event as ManageableEvent }
+    return { allowed: false, error: 'No approved chapter assigned', event: event as ManageableEvent }
+  }
+
+  const hasEventPermission = await hasPermissionForApprovedMembership(supabase, {
+    userId: user.id,
+    chapterId,
+    permissionKey,
+  })
+  if (!hasEventPermission) {
+    return { allowed: false, error: 'Insufficient permissions', event: event as ManageableEvent }
   }
 
   if (event.chapter_id === chapterId) {
@@ -288,6 +343,21 @@ export async function canUserManageEvent(
 
   return { allowed: false, error: 'Insufficient permissions', event: event as ManageableEvent }
 }
+
+export async function canUserManageEvent(
+  supabase: SupabaseClient<Database>,
+  user: UserRow,
+  eventId: string
+) {
+  return canUserAccessEventWithPermission(supabase, user, eventId, CHAPTER_EVENT_MANAGE_PERMISSION)
+}
+
+export const CHAPTER_EVENT_PERMISSIONS = {
+  manage: CHAPTER_EVENT_MANAGE_PERMISSION,
+  viewRegistrations: CHAPTER_EVENT_VIEW_REGISTRATIONS_PERMISSION,
+  checkIn: CHAPTER_EVENT_CHECK_IN_PERMISSION,
+  archive: CHAPTER_EVENT_ARCHIVE_PERMISSION,
+} as const
 
 
 export async function getSidebarStatsForEditor(

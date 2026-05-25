@@ -28,6 +28,39 @@ const EVENT_REGISTRATION_LOOKUP_SELECT =
 
 type EventWithChapterViewRow = Database['public']['Views']['event_with_chapter']['Row']
 
+type PublishedEventListRow = Pick<
+  EventRow,
+  | 'id'
+  | 'title'
+  | 'description'
+  | 'cover_image'
+  | 'start_at'
+  | 'end_at'
+  | 'location'
+  | 'meeting_url'
+  | 'event_type'
+  | 'capacity'
+  | 'is_published'
+  | 'access_model'
+  | 'application_form_url'
+  | 'chapter_id'
+  | 'created_by_id'
+  | 'created_at'
+  | 'updated_at'
+  | 'location_name'
+  | 'location_address'
+  | 'location_city'
+  | 'location_region'
+  | 'location_latitude'
+  | 'location_longitude'
+> & {
+  chapter_name: string | null
+  chapter_university: string | null
+  chapter_city: string | null
+  chapter_region: string | null
+  registrations_count: number | null
+}
+
 type EventAdminJoinedRow = EventRow & {
   owner_chapter: Pick<ChapterRow, 'id' | 'name' | 'university'> | Pick<ChapterRow, 'id' | 'name' | 'university'>[] | null
   collaborators:
@@ -93,6 +126,12 @@ export type CreateEventParams = {
   locationLatitude?: number | null;
   locationLongitude?: number | null;
   createdById: string;
+};
+
+type DeleteEventAuditContext = {
+  actorUserId: string;
+  chapterId: string | null;
+  title?: string | null;
 };
 
 type EventNewsletterOptions = {
@@ -754,12 +793,34 @@ export const EventService = {
     return event as EventRow;
   },
 
-  async deleteEvent(supabase: SupabaseClient<Database>, eventId: string): Promise<{ success: boolean; error?: string }> {
+  async deleteEvent(
+    supabase: SupabaseClient<Database>,
+    eventId: string,
+    audit?: DeleteEventAuditContext
+  ): Promise<{ success: boolean; error?: string }> {
     const { error } = await supabase.from('event').delete().eq('id', eventId);
     if (error) {
       logger.error({ context: 'EventService.deleteEvent', error: error }, 'Error');
       return { success: false, error: 'Failed to delete event' };
     }
+
+    if (audit) {
+      const { error: auditError } = await supabase.from('chapter_audit_log').insert({
+        action: 'chapter.event.deleted',
+        actor_user_id: audit.actorUserId,
+        chapter_id: audit.chapterId,
+        entity_type: 'event',
+        entity_id: eventId,
+        metadata: {
+          title: audit.title ?? null,
+        },
+      });
+
+      if (auditError) {
+        logger.error({ context: 'EventService.deleteEvent.audit', error: auditError, eventId }, 'Error');
+      }
+    }
+
     return { success: true };
   },
 
@@ -853,31 +914,30 @@ export const EventService = {
     supabase: SupabaseClient<Database>
   ): Promise<EventWithDetails[]> {
     const { data, error } = await supabase
-      .from('event_with_chapter')
+      .from('published_event_listing')
       .select(`
         id,
         title,
-        description,
-        cover_image,
         start_at,
         end_at,
         location,
-        meeting_url,
         event_type,
         capacity,
         is_published,
         access_model,
-        application_form_url,
         chapter_id,
         created_by_id,
         created_at,
         updated_at,
+        location_name,
+        location_city,
+        location_region,
         chapter_name,
         chapter_university,
         chapter_city,
-        chapter_region
+        chapter_region,
+        registrations_count
       `)
-      .eq('is_published', true)
       .order('start_at', { ascending: true })
 
     if (error || !data) {
@@ -885,24 +945,7 @@ export const EventService = {
       return []
     }
 
-    const eventRows = data as EventWithChapterViewRow[]
-    const eventIds = eventRows.map((event) => event.id).filter((id): id is string => Boolean(id))
-
-    const { data: registrations, error: registrationsError } = await supabase
-      .from('event_registration')
-      .select('event_id, status')
-      .in('event_id', eventIds)
-      .eq('status', 'registered')
-
-    if (registrationsError) {
-      logger.error({ context: 'getPublishedEvents', error: registrationsError }, 'Registration count error')
-    }
-
-    const countsByEventId = new Map<string, number>()
-    for (const row of registrations ?? []) {
-      countsByEventId.set(row.event_id, (countsByEventId.get(row.event_id) ?? 0) + 1)
-    }
-
+    const eventRows = data as unknown as PublishedEventListRow[]
     return eventRows
       .map((event) => {
         const chapter = event.chapter_name ? {
@@ -922,35 +965,35 @@ export const EventService = {
         return {
           id: event.id ?? '',
           title: event.title ?? '',
-          description: event.description,
-          cover_image: event.cover_image,
+          description: null,
+          cover_image: null,
           start_at: event.start_at ?? '',
           end_at: event.end_at ?? '',
           location: event.location,
-          meeting_url: event.meeting_url,
+          meeting_url: null,
           event_type: event.event_type ?? 'in_person',
           capacity: event.capacity,
           is_published: event.is_published ?? false,
           access_model: event.access_model ?? 'open',
-          application_form_url: event.application_form_url,
+          application_form_url: null,
           chapter_id: event.chapter_id,
           created_by_id: event.created_by_id ?? '',
           created_at: event.created_at ?? '',
           updated_at: event.updated_at ?? '',
           location_address: null,
-          location_city: null,
+          location_city: event.location_city,
           location_latitude: null,
           location_longitude: null,
-          location_name: null,
+          location_name: event.location_name,
           location_point: null,
-          location_region: null,
+          location_region: event.location_region,
           chapter: chapter as unknown as EventWithDetails['chapter'],
           owner_chapter: chapter as unknown as EventWithDetails['owner_chapter'],
           event_chapter: [],
           collaborators: [],
           created_by: null,
           _count: {
-            registrations: event.id ? countsByEventId.get(event.id) ?? 0 : 0,
+            registrations: event.registrations_count ?? 0,
             chapters: 0,
           },
         } as EventWithDetails

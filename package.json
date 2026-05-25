@@ -20,6 +20,10 @@
     "chapter-eboard:approved-artifact": "tsx scripts/chapter-eboard-approved-artifact.ts",
     "event-ops:readiness": "tsx scripts/event-ops-readiness-validation.ts",
     "company-portal:readiness": "tsx scripts/company-portal-readiness-validation.ts",
+    "qa:email": "node scripts/production-readiness/email-delivery-smoke.mjs",
+    "qa:storage": "node scripts/production-readiness/storage-upload-smoke.mjs",
+    "qa:accessibility": "playwright test tests/e2e/production-readiness-accessibility.spec.ts --reporter=line",
+    "qa:performance": "playwright test tests/e2e/production-readiness-performance.spec.ts --reporter=line",
     "test": "vitest run",
     "test:watch": "vitest",
     "prepare": "husky"
@@ -63,6 +67,7 @@
     "next": "latest",
     "next-intl": "^4.8.2",
     "next-themes": "^0.4.6",
+    "nodemailer": "^7.0.12",
     "ogl": "^1.0.11",
     "qrcode": "^1.5.4",
     "radix-ui": "^1.4.3",
@@ -77,12 +82,14 @@
     "zod": "^4.3.5"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.3",
     "@eslint/eslintrc": "^3",
     "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4.1.18",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^20",
+    "@types/nodemailer": "^7.0.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.0.1",
