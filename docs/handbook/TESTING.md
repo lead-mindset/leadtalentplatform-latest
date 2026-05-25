@@ -237,6 +237,22 @@ $env:LAUNCH_QA_SCOPE='admin-recruiter'; pnpm exec playwright test tests/e2e/laun
 
 The launch matrix writes JSON and screenshots to `outputs/launch-qa/`. Confirmed findings fail the Playwright test. Expected route-guard redirects, such as anonymous access to protected routes, are recorded separately as `expectedBehaviors` in the JSON output and should not be triaged as bugs.
 
+## Production Readiness Validation
+
+Before inviting real chapter leaders or expanding beyond a controlled pilot, use the production-readiness runbook:
+
+```text
+docs/runbooks/production-readiness-validation.md
+```
+
+The production-readiness pass extends seeded launch QA with provider-backed email delivery, Supabase Storage upload/access checks, axe accessibility, performance budgets, and a chapter leader training dry run. Raw screenshots, traces, provider logs, and storage evidence should stay in ignored artifact folders such as `outputs/`, `test-results/`, or `playwright-report/` unless they are sanitized for commit.
+
+The founder-facing report template lives at:
+
+```text
+.github/reports/production-readiness-validation-report.md
+```
+
 ## Running Tests
 
 ```bash
