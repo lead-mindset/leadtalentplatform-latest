@@ -25,6 +25,12 @@ export function IconWrapper({
   "aria-hidden": ariaHidden = false,
   ...props
 }: IconWrapperProps) {
+  const accessibilityProps = ariaHidden
+    ? { "aria-hidden": true }
+    : ariaLabel
+      ? { role: "img", "aria-label": ariaLabel }
+      : {}
+
   return (
     <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
       <span
@@ -33,8 +39,7 @@ export function IconWrapper({
           iconSizes[size],
           className
         )}
-        aria-label={ariaLabel}
-        aria-hidden={ariaHidden}
+        {...accessibilityProps}
         {...props}
       >
         {children}

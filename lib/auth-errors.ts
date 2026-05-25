@@ -7,6 +7,9 @@ const SUPABASE_ERROR_MAP: Record<string, string> = {
   'network request failed': 'networkError',
   'user not found': 'userNotFound',
   'email already in use': 'emailAlreadyInUse',
+  'email_address_invalid': 'invalidEmailAddress',
+  'email address': 'invalidEmailAddress',
+  'invalid email': 'invalidEmailAddress',
 };
 
 export function getAuthErrorKey(error: unknown): string {

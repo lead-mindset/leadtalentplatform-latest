@@ -10,8 +10,8 @@ interface SidebarUserHeaderProps {
 }
 
 const ROLE_LABELS: Record<Role, string> = {
-  member:    'Member',
-  editor:    'Chapter Editor',
+  member:    'Miembro',
+  editor:    'Editor de chapter',
   admin:     'Admin',
   recruiter: 'Representante de empresa',
 }
@@ -45,7 +45,7 @@ export function SidebarUserHeader({ name, email, role, memberId }: SidebarUserHe
 
       {memberId && (
         <div className="flex items-center gap-2 rounded-md bg-primary/5 border border-primary/10 px-3 py-2">
-          <span className="text-xs text-muted-foreground shrink-0">Member ID</span>
+          <span className="text-xs text-muted-foreground shrink-0">ID de miembro</span>
           <span className="text-xs font-mono font-semibold text-primary ml-auto tracking-wide">
             {memberId}
           </span>

@@ -22,16 +22,16 @@ export default async function HelpPage({ params }: HelpPageProps) {
         badge: 'Support',
         title: 'Help Center',
         body:
-          'Find the quickest path for account access, public event registration, partnership questions, and company invite support.',
+          'Find the quickest path for account access, member activation, event registration, check-in, and company invite support.',
         accountTitle: 'Student account help',
-        accountDesc: 'Sign-in issues, profile setup, chapter access, and event registration.',
+        accountDesc: 'Sign-in issues, wrong email or chapter, missing membership, profile edits, event registration, and check-in.',
         accountCta: 'Go to sign in',
         emailTitle: 'Partnership support',
         emailDesc:
-          'Reach the team for sponsorships, company access, invitations, or platform questions.',
+          'Reach the team for sponsorships, invite-only company access, visibility questions, or platform issues.',
         privacyTitle: 'Privacy and policies',
         privacyDesc:
-          'Review platform terms and privacy expectations before onboarding or partnership conversations.',
+          'Review profile visibility, consent, platform terms, and privacy expectations before onboarding or partnership conversations.',
         privacy: 'Privacy',
         terms: 'Terms',
       }
@@ -39,16 +39,16 @@ export default async function HelpPage({ params }: HelpPageProps) {
         badge: 'Soporte',
         title: 'Centro de ayuda',
         body:
-          'Encuentra el camino mas rapido para acceso de cuenta, registro a eventos, alianzas y soporte de invitaciones para empresas.',
+          'Encuentra el camino mas rapido para acceso de cuenta, activacion de miembros, registro a eventos, check-in y soporte de invitaciones para empresas.',
         accountTitle: 'Ayuda de cuenta',
-        accountDesc: 'Problemas de ingreso, perfil, acceso a capitulos y registro a eventos.',
+        accountDesc: 'Problemas de ingreso, email o chapter incorrecto, membresia faltante, perfil, registro a eventos y check-in.',
         accountCta: 'Ir a iniciar sesion',
         emailTitle: 'Soporte de alianzas',
         emailDesc:
-          'Contacta al equipo por sponsors, acceso de empresas, invitaciones o preguntas de la plataforma.',
+          'Contacta al equipo por sponsors, acceso invite-only de empresas, dudas de visibilidad o problemas de la plataforma.',
         privacyTitle: 'Privacidad y politicas',
         privacyDesc:
-          'Revisa terminos y privacidad antes de completar onboarding o conversaciones de alianza.',
+          'Revisa visibilidad de perfil, consentimiento, terminos y privacidad antes de completar onboarding o conversaciones de alianza.',
         privacy: 'Privacidad',
         terms: 'Terminos',
       }

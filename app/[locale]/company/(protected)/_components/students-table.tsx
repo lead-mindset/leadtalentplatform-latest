@@ -77,7 +77,7 @@ export function StudentsTable({ students, savedStudentIds = [] }: StudentsTableP
             <TableHead className="min-w-[180px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Area</TableHead>
             <TableHead className="w-[130px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Graduacion</TableHead>
             <TableHead className="min-w-[240px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Habilidades</TableHead>
-            <TableHead className="w-[150px] px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Acciones</TableHead>
+            <TableHead className="sticky right-0 z-20 w-[150px] bg-card px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground shadow-[-12px_0_18px_-18px_rgba(15,23,42,0.6)]">Acciones</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -137,7 +137,7 @@ export function StudentsTable({ students, savedStudentIds = [] }: StudentsTableP
                   )}
                 </div>
               </TableCell>
-              <TableCell className="px-4 py-3 text-right align-top">
+              <TableCell className="sticky right-0 z-10 bg-card px-4 py-3 text-right align-top shadow-[-12px_0_18px_-18px_rgba(15,23,42,0.6)]">
                 <div className="flex justify-end gap-2">
                   <SaveButton
                     studentId={student.id}

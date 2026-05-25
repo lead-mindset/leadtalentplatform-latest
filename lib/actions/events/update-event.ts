@@ -1,9 +1,10 @@
 'use server'
 
 import { z } from 'zod'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { EventService } from '@/lib/services/event.service'
 import { EventApplicationService } from '@/lib/services/event-application.service'
+import { PUBLIC_EVENTS_CACHE_TAG } from '@/lib/data/public-events'
 import type { EventRow, EventType } from '@/lib/types'
 import { assertCanManageEvent } from './access'
 
@@ -39,7 +40,7 @@ const UpdateEventSchema = z.object({
   locationLongitude: z.number().nullable().optional(),
 }).refine(
   (data) => {
-    if (data.accessModel === 'application') {
+    if (data.isPublished === true && data.accessModel === 'application') {
       return Boolean(data.applicationQuestions?.length)
     }
     return true
@@ -47,6 +48,17 @@ const UpdateEventSchema = z.object({
   {
     message: 'Application events need at least one native question',
     path: ['applicationQuestions'],
+  }
+).refine(
+  (data) => {
+    if (data.isPublished === true && data.eventType && data.eventType !== 'in_person') {
+      return Boolean(data.meetingUrl?.trim())
+    }
+    return true
+  },
+  {
+    message: 'Meeting URL is required for online or hybrid events',
+    path: ['meetingUrl'],
   }
 )
 
@@ -64,8 +76,8 @@ export async function updateEvent(input: UpdateEventInput): Promise<UpdateEventR
   if ('error' in access) return { error: access.error }
   const { supabase, user, event: existing } = access
 
-  if (user.role === 'editor' && parsed.data.chapter_id !== undefined && parsed.data.chapter_id !== existing.chapter_id) {
-    return { error: 'Editors cannot change chapter' }
+  if (user.role !== 'admin' && parsed.data.chapter_id !== undefined && parsed.data.chapter_id !== existing.chapter_id) {
+    return { error: 'Chapter users cannot change event chapter' }
   }
 
   const d = parsed.data
@@ -100,11 +112,13 @@ export async function updateEvent(input: UpdateEventInput): Promise<UpdateEventR
     const questionsResult = await EventApplicationService.upsertQuestionsForEvent(supabase, {
       eventId: event.id,
       questions: d.applicationQuestions ?? [],
+      requireCompleteQuestions: d.isPublished === true,
     })
 
     if (!questionsResult.success) return { error: questionsResult.error }
   }
 
+  revalidateTag(PUBLIC_EVENTS_CACHE_TAG, { expire: 0 })
   revalidatePath('/chapter/events')
   revalidatePath(`/chapter/events/${event.id}`)
 

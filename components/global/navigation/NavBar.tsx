@@ -22,7 +22,7 @@ export default function NavBar({ user, menuItems, memberId, signInLabel }: NavBa
   return (
     <nav className="flex items-center h-16 px-6 border-b bg-background relative z-50 font-montserrat">
       <Link href="/" className="flex items-center font-bold gap-2 shrink-0">
-        <Image src="/leadl2.svg" alt="LEAD" width={32} height={32} />
+        <Image src="/leadl2.svg" alt="LEAD" width={270} height={148} className="h-8 w-auto object-contain" />
         <span className='max-sm:hidden'>LEAD Talent Platform</span>
       </Link>
 

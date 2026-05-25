@@ -5,7 +5,11 @@ import { Suspense } from 'react'
 import { Icons } from '@/components/ui/icons'
 import { requireChapterMember } from '@/lib/auth'
 import type { MemberWithProfile, RecentActivityMember } from '@/lib/types'
-import { getChapterMembers, getMemberStats, getRecentChapterActivity } from '@/lib/actions/chapter/get-data'
+import {
+  getChapterOverviewRoster,
+  getMemberStats,
+} from '@/lib/actions/chapter/get-data'
+import type { ChapterMemberPermissionFlags } from '@/lib/services/chapter.service'
 import { getChapterEvents } from '@/lib/actions/events/get-data'
 import MemberCard from './members/components/member-card'
 import { Breadcrumb } from '@/components/ui/breadcrumb'
@@ -59,9 +63,13 @@ function StatCard({
 function PendingInbox({
   members,
   total,
+  permissions,
+  currentUserId,
 }: {
   members: MemberWithProfile[]
   total: number
+  permissions: ChapterMemberPermissionFlags
+  currentUserId: string
 }) {
   if (members.length === 0) {
     return (
@@ -88,7 +96,8 @@ function PendingInbox({
         <MemberCard
           key={member.id}
           member={member}
-
+          permissions={permissions}
+          currentUserId={currentUserId}
         />
       ))}
       {remaining > 0 && (
@@ -233,7 +242,7 @@ function EventOpsList({
 }
 
 async function ChapterContent() {
-  const { supabase, chapter_id } = await requireChapterMember()
+  const { supabase, user, chapter_id } = await requireChapterMember()
 
   const { data: chapter } = await supabase
     .from('chapter')
@@ -256,11 +265,13 @@ async function ChapterContent() {
     )
   }
 
-  const [allMembers, recentActivity, chapterEvents] = await Promise.all([
-    getChapterMembers(chapter_id),
-    getRecentChapterActivity(chapter_id, 4),
+  const [overviewRoster, chapterEvents] = await Promise.all([
+    getChapterOverviewRoster(chapter_id, 4),
     getChapterEvents(),
   ])
+  const allMembers = overviewRoster?.members ?? []
+  const recentActivity = overviewRoster?.recentActivity ?? []
+  const memberPermissions = overviewRoster?.permissions ?? null
 
   const stats = getMemberStats(allMembers)
   const approvalRate =
@@ -366,6 +377,18 @@ async function ChapterContent() {
               <PendingInbox
                 members={pending_members}
                 total={stats.pending}
+                currentUserId={user.id}
+                permissions={memberPermissions ?? {
+                  canViewApproved: false,
+                  canViewAlumni: false,
+                  canViewMemberContact: false,
+                  canViewApplicants: false,
+                  canViewRejected: false,
+                  canViewInactive: false,
+                  canManageApplications: false,
+                  canRevokeMembers: false,
+                  canAssignEboard: false,
+                }}
               />
             </>
           )}

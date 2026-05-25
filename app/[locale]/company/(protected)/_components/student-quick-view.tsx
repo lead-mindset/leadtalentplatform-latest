@@ -1,7 +1,7 @@
 import type { StudentForRecruiter } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Building2, GraduationCap, Mail, Phone, Linkedin } from 'lucide-react';
+import { Building2, ExternalLink, GraduationCap, Mail, Phone, Linkedin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
@@ -59,11 +59,19 @@ export function StudentQuickView({ student }: StudentQuickViewProps) {
           </div>
         )}
 
-{student.person_profile?.linkedin_url && (
+        {student.person_profile?.linkedin_url && (
           <Button asChild variant="outline" size="sm" className="w-full gap-2">
             <Link href={student.person_profile.linkedin_url} target="_blank" rel="noopener noreferrer">
               <Linkedin className="h-4 w-4" />
               View LinkedIn
+            </Link>
+          </Button>
+        )}
+        {student.person_profile?.portfolio_url && (
+          <Button asChild variant="outline" size="sm" className="w-full gap-2">
+            <Link href={student.person_profile.portfolio_url} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="h-4 w-4" />
+              View Portfolio
             </Link>
           </Button>
         )}

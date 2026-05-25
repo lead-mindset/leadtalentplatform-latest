@@ -4,6 +4,8 @@ import ProfileUpdateForm from "./components/profile-update-form";
 import type { ProfileData } from "@/lib/memberschema";
 import { PersonProfileService } from "@/lib/services/person-profile.service";
 import Loading from "./loading";
+import { MainContainer } from "@/components/global/main-container";
+import { PageHeader } from "@/components/ui/page-header";
 
 async function ProfileData() {
   const { supabase, user } = await requireUser();
@@ -30,6 +32,7 @@ async function ProfileData() {
     graduation_year: profileData?.graduationYear || 0,
     skills: profileData?.skills || [],
     linkedin_url: profileData?.linkedinUrl || '',
+    portfolio_url: profileData?.portfolioUrl || '',
     consentRecruiterVisibility: profileData?.isRecruiterVisible || false,
     emailNotificationsEnabled: true,
     memberId: membership?.member_id || null,
@@ -43,16 +46,17 @@ async function ProfileData() {
 
 export default function ProfilePage() {
   return (
-    <div className="container max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-8">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Mi perfil</h1>
-        <p className="text-muted-foreground text-lg">
-          Gestiona los datos reutilizables de tu perfil. La membresia de capitulo y el estado de miembro se manejan por separado.
-        </p>
+    <MainContainer maxWidth="7xl" className="space-y-6 py-6 pb-24 sm:py-8">
+      <PageHeader
+        eyebrow="Mi LEAD"
+        title="Mi perfil"
+        description="Gestiona los datos reutilizables de tu perfil. La membresia de capitulo y el estado de miembro se manejan por separado."
+      />
+      <div className="max-w-3xl">
+        <Suspense fallback={<Loading />}>
+          <ProfileData />
+        </Suspense>
       </div>
-      <Suspense fallback={<Loading />}>
-        <ProfileData />
-      </Suspense>
-    </div>
+    </MainContainer>
   );
 }

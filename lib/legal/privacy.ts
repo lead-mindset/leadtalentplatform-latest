@@ -35,7 +35,7 @@ const en: PrivacyContent = {
       list: [
         'Personal information: name, email, phone number',
         'Academic information: university / chapter, major, graduation year',
-        'Professional information: LinkedIn, skills',
+        'Professional information: LinkedIn, portfolio, skills',
         'Résumé in PDF format (stored securely)',
         'Explicit consent for recruiter visibility (opt-in, not automatic)',
         'IP address, browser, and other data automatically collected by Supabase and Vercel',
@@ -116,7 +116,7 @@ const es: PrivacyContent = {
       list: [
         'Información personal: nombre, email, teléfono',
         'Información académica: universidad/capítulo, carrera, año de graduación',
-        'Información profesional: LinkedIn, habilidades (skills)',
+        'Información profesional: LinkedIn, portafolio, habilidades (skills)',
         'Currículum vitae en formato PDF (almacenado de forma segura)',
         'Consentimiento explícito para visibilidad ante empresas (opt-in, no automático)',
         'IP, navegador y demás datos que Supabase y Vercel recolecten de manera automática',

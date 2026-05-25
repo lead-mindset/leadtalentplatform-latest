@@ -8,6 +8,7 @@ import {
 import { PersonProfileService } from '@/lib/services/person-profile.service'
 import { NewsletterSubscriptionService } from '@/lib/services/newsletter-subscription.service'
 import { ChapterMembershipService } from '@/lib/services/chapter-membership.service'
+import { ChapterPreapprovalService } from '@/lib/services/chapter-preapproval.service'
 
 vi.mock('@/lib/services/person-profile.service', () => ({
   PersonProfileService: {
@@ -25,6 +26,12 @@ vi.mock('@/lib/services/newsletter-subscription.service', () => ({
 vi.mock('@/lib/services/chapter-membership.service', () => ({
   ChapterMembershipService: {
     applyToChapter: vi.fn(),
+  },
+}))
+
+vi.mock('@/lib/services/chapter-preapproval.service', () => ({
+  ChapterPreapprovalService: {
+    activatePreapprovalForUser: vi.fn(),
   },
 }))
 
@@ -56,6 +63,12 @@ describe('basic onboarding helpers', () => {
     vi.mocked(NewsletterSubscriptionService.subscribeGlobal).mockReset()
     vi.mocked(NewsletterSubscriptionService.subscribeToChapters).mockReset()
     vi.mocked(ChapterMembershipService.applyToChapter).mockReset()
+    vi.mocked(ChapterPreapprovalService.activatePreapprovalForUser).mockReset()
+    vi.mocked(ChapterPreapprovalService.activatePreapprovalForUser).mockResolvedValue({
+      success: true,
+      activated: false,
+      reason: 'no_matching_preapproval',
+    })
   })
 
   it('parses reusable profile and newsletter data without requiring chapter membership fields', () => {
@@ -150,6 +163,13 @@ describe('basic onboarding helpers', () => {
         isRecruiterVisible: true,
       })
     )
+    expect(ChapterPreapprovalService.activatePreapprovalForUser).toHaveBeenCalledWith(
+      {},
+      {
+        userId: 'user-123',
+        email: 'participant@test.com',
+      }
+    )
     expect(NewsletterSubscriptionService.subscribeGlobal).toHaveBeenCalledWith(
       {},
       { userId: 'user-123', source: 'onboarding' }
@@ -193,6 +213,47 @@ describe('basic onboarding helpers', () => {
         position: 'member',
       }
     )
+  })
+
+  it('activates matching preapproval with the service client and skips pending chapter application', async () => {
+    vi.mocked(PersonProfileService.upsertBasicProfile).mockResolvedValue({ success: true })
+    vi.mocked(ChapterPreapprovalService.activatePreapprovalForUser).mockResolvedValue({
+      success: true,
+      activated: true,
+      preapprovalId: 'preapproval-1',
+      chapterId: 'leaduni',
+      preapprovalType: 'eboard',
+      memberId: 'LEAD-123456',
+      roleAssignmentId: 'role-1',
+      grantedPermissions: ['chapter.dashboard.access'],
+    })
+    vi.mocked(NewsletterSubscriptionService.subscribeGlobal).mockResolvedValue({ success: true })
+    vi.mocked(NewsletterSubscriptionService.subscribeToChapters).mockResolvedValue({ success: true })
+
+    const formData = validFormData()
+    formData.set('chapterIntent', 'already_member')
+    formData.set('selectedChapterId', 'leaduni')
+
+    const parsed = parseBasicOnboardingFormData(formData, t)
+    if (!parsed.success) throw new Error('Expected valid onboarding data')
+
+    const serviceSupabase = { service: true } as unknown as SupabaseClient<Database>
+    const result = await saveBasicOnboarding({} as SupabaseClient<Database>, {
+      userId: 'user-123',
+      email: 'participant@test.com',
+      data: parsed.data,
+      preapprovalSupabase: serviceSupabase,
+    })
+
+    expect(result).toEqual({ success: true, postOnboardingRedirectPath: '/chapter' })
+    expect(ChapterPreapprovalService.activatePreapprovalForUser).toHaveBeenCalledWith(
+      serviceSupabase,
+      {
+        userId: 'user-123',
+        email: 'participant@test.com',
+      }
+    )
+    expect(ChapterMembershipService.applyToChapter).not.toHaveBeenCalled()
   })
 
   it('creates a pending membership application for chapter applicants', async () => {

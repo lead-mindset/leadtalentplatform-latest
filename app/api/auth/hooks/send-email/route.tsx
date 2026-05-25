@@ -1,18 +1,9 @@
-import { Resend } from 'resend';
-import { Webhook } from 'standardwebhooks';
-import { render } from '@react-email/render';
-import ConfirmSignupEmail from '@/emails/templates/ConfirmSignUpEmail';
-import ResetPasswordEmail from '@/emails/templates/ResetPasswordEmail';
-
-function createResendClient() {
-  const apiKey = process.env.RESEND_API_KEY;
-
-  if (!apiKey) {
-    throw new Error('RESEND_API_KEY not configured');
-  }
-
-  return new Resend(apiKey);
-}
+import { Webhook } from 'standardwebhooks'
+import { render } from '@react-email/render'
+import ConfirmSignupEmail from '@/emails/templates/ConfirmSignUpEmail'
+import ResetPasswordEmail from '@/emails/templates/ResetPasswordEmail'
+import { getConfiguredAppUrl } from '@/lib/app-url'
+import { sendTransactionalEmail } from '@/lib/emails/provider'
 
 type SupabaseEmailUser = {
   email: string
@@ -34,146 +25,100 @@ type SupabaseEmailWebhookPayload = {
 }
 
 function getRequestOrigin(request: Request) {
-  const forwardedProto = request.headers.get('x-forwarded-proto');
-  const forwardedHost = request.headers.get('x-forwarded-host') || request.headers.get('host');
+  const forwardedProto = request.headers.get('x-forwarded-proto')
+  const forwardedHost = request.headers.get('x-forwarded-host') || request.headers.get('host')
 
   if (forwardedHost) {
-    return `${forwardedProto || 'https'}://${forwardedHost}`;
+    return `${forwardedProto || 'https'}://${forwardedHost}`
   }
 
-  return new URL(request.url).origin;
+  return new URL(request.url).origin
+}
+
+function getLocale(user: SupabaseEmailUser) {
+  return user.user_metadata?.locale === 'en' ? 'en' : 'es'
 }
 
 export async function POST(request: Request) {
   try {
-    const payload = await request.text();
+    const payload = await request.text()
 
     const headers = {
       'webhook-id': request.headers.get('webhook-id') || '',
       'webhook-timestamp': request.headers.get('webhook-timestamp') || '',
-      'webhook-signature': request.headers.get('webhook-signature') || ''
-    };
+      'webhook-signature': request.headers.get('webhook-signature') || '',
+    }
 
-    const hookSecret = process.env.SUPABASE_HOOK_SECRET?.replace('v1,whsec_', '') || '';
+    const hookSecret = process.env.SUPABASE_HOOK_SECRET?.replace('v1,whsec_', '') || ''
 
     if (!hookSecret) {
-      console.error('SUPABASE_HOOK_SECRET not configured');
-      return new Response(
-        JSON.stringify({ error: 'Server configuration error' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
+      console.error('SUPABASE_HOOK_SECRET not configured')
+      return Response.json({ error: 'Server configuration error' }, { status: 500 })
     }
 
-    const wh = new Webhook(hookSecret);
-
-    let event: SupabaseEmailWebhookPayload;
+    let event: SupabaseEmailWebhookPayload
     try {
-      event = wh.verify(payload, headers) as SupabaseEmailWebhookPayload;
-    } catch (err) {
-      console.error('Webhook verification failed:', err);
-      return new Response(
-        JSON.stringify({ error: 'Invalid signature' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
-      );
+      event = new Webhook(hookSecret).verify(payload, headers) as SupabaseEmailWebhookPayload
+    } catch (error) {
+      console.error('Webhook verification failed:', error)
+      return Response.json({ error: 'Invalid signature' }, { status: 401 })
     }
 
-    const { user, email_data } = event;
+    const { user, email_data } = event
 
-    if (!user || !user.email) {
-      console.error('Missing user or email in payload');
-      return new Response(
-        JSON.stringify({ error: 'Missing user data' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+    if (!user?.email) {
+      console.error('Missing user or email in payload')
+      return Response.json({ error: 'Missing user data' }, { status: 400 })
     }
 
-    if (!email_data) {
-      console.error('Missing email_data');
-      return new Response(
-        JSON.stringify({ error: 'Missing email data' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+    if (!email_data?.token_hash) {
+      console.error('Missing email data')
+      return Response.json({ error: 'Missing email data' }, { status: 400 })
     }
 
-    let resend: Resend;
-    try {
-      resend = createResendClient();
-    } catch (err) {
-      console.error(err instanceof Error ? err.message : 'Email service not configured');
-      return new Response(
-        JSON.stringify({ error: 'Email service not configured' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
+    const locale = getLocale(user)
+    const appUrl = getConfiguredAppUrl(getRequestOrigin(request))
+    const emailType = email_data.email_action_type || 'signup'
+    const nextPath = email_data.redirect_to || `/${locale}/dashboard`
+    const confirmationUrl = `${appUrl}/${locale}/auth/confirm?token_hash=${email_data.token_hash}&type=${emailType}&next=${encodeURIComponent(nextPath)}`
 
-    const locale = (user.user_metadata?.locale || 'es') as 'en' | 'es';
-    const appUrl = getRequestOrigin(request);
-    const emailType = email_data.email_action_type || 'signup';
+    const isRecovery = emailType === 'recovery'
+    const html = isRecovery
+      ? await render(<ResetPasswordEmail resetUrl={confirmationUrl} locale={locale} />)
+      : await render(<ConfirmSignupEmail confirmationUrl={confirmationUrl} locale={locale} />)
 
-    const confirmationUrl = `${appUrl}/${locale}/auth/confirm?token_hash=${email_data.token_hash}&type=${emailType}&next=${encodeURIComponent(email_data.redirect_to || `/${locale}/dashboard`)}`;
+    const subject = isRecovery
+      ? locale === 'es'
+        ? 'Restablece tu contrasena de LEAD Talent Platform'
+        : 'Reset your LEAD Talent Platform password'
+      : locale === 'es'
+        ? 'Confirma tu cuenta en LEAD Talent Platform'
+        : 'Confirm your LEAD Talent Platform account'
 
-    let html = '';
-    let subject = '';
-
-    if (emailType === 'recovery') {
-      html = await render(
-        <ResetPasswordEmail resetUrl={confirmationUrl} locale={locale} />
-      );
-      subject = locale === 'es'
-        ? 'Restablece tu contraseña - LEAD Mindset'
-        : 'Reset your password - LEAD Mindset';
-    } else {
-      html = await render(
-        <ConfirmSignupEmail confirmationUrl={confirmationUrl} locale={locale} />
-      );
-      subject = locale === 'es'
-        ? 'Confirma tu registro en LEAD Mindset'
-        : 'Confirm your registration - LEAD Mindset';
-    }
-
-    const result = await resend.emails.send({
-      from: 'LEAD Mindset <noreply@leadmindset.org>',
+    const result = await sendTransactionalEmail({
       to: user.email,
       subject,
       html,
-    });
+      critical: true,
+    })
 
-    if (result.error) {
-      console.error('Resend error:', result.error);
-      return new Response(
-        JSON.stringify({
-          error: 'Email service unavailable',
-          details: result.error
-        }),
-        {
-          status: 503,
-          headers: {
-            'Content-Type': 'application/json',
-            'retry-after': 'true'
-          }
-        }
-      );
+    if (!result.success) {
+      return Response.json(
+        { error: 'Email service unavailable', details: result.error },
+        { status: 503, headers: { 'retry-after': 'true' } }
+      )
     }
 
-    console.log('Email sent:', result.data?.id);
-
-    return new Response(
-      JSON.stringify({ success: true }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
-
+    console.log('Auth email sent:', result.id)
+    return Response.json({ success: true }, { status: 200 })
   } catch (error) {
-    console.error('Webhook failed:', error instanceof Error ? error.message : 'Unknown error');
-
-    return new Response(
-      JSON.stringify({
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      }),
+    console.error('Webhook failed:', error instanceof Error ? error.message : 'Unknown error')
+    return Response.json(
       {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    )
   }
 }

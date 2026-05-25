@@ -123,7 +123,7 @@ export function CheckinScanner({
       }, 350)
     } catch {
       setScanStatus('error')
-      showStatus('error', 'Camera permission denied', false)
+      showStatus('error', 'No se pudo acceder a la camara', false)
       await stopCamera()
     }
   }
@@ -182,7 +182,7 @@ export function CheckinScanner({
         setCounter(candidate.counter)
         const time = new Date(candidate.checkedInAt).toLocaleTimeString()
         showStatus('neutral',
-          `${candidate.attendee.name} already checked in at ${time}${candidate.checkedInByName ? ` by ${candidate.checkedInByName}` : ''}`,
+          `${candidate.attendee.name} ya hizo check-in a las ${time}${candidate.checkedInByName ? ` con ${candidate.checkedInByName}` : ''}`,
           false
         )
         return
@@ -199,7 +199,7 @@ export function CheckinScanner({
   function prepareFromSearchResult(result: CheckInSearchResult) {
     if (result.status === 'attended') {
       const time = result.checkedInAt ? new Date(result.checkedInAt).toLocaleTimeString() : ''
-      showStatus('neutral', `${result.name} is already checked in${time ? ` at ${time}` : ''}`, false)
+      showStatus('neutral', `${result.name} ya hizo check-in${time ? ` a las ${time}` : ''}`, false)
       return
     }
     setPendingCandidate({
@@ -231,9 +231,9 @@ export function CheckinScanner({
       setCounter(result.counter)
       setQrToken('')
       if (result.state === 'already_checked_in') {
-        showStatus('neutral', `${result.attendee.name} was already checked in`)
+        showStatus('neutral', `${result.attendee.name} ya tenia check-in`)
       } else {
-        showStatus('success', `${result.attendee.name} checked in`)
+        showStatus('success', `${result.attendee.name} marcado como asistente`)
       }
       setPendingCandidate(null)
     } finally {
@@ -267,10 +267,10 @@ export function CheckinScanner({
   useEffect(() => {
     async function requestWakeLock() {
       try {
-        if (!('wakeLock' in navigator)) { setWakeLockNote('Keep your screen on during check-in.'); return }
+        if (!('wakeLock' in navigator)) { setWakeLockNote('Mantén la pantalla encendida durante el check-in.'); return }
         wakeLockRef.current = await navigator.wakeLock.request('screen')
       } catch {
-        setWakeLockNote('Keep your screen on during check-in.')
+        setWakeLockNote('Mantén la pantalla encendida durante el check-in.')
       }
     }
     void requestWakeLock()
@@ -297,14 +297,14 @@ export function CheckinScanner({
         <CardContent className="space-y-4 py-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Live check-in</p>
+              <p className="text-sm font-medium text-muted-foreground">Check-in en vivo</p>
               <p className="mt-2 text-4xl font-semibold tracking-tight tabular-nums">
                 {counter.checkedIn}
                 <span className="text-xl font-normal text-muted-foreground"> / {counter.total}</span>
               </p>
             </div>
             <Badge variant={percentage === 100 && counter.total > 0 ? 'success' : 'outline'}>
-              {percentage}% attended
+              {percentage}% asistencia
             </Badge>
           </div>
           <div className="h-3 overflow-hidden rounded-full bg-muted">
@@ -314,8 +314,8 @@ export function CheckinScanner({
             />
           </div>
           <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-            <span className="rounded-full bg-muted px-2.5 py-1">Registered: {counter.total}</span>
-            <span className="rounded-full bg-muted px-2.5 py-1">Attended: {counter.checkedIn}</span>
+            <span className="rounded-full bg-muted px-2.5 py-1">Registrados: {counter.total}</span>
+            <span className="rounded-full bg-muted px-2.5 py-1">Asistieron: {counter.checkedIn}</span>
             {wakeLockNote && <span className="rounded-full bg-muted px-2.5 py-1">{wakeLockNote}</span>}
           </div>
         </CardContent>
@@ -334,7 +334,7 @@ export function CheckinScanner({
             <p>{status.text}</p>
             {status.type === 'error' && (
               <p className="font-normal text-muted-foreground">
-                Check that the attendee is registered for this event and not pending, rejected, cancelled, or already checked in.
+                Revisa que la persona este registrada para este evento y no este pendiente, rechazada, cancelada o ya marcada.
               </p>
             )}
           </div>
@@ -349,9 +349,9 @@ export function CheckinScanner({
                 <ShieldCheck className="h-5 w-5" />
               </div>
               <div>
-                <CardTitle className="text-lg">Confirm attendee</CardTitle>
+                <CardTitle className="text-lg">Confirmar asistente</CardTitle>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Verify the name before marking this registration as attended.
+                  Verifica el nombre antes de marcar esta asistencia.
                 </p>
               </div>
             </div>
@@ -367,15 +367,15 @@ export function CheckinScanner({
                 onClick={cancelPendingCheckIn}
                 disabled={isConfirming}
               >
-                Cancel
+                Cancelar
               </Button>
               <Button
                 onClick={() => void commitCheckIn()}
                 disabled={isConfirming}
               >
                 {isConfirming
-                  ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Checking in...</>
-                  : 'Confirm check-in'
+                  ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Confirmando...</>
+                  : 'Confirmar check-in'
                 }
               </Button>
             </div>
@@ -383,7 +383,7 @@ export function CheckinScanner({
         </Card>
       )}
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(18rem,0.75fr)]">
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(18rem,0.75fr)]">
         <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center gap-3">
@@ -391,18 +391,18 @@ export function CheckinScanner({
                 <Search className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <CardTitle className="text-lg">Find attendee</CardTitle>
-                <p className="mt-1 text-sm text-muted-foreground">Best fallback when a QR code is unavailable.</p>
+                <CardTitle className="text-lg">Buscar asistente</CardTitle>
+                <p className="mt-1 text-sm text-muted-foreground">Usa nombre o correo cuando el QR no este disponible.</p>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="relative">
               <Input
-                aria-label="Search attendees by name or email"
+                aria-label="Buscar asistentes por nombre o correo"
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
-                placeholder="Search name or email"
+                placeholder="Buscar nombre o correo"
                 autoComplete="off"
                 autoCorrect="off"
                 autoCapitalize="off"
@@ -415,7 +415,7 @@ export function CheckinScanner({
 
             {searchQuery.trim().length >= 2 && !isSearching && searchResults.length === 0 && (
               <p className="rounded-lg border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
-                No registered attendee found for &quot;{searchQuery}&quot;.
+                No encontramos una persona registrada para &quot;{searchQuery}&quot;.
               </p>
             )}
 
@@ -433,7 +433,7 @@ export function CheckinScanner({
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
                         <Badge variant={result.status === 'attended' ? 'success' : 'outline'}>
-                          {result.status === 'attended' ? 'Attended' : 'Registered'}
+                          {result.status === 'attended' ? 'Asistio' : 'Registrado'}
                         </Badge>
                         <Button
                           size="sm"
@@ -441,7 +441,7 @@ export function CheckinScanner({
                           onClick={() => prepareFromSearchResult(result)}
                           disabled={isPending}
                         >
-                          {result.status === 'attended' ? 'View' : 'Check in'}
+                          {result.status === 'attended' ? 'Ver' : 'Hacer check-in'}
                         </Button>
                       </div>
                     </div>
@@ -460,8 +460,8 @@ export function CheckinScanner({
                   <Camera className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg">Scan QR code</CardTitle>
-                  <p className="mt-1 text-sm text-muted-foreground">Use the rear camera when supported.</p>
+                  <CardTitle className="text-lg">Escanear QR</CardTitle>
+                  <p className="mt-1 text-sm text-muted-foreground">Usa la camara trasera cuando el navegador lo permita.</p>
                 </div>
               </div>
             </CardHeader>
@@ -473,7 +473,7 @@ export function CheckinScanner({
               )}
               {!hasBarcodeDetector && (
                 <p className="rounded-lg border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
-                  Camera scanning is unavailable in this browser. Use attendee search or paste the QR token.
+                  El escaneo con camara no esta disponible en este navegador. Busca a la persona o pega el token QR.
                 </p>
               )}
               {hasBarcodeDetector && (
@@ -484,7 +484,7 @@ export function CheckinScanner({
                   onClick={scanStatus === 'scanning' ? stopCamera : startCamera}
                   disabled={isPending}
                 >
-                  {scanStatus === 'scanning' ? 'Stop camera' : 'Start camera'}
+                  {scanStatus === 'scanning' ? 'Detener camara' : 'Iniciar camara'}
                 </Button>
               )}
             </CardContent>
@@ -497,17 +497,17 @@ export function CheckinScanner({
                   <Keyboard className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg">Paste QR token</CardTitle>
-                  <p className="mt-1 text-sm text-muted-foreground">Fallback for screenshots or copied pass links.</p>
+                  <CardTitle className="text-lg">Pegar token QR</CardTitle>
+                  <p className="mt-1 text-sm text-muted-foreground">Alternativa para capturas o enlaces copiados.</p>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
               <Input
-                aria-label="Paste QR token"
+                aria-label="Pegar token QR"
                 value={qrToken}
                 onChange={(e) => setQrToken(e.target.value)}
-                placeholder="Paste token"
+                placeholder="Pegar token"
                 autoComplete="off"
                 className="h-11"
               />
@@ -519,8 +519,8 @@ export function CheckinScanner({
                 disabled={isPending || !qrToken.trim()}
               >
                 {isPending
-                  ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Looking up...</>
-                  : 'Look up attendee'
+                  ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Buscando...</>
+                  : 'Buscar asistente'
                 }
               </Button>
             </CardContent>

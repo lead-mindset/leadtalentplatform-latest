@@ -129,7 +129,7 @@ export function CollaboratorManager({
         const selectedChapter = availableChapters.find(c => c.id === selectedChapterId)
         if (!selectedChapter) return
         if (selectedChapterId === ownerChapterId) {
-          toast.error('Cannot add the owner chapter as a collaborator')
+          toast.error('No puedes agregar el chapter propietario como colaborador')
           return
         }
         const result = await addEventCollaborator(eventId, selectedChapterId)
@@ -169,10 +169,10 @@ export function CollaboratorManager({
         setCollaborators(updatedCollaborators)
         onCollaboratorsChange?.(updatedCollaborators.map(c => c.chapter_id))
 
-        toast.success(`${selectedChapter.name} added as collaborator`)
+        toast.success(`${selectedChapter.name} agregado como colaborador`)
       } catch (error) {
         console.error('Error adding collaborator:', error)
-        toast.error('Failed to add collaborator')
+        toast.error('No se pudo agregar el colaborador')
       }
     })
   }
@@ -199,10 +199,10 @@ export function CollaboratorManager({
 
         onCollaboratorsChange?.(updatedCollaborators.map(c => c.chapter_id))
 
-        toast.success(`${collaborator.chapter.name} removed as collaborator`)
+        toast.success(`${collaborator.chapter.name} eliminado como colaborador`)
       } catch (error) {
         console.error('Error removing collaborator:', error)
-        toast.error('Failed to remove collaborator')
+        toast.error('No se pudo eliminar el colaborador')
       }
     })
   }
@@ -211,10 +211,10 @@ export function CollaboratorManager({
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Chapter Collaboration</CardTitle>
+          <CardTitle className="text-lg">Colaboración entre chapters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-sm text-muted-foreground">Loading collaboration settings...</div>
+          <div className="text-sm text-muted-foreground">Cargando configuración de colaboración...</div>
         </CardContent>
       </Card>
     )
@@ -231,10 +231,10 @@ export function CollaboratorManager({
               onClick={() => setIsExpanded(!isExpanded)}
               className="flex items-center gap-2 text-left hover:bg-muted/50 rounded-lg p-2 -m-2 transition-colors flex-1"
             >
-              <CardTitle className="text-lg">Chapter Collaboration</CardTitle>
+              <CardTitle className="text-lg">Colaboración entre chapters</CardTitle>
               {collaboratorCount > 0 && (
                 <Badge variant="secondary" className="text-xs">
-                  {collaboratorCount} {collaboratorCount === 1 ? 'collaborator' : 'collaborators'}
+                  {collaboratorCount} {collaboratorCount === 1 ? 'colaborador' : 'colaboradores'}
                 </Badge>
               )}
               {isExpanded ? (
@@ -249,16 +249,16 @@ export function CollaboratorManager({
               <TooltipTrigger asChild>
                 <button
                   className="p-2 hover:bg-muted/50 rounded-lg transition-colors"
-                  aria-label="Help with chapter collaboration"
+                  aria-label="Ayuda sobre colaboración entre chapters"
                 >
                   <HelpCircle className="w-4 h-4 text-muted-foreground" />
                 </button>
               </TooltipTrigger>
               <TooltipContent>
-                <p className="max-w-xs">
-                  Add other chapters as collaborators to allow their editors to manage this event.
-                  Collaborators have full editing access.
-                </p>
+                <div className="max-w-xs">
+                  Agrega otros chapters como colaboradores para que sus editores puedan gestionar este evento.
+                  Los colaboradores tienen acceso completo de edición.
+                </div>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -269,26 +269,26 @@ export function CollaboratorManager({
         <CardContent className="space-y-4 border-t pt-4">
           {mode === 'edit' && ownerChapterId ? (
             <div className="space-y-2">
-              <div className="text-sm font-medium text-muted-foreground">Owner Chapter</div>
+              <div className="text-sm font-medium text-muted-foreground">Chapter propietario</div>
               <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
                 <Crown className="h-4 w-4 text-primary" />
                 <div>
-                  <div className="font-medium">Owner Chapter ID: {ownerChapterId}</div>
+                  <div className="font-medium">ID del chapter propietario: {ownerChapterId}</div>
                   <div className="text-sm text-muted-foreground">
-                    This chapter owns the event
+                    Este chapter es responsable principal del evento
                   </div>
                 </div>
               </div>
             </div>
           ) : (
             <div className="space-y-2">
-              <div className="text-sm font-medium text-muted-foreground">Owner Chapter</div>
+              <div className="text-sm font-medium text-muted-foreground">Chapter propietario</div>
               <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
                 <Crown className="h-4 w-4 text-primary" />
                 <div>
-                  <div className="font-medium">Your Chapter</div>
+                  <div className="font-medium">Tu chapter</div>
                   <div className="text-sm text-muted-foreground">
-                    This will be set as the owner chapter when you create the event
+                    Se asignará como propietario cuando crees el evento
                   </div>
                 </div>
               </div>
@@ -297,7 +297,7 @@ export function CollaboratorManager({
 
           {collaborators.length > 0 && (
             <div className="space-y-2">
-              <div className="text-sm font-medium text-muted-foreground">Collaborating Chapters</div>
+              <div className="text-sm font-medium text-muted-foreground">Chapters colaboradores</div>
               <div className="space-y-2">
                 {collaborators.map((collaborator) => (
                   <div key={collaborator.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
@@ -328,12 +328,12 @@ export function CollaboratorManager({
           {availableChapters.length > 0 && (
             <div className="space-y-2">
               <div className="text-sm font-medium text-muted-foreground">
-                {mode === 'create' ? 'Add Collaborating Chapters' : 'Add Collaborator'}
+                {mode === 'create' ? 'Agregar chapters colaboradores' : 'Agregar colaborador'}
               </div>
               <div className="flex items-center gap-2">
                 <Select value={selectedChapterId} onValueChange={setSelectedChapterId}>
                   <SelectTrigger className="flex-1">
-                    <SelectValue placeholder={mode === 'create' ? "Select chapters to collaborate" : "Select a chapter to add as collaborator"} />
+                    <SelectValue placeholder={mode === 'create' ? 'Selecciona chapters para colaborar' : 'Selecciona un chapter'} />
                   </SelectTrigger>
                   <SelectContent>
                     {availableChapters.map((chapter) => (
@@ -352,13 +352,13 @@ export function CollaboratorManager({
                   size="sm"
                 >
                   <Plus className="h-4 w-4 mr-1" />
-                  Add
+                  Agregar
                 </Button>
               </div>
               {mode === 'create' && (
-                <p className="text-xs text-muted-foreground">
-                  Select chapters that can co-manage this event with your chapter.
-                </p>
+                <div className="text-xs text-muted-foreground">
+                  Selecciona chapters que podrán cogestionar este evento.
+                </div>
               )}
             </div>
           )}
@@ -366,8 +366,8 @@ export function CollaboratorManager({
           {availableChapters.length === 0 && collaborators.length === 0 && (
             <div className="text-sm text-muted-foreground text-center py-4">
               {mode === 'create'
-                ? 'No other chapters available to collaborate with.'
-                : 'No other chapters available to collaborate with.'}
+                ? 'No hay otros chapters disponibles para colaborar.'
+                : 'No hay otros chapters disponibles para colaborar.'}
             </div>
           )}
         </CardContent>

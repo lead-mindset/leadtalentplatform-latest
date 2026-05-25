@@ -103,6 +103,7 @@ export type ChapterRow = Database["public"]["Tables"]["chapter"]["Row"];
 
 export type PersonProfileRow = Database["public"]["Tables"]["person_profile"]["Row"];
 export type ChapterMembershipRow = Database["public"]["Tables"]["chapter_membership"]["Row"];
+export type ChapterRoleAssignmentRow = Database["public"]["Tables"]["chapter_role_assignment"]["Row"];
 export type LeadIdentityRow = Database["public"]["Tables"]["lead_identity"]["Row"];
 export type IdentityType = Database["public"]["Enums"]["identity_type"];
 export type IdentityStatus = Database["public"]["Enums"]["identity_status"];
@@ -137,6 +138,18 @@ export type EventChapterUpdate = Partial<EventChapterInsert>;
 export type NewsletterSubscriptionRow = Database["public"]["Tables"]["newsletter_subscription"]["Row"];
 export type NewsletterSubscriptionInsert = Database["public"]["Tables"]["newsletter_subscription"]["Insert"];
 export type NewsletterSubscriptionUpdate = Database["public"]["Tables"]["newsletter_subscription"]["Update"];
+export type GrowthReflectionRow = Database["public"]["Tables"]["growth_reflection"]["Row"];
+export type GrowthReflectionInsert = Database["public"]["Tables"]["growth_reflection"]["Insert"];
+export type GrowthReflectionUpdate = Database["public"]["Tables"]["growth_reflection"]["Update"];
+export type PathwayFeatureFlagRow = Database["public"]["Tables"]["pathway_feature_flag"]["Row"];
+export type PathwayFeatureFlagInsert = Database["public"]["Tables"]["pathway_feature_flag"]["Insert"];
+export type PathwayFeatureFlagUpdate = Database["public"]["Tables"]["pathway_feature_flag"]["Update"];
+export type PathwayCheckInRow = Database["public"]["Tables"]["pathway_check_in"]["Row"];
+export type PathwayCheckInInsert = Database["public"]["Tables"]["pathway_check_in"]["Insert"];
+export type PathwayCheckInUpdate = Database["public"]["Tables"]["pathway_check_in"]["Update"];
+export type PathwayRecommendationRow = Database["public"]["Tables"]["pathway_recommendation"]["Row"];
+export type PathwayRecommendationInsert = Database["public"]["Tables"]["pathway_recommendation"]["Insert"];
+export type PathwayRecommendationUpdate = Database["public"]["Tables"]["pathway_recommendation"]["Update"];
 
 // ============================================================================
 // COMPOSITE TYPES - Used in queries with joins
@@ -146,12 +159,27 @@ export type UserWithChapter = UserRow & {
   chapter: ChapterRow | null
 };
 
+export type ActiveChapterRoleAssignment = Pick<
+  ChapterRoleAssignmentRow,
+  | 'id'
+  | 'chapter_id'
+  | 'role_level'
+  | 'functional_area'
+  | 'display_title'
+  | 'status'
+  | 'is_primary'
+  | 'starts_at'
+  | 'ends_at'
+  | 'assigned_by_id'
+>
+
 export type MemberWithProfile = UserRow & {
   person_profile: PersonProfileRow | null;
   chapter_membership: Pick<
     ChapterMembershipRow,
     'chapter_id' | 'status' | 'position' | 'member_id' | 'joined_at'
   > | null;
+  chapter_role_assignment: ActiveChapterRoleAssignment | null;
   chapter: ChapterRow | null;
 };
 
@@ -216,12 +244,12 @@ export type EventWithDetails = EventRow & {
 
 export type RegistrationWithUserRaw = EventRegistrationRow & {
   user: Pick<UserRow, 'id' | 'name' | 'email' | 'phone'>[]
-  person_profile: Pick<PersonProfileRow, 'major_or_interest' | 'graduation_year' | 'linkedin_url'>[]
+  person_profile: Pick<PersonProfileRow, 'major_or_interest' | 'graduation_year' | 'linkedin_url' | 'portfolio_url'>[]
 }
 
 export type RegistrationWithUser = EventRegistrationRow & {
   user: Pick<UserRow, 'id' | 'name' | 'email' | 'phone'> | null
-  person_profile: Pick<PersonProfileRow, 'major_or_interest' | 'graduation_year' | 'linkedin_url'> | null
+  person_profile: Pick<PersonProfileRow, 'major_or_interest' | 'graduation_year' | 'linkedin_url' | 'portfolio_url'> | null
   application_answers?: Array<
     EventApplicationAnswerRow & {
       event_application_question: Pick<
@@ -286,6 +314,7 @@ export type RecruiterVisibleProfile = Pick<
   | 'major_or_interest'
   | 'graduation_year'
   | 'linkedin_url'
+  | 'portfolio_url'
   | 'skills'
   | 'is_recruiter_visible'
   | 'updated_at'
@@ -299,7 +328,7 @@ export type StudentForRecruiterRaw = {
   name: string | null;
   phone: string | null;
   created_at: string;
-  chapter: Pick<ChapterRow, "name" | "university" | "city" | "region">[];
+  chapter: Pick<ChapterRow, "id" | "name" | "university" | "city" | "region">[];
   person_profile: RecruiterVisibleProfile[];
 };
 
@@ -309,7 +338,7 @@ export type StudentForRecruiter = {
   name: string;
   phone: string | null;
   created_at: string;
-  chapter: Pick<ChapterRow, "name" | "university" | "city" | "region"> | null;
+  chapter: Pick<ChapterRow, "id" | "name" | "university" | "city" | "region"> | null;
   person_profile: RecruiterVisibleProfile | null;
 };
 
@@ -334,6 +363,7 @@ export type UserWithFullProfile = UserRow & {
   > & {
     chapter: ChapterRow | null
   }) | null
+  chapter_role_assignment: ActiveChapterRoleAssignment | null
 }
 
 export type EventChapterWithChapter = EventChapterRow & {

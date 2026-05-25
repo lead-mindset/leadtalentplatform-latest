@@ -92,6 +92,7 @@ function mapApplication(application: RegistrationWithUser) {
       majorOrInterest: application.person_profile?.major_or_interest ?? 'Area no registrada',
       graduation_year: application.person_profile?.graduation_year ?? 0,
       linkedinUrl: application.person_profile?.linkedin_url ?? null,
+      portfolioUrl: application.person_profile?.portfolio_url ?? null,
     },
     applicationAnswers: application.application_answers ?? [],
   }

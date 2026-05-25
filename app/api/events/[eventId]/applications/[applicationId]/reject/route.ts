@@ -1,5 +1,6 @@
- import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { assertCanManageEvent } from '@/lib/actions/events/access'
+import { sendApplicationRejectedEmail } from '@/lib/emails/send-email'
 
 export async function POST(
   request: NextRequest,
@@ -45,14 +46,13 @@ export async function POST(
   if (application && application.User && application.Event) {
     const user = application.User as unknown as { email: string; name: string | null }
     const event = application.Event as unknown as { title: string; Chapter?: { name: string } | null }
-    import('@/lib/emails/send-email').then(({ sendApplicationRejectedEmail }) => {
-      sendApplicationRejectedEmail(
-        user.email,
-        user.name ?? 'Student',
-        event.title,
-        event.Chapter?.name || 'LEAD Chapter'
-      ).catch(err => console.error('Email error:', err))
-    })
+    void sendApplicationRejectedEmail(
+      user.email,
+      user.name ?? 'Student',
+      event.title,
+      event.Chapter?.name || 'LEAD Chapter',
+      'es'
+    ).catch(err => console.error('Email error:', err))
   }
 
   return NextResponse.json({ success: true })

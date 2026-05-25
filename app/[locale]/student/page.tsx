@@ -1,16 +1,37 @@
-import { ArrowRight, CalendarDays, CheckCircle2, Clock3, Edit3, IdCard, Users } from 'lucide-react'
+import {
+  ArrowRight,
+  CalendarDays,
+  CheckCircle2,
+  Clock3,
+  Edit3,
+  FileText,
+  IdCard,
+  Route,
+  Sparkles,
+  Users,
+} from 'lucide-react'
 import { MainContainer } from '@/components/global/main-container'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Link } from '@/i18n/routing'
 import { requireUser } from '@/lib/auth'
+import { updatePathwayRecommendationStatus } from '@/lib/actions/student/pathway-recommendation'
 import { PageHeader } from '@/components/ui/page-header'
 import {
   StudentDashboardService,
   type StudentActivationDashboard,
   type StudentDashboardChapterOption,
 } from '@/lib/services/student-dashboard.service'
+import {
+  PathwayCheckInService,
+  type PathwayDashboardGuidance,
+} from '@/lib/services/pathway-check-in.service'
+import { PathwayRolloutService } from '@/lib/services/pathway-rollout.service'
+import {
+  GrowthReflectionService,
+  type GrowthReflectionProgress,
+} from '@/lib/services/growth-reflection.service'
 import { ChapterApplicationCard } from './_components/chapter-application-card'
 
 type ParticipantApplicationCardProps = {
@@ -36,7 +57,7 @@ const STATUS_CONTENT = {
   official_member: {
     badge: 'Miembro oficial',
     title: 'Ya eres miembro oficial de LEAD.',
-    body: 'Tu membresia aprobada esta activa. Tu Member ID solo aparece despues de la aprobacion.',
+    body: 'Tu membresia aprobada esta activa. Usa este espacio para mantener tu perfil listo, explorar eventos y revisar tu actividad.',
     badgeVariant: 'success' as const,
     icon: CheckCircle2,
   },
@@ -187,7 +208,9 @@ function PrimaryActions({ dashboard }: { dashboard: StudentActivationDashboard }
   const actions =
     dashboard.status === 'official_member'
       ? [
-          { href: '/student/events', label: 'Ver mis eventos', icon: CalendarDays },
+          { href: '/events', label: 'Explorar eventos', icon: CalendarDays },
+          { href: '/student/events', label: 'Mis eventos', icon: IdCard },
+          { href: '/student/resume', label: 'Mi CV', icon: FileText },
           { href: '/student/profile', label: 'Editar perfil', icon: Edit3 },
         ]
       : [
@@ -197,7 +220,7 @@ function PrimaryActions({ dashboard }: { dashboard: StudentActivationDashboard }
         ]
 
   return (
-    <div className="grid w-full gap-3 sm:grid-cols-3 lg:max-w-xl">
+    <div className="grid w-full gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {actions.map((action) => {
         const Icon = action.icon
         return (
@@ -205,14 +228,14 @@ function PrimaryActions({ dashboard }: { dashboard: StudentActivationDashboard }
             key={action.href}
             asChild
             variant={action.href === '/events' ? 'default' : 'outline'}
-            className="h-12 w-full min-w-0 justify-between rounded-lg px-4"
+            className="h-auto min-h-11 w-full min-w-0 justify-between rounded-lg px-4 py-2.5"
           >
-            <Link href={action.href}>
+            <Link href={action.href} className="min-w-0">
               <span className="flex min-w-0 items-center gap-2">
-                <Icon className="h-4 w-4" />
+                <Icon className="h-4 w-4 shrink-0" />
                 <span className="truncate">{action.label}</span>
               </span>
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-4 w-4 shrink-0" />
             </Link>
           </Button>
         )
@@ -221,9 +244,226 @@ function PrimaryActions({ dashboard }: { dashboard: StudentActivationDashboard }
   )
 }
 
+const GROWTH_STAGE_LABELS: Record<string, string> = {
+  explorer: 'Explorer',
+  builder: 'Builder',
+  leader: 'Leader',
+  candidate: 'Candidate',
+  emerging_professional: 'Emerging Professional',
+}
+
+const PRIMARY_FOCUS_LABELS: Record<string, string> = {
+  career_exploration: 'Career exploration',
+  technical_experience: 'Technical experience',
+  opportunity_readiness: 'Opportunity readiness',
+  community_mentorship: 'Community and mentorship',
+  leadership: 'Leadership',
+}
+
+const RECOMMENDATION_LABELS: Record<string, string> = {
+  learn: 'Learn',
+  connect: 'Connect',
+  prove: 'Prove',
+}
+
+function RecommendationAction({
+  recommendationId,
+  status,
+  label,
+  variant = 'outline',
+}: {
+  recommendationId: string
+  status: 'started' | 'completed' | 'dismissed'
+  label: string
+  variant?: 'default' | 'outline' | 'ghost'
+}) {
+  return (
+    <form action={updatePathwayRecommendationStatus}>
+      <input type="hidden" name="recommendation_id" value={recommendationId} />
+      <input type="hidden" name="status" value={status} />
+      <Button type="submit" size="sm" variant={variant}>
+        {label}
+      </Button>
+    </form>
+  )
+}
+
+function PathwayGuidanceCard({ guidance }: { guidance: PathwayDashboardGuidance | null }) {
+  if (!guidance || guidance.status !== 'completed' || !guidance.row) {
+    return (
+      <Card className="rounded-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Route className="h-5 w-5 text-primary" />
+            Tus proximos pasos
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm leading-6 text-muted-foreground">
+            Completa un Check-In de 3 minutos para recibir tres movimientos claros: que aprender,
+            con quien conectar y que pequena prueba construir.
+          </p>
+          <Button asChild className="w-full sm:w-auto">
+            <Link href="/student/pathway-check-in">Empezar Check-In</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <Card className="rounded-lg">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Sparkles className="h-5 w-5 text-primary" />
+          Tus Next Three Moves
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        <div className="rounded-lg border border-border/70 bg-muted/25 p-3 text-sm text-muted-foreground">
+          <span className="font-semibold text-foreground">
+            {guidance.progress.completed} de {guidance.progress.actionable}
+          </span>{' '}
+          movimientos completados. Avanza a tu ritmo; esto es guia, no una calificacion.
+        </div>
+
+        <div className="grid gap-3 text-sm sm:grid-cols-2">
+          <div className="rounded-lg border border-border/70 bg-muted/25 p-3">
+            <p className="font-semibold text-foreground">Growth stage</p>
+            <p className="mt-1 text-muted-foreground">
+              {GROWTH_STAGE_LABELS[guidance.row.growth_stage ?? ''] ?? 'En progreso'}
+            </p>
+          </div>
+          <div className="rounded-lg border border-border/70 bg-muted/25 p-3">
+            <p className="font-semibold text-foreground">Primary focus</p>
+            <p className="mt-1 text-muted-foreground">
+              {PRIMARY_FOCUS_LABELS[guidance.row.primary_focus ?? ''] ?? 'Tu siguiente paso'}
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          {guidance.recommendations.map((recommendation) => (
+            <div
+              key={recommendation.id}
+              className="rounded-lg border border-border/70 bg-background p-4"
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="secondary" size="sm">
+                  {RECOMMENDATION_LABELS[recommendation.category] ?? recommendation.category}
+                </Badge>
+                <h3 className="text-sm font-semibold text-foreground">{recommendation.title}</h3>
+              </div>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">{recommendation.body}</p>
+              <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                {recommendation.reason}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {recommendation.status === 'active' ? (
+                  <RecommendationAction
+                    recommendationId={recommendation.id}
+                    status="started"
+                    label="Marcar empezado"
+                  />
+                ) : null}
+                {recommendation.status !== 'completed' ? (
+                  <RecommendationAction
+                    recommendationId={recommendation.id}
+                    status="completed"
+                    label="Completar"
+                    variant="default"
+                  />
+                ) : (
+                  <Badge variant="success" size="sm">
+                    Completado
+                  </Badge>
+                )}
+                {recommendation.status !== 'completed' ? (
+                  <RecommendationAction
+                    recommendationId={recommendation.id}
+                    status="dismissed"
+                    label="No aplica"
+                    variant="ghost"
+                  />
+                ) : null}
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function PersonalProgressCard({
+  pathwayGuidance,
+  reflectionProgress,
+}: {
+  pathwayGuidance: PathwayDashboardGuidance | null
+  reflectionProgress: GrowthReflectionProgress
+}) {
+  const completedMoves =
+    pathwayGuidance && pathwayGuidance.status === 'completed' ? pathwayGuidance.progress.completed : 0
+
+  const metrics = [
+    {
+      label: 'Next moves completados',
+      value: completedMoves,
+      helper: 'Acciones pequenas que ya convertiste en avance.',
+    },
+    {
+      label: 'Growth Reflections completadas',
+      value: reflectionProgress.completedReflections,
+      helper: 'Momentos que transformaste en aprendizaje claro.',
+    },
+    {
+      label: 'Proof items creados',
+      value: reflectionProgress.proofItemsCreated,
+      helper: 'Evidencia personal que puedes convertir en historias, perfil o entrevistas.',
+    },
+  ]
+
+  return (
+    <Card className="rounded-lg">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <CheckCircle2 className="h-5 w-5 text-primary" />
+          Tu progreso personal
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm leading-6 text-muted-foreground">
+          Sin rankings ni comparaciones. Solo senales de lo que ya estas construyendo.
+        </p>
+        <div className="grid gap-3">
+          {metrics.map((metric) => (
+            <div key={metric.label} className="rounded-lg border border-border/70 bg-muted/25 p-3">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-foreground">{metric.label}</p>
+                <span className="text-2xl font-semibold tabular-nums text-primary">
+                  {metric.value}
+                </span>
+              </div>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">{metric.helper}</p>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
 export default async function StudentDashboard() {
   const { supabase, user } = await requireUser()
   const dashboard = await StudentDashboardService.getActivationDashboard(supabase, user.id)
+  const pathwayFlags = await PathwayRolloutService.getFlagsForChapter(
+    supabase,
+    dashboard.membership?.chapter_id
+  )
+  const pathwayGuidance = pathwayFlags.enable_recommendation_card
+    ? await PathwayCheckInService.getDashboardGuidanceForUser(supabase, user.id)
+    : null
+  const reflectionProgress = await GrowthReflectionService.getProgressForUser(supabase, user.id)
   const chapterOptions =
     dashboard.status === 'participant'
       ? await StudentDashboardService.getChapterApplicationOptions(supabase)
@@ -242,8 +482,9 @@ export default async function StudentDashboard() {
           </Badge>
         }
         description={content.body}
-        actions={<PrimaryActions dashboard={dashboard} />}
       />
+
+      <PrimaryActions dashboard={dashboard} />
 
       <Card className="rounded-lg">
         <CardContent className="flex flex-col gap-5 py-6 sm:flex-row sm:items-center">
@@ -263,10 +504,19 @@ export default async function StudentDashboard() {
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-6">
+          {pathwayFlags.enable_recommendation_card ? (
+            <PathwayGuidanceCard guidance={pathwayGuidance} />
+          ) : null}
           <ParticipantApplicationCard dashboard={dashboard} chapterOptions={chapterOptions} />
           <ProfileReadinessCard dashboard={dashboard} />
         </div>
-        <MembershipDetailsCard dashboard={dashboard} />
+        <div className="space-y-6">
+          <PersonalProgressCard
+            pathwayGuidance={pathwayGuidance}
+            reflectionProgress={reflectionProgress}
+          />
+          <MembershipDetailsCard dashboard={dashboard} />
+        </div>
       </div>
     </MainContainer>
   )

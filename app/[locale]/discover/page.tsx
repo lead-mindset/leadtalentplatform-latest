@@ -1,9 +1,11 @@
+import { Suspense } from "react"
 import { createClient } from "@/lib/supabase/server"
 import { DiscoverClient } from "./discover-client"
+import { Navbar } from "../(public)/_components/navbar"
 
 export const metadata = {
-  title: "Discover Events",
-  description: "Discover popular events in your city and featured calendars from the community.",
+  title: "Discover LEAD",
+  description: "Explore LEAD opportunities, events, chapters, and countries.",
 }
 
 interface DiscoverPageProps {
@@ -20,12 +22,12 @@ export default async function DiscoverPage({
   searchParams,
 }: DiscoverPageProps) {
   const { locale } = await params
-  const { city, category } = await searchParams
+  const { city } = await searchParams
   const supabase = await createClient()
 
-  // Fetch popular events (next 30 days, filtered by city if provided)
+  // Fetch upcoming events, filtered by city if provided.
   const today = new Date().toISOString()
-  const thirtyDaysLater = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+  const sixMonthsLater = new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString()
 
   let eventsQuery = supabase
     .from("event")
@@ -39,12 +41,12 @@ export default async function DiscoverPage({
       location_city,
       cover_image,
       event_type,
-      slug,
-      chapter!inner(name, slug)
+      chapter(name)
     `)
     .eq("is_published", true)
     .gte("start_at", today)
-    .lte("start_at", thirtyDaysLater)
+    .lte("start_at", sixMonthsLater)
+    .not("title", "ilike", "QA %")
     .order("start_at", { ascending: true })
     .limit(12)
 
@@ -52,31 +54,26 @@ export default async function DiscoverPage({
     eventsQuery = eventsQuery.eq("location_city", city)
   }
 
-  // Category filtering removed - categories table does not exist in schema
-
   const { data: events, error: eventsError } = await eventsQuery
 
   if (eventsError) {
     console.error("Error fetching events:", eventsError)
   }
 
-  // Categories table does not exist in schema - returning empty array
-
-  // Fetch featured calendars (using chapter table)
-  const { data: calendars, error: calendarsError } = await supabase
+  const { data: chapters, error: chaptersError } = await supabase
     .from("chapter")
     .select(`
       id,
       name,
-      slug,
       city,
-      event(count)
+      region,
+      university
     `)
     .order("name")
-    .limit(10)
+    .limit(24)
 
-  if (calendarsError) {
-    console.error("Error fetching calendars:", calendarsError)
+  if (chaptersError) {
+    console.error("Error fetching chapters:", chaptersError)
   }
 
   // Fetch cities with event counts
@@ -86,6 +83,7 @@ export default async function DiscoverPage({
     .not("location_city", "is", null)
     .eq("is_published", true)
     .gte("start_at", today)
+    .not("title", "ilike", "QA %")
 
   if (citiesError) {
     console.error("Error fetching cities:", citiesError)
@@ -109,36 +107,78 @@ export default async function DiscoverPage({
     .sort((a, b) => b.eventCount - a.eventCount)
     .slice(0, 24)
 
-  return (
-    <DiscoverClient
-      locale={locale}
-      initialEvents={(events || []).map(e => ({
-        id: e.id,
-        title: e.title,
-        description: e.description || "",
-        start_at: e.start_at,
-        end_at: e.end_at,
-        location_name: e.location_name,
-        location_city: e.location_city,
-        cover_image_url: e.cover_image,
-        event_type: e.event_type,
-        slug: e.slug,
-        chapters: e.chapter?.[0] || { name: "", slug: "" },
-      }))}
-      categories={[]}
-      calendars={(calendars || []).map(c => ({
-        id: c.id,
-        name: c.name,
-        slug: c.slug,
-        description: "",
-        avatarUrl: null,
-        location: c.city,
-        isSubscribed: false,
-      }))}
-      cities={citiesList}
-      currentCity={city}
-      currentCategory={category}
+  const chapterRows = chapters || []
+  const peruChapterCount = chapterRows.filter((chapter) => {
+    const values = [chapter.city, chapter.region, chapter.university, chapter.name]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase()
+    return (
+      values.includes("lima") ||
+      values.includes("peru") ||
+      values.includes("peruana") ||
+      values.includes("nacional") ||
+      values.includes("arequipa") ||
+      values.includes("trujillo")
+    )
+  }).length
 
-    />
+  const countries = [
+    {
+      id: "peru",
+      name: "LEAD Peru",
+      chapterCount: peruChapterCount || chapterRows.length,
+      eventCount: citiesList.reduce((count, city) => count + city.eventCount, 0),
+      status: "active" as const,
+    },
+    {
+      id: "colombia",
+      name: "LEAD Colombia",
+      chapterCount: 0,
+      eventCount: 0,
+      status: "growing" as const,
+    },
+    {
+      id: "ecuador",
+      name: "LEAD Ecuador",
+      chapterCount: 0,
+      eventCount: 0,
+      status: "growing" as const,
+    },
+  ]
+
+  return (
+    <>
+      <Suspense fallback={null}>
+        <Navbar />
+      </Suspense>
+      <DiscoverClient
+        locale={locale}
+        initialEvents={(events || []).map(e => {
+          const chapter = e.chapter as { name?: string } | { name?: string }[] | null
+
+          return {
+            id: e.id,
+            title: e.title,
+            description: e.description || "",
+            start_at: e.start_at,
+            end_at: e.end_at,
+            location_name: e.location_name,
+            location_city: e.location_city,
+            cover_image_url: e.cover_image,
+            event_type: e.event_type,
+            chapterName: Array.isArray(chapter) ? chapter[0]?.name || "" : chapter?.name || "",
+          }
+        })}
+        chapters={chapterRows.map(c => ({
+          id: c.id,
+          name: c.name,
+          city: c.city,
+          region: c.region,
+          university: c.university,
+        }))}
+        countries={countries}
+      />
+    </>
   )
 }

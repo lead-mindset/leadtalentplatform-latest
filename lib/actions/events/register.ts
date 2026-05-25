@@ -1,15 +1,14 @@
 'use server'
 
-import { isRedirectError } from 'next/dist/client/components/redirect-error'
 import { headers } from 'next/headers'
-import { redirect } from 'next/navigation'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { z } from 'zod'
 import { requireUser } from '@/lib/auth'
 import { EventService } from '@/lib/services/event.service'
-import { sendApplicationReceivedEmail } from '@/lib/emails/send-email'
+import { sendApplicationReceivedEmail, sendEventRegistrationConfirmedEmail } from '@/lib/emails/send-email'
 import type { EventRegistrationRow } from '@/lib/types'
 import { getEventRegistrationPreflight } from '@/lib/actions/events/register.helpers'
+import { PUBLIC_EVENTS_CACHE_TAG } from '@/lib/data/public-events'
 
 const ApplicationAnswerSchema = z.object({
   questionId: z.string().uuid(),
@@ -19,6 +18,8 @@ const ApplicationAnswerSchema = z.object({
 const SUPPORTED_LOCALES = new Set(['en', 'es'])
 
 export type RegisterForEventState = {
+  success?: boolean
+  redirectPath?: string
   error?: string
   /** True when the DB capacity trigger rejected the insert */
   capacityExceeded?: boolean
@@ -27,6 +28,7 @@ export type RegisterForEventState = {
 }
 
 function revalidateEventRegistrationPaths(eventId: string) {
+  revalidateTag(PUBLIC_EVENTS_CACHE_TAG, { expire: 0 })
   revalidatePath('/events')
   revalidatePath(`/events/${eventId}`)
   revalidatePath('/student/events')
@@ -34,18 +36,18 @@ function revalidateEventRegistrationPaths(eventId: string) {
 
 async function getRequestLocale() {
   const referer = (await headers()).get('referer')
-  if (!referer) return 'en'
+  if (!referer) return 'es'
 
   try {
     const locale = new URL(referer).pathname.split('/').filter(Boolean)[0]
-    return SUPPORTED_LOCALES.has(locale) ? locale : 'en'
+    return SUPPORTED_LOCALES.has(locale) ? locale : 'es'
   } catch {
-    return 'en'
+    return 'es'
   }
 }
 
-function redirectToStudentEventQr(eventId: string, locale: string) {
-  redirect(`/${locale}/student/events?event=${eventId}`)
+function getStudentEventQrPath(eventId: string, locale: string) {
+  return `/${locale}/student/events?event=${encodeURIComponent(eventId)}`
 }
 
 export async function applyForEvent(
@@ -97,12 +99,15 @@ export async function applyForEvent(
       ? eventData.chapter[0]?.name
       : eventData?.chapter?.name || 'LEAD Chapter'
 
+    const locale = await getRequestLocale()
+
     if (eventData?.title) {
       void sendApplicationReceivedEmail(
         user.email!,
         user.name || user.email!.split('@')[0],
         eventData.title,
-        chapter_name
+        chapter_name,
+        locale as 'en' | 'es'
       ).catch((err: Error) => console.error('Failed to send application received email:', err))
     }
 
@@ -154,12 +159,27 @@ export async function registerForEvent(
       return { error: result.error, capacityExceeded: result.capacityExceeded }
     }
 
-    revalidateEventRegistrationPaths(eventId)
-    redirectToStudentEventQr(eventId, locale)
+    const { data: eventData } = await supabase
+      .from('event')
+      .select('title, start_at, location, meeting_url, event_type')
+      .eq('id', eventId)
+      .single()
 
-    return { error: 'Something went wrong. Please try again.' }
+    if (eventData?.title) {
+      void sendEventRegistrationConfirmedEmail(user.email!, {
+        name: user.name,
+        eventTitle: eventData.title,
+        eventDate: new Date(eventData.start_at).toLocaleString(),
+        eventLocation: eventData.location,
+        meetingUrl: eventData.meeting_url,
+        eventType: eventData.event_type,
+        locale: locale as 'en' | 'es',
+      }).catch((error: Error) => console.error('Failed to send event registration email:', error))
+    }
+
+    revalidateEventRegistrationPaths(eventId)
+    return { success: true, redirectPath: getStudentEventQrPath(eventId, locale) }
   } catch (err) {
-    if (isRedirectError(err)) throw err
     console.error('[registerForEvent]', err)
     return { error: 'Something went wrong. Please try again.' }
   }

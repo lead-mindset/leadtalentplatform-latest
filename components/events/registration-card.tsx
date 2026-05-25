@@ -1,12 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { Share, CalendarPlus, Check } from "lucide-react"
+import { CalendarPlus, Check } from "lucide-react"
 import { Loader2 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import { EventShareButton } from "@/components/events/event-share-button"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
@@ -50,15 +51,6 @@ export function RegistrationCard({
       toast.error("Something went wrong. Please try again.")
     } finally {
       setIsLoading(false)
-    }
-  }
-
-  const handleShare = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href)
-      toast.success("Link copied to clipboard!")
-    } catch {
-      toast.error("Failed to copy link")
     }
   }
 
@@ -136,14 +128,7 @@ export function RegistrationCard({
 
       {}
       <div className="flex gap-2">
-        <Button
-          variant="outline"
-          className="flex-1"
-          onClick={handleShare}
-        >
-          <Share className="mr-2 h-4 w-4" />
-          Share
-        </Button>
+        <EventShareButton eventId={eventId} eventTitle={title} className="flex-1" />
         <Button
           variant="outline"
           className="flex-1"

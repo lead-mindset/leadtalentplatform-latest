@@ -16,6 +16,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import type { AdminEventListItem } from '@/lib/services/admin.service'
+import { formatLeadDateTime } from '@/lib/utils/date-format'
 
 type Props = {
   items: AdminEventListItem[]
@@ -198,7 +199,7 @@ export function EventsManagementClient({
                         {event.title}
                         <p className="mt-1 text-xs text-muted-foreground">{event.id}</p>
                       </TableCell>
-                      <TableCell className="whitespace-nowrap">{new Date(event.start_at).toLocaleString()}</TableCell>
+                      <TableCell className="whitespace-nowrap">{formatLeadDateTime(event.start_at)}</TableCell>
                       <TableCell className="min-w-[14rem]">
                         <div className="flex flex-wrap gap-1">
                           {event.chapter && <Badge variant="info">{event.chapter.name}</Badge>}

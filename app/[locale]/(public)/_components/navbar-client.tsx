@@ -56,6 +56,7 @@ export function NavbarClient({ visibleLinks, user, dashboardHref }: Props) {
     if (isEnglish) return label;
     const labels: Record<string, string> = {
       Events: "Eventos",
+      Chapters: "Chapters",
       Partners: "Aliados",
       Help: "Ayuda",
       Dashboard: "Panel",
@@ -77,9 +78,9 @@ export function NavbarClient({ visibleLinks, user, dashboardHref }: Props) {
             <Image
               src="/leadl2.svg"
               alt="LEAD"
-              width={36}
-              height={36}
-              className="object-contain"
+              width={270}
+              height={148}
+              className="h-9 w-auto object-contain"
               priority
             />
             <span className="pl-1 text-base font-semibold tracking-tight text-foreground">

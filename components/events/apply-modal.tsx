@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import {
   Button,
+  Badge,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -154,18 +155,24 @@ export function ApplyModal({
         </DialogHeader>
 
         <div className="max-h-[60vh] space-y-5 overflow-y-auto pr-1">
-          {questions.map((question) => (
-            <div key={question.id} className="space-y-2">
-              <label className="text-sm font-medium">
-                {question.question_text}
-                {question.is_required ? <span className="text-destructive"> *</span> : null}
-              </label>
+          {questions.map((question, index) => (
+            <div key={question.id} className="space-y-3 rounded-lg border bg-muted/20 p-4">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <label className="min-w-0 flex-1 text-sm font-medium leading-6">
+                  <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Pregunta {index + 1}
+                  </span>
+                  {question.question_text}
+                </label>
+                {question.is_required ? <Badge variant="outline">Obligatoria</Badge> : null}
+              </div>
 
               {question.question_type === 'long_text' ? (
                 <textarea
                   value={(answers[question.id] as string | undefined) ?? ''}
                   onChange={(event) => updateAnswer(question.id, event.target.value)}
                   aria-invalid={Boolean(fieldErrors[question.id])}
+                  placeholder="Escribe tu respuesta..."
                   className={`min-h-28 w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                     fieldErrors[question.id] ? 'border-destructive' : 'border-input'
                   }`}
@@ -206,6 +213,7 @@ export function ApplyModal({
                   value={(answers[question.id] as string | undefined) ?? ''}
                   onChange={(event) => updateAnswer(question.id, event.target.value)}
                   aria-invalid={Boolean(fieldErrors[question.id])}
+                  placeholder={question.question_type === 'url' ? 'https://...' : 'Escribe tu respuesta...'}
                   className={`h-10 w-full rounded-md border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                     fieldErrors[question.id] ? 'border-destructive' : 'border-input'
                   }`}

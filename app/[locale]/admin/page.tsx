@@ -20,15 +20,10 @@ import {
   getRecentJoins,
   getSystemStats,
 } from '@/lib/actions/admin/get-data'
+import { formatLeadDate } from '@/lib/utils/date-format'
 
 function formatDate(value: string | null) {
-  if (!value) return 'No activity'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'No activity'
-  return date.toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-  })
+  return formatLeadDate(value, 'No activity')
 }
 
 function StatTile({

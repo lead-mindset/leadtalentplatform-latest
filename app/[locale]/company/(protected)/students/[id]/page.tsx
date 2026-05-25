@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   ExternalLink,
   FileText,
+  Globe2,
   Linkedin,
   Mail,
   Phone,
@@ -213,6 +214,19 @@ export default async function StudentProfilePage({
             ) : (
               <p className="text-sm text-muted-foreground">No LinkedIn profile listed.</p>
             )}
+            {resolvedStudent.person_profile?.portfolio_url ? (
+              <Button asChild variant="outline" className="gap-2">
+                <NextLink
+                  href={resolvedStudent.person_profile.portfolio_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Globe2 className="h-4 w-4" />
+                  Portfolio
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </NextLink>
+              </Button>
+            ) : null}
             {resume ? (
               <div className="rounded-lg border bg-muted/20 p-4">
                 <div className="flex items-start gap-3">

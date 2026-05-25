@@ -75,6 +75,7 @@ export default function CareerCommandSelect({
             variant="outline"
             role="combobox"
             aria-expanded={open}
+            aria-label={t('majorCareerField')}
             className="w-full justify-between"
           >
             {displayValue || t('selectCareerField')}

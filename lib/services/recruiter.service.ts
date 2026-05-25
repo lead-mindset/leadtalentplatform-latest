@@ -1,7 +1,8 @@
 import { logger } from '@/lib/logger'
 import { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.generated'
-import type { ChapterRow, PersonProfileRow, UserRow } from '@/lib/types'
+import { CompanyService } from '@/lib/services/company.service'
+import type { StudentForRecruiter } from '@/lib/types'
 
 export type TalentPoolFilters = {
   query?: string
@@ -26,15 +27,6 @@ export type TalentPoolStudent = {
   updated_at: string
 }
 
-type TalentPoolProfileRow = Pick<
-  PersonProfileRow,
-  'graduation_year' | 'major_or_interest' | 'skills' | 'updated_at' | 'linkedin_url'
-> & {
-  chapter_membership: {
-    chapter: Pick<ChapterRow, 'name' | 'university'> | Pick<ChapterRow, 'name' | 'university'>[] | null
-  }
-}
-
 type InviteAcceptanceAccess = {
   id: string
   recruiter_email: string
@@ -45,47 +37,33 @@ type InviteAcceptanceAccess = {
   company_id: string
 }
 
-type TalentPoolRow = Pick<UserRow, 'id' | 'name' | 'email'> & {
-  person_profile: TalentPoolProfileRow | TalentPoolProfileRow[] | null
-}
-
-type TalentPoolFilterRow = Pick<PersonProfileRow, 'graduation_year'> & {
-  chapter_membership: {
-    chapter: { id: string; name: string } | { id: string; name: string }[] | null
-  }
-}
-
-function mapTalentPoolRow(row: TalentPoolRow): TalentPoolStudent | null {
-  const profile = Array.isArray(row.person_profile) ? row.person_profile[0] : row.person_profile
-  if (!profile) return null
-
-  const chapter = Array.isArray(profile.chapter_membership.chapter)
-    ? profile.chapter_membership.chapter[0]
-    : profile.chapter_membership.chapter
-
-  return {
-    id: row.id,
-    name: row.name ?? '',
-    email: row.email,
-    chapter: chapter
-      ? {
-          name: chapter.name,
-          university: chapter.university,
-        }
-      : null,
-    graduation_year: profile.graduation_year ?? null,
-    major: profile.major_or_interest ?? null,
-    skills: Array.isArray(profile.skills) ? profile.skills : [],
-    updated_at: profile.updated_at,
-  }
-}
-
 function parsePagination(pagination?: TalentPoolPagination) {
   const page = Math.max(1, pagination?.page ?? 1)
   const pageSize = Math.min(50, Math.max(1, pagination?.pageSize ?? 12))
   const from = (page - 1) * pageSize
   const to = from + pageSize - 1
   return { page, pageSize, from, to }
+}
+
+function mapVisibleStudentToTalentPoolStudent(student: StudentForRecruiter): TalentPoolStudent | null {
+  const profile = student.person_profile
+  if (!profile) return null
+
+  return {
+    id: student.id,
+    name: student.name,
+    email: student.email,
+    chapter: student.chapter
+      ? {
+          name: student.chapter.name,
+          university: student.chapter.university,
+        }
+      : null,
+    graduation_year: profile.graduation_year,
+    major: profile.major_or_interest,
+    skills: Array.isArray(profile.skills) ? profile.skills : [],
+    updated_at: profile.updated_at,
+  }
 }
 
 export const RecruiterService = {
@@ -96,66 +74,26 @@ export const RecruiterService = {
   ) {
     const { page, pageSize, from, to } = parsePagination(pagination)
 
-    let query = supabase
-      .from('user')
-      .select(
-        `
-        id, name, email,
-        person_profile!user_id!inner (
-          graduation_year, major_or_interest, skills, updated_at, is_recruiter_visible,
-          chapter_membership!user_id!inner (
-            status,
-            chapter_id,
-            chapter (name, university)
-          )
-        )
-        `,
-        { count: 'exact' }
-      )
-      .eq('role', 'member')
-      .eq('person_profile.is_recruiter_visible', true)
-      .eq('person_profile.chapter_membership.status', 'approved')
-      .order('updated_at', { ascending: false, referencedTable: 'person_profile' })
-      .range(from, to)
+    const visibleStudents = await CompanyService.searchStudents(supabase, {
+      query: filters.query,
+      graduation_year: filters.graduation_year,
+      chapter_id: filters.chapter_id,
+    })
 
-    if (filters.query?.trim()) {
-      query = query.ilike('name', `%${filters.query.trim()}%`)
-    }
-
-    if (filters.graduation_year) {
-      query = query.eq('person_profile.graduation_year', filters.graduation_year)
-    }
-
-    if (filters.chapter_id) {
-      query = query.eq('person_profile.chapter_membership.chapter_id', filters.chapter_id)
-    }
-
-    if (filters.skills && filters.skills.length > 0) {
-      query = query.contains('person_profile.skills', filters.skills)
-    }
-
-    const { data, error, count } = await query
-    if (error) {
-      logger.error({ context: 'recruiter/talent-pool', error: error }, 'getTalentPool error')
-      return {
-        students: [] as TalentPoolStudent[],
-        total: 0,
-        page,
-        pageSize,
-        totalPages: 0,
-        hasNextPage: false,
-      }
-    }
-
-    const students = ((data ?? []) as unknown as TalentPoolRow[])
-      .map(mapTalentPoolRow)
+    const students = visibleStudents
+      .map(mapVisibleStudentToTalentPoolStudent)
       .filter((student): student is TalentPoolStudent => student !== null)
+      .filter((student) => {
+        if (!filters.skills || filters.skills.length === 0) return true
+        return filters.skills.every((skill) => student.skills.includes(skill))
+      })
 
-    const total = count ?? 0
+    const total = students.length
     const totalPages = total === 0 ? 0 : Math.ceil(total / pageSize)
+    const paginatedStudents = students.slice(from, to + 1)
 
     return {
-      students,
+      students: paginatedStudents,
       total,
       page,
       pageSize,
@@ -171,143 +109,18 @@ export const RecruiterService = {
     pagination?: TalentPoolPagination
   ) {
     const { page, pageSize } = parsePagination(pagination)
-
-    const { data: savedRows, error: savedError } = await supabase
-      .from('saved_student')
-      .select('student_id, saved_at')
-      .eq('recruiter_id', recruiterId)
-      .order('saved_at', { ascending: false })
-
-    if (savedError) {
-      logger.error({ context: 'recruiter/talent-pool', error: savedError }, 'getSavedStudents error')
-      return {
-        students: [] as TalentPoolStudent[],
-        total: 0,
-        page,
-        pageSize,
-        totalPages: 0,
-        hasNextPage: false,
-      }
-    }
-
-    const savedStudentIds = (savedRows ?? []).map((row) => row.student_id)
-    if (savedStudentIds.length === 0) {
-      return {
-        students: [] as TalentPoolStudent[],
-        total: 0,
-        page,
-        pageSize,
-        totalPages: 0,
-        hasNextPage: false,
-      }
-    }
-
-    const [{ data: users, error: usersError }, { data: profiles, error: profilesError }] = await Promise.all([
-      supabase
-        .from('user')
-        .select('id, name, email')
-        .in('id', savedStudentIds),
-      supabase
-        .from('person_profile')
-        .select('user_id, graduation_year, major_or_interest, skills, updated_at, is_recruiter_visible')
-        .in('user_id', savedStudentIds)
-        .eq('is_recruiter_visible', true),
-    ])
-
-    if (usersError || profilesError) {
-      logger.error(
-        { context: 'recruiter/talent-pool', error: usersError ?? profilesError },
-        'getSavedStudents profile load error'
-      )
-      return {
-        students: [] as TalentPoolStudent[],
-        total: 0,
-        page,
-        pageSize,
-        totalPages: 0,
-        hasNextPage: false,
-      }
-    }
-
-    const profileUserIds = (profiles ?? []).map((profile) => profile.user_id)
-    const { data: memberships, error: membershipsError } = profileUserIds.length > 0
-      ? await supabase
-          .from('chapter_membership')
-          .select('user_id, chapter_id')
-          .in('user_id', profileUserIds)
-          .eq('status', 'approved')
-      : { data: [], error: null }
-
-    if (membershipsError) {
-      logger.error({ context: 'recruiter/talent-pool', error: membershipsError }, 'getSavedStudents membership error')
-      return {
-        students: [] as TalentPoolStudent[],
-        total: 0,
-        page,
-        pageSize,
-        totalPages: 0,
-        hasNextPage: false,
-      }
-    }
-
-    const chapterIds = Array.from(new Set((memberships ?? []).map((membership) => membership.chapter_id)))
-    const { data: chapters, error: chaptersError } = chapterIds.length > 0
-      ? await supabase
-          .from('chapter')
-          .select('id, name, university')
-          .in('id', chapterIds)
-      : { data: [], error: null }
-
-    if (chaptersError) {
-      logger.error({ context: 'recruiter/talent-pool', error: chaptersError }, 'getSavedStudents chapter error')
-      return {
-        students: [] as TalentPoolStudent[],
-        total: 0,
-        page,
-        pageSize,
-        totalPages: 0,
-        hasNextPage: false,
-      }
-    }
-
-    const usersById = new Map((users ?? []).map((user) => [user.id, user]))
-    const profilesByUserId = new Map((profiles ?? []).map((profile) => [profile.user_id, profile]))
-    const membershipsByUserId = new Map((memberships ?? []).map((membership) => [membership.user_id, membership]))
-    const chaptersById = new Map((chapters ?? []).map((chapter) => [chapter.id, chapter]))
     const query = filters.query?.trim().toLowerCase()
+    const savedRows = await CompanyService.getSavedStudents(supabase, recruiterId)
+    const savedChapterIdsByStudentId = new Map(
+      savedRows.map((saved) => [saved.student_id, saved.student.person_profile?.chapter_id ?? null])
+    )
 
-    const students = savedStudentIds
-      .map((studentId) => {
-        const user = usersById.get(studentId)
-        const profile = profilesByUserId.get(studentId)
-        const membership = membershipsByUserId.get(studentId)
-        const chapter = membership?.chapter_id ? chaptersById.get(membership.chapter_id) : null
-
-        if (!user || !profile || !membership || !chapter) return null
-
-        return mapTalentPoolRow({
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          person_profile: {
-            graduation_year: profile.graduation_year,
-            major_or_interest: profile.major_or_interest,
-            skills: profile.skills,
-            updated_at: profile.updated_at,
-            linkedin_url: null,
-            chapter_membership: {
-              chapter: {
-                name: chapter.name,
-                university: chapter.university,
-              },
-            },
-          },
-        })
-      })
+    const students = savedRows
+      .map((saved) => mapVisibleStudentToTalentPoolStudent(saved.student))
       .filter((student): student is TalentPoolStudent => student !== null)
       .filter((student) => !query || student.name.toLowerCase().includes(query))
       .filter((student) => !filters.graduation_year || student.graduation_year === filters.graduation_year)
-      .filter((student) => !filters.chapter_id || membershipsByUserId.get(student.id)?.chapter_id === filters.chapter_id)
+      .filter((student) => !filters.chapter_id || savedChapterIdsByStudentId.get(student.id) === filters.chapter_id)
       .filter((student) => {
         if (!filters.skills || filters.skills.length === 0) return true
         return filters.skills.every((skill) => student.skills.includes(skill))
@@ -328,36 +141,18 @@ export const RecruiterService = {
   },
 
   async getTalentPoolFilterOptions(supabase: SupabaseClient<Database>) {
-    const { data, error } = await supabase
-      .from('person_profile')
-      .select(
-        `
-        graduation_year,
-        chapter_membership!inner (
-          chapter_id,
-          status,
-          chapter (id, name)
-        )
-        `
-      )
-      .eq('is_recruiter_visible', true)
-      .eq('chapter_membership.status', 'approved')
-
-    if (error) {
-      logger.error({ context: 'recruiter/talent-pool', error: error }, 'getTalentPoolFilterOptions error')
-      return { years: [] as number[], chapters: [] as Array<{ id: string; name: string }> }
-    }
-
-    const filterRows = (data ?? []) as unknown as TalentPoolFilterRow[]
+    const visibleStudents = await CompanyService.getVisibleStudents(supabase)
     const years = Array.from(
-      new Set(filterRows.map((row) => row.graduation_year).filter((year): year is number => !!year))
+      new Set(
+        visibleStudents
+          .map((student) => student.person_profile?.graduation_year ?? null)
+          .filter((year): year is number => !!year)
+      )
     ).sort((a, b) => a - b)
 
     const chaptersById = new Map<string, { id: string; name: string }>()
-    for (const row of filterRows) {
-      const chapter = Array.isArray(row.chapter_membership.chapter)
-        ? row.chapter_membership.chapter[0]
-        : row.chapter_membership.chapter
+    for (const student of visibleStudents) {
+      const chapter = student.chapter
       if (chapter?.id && chapter?.name && !chaptersById.has(chapter.id)) {
         chaptersById.set(chapter.id, { id: chapter.id, name: chapter.name })
       }
@@ -400,58 +195,37 @@ export const RecruiterService = {
     major: string | null
     skills: string[]
     linkedin_url: string | null
+    portfolio_url: string | null
     resume: {
       file_name: string
       file_url: string
       uploaded_at: string
     } | null
   } | null> {
-    const { data, error } = await supabase
-      .from('user')
-      .select(
-        `
-        id, name, email,
-        person_profile!user_id!inner (
-          major_or_interest, graduation_year, skills, linkedin_url, is_recruiter_visible,
-          chapter_membership!user_id!inner (
-            status,
-            chapter_id,
-            chapter (name, university)
-          )
-        ),
-        resume!left (
-          file_name, file_url, uploaded_at
-        )
-        `
-      )
-      .eq('id', studentId)
-      .eq('role', 'member')
-      .eq('person_profile.is_recruiter_visible', true)
-      .eq('person_profile.chapter_membership.status', 'approved')
-      .maybeSingle()
+    const student = await CompanyService.getStudentById(supabase, studentId)
+    if (!student) return null
+    if (!student.person_profile) return null
 
-    if (error || !data) {
-      if (error) logger.error({ context: 'RecruiterService.getStudentProfile', error: error }, 'error')
-      return null
-    }
+    const { data: resume, error } = await supabase
+      .from('resume')
+      .select('file_name, file_url, uploaded_at')
+      .eq('student_id', studentId)
+      .maybeSingle<{ file_name: string; file_url: string; uploaded_at: string }>()
 
-    const student = data as unknown as TalentPoolRow & {
-      resume: { file_name: string; file_url: string; uploaded_at: string } | { file_name: string; file_url: string; uploaded_at: string }[] | null
+    if (error) {
+      logger.error({ context: 'RecruiterService.getStudentProfile', error }, 'resume load error')
     }
-    const profile = Array.isArray(student.person_profile) ? student.person_profile[0] : student.person_profile
-    if (!profile) return null
-    const chapter = Array.isArray(profile.chapter_membership.chapter) ? profile.chapter_membership.chapter[0] : profile.chapter_membership.chapter
-    const resume = Array.isArray(student.resume) ? student.resume[0] : student.resume
 
     return {
       id: student.id,
       name: student.name ?? '',
       email: student.email,
-      chapter: chapter ? { name: chapter.name, university: chapter.university } : null,
-      graduation_year: profile.graduation_year ?? null,
-      major: profile.major_or_interest ?? null,
-      skills: Array.isArray(profile.skills) ? profile.skills : [],
-      linkedin_url: profile.linkedin_url ?? null,
+      chapter: student.chapter ? { name: student.chapter.name, university: student.chapter.university } : null,
+      graduation_year: student.person_profile.graduation_year ?? null,
+      major: student.person_profile.major_or_interest ?? null,
+      skills: Array.isArray(student.person_profile.skills) ? student.person_profile.skills : [],
+      linkedin_url: student.person_profile.linkedin_url ?? null,
+      portfolio_url: student.person_profile.portfolio_url ?? null,
       resume: resume
         ? {
             file_name: resume.file_name,
@@ -468,6 +242,11 @@ export const RecruiterService = {
     studentId: string,
     fileUrl: string
   ): Promise<{ success: true; url: string } | { success: false; error: string }> {
+    const student = await this.getStudentProfile(supabase, studentId)
+    if (!student) {
+      return { success: false, error: 'Profile not found or unavailable.' }
+    }
+
     const marker = '/storage/v1/object/public/resumes/'
     const markerIndex = fileUrl.indexOf(marker)
     if (markerIndex < 0) {

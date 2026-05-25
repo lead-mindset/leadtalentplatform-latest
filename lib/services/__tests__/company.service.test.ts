@@ -122,6 +122,7 @@ function queueVisibleStudent(
             major_or_interest: 'CS',
             graduation_year: 2025,
             linkedin_url: null,
+            portfolio_url: 'https://portfolio.example.com/student',
             skills: ['React'],
             is_recruiter_visible: true,
             updated_at: '2024-01-01',
@@ -196,6 +197,7 @@ describe('CompanyService', () => {
       expect(result).not.toBeNull()
       expect(result?.name).toBe('Student')
       expect(result?.person_profile?.is_recruiter_visible).toBe(true)
+      expect(result?.person_profile?.portfolio_url).toBe('https://portfolio.example.com/student')
       expect(tableMocks.person_profile._builder.eq).toHaveBeenCalledWith('is_recruiter_visible', true)
       expect(tableMocks.chapter_membership._builder.eq).toHaveBeenCalledWith('status', 'approved')
     })
@@ -218,6 +220,18 @@ describe('CompanyService', () => {
       const result = await CompanyService.getStudentById(mockSupabase as unknown as SupabaseClient, 'student-1')
 
       expect(result).toBeNull()
+    })
+
+    it('should rely on approved membership so pending rejected and alumni-only users stay hidden', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      queueVisibleStudent(tableMocks, { approved: false })
+
+      const result = await CompanyService.getStudentById(mockSupabase as unknown as SupabaseClient, 'student-1')
+
+      expect(result).toBeNull()
+      expect(tableMocks.person_profile._builder.eq).toHaveBeenCalledWith('is_recruiter_visible', true)
+      expect(tableMocks.chapter_membership._builder.eq).toHaveBeenCalledWith('status', 'approved')
     })
 
     it('should return null on error', async () => {
@@ -363,6 +377,7 @@ describe('CompanyService', () => {
                 major_or_interest: 'CS',
                 graduation_year: 2025,
                 linkedin_url: null,
+                portfolio_url: 'https://portfolio.example.com/student',
                 skills: ['React'],
                 is_recruiter_visible: true,
                 updated_at: '2024-01-01',
@@ -390,6 +405,7 @@ describe('CompanyService', () => {
                 major_or_interest: 'CS',
                 graduation_year: 2025,
                 linkedin_url: null,
+                portfolio_url: 'https://portfolio.example.com/hidden',
                 skills: ['React'],
                 is_recruiter_visible: false,
                 updated_at: '2024-01-01',
