@@ -108,6 +108,10 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
       select: vi.fn().mockReturnValue(selectChain),
       _selectChain: selectChain,
     },
+    published_event_listing: {
+      select: vi.fn().mockReturnValue(selectChain),
+      _selectChain: selectChain,
+    },
     event_chapter: {
       select: vi.fn().mockReturnValue(selectChain),
       insert: vi.fn().mockReturnValue(insertChain),
@@ -1057,7 +1061,7 @@ describe('EventService', () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
       const futureDate = new Date(Date.now() + 86400000).toISOString()
 
-      tableMocks.event_with_chapter._selectChain.then.mockImplementationOnce((resolve: (value: unknown) => unknown) =>
+      tableMocks.published_event_listing._selectChain.then.mockImplementationOnce((resolve: (value: unknown) => unknown) =>
         resolve({
           data: [
             {
@@ -1078,21 +1082,21 @@ describe('EventService', () => {
               created_by_id: 'user-1',
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
+              location_name: null,
+              location_address: null,
+              location_city: null,
+              location_region: null,
+              location_latitude: null,
+              location_longitude: null,
               chapter_name: 'Chapter 1',
               chapter_university: 'Uni 1',
               chapter_city: 'City',
               chapter_region: 'Region',
+              registrations_count: 1,
               created_by_name: 'Creator',
               created_by_email: 'creator@test.com',
             },
           ],
-          error: null,
-        })
-      )
-
-      tableMocks.event_registration._selectChain.then.mockImplementationOnce((resolve: (value: unknown) => unknown) =>
-        resolve({
-          data: [{ event_id: 'evt-1', status: 'registered' }],
           error: null,
         })
       )
@@ -1102,12 +1106,13 @@ describe('EventService', () => {
       expect(result).toHaveLength(1)
       expect(result[0].id).toBe('evt-1')
       expect(result[0]._count.registrations).toBe(1)
+      expect(tableMocks.event_registration.select).not.toHaveBeenCalled()
     })
 
     it('should return empty array on error', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.event_with_chapter._selectChain.then.mockImplementationOnce((resolve: (value: unknown) => unknown) =>
+      tableMocks.published_event_listing._selectChain.then.mockImplementationOnce((resolve: (value: unknown) => unknown) =>
         resolve({ data: null, error: { message: 'DB error' } })
       )
 

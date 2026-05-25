@@ -1,8 +1,9 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { EventService } from '@/lib/services/event.service'
 import { assertCanAccessEvent } from './access'
+import { PUBLIC_EVENTS_CACHE_TAG } from '@/lib/data/public-events'
 
 export type DeleteEventResponse =
   | { success: true }
@@ -22,6 +23,7 @@ export async function deleteEvent(eventId: string): Promise<DeleteEventResponse>
     return { error: result.error ?? 'Failed to delete event' }
   }
 
+  revalidateTag(PUBLIC_EVENTS_CACHE_TAG, { expire: 0 })
   revalidatePath('/events')
   revalidatePath('/chapter/events')
   revalidatePath('/admin/events')

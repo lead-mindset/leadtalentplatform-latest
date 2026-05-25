@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { requireAdmin, requireChapterEditor, requireUser } from '@/lib/auth'
 import { EventService } from '@/lib/services/event.service'
 import { ChapterPermissionService, type ChapterPermissionKey } from '@/lib/services/chapter-permission.service'
+import { getCachedPublishedEvents } from '@/lib/data/public-events'
 import { assertCanAccessEvent } from './access'
 import type {
   EventWithDetails,
@@ -12,8 +13,7 @@ import type {
 } from '@/lib/types'
 
 export async function getPublishedEvents(): Promise<EventWithDetails[]> {
-  const supabase = await createClient()
-  return EventService.getPublishedEvents(supabase)
+  return getCachedPublishedEvents()
 }
 
 export async function getEventById(id: string): Promise<EventWithDetails | null> {

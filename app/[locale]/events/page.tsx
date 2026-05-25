@@ -6,7 +6,7 @@ import {
   Monitor,
   Users,
 } from 'lucide-react'
-import { getPublishedEvents } from '@/lib/actions/events/get-data'
+import { getCachedPublishedEvents } from '@/lib/data/public-events'
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -267,7 +267,7 @@ function EventCard({ event, locale }: { event: EventWithDetails; locale: PublicE
 
 async function EventsContent({ locale }: { locale: PublicEventsLocale }) {
   const copy = EVENT_COPY[locale]
-  const events: EventWithDetails[] = await getPublishedEvents()
+  const events: EventWithDetails[] = await getCachedPublishedEvents()
   const now = Date.now()
   const upcomingEvents = events
     .filter((event) => new Date(event.end_at).getTime() >= now)

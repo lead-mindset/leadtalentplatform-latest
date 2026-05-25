@@ -5,6 +5,8 @@ import { EventService } from '@/lib/services/event.service'
 
 vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
+  revalidateTag: vi.fn(),
+  unstable_cache: (callback: unknown) => callback,
 }))
 
 vi.mock('../access', () => ({

@@ -1,13 +1,14 @@
 'use server'
 
 import { headers } from 'next/headers'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { z } from 'zod'
 import { requireUser } from '@/lib/auth'
 import { EventService } from '@/lib/services/event.service'
 import { sendApplicationReceivedEmail } from '@/lib/emails/send-email'
 import type { EventRegistrationRow } from '@/lib/types'
 import { getEventRegistrationPreflight } from '@/lib/actions/events/register.helpers'
+import { PUBLIC_EVENTS_CACHE_TAG } from '@/lib/data/public-events'
 
 const ApplicationAnswerSchema = z.object({
   questionId: z.string().uuid(),
@@ -27,6 +28,7 @@ export type RegisterForEventState = {
 }
 
 function revalidateEventRegistrationPaths(eventId: string) {
+  revalidateTag(PUBLIC_EVENTS_CACHE_TAG, { expire: 0 })
   revalidatePath('/events')
   revalidatePath(`/events/${eventId}`)
   revalidatePath('/student/events')

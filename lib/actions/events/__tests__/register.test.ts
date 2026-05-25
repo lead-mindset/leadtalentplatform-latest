@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   validateEventForRegistration: vi.fn(),
   registerForEvent: vi.fn(),
   revalidatePath: vi.fn(),
+  revalidateTag: vi.fn(),
 }))
 
 vi.mock('next/headers', () => ({
@@ -20,6 +21,8 @@ vi.mock('next/headers', () => ({
 
 vi.mock('next/cache', () => ({
   revalidatePath: mocks.revalidatePath,
+  revalidateTag: mocks.revalidateTag,
+  unstable_cache: (callback: unknown) => callback,
 }))
 
 vi.mock('@/lib/auth', () => ({

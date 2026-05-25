@@ -1,8 +1,9 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { requireUser } from '@/lib/auth'
 import { EventService } from '@/lib/services/event.service'
+import { PUBLIC_EVENTS_CACHE_TAG } from '@/lib/data/public-events'
 
 export async function cancelRegistration(formData: FormData): Promise<void> {
   const { supabase, user } = await requireUser()
@@ -16,6 +17,7 @@ export async function cancelRegistration(formData: FormData): Promise<void> {
     return
   }
 
+  revalidateTag(PUBLIC_EVENTS_CACHE_TAG, { expire: 0 })
   revalidatePath('/student/events')
   revalidatePath('/events')
   revalidatePath(`/events/${formData.get('eventId')}`)

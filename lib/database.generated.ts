@@ -669,6 +669,13 @@ export type Database = {
             referencedRelation: "event_with_chapter"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_event_application_question_event"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "published_event_listing"
+            referencedColumns: ["id"]
+          },
         ]
       }
       event_chapter: {
@@ -720,6 +727,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "event_with_chapter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_chapter_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "published_event_listing"
             referencedColumns: ["id"]
           },
         ]
@@ -775,6 +789,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "event_with_chapter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_registration_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "published_event_listing"
             referencedColumns: ["id"]
           },
           {
@@ -1318,6 +1339,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "event_registration_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "published_event_listing"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "event_registration_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -1408,6 +1436,54 @@ export type Database = {
           type?: string | null
         }
         Relationships: []
+      }
+      published_event_listing: {
+        Row: {
+          access_model: string | null
+          application_form_url: string | null
+          capacity: number | null
+          chapter_city: string | null
+          chapter_id: string | null
+          chapter_name: string | null
+          chapter_region: string | null
+          chapter_university: string | null
+          cover_image: string | null
+          created_at: string | null
+          created_by_id: string | null
+          description: string | null
+          end_at: string | null
+          event_type: Database["public"]["Enums"]["EventType"] | null
+          id: string | null
+          is_published: boolean | null
+          location: string | null
+          location_address: string | null
+          location_city: string | null
+          location_latitude: number | null
+          location_longitude: number | null
+          location_name: string | null
+          location_region: string | null
+          meeting_url: string | null
+          registrations_count: number | null
+          start_at: string | null
+          title: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_created_by_id_fkey"
+            columns: ["created_by_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
@@ -1550,6 +1626,11 @@ export type Database = {
         Args: { check_event_id: string; check_permission_key: string }
         Returns: boolean
       }
+      can_access_resume_object: {
+        Args: { object_name: string }
+        Returns: boolean
+      }
+      can_upload_event_cover: { Args: never; Returns: boolean }
       check_is_admin: { Args: never; Returns: boolean }
       current_user_role: { Args: never; Returns: string }
       disablelongtransactions: { Args: never; Returns: string }
