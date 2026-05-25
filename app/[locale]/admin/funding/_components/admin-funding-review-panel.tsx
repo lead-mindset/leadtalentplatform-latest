@@ -26,6 +26,7 @@ import {
   formatFundingCurrency,
 } from '@/lib/funding-display'
 import {
+  closeAdminFundingRequest,
   reviewFundingRequest,
   setFundingSource as saveFundingSource,
 } from '@/lib/actions/funding/admin'
@@ -50,7 +51,9 @@ export function AdminFundingReviewPanel({
     (request.internal_funding_source as FundingSourceKey | null) ?? ''
   )
   const [sourceNote, setSourceNote] = useState(request.internal_funding_source_note ?? '')
+  const [closureNote, setClosureNote] = useState(request.closure_note ?? '')
   const canReview = request.status === 'submitted'
+  const canClose = request.status === 'approved' || request.status === 'receipts_due'
 
   function runReview(decision: ReviewDecision) {
     startTransition(() => {
@@ -89,6 +92,25 @@ export function AdminFundingReviewPanel({
         }
 
         toast.success('Fuente interna actualizada.')
+        router.refresh()
+      })()
+    })
+  }
+
+  function runClose() {
+    startTransition(() => {
+      void (async () => {
+        const result = await closeAdminFundingRequest({
+          requestId: request.id,
+          closureNote: closureNote || null,
+        })
+
+        if (!result.success) {
+          toast.error(result.error)
+          return
+        }
+
+        toast.success('Solicitud cerrada.')
         router.refresh()
       })()
     })
@@ -198,6 +220,30 @@ export function AdminFundingReviewPanel({
           </Button>
         </CardContent>
       </Card>
+
+      {canClose && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Cierre y regularizacion</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor={`closure-note-${request.id}`}>Nota de cierre</Label>
+              <Textarea
+                id={`closure-note-${request.id}`}
+                value={closureNote}
+                onChange={(event) => setClosureNote(event.target.value)}
+                rows={3}
+                disabled={isPending}
+                placeholder="Usa esto para excepciones justificadas o regularizacion manual."
+              />
+            </div>
+            <Button type="button" variant="outline" className="w-full" onClick={runClose} disabled={isPending}>
+              Cerrar solicitud
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
