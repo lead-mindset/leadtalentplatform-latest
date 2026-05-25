@@ -42,7 +42,7 @@ function FundingRequestCard({ request }: { request: FundingRequestRow }) {
           <div className="min-w-0 space-y-2">
             <div className="flex flex-wrap items-center gap-2">
               <FundingStatusBadge status={status} />
-              {request.is_late_request && <Badge variant="warning">Solicitud tardia</Badge>}
+              {request.is_late_request && <Badge variant="warning">Solicitud tardía</Badge>}
             </div>
             <div>
               <h2 className="text-base font-semibold text-foreground">{request.title}</h2>
@@ -125,7 +125,7 @@ export default async function ChapterFundingPage() {
       />
 
       <PageHeader
-        eyebrow="Herramientas del capitulo"
+        eyebrow="Herramientas del capítulo"
         title="Financiamiento"
         description="Solicita apoyo para eventos o iniciativas y mantén visible el estado de revisión y comprobantes."
         actions={
@@ -140,7 +140,7 @@ export default async function ChapterFundingPage() {
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatBlock label="Activas" value={activeRequests.length} helper="Abiertas o en seguimiento" />
-        <StatBlock label="En revision" value={getStatusCount(requests, 'submitted')} helper="Pendientes de admin/finanzas" />
+        <StatBlock label="En revisión" value={getStatusCount(requests, 'submitted')} helper="Pendientes de admin/finanzas" />
         <StatBlock label="Aprobadas" value={getStatusCount(requests, 'approved')} helper="Con seguimiento posterior" />
         <StatBlock label="Comprobantes" value={getStatusCount(requests, 'receipts_due')} helper="Pendientes de regularizar" />
       </div>
@@ -151,9 +151,9 @@ export default async function ChapterFundingPage() {
             <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
               <Icons.FileText className="h-5 w-5 text-primary" />
             </div>
-            <h2 className="text-xl font-semibold">Todavia no hay solicitudes</h2>
+            <h2 className="text-xl font-semibold">Todavía no hay solicitudes</h2>
             <p className="mx-auto mt-2 mb-6 max-w-md text-sm text-muted-foreground">
-              Crea una solicitud cuando tu chapter necesite apoyo para un evento o iniciativa con impacto claro.
+              Crea una solicitud cuando tu capítulo necesite apoyo para un evento o iniciativa con impacto claro.
             </p>
             <Button asChild>
               <Link href="/chapter/funding/new">
@@ -168,7 +168,7 @@ export default async function ChapterFundingPage() {
           <div className="space-y-4">
             <div>
               <h2 className="text-lg font-semibold">Solicitudes activas</h2>
-              <p className="text-sm text-muted-foreground">Borradores, revision, aprobadas y comprobantes pendientes.</p>
+              <p className="text-sm text-muted-foreground">Borradores, revisión, aprobadas y comprobantes pendientes.</p>
             </div>
             {activeRequests.length === 0 ? (
               <Card>

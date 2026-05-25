@@ -191,7 +191,7 @@ export function FundingRequestForm({
             router.push('/chapter/funding')
             return
           }
-          toast.success('Solicitud enviada a revision.')
+          toast.success('Solicitud enviada a revisión.')
         } else {
           toast.success('Borrador guardado.')
         }
@@ -233,7 +233,7 @@ export function FundingRequestForm({
             </div>
 
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="purpose">Proposito <span className="text-primary">*</span></Label>
+              <Label htmlFor="purpose">Propósito <span className="text-primary">*</span></Label>
               <Textarea
                 id="purpose"
                 value={purpose}
@@ -252,7 +252,7 @@ export function FundingRequestForm({
               />
               {isLate && (
                 <p className="text-xs text-warning">
-                  Solicitud tardia: faltan menos de 14 dias. Se puede enviar, pero puede requerir revision especial.
+                  Solicitud tardía: faltan menos de 14 días. Se puede enviar, pero puede requerir revisión especial.
                 </p>
               )}
             </div>
@@ -280,7 +280,7 @@ export function FundingRequestForm({
 
         <Card>
           <CardHeader>
-            <CardTitle>Alineacion con LEAD</CardTitle>
+            <CardTitle>Alineación con LEAD</CardTitle>
           </CardHeader>
           <CardContent className="space-y-5">
             <div className="space-y-3">
@@ -320,7 +320,7 @@ export function FundingRequestForm({
             <CardTitle>Desglose del presupuesto</CardTitle>
             <Button type="button" variant="outline" onClick={addBudgetItem} className="w-full sm:w-auto">
               <Icons.Plus className="mr-2 h-4 w-4" />
-              Agregar item
+              Agregar ítem
             </Button>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -336,7 +336,7 @@ export function FundingRequestForm({
                 />
               </div>
               <div className="rounded-md border border-border/60 p-3">
-                <p className="text-xs text-muted-foreground">Total de items</p>
+                <p className="text-xs text-muted-foreground">Total de ítems</p>
                 <p className="text-lg font-semibold">{formatFundingCurrency(budgetTotal)}</p>
                 <p className={budgetDiff === 0 ? 'text-xs text-success' : 'text-xs text-warning'}>
                   {budgetDiff === 0 ? 'Cuadra con el monto' : `${formatFundingCurrency(Math.abs(budgetDiff))} por ajustar`}
@@ -348,7 +348,7 @@ export function FundingRequestForm({
               {budgetItems.map((item, index) => (
                 <div key={index} className="grid gap-3 rounded-md border border-border/60 p-3 md:grid-cols-[minmax(0,1fr)_13rem_8rem_auto]">
                   <div className="space-y-2">
-                    <Label htmlFor={`budget-label-${index}`}>Item <span className="text-primary">*</span></Label>
+                    <Label htmlFor={`budget-label-${index}`}>Ítem <span className="text-primary">*</span></Label>
                     <Input
                       id={`budget-label-${index}`}
                       value={item.label}
@@ -389,7 +389,7 @@ export function FundingRequestForm({
                       size="icon"
                       onClick={() => removeBudgetItem(index)}
                       disabled={budgetItems.length === 1}
-                      aria-label="Quitar item"
+                      aria-label="Quitar ítem"
                     >
                       <Icons.Trash2 className="h-4 w-4" />
                     </Button>
@@ -424,12 +424,12 @@ export function FundingRequestForm({
       <aside className="space-y-4">
         <Card>
           <CardHeader>
-            <CardTitle>Reglas rapidas</CardTitle>
+            <CardTitle>Reglas rápidas</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-muted-foreground">
-            <p>Normalmente califica comida moderada, materiales, decoracion minima y recursos de aprendizaje.</p>
+            <p>Normalmente califica comida moderada, materiales, decoración mínima y recursos de aprendizaje.</p>
             <p>Giveaways, gastos personales, merch no aprobado y transporte normal no califican por defecto.</p>
-            <p>Despues del evento se esperaran comprobantes, evidencia y una breve reflexion de impacto.</p>
+            <p>Después del evento se esperan comprobantes, evidencia y una breve reflexión de impacto.</p>
           </CardContent>
         </Card>
 

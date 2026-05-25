@@ -86,7 +86,7 @@ function FundingAdminCard({ context }: { context: FundingAdminRequestContext }) 
               <div className="min-w-0 space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
                   <FundingStatusBadge status={status} />
-                  {request.is_late_request && <Badge variant="warning">Solicitud tardia</Badge>}
+                  {request.is_late_request && <Badge variant="warning">Solicitud tardía</Badge>}
                   {sourceKey && <Badge variant="secondary">{FUNDING_SOURCE_LABELS[sourceKey]}</Badge>}
                 </div>
                 <div>
@@ -155,7 +155,7 @@ function FundingAdminCard({ context }: { context: FundingAdminRequestContext }) 
                 <MetaBlock label="Audiencia" value={request.expected_audience ?? 'No indicada'} />
                 <MetaBlock label="Asistencia" value={request.expected_attendee_count == null ? 'No indicada' : String(request.expected_attendee_count)} />
                 <MetaBlock label="Partner" value={request.partner_name ?? 'Sin partner'} />
-                <MetaBlock label="Limite comprobantes" value={formatFundingDate(request.accountability_due_at)} />
+                <MetaBlock label="Límite comprobantes" value={formatFundingDate(request.accountability_due_at)} />
               </div>
             )}
           </div>
@@ -180,9 +180,9 @@ export default async function AdminFundingPage({
     return (
       <div className="space-y-6">
         <PageHeader
-          eyebrow="Administracion"
+          eyebrow="Administración"
           title="Financiamiento"
-          description="Revisa solicitudes de financiamiento de capitulos y seguimiento de comprobantes."
+          description="Revisa solicitudes de financiamiento de capítulos y seguimiento de comprobantes."
         />
         <Card>
           <CardContent className="py-12 text-center">
@@ -200,9 +200,9 @@ export default async function AdminFundingPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Administracion"
+        eyebrow="Administración"
         title="Financiamiento"
-        description="Revisa solicitudes de financiamiento de capitulos, asigna fuente interna y monitorea comprobantes."
+        description="Revisa solicitudes de financiamiento de capítulos, asigna fuente interna y monitorea comprobantes."
       />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
@@ -235,7 +235,7 @@ export default async function AdminFundingPage({
             <CardContent className="py-14 text-center">
               <h3 className="text-lg font-semibold">No hay solicitudes en esta vista</h3>
               <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-                Cambia el filtro para revisar otros estados o espera nuevas solicitudes de los chapters.
+                Cambia el filtro para revisar otros estados o espera nuevas solicitudes de los capítulos.
               </p>
             </CardContent>
           </Card>

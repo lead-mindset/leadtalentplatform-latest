@@ -80,13 +80,13 @@ export default async function ChapterFundingDetailPage({
       />
 
       <PageHeader
-        eyebrow="Financiamiento del chapter"
+        eyebrow="Financiamiento del capítulo"
         title={request.title}
-        description="Revisa el estado, presupuesto, comprobantes y reflexion post-evento de esta solicitud."
+        description="Revisa el estado, presupuesto, comprobantes y reflexión post-evento de esta solicitud."
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <FundingStatusBadge status={status} />
-            {request.is_late_request && <Badge variant="warning">Solicitud tardia</Badge>}
+            {request.is_late_request && <Badge variant="warning">Solicitud tardía</Badge>}
             {overdue && <Badge variant="warning">Comprobantes vencidos</Badge>}
             {editable && (
               <Button asChild variant="outline">
@@ -100,7 +100,7 @@ export default async function ChapterFundingDetailPage({
       {overdue && (
         <Card className="border-warning/40 bg-warning/5">
           <CardContent className="py-4 text-sm">
-            Los comprobantes o evidencia estan vencidos. Esto no bloquea nuevas solicitudes en v1, pero ayuda a cerrar el ciclo con transparencia.
+            Los comprobantes o evidencia están vencidos. Esto no bloquea nuevas solicitudes en v1, pero ayuda a cerrar el ciclo con transparencia.
           </CardContent>
         </Card>
       )}
@@ -124,7 +124,7 @@ export default async function ChapterFundingDetailPage({
                 <MetaBlock label="Audiencia" value={request.expected_audience} />
                 <MetaBlock label="Asistencia esperada" value={request.expected_attendee_count == null ? 'No indicada' : String(request.expected_attendee_count)} />
                 <MetaBlock label="Partner" value={request.partner_name ?? 'Sin partner'} />
-                <MetaBlock label="Limite comprobantes" value={formatFundingDate(request.accountability_due_at)} />
+                <MetaBlock label="Límite comprobantes" value={formatFundingDate(request.accountability_due_at)} />
               </div>
 
               <div className="space-y-2">
@@ -164,7 +164,7 @@ export default async function ChapterFundingDetailPage({
             </CardHeader>
             <CardContent className="space-y-3">
               {detail.statusEvents.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Todavia no hay historial.</p>
+                <p className="text-sm text-muted-foreground">Todavía no hay historial.</p>
               ) : (
                 detail.statusEvents.map(event => (
                   <div key={event.id} className="rounded-md border border-border/60 p-3 text-sm">
