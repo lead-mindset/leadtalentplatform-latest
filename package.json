@@ -101,6 +101,7 @@
     "shadcn": "^4.3.0",
     "supabase": "2.92.1",
     "tailwindcss": "^4.1.18",
+    "tsx": "^4.21.0",
     "typescript": "^5",
     "vitest": "^4.1.5",
     "vitest-tsconfig-paths": "^3.4.1"
