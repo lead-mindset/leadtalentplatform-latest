@@ -1,0 +1,483 @@
+{
+  "version": 1,
+  "source": "chapter_eboard_csv_2026_05",
+  "sourceFile": "docs/Registro de Junta Ejecutiva(Sheet1).csv",
+  "allowedProposedAppRoles": [
+    "member",
+    "editor"
+  ],
+  "normalizationHints": [
+    "trim",
+    "lowercase",
+    "remove_accents",
+    "collapse_whitespace",
+    "strip_punctuation_for_matching"
+  ],
+  "notes": [
+    "Raw role titles must be preserved by consumers of this mapping.",
+    "E-board roles do not automatically become platform admins.",
+    "Editor access is recommendation-first and always requires human approval.",
+    "Detailed role taxonomy should not be forced into chapter_membership.position until future schema support exists."
+  ],
+  "default": {
+    "roleLevel": "member",
+    "functionalArea": "other",
+    "proposedAppRole": "member",
+    "proposedMembershipPosition": "member",
+    "proposedIdentityType": "chapter_member",
+    "confidence": "low",
+    "requiresReview": true,
+    "reviewReason": "Unmapped or ambiguous title"
+  },
+  "mappings": [
+    {
+      "id": "president",
+      "match": [
+        "presidente",
+        "presidenta",
+        "chapter president",
+        "president"
+      ],
+      "roleLevel": "president",
+      "functionalArea": "general_leadership",
+      "proposedAppRole": "editor",
+      "proposedMembershipPosition": "president",
+      "proposedIdentityType": "chapter_editor",
+      "confidence": "high",
+      "requiresReview": true,
+      "reviewReason": "Elevated editor access must be approved"
+    },
+    {
+      "id": "vice-president",
+      "match": [
+        "vicepresidente",
+        "vicepresidenta",
+        "vice presidente",
+        "vice presidenta",
+        "vp",
+        "vice president",
+        "vice-president"
+      ],
+      "roleLevel": "vice_president",
+      "functionalArea": "general_leadership",
+      "proposedAppRole": "editor",
+      "proposedMembershipPosition": "vice_president",
+      "proposedIdentityType": "chapter_editor",
+      "confidence": "high",
+      "requiresReview": true,
+      "reviewReason": "Elevated editor access must be approved"
+    },
+    {
+      "id": "chief-of-staff",
+      "match": [
+        "chief of staff",
+        "chief of staff / jefe de personal",
+        "jefe de personal",
+        "jefa de personal"
+      ],
+      "roleLevel": "chief_of_staff",
+      "functionalArea": "strategy_operations",
+      "proposedAppRole": "editor",
+      "proposedMembershipPosition": "editor",
+      "proposedIdentityType": "chapter_editor",
+      "confidence": "high",
+      "requiresReview": true,
+      "reviewReason": "Elevated editor access must be approved"
+    },
+    {
+      "id": "secretary",
+      "match": [
+        "secretario",
+        "secretaria",
+        "secretary",
+        "secretaria general",
+        "secretario general"
+      ],
+      "roleLevel": "director",
+      "functionalArea": "strategy_operations",
+      "proposedAppRole": "member",
+      "proposedMembershipPosition": "secretary",
+      "proposedIdentityType": "chapter_member",
+      "confidence": "high",
+      "requiresReview": false
+    },
+    {
+      "id": "treasury-finance",
+      "match": [
+        "tesorero",
+        "tesorera",
+        "tesoreria",
+        "tesorer\\u00eda",
+        "finanzas",
+        "finance",
+        "logistica y finanzas",
+        "log\\u00edstica y finanzas",
+        "director de logistica y finanzas",
+        "directora de logistica y finanzas"
+      ],
+      "roleLevel": "director",
+      "functionalArea": "finance_legal",
+      "proposedAppRole": "member",
+      "proposedMembershipPosition": "treasurer",
+      "proposedIdentityType": "chapter_member",
+      "confidence": "high",
+      "requiresReview": false
+    },
+    {
+      "id": "legal",
+      "match": [
+        "legal",
+        "compliance",
+        "cumplimiento",
+        "director legal",
+        "directora legal"
+      ],
+      "roleLevel": "director",
+      "functionalArea": "finance_legal",
+      "proposedAppRole": "member",
+      "proposedMembershipPosition": "member",
+      "proposedIdentityType": "chapter_member",
+      "confidence": "high",
+      "requiresReview": false
+    },
+    {
+      "id": "marketing-communications",
+      "match": [
+        "marketing",
+        "comunicaciones",
+        "communications",
+        "comms",
+        "prensa",
+        "contenido",
+        "redes",
+        "social media",
+        "director de marketing",
+        "directora de marketing",
+        "director de comunicaciones",
+        "directora de comunicaciones"
+      ],
+      "roleLevel": "director",
+      "functionalArea": "marketing_communications",
+      "proposedAppRole": "member",
+      "proposedMembershipPosition": "member",
+      "proposedIdentityType": "chapter_member",
+      "confidence": "high",
+      "requiresReview": false
+    },
+    {
+      "id": "people-talent",
+      "match": [
+        "rrhh",
+        "recursos humanos",
+        "gth",
+        "gestion del talento humano",
+        "gesti\\u00f3n del talento humano",
+        "people",
+        "talent",
+        "bienestar",
+        "cultura"
+      ],
+      "roleLevel": "director",
+      "functionalArea": "people_talent",
+      "proposedAppRole": "member",
+      "proposedMembershipPosition": "member",
+      "proposedIdentityType": "chapter_member",
+      "confidence": "high",
+      "requiresReview": false
+    },
+    {
+      "id": "chapter-development",
+      "match": [
+        "desarrollo de capitulo",
+        "desarrollo de cap\\u00edtulo",
+        "chapter development",
+        "pilar de desarrollo de capitulo",
+        "pilar de desarrollo de cap\\u00edtulo"
+      ],
+      "roleLevel": "director",
+      "functionalArea": "chapter_development",
+      "proposedAppRole": "member",
+      "proposedMembershipPosition": "member",
+      "proposedIdentityType": "chapter_member",
+      "confidence": "high",
+      "requiresReview": false
+    },
+    {
+      "id": "events-experience",
+      "match": [
+        "eventos",
+        "events",
+        "experiencia",
+        "experience",
+        "logistica",
+        "log\\u00edstica",
+        "operaciones de eventos"
+      ],
+      "roleLevel": "director",
+      "functionalArea": "events_experience",
+      "proposedAppRole": "member",
+      "proposedMembershipPosition": "member",
+      "proposedIdentityType": "chapter_member",
+      "confidence": "medium",
+      "requiresReview": false
+    },
+    {
+      "id": "academic-excellence",
+      "match": [
+        "lead academia",
+        "academia",
+        "academico",
+        "acad\\u00e9mico",
+        "excelencia academica",
+        "excelencia acad\\u00e9mica",
+        "desarrollo profesional y academico",
+        "desarrollo profesional y acad\\u00e9mico"
+      ],
+      "roleLevel": "director",
+      "functionalArea": "academic_excellence",
+      "proposedAppRole": "member",
+      "proposedMembershipPosition": "member",
+      "proposedIdentityType": "chapter_member",
+      "confidence": "medium",
+      "requiresReview": false
+    },
+    {
+      "id": "professional-development",
+      "match": [
+        "desarrollo profesional",
+        "professional development",
+        "empleabilidad",
+        "career",
+        "careers",
+        "mentoria",
+        "mentor\\u00eda"
+      ],
+      "roleLevel": "director",
+      "functionalArea": "professional_development",
+      "proposedAppRole": "member",
+      "proposedMembershipPosition": "member",
+      "proposedIdentityType": "chapter_member",
+      "confidence": "medium",
+      "requiresReview": false
+    },
+    {
+      "id": "community-impact",
+      "match": [
+        "impacto comunitario",
+        "community impact",
+        "impact lab",
+        "impacto",
+        "social impact",
+        "responsabilidad social"
+      ],
+      "roleLevel": "director",
+      "functionalArea": "community_impact",
+      "proposedAppRole": "member",
+      "proposedMembershipPosition": "member",
+      "proposedIdentityType": "chapter_member",
+      "confidence": "high",
+      "requiresReview": false
+    },
+    {
+      "id": "women-in-stem",
+      "match": [
+        "mujeres en stem",
+        "women in stem",
+        "lead her",
+        "impulso femenino",
+        "woman in stem",
+        "stem women"
+      ],
+      "roleLevel": "director",
+      "functionalArea": "women_in_stem",
+      "proposedAppRole": "member",
+      "proposedMembershipPosition": "member",
+      "proposedIdentityType": "chapter_member",
+      "confidence": "high",
+      "requiresReview": false
+    },
+    {
+      "id": "innovation-technology",
+      "match": [
+        "innovacion",
+        "innovaci\\u00f3n",
+        "tecnologia",
+        "tecnolog\\u00eda",
+        "technology",
+        "tech",
+        "digital",
+        "sistemas",
+        "data"
+      ],
+      "roleLevel": "director",
+      "functionalArea": "innovation_technology",
+      "proposedAppRole": "member",
+      "proposedMembershipPosition": "member",
+      "proposedIdentityType": "chapter_member",
+      "confidence": "medium",
+      "requiresReview": false
+    },
+    {
+      "id": "partnerships-external-relations",
+      "match": [
+        "alianzas",
+        "partnerships",
+        "partners",
+        "relaciones institucionales",
+        "relaciones externas",
+        "external relations",
+        "sponsors",
+        "sponsorship"
+      ],
+      "roleLevel": "director",
+      "functionalArea": "partnerships_external_relations",
+      "proposedAppRole": "member",
+      "proposedMembershipPosition": "member",
+      "proposedIdentityType": "chapter_member",
+      "confidence": "high",
+      "requiresReview": false
+    },
+    {
+      "id": "entrepreneurship",
+      "match": [
+        "emprendimiento",
+        "entrepreneurship",
+        "startups",
+        "startup",
+        "negocios"
+      ],
+      "roleLevel": "director",
+      "functionalArea": "entrepreneurship",
+      "proposedAppRole": "member",
+      "proposedMembershipPosition": "member",
+      "proposedIdentityType": "chapter_member",
+      "confidence": "medium",
+      "requiresReview": false
+    },
+    {
+      "id": "strategy-operations",
+      "match": [
+        "operaciones",
+        "operations",
+        "estrategia",
+        "strategy",
+        "pm",
+        "project management",
+        "program management",
+        "gestion de proyectos",
+        "gesti\\u00f3n de proyectos"
+      ],
+      "roleLevel": "director",
+      "functionalArea": "strategy_operations",
+      "proposedAppRole": "member",
+      "proposedMembershipPosition": "member",
+      "proposedIdentityType": "chapter_member",
+      "confidence": "medium",
+      "requiresReview": false
+    },
+    {
+      "id": "subdirector",
+      "match": [
+        "subdirector",
+        "subdirectora",
+        "sub director",
+        "sub directora",
+        "deputy director"
+      ],
+      "roleLevel": "subdirector",
+      "functionalArea": "other",
+      "proposedAppRole": "member",
+      "proposedMembershipPosition": "member",
+      "proposedIdentityType": "chapter_member",
+      "confidence": "medium",
+      "requiresReview": true,
+      "reviewReason": "Functional area should be inferred by a later normalization pass or human review"
+    },
+    {
+      "id": "director-generic",
+      "match": [
+        "director",
+        "directora",
+        "head"
+      ],
+      "roleLevel": "director",
+      "functionalArea": "other",
+      "proposedAppRole": "member",
+      "proposedMembershipPosition": "member",
+      "proposedIdentityType": "chapter_member",
+      "confidence": "low",
+      "requiresReview": true,
+      "reviewReason": "Generic director title needs functional area review"
+    },
+    {
+      "id": "coordinator",
+      "match": [
+        "coordinador",
+        "coordinadora",
+        "coordinator",
+        "coordinacion",
+        "coordinaci\\u00f3n"
+      ],
+      "roleLevel": "coordinator",
+      "functionalArea": "other",
+      "proposedAppRole": "member",
+      "proposedMembershipPosition": "member",
+      "proposedIdentityType": "chapter_member",
+      "confidence": "medium",
+      "requiresReview": true,
+      "reviewReason": "Coordinator title may need functional area review"
+    },
+    {
+      "id": "analyst",
+      "match": [
+        "analista",
+        "analyst",
+        "associate",
+        "asistente",
+        "assistant"
+      ],
+      "roleLevel": "analyst",
+      "functionalArea": "other",
+      "proposedAppRole": "member",
+      "proposedMembershipPosition": "member",
+      "proposedIdentityType": "chapter_member",
+      "confidence": "medium",
+      "requiresReview": true,
+      "reviewReason": "Analyst title may need functional area review"
+    },
+    {
+      "id": "volunteer",
+      "match": [
+        "voluntario",
+        "voluntaria",
+        "volunteer",
+        "apoyo"
+      ],
+      "roleLevel": "volunteer",
+      "functionalArea": "other",
+      "proposedAppRole": "member",
+      "proposedMembershipPosition": "member",
+      "proposedIdentityType": "chapter_member",
+      "confidence": "medium",
+      "requiresReview": false
+    },
+    {
+      "id": "advisor",
+      "match": [
+        "advisor",
+        "asesor",
+        "asesora",
+        "mentor",
+        "mentora"
+      ],
+      "roleLevel": "advisor",
+      "functionalArea": "other",
+      "proposedAppRole": "member",
+      "proposedMembershipPosition": "member",
+      "proposedIdentityType": "chapter_member",
+      "confidence": "medium",
+      "requiresReview": true,
+      "reviewReason": "Advisor status should be confirmed before import"
+    }
+  ]
+}

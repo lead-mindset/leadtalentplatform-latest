@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/dialog'
 import { createCompany, deleteCompany, updateCompany } from '@/lib/actions/admin/companies'
 import type { CompanyListItem } from '@/lib/services/admin.service'
+import { formatLeadDate } from '@/lib/utils/date-format'
 
 type Props = {
   items: CompanyListItem[]
@@ -158,7 +159,7 @@ export function CompaniesManagementClient({
                         {company.name}
                         <p className="mt-1 text-xs text-muted-foreground">{company.id}</p>
                       </TableCell>
-                      <TableCell>{new Date(company.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell>{formatLeadDate(company.created_at)}</TableCell>
                       <TableCell>{company.created_by_name ?? '-'}</TableCell>
                       <TableCell><Badge variant={company.active_recruiters > 0 ? 'success' : 'outline'}>{company.active_recruiters}</Badge></TableCell>
                       <TableCell><Badge variant={company.pending_invites > 0 ? 'warning' : 'outline'}>{company.pending_invites}</Badge></TableCell>

@@ -7,7 +7,8 @@ INSERT INTO "public"."chapter" ("id", "name", "university", "city", "region", "c
 -- Clean up existing persona users if running seed multiple times
 DELETE FROM auth.users WHERE email IN (
   'participant@test.com', 'member@test.com', 'editor@test.com',
-  'admin@test.com', 'staff@test.com', 'recruiter@test.com', 'alumni@test.com'
+  'admin@test.com', 'staff@test.com', 'recruiter@test.com', 'alumni@test.com',
+  'president@test.com', 'vp@test.com', 'eboard@test.com'
 );
 
 -- Insert Users into auth.users (Requires Supabase privileges to inject into auth schema)
@@ -19,7 +20,10 @@ VALUES
   ('44444444-4444-4444-4444-444444444444', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin@test.com', '$2b$10$d04rJdM2Gfm5OHSN2PpRzeYiXF00LKzkV//rhHDPW2CI07z/t8Wr.', NOW(), NOW(), NOW(), '', '', '', ''),
   ('55555555-5555-5555-5555-555555555555', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'staff@test.com', '$2b$10$d04rJdM2Gfm5OHSN2PpRzeYiXF00LKzkV//rhHDPW2CI07z/t8Wr.', NOW(), NOW(), NOW(), '', '', '', ''),
   ('66666666-6666-6666-6666-666666666666', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'recruiter@test.com', '$2b$10$d04rJdM2Gfm5OHSN2PpRzeYiXF00LKzkV//rhHDPW2CI07z/t8Wr.', NOW(), NOW(), NOW(), '', '', '', ''),
-  ('77777777-7777-7777-7777-777777777777', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'alumni@test.com', '$2b$10$d04rJdM2Gfm5OHSN2PpRzeYiXF00LKzkV//rhHDPW2CI07z/t8Wr.', NOW(), NOW(), NOW(), '', '', '', '');
+  ('77777777-7777-7777-7777-777777777777', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'alumni@test.com', '$2b$10$d04rJdM2Gfm5OHSN2PpRzeYiXF00LKzkV//rhHDPW2CI07z/t8Wr.', NOW(), NOW(), NOW(), '', '', '', ''),
+  ('81000000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'president@test.com', '$2b$10$d04rJdM2Gfm5OHSN2PpRzeYiXF00LKzkV//rhHDPW2CI07z/t8Wr.', NOW(), NOW(), NOW(), '', '', '', ''),
+  ('81000000-0000-4000-8000-000000000002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'vp@test.com', '$2b$10$d04rJdM2Gfm5OHSN2PpRzeYiXF00LKzkV//rhHDPW2CI07z/t8Wr.', NOW(), NOW(), NOW(), '', '', '', ''),
+  ('81000000-0000-4000-8000-000000000003', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'eboard@test.com', '$2b$10$d04rJdM2Gfm5OHSN2PpRzeYiXF00LKzkV//rhHDPW2CI07z/t8Wr.', NOW(), NOW(), NOW(), '', '', '', '');
 
 -- Align app-account rows created by public.handle_new_user().
 UPDATE public."user" SET name = 'Test Participant', role = 'member' WHERE id = '11111111-1111-1111-1111-111111111111';
@@ -29,6 +33,9 @@ UPDATE public."user" SET name = 'Test Admin', role = 'admin' WHERE id = '4444444
 UPDATE public."user" SET name = 'Test Staff', role = 'admin' WHERE id = '55555555-5555-5555-5555-555555555555';
 UPDATE public."user" SET name = 'Test Recruiter', role = 'recruiter' WHERE id = '66666666-6666-6666-6666-666666666666';
 UPDATE public."user" SET name = 'Test Alumni', role = 'member' WHERE id = '77777777-7777-7777-7777-777777777777';
+UPDATE public."user" SET name = 'Test President', role = 'member' WHERE id = '81000000-0000-4000-8000-000000000001';
+UPDATE public."user" SET name = 'Test Vice President', role = 'member' WHERE id = '81000000-0000-4000-8000-000000000002';
+UPDATE public."user" SET name = 'Test Eboard', role = 'member' WHERE id = '81000000-0000-4000-8000-000000000003';
 
 -- Insert Person Profiles (using user_id)
 INSERT INTO public.person_profile (
@@ -49,7 +56,10 @@ INSERT INTO public.person_profile (
   ('44444444-4444-4444-4444-444444444444', '44444444-4444-4444-4444-444444444444', 'LEAD Peru', 'Platform administration', null, 'https://linkedin.com/in/test-admin', null, ARRAY['Governance', 'Operations'], 'prefer_not_to_say', false),
   ('55555555-5555-5555-5555-555555555555', '55555555-5555-5555-5555-555555555555', 'LEAD Peru', 'Program operations', null, 'https://linkedin.com/in/test-staff', null, ARRAY['Programs', 'Community'], 'prefer_not_to_say', false),
   ('66666666-6666-6666-6666-666666666666', '66666666-6666-6666-6666-666666666666', 'Test Company', 'Recruiting', null, 'https://linkedin.com/in/test-recruiter', null, ARRAY['Hiring', 'Talent'], 'prefer_not_to_say', false),
-  ('77777777-7777-7777-7777-777777777777', '77777777-7777-7777-7777-777777777777', 'Universidad Nacional de Ingenieria', 'Finance', 2024, 'https://linkedin.com/in/test-alumni', 'https://test-alumni.dev', ARRAY['Finance', 'Mentorship'], 'woman', true);
+  ('77777777-7777-7777-7777-777777777777', '77777777-7777-7777-7777-777777777777', 'Universidad Nacional de Ingenieria', 'Finance', 2024, 'https://linkedin.com/in/test-alumni', 'https://test-alumni.dev', ARRAY['Finance', 'Mentorship'], 'woman', true),
+  ('81000000-0000-4000-8000-000000000001', '81000000-0000-4000-8000-000000000001', 'Universidad Nacional de Ingenieria', 'Industrial Engineering', 2026, 'https://linkedin.com/in/test-president', 'https://test-president.dev', ARRAY['Leadership', 'Strategy'], 'woman', true),
+  ('81000000-0000-4000-8000-000000000002', '81000000-0000-4000-8000-000000000002', 'Universidad Nacional de Ingenieria', 'Computer Science', 2026, 'https://linkedin.com/in/test-vp', 'https://test-vp.dev', ARRAY['Operations', 'Events'], 'man', true),
+  ('81000000-0000-4000-8000-000000000003', '81000000-0000-4000-8000-000000000003', 'Universidad Nacional de Ingenieria', 'Marketing', 2027, 'https://linkedin.com/in/test-eboard', 'https://test-eboard.dev', ARRAY['Marketing', 'Community'], 'prefer_not_to_say', true);
 
 -- Insert Chapter Memberships (using the layered membership model)
 INSERT INTO public.chapter_membership (
@@ -63,7 +73,10 @@ INSERT INTO public.chapter_membership (
 ) VALUES
   ('22222222-2222-2222-2222-222222222222', 'leaduni', 'member', 'approved', '44444444-4444-4444-4444-444444444444', 'LEAD-UNI-0001', NOW() - INTERVAL '180 days'),
   ('33333333-3333-3333-3333-333333333333', 'leaduni', 'editor', 'approved', '44444444-4444-4444-4444-444444444444', 'LEAD-UNI-0002', NOW() - INTERVAL '210 days'),
-  ('77777777-7777-7777-7777-777777777777', 'leaduni', 'member', 'alumni', '55555555-5555-5555-5555-555555555555', 'LEAD-UNI-0003', NOW() - INTERVAL '540 days');
+  ('77777777-7777-7777-7777-777777777777', 'leaduni', 'member', 'alumni', '55555555-5555-5555-5555-555555555555', 'LEAD-UNI-0003', NOW() - INTERVAL '540 days'),
+  ('81000000-0000-4000-8000-000000000001', 'leaduni', 'member', 'approved', '44444444-4444-4444-4444-444444444444', 'LEAD-UNI-0101', NOW() - INTERVAL '240 days'),
+  ('81000000-0000-4000-8000-000000000002', 'leaduni', 'member', 'approved', '44444444-4444-4444-4444-444444444444', 'LEAD-UNI-0102', NOW() - INTERVAL '230 days'),
+  ('81000000-0000-4000-8000-000000000003', 'leaduni', 'member', 'approved', '44444444-4444-4444-4444-444444444444', 'LEAD-UNI-0103', NOW() - INTERVAL '220 days');
 
 -- Insert Lead Identities (Global and membership-derived roles)
 INSERT INTO public.lead_identity (user_id, identity_type, chapter_id, issued_by_id, issued_at) VALUES
@@ -71,7 +84,242 @@ INSERT INTO public.lead_identity (user_id, identity_type, chapter_id, issued_by_
   ('33333333-3333-3333-3333-333333333333', 'chapter_editor', 'leaduni', '44444444-4444-4444-4444-444444444444', NOW() - INTERVAL '210 days'),
   ('44444444-4444-4444-4444-444444444444', 'founder', null, null, NOW() - INTERVAL '365 days'),
   ('55555555-5555-5555-5555-555555555555', 'staff', null, '44444444-4444-4444-4444-444444444444', NOW() - INTERVAL '300 days'),
-  ('77777777-7777-7777-7777-777777777777', 'alumni', 'leaduni', '55555555-5555-5555-5555-555555555555', NOW() - INTERVAL '540 days');
+  ('77777777-7777-7777-7777-777777777777', 'alumni', 'leaduni', '55555555-5555-5555-5555-555555555555', NOW() - INTERVAL '540 days'),
+  ('81000000-0000-4000-8000-000000000001', 'chapter_member', 'leaduni', '44444444-4444-4444-4444-444444444444', NOW() - INTERVAL '240 days'),
+  ('81000000-0000-4000-8000-000000000002', 'chapter_member', 'leaduni', '44444444-4444-4444-4444-444444444444', NOW() - INTERVAL '230 days'),
+  ('81000000-0000-4000-8000-000000000003', 'chapter_member', 'leaduni', '44444444-4444-4444-4444-444444444444', NOW() - INTERVAL '220 days');
+
+-- Seed explicit chapter-scoped e-board personas for permission regression tests.
+WITH seeded_roles(user_id, role_level, functional_area, display_title) AS (
+  VALUES
+    ('81000000-0000-4000-8000-000000000001'::uuid, 'president', 'general_leadership', 'Presidenta'),
+    ('81000000-0000-4000-8000-000000000002'::uuid, 'vice_president', 'general_leadership', 'Vicepresidente'),
+    ('81000000-0000-4000-8000-000000000003'::uuid, 'director', 'marketing_communications', 'Directora de Marketing')
+),
+seeded_assignments AS (
+  INSERT INTO public.chapter_role_assignment (
+    user_id,
+    chapter_id,
+    role_level,
+    functional_area,
+    display_title,
+    raw_title,
+    is_primary,
+    status,
+    assigned_by_id,
+    source,
+    source_preapproval_id
+  )
+  SELECT
+    sr.user_id,
+    'leaduni',
+    sr.role_level,
+    sr.functional_area,
+    sr.display_title,
+    sr.display_title,
+    true,
+    'active',
+    '44444444-4444-4444-4444-444444444444',
+    'manual_admin',
+    NULL::uuid
+  FROM seeded_roles sr
+  WHERE NOT EXISTS (
+    SELECT 1
+    FROM public.chapter_role_assignment existing
+    WHERE existing.user_id = sr.user_id
+      AND existing.chapter_id = 'leaduni'
+      AND existing.status = 'active'
+  )
+  RETURNING id, user_id, chapter_id, role_level
+),
+active_seeded_assignments AS (
+  SELECT id, user_id, chapter_id, role_level FROM seeded_assignments
+  UNION
+  SELECT cra.id, cra.user_id, cra.chapter_id, cra.role_level
+  FROM public.chapter_role_assignment cra
+  JOIN seeded_roles sr
+    ON sr.user_id = cra.user_id
+  WHERE cra.chapter_id = 'leaduni'
+    AND cra.status = 'active'
+),
+role_permission_keys(role_level, permission_key) AS (
+  VALUES
+    ('president', 'chapter.dashboard.access'),
+    ('president', 'chapter.members.view_approved'),
+    ('president', 'chapter.members.view_alumni'),
+    ('president', 'chapter.members.view_member_contact'),
+    ('president', 'chapter.members.view_applicants'),
+    ('president', 'chapter.members.view_rejected'),
+    ('president', 'chapter.members.view_inactive'),
+    ('president', 'chapter.members.manage_applications'),
+    ('president', 'chapter.members.revoke'),
+    ('president', 'chapter.roles.assign_eboard'),
+    ('president', 'chapter.events.manage'),
+    ('president', 'chapter.events.view_registrations'),
+    ('president', 'chapter.events.check_in'),
+    ('president', 'chapter.events.archive'),
+    ('president', 'chapter.funding.view'),
+    ('president', 'chapter.funding.submit'),
+    ('vice_president', 'chapter.dashboard.access'),
+    ('vice_president', 'chapter.members.view_approved'),
+    ('vice_president', 'chapter.members.view_alumni'),
+    ('vice_president', 'chapter.members.view_member_contact'),
+    ('vice_president', 'chapter.members.view_applicants'),
+    ('vice_president', 'chapter.members.view_rejected'),
+    ('vice_president', 'chapter.members.view_inactive'),
+    ('vice_president', 'chapter.members.manage_applications'),
+    ('vice_president', 'chapter.members.revoke'),
+    ('vice_president', 'chapter.roles.assign_eboard'),
+    ('vice_president', 'chapter.events.manage'),
+    ('vice_president', 'chapter.events.view_registrations'),
+    ('vice_president', 'chapter.events.check_in'),
+    ('vice_president', 'chapter.events.archive'),
+    ('vice_president', 'chapter.funding.view'),
+    ('vice_president', 'chapter.funding.submit'),
+    ('director', 'chapter.dashboard.access'),
+    ('director', 'chapter.members.view_approved'),
+    ('director', 'chapter.members.view_alumni'),
+    ('director', 'chapter.members.view_member_contact'),
+    ('director', 'chapter.events.manage'),
+    ('director', 'chapter.events.view_registrations'),
+    ('director', 'chapter.events.check_in'),
+    ('director', 'chapter.funding.view'),
+    ('director', 'chapter.funding.submit')
+)
+INSERT INTO public.chapter_permission_grant (
+  user_id,
+  chapter_id,
+  permission_key,
+  source,
+  source_role_assignment_id,
+  granted_by_id
+)
+SELECT
+  asa.user_id,
+  asa.chapter_id,
+  rpk.permission_key,
+  'role_template',
+  asa.id,
+  '44444444-4444-4444-4444-444444444444'
+FROM active_seeded_assignments asa
+JOIN role_permission_keys rpk
+  ON rpk.role_level = asa.role_level
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM public.chapter_permission_grant existing
+  WHERE existing.user_id = asa.user_id
+    AND existing.chapter_id = asa.chapter_id
+    AND existing.permission_key = rpk.permission_key
+    AND existing.revoked_at IS NULL
+);
+
+-- Keep the seeded legacy editor compatible with the chapter-scoped role model.
+WITH legacy_seed_editor AS (
+  SELECT
+    u.id AS user_id,
+    cm.chapter_id,
+    cm.approved_by_id
+  FROM public."user" u
+  JOIN public.chapter_membership cm
+    ON cm.user_id = u.id
+   AND cm.status = 'approved'
+  WHERE u.email = 'editor@test.com'
+),
+inserted_assignment AS (
+  INSERT INTO public.chapter_role_assignment (
+    user_id,
+    chapter_id,
+    role_level,
+    functional_area,
+    display_title,
+    raw_title,
+    is_primary,
+    status,
+    assigned_by_id,
+    source,
+    source_preapproval_id
+  )
+  SELECT
+    lse.user_id,
+    lse.chapter_id,
+    'chief_of_staff',
+    'strategy_operations',
+    'Legacy Chapter Editor',
+    'legacy_editor',
+    true,
+    'active',
+    lse.approved_by_id,
+    'migration',
+    NULL::uuid
+  FROM legacy_seed_editor lse
+  WHERE NOT EXISTS (
+    SELECT 1
+    FROM public.chapter_role_assignment existing
+    WHERE existing.user_id = lse.user_id
+      AND existing.chapter_id = lse.chapter_id
+      AND existing.status = 'active'
+  )
+  RETURNING id, user_id, chapter_id
+),
+legacy_seed_assignment AS (
+  SELECT
+    ia.id,
+    ia.user_id,
+    ia.chapter_id
+  FROM inserted_assignment ia
+  UNION
+  SELECT
+    cra.id,
+    lse.user_id,
+    lse.chapter_id
+  FROM legacy_seed_editor lse
+  JOIN public.chapter_role_assignment cra
+    ON cra.user_id = lse.user_id
+   AND cra.chapter_id = lse.chapter_id
+   AND cra.status = 'active'
+),
+permission_keys(permission_key) AS (
+  VALUES
+    ('chapter.dashboard.access'),
+    ('chapter.members.view_approved'),
+    ('chapter.members.view_alumni'),
+    ('chapter.members.view_member_contact'),
+    ('chapter.members.view_applicants'),
+    ('chapter.members.view_rejected'),
+    ('chapter.members.view_inactive'),
+    ('chapter.members.manage_applications'),
+    ('chapter.events.manage'),
+    ('chapter.events.view_registrations'),
+    ('chapter.events.check_in'),
+    ('chapter.events.archive'),
+    ('chapter.funding.view'),
+    ('chapter.funding.submit')
+)
+INSERT INTO public.chapter_permission_grant (
+  user_id,
+  chapter_id,
+  permission_key,
+  source,
+  source_role_assignment_id,
+  granted_by_id
+)
+SELECT DISTINCT
+  lsa.user_id,
+  lsa.chapter_id,
+  pk.permission_key,
+  'migration',
+  lsa.id,
+  NULL::uuid
+FROM legacy_seed_assignment lsa
+CROSS JOIN permission_keys pk
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM public.chapter_permission_grant existing
+  WHERE existing.user_id = lsa.user_id
+    AND existing.chapter_id = lsa.chapter_id
+    AND existing.permission_key = pk.permission_key
+    AND existing.revoked_at IS NULL
+);
 
 -- Insert accepted recruiter scope for recruiter persona.
 INSERT INTO public.company (id, name, created_by_id) VALUES
@@ -258,3 +506,267 @@ INSERT INTO public.event_application_question (
   ('92100000-0000-4000-8000-000000000011', '92000000-0000-4000-8000-000000000027', 'checkbox', 'Que habilidades puedes aportar al equipo?', ARRAY['Investigacion', 'Comunicacion', 'Diseno', 'Operaciones', 'Datos'], true, 1),
   ('92100000-0000-4000-8000-000000000012', '92000000-0000-4000-8000-000000000030', 'short_text', 'Que tipo de entrevista quieres practicar?', null, true, 0),
   ('92100000-0000-4000-8000-000000000013', '92000000-0000-4000-8000-000000000030', 'single_select', 'Selecciona tu foco principal.', ARRAY['Practica general', 'Consultoria', 'Tecnologia', 'Marketing', 'Finanzas'], true, 1);
+
+-- Seed Lead Funding request states for controlled pilot QA.
+DELETE FROM public.funding_request_status_event WHERE funding_request_id IN (
+  'f1000000-0000-4000-8000-000000000001',
+  'f1000000-0000-4000-8000-000000000002',
+  'f1000000-0000-4000-8000-000000000003',
+  'f1000000-0000-4000-8000-000000000004'
+);
+
+DELETE FROM public.funding_request_file WHERE funding_request_id IN (
+  'f1000000-0000-4000-8000-000000000001',
+  'f1000000-0000-4000-8000-000000000002',
+  'f1000000-0000-4000-8000-000000000003',
+  'f1000000-0000-4000-8000-000000000004'
+);
+
+DELETE FROM public.funding_request_budget_item WHERE funding_request_id IN (
+  'f1000000-0000-4000-8000-000000000001',
+  'f1000000-0000-4000-8000-000000000002',
+  'f1000000-0000-4000-8000-000000000003',
+  'f1000000-0000-4000-8000-000000000004'
+);
+
+DELETE FROM public.funding_request WHERE id IN (
+  'f1000000-0000-4000-8000-000000000001',
+  'f1000000-0000-4000-8000-000000000002',
+  'f1000000-0000-4000-8000-000000000003',
+  'f1000000-0000-4000-8000-000000000004'
+);
+
+INSERT INTO public.funding_request (
+  id,
+  chapter_id,
+  requester_user_id,
+  event_id,
+  title,
+  purpose,
+  expected_audience,
+  expected_attendee_count,
+  requested_amount,
+  approved_amount,
+  actual_spend_amount,
+  currency,
+  status,
+  okr_keys,
+  pillar_keys,
+  partner_name,
+  partner_details,
+  supporting_notes,
+  event_date,
+  is_late_request,
+  submitted_at,
+  reviewed_by_id,
+  reviewed_at,
+  admin_decision_note,
+  internal_funding_source,
+  accountability_due_at,
+  accountability_submitted_at,
+  accountability_note,
+  result_summary,
+  created_at,
+  updated_at
+) VALUES
+  (
+    'f1000000-0000-4000-8000-000000000001',
+    'leaduni',
+    '81000000-0000-4000-8000-000000000001',
+    '92000000-0000-4000-8000-000000000016',
+    'Materiales para taller de liderazgo',
+    'Fortalecer habilidades de liderazgo, comunicacion y colaboracion en nuevos miembros de LEAD UNI.',
+    'Miembros nuevos y estudiantes interesados en liderazgo universitario',
+    60,
+    350.00,
+    NULL,
+    NULL,
+    'PEN',
+    'submitted',
+    ARRAY['unite', 'empower'],
+    ARRAY['leadership_development', 'chapter_development'],
+    NULL,
+    NULL,
+    'Solicitud piloto para probar el flujo de revision.',
+    '2026-06-12',
+    false,
+    NOW() - INTERVAL '2 days',
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NOW() - INTERVAL '3 days',
+    NOW() - INTERVAL '2 days'
+  ),
+  (
+    'f1000000-0000-4000-8000-000000000002',
+    'leaduni',
+    '81000000-0000-4000-8000-000000000002',
+    '92000000-0000-4000-8000-000000000022',
+    'Refreshments para Career Readiness Clinic',
+    'Apoyar una clinica de empleabilidad con mentores y revision de CV para estudiantes.',
+    'Estudiantes que estan preparando practicas y primeros procesos profesionales',
+    90,
+    420.00,
+    350.00,
+    NULL,
+    'PEN',
+    'approved',
+    ARRAY['empower', 'elevate'],
+    ARRAY['professional_development', 'academic_excellence'],
+    NULL,
+    NULL,
+    'Admin aprobo monto parcial priorizando comida y materiales impresos.',
+    '2026-08-15',
+    false,
+    NOW() - INTERVAL '8 days',
+    '44444444-4444-4444-4444-444444444444',
+    NOW() - INTERVAL '5 days',
+    'Aprobado parcialmente. Mantener evidencia de asistencia y recibos.',
+    'lead_peru_chapter_budget',
+    '2026-08-22',
+    NULL,
+    NULL,
+    NULL,
+    NOW() - INTERVAL '9 days',
+    NOW() - INTERVAL '5 days'
+  ),
+  (
+    'f1000000-0000-4000-8000-000000000003',
+    'leaduni',
+    '81000000-0000-4000-8000-000000000003',
+    '92000000-0000-4000-8000-000000000015',
+    'Regularizacion de IBM Integration Day',
+    'Registrar comprobantes pendientes de un evento de integracion y aprendizaje para miembros.',
+    'Miembros nuevos de LEAD y e-board facilitador',
+    45,
+    280.00,
+    280.00,
+    265.50,
+    'PEN',
+    'receipts_due',
+    ARRAY['unite', 'elevate'],
+    ARRAY['chapter_development', 'leadership_development'],
+    'IBM',
+    'Apoyo de contenido y mentoria; sin transferencia directa del partner.',
+    'Caso piloto para visualizar comprobantes pendientes.',
+    '2026-05-02',
+    false,
+    NOW() - INTERVAL '32 days',
+    '44444444-4444-4444-4444-444444444444',
+    NOW() - INTERVAL '29 days',
+    'Aprobado. Subir recibos y evidencia posterior al evento.',
+    'sponsor_partner',
+    '2026-05-09',
+    NULL,
+    'Falta adjuntar comprobantes completos.',
+    'El evento ya se realizo; queda pendiente regularizar comprobantes.',
+    NOW() - INTERVAL '33 days',
+    NOW() - INTERVAL '1 day'
+  ),
+  (
+    'f1000000-0000-4000-8000-000000000004',
+    'leaduni',
+    '81000000-0000-4000-8000-000000000001',
+    NULL,
+    'Kit de activacion interna LEAD UNI',
+    'Preparar materiales base para entrenamiento de e-board y mejora de operaciones del chapter.',
+    'E-board de LEAD UNI y coordinadores de pilares',
+    18,
+    180.00,
+    NULL,
+    NULL,
+    'PEN',
+    'draft',
+    ARRAY['unite', 'elevate'],
+    ARRAY['chapter_development'],
+    NULL,
+    NULL,
+    'Iniciativa interna, no evento publico.',
+    '2026-06-30',
+    false,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NOW() - INTERVAL '1 day',
+    NOW() - INTERVAL '1 day'
+  );
+
+INSERT INTO public.funding_request_budget_item (
+  id,
+  funding_request_id,
+  label,
+  category,
+  amount,
+  notes,
+  sort_order
+) VALUES
+  ('f2000000-0000-4000-8000-000000000001', 'f1000000-0000-4000-8000-000000000001', 'Materiales impresos', 'event_materials', 120.00, 'Hojas de trabajo y dinamicas.', 1),
+  ('f2000000-0000-4000-8000-000000000002', 'f1000000-0000-4000-8000-000000000001', 'Refreshments modestos', 'food_refreshments', 180.00, 'Agua y snacks para participantes.', 2),
+  ('f2000000-0000-4000-8000-000000000003', 'f1000000-0000-4000-8000-000000000001', 'Marcadores y post-its', 'learning_materials', 50.00, NULL, 3),
+  ('f2000000-0000-4000-8000-000000000004', 'f1000000-0000-4000-8000-000000000002', 'Snacks para mentores y estudiantes', 'food_refreshments', 260.00, NULL, 1),
+  ('f2000000-0000-4000-8000-000000000005', 'f1000000-0000-4000-8000-000000000002', 'Materiales de revision de CV', 'learning_materials', 90.00, NULL, 2),
+  ('f2000000-0000-4000-8000-000000000006', 'f1000000-0000-4000-8000-000000000002', 'Decoracion minima de registro', 'minimal_decorations', 70.00, 'No incluida en el monto parcial aprobado.', 3),
+  ('f2000000-0000-4000-8000-000000000007', 'f1000000-0000-4000-8000-000000000003', 'Coffee break de integracion', 'food_refreshments', 210.00, NULL, 1),
+  ('f2000000-0000-4000-8000-000000000008', 'f1000000-0000-4000-8000-000000000003', 'Certificados de participacion', 'recognition_items', 70.00, 'Reconocimiento ligado a aprendizaje.', 2),
+  ('f2000000-0000-4000-8000-000000000009', 'f1000000-0000-4000-8000-000000000004', 'Folders para entrenamiento interno', 'event_materials', 80.00, NULL, 1),
+  ('f2000000-0000-4000-8000-000000000010', 'f1000000-0000-4000-8000-000000000004', 'Post-its y lapiceros', 'learning_materials', 100.00, NULL, 2);
+
+INSERT INTO public.funding_request_file (
+  id,
+  funding_request_id,
+  chapter_id,
+  uploaded_by_id,
+  file_type,
+  external_url,
+  original_name,
+  notes
+) VALUES
+  (
+    'f3000000-0000-4000-8000-000000000001',
+    'f1000000-0000-4000-8000-000000000002',
+    'leaduni',
+    '81000000-0000-4000-8000-000000000002',
+    'supporting_material',
+    'https://example.com/lead-funding/career-readiness-quote.pdf',
+    'cotizacion-career-readiness.pdf',
+    'Cotizacion externa de ejemplo para QA.'
+  ),
+  (
+    'f3000000-0000-4000-8000-000000000002',
+    'f1000000-0000-4000-8000-000000000003',
+    'leaduni',
+    '81000000-0000-4000-8000-000000000003',
+    'evidence',
+    'https://example.com/lead-funding/ibm-integration-day-post',
+    'post-evento-ibm.txt',
+    'Link de evidencia sin comprobante fiscal adjunto.'
+  );
+
+INSERT INTO public.funding_request_status_event (
+  id,
+  funding_request_id,
+  actor_user_id,
+  from_status,
+  to_status,
+  note,
+  metadata,
+  created_at
+) VALUES
+  ('f4000000-0000-4000-8000-000000000001', 'f1000000-0000-4000-8000-000000000001', '81000000-0000-4000-8000-000000000001', 'draft', 'submitted', 'Solicitud enviada para revision.', '{}'::jsonb, NOW() - INTERVAL '2 days'),
+  ('f4000000-0000-4000-8000-000000000002', 'f1000000-0000-4000-8000-000000000002', '81000000-0000-4000-8000-000000000002', 'draft', 'submitted', 'Solicitud enviada para revision.', '{}'::jsonb, NOW() - INTERVAL '8 days'),
+  ('f4000000-0000-4000-8000-000000000003', 'f1000000-0000-4000-8000-000000000002', '44444444-4444-4444-4444-444444444444', 'submitted', 'approved', 'Aprobado parcialmente por admin.', '{"approvedAmount":350}'::jsonb, NOW() - INTERVAL '5 days'),
+  ('f4000000-0000-4000-8000-000000000004', 'f1000000-0000-4000-8000-000000000003', '81000000-0000-4000-8000-000000000003', 'draft', 'submitted', 'Solicitud enviada para revision.', '{}'::jsonb, NOW() - INTERVAL '32 days'),
+  ('f4000000-0000-4000-8000-000000000005', 'f1000000-0000-4000-8000-000000000003', '44444444-4444-4444-4444-444444444444', 'submitted', 'approved', 'Aprobado con seguimiento de comprobantes.', '{"approvedAmount":280}'::jsonb, NOW() - INTERVAL '29 days'),
+  ('f4000000-0000-4000-8000-000000000006', 'f1000000-0000-4000-8000-000000000003', '44444444-4444-4444-4444-444444444444', 'approved', 'receipts_due', 'Comprobantes pendientes de regularizacion.', '{}'::jsonb, NOW() - INTERVAL '1 day'),
+  ('f4000000-0000-4000-8000-000000000007', 'f1000000-0000-4000-8000-000000000004', '81000000-0000-4000-8000-000000000001', NULL, 'draft', 'Borrador creado.', '{}'::jsonb, NOW() - INTERVAL '1 day');

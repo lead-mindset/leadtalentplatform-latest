@@ -1,4 +1,5 @@
 import { Suspense } from 'react'
+import Image from 'next/image'
 import {
   ArrowRight,
   CalendarDays,
@@ -6,7 +7,7 @@ import {
   Monitor,
   Users,
 } from 'lucide-react'
-import { getPublishedEvents } from '@/lib/actions/events/get-data'
+import { getCachedPublishedEvents } from '@/lib/data/public-events'
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -43,6 +44,9 @@ const EVENT_COPY = {
     oneSeat: '1 seat left',
     seatsLeft: (count: number) => `${count} seats left`,
     detail: 'View details',
+    register: 'Register',
+    apply: 'Apply',
+    leadEvent: 'LEAD event',
     fallbackTitle: 'Untitled event',
     registrations: 'registered',
     badge: 'LEAD events',
@@ -79,6 +83,9 @@ const EVENT_COPY = {
     oneSeat: 'Queda 1 cupo',
     seatsLeft: (count: number) => `Quedan ${count} cupos`,
     detail: 'Ver detalle',
+    register: 'Registrarme',
+    apply: 'Postular',
+    leadEvent: 'Evento LEAD',
     fallbackTitle: 'Evento sin titulo',
     registrations: 'registrados',
     badge: 'Eventos LEAD',
@@ -190,53 +197,100 @@ function getAvailabilityVariant(event: EventWithDetails) {
   return 'neutral' as const
 }
 
+function getEventActionLabel(event: EventWithDetails, locale: PublicEventsLocale) {
+  const copy = EVENT_COPY[locale]
+  const end = new Date(event.end_at).getTime()
+
+  if (!Number.isFinite(end) || Date.now() > end) return copy.detail
+
+  if (event.capacity !== null && event._count.registrations >= event.capacity) {
+    return copy.detail
+  }
+
+  return event.access_model === 'application' ? copy.apply : copy.register
+}
+
 function EventCard({ event, locale }: { event: EventWithDetails; locale: PublicEventsLocale }) {
   const copy = EVENT_COPY[locale]
   const timing = getEventTiming(event, locale)
   const ownerChapter = event.chapter?.name ?? event.owner_chapter?.name ?? 'LEAD'
   const availability = getAvailabilityLabel(event, locale)
   const availabilityVariant = getAvailabilityVariant(event)
+  const actionLabel = getEventActionLabel(event, locale)
+  const description = event.description?.trim()
 
   return (
-    <Card className={cn('overflow-hidden transition-colors hover:border-primary/40', timing.label === copy.past && 'opacity-80')}>
+    <Card className={cn('group overflow-hidden transition-colors hover:border-primary/40', timing.label === copy.past && 'opacity-80')}>
       <CardContent className="p-0">
         <Link href={`/events/${event.id}`} className="block">
-          <div className="grid gap-0 md:grid-cols-[11rem_1fr]">
-            <div className="flex border-b bg-muted/40 p-4 md:border-b-0 md:border-r md:p-5">
-              <div className="flex w-full flex-row items-center gap-4 md:flex-col md:items-start md:justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">{formatDate(event.start_at, locale)}</p>
-                  <p className="mt-1 text-lg font-semibold text-foreground md:text-2xl">{formatTime(event.start_at, locale)}</p>
+          <div className="grid gap-0 lg:grid-cols-[17rem_1fr]">
+            <div className="relative min-h-52 overflow-hidden bg-muted lg:min-h-full">
+              {event.cover_image ? (
+                <Image
+                  src={event.cover_image}
+                  alt={event.title || copy.fallbackTitle}
+                  fill
+                  sizes="(min-width: 1024px) 17rem, 100vw"
+                  className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                />
+              ) : (
+                <div className="flex h-full min-h-52 flex-col justify-between bg-[radial-gradient(circle_at_20%_15%,hsl(var(--primary)/0.28),transparent_34%),linear-gradient(135deg,hsl(var(--muted)),hsl(var(--card)))] p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <Badge variant="outline" className="bg-background/70 backdrop-blur">
+                      {copy.leadEvent}
+                    </Badge>
+                    <CalendarDays className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">{formatDate(event.start_at, locale)}</p>
+                    <p className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
+                      {formatTime(event.start_at, locale)}
+                    </p>
+                    <p className="mt-3 line-clamp-1 text-sm text-muted-foreground">{ownerChapter}</p>
+                  </div>
                 </div>
-                <Badge variant={timing.variant}>{timing.label}</Badge>
-              </div>
+              )}
             </div>
 
             <div className="space-y-5 p-5 md:p-6">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div className="min-w-0 space-y-2">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0 space-y-3">
                   <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant={timing.variant}>{timing.label}</Badge>
                     <Badge variant="outline">{getEventTypeLabel(event.event_type, locale)}</Badge>
                     <Badge variant={availabilityVariant}>{availability}</Badge>
                   </div>
-                  <h2 className="line-clamp-2 text-xl font-semibold tracking-tight text-foreground md:text-2xl">
-                    {event.title || copy.fallbackTitle}
-                  </h2>
+                  <div className="space-y-2">
+                    <h2 className="line-clamp-2 text-xl font-semibold tracking-tight text-foreground md:text-2xl">
+                      {event.title || copy.fallbackTitle}
+                    </h2>
+                    {description ? (
+                      <p className="line-clamp-2 max-w-3xl text-sm leading-6 text-muted-foreground">
+                        {description}
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
 
                 <span
                   className={cn(
                     buttonVariants({ variant: 'outline' }),
-                    'w-full shrink-0 justify-between sm:w-auto sm:min-w-32'
+                    'w-full shrink-0 justify-between sm:w-auto sm:min-w-36'
                   )}
                   aria-hidden="true"
                 >
-                  {copy.detail}
+                  {actionLabel}
                   <ArrowRight className="h-4 w-4" />
                 </span>
               </div>
 
-              <div className="grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
+              <div className="grid gap-3 border-t pt-4 text-sm text-muted-foreground sm:grid-cols-2 xl:grid-cols-4">
+                <div className="flex min-w-0 items-center gap-2">
+                  <CalendarDays className="h-4 w-4 shrink-0" />
+                  <span className="truncate">
+                    {formatDate(event.start_at, locale)} - {formatTime(event.start_at, locale)}
+                  </span>
+                </div>
                 <div className="flex min-w-0 items-center gap-2">
                   <Users className="h-4 w-4 shrink-0" />
                   <span className="truncate">{ownerChapter}</span>
@@ -249,8 +303,8 @@ function EventCard({ event, locale }: { event: EventWithDetails; locale: PublicE
                   )}
                   <span className="truncate">{getLocationLabel(event, locale)}</span>
                 </div>
-                <div className="flex min-w-0 items-center gap-2">
-                  <CalendarDays className="h-4 w-4 shrink-0" />
+                <div className="flex min-w-0 items-center gap-2 sm:col-span-2 xl:col-span-1">
+                  <Users className="h-4 w-4 shrink-0" />
                   <span className="truncate">
                     {event._count.registrations} {copy.registrations}
                     {event.capacity !== null ? ` / ${event.capacity}` : ''}
@@ -267,7 +321,7 @@ function EventCard({ event, locale }: { event: EventWithDetails; locale: PublicE
 
 async function EventsContent({ locale }: { locale: PublicEventsLocale }) {
   const copy = EVENT_COPY[locale]
-  const events: EventWithDetails[] = await getPublishedEvents()
+  const events: EventWithDetails[] = await getCachedPublishedEvents()
   const now = Date.now()
   const upcomingEvents = events
     .filter((event) => new Date(event.end_at).getTime() >= now)

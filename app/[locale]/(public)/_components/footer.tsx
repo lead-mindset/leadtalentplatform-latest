@@ -48,8 +48,8 @@ export function Footer() {
             <Image
               src="/leadl2.svg"
               alt="LEAD"
-              width={100}
-              height={32}
+              width={270}
+              height={148}
               className="mb-6 h-8 w-auto object-contain brightness-0 invert opacity-80"
             />
             <p className="mb-6 pr-4 text-muted-foreground">

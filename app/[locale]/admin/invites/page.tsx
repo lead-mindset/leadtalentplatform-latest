@@ -7,6 +7,7 @@ import { InviteForm } from './components/invite-form'
 import { InviteActions } from './components/invite-actions'
 import { getInvites, getCompanies } from '@/lib/actions/admin/get-data'
 import { PageHeader } from '@/components/ui/page-header'
+import { formatLeadDate } from '@/lib/utils/date-format'
 
 function getInviteStatus(invite: RecruiterInvite): 'pending' | 'accepted' | 'expired' | 'revoked' {
   if (invite.revoked_at) return 'revoked'
@@ -200,13 +201,13 @@ async function InvitesList() {
                         </td>
                         <td className="p-3">
                           <span className="text-sm text-muted-foreground">
-                            {new Date(invite.granted_at).toLocaleDateString('es-PE')}
+                            {formatLeadDate(invite.granted_at)}
                           </span>
                         </td>
                         <td className="p-3">
                           <span className="text-sm text-muted-foreground">
                             {invite.invite_expires_at
-                              ? new Date(invite.invite_expires_at).toLocaleDateString('es-PE')
+                              ? formatLeadDate(invite.invite_expires_at)
                               : 'Nunca'}
                           </span>
                         </td>
@@ -248,12 +249,12 @@ async function InvitesList() {
                       </p>
                       <p>
                         <span className="font-medium text-foreground">Fecha:</span>{' '}
-                        {new Date(invite.granted_at).toLocaleDateString('es-PE')}
+                        {formatLeadDate(invite.granted_at)}
                       </p>
                       <p>
                         <span className="font-medium text-foreground">Vence:</span>{' '}
                         {invite.invite_expires_at
-                          ? new Date(invite.invite_expires_at).toLocaleDateString('es-PE')
+                          ? formatLeadDate(invite.invite_expires_at)
                           : 'Nunca'}
                       </p>
                     </div>

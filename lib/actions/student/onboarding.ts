@@ -5,6 +5,7 @@ import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server-service'
 import {
   parseBasicOnboardingFormData,
   saveBasicOnboarding,
@@ -26,6 +27,7 @@ async function getRequestLocale() {
 
 export async function submitOnboarding(formData: FormData) {
   const locale = await getRequestLocale()
+  let redirectPath = '/student'
 
   try {
     const supabase = await createClient()
@@ -44,15 +46,19 @@ export async function submitOnboarding(formData: FormData) {
       return { error: 'Validation failed', details: parsed.error.flatten() }
     }
 
+    const serviceSupabase = createServiceClient()
     const result = await saveBasicOnboarding(supabase, {
       userId: user.id,
       email: user.email,
       data: parsed.data,
+      preapprovalSupabase: serviceSupabase,
     })
 
     if (!result.success) {
       return { error: result.error }
     }
+
+    redirectPath = result.postOnboardingRedirectPath ?? redirectPath
   } catch (error) {
     console.error('Onboarding submission error:', error)
     return { error: 'Internal server error' }
@@ -62,5 +68,6 @@ export async function submitOnboarding(formData: FormData) {
   revalidatePath('/events')
   revalidatePath('/student')
   revalidatePath('/student/profile')
-  redirect(`/${locale}/student`)
+  revalidatePath('/chapter')
+  redirect(`/${locale}${redirectPath}`)
 }

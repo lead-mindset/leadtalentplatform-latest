@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { requireUser } from '@/lib/auth'
 import { ChapterMembershipService } from '@/lib/services/chapter-membership.service'
+import { ChapterService } from '@/lib/services/chapter.service'
+import { sendChapterApplicationSubmittedEmail } from '@/lib/emails/send-email'
 
 const ApplyToChapterSchema = z.object({
   chapterId: z.string().trim().min(1, 'Chapter is required'),
@@ -27,6 +29,15 @@ export async function applyToChapter(input: { chapterId: string }) {
 
     if (!result.success) {
       return result
+    }
+
+    const chapterName = await ChapterService.getChapterName(supabase, parsed.data.chapterId)
+    if (chapterName && user.email) {
+      void sendChapterApplicationSubmittedEmail(
+        user.email,
+        user.name || user.email.split('@')[0],
+        chapterName
+      ).catch((error: Error) => console.error('Failed to send chapter application email:', error))
     }
 
     revalidatePath('/student')

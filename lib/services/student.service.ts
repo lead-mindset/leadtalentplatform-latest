@@ -29,18 +29,35 @@ export type UpdateProfileParams = {
   graduation_year: number;
   skills: string[];
   linkedinUrl: string;
+  portfolioUrl?: string | null;
   consentRecruiterVisibility: boolean;
   emailNotificationsEnabled: boolean;
-  chapter_id: string;
   resumePdf?: File;
 };
+
+const RESUME_PUBLIC_URL_MARKER = '/storage/v1/object/public/resumes/';
+
+function getResumeStoragePath(fileUrl: string | null): string | null {
+  if (!fileUrl) return null;
+
+  const markerIndex = fileUrl.indexOf(RESUME_PUBLIC_URL_MARKER);
+  if (markerIndex >= 0) {
+    return decodeURIComponent(fileUrl.slice(markerIndex + RESUME_PUBLIC_URL_MARKER.length));
+  }
+
+  if (fileUrl.startsWith('resumes/')) {
+    return fileUrl.slice('resumes/'.length);
+  }
+
+  return null;
+}
 
 export const StudentService = {
   async getProfile(supabase: SupabaseClient<Database>, userId: string) {
     const { data: profile, error } = await supabase
       .from('person_profile')
       .select(
-        'user_id, university, major_or_interest, graduation_year, skills, linkedin_url, is_recruiter_visible, gender'
+        'user_id, university, major_or_interest, graduation_year, skills, linkedin_url, portfolio_url, is_recruiter_visible, gender'
       )
       .eq('user_id', userId)
       .single();
@@ -81,6 +98,7 @@ export const StudentService = {
         graduation_year: params.graduation_year,
         skills: params.skills,
         linkedin_url: params.linkedinUrl,
+        portfolio_url: params.portfolioUrl ?? null,
         is_recruiter_visible: params.consentRecruiterVisibility,
         updated_at: now,
       },
@@ -89,15 +107,8 @@ export const StudentService = {
 
     if (profileError) throw profileError;
 
-    // 3. Create explicit chapter application
-    const membershipResult = await ChapterMembershipService.applyToChapter(supabase, {
-      userId: params.userId,
-      chapterId: params.chapter_id,
-    });
-
-    if (!membershipResult.success) throw new Error(membershipResult.error);
-
-    // 4. Create newsletter preferences when explicitly opted in.
+    // 3. Create global newsletter preferences when explicitly opted in.
+    // Chapter-scoped subscriptions belong to onboarding/application flows, not profile edits.
     if (params.emailNotificationsEnabled) {
       const globalResult = await NewsletterSubscriptionService.subscribeGlobal(supabase, {
         userId: params.userId,
@@ -105,17 +116,9 @@ export const StudentService = {
       });
 
       if (!globalResult.success) throw new Error(globalResult.error);
-
-      const chapterResult = await NewsletterSubscriptionService.subscribeToChapter(supabase, {
-        userId: params.userId,
-        chapterId: params.chapter_id,
-        source: 'onboarding',
-      });
-
-      if (!chapterResult.success) throw new Error(chapterResult.error);
     }
 
-    // 5. Handle Resume if provided
+    // 4. Handle Resume if provided
     if (params.resumePdf) {
       await this.uploadResume(supabase, params.userId, params.resumePdf);
     }
@@ -132,6 +135,20 @@ export const StudentService = {
 
     if (error) return null;
     return resume;
+  },
+
+  async createResumeSignedUrl(
+    supabase: SupabaseClient<Database>,
+    fileUrl: string | null,
+    expiresIn = 60 * 5
+  ): Promise<string | null> {
+    const storagePath = getResumeStoragePath(fileUrl);
+    if (!storagePath) return null;
+
+    const { data, error } = await supabase.storage.from('resumes').createSignedUrl(storagePath, expiresIn);
+    if (error || !data?.signedUrl) return null;
+
+    return data.signedUrl;
   },
 
   async uploadResume(supabase: SupabaseClient<Database>, userId: string, file: File) {

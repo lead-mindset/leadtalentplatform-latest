@@ -1,0 +1,206 @@
+{
+  "version": 1,
+  "source": "chapter_eboard_csv_2026_05",
+  "sourceFile": "docs/Registro de Junta Ejecutiva(Sheet1).csv",
+  "noFallback": true,
+  "normalizationHints": [
+    "trim",
+    "lowercase",
+    "remove_accents",
+    "collapse_whitespace",
+    "normalize_hyphens",
+    "strip_surrounding_punctuation"
+  ],
+  "notes": [
+    "Sheet1 is the source of truth for the first e-board import.",
+    "Individual chapter CSVs are validation references only.",
+    "The local seed includes an 'other' chapter, but this mapping intentionally does not use it as a fallback."
+  ],
+  "chapters": [
+    {
+      "canonicalChapterId": "leadpacifico",
+      "canonicalName": "LEAD UP",
+      "university": "Universidad del Pacifico",
+      "aliases": [
+        "UP",
+        "LEAD UP",
+        "Universidad del Pacifico",
+        "Universidad del Pac\\u00edfico",
+        "Pacifico",
+        "Pac\\u00edfico"
+      ],
+      "notes": "Universidad del Pacifico"
+    },
+    {
+      "canonicalChapterId": "leadpucp",
+      "canonicalName": "LEAD PUCP",
+      "university": "Pontificia Universidad Catolica del Peru",
+      "aliases": [
+        "PUCP",
+        "LEAD PUCP",
+        "Pontificia Universidad Catolica del Peru",
+        "Pontificia Universidad Cat\\u00f3lica del Per\\u00fa",
+        "Catolica",
+        "Cat\\u00f3lica"
+      ],
+      "notes": "Pontificia Universidad Catolica del Peru"
+    },
+    {
+      "canonicalChapterId": "leadtecsup",
+      "canonicalName": "LEAD TECSUP",
+      "university": "Instituto Tecnologico Superior Tecsup",
+      "aliases": [
+        "TECSUP",
+        "LEAD TECSUP",
+        "Tecsup",
+        "Instituto Tecnologico Superior Tecsup",
+        "Instituto Tecnol\\u00f3gico Superior Tecsup"
+      ],
+      "notes": "Instituto Tecnologico Superior Tecsup"
+    },
+    {
+      "canonicalChapterId": "leaducsur",
+      "canonicalName": "LEAD UCSUR",
+      "university": "Universidad Cientifica del Sur",
+      "aliases": [
+        "UCSUR",
+        "LEAD UCSUR",
+        "Universidad Cientifica del Sur",
+        "Universidad Cient\\u00edfica del Sur",
+        "Cientifica del Sur",
+        "Cient\\u00edfica del Sur"
+      ],
+      "notes": "Universidad Cientifica del Sur"
+    },
+    {
+      "canonicalChapterId": "leaduni",
+      "canonicalName": "LEAD UNI",
+      "university": "Universidad Nacional de Ingenieria",
+      "aliases": [
+        "UNI",
+        "LEAD UNI",
+        "Universidad Nacional de Ingenieria",
+        "Universidad Nacional de Ingenier\\u00eda"
+      ],
+      "notes": "Universidad Nacional de Ingenieria"
+    },
+    {
+      "canonicalChapterId": "leadunmsm",
+      "canonicalName": "LEAD UNMSM",
+      "university": "Universidad Nacional Mayor de San Marcos",
+      "aliases": [
+        "UNMSM",
+        "LEAD UNMSM",
+        "San Marcos",
+        "Universidad Nacional Mayor de San Marcos"
+      ],
+      "notes": "Universidad Nacional Mayor de San Marcos"
+    },
+    {
+      "canonicalChapterId": "leadunsa",
+      "canonicalName": "LEAD UNSA",
+      "university": "Universidad Nacional de San Agustin de Arequipa",
+      "aliases": [
+        "UNSA",
+        "LEAD UNSA",
+        "Universidad Nacional de San Agustin",
+        "Universidad Nacional de San Agust\\u00edn",
+        "Universidad Nacional de San Agustin de Arequipa",
+        "Universidad Nacional de San Agust\\u00edn de Arequipa",
+        "San Agustin",
+        "San Agust\\u00edn"
+      ],
+      "notes": "Universidad Nacional de San Agustin de Arequipa"
+    },
+    {
+      "canonicalChapterId": "leadupc",
+      "canonicalName": "LEAD UPC",
+      "university": "Universidad Peruana de Ciencias Aplicadas",
+      "aliases": [
+        "UPC",
+        "LEAD UPC",
+        "Universidad Peruana de Ciencias Aplicadas"
+      ],
+      "notes": "Universidad Peruana de Ciencias Aplicadas"
+    },
+    {
+      "canonicalChapterId": "leadupn",
+      "canonicalName": "LEAD UPN",
+      "university": "Universidad Privada del Norte",
+      "aliases": [
+        "UPN",
+        "LEAD UPN",
+        "UPN Lima",
+        "Universidad Privada del Norte"
+      ],
+      "notes": "Universidad Privada del Norte - Lima/general chapter"
+    },
+    {
+      "canonicalChapterId": "leadupntrujillo",
+      "canonicalName": "LEAD UPN TRUJILLO",
+      "university": "Universidad Privada del Norte - Trujillo",
+      "aliases": [
+        "UPN-Trujillo",
+        "UPN Trujillo",
+        "UPN - Trujillo",
+        "LEAD UPN TRUJILLO",
+        "LEAD UPN-Trujillo",
+        "Universidad Privada del Norte Trujillo",
+        "Universidad Privada del Norte - Trujillo"
+      ],
+      "notes": "Universidad Privada del Norte - Trujillo"
+    },
+    {
+      "canonicalChapterId": "leadusil",
+      "canonicalName": "LEAD USIL",
+      "university": "Universidad San Ignacio de Loyola",
+      "aliases": [
+        "USIL",
+        "LEAD USIL",
+        "Universidad San Ignacio de Loyola",
+        "San Ignacio de Loyola"
+      ],
+      "notes": "Universidad San Ignacio de Loyola"
+    },
+    {
+      "canonicalChapterId": "leadutec",
+      "canonicalName": "LEAD UTEC",
+      "university": "Universidad de Ingenieria y Tecnologia",
+      "aliases": [
+        "UTEC",
+        "LEAD UTEC",
+        "Universidad de Ingenieria y Tecnologia",
+        "Universidad de Ingenier\\u00eda y Tecnolog\\u00eda"
+      ],
+      "notes": "Universidad de Ingenieria y Tecnologia"
+    },
+    {
+      "canonicalChapterId": "leadutp",
+      "canonicalName": "LEAD UTP",
+      "university": "Universidad Tecnologica del Peru",
+      "aliases": [
+        "UTP",
+        "LEAD UTP",
+        "Universidad Tecnologica del Peru",
+        "Universidad Tecnol\\u00f3gica del Per\\u00fa"
+      ],
+      "notes": "Universidad Tecnologica del Peru"
+    },
+    {
+      "canonicalChapterId": "leadvillareal",
+      "canonicalName": "LEAD VILLAREAL",
+      "university": "Universidad Nacional Federico Villareal",
+      "aliases": [
+        "UNFV",
+        "LEAD UNFV",
+        "Villarreal",
+        "Villareal",
+        "LEAD Villarreal",
+        "LEAD Villareal",
+        "Universidad Nacional Federico Villarreal",
+        "Universidad Nacional Federico Villareal"
+      ],
+      "notes": "Canonical local ID currently uses the existing spelling 'leadvillareal'."
+    }
+  ]
+}

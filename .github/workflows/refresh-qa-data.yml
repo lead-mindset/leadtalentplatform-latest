@@ -1,0 +1,60 @@
+name: Refresh QA Data
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type REFRESH_QA to run the QA seed fixture.
+        required: true
+        type: string
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    environment: Preview
+    steps:
+      - name: Check confirmation
+        run: |
+          if [ "${{ inputs.confirmation }}" != "REFRESH_QA" ]; then
+            echo "Confirmation did not match REFRESH_QA. Aborting."
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Apply migrations to QA
+        run: |
+          supabase db push --db-url "postgresql://${QA_DB_USER}:${QA_DB_PASSWORD}@${QA_DB_HOST}:${QA_DB_PORT}/postgres?sslmode=require" --yes
+        env:
+          QA_DB_HOST: ${{ vars.QA_DB_HOST }}
+          QA_DB_PORT: ${{ vars.QA_DB_PORT }}
+          QA_DB_USER: ${{ vars.QA_DB_USER }}
+          QA_DB_PASSWORD: ${{ secrets.QA_DB_PASSWORD }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.QA_SUPABASE_SERVICE_ROLE_KEY }}
+
+      - name: Seed QA fixture data
+        run: |
+          PGPASSWORD="${QA_DB_PASSWORD}" psql \
+            -v ON_ERROR_STOP=1 \
+            -h "${QA_DB_HOST}" \
+            -p "${QA_DB_PORT}" \
+            -U "${QA_DB_USER}" \
+            -d postgres \
+            -f supabase/qa.seed.sql
+        env:
+          QA_DB_HOST: ${{ vars.QA_DB_HOST }}
+          QA_DB_PORT: ${{ vars.QA_DB_PORT }}
+          QA_DB_USER: ${{ vars.QA_DB_USER }}
+          QA_DB_PASSWORD: ${{ secrets.QA_DB_PASSWORD }}

@@ -76,6 +76,64 @@ export type Database = {
         }
         Relationships: []
       }
+      chapter_audit_log: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          chapter_id: string | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          metadata: Json
+          target_user_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          chapter_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          metadata?: Json
+          target_user_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          chapter_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          metadata?: Json
+          target_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chapter_audit_log_actor_user_id_fkey"
+            columns: ["actor_user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_audit_log_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_audit_log_target_user_id_fkey"
+            columns: ["target_user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chapter_membership: {
         Row: {
           approved_by_id: string | null
@@ -119,6 +177,268 @@ export type Database = {
             columns: ["chapter_id"]
             isOneToOne: false
             referencedRelation: "chapter"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chapter_permission_grant: {
+        Row: {
+          chapter_id: string
+          created_at: string
+          granted_at: string
+          granted_by_id: string | null
+          id: string
+          permission_key: string
+          revoke_reason: string | null
+          revoked_at: string | null
+          revoked_by_id: string | null
+          source: string
+          source_role_assignment_id: string | null
+          user_id: string
+        }
+        Insert: {
+          chapter_id: string
+          created_at?: string
+          granted_at?: string
+          granted_by_id?: string | null
+          id?: string
+          permission_key: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by_id?: string | null
+          source: string
+          source_role_assignment_id?: string | null
+          user_id: string
+        }
+        Update: {
+          chapter_id?: string
+          created_at?: string
+          granted_at?: string
+          granted_by_id?: string | null
+          id?: string
+          permission_key?: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by_id?: string | null
+          source?: string
+          source_role_assignment_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chapter_permission_grant_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_permission_grant_granted_by_id_fkey"
+            columns: ["granted_by_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_permission_grant_revoked_by_id_fkey"
+            columns: ["revoked_by_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_permission_grant_source_role_assignment_id_fkey"
+            columns: ["source_role_assignment_id"]
+            isOneToOne: false
+            referencedRelation: "chapter_role_assignment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_permission_grant_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chapter_preapproval: {
+        Row: {
+          chapter_id: string
+          consumed_at: string | null
+          consumed_by_user_id: string | null
+          created_at: string
+          created_by_id: string | null
+          display_title: string | null
+          email: string
+          expires_at: string
+          functional_area: string | null
+          id: string
+          normalized_email: string
+          notes: string | null
+          preapproval_type: string
+          raw_title: string | null
+          revoked_at: string | null
+          revoked_by_id: string | null
+          role_level: string | null
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          chapter_id: string
+          consumed_at?: string | null
+          consumed_by_user_id?: string | null
+          created_at?: string
+          created_by_id?: string | null
+          display_title?: string | null
+          email: string
+          expires_at?: string
+          functional_area?: string | null
+          id?: string
+          normalized_email: string
+          notes?: string | null
+          preapproval_type: string
+          raw_title?: string | null
+          revoked_at?: string | null
+          revoked_by_id?: string | null
+          role_level?: string | null
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          chapter_id?: string
+          consumed_at?: string | null
+          consumed_by_user_id?: string | null
+          created_at?: string
+          created_by_id?: string | null
+          display_title?: string | null
+          email?: string
+          expires_at?: string
+          functional_area?: string | null
+          id?: string
+          normalized_email?: string
+          notes?: string | null
+          preapproval_type?: string
+          raw_title?: string | null
+          revoked_at?: string | null
+          revoked_by_id?: string | null
+          role_level?: string | null
+          source?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chapter_preapproval_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_preapproval_consumed_by_user_id_fkey"
+            columns: ["consumed_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_preapproval_created_by_id_fkey"
+            columns: ["created_by_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_preapproval_revoked_by_id_fkey"
+            columns: ["revoked_by_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chapter_role_assignment: {
+        Row: {
+          assigned_by_id: string | null
+          chapter_id: string
+          created_at: string
+          display_title: string
+          ends_at: string | null
+          functional_area: string
+          id: string
+          is_primary: boolean
+          raw_title: string | null
+          role_level: string
+          source: string
+          source_preapproval_id: string | null
+          starts_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_by_id?: string | null
+          chapter_id: string
+          created_at?: string
+          display_title: string
+          ends_at?: string | null
+          functional_area: string
+          id?: string
+          is_primary?: boolean
+          raw_title?: string | null
+          role_level: string
+          source?: string
+          source_preapproval_id?: string | null
+          starts_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_by_id?: string | null
+          chapter_id?: string
+          created_at?: string
+          display_title?: string
+          ends_at?: string | null
+          functional_area?: string
+          id?: string
+          is_primary?: boolean
+          raw_title?: string | null
+          role_level?: string
+          source?: string
+          source_preapproval_id?: string | null
+          starts_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chapter_role_assignment_assigned_by_id_fkey"
+            columns: ["assigned_by_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_role_assignment_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_role_assignment_source_preapproval_id_fkey"
+            columns: ["source_preapproval_id"]
+            isOneToOne: false
+            referencedRelation: "chapter_preapproval"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_role_assignment_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
             referencedColumns: ["id"]
           },
         ]
@@ -349,6 +669,13 @@ export type Database = {
             referencedRelation: "event_with_chapter"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_event_application_question_event"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "published_event_listing"
+            referencedColumns: ["id"]
+          },
         ]
       }
       event_chapter: {
@@ -400,6 +727,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "event_with_chapter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_chapter_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "published_event_listing"
             referencedColumns: ["id"]
           },
         ]
@@ -458,10 +792,343 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "event_registration_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "published_event_listing"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "event_registration_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funding_request: {
+        Row: {
+          accountability_due_at: string | null
+          accountability_note: string | null
+          accountability_submitted_at: string | null
+          actual_spend_amount: number | null
+          admin_decision_note: string | null
+          approved_amount: number | null
+          chapter_id: string
+          closed_at: string | null
+          closed_by_id: string | null
+          closure_note: string | null
+          created_at: string
+          currency: string
+          event_date: string
+          event_id: string | null
+          expected_attendee_count: number | null
+          expected_audience: string
+          id: string
+          internal_funding_source: string | null
+          internal_funding_source_note: string | null
+          is_late_request: boolean
+          okr_keys: string[]
+          partner_details: string | null
+          partner_name: string | null
+          pillar_keys: string[]
+          purpose: string
+          requested_amount: number
+          requester_user_id: string
+          result_summary: string | null
+          reviewed_at: string | null
+          reviewed_by_id: string | null
+          status: string
+          submitted_at: string | null
+          supporting_notes: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          accountability_due_at?: string | null
+          accountability_note?: string | null
+          accountability_submitted_at?: string | null
+          actual_spend_amount?: number | null
+          admin_decision_note?: string | null
+          approved_amount?: number | null
+          chapter_id: string
+          closed_at?: string | null
+          closed_by_id?: string | null
+          closure_note?: string | null
+          created_at?: string
+          currency?: string
+          event_date: string
+          event_id?: string | null
+          expected_attendee_count?: number | null
+          expected_audience: string
+          id?: string
+          internal_funding_source?: string | null
+          internal_funding_source_note?: string | null
+          is_late_request?: boolean
+          okr_keys?: string[]
+          partner_details?: string | null
+          partner_name?: string | null
+          pillar_keys?: string[]
+          purpose: string
+          requested_amount: number
+          requester_user_id: string
+          result_summary?: string | null
+          reviewed_at?: string | null
+          reviewed_by_id?: string | null
+          status?: string
+          submitted_at?: string | null
+          supporting_notes?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          accountability_due_at?: string | null
+          accountability_note?: string | null
+          accountability_submitted_at?: string | null
+          actual_spend_amount?: number | null
+          admin_decision_note?: string | null
+          approved_amount?: number | null
+          chapter_id?: string
+          closed_at?: string | null
+          closed_by_id?: string | null
+          closure_note?: string | null
+          created_at?: string
+          currency?: string
+          event_date?: string
+          event_id?: string | null
+          expected_attendee_count?: number | null
+          expected_audience?: string
+          id?: string
+          internal_funding_source?: string | null
+          internal_funding_source_note?: string | null
+          is_late_request?: boolean
+          okr_keys?: string[]
+          partner_details?: string | null
+          partner_name?: string | null
+          pillar_keys?: string[]
+          purpose?: string
+          requested_amount?: number
+          requester_user_id?: string
+          result_summary?: string | null
+          reviewed_at?: string | null
+          reviewed_by_id?: string | null
+          status?: string
+          submitted_at?: string | null
+          supporting_notes?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funding_request_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_request_closed_by_id_fkey"
+            columns: ["closed_by_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_request_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_request_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event_with_chapter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_request_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "published_event_listing"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_request_requester_user_id_fkey"
+            columns: ["requester_user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_request_reviewed_by_id_fkey"
+            columns: ["reviewed_by_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funding_request_budget_item: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          funding_request_id: string
+          id: string
+          label: string
+          notes: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          category?: string
+          created_at?: string
+          funding_request_id: string
+          id?: string
+          label: string
+          notes?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          funding_request_id?: string
+          id?: string
+          label?: string
+          notes?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funding_request_budget_item_funding_request_id_fkey"
+            columns: ["funding_request_id"]
+            isOneToOne: false
+            referencedRelation: "funding_request"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funding_request_file: {
+        Row: {
+          chapter_id: string
+          created_at: string
+          external_url: string | null
+          file_size_bytes: number | null
+          file_type: string
+          funding_request_id: string
+          id: string
+          mime_type: string | null
+          notes: string | null
+          original_name: string | null
+          storage_bucket: string
+          storage_path: string | null
+          uploaded_by_id: string | null
+        }
+        Insert: {
+          chapter_id: string
+          created_at?: string
+          external_url?: string | null
+          file_size_bytes?: number | null
+          file_type: string
+          funding_request_id: string
+          id?: string
+          mime_type?: string | null
+          notes?: string | null
+          original_name?: string | null
+          storage_bucket?: string
+          storage_path?: string | null
+          uploaded_by_id?: string | null
+        }
+        Update: {
+          chapter_id?: string
+          created_at?: string
+          external_url?: string | null
+          file_size_bytes?: number | null
+          file_type?: string
+          funding_request_id?: string
+          id?: string
+          mime_type?: string | null
+          notes?: string | null
+          original_name?: string | null
+          storage_bucket?: string
+          storage_path?: string | null
+          uploaded_by_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funding_request_file_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_request_file_funding_request_id_fkey"
+            columns: ["funding_request_id"]
+            isOneToOne: false
+            referencedRelation: "funding_request"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_request_file_uploaded_by_id_fkey"
+            columns: ["uploaded_by_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funding_request_status_event: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          from_status: string | null
+          funding_request_id: string
+          id: string
+          metadata: Json
+          note: string | null
+          to_status: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          from_status?: string | null
+          funding_request_id: string
+          id?: string
+          metadata?: Json
+          note?: string | null
+          to_status: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          from_status?: string | null
+          funding_request_id?: string
+          id?: string
+          metadata?: Json
+          note?: string | null
+          to_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funding_request_status_event_actor_user_id_fkey"
+            columns: ["actor_user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_request_status_event_funding_request_id_fkey"
+            columns: ["funding_request_id"]
+            isOneToOne: false
+            referencedRelation: "funding_request"
             referencedColumns: ["id"]
           },
         ]
@@ -559,6 +1226,253 @@ export type Database = {
             columns: ["chapter_id"]
             isOneToOne: false
             referencedRelation: "chapter"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      growth_reflection: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          event_id: string | null
+          goal_connection: string
+          id: string
+          learned: string
+          next_move: string
+          participated_in: string
+          recommendation_id: string | null
+          skill_or_mindset: string
+          status: string
+          updated_at: string
+          user_id: string
+          visibility: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          event_id?: string | null
+          goal_connection: string
+          id?: string
+          learned: string
+          next_move: string
+          participated_in: string
+          recommendation_id?: string | null
+          skill_or_mindset: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          visibility?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          event_id?: string | null
+          goal_connection?: string
+          id?: string
+          learned?: string
+          next_move?: string
+          participated_in?: string
+          recommendation_id?: string | null
+          skill_or_mindset?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "growth_reflection_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "growth_reflection_recommendation_id_fkey"
+            columns: ["recommendation_id"]
+            isOneToOne: false
+            referencedRelation: "pathway_recommendation"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "growth_reflection_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pathway_feature_flag: {
+        Row: {
+          chapter_id: string | null
+          created_at: string
+          enable_chapter_insights: boolean
+          enable_check_in: boolean
+          enable_growth_reflection: boolean
+          enable_recommendation_card: boolean
+          id: string
+          updated_at: string
+          updated_by_id: string | null
+        }
+        Insert: {
+          chapter_id?: string | null
+          created_at?: string
+          enable_chapter_insights?: boolean
+          enable_check_in?: boolean
+          enable_growth_reflection?: boolean
+          enable_recommendation_card?: boolean
+          id?: string
+          updated_at?: string
+          updated_by_id?: string | null
+        }
+        Update: {
+          chapter_id?: string | null
+          created_at?: string
+          enable_chapter_insights?: boolean
+          enable_check_in?: boolean
+          enable_growth_reflection?: boolean
+          enable_recommendation_card?: boolean
+          id?: string
+          updated_at?: string
+          updated_by_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathway_feature_flag_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: true
+            referencedRelation: "chapter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pathway_feature_flag_updated_by_id_fkey"
+            columns: ["updated_by_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pathway_check_in: {
+        Row: {
+          chapter_id: string | null
+          confidence_level: number | null
+          created_at: string
+          current_blocker: string | null
+          id: string
+          looking_for: string | null
+          monthly_time_commitment: string | null
+          growth_stage: string | null
+          primary_focus: string | null
+          status: string
+          study_interest: string | null
+          submitted_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chapter_id?: string | null
+          confidence_level?: number | null
+          created_at?: string
+          current_blocker?: string | null
+          id?: string
+          looking_for?: string | null
+          monthly_time_commitment?: string | null
+          growth_stage?: string | null
+          primary_focus?: string | null
+          status?: string
+          study_interest?: string | null
+          submitted_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chapter_id?: string | null
+          confidence_level?: number | null
+          created_at?: string
+          current_blocker?: string | null
+          id?: string
+          looking_for?: string | null
+          monthly_time_commitment?: string | null
+          growth_stage?: string | null
+          primary_focus?: string | null
+          status?: string
+          study_interest?: string | null
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathway_check_in_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pathway_check_in_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pathway_recommendation: {
+        Row: {
+          body: string
+          category: string
+          check_in_id: string
+          created_at: string
+          id: string
+          reason: string
+          sort_order: number
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          category: string
+          check_in_id: string
+          created_at?: string
+          id?: string
+          reason: string
+          sort_order: number
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          category?: string
+          check_in_id?: string
+          created_at?: string
+          id?: string
+          reason?: string
+          sort_order?: number
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathway_recommendation_check_in_id_fkey"
+            columns: ["check_in_id"]
+            isOneToOne: false
+            referencedRelation: "pathway_check_in"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pathway_recommendation_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
             referencedColumns: ["id"]
           },
         ]
@@ -998,6 +1912,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "event_registration_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "published_event_listing"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "event_registration_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -1088,6 +2009,54 @@ export type Database = {
           type?: string | null
         }
         Relationships: []
+      }
+      published_event_listing: {
+        Row: {
+          access_model: string | null
+          application_form_url: string | null
+          capacity: number | null
+          chapter_city: string | null
+          chapter_id: string | null
+          chapter_name: string | null
+          chapter_region: string | null
+          chapter_university: string | null
+          cover_image: string | null
+          created_at: string | null
+          created_by_id: string | null
+          description: string | null
+          end_at: string | null
+          event_type: Database["public"]["Enums"]["EventType"] | null
+          id: string | null
+          is_published: boolean | null
+          location: string | null
+          location_address: string | null
+          location_city: string | null
+          location_latitude: number | null
+          location_longitude: number | null
+          location_name: string | null
+          location_region: string | null
+          meeting_url: string | null
+          registrations_count: number | null
+          start_at: string | null
+          title: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_created_by_id_fkey"
+            columns: ["created_by_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
@@ -1226,6 +2195,23 @@ export type Database = {
         }
         Returns: Json
       }
+      can_access_event_with_permission: {
+        Args: { check_event_id: string; check_permission_key: string }
+        Returns: boolean
+      }
+      can_access_funding_file_object: {
+        Args: { check_permission_key: string; object_name: string }
+        Returns: boolean
+      }
+      can_access_funding_request: {
+        Args: { check_permission_key: string; check_request_id: string }
+        Returns: boolean
+      }
+      can_access_resume_object: {
+        Args: { object_name: string }
+        Returns: boolean
+      }
+      can_upload_event_cover: { Args: never; Returns: boolean }
       check_is_admin: { Args: never; Returns: boolean }
       current_user_role: { Args: never; Returns: string }
       disablelongtransactions: { Args: never; Returns: string }
@@ -1371,6 +2357,10 @@ export type Database = {
       }
       get_user_role: { Args: { user_id: string }; Returns: string }
       gettransactionid: { Args: never; Returns: unknown }
+      has_chapter_permission: {
+        Args: { check_chapter_id: string; check_permission_key: string }
+        Returns: boolean
+      }
       is_admin: { Args: never; Returns: boolean }
       is_chapter_editor: {
         Args: { check_chapter_id: string }
@@ -2211,3 +3201,4 @@ export const Constants = {
     },
   },
 } as const
+

@@ -1,6 +1,6 @@
 -- QA Test Data for LEAD Talent Platform
 -- This file provides test personas for QA/staging environments
--- Run: psql -f supabase/seed.sql
+-- Legacy fixture only. Routine QA refreshes should run supabase/qa.seed.sql.
 --
 -- LEAD-010 note:
 -- This file is a legacy migration fixture because it still writes

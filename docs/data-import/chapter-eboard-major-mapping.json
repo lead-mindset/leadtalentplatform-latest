@@ -1,0 +1,251 @@
+{
+  "version": 1,
+  "source": "chapter_eboard_csv_2026_05",
+  "sourceFile": "docs/Registro de Junta Ejecutiva(Sheet1).csv",
+  "normalizationHints": [
+    "trim",
+    "lowercase",
+    "remove_accents",
+    "collapse_whitespace",
+    "strip_surrounding_punctuation"
+  ],
+  "notes": [
+    "Raw major values must be preserved by consumers of this mapping.",
+    "This mapping standardizes common variants for reviewable dry-run artifacts.",
+    "Low-confidence and missing majors should remain reviewable instead of being silently coerced."
+  ],
+  "default": {
+    "standardizedMajor": "Otra / Por confirmar",
+    "majorFamily": "Other / Review",
+    "confidence": "low",
+    "requiresReview": true
+  },
+  "mappings": [
+    {
+      "id": "systems-engineering",
+      "match": [
+        "ingenieria de sistemas",
+        "ingenier\\u00eda de sistemas",
+        "ing. sistemas",
+        "ing sistemas",
+        "ingenieria sistemas",
+        "ingenier\\u00eda sistemas",
+        "sistemas"
+      ],
+      "standardizedMajor": "Ingenieria de Sistemas",
+      "majorFamily": "Computing / Technology",
+      "confidence": "high",
+      "requiresReview": false
+    },
+    {
+      "id": "software-engineering",
+      "match": [
+        "ingenieria de software",
+        "ingenier\\u00eda de software",
+        "ing. software",
+        "ing software",
+        "software engineering"
+      ],
+      "standardizedMajor": "Ingenieria de Software",
+      "majorFamily": "Computing / Technology",
+      "confidence": "high",
+      "requiresReview": false
+    },
+    {
+      "id": "software-design-and-development",
+      "match": [
+        "diseno y desarrollo de software",
+        "dise\\u00f1o y desarrollo de software",
+        "desarrollo de software",
+        "software development"
+      ],
+      "standardizedMajor": "Diseno y Desarrollo de Software",
+      "majorFamily": "Computing / Technology",
+      "confidence": "high",
+      "requiresReview": false
+    },
+    {
+      "id": "computer-science",
+      "match": [
+        "computer science",
+        "ciencia de la computacion",
+        "ciencia de la computaci\\u00f3n",
+        "ciencias de la computacion",
+        "ciencias de la computaci\\u00f3n",
+        "computacion",
+        "computaci\\u00f3n"
+      ],
+      "standardizedMajor": "Ciencia de la Computacion",
+      "majorFamily": "Computing / Technology",
+      "confidence": "high",
+      "requiresReview": false
+    },
+    {
+      "id": "informatics",
+      "match": [
+        "informatica",
+        "inform\\u00e1tica",
+        "ingenieria informatica",
+        "ingenier\\u00eda inform\\u00e1tica"
+      ],
+      "standardizedMajor": "Informatica",
+      "majorFamily": "Computing / Technology",
+      "confidence": "high",
+      "requiresReview": false
+    },
+    {
+      "id": "telecommunications-engineering",
+      "match": [
+        "telecomunicaciones",
+        "ingenieria de telecomunicaciones",
+        "ingenier\\u00eda de telecomunicaciones",
+        "telecommunications"
+      ],
+      "standardizedMajor": "Ingenieria de Telecomunicaciones",
+      "majorFamily": "Engineering",
+      "confidence": "high",
+      "requiresReview": false
+    },
+    {
+      "id": "industrial-engineering",
+      "match": [
+        "ingenieria industrial",
+        "ingenier\\u00eda industrial",
+        "ing. industrial",
+        "ing industrial",
+        "industrial engineering"
+      ],
+      "standardizedMajor": "Ingenieria Industrial",
+      "majorFamily": "Engineering",
+      "confidence": "high",
+      "requiresReview": false
+    },
+    {
+      "id": "mechatronics-engineering",
+      "match": [
+        "mecatronica",
+        "mecatr\\u00f3nica",
+        "ingenieria mecatronica",
+        "ingenier\\u00eda mecatr\\u00f3nica",
+        "mechatronics"
+      ],
+      "standardizedMajor": "Ingenieria Mecatronica",
+      "majorFamily": "Engineering",
+      "confidence": "high",
+      "requiresReview": false
+    },
+    {
+      "id": "business-administration",
+      "match": [
+        "administracion",
+        "administraci\\u00f3n",
+        "administracion de empresas",
+        "administraci\\u00f3n de empresas",
+        "business administration"
+      ],
+      "standardizedMajor": "Administracion",
+      "majorFamily": "Business",
+      "confidence": "high",
+      "requiresReview": false
+    },
+    {
+      "id": "business-and-marketing",
+      "match": [
+        "administracion y marketing",
+        "administraci\\u00f3n y marketing",
+        "administracion marketing",
+        "administraci\\u00f3n marketing"
+      ],
+      "standardizedMajor": "Administracion y Marketing",
+      "majorFamily": "Marketing",
+      "confidence": "high",
+      "requiresReview": false
+    },
+    {
+      "id": "international-business",
+      "match": [
+        "administracion y negocios internacionales",
+        "administraci\\u00f3n y negocios internacionales",
+        "negocios internacionales",
+        "international business"
+      ],
+      "standardizedMajor": "Administracion y Negocios Internacionales",
+      "majorFamily": "Business",
+      "confidence": "high",
+      "requiresReview": false
+    },
+    {
+      "id": "marketing",
+      "match": [
+        "marketing",
+        "mercadotecnia",
+        "publicidad"
+      ],
+      "standardizedMajor": "Marketing",
+      "majorFamily": "Marketing",
+      "confidence": "high",
+      "requiresReview": false
+    },
+    {
+      "id": "economics",
+      "match": [
+        "economia",
+        "econom\\u00eda",
+        "economics"
+      ],
+      "standardizedMajor": "Economia",
+      "majorFamily": "Economics / Finance",
+      "confidence": "high",
+      "requiresReview": false
+    },
+    {
+      "id": "finance",
+      "match": [
+        "finanzas",
+        "finance",
+        "banca y finanzas"
+      ],
+      "standardizedMajor": "Finanzas",
+      "majorFamily": "Economics / Finance",
+      "confidence": "high",
+      "requiresReview": false
+    },
+    {
+      "id": "law",
+      "match": [
+        "derecho",
+        "law",
+        "legal"
+      ],
+      "standardizedMajor": "Derecho",
+      "majorFamily": "Law",
+      "confidence": "high",
+      "requiresReview": false
+    },
+    {
+      "id": "communications",
+      "match": [
+        "comunicaciones",
+        "comunicacion",
+        "comunicaci\\u00f3n",
+        "communication",
+        "communications"
+      ],
+      "standardizedMajor": "Comunicaciones",
+      "majorFamily": "Communications",
+      "confidence": "high",
+      "requiresReview": false
+    },
+    {
+      "id": "international-relations",
+      "match": [
+        "relaciones internacionales",
+        "international relations"
+      ],
+      "standardizedMajor": "Relaciones Internacionales",
+      "majorFamily": "International Relations",
+      "confidence": "high",
+      "requiresReview": false
+    }
+  ]
+}

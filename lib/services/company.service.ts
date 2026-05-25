@@ -25,7 +25,7 @@ const TALENT_UNAVAILABLE_ERROR = 'Profile not found or unavailable.'
 
 export type RecruiterProfileRow = Pick<
   PersonProfileRow,
-  'major_or_interest' | 'graduation_year' | 'linkedin_url' | 'skills' | 'is_recruiter_visible' | 'updated_at'
+  'major_or_interest' | 'graduation_year' | 'linkedin_url' | 'portfolio_url' | 'skills' | 'is_recruiter_visible' | 'updated_at'
 > & {
   chapter_membership: {
     chapter_id: string
@@ -80,6 +80,7 @@ type VisibleProfileRow = Pick<
   | 'major_or_interest'
   | 'graduation_year'
   | 'linkedin_url'
+  | 'portfolio_url'
   | 'skills'
   | 'is_recruiter_visible'
   | 'updated_at'
@@ -113,7 +114,7 @@ async function loadVisibleStudents(
 ): Promise<StudentForRecruiter[]> {
   let profileQuery = supabase
     .from('person_profile')
-    .select('user_id, major_or_interest, graduation_year, linkedin_url, skills, is_recruiter_visible, updated_at')
+    .select('user_id, major_or_interest, graduation_year, linkedin_url, portfolio_url, skills, is_recruiter_visible, updated_at')
     .eq('is_recruiter_visible', true)
 
   if (filters.studentIds) {
@@ -207,6 +208,7 @@ async function loadVisibleStudents(
           major_or_interest: profile.major_or_interest,
           graduation_year: profile.graduation_year,
           linkedin_url: profile.linkedin_url,
+          portfolio_url: profile.portfolio_url,
           skills: Array.isArray(profile.skills) ? profile.skills : [],
           is_recruiter_visible: profile.is_recruiter_visible,
           updated_at: profile.updated_at,

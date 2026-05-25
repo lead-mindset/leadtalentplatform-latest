@@ -16,6 +16,8 @@ yarn.lock
 
 # testing
 /coverage
+/test-results
+/playwright-report
 
 # next.js
 /.next/
@@ -52,6 +54,10 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# local generated artifacts
+/outputs
+/tmp
+
 # env files (can opt-in for committing if needed)
 .env*.local
 .env
@@ -67,6 +73,7 @@ supabase/.temp/
 
 # remote opencode
 logs/
+tmp/
 *.log
 ecosystem.config.json
 .pm2/

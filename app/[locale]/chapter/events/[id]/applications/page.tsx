@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { getEventRegistrations } from '@/lib/actions/events/get-data'
-import { assertCanManageEvent } from '@/lib/actions/events/access'
+import { assertCanAccessEvent } from '@/lib/actions/events/access'
 import { EventApplicationsClient } from './_components/event-applications-client'
 
 export default async function EventApplicationsPage({
@@ -9,7 +9,7 @@ export default async function EventApplicationsPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const access = await assertCanManageEvent(id)
+  const access = await assertCanAccessEvent(id, 'chapter.events.view_registrations')
 
   if ('error' in access) {
     if (access.error === 'Event not found') {

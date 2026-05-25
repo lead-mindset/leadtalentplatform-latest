@@ -15,9 +15,28 @@ This checklist validates:
 
 This checklist does not replace service tests. It is a smoke-level manual pass over the user-visible flows.
 
+## Automated Local Readiness
+
+Before manual QA, run the local readiness harness:
+
+```bash
+pnpm company-portal:readiness
+```
+
+Expected result:
+
+- Company visibility returns only approved opted-in talent.
+- Hidden, public participant/no-membership, pending, rejected, and alumni-only users stay hidden.
+- Active accepted company representative access is allowed.
+- Missing, inactive, revoked, and expired access states are denied.
+- Disposable local rows are cleaned up after the run.
+
+This harness is local Docker only. It must not be pointed at QA or production.
+
 ## Prerequisites
 
 - Run against local or staging unless a dedicated production QA company and test users exist.
+- Production validation must use a dedicated production QA company and controlled test accounts only, not real candidates.
 - Use a fresh browser profile or incognito window for invite acceptance and email mismatch checks.
 - Start from seeded local Supabase data or equivalent staging fixtures.
 - Confirm an admin account can access invite/company management.

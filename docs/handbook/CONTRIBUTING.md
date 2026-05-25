@@ -264,54 +264,88 @@ Record linked issue, plan artifact, validation commands/results, migration notes
 
 We use a three-environment workflow for development, QA/staging, and production.
 
-| Environment | Branch | Supabase | Vercel URL | Purpose |
-|-------------|--------|----------|------------|---------|
-| Local | feature/* | Docker | localhost:3000 | Development |
-| QA/Staging | dev | QA Project | [project]-vercel.app | Integration testing |
-| Production | master | Prod Project | Official domain | Live |
+| Environment | Branch | Supabase | Vercel project / URL | Purpose |
+|-------------|--------|----------|----------------------|---------|
+| Local | feature branches / `dev` | Docker Supabase | `localhost:3000` | Fast development and reset-heavy experiments |
+| QA/Staging | `dev` | QA Supabase project | `leadqa` / `https://leadqa.vercel.app` | Shared team testing and integration validation |
+| Production | `master` | Production Supabase project | `lead-talent-platform-latest` / production domain | Stable live environment |
 
 ### Branch Strategy
-- `master` — Production branch (protected, requires PR)
-- `dev` — Integration/QA branch (deployed to Vercel QA)
-- `feature/*` — Feature branches (deployed as Vercel previews)
-- PRs target `dev` for integration testing
+- `dev` is the QA integration branch. Pushing to `dev` should update QA code and apply committed migrations to the QA database.
+- `master` is the production branch. Production should be promoted deliberately after QA passes.
+- Feature branches should branch from `dev` and merge back into `dev`.
+- Do not treat a local database dump as the source of truth for QA or production. Schema changes travel through committed migrations.
 
-### QA Testing Flow
-1. Create feature branch from `dev`
-2. Implement feature, push to trigger Vercel preview
-3. Test on Vercel preview with QA Supabase
-4. Merge to `dev` for QA team validation
-5. After QA approval, merge to `master`
+### Database Promotion Flow
+1. Develop locally against Docker Supabase.
+2. Create or edit migration files in `supabase/migrations/`.
+3. Validate locally with `pnpm run supabase:reset`, `pnpm test`, and `pnpm build` as appropriate.
+4. Commit code, migrations, generated types, and related tests.
+5. Push or merge to `dev`.
+6. GitHub Actions applies migrations to QA Supabase.
+7. Test on `https://leadqa.vercel.app`.
+8. Promote to `master` only after QA approval.
+
+### QA Data Policy
+Normal `dev` pushes must not reseed QA data. They may apply migrations, but they should preserve shared QA testing state.
+
+Use the manual **Refresh QA Data** GitHub Action when the team intentionally wants to refresh deterministic QA fixtures.
+
+| Action | Trigger | Database effect |
+|--------|---------|-----------------|
+| `Deploy to QA` | Push to `dev` | Applies migrations only |
+| `Refresh QA Data` | Manual `workflow_dispatch` | Applies migrations, then runs `supabase/qa.seed.sql` |
+
+The manual refresh action requires typing `REFRESH_QA` so accidental clicks do not mutate QA data.
+
+GitHub only exposes manual `workflow_dispatch` actions from the repository default branch (`master`). If a manual QA workflow is introduced on `dev`, it will not appear in the Actions UI until the workflow file is also present on `master`.
+
+### Seed Files
+- `supabase/seed.sql` is the canonical local Docker baseline. It should stay deterministic and compatible with the current account model.
+- `supabase/qa.seed.sql` is the current QA refresh entrypoint. It may include `seed.sql` plus QA-only fixtures.
+- `supabase/seed-qa.sql` is legacy migration-test data for old `student_profile` migration paths. Do not use it for routine QA refreshes unless a migration story explicitly requires it.
 
 ### Secrets & Environment Variables
 **Never commit secrets to Git.** Use environment variables:
 - Local: `.env.local` (not committed)
-- Vercel: Project → Settings → Environment Variables
-- GitHub: Repo → Settings → Environments
+- Vercel QA project (`leadqa`): QA Supabase URL, publishable key, service role, auth/email provider keys, and QA app URL values.
+- Vercel production project (`lead-talent-platform-latest`): production Supabase credentials and production app URL values.
+- GitHub Environments: database migration credentials for QA/production workflows.
 
 #### GitHub Environments
 We use two environments for secrets/variables:
 
 | Environment | Purpose | Secrets/Variables |
 |-------------|---------|-------------------|
-| **Preview** | QA/Staging (dev branch) | QA Supabase credentials |
-| **Production** | Live site (master branch) | Production Supabase credentials |
+| **Preview** | QA/Staging (`dev` branch) | QA Supabase database credentials |
+| **Production** | Live site (`master` branch) | Production Supabase credentials |
 
 **Preview Environment Variables:**
-- `QA_SUPABASE_PROJECT_REF` - QA project reference ID
 - `QA_DB_HOST` - QA database host
+- `QA_DB_PORT` - QA database port
+- `QA_DB_USER` - QA database user
 
 **Preview Environment Secrets:**
-- `QA_SUPABASE_SERVICE_ROLE_KEY` - QA service role key
 - `QA_DB_PASSWORD` - QA database password
+- `QA_SUPABASE_SERVICE_ROLE_KEY` - QA service role key
+- `SUPABASE_ACCESS_TOKEN` - Supabase CLI token if required by hosted migration commands
 
-### Seed Data for QA
-Run `pnpm run supabase:start` then:
-```bash
-psql -f supabase/seed-qa.sql
+### Hosted Supabase Auth Configuration
+Do not push the local `supabase/config.toml` directly to hosted QA or production. The local file contains localhost auth URLs for Docker Supabase.
+
+Hosted auth configuration must be environment-specific:
+
+| Environment | Site URL | Required redirect shape |
+|-------------|----------|-------------------------|
+| QA | `https://leadqa.vercel.app` | QA auth callback/company/dashboard URLs plus local dev URLs if needed |
+| Production | Production domain | Production auth callback/company/dashboard URLs |
+
+For QA, Google OAuth must be enabled in the QA Supabase project and should redirect through the QA Supabase callback, not localhost. Verify with the Supabase authorize endpoint before asking the team to test Google login.
+
+QA auth emails use the Supabase **Send Email** auth hook, not Supabase's default email templates. The hook points to:
+
+```text
+https://leadqa.vercel.app/api/auth/hooks/send-email
 ```
-This creates test personas (see `supabase/seed-qa.sql`):
-- Admin: `admin@leadplatform.qa`
-- Editors: `editor-*@leadplatform.qa`
-- Members: `student-*@uni.edu`
-- Company representatives: `recruiter-*@company.com`
+
+The QA Vercel project must have `SUPABASE_HOOK_SECRET` and `RESEND_API_KEY` configured before enabling the hook. After changing either value, redeploy `leadqa` so the serverless route receives the latest environment.

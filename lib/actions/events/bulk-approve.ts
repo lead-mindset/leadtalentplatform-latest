@@ -1,10 +1,11 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { sendApplicationApprovedEmail } from '@/lib/emails/send-email'
 import { sendApplicationRejectedEmail } from '@/lib/emails/send-email'
 import { assertCanManageEvent } from './access'
 import { EventService } from '@/lib/services/event.service'
+import { PUBLIC_EVENTS_CACHE_TAG } from '@/lib/data/public-events'
 
 export async function bulkApproveApplications(eventId: string, applicationIds: string[]) {
   const access = await assertCanManageEvent(eventId)
@@ -48,11 +49,17 @@ export async function bulkApproveApplications(eventId: string, applicationIds: s
         registration.event.location,
         registration.event.meeting_url,
         registration.event.event_type,
-        registration.id
-      ).catch((err: Error) => console.error('Failed to send approval email:', err))
+        registration.id,
+        'es'
+      ).then((emailResult) => {
+        if (!emailResult.success) {
+          console.error('Failed to send approval email:', emailResult.error)
+        }
+      }).catch((err: Error) => console.error('Failed to send approval email:', err))
     }
   })
 
+  revalidateTag(PUBLIC_EVENTS_CACHE_TAG, { expire: 0 })
   revalidatePath(`/chapter/events/${eventId}/applications`)
   revalidatePath(`/chapter/events`)
   revalidatePath(`/events/${eventId}`)
@@ -83,11 +90,17 @@ export async function bulkRejectApplications(eventId: string, applicationIds: st
         registration.user.email,
         registration.user.name ?? 'Student',
         registration.event.title,
-        chapter_name
-      ).catch((err: Error) => console.error('Failed to send rejection email:', err))
+        chapter_name,
+        'es'
+      ).then((emailResult) => {
+        if (!emailResult.success) {
+          console.error('Failed to send rejection email:', emailResult.error)
+        }
+      }).catch((err: Error) => console.error('Failed to send rejection email:', err))
     }
   })
 
+  revalidateTag(PUBLIC_EVENTS_CACHE_TAG, { expire: 0 })
   revalidatePath(`/chapter/events/${eventId}/applications`)
   revalidatePath(`/chapter/events`)
 

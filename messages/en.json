@@ -92,6 +92,7 @@
     "networkError": "Network error. Please check your connection",
     "userNotFound": "No account found with this email",
     "emailAlreadyInUse": "This email is already in use",
+    "invalidEmailAddress": "Enter a valid email address",
     "confirmAccountMessage": "You've successfully signed up. Please check your email to confirm your account before signing in."
   },
   "gender": {
@@ -164,8 +165,10 @@
       "title": "Professional Profile",
       "subtitle": "Update your professional information",
       "linkedin": "LinkedIn Profile",
-      "visibility": "Make my profile visible",
-      "visibilityDesc": "Share my profile with LEAD partners",
+      "portfolio": "Portfolio",
+      "portfolioPlaceholder": "https://your-site.com",
+      "visibility": "Make my profile visible to companies invited by LEAD",
+      "visibilityDesc": "Optional. Approved representatives can view your professional profile. You can change this later; it does not guarantee opportunities.",
       "emailNotifications": "Email Notifications",
       "emailNotificationsLabel": "Keep me updated about LEAD",
       "emailNotificationsDesc": "Receive emails about events, workshops, and opportunities"

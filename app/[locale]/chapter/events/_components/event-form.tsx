@@ -3,14 +3,17 @@
 import React, { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { createEvent, type CreateEventInput } from '@/lib/actions/events/create-event'
 import { updateEvent, type UpdateEventInput } from '@/lib/actions/events/update-event'
 import { deleteEvent } from '@/lib/actions/events/delete-event'
 import { addEventCollaborators } from '@/lib/actions/events/add-event-collaborators'
 import type { EventRow, EventType, EventAccessModel, ChapterRow, EventApplicationQuestionRow, EventApplicationQuestionType } from '@/lib/types'
-import { EVENT_ACCESS_MODEL_OPTIONS } from '@/lib/constants'
 import { useRouter } from 'next/navigation'
 import { useLocale } from 'next-intl'
 import { uploadEventCover } from '@/lib/actions/events/upload-cover'
@@ -29,14 +32,67 @@ type EditableApplicationQuestion = {
 }
 
 const questionTypeOptions: Array<{ value: EventApplicationQuestionType; label: string }> = [
-  { value: 'short_text', label: 'Short text' },
-  { value: 'long_text', label: 'Long text' },
-  { value: 'single_select', label: 'Single select' },
-  { value: 'checkbox', label: 'Checkbox' },
+  { value: 'short_text', label: 'Respuesta corta' },
+  { value: 'long_text', label: 'Respuesta larga' },
+  { value: 'single_select', label: 'Selección única' },
+  { value: 'checkbox', label: 'Casillas' },
   { value: 'url', label: 'URL' },
 ]
 
+const EVENT_ACCESS_OPTIONS: Array<{ value: EventAccessModel; label: string }> = [
+  { value: 'open', label: 'Registro abierto' },
+  { value: 'application', label: 'Postulación requerida' },
+]
+
+const eventTypeOptions: Array<{ value: EventType; label: string; icon: typeof MapPin }> = [
+  { value: 'in_person', label: 'Presencial', icon: MapPin },
+  { value: 'online', label: 'Virtual', icon: Video },
+  { value: 'hybrid', label: 'Híbrido', icon: MonitorSmartphone },
+]
+
+const eventTypeLabels: Record<EventType, string> = {
+  in_person: 'Presencial',
+  online: 'Virtual',
+  hybrid: 'Híbrido',
+}
+
+const accessModelLabels: Record<EventAccessModel, string> = {
+  open: 'Registro abierto',
+  application: 'Postulación requerida',
+}
+
 const EMPTY_APPLICATION_QUESTIONS: EventApplicationQuestionRow[] = []
+
+function RequirementBadge({ required, label }: { required: boolean; label?: string }) {
+  return (
+    <Badge variant={required ? 'default' : 'outline'} size="sm">
+      {label ?? (required ? 'Obligatorio' : 'Opcional')}
+    </Badge>
+  )
+}
+
+function FieldLabel({
+  htmlFor,
+  children,
+  required,
+  badgeLabel,
+  className,
+}: {
+  htmlFor?: string
+  children: React.ReactNode
+  required: boolean
+  badgeLabel?: string
+  className?: string
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Label htmlFor={htmlFor} className={className ?? 'text-sm font-semibold tracking-wide text-muted-foreground uppercase'}>
+        {children}
+      </Label>
+      <RequirementBadge required={required} label={badgeLabel} />
+    </div>
+  )
+}
 
 function toEditableQuestion(question: EventApplicationQuestionRow): EditableApplicationQuestion {
   return {
@@ -82,11 +138,13 @@ export function EventForm({
   mode,
   initial,
   editorChapter,
+  canArchiveEvents = false,
   applicationQuestions = EMPTY_APPLICATION_QUESTIONS,
 }: {
   mode: Mode
   initial?: EventRow | null
   editorChapter?: ChapterRow | null
+  canArchiveEvents?: boolean
   applicationQuestions?: EventApplicationQuestionRow[]
 }) {
   const router = useRouter()
@@ -175,29 +233,29 @@ export function EventForm({
   async function handleCoverFile(file: File | null) {
     if (!file) return
     if (!file.type.startsWith('image/')) {
-      setCoverError('Only image files are allowed')
+      setCoverError('Solo se permiten archivos de imagen')
       return
     }
     if (file.size > 2 * 1024 * 1024) {
-      setCoverError('Cover image must be 2MB or smaller')
+      setCoverError('La imagen de portada debe pesar 2 MB o menos')
       return
     }
 
     setCoverError(null)
     const formData = new FormData()
     formData.set('cover', file)
-    const toastId = toast.loading('Uploading image...')
+    const toastId = toast.loading('Subiendo imagen...')
     try {
       const result = await uploadEventCover(formData)
       setCoverImage(result.publicUrl)
-      toast.success('Image uploaded successfully', { id: toastId })
+      toast.success('Imagen subida correctamente', { id: toastId })
     } catch (uploadError) {
-      setCoverError(uploadError instanceof Error ? uploadError.message : 'Failed to upload image')
-      toast.error('Failed to upload image', { id: toastId })
+      setCoverError(uploadError instanceof Error ? uploadError.message : 'No se pudo subir la imagen')
+      toast.error('No se pudo subir la imagen', { id: toastId })
     }
   }
 
-  const validateFields = (checkMode: 'step' | 'all', currentStep?: number) => {
+  const validateFields = (checkMode: 'step' | 'all', currentStep?: number, targetPublished = true) => {
     setFieldErrors({})
     let isValid = true
     const errors: Record<string, string> = {}
@@ -207,50 +265,50 @@ export function EventForm({
     const checkAccess = checkMode === 'all' || currentStep === 3
 
     if (checkBasics) {
-      if (!title.trim()) { errors.title = 'Title is required'; isValid = false }
-      if (title.length > 100) { errors.title = 'Title must be less than 100 characters'; isValid = false }
-      if (description.length > 2000) { errors.description = 'Description must be less than 2000 characters'; isValid = false }
-      if (coverImage && !coverImage.startsWith('http')) { errors.cover_image = 'Invalid image URL'; isValid = false }
+      if (!title.trim()) { errors.title = 'El título es obligatorio'; isValid = false }
+      if (title.length > 100) { errors.title = 'El título debe tener menos de 100 caracteres'; isValid = false }
+      if (description.length > 2000) { errors.description = 'La descripción debe tener menos de 2000 caracteres'; isValid = false }
+      if (coverImage && !coverImage.startsWith('http')) { errors.cover_image = 'La URL de imagen no es valida'; isValid = false }
     }
 
     if (checkLogistics) {
-      if (!startAt) { errors.start_at = 'Start date and time are required'; isValid = false }
-      if (!endAt) { errors.end_at = 'End date and time are required'; isValid = false }
+      if (!startAt) { errors.start_at = 'La fecha y hora de inicio son obligatorias'; isValid = false }
+      if (!endAt) { errors.end_at = 'La fecha y hora de fin son obligatorias'; isValid = false }
       if (startAt && endAt && new Date(startAt) >= new Date(endAt)) {
-        errors.end_at = 'End date must be after start date'
+        errors.end_at = 'La fecha de fin debe ser posterior al inicio'
         isValid = false
       }
-      if (eventType === 'in_person' && !location?.trim()) {
-        errors.location = 'Location is required for in-person events'
+      if (targetPublished && eventType === 'in_person' && !location?.trim()) {
+        errors.location = 'La ubicación es obligatoria para eventos presenciales'
         isValid = false
       }
-      if (eventType === 'online' && !meetingUrl?.trim()) {
-        errors.meeting_url = 'Meeting URL is required for online events'
+      if (targetPublished && eventType === 'online' && !meetingUrl?.trim()) {
+        errors.meeting_url = 'El enlace de reunión es obligatorio para eventos virtuales'
         isValid = false
       }
-      if (eventType === 'hybrid') {
-        if (!location?.trim()) { errors.location = 'Location is required for hybrid events'; isValid = false }
-        if (!meetingUrl?.trim()) { errors.meeting_url = 'Meeting URL is required for hybrid events'; isValid = false }
+      if (targetPublished && eventType === 'hybrid') {
+        if (!location?.trim()) { errors.location = 'La ubicación es obligatoria para eventos híbridos'; isValid = false }
+        if (!meetingUrl?.trim()) { errors.meeting_url = 'El enlace de reunión es obligatorio para eventos híbridos'; isValid = false }
       }
     }
 
     if (checkAccess) {
       if (capacity && (isNaN(Number(capacity)) || Number(capacity) <= 0)) {
-        errors.capacity = 'Capacity must be a valid number greater than 0'
+        errors.capacity = 'La capacidad debe ser un número mayor que 0'
         isValid = false
       }
-      if (accessModel === 'application' && !applicationFormUrl?.trim()) {
+      if (targetPublished && accessModel === 'application' && !applicationFormUrl?.trim()) {
         const hasQuestions = applicationQuestionsState.some((question) => question.questionText.trim())
         if (!hasQuestions) {
-          errors.application_questions = 'Add at least one application question'
+          errors.application_questions = 'Agrega al menos una pregunta de postulación'
           isValid = false
         }
       }
 
-      if (accessModel === 'application') {
+      if (targetPublished && accessModel === 'application') {
         applicationQuestionsState.forEach((question, index) => {
           if (!question.questionText.trim()) {
-            errors.application_questions = `Question ${index + 1} needs text`
+            errors.application_questions = `La pregunta ${index + 1} necesita texto`
             isValid = false
           }
 
@@ -258,7 +316,7 @@ export function EventForm({
             ['single_select', 'checkbox'].includes(question.questionType) &&
             !question.optionsText.split('\n').some((option) => option.trim())
           ) {
-            errors.application_questions = `Question ${index + 1} needs at least one option`
+            errors.application_questions = `La pregunta ${index + 1} necesita al menos una opción`
             isValid = false
           }
         })
@@ -267,13 +325,13 @@ export function EventForm({
 
     if (!isValid) {
       setFieldErrors(errors)
-      toast.error('Please fix the highlighted errors before saving')
+      toast.error(targetPublished ? 'Corrige los campos obligatorios antes de publicar' : 'Corrige los campos mínimos antes de guardar el borrador')
     }
     return isValid
   }
 
   const handleNext = () => {
-    if (validateFields('step', step)) {
+    if (validateFields('step', step, false)) {
       setStep(s => Math.min(s + 1, 4))
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
@@ -285,7 +343,7 @@ export function EventForm({
   }
 
   async function submitEvent(targetPublished: boolean) {
-    if (!validateFields('all')) {
+    if (!validateFields('all', undefined, targetPublished)) {
       return
     }
 
@@ -331,11 +389,11 @@ export function EventForm({
         if (mode === 'edit' && pendingCollaboratorIds.length > 0) {
           const collaboratorResult = await addEventCollaborators(res.event.id, pendingCollaboratorIds)
           if ('error' in collaboratorResult) {
-            toast.error(`Event updated but failed to add collaborators: ${collaboratorResult.error}`)
+            toast.error(`El evento se actualizó, pero no se pudieron agregar colaboradores: ${collaboratorResult.error}`)
           }
         }
-        toast.success(mode === 'create' ? 'Event created successfully!' : 'Event updated successfully!')
-        setLastSavedAt(new Date().toLocaleTimeString())
+        toast.success(mode === 'create' ? 'Evento creado correctamente' : 'Evento actualizado correctamente')
+        setLastSavedAt(new Date().toLocaleTimeString('es-PE'))
         setIsPublished(res.event.is_published)
 
         if (mode === 'create') {
@@ -344,7 +402,7 @@ export function EventForm({
           router.refresh()
         }
       } catch {
-        toast.error('An unexpected error occurred. Please try again.')
+        toast.error('Ocurrió un error inesperado. Inténtalo nuevamente.')
       }
     })
   }
@@ -382,7 +440,7 @@ export function EventForm({
       }
       const res = await updateEvent(payload as UpdateEventInput)
       if (!('error' in res)) {
-        setLastSavedAt(new Date().toLocaleTimeString())
+        setLastSavedAt(new Date().toLocaleTimeString('es-PE'))
       }
       setIsAutoSaving(false)
     }, 30000)
@@ -444,10 +502,10 @@ export function EventForm({
   }
 
   const steps = [
-    { num: 1, title: 'Basics' },
-    { num: 2, title: 'Logistics' },
-    { num: 3, title: 'Access' },
-    { num: 4, title: 'Review' },
+    { num: 1, title: 'Datos' },
+    { num: 2, title: 'Logística' },
+    { num: 3, title: 'Acceso' },
+    { num: 4, title: 'Revisión' },
   ]
   const fieldErrorEntries = Object.entries(fieldErrors).filter(([, message]) => message)
 
@@ -456,7 +514,7 @@ export function EventForm({
 
     return (
       <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-        {error && <p className="font-medium">{error}</p>}
+        {error && <div className="font-medium">{error}</div>}
         {fieldErrorEntries.length > 0 && (
           <ul className={error ? 'mt-2 list-disc space-y-1 pl-5' : 'list-disc space-y-1 pl-5'}>
             {fieldErrorEntries.slice(0, 4).map(([field, message]) => (
@@ -477,11 +535,11 @@ export function EventForm({
           <div className="p-2 bg-primary/10 rounded-lg text-primary">
             <Lightbulb className="w-5 h-5" />
           </div>
-          <h2 className="text-xl font-bold">Event Basics</h2>
+          <div className="text-xl font-semibold">Datos del evento</div>
         </div>
         <div className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="title" className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">Event Title</Label>
+            <FieldLabel htmlFor="title" required>Título del evento</FieldLabel>
             <Input
               id="title"
               value={title}
@@ -491,30 +549,30 @@ export function EventForm({
                   setFieldErrors(prev => ({ ...prev, title: '' }))
                 }
               }}
-              placeholder="e.g. LATAM Tech Summit 2026"
-              className={`h-12 px-4 text-lg bg-muted/50 border-transparent focus-visible:ring-primary focus-visible:bg-background transition-all rounded-xl ${fieldErrors.title ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+              placeholder="Ej. LEAD Spark: Tech & Careers"
+              className={fieldErrors.title ? 'border-destructive focus-visible:ring-destructive' : ''}
             />
-            {fieldErrors.title && <p className="text-sm text-destructive">{fieldErrors.title}</p>}
+            {fieldErrors.title && <div className="text-sm text-destructive">{fieldErrors.title}</div>}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description" className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">Description</Label>
-            <div className={`bg-muted/50 rounded-xl overflow-hidden border transition-all focus-within:ring-2 focus-within:ring-primary focus-within:bg-background ${fieldErrors.description ? 'border-destructive focus-within:ring-destructive' : 'border-transparent'}`}>
-              <textarea
-                id="description"
-                className="w-full min-h-32 bg-transparent border-none px-4 py-4 text-foreground outline-none resize-y placeholder:text-muted-foreground"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Describe what participants should expect..."
-              />
-            </div>
-            {fieldErrors.description && <p className="text-sm text-destructive">{fieldErrors.description}</p>}
+            <FieldLabel htmlFor="description" required={false}>Descripción</FieldLabel>
+            <Textarea
+              id="description"
+              className={fieldErrors.description ? 'min-h-32 border-destructive focus-visible:ring-destructive' : 'min-h-32'}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Explica el propósito, la audiencia y qué deben esperar los participantes."
+            />
+            {fieldErrors.description && <div className="text-sm text-destructive">{fieldErrors.description}</div>}
           </div>
         </div>
       </section>
 
       <section className="bg-card border rounded-lg p-6 md:p-8 shadow-sm">
-        <Label className="text-sm font-semibold tracking-wide text-muted-foreground uppercase mb-4 block">Event Cover Image</Label>
+        <div className="mb-4">
+          <FieldLabel required={false}>Imagen de portada</FieldLabel>
+        </div>
         <div
           onDragOver={(event) => {
             event.preventDefault()
@@ -529,13 +587,14 @@ export function EventForm({
             setIsDraggingCover(false)
             await handleCoverFile(event.dataTransfer.files[0] ?? null)
           }}
-          className={`relative w-full aspect-[21/9] rounded-lg overflow-hidden border-2 border-dashed flex flex-col items-center justify-center gap-4 transition-all cursor-pointer group ${isDraggingCover ? 'border-primary bg-primary/5' : 'border-border bg-muted/30 hover:bg-muted/60'}`}
+          className={`relative flex aspect-video w-full cursor-pointer flex-col items-center justify-center gap-4 overflow-hidden rounded-lg border border-dashed transition-all group ${isDraggingCover ? 'border-primary bg-primary/5' : 'border-border bg-muted/30 hover:bg-muted/60'}`}
           onClick={() => !coverImage && fileInputRef.current?.click()}
         >
           <input
             ref={fileInputRef}
             type="file"
             accept="image/*"
+            aria-label="Subir imagen de portada del evento"
             className="sr-only"
             onChange={async (event) => handleCoverFile(event.target.files?.[0] ?? null)}
           />
@@ -544,14 +603,14 @@ export function EventForm({
             <>
               <Image
                 src={coverImage}
-                alt="Cover preview"
+                alt="Vista previa de la portada"
                 fill
                 sizes="(min-width: 1024px) 768px, 100vw"
                 className="object-cover"
               />
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+              <div className="absolute inset-0 flex items-center justify-center bg-background/70 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
                 <Button variant="secondary" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
-                  <ImagePlus className="w-4 h-4 mr-2" /> Change Cover
+                  <ImagePlus className="w-4 h-4 mr-2" /> Cambiar portada
                 </Button>
               </div>
             </>
@@ -561,23 +620,22 @@ export function EventForm({
                 <UploadCloud className="w-8 h-8" />
               </div>
               <div className="text-center px-4">
-                <p className="font-bold text-lg mb-1">Drop your cover here</p>
-                <p className="text-muted-foreground text-sm">Recommended: 1920x820px (Max 2MB)</p>
+                <div className="mb-1 text-lg font-semibold">Arrastra la portada aquí</div>
+                <div className="text-sm text-muted-foreground">Recomendado: 1920 x 1080 px. Máximo 2 MB.</div>
               </div>
             </>
           )}
         </div>
-        {coverError && <p className="text-sm text-destructive mt-2">{coverError}</p>}
-        {fieldErrors.cover_image && <p className="text-sm text-destructive mt-2">{fieldErrors.cover_image}</p>}
+        {coverError && <div className="mt-2 text-sm text-destructive">{coverError}</div>}
+        {fieldErrors.cover_image && <div className="mt-2 text-sm text-destructive">{fieldErrors.cover_image}</div>}
 
         <div className="mt-4 space-y-2">
-          <Label htmlFor="coverImageUrl" className="text-sm text-muted-foreground">Or paste image URL</Label>
+          <Label htmlFor="coverImageUrl" className="text-sm text-muted-foreground">O pega una URL de imagen</Label>
           <Input
             id="coverImageUrl"
             value={coverImage}
             onChange={(e) => setCoverImage(e.target.value)}
             placeholder="https://..."
-            className="bg-muted/50 border-transparent focus-visible:bg-background"
           />
         </div>
       </section>
@@ -591,15 +649,11 @@ export function EventForm({
           <div className="p-2 bg-primary/10 rounded-lg text-primary">
             <UserCheck className="w-5 h-5" />
           </div>
-          <h2 className="text-xl font-bold">Attendance Type</h2>
+          <div className="text-xl font-semibold">Formato de asistencia</div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[
-            { value: 'in_person', label: 'In-person', icon: MapPin },
-            { value: 'online', label: 'Virtual', icon: Video },
-            { value: 'hybrid', label: 'Hybrid', icon: MonitorSmartphone },
-          ].map((type) => (
-            <label key={type.value} className={`flex flex-col items-center justify-center p-6 border-2 rounded-xl cursor-pointer transition-all ${eventType === type.value ? 'bg-primary/5 border-primary text-primary shadow-sm' : 'border-border/50 hover:bg-muted/50 text-muted-foreground hover:text-foreground'}`}>
+          {eventTypeOptions.map((type) => (
+            <label key={type.value} className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border p-6 transition-colors ${eventType === type.value ? 'border-primary bg-primary/10 text-primary' : 'border-border/60 text-muted-foreground hover:bg-muted/40 hover:text-foreground'}`}>
               <input
                 type="radio"
                 name="attendance_type"
@@ -620,30 +674,30 @@ export function EventForm({
           <div className="p-2 bg-primary/10 rounded-lg text-primary">
             <Video className="w-5 h-5" />
           </div>
-          <h2 className="text-xl font-bold">Schedule</h2>
+          <div className="text-xl font-semibold">Fecha y hora</div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label htmlFor="startAt" className="text-sm font-semibold text-muted-foreground ml-1">Start Date & Time</Label>
+            <FieldLabel htmlFor="startAt" required className="text-sm font-semibold text-muted-foreground">Inicio</FieldLabel>
             <Input
               id="startAt"
               type="datetime-local"
               value={startAt}
               onChange={(e) => setStartAt(e.target.value)}
-              className={`h-12 bg-muted/50 border-transparent focus-visible:bg-background ${fieldErrors.start_at ? 'border-destructive' : ''}`}
+              className={fieldErrors.start_at ? 'border-destructive focus-visible:ring-destructive' : ''}
             />
-            {fieldErrors.start_at && <p className="text-xs text-destructive ml-1">{fieldErrors.start_at}</p>}
+            {fieldErrors.start_at && <div className="ml-1 text-xs text-destructive">{fieldErrors.start_at}</div>}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="endAt" className="text-sm font-semibold text-muted-foreground ml-1">End Date & Time</Label>
+            <FieldLabel htmlFor="endAt" required className="text-sm font-semibold text-muted-foreground">Fin</FieldLabel>
             <Input
               id="endAt"
               type="datetime-local"
               value={endAt}
               onChange={(e) => setEndAt(e.target.value)}
-              className={`h-12 bg-muted/50 border-transparent focus-visible:bg-background ${fieldErrors.end_at ? 'border-destructive' : ''}`}
+              className={fieldErrors.end_at ? 'border-destructive focus-visible:ring-destructive' : ''}
             />
-            {fieldErrors.end_at && <p className="text-xs text-destructive ml-1">{fieldErrors.end_at}</p>}
+            {fieldErrors.end_at && <div className="ml-1 text-xs text-destructive">{fieldErrors.end_at}</div>}
           </div>
         </div>
       </section>
@@ -654,10 +708,17 @@ export function EventForm({
             <div className="p-2 bg-primary/10 rounded-lg text-primary">
               <MapPin className="w-5 h-5" />
             </div>
-            <h2 className="text-xl font-bold">Venue Details</h2>
+            <div className="text-xl font-semibold">Lugar</div>
           </div>
           <div className="space-y-2 relative z-50">
-            <Label htmlFor="location" className="text-sm font-semibold text-muted-foreground ml-1">Location / Address</Label>
+            <FieldLabel
+              htmlFor="location"
+              required={eventType === 'in_person' || eventType === 'hybrid'}
+              badgeLabel="Para publicar"
+              className="text-sm font-semibold text-muted-foreground"
+            >
+              Ubicación / dirección
+            </FieldLabel>
             <LocationAutocomplete
               value={location}
               onChange={(data) => {
@@ -678,14 +739,14 @@ export function EventForm({
                 setLocationLatitude(null)
                 setLocationLongitude(null)
               }}
-              placeholder="Start typing to search for venue via Google Places..."
-              className={`h-12 w-full bg-muted/50 border-transparent focus-visible:bg-background ${fieldErrors.location ? 'border-destructive' : ''}`}
+              placeholder="Busca el lugar con Google Places..."
+              className={`w-full ${fieldErrors.location ? 'border-destructive focus-visible:ring-destructive' : ''}`}
             />
-            {fieldErrors.location && <p className="text-xs text-destructive ml-1">{fieldErrors.location}</p>}
+            {fieldErrors.location && <div className="ml-1 text-xs text-destructive">{fieldErrors.location}</div>}
 
             {(locationCity || locationRegion) && (
-              <div className="flex gap-2 ml-1 mt-2 text-xs text-muted-foreground bg-muted/30 px-3 py-2 rounded-lg border inline-flex items-center">
-                <span>📍 Parsed Data:</span>
+              <div className="ml-1 mt-2 inline-flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+                <span>Datos detectados:</span>
                 {locationCity && <span className="font-semibold text-foreground">{locationCity}</span>}
                 {locationCity && locationRegion && <span>,</span>}
                 {locationRegion && <span className="font-semibold text-foreground">{locationRegion}</span>}
@@ -701,20 +762,27 @@ export function EventForm({
             <div className="p-2 bg-primary/10 rounded-lg text-primary">
               <Video className="w-5 h-5" />
             </div>
-            <h2 className="text-xl font-bold">Virtual Connection</h2>
+            <div className="text-xl font-semibold">Conexion virtual</div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="meetingUrl" className="text-sm font-semibold text-muted-foreground ml-1">Meeting URL</Label>
+            <FieldLabel
+              htmlFor="meetingUrl"
+              required={eventType === 'online' || eventType === 'hybrid'}
+              badgeLabel="Para publicar"
+              className="text-sm font-semibold text-muted-foreground"
+            >
+              Enlace de reunión
+            </FieldLabel>
             <Input
               id="meetingUrl"
               type="url"
               value={meetingUrl}
               onChange={(e) => setMeetingUrl(e.target.value)}
               placeholder="https://zoom.us/j/..."
-              className={`h-12 bg-muted/50 border-transparent focus-visible:bg-background ${fieldErrors.meeting_url ? 'border-destructive' : ''}`}
+              className={fieldErrors.meeting_url ? 'border-destructive focus-visible:ring-destructive' : ''}
             />
-            <p className="text-xs text-muted-foreground ml-1 italic mt-1">Link will be shared with approved attendees only.</p>
-            {fieldErrors.meeting_url && <p className="text-xs text-destructive ml-1">{fieldErrors.meeting_url}</p>}
+            <div className="ml-1 mt-1 text-xs text-muted-foreground">El enlace se compartira solo con asistentes aprobados.</div>
+            {fieldErrors.meeting_url && <div className="ml-1 text-xs text-destructive">{fieldErrors.meeting_url}</div>}
           </div>
         </section>
       )}
@@ -728,11 +796,11 @@ export function EventForm({
           <div className="p-2 bg-primary/10 rounded-lg text-primary">
             <QrCode className="w-5 h-5" />
           </div>
-          <h2 className="text-xl font-bold">Enrollment Model</h2>
+          <div className="text-xl font-semibold">Modelo de registro</div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {EVENT_ACCESS_MODEL_OPTIONS.map((option) => (
-            <label key={option.value} className={`flex items-start gap-4 p-5 rounded-xl transition-all cursor-pointer border ${accessModel === option.value ? 'bg-primary/5 border-primary shadow-sm' : 'bg-muted/30 border-transparent hover:bg-muted/60'}`}>
+          {EVENT_ACCESS_OPTIONS.map((option) => (
+            <label key={option.value} className={`flex cursor-pointer items-start gap-4 rounded-lg border p-5 transition-colors ${accessModel === option.value ? 'border-primary bg-primary/10' : 'border-border/60 bg-muted/20 hover:bg-muted/40'}`}>
               <div className="mt-1">
                 <input
                   type="radio"
@@ -740,15 +808,15 @@ export function EventForm({
                   value={option.value}
                   checked={accessModel === option.value}
                   onChange={(e) => setAccessModel(e.target.value as EventAccessModel)}
-                  className="w-4 h-4 text-primary bg-background border-border focus:ring-primary focus:ring-2"
+                  className="h-4 w-4 accent-primary"
                 />
               </div>
               <div>
                 <span className={`block font-semibold ${accessModel === option.value ? 'text-primary' : 'text-foreground'}`}>{option.label}</span>
                 <span className="text-sm text-muted-foreground mt-1 block leading-relaxed">
                   {option.value === 'open'
-                    ? 'First-come, first-served. Students register instantly and receive their QR code immediately.'
-                    : 'Members must apply. Admins review and approve entries manually.'
+                    ? 'Los estudiantes se registran al instante y reciben su QR de inmediato.'
+                    : 'Los participantes postulan y el chapter revisa las solicitudes antes de aprobarlas.'
                   }
                 </span>
               </div>
@@ -757,86 +825,108 @@ export function EventForm({
         </div>
 
         {accessModel === 'application' && (
-          <div className="mt-6 ml-10 p-5 rounded-xl bg-muted/50 border-l-4 border-l-primary animate-in fade-in slide-in-from-left-4">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between gap-3">
-                <Label className="text-sm font-semibold">Application Questions</Label>
-                <Button type="button" variant="outline" size="sm" onClick={addApplicationQuestion}>
+          <div className="mt-6 rounded-lg border bg-muted/30 p-4 md:p-5">
+            <div className="space-y-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Label className="text-sm font-semibold">Preguntas de postulación</Label>
+                    <RequirementBadge required label="Para publicar" />
+                  </div>
+                  <div className="text-xs leading-relaxed text-muted-foreground">
+                    El borrador se puede guardar incompleto. Para publicar, cada pregunta debe tener texto y las preguntas de selección deben tener opciones.
+                  </div>
+                </div>
+                <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto" onClick={addApplicationQuestion}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Question
+                  Agregar pregunta
                 </Button>
               </div>
 
               {applicationQuestionsState.length === 0 ? (
                 <div className="rounded-lg border border-dashed bg-background p-4 text-sm text-muted-foreground">
-                  Add at least one question. Applicants will answer directly inside LEAD.
+                  Agrega al menos una pregunta. Los postulantes responderán dentro de LEAD.
                 </div>
               ) : (
                 <div className="space-y-3">
                   {applicationQuestionsState.map((question, index) => (
-                    <div key={question.id ?? index} className="rounded-lg border bg-background p-4 space-y-3">
-                      <div className="flex items-start gap-3">
-                        <GripVertical className="mt-3 h-4 w-4 text-muted-foreground" />
-                        <div className="grid flex-1 gap-3 md:grid-cols-[1fr_160px]">
-                          <Input
-                            value={question.questionText}
-                            onChange={(event) => updateApplicationQuestion(index, { questionText: event.target.value })}
-                            placeholder={`Question ${index + 1}`}
-                            className="bg-muted/40"
-                          />
-                          <select
-                            value={question.questionType}
-                            onChange={(event) => updateApplicationQuestion(index, {
-                              questionType: event.target.value as EventApplicationQuestionType,
-                              optionsText: ['single_select', 'checkbox'].includes(event.target.value)
-                                ? question.optionsText
-                                : '',
-                            })}
-                            className="h-10 rounded-md border border-input bg-muted/40 px-3 text-sm"
-                          >
-                            {questionTypeOptions.map((option) => (
-                              <option key={option.value} value={option.value}>{option.label}</option>
-                            ))}
-                          </select>
+                    <div key={question.id ?? index} className="space-y-3 rounded-lg border bg-background p-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          <GripVertical className="h-4 w-4" />
+                          Pregunta {index + 1}
+                          <Badge variant={question.isRequired ? 'default' : 'outline'} size="sm">
+                            {question.isRequired ? 'Obligatoria' : 'Opcional'}
+                          </Badge>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Button type="button" variant="ghost" size="icon" onClick={() => moveApplicationQuestion(index, -1)} disabled={index === 0}>
+
+                        <div className="flex flex-wrap items-center gap-1">
+                          <label className="inline-flex min-h-7 items-center gap-1.5 rounded-md border bg-muted/20 px-2 text-xs font-medium text-muted-foreground">
+                            <Checkbox
+                              checked={question.isRequired}
+                              onCheckedChange={(checked) => updateApplicationQuestion(index, { isRequired: checked === true })}
+                            />
+                            Requerir
+                          </label>
+                          <Button type="button" variant="ghost" size="icon-xs" aria-label="Subir pregunta" onClick={() => moveApplicationQuestion(index, -1)} disabled={index === 0}>
                             <ChevronUp className="h-4 w-4" />
                           </Button>
-                          <Button type="button" variant="ghost" size="icon" onClick={() => moveApplicationQuestion(index, 1)} disabled={index === applicationQuestionsState.length - 1}>
+                          <Button type="button" variant="ghost" size="icon-xs" aria-label="Bajar pregunta" onClick={() => moveApplicationQuestion(index, 1)} disabled={index === applicationQuestionsState.length - 1}>
                             <ChevronDown className="h-4 w-4" />
                           </Button>
-                          <Button type="button" variant="ghost" size="icon" onClick={() => removeApplicationQuestion(index)}>
+                          <Button type="button" variant="ghost" size="icon-xs" aria-label="Eliminar pregunta" onClick={() => removeApplicationQuestion(index)}>
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </div>
                       </div>
 
+                      <div className="grid gap-3 2xl:grid-cols-[minmax(0,1fr)_14rem]">
+                        <Input
+                          value={question.questionText}
+                          onChange={(event) => updateApplicationQuestion(index, { questionText: event.target.value })}
+                          placeholder="Ej. ¿Por qué quieres asistir?"
+                          className="bg-muted/40"
+                          aria-label={`Texto de pregunta ${index + 1}`}
+                        />
+
+                        <div className="min-w-0">
+                          <Select
+                            value={question.questionType}
+                            onValueChange={(value) => updateApplicationQuestion(index, {
+                              questionType: value as EventApplicationQuestionType,
+                              optionsText: ['single_select', 'checkbox'].includes(value)
+                                ? question.optionsText
+                                : '',
+                            })}
+                          >
+                            <SelectTrigger className="w-full" aria-label={`Tipo de respuesta para pregunta ${index + 1}`}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {questionTypeOptions.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
                       {['single_select', 'checkbox'].includes(question.questionType) ? (
-                        <textarea
+                        <Textarea
                           value={question.optionsText}
                           onChange={(event) => updateApplicationQuestion(index, { optionsText: event.target.value })}
-                          placeholder="One option per line"
-                          className="min-h-20 w-full rounded-md border border-input bg-muted/40 px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                          placeholder="Opciones, una por línea"
+                          className="min-h-20 bg-muted/40"
+                          aria-label={`Opciones de pregunta ${index + 1}`}
                         />
                       ) : null}
-
-                      <label className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-                        <input
-                          type="checkbox"
-                          checked={question.isRequired}
-                          onChange={(event) => updateApplicationQuestion(index, { isRequired: event.target.checked })}
-                          className="h-4 w-4 rounded border-border"
-                        />
-                        Required
-                      </label>
                     </div>
                   ))}
                 </div>
               )}
 
               {fieldErrors.application_questions && (
-                <p className="text-xs text-destructive">{fieldErrors.application_questions}</p>
+                <div className="text-xs text-destructive">{fieldErrors.application_questions}</div>
               )}
             </div>
           </div>
@@ -848,23 +938,28 @@ export function EventForm({
           <div className="p-2 bg-primary/10 rounded-lg text-primary">
             <UserCheck className="w-5 h-5" />
           </div>
-          <h2 className="text-xl font-bold">Capacity Limit</h2>
+          <div className="text-xl font-semibold">Límite de capacidad</div>
         </div>
         <div className="relative max-w-md">
+          <div className="mb-2">
+            <FieldLabel htmlFor="capacity" required={false} className="text-sm font-semibold text-muted-foreground">
+              Cupos disponibles
+            </FieldLabel>
+          </div>
           <Input
             id="capacity"
             inputMode="numeric"
             value={capacity}
             onChange={(e) => setCapacity(e.target.value)}
-            placeholder="e.g. 150"
-            className={`h-12 bg-muted/50 border-transparent focus-visible:bg-background ${fieldErrors.capacity ? 'border-destructive' : ''}`}
+            placeholder="Ej. 150"
+            className={fieldErrors.capacity ? 'border-destructive focus-visible:ring-destructive' : ''}
           />
           <div className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
             <UserCheck className="w-5 h-5 opacity-50" />
           </div>
         </div>
-        <p className="mt-2 text-sm text-muted-foreground">Leave blank for unlimited capacity.</p>
-        {fieldErrors.capacity && <p className="text-xs text-destructive mt-1">{fieldErrors.capacity}</p>}
+        <div className="mt-2 text-sm text-muted-foreground">Déjalo en blanco si no hay límite de cupos.</div>
+        {fieldErrors.capacity && <div className="mt-1 text-xs text-destructive">{fieldErrors.capacity}</div>}
       </section>
 
       {mode === 'edit' && initial?.id && (
@@ -873,7 +968,7 @@ export function EventForm({
             <div className="p-2 bg-primary/10 rounded-lg text-primary">
               <MapPin className="w-5 h-5" />
             </div>
-            <h2 className="text-xl font-bold">Collaborating Chapters</h2>
+            <div className="text-xl font-semibold">Chapters colaboradores</div>
           </div>
           <CollaboratorManager
             eventId={initial.id}
@@ -889,58 +984,58 @@ export function EventForm({
   const renderReview = () => (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
       <section className="bg-card border rounded-lg p-6 md:p-8 space-y-8 shadow-sm">
-        <h2 className="text-2xl font-bold mb-6 border-b pb-4">Event Summary</h2>
+        <div className="mb-6 border-b pb-4 text-2xl font-semibold">Resumen del evento</div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-6">
             <div className="space-y-1">
-              <span className="text-sm text-muted-foreground uppercase tracking-wide font-semibold">Title</span>
-              <p className="text-lg font-medium">{title || <span className="text-muted-foreground italic">Untitled Event</span>}</p>
+              <span className="text-sm text-muted-foreground uppercase tracking-wide font-semibold">Título</span>
+              <div className="text-lg font-medium">{title || <span className="text-muted-foreground italic">Evento sin título</span>}</div>
             </div>
             <div className="space-y-1">
-              <span className="text-sm text-muted-foreground uppercase tracking-wide font-semibold">Type & Access</span>
-              <p className="font-medium capitalize">{eventType.replace('_', ' ')} • {accessModel === 'open' ? 'Open Enrollment' : 'Application Required'}</p>
+              <span className="text-sm text-muted-foreground uppercase tracking-wide font-semibold">Formato y acceso</span>
+              <div className="font-medium">{eventTypeLabels[eventType]} · {accessModelLabels[accessModel]}</div>
             </div>
             <div className="space-y-1">
-              <span className="text-sm text-muted-foreground uppercase tracking-wide font-semibold">Date & Time</span>
-              <p className="font-medium">
-                {startAt ? new Date(fromDateTimeLocal(startAt)).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : <span className="text-muted-foreground italic">Not set</span>}
+              <span className="text-sm text-muted-foreground uppercase tracking-wide font-semibold">Fecha y hora</span>
+              <div className="font-medium">
+                {startAt ? new Date(fromDateTimeLocal(startAt)).toLocaleString('es-PE', { dateStyle: 'medium', timeStyle: 'short' }) : <span className="text-muted-foreground italic">Sin definir</span>}
                 {' - '}
-                {endAt ? new Date(fromDateTimeLocal(endAt)).toLocaleTimeString(undefined, { timeStyle: 'short' }) : ''}
-              </p>
+                {endAt ? new Date(fromDateTimeLocal(endAt)).toLocaleTimeString('es-PE', { timeStyle: 'short' }) : ''}
+              </div>
             </div>
             <div className="space-y-1">
-              <span className="text-sm text-muted-foreground uppercase tracking-wide font-semibold">Location/Meeting</span>
-              <p className="font-medium max-w-[300px] truncate">
-                {eventType === 'in_person' || eventType === 'hybrid' ? location || <span className="text-muted-foreground italic">No location set</span> : null}
+              <span className="text-sm text-muted-foreground uppercase tracking-wide font-semibold">Ubicación / enlace</span>
+              <div className="max-w-sm truncate font-medium">
+                {eventType === 'in_person' || eventType === 'hybrid' ? location || <span className="text-muted-foreground italic">Sin ubicación</span> : null}
                 {eventType === 'hybrid' && <span className="mx-2 text-muted-foreground">|</span>}
-                {eventType === 'online' || eventType === 'hybrid' ? meetingUrl || <span className="text-muted-foreground italic">No meeting link set</span> : null}
-              </p>
+                {eventType === 'online' || eventType === 'hybrid' ? meetingUrl || <span className="text-muted-foreground italic">Sin enlace</span> : null}
+              </div>
             </div>
           </div>
 
           <div className="bg-muted/30 rounded-xl p-5 border">
-            <h3 className="font-semibold mb-4 flex items-center gap-2"><Check className="w-5 h-5 text-success" /> Readiness Checklist</h3>
+            <div className="font-semibold mb-4 flex items-center gap-2"><Check className="w-5 h-5 text-success" /> Checklist de publicación</div>
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
-                {title && description ? <Check className="w-5 h-5 text-success mt-0.5" /> : <div className="w-5 h-5 rounded-full border-2 mt-0.5" />}
+                {title ? <Check className="w-5 h-5 text-success mt-0.5" /> : <div className="w-5 h-5 rounded-full border-2 mt-0.5" />}
                 <div>
-                  <p className="font-medium text-sm">Basic details completed</p>
-                  <p className="text-xs text-muted-foreground">Title and description provided</p>
+                  <div className="text-sm font-medium">Datos básicos completos</div>
+                  <div className="text-xs text-muted-foreground">Título definido; la descripción es opcional</div>
                 </div>
               </li>
               <li className="flex items-start gap-3">
                 {coverImage ? <Check className="w-5 h-5 text-success mt-0.5" /> : <div className="w-5 h-5 rounded-full border-2 mt-0.5" />}
                 <div>
-                  <p className="font-medium text-sm">Cover image uploaded</p>
-                  <p className="text-xs text-muted-foreground">Helps attract more attendees</p>
+                  <div className="text-sm font-medium">Portada lista</div>
+                  <div className="text-xs text-muted-foreground">Ayuda a comunicar mejor el evento</div>
                 </div>
               </li>
               <li className="flex items-start gap-3">
                 {startAt && endAt && (location || meetingUrl) ? <Check className="w-5 h-5 text-success mt-0.5" /> : <div className="w-5 h-5 rounded-full border-2 mt-0.5" />}
                 <div>
-                  <p className="font-medium text-sm">Logistics confirmed</p>
-                  <p className="text-xs text-muted-foreground">Date, time, and location set</p>
+                  <div className="text-sm font-medium">Logística confirmada</div>
+                  <div className="text-xs text-muted-foreground">Fecha, hora y acceso definidos</div>
                 </div>
               </li>
             </ul>
@@ -954,14 +1049,14 @@ export function EventForm({
             disabled={isPending}
           >
             <Rocket className="w-5 h-5 mr-2" />
-            Publish Event Now
+            Publicar evento ahora
           </Button>
-          <p className="text-center text-xs text-muted-foreground">
-            By publishing, this event will become visible to all members within the chapter network.
-          </p>
+          <div className="text-center text-xs text-muted-foreground">
+            Al publicar, el evento será visible para la comunidad según el modelo de registro elegido.
+          </div>
           <div className="flex gap-4 pt-2">
             <Button variant="secondary" className="flex-1" onClick={() => submitEvent(false)} disabled={isPending}>
-              Save as Draft
+              Guardar como borrador
             </Button>
           </div>
         </div>
@@ -987,34 +1082,36 @@ export function EventForm({
         <div className="sticky bottom-6 z-50 mt-12 rounded-lg border bg-card/95 p-4 shadow-lg backdrop-blur-md">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <Button
-                variant="destructive"
-                className="hidden sm:flex"
-                onClick={onDelete}
-                disabled={isPending}
-              >
-                <Trash2 className="w-4 h-4 mr-2" /> Delete
-              </Button>
+              {canArchiveEvents ? (
+                <Button
+                  variant="destructive"
+                  className="hidden sm:flex"
+                  onClick={onDelete}
+                  disabled={isPending}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" /> Eliminar
+                </Button>
+              ) : null}
               <div className="text-xs text-muted-foreground hidden md:block font-medium">
-                {isAutoSaving ? 'Auto-saving...' : lastSavedAt ? `Last saved at ${lastSavedAt}` : 'All changes saved.'}
+                {isAutoSaving ? 'Guardando automáticamente...' : lastSavedAt ? `Último guardado: ${lastSavedAt}` : 'Todos los cambios están guardados.'}
               </div>
             </div>
 
             <div className="flex items-center gap-3 w-full sm:w-auto">
               <Button
-                variant="outline"
+                variant="secondary"
                 className="flex-1 sm:flex-none font-semibold"
                 onClick={() => submitEvent(false)}
                 disabled={isPending}
               >
-                Save Draft
+                Guardar borrador
               </Button>
               <Button
                 className="flex-1 sm:flex-none font-semibold"
                 onClick={() => submitEvent(true)}
                 disabled={isPending}
               >
-                <Save className="w-4 h-4 mr-2" /> Save & Publish
+                <Save className="w-4 h-4 mr-2" /> Guardar y publicar
               </Button>
             </div>
           </div>
@@ -1042,7 +1139,7 @@ export function EventForm({
                 </span>
               </div>
               {i < steps.length - 1 && (
-                <div className="h-[2px] flex-1 mx-2 relative overflow-hidden bg-muted">
+                <div className="relative mx-2 h-0.5 flex-1 overflow-hidden bg-muted">
                   <div className={`absolute top-0 left-0 h-full bg-primary transition-all duration-500 ease-in-out ${step > s.num ? 'w-full' : 'w-0'}`} />
                 </div>
               )}
@@ -1068,20 +1165,20 @@ export function EventForm({
               className={step === 1 ? 'invisible' : ''}
               onClick={handleBack}
             >
-              <ArrowLeft className="w-4 h-4 mr-2" /> Back
+              <ArrowLeft className="w-4 h-4 mr-2" /> Atrás
             </Button>
 
             {step < 4 ? (
               <Button
                 size="lg"
-                className="min-w-[140px]"
+                className="min-w-36"
                 onClick={handleNext}
               >
-                Next <ArrowRight className="w-4 h-4 ml-2" />
+                Siguiente <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             ) : (
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                {isAutoSaving ? 'Auto-saving draft...' : lastSavedAt ? `Draft last saved at ${lastSavedAt}` : ''}
+                {isAutoSaving ? 'Guardando borrador...' : lastSavedAt ? `Borrador guardado: ${lastSavedAt}` : ''}
               </div>
             )}
           </div>
@@ -1095,51 +1192,51 @@ export function EventForm({
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <Lightbulb className="w-5 h-5" />
                 </div>
-                <h3 className="font-bold text-lg">Editor Tips</h3>
+                <div className="text-lg font-semibold">Consejos para editar</div>
               </div>
 
               <ul className="space-y-6">
                 {step === 1 && (
                   <>
                     <li className="space-y-1">
-                      <p className="font-semibold text-sm">Clear titles</p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">Keep titles under 50 characters. Use action verbs to attract the right talent.</p>
+                      <div className="text-sm font-semibold">Títulos claros</div>
+                      <div className="text-xs leading-relaxed text-muted-foreground">Usa un título específico y fácil de escanear para que el público correcto entienda el valor rápido.</div>
                     </li>
                     <li className="space-y-1">
-                      <p className="font-semibold text-sm">Visual impact</p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">High-contrast cover images perform 40% better. Avoid text-heavy graphics.</p>
+                      <div className="text-sm font-semibold">Portada útil</div>
+                      <div className="text-xs leading-relaxed text-muted-foreground">Elige una imagen clara del tema, lugar o comunidad. Evita gráficas con demasiado texto.</div>
                     </li>
                   </>
                 )}
                 {step === 2 && (
                   <>
                     <li className="space-y-1">
-                      <p className="font-semibold text-sm">Timezone check</p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">Most LEAD events are cross-border. Ensure your timezone is clear in the description.</p>
+                      <div className="text-sm font-semibold">Zona horaria</div>
+                      <div className="text-xs leading-relaxed text-muted-foreground">Si el evento es virtual o regional, menciona la zona horaria en la descripción.</div>
                     </li>
                     <li className="space-y-1">
-                      <p className="font-semibold text-sm">Hybrid access</p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">Providing a virtual link increases participation for regional chapters.</p>
+                      <div className="text-sm font-semibold">Acceso híbrido</div>
+                      <div className="text-xs leading-relaxed text-muted-foreground">Un enlace virtual puede ayudar a chapters aliados o miembros fuera de la ciudad.</div>
                     </li>
                   </>
                 )}
                 {step === 3 && (
                   <>
                     <li className="space-y-1">
-                      <p className="font-semibold text-sm">Open vs. application</p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">Open enrollment leads to higher turnout, but application models ensure higher attendee quality.</p>
+                      <div className="text-sm font-semibold">Registro vs. postulación</div>
+                      <div className="text-xs leading-relaxed text-muted-foreground">El registro abierto reduce fricción. La postulación ayuda cuando necesitas curar cupos.</div>
                     </li>
                     <li className="space-y-1">
-                      <p className="font-semibold text-sm">Capacity buffers</p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">Set capacity slightly lower than venue limit to ensure comfortable networking space.</p>
+                      <div className="text-sm font-semibold">Cupos reales</div>
+                      <div className="text-xs leading-relaxed text-muted-foreground">Deja margen si el espacio necesita circulación, networking o equipos de apoyo.</div>
                     </li>
                   </>
                 )}
                 {step === 4 && (
                   <>
                     <li className="space-y-1">
-                      <p className="font-semibold text-sm">Final check</p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">Review all details carefully. Once published, members will receive immediate notifications.</p>
+                      <div className="text-sm font-semibold">Revisión final</div>
+                      <div className="text-xs leading-relaxed text-muted-foreground">Confirma fecha, acceso, cupos y preguntas antes de publicar.</div>
                     </li>
                   </>
                 )}

@@ -15,6 +15,15 @@
     "db:pull": "supabase db pull && pnpm run types:generate",
     "db:push": "supabase db push && pnpm run types:generate",
     "migration:new": "supabase migration new",
+    "chapter-eboard:dry-run": "tsx scripts/chapter-eboard-dry-run.ts",
+    "chapter-eboard:review-package": "tsx scripts/chapter-eboard-human-review-package.ts",
+    "chapter-eboard:approved-artifact": "tsx scripts/chapter-eboard-approved-artifact.ts",
+    "event-ops:readiness": "tsx scripts/event-ops-readiness-validation.ts",
+    "company-portal:readiness": "tsx scripts/company-portal-readiness-validation.ts",
+    "qa:email": "node scripts/production-readiness/email-delivery-smoke.mjs",
+    "qa:storage": "node scripts/production-readiness/storage-upload-smoke.mjs",
+    "qa:accessibility": "playwright test tests/e2e/production-readiness-accessibility.spec.ts --reporter=line",
+    "qa:performance": "playwright test tests/e2e/production-readiness-performance.spec.ts --reporter=line",
     "test": "vitest run",
     "test:watch": "vitest",
     "prepare": "husky"
@@ -73,6 +82,7 @@
     "zod": "^4.3.5"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.3",
     "@eslint/eslintrc": "^3",
     "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4.1.18",
@@ -91,6 +101,7 @@
     "shadcn": "^4.3.0",
     "supabase": "2.92.1",
     "tailwindcss": "^4.1.18",
+    "tsx": "^4.21.0",
     "typescript": "^5",
     "vitest": "^4.1.5",
     "vitest-tsconfig-paths": "^3.4.1"

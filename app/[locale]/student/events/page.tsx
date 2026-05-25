@@ -1,7 +1,7 @@
 import QRCode from 'qrcode'
 import Image from 'next/image'
 import type { ReactNode } from 'react'
-import { QrCode } from 'lucide-react'
+import { BookOpenCheck, QrCode } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -45,6 +45,20 @@ function isFutureEvent(registration: RegistrationWithEvent) {
 
 function isCheckedIn(registration: RegistrationWithEvent) {
   return Boolean(registration.checked_in_at) || registration.status === 'attended'
+}
+
+function canReflectOnEvent(registration: RegistrationWithEvent) {
+  if (isCheckedIn(registration)) return true
+  if (registration.status !== 'registered') return false
+  if (!registration.event?.start_at) return false
+  return new Date(registration.event.start_at) <= new Date()
+}
+
+function reflectionHref(registration: RegistrationWithEvent) {
+  const params = new URLSearchParams()
+  params.set('eventId', registration.event_id)
+  if (registration.event?.title) params.set('eventTitle', registration.event.title)
+  return `/student/growth-reflection?${params.toString()}`
 }
 
 function getRegistrationMessage(registration: RegistrationWithEvent, qrDataUrl: string | null) {
@@ -175,6 +189,25 @@ function EventRegistrationCard({
         </div>
 
         {canShowQr && qrDataUrl ? <QrPanel qrDataUrl={qrDataUrl} /> : null}
+
+        {canReflectOnEvent(registration) ? (
+          <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex gap-3">
+                <BookOpenCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-foreground">Convertir en aprendizaje</p>
+                  <p className="text-sm leading-6 text-muted-foreground">
+                    Opcional: captura lo que aprendiste mientras esta experiencia sigue fresca.
+                  </p>
+                </div>
+              </div>
+              <Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
+                <Link href={reflectionHref(registration)}>Crear reflexion</Link>
+              </Button>
+            </div>
+          </div>
+        ) : null}
 
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button asChild variant="outline" className="w-full sm:flex-1">

@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import Link from 'next/link'
-import { getChapterEvents } from '@/lib/actions/events/get-data'
+import { getChapterEventPermissionFlags, getChapterEvents } from '@/lib/actions/events/get-data'
 import { EventsTable } from './_components/events-table'
 import { Icons } from '@/components/ui/icons'
 import { Breadcrumb } from '@/components/ui/breadcrumb'
@@ -34,6 +34,7 @@ function StatBlock({
 
 export default async function ChapterEventsPage() {
   const events = await getChapterEvents()
+  const permissions = await getChapterEventPermissionFlags()
   const now = new Date()
   const activeEvents = events.filter(event => event.is_published && new Date(event.end_at) >= now)
   const draftEvents = events.filter(event => !event.is_published && new Date(event.end_at) >= now)
@@ -44,7 +45,7 @@ export default async function ChapterEventsPage() {
   const upcomingCheckins = events.filter(event => event.is_published && new Date(event.start_at) >= now).length
 
   return (
-    <MainContainer className="py-8 space-y-8">
+    <MainContainer className="w-full max-w-full py-8 space-y-8">
       <Breadcrumb
         items={[
           { label: 'Resumen', href: '/chapter' },
@@ -54,9 +55,9 @@ export default async function ChapterEventsPage() {
 
       <div className="space-y-5">
         <PageHeader
-          eyebrow="Herramientas del capitulo"
-          title="Eventos del capitulo"
-          description="Gestiona eventos propios y colaborativos asociados a tu capitulo."
+          eyebrow="Herramientas del chapter"
+          title="Eventos del chapter"
+          description="Gestiona eventos propios y colaborativos asociados a tu chapter."
           actions={
             <Button asChild className="shrink-0">
             <Link href="/chapter/events/new">
@@ -103,7 +104,7 @@ export default async function ChapterEventsPage() {
             </div>
             <h2 className="text-xl font-semibold">Todavia no hay eventos</h2>
             <p className="mx-auto mt-2 mb-6 max-w-md text-sm text-muted-foreground">
-              Crea el primer evento del capitulo cuando tu equipo este listo para recibir registros o postulaciones.
+              Crea el primer evento del chapter cuando tu equipo este listo para recibir registros o postulaciones.
             </p>
             <Button asChild>
               <Link href="/chapter/events/new">
@@ -114,7 +115,7 @@ export default async function ChapterEventsPage() {
           </CardContent>
         </Card>
       ) : (
-        <EventsTable events={events} />
+        <EventsTable events={events} canArchiveEvents={permissions.canArchiveEvents} />
       )}
     </MainContainer>
   )

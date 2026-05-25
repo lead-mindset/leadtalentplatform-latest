@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/table'
 import { updateEvent } from '@/lib/actions/events/update-event'
 import { deleteEvent } from '@/lib/actions/events/delete-event'
+import { EventShareButton } from '@/components/events/event-share-button'
 import type { EventWithDetails } from '@/lib/types'
 import { useRouter } from 'next/navigation'
 import LocalDate from './local_date'
@@ -50,7 +51,13 @@ function ownershipLabel(event: EventWithDetails) {
   return { label: 'Propio', icon: Icons.Crown }
 }
 
-export function EventsTable({ events }: { events: EventWithDetails[] }) {
+export function EventsTable({
+  events,
+  canArchiveEvents,
+}: {
+  events: EventWithDetails[]
+  canArchiveEvents: boolean
+}) {
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
 
@@ -103,7 +110,7 @@ export function EventsTable({ events }: { events: EventWithDetails[] }) {
                 : null
 
               return (
-                <TableRow key={event.id} className={status.label === 'Finalizado' ? 'opacity-75' : ''}>
+                <TableRow key={event.id} className={status.label === 'Finalizado' ? 'bg-muted/10' : ''}>
                   <TableCell className="pl-4 align-top">
                     <div className="min-w-0 space-y-2">
                       <div className="flex min-w-0 items-center gap-2">
@@ -152,6 +159,15 @@ export function EventsTable({ events }: { events: EventWithDetails[] }) {
                       <Button asChild size="sm" variant="outline">
                         <Link href={`/chapter/events/${event.id}`}>Editar</Link>
                       </Button>
+                      {event.is_published ? (
+                        <EventShareButton
+                          eventId={event.id}
+                          eventTitle={event.title}
+                          mode="copy"
+                          size="sm"
+                          variant="outline"
+                        />
+                      ) : null}
                       {event.access_model === 'application' ? (
                         <Button asChild size="sm" variant="outline">
                           <Link href={`/chapter/events/${event.id}/applications`}>
@@ -165,11 +181,13 @@ export function EventsTable({ events }: { events: EventWithDetails[] }) {
                       <Button asChild size="sm" variant="outline">
                         <Link href={`/chapter/events/${event.id}/checkin`}>Check-in</Link>
                       </Button>
-                      <DeleteEventButton
-                        disabled={isPending}
-                        eventTitle={event.title}
-                        onConfirm={() => onDelete(event.id)}
-                      />
+                      {canArchiveEvents ? (
+                        <DeleteEventButton
+                          disabled={isPending}
+                          eventTitle={event.title}
+                          onConfirm={() => onDelete(event.id)}
+                        />
+                      ) : null}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -185,6 +203,7 @@ export function EventsTable({ events }: { events: EventWithDetails[] }) {
             key={event.id}
             event={event}
             isPending={isPending}
+            canArchiveEvents={canArchiveEvents}
             onDelete={onDelete}
             onTogglePublish={onTogglePublish}
           />
@@ -197,11 +216,13 @@ export function EventsTable({ events }: { events: EventWithDetails[] }) {
 function MobileEventRow({
   event,
   isPending,
+  canArchiveEvents,
   onDelete,
   onTogglePublish,
 }: {
   event: EventWithDetails
   isPending: boolean
+  canArchiveEvents: boolean
   onDelete: (eventId: string) => void
   onTogglePublish: (event: EventWithDetails) => void
 }) {
@@ -241,6 +262,15 @@ function MobileEventRow({
         <Button asChild size="sm" variant="outline">
           <Link href={`/chapter/events/${event.id}`}>Editar</Link>
         </Button>
+        {event.is_published ? (
+          <EventShareButton
+            eventId={event.id}
+            eventTitle={event.title}
+            mode="copy"
+            size="sm"
+            variant="outline"
+          />
+        ) : null}
         <Button asChild size="sm" variant="outline">
           <Link href={`/chapter/events/${event.id}/checkin`}>Check-in</Link>
         </Button>
@@ -252,11 +282,13 @@ function MobileEventRow({
         <Button size="sm" variant="outline" disabled={isPending} onClick={() => onTogglePublish(event)}>
           {event.is_published ? 'Despublicar' : 'Publicar'}
         </Button>
-        <DeleteEventButton
-          disabled={isPending}
-          eventTitle={event.title}
-          onConfirm={() => onDelete(event.id)}
-        />
+        {canArchiveEvents ? (
+          <DeleteEventButton
+            disabled={isPending}
+            eventTitle={event.title}
+            onConfirm={() => onDelete(event.id)}
+          />
+        ) : null}
       </div>
     </div>
   )
@@ -274,7 +306,13 @@ function DeleteEventButton({
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button size="sm" variant="destructive" disabled={disabled}>
+        <Button
+          size="sm"
+          variant="destructive"
+          aria-disabled={disabled}
+          tabIndex={disabled ? -1 : undefined}
+          className={disabled ? 'pointer-events-none bg-muted! text-muted-foreground! hover:bg-muted!' : undefined}
+        >
           Eliminar
         </Button>
       </AlertDialogTrigger>
