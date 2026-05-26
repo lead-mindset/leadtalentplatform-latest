@@ -1,7 +1,12 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import type { EventRow, ChapterRow, EventApplicationQuestionRow } from '@/lib/types'
+import type {
+  EventRow,
+  ChapterRow,
+  EventApplicationQuestionRow,
+  EventPathwayMetadataRow,
+} from '@/lib/types'
 import { EventForm } from '../_components/event-form'
 import { Badge } from '@/components/ui/badge'
 import { Breadcrumb } from '@/components/ui/breadcrumb'
@@ -44,6 +49,14 @@ export default async function ChapterEventDetailPage({
         .eq('event_id', id)
         .order('sort_order', { ascending: true })
     : { data: [] }
+
+  const { data: pathwayMetadata } = supabase
+    ? await supabase
+        .from('event_pathway_metadata')
+        .select('*')
+        .eq('event_id', id)
+        .maybeSingle<EventPathwayMetadataRow>()
+    : { data: null }
 
   const archiveAccess = event
     ? await assertCanAccessEvent(id, 'chapter.events.archive')
@@ -114,6 +127,7 @@ export default async function ChapterEventDetailPage({
         editorChapter={editorChapter}
         canArchiveEvents={canArchiveEvents}
         applicationQuestions={(applicationQuestions ?? []) as EventApplicationQuestionRow[]}
+        pathwayMetadata={pathwayMetadata}
       />
     </MainContainer>
   )
