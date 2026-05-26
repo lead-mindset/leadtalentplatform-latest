@@ -5,6 +5,12 @@ INSERT INTO "public"."chapter" ("id", "name", "university", "city", "region", "c
 -- Note: All passwords are set to "password123" (using standard bcrypt hash for testing)
 
 -- Clean up existing persona users if running seed multiple times
+DELETE FROM auth.identities WHERE provider = 'email' AND provider_id IN (
+  'participant@test.com', 'member@test.com', 'editor@test.com',
+  'admin@test.com', 'staff@test.com', 'recruiter@test.com', 'alumni@test.com',
+  'president@test.com', 'vp@test.com', 'eboard@test.com'
+);
+
 DELETE FROM auth.users WHERE email IN (
   'participant@test.com', 'member@test.com', 'editor@test.com',
   'admin@test.com', 'staff@test.com', 'recruiter@test.com', 'alumni@test.com',
@@ -24,6 +30,42 @@ VALUES
   ('81000000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'president@test.com', '$2b$10$d04rJdM2Gfm5OHSN2PpRzeYiXF00LKzkV//rhHDPW2CI07z/t8Wr.', NOW(), NOW(), NOW(), '', '', '', ''),
   ('81000000-0000-4000-8000-000000000002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'vp@test.com', '$2b$10$d04rJdM2Gfm5OHSN2PpRzeYiXF00LKzkV//rhHDPW2CI07z/t8Wr.', NOW(), NOW(), NOW(), '', '', '', ''),
   ('81000000-0000-4000-8000-000000000003', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'eboard@test.com', '$2b$10$d04rJdM2Gfm5OHSN2PpRzeYiXF00LKzkV//rhHDPW2CI07z/t8Wr.', NOW(), NOW(), NOW(), '', '', '', '');
+
+UPDATE auth.users
+SET
+  raw_app_meta_data = '{"provider":"email","providers":["email"]}'::jsonb,
+  raw_user_meta_data = COALESCE(raw_user_meta_data, '{}'::jsonb),
+  updated_at = NOW()
+WHERE email IN (
+  'participant@test.com', 'member@test.com', 'editor@test.com',
+  'admin@test.com', 'staff@test.com', 'recruiter@test.com', 'alumni@test.com',
+  'president@test.com', 'vp@test.com', 'eboard@test.com'
+);
+
+INSERT INTO auth.identities (
+  provider_id,
+  user_id,
+  identity_data,
+  provider,
+  last_sign_in_at,
+  created_at,
+  updated_at
+)
+VALUES
+  ('participant@test.com', '11111111-1111-1111-1111-111111111111', '{"sub":"11111111-1111-1111-1111-111111111111","email":"participant@test.com","email_verified":true,"phone_verified":false}'::jsonb, 'email', NOW(), NOW(), NOW()),
+  ('member@test.com', '22222222-2222-2222-2222-222222222222', '{"sub":"22222222-2222-2222-2222-222222222222","email":"member@test.com","email_verified":true,"phone_verified":false}'::jsonb, 'email', NOW(), NOW(), NOW()),
+  ('editor@test.com', '33333333-3333-3333-3333-333333333333', '{"sub":"33333333-3333-3333-3333-333333333333","email":"editor@test.com","email_verified":true,"phone_verified":false}'::jsonb, 'email', NOW(), NOW(), NOW()),
+  ('admin@test.com', '44444444-4444-4444-4444-444444444444', '{"sub":"44444444-4444-4444-4444-444444444444","email":"admin@test.com","email_verified":true,"phone_verified":false}'::jsonb, 'email', NOW(), NOW(), NOW()),
+  ('staff@test.com', '55555555-5555-5555-5555-555555555555', '{"sub":"55555555-5555-5555-5555-555555555555","email":"staff@test.com","email_verified":true,"phone_verified":false}'::jsonb, 'email', NOW(), NOW(), NOW()),
+  ('recruiter@test.com', '66666666-6666-6666-6666-666666666666', '{"sub":"66666666-6666-6666-6666-666666666666","email":"recruiter@test.com","email_verified":true,"phone_verified":false}'::jsonb, 'email', NOW(), NOW(), NOW()),
+  ('alumni@test.com', '77777777-7777-7777-7777-777777777777', '{"sub":"77777777-7777-7777-7777-777777777777","email":"alumni@test.com","email_verified":true,"phone_verified":false}'::jsonb, 'email', NOW(), NOW(), NOW()),
+  ('president@test.com', '81000000-0000-4000-8000-000000000001', '{"sub":"81000000-0000-4000-8000-000000000001","email":"president@test.com","email_verified":true,"phone_verified":false}'::jsonb, 'email', NOW(), NOW(), NOW()),
+  ('vp@test.com', '81000000-0000-4000-8000-000000000002', '{"sub":"81000000-0000-4000-8000-000000000002","email":"vp@test.com","email_verified":true,"phone_verified":false}'::jsonb, 'email', NOW(), NOW(), NOW()),
+  ('eboard@test.com', '81000000-0000-4000-8000-000000000003', '{"sub":"81000000-0000-4000-8000-000000000003","email":"eboard@test.com","email_verified":true,"phone_verified":false}'::jsonb, 'email', NOW(), NOW(), NOW())
+ON CONFLICT (provider_id, provider) DO UPDATE SET
+  user_id = EXCLUDED.user_id,
+  identity_data = EXCLUDED.identity_data,
+  updated_at = NOW();
 
 -- Align app-account rows created by public.handle_new_user().
 UPDATE public."user" SET name = 'Test Participant', role = 'member' WHERE id = '11111111-1111-1111-1111-111111111111';
