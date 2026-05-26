@@ -50,6 +50,7 @@ The implementation follows the SharePoint audit recorded in the PRD:
 | `pnpm run lint` | Pass, with existing repo warnings only. |
 | `pnpm exec tsc --noEmit` | Pass. |
 | `pnpm test` | Pass after #251: 50 files, 478 tests. |
+| `pnpm exec playwright test tests/e2e/lead-intelligence-auth-qa.spec.ts --reporter=line` | Pass after #253: 8 tests across desktop and mobile Chromium. |
 
 Service/action coverage added:
 
@@ -62,25 +63,26 @@ Service/action coverage added:
 
 ## Browser QA
 
-Attempted:
+Completed in #253:
 
-- Chapter event creator reaches Pathway metadata and required-field validation.
-- Student Growth Reflection receives `eventId` and `recommendationId` context.
+- Restored deterministic seeded password login for `eboard@test.com` and `member@test.com`.
+- Confirmed chapter event creation reaches the Pathway metadata step on desktop and mobile.
+- Confirmed required-field validation appears only after `Hacer elegible para Pathway` is enabled.
+- Confirmed student recommendation CTAs render for an event-backed recommendation, profile action, and proof action when the chapter Pathway rollout flag is enabled.
+- Confirmed Growth Reflection receives `eventId` and `recommendationId`, saves private proof, and marks the linked recommendation completed.
 
-Result:
+Evidence:
 
-- Blocked before protected surfaces. Seeded password login returned the visible login error state for both `eboard@test.com` and `member@test.com`.
-- Temporary Playwright artifacts were generated under ignored `test-results/`; the temporary committed spec was removed.
-- Follow-up #253 tracks restoring the authenticated fixture and rerunning desktop/mobile browser QA.
+- Playwright command: `pnpm exec playwright test tests/e2e/lead-intelligence-auth-qa.spec.ts --reporter=line`
+- Result: 8 passed across `desktop-chromium` and `mobile-chromium`.
+- Screenshots: `outputs/issue-253-lead-intelligence-auth-qa/`
 
-Current closure decision:
+QA-discovered fix:
 
-- Code validation and service/action coverage are sufficient for branch implementation review.
-- Authenticated visual QA remains required before treating this as pilot-ready UX.
+- `pathway_feature_flag` needed an authenticated read policy because student dashboard server rendering resolves feature flags through the signed-in user's Supabase client. Without that policy, enabled chapter flags defaulted to hidden cards for non-admin students.
 
 ## Deferred Work
 
-- Authenticated browser QA for chapter metadata and student proof loop (#253).
 - Pulse question-bank export/review before any Pulse form implementation.
 - Aggregation thresholds before Pulse appears in leadership dashboards.
 - Broad resource catalog for non-event resources.
