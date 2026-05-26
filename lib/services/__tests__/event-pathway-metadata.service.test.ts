@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/database.generated'
 import {
@@ -12,6 +12,10 @@ vi.mock('@/lib/logger', () => ({
     error: vi.fn(),
   },
 }))
+
+afterEach(() => {
+  vi.useRealTimers()
+})
 
 const VALID_INPUT: EventPathwayMetadataInput = {
   eventId: 'event-1',
@@ -66,7 +70,7 @@ describe('EventPathwayMetadataService', () => {
     expect(validation.errors).toContain(
       'CTA type is required when Pathway eligibility is enabled.'
     )
-    expect(validation.errors).toContain(
+    expect(validation.errors).not.toContain(
       'Recommendation safety is required when Pathway eligibility is enabled.'
     )
   })
@@ -92,6 +96,37 @@ describe('EventPathwayMetadataService', () => {
     })
 
     expect(builder.upsert).not.toHaveBeenCalled()
+  })
+
+  it('derives hidden evidence and safety metadata for simplified chapter forms', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-05-25T20:00:00Z'))
+    const row = {
+      event_id: 'event-1',
+      is_pathway_eligible: true,
+    }
+    const { supabase, builder } = createUpsertMock({ data: row, error: null })
+
+    await expect(
+      EventPathwayMetadataService.upsertForEvent(supabase, {
+        ...VALID_INPUT,
+        evidenceSignals: undefined,
+        recommendationSafety: undefined,
+        metadataStatus: undefined,
+      })
+    ).resolves.toEqual({
+      success: true,
+      data: row,
+    })
+
+    expect(builder.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        evidence_signals: ['event_registration', 'proof_submitted'],
+        recommendation_safety: 'recommend_only_if_event_active',
+        metadata_status: 'ready',
+      }),
+      { onConflict: 'event_id' }
+    )
   })
 
   it('upserts normalized metadata for an event', async () => {
@@ -120,6 +155,5 @@ describe('EventPathwayMetadataService', () => {
       }),
       { onConflict: 'event_id' }
     )
-    vi.useRealTimers()
   })
 })

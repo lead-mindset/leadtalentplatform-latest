@@ -65,14 +65,56 @@ function invalidValues(values: string[] | undefined, options: readonly string[])
   return (values ?? []).filter((value) => !options.includes(value))
 }
 
-function requiredArray(values: string[] | undefined) {
+function requiredArray<T>(values: T[] | undefined): values is T[] {
   return Array.isArray(values) && values.length > 0
+}
+
+function uniqueEvidenceSignals(signals: LeadEvidenceSignalKey[]) {
+  return [...new Set(signals)]
+}
+
+function deriveEvidenceSignals(input: Pick<EventPathwayMetadataInput, 'ctaType' | 'proofOutcome'>) {
+  const signals: LeadEvidenceSignalKey[] = []
+
+  if (input.ctaType === 'apply') signals.push('application_submitted')
+  if (input.ctaType === 'attend') signals.push('event_attendance')
+  if (input.ctaType === 'register') signals.push('event_registration')
+  if (input.ctaType === 'update_profile') signals.push('profile_updated')
+  if (input.ctaType === 'update_linkedin') signals.push('linkedin_updated')
+  if (input.ctaType === 'update_resume') signals.push('resume_updated')
+  if (input.ctaType === 'reflect') signals.push('reflection_completed')
+  if (input.ctaType === 'capture_proof') signals.push('proof_submitted')
+
+  switch (input.proofOutcome) {
+    case 'reflection':
+      signals.push('reflection_completed')
+      break
+    case 'certificate':
+      signals.push('certificate_earned')
+      break
+    case 'linkedin_update':
+      signals.push('linkedin_updated')
+      break
+    case 'resume_bullet':
+      signals.push('resume_updated')
+      break
+    case 'pitch_deck':
+    case 'project_note':
+    case 'portfolio_item':
+      signals.push('proof_submitted')
+      break
+  }
+
+  return uniqueEvidenceSignals(signals)
 }
 
 export function validateEventPathwayMetadataInput(
   input: EventPathwayMetadataInput
 ): EventPathwayMetadataValidation {
   const errors: string[] = []
+  const evidenceSignals = requiredArray(input.evidenceSignals)
+    ? input.evidenceSignals
+    : deriveEvidenceSignals(input)
 
   if (!input.eventId) errors.push('Event id is required.')
   if (!input.actorUserId) errors.push('Actor user id is required.')
@@ -147,14 +189,11 @@ export function validateEventPathwayMetadataInput(
     if (!input.proofOutcome) {
       errors.push('Proof outcome is required when Pathway eligibility is enabled.')
     }
-    if (!requiredArray(input.evidenceSignals)) {
+    if (!requiredArray(evidenceSignals)) {
       errors.push('At least one evidence signal is required when Pathway eligibility is enabled.')
     }
     if (!input.audience) errors.push('Audience is required when Pathway eligibility is enabled.')
     if (!input.ctaType) errors.push('CTA type is required when Pathway eligibility is enabled.')
-    if (!input.recommendationSafety) {
-      errors.push('Recommendation safety is required when Pathway eligibility is enabled.')
-    }
   }
 
   return {
@@ -165,6 +204,9 @@ export function validateEventPathwayMetadataInput(
 
 function toUpsertPayload(input: EventPathwayMetadataInput): EventPathwayMetadataRow {
   const now = new Date().toISOString()
+  const evidenceSignals = requiredArray(input.evidenceSignals)
+    ? input.evidenceSignals
+    : deriveEvidenceSignals(input)
 
   return {
     event_id: input.eventId,
@@ -176,12 +218,12 @@ function toUpsertPayload(input: EventPathwayMetadataInput): EventPathwayMetadata
     growth_stage_fit: input.growthStageFit ?? [],
     student_outcomes: input.studentOutcomes ?? [],
     proof_outcome: input.proofOutcome ?? null,
-    evidence_signals: input.evidenceSignals ?? [],
+    evidence_signals: evidenceSignals,
     audience: input.audience ?? null,
     cta_type: input.ctaType ?? null,
     coordination_risk: input.coordinationRisk ?? 'low',
-    recommendation_safety: input.recommendationSafety ?? 'manual_review',
-    metadata_status: input.metadataStatus ?? 'draft',
+    recommendation_safety: input.recommendationSafety ?? (input.isPathwayEligible ? 'recommend_only_if_event_active' : 'manual_review'),
+    metadata_status: input.metadataStatus ?? (input.isPathwayEligible ? 'ready' : 'draft'),
     notes: input.notes ?? null,
     created_by_id: input.actorUserId,
     updated_by_id: input.actorUserId,
