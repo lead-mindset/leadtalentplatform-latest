@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import {
   PathwayCheckInService,
@@ -12,6 +13,13 @@ const ALLOWED_STATUSES = new Set<PathwayRecommendationStatus>([
   'completed',
   'dismissed',
 ])
+
+function isSafeRecommendationTarget(path: string) {
+  return path === '/events' ||
+    path.startsWith('/events/') ||
+    path === '/student' ||
+    path.startsWith('/student/')
+}
 
 export async function updatePathwayRecommendationStatus(formData: FormData): Promise<void> {
   const recommendationId = formData.get('recommendation_id')?.toString() ?? ''
@@ -42,4 +50,38 @@ export async function updatePathwayRecommendationStatus(formData: FormData): Pro
   }
 
   revalidatePath('/student')
+}
+
+export async function startPathwayRecommendation(formData: FormData): Promise<void> {
+  const recommendationId = formData.get('recommendation_id')?.toString() ?? ''
+  const targetPath = formData.get('target_path')?.toString() ?? '/student'
+
+  if (!recommendationId || !isSafeRecommendationTarget(targetPath)) {
+    return
+  }
+
+  let shouldRedirect = false
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user?.id) return
+
+    const result = await PathwayCheckInService.updateRecommendationStatus(supabase, {
+      userId: user.id,
+      recommendationId,
+      status: 'started',
+    })
+
+    if (!result.success) return
+    shouldRedirect = true
+  } catch (error) {
+    console.error('Pathway recommendation start error:', error)
+    return
+  }
+
+  revalidatePath('/student')
+  if (shouldRedirect) redirect(targetPath)
 }

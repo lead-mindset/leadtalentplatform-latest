@@ -31,11 +31,20 @@ function TextAreaField({
 export default async function GrowthReflectionPage({
   searchParams,
 }: {
-  searchParams: Promise<{ eventId?: string; eventTitle?: string }>
+  searchParams: Promise<{
+    eventId?: string
+    eventTitle?: string
+    recommendationId?: string
+    recommendationTitle?: string
+  }>
 }) {
   await requireUser()
   const params = await searchParams
   const eventTitle = params.eventTitle ? decodeURIComponent(params.eventTitle) : ''
+  const recommendationTitle = params.recommendationTitle
+    ? decodeURIComponent(params.recommendationTitle)
+    : ''
+  const participatedInDefault = eventTitle || recommendationTitle
 
   return (
     <MainContainer maxWidth="3xl" className="space-y-6 py-6 pb-24 sm:py-8">
@@ -58,6 +67,9 @@ export default async function GrowthReflectionPage({
         <CardContent>
           <form action={submitGrowthReflection} className="space-y-5">
             {params.eventId ? <input type="hidden" name="event_id" value={params.eventId} /> : null}
+            {params.recommendationId ? (
+              <input type="hidden" name="recommendation_id" value={params.recommendationId} />
+            ) : null}
             <label className="space-y-2">
               <span className="block text-sm font-semibold text-foreground">
                 Que experiencia de LEAD quieres capturar?
@@ -65,7 +77,7 @@ export default async function GrowthReflectionPage({
               <input
                 required
                 name="participated_in"
-                defaultValue={eventTitle}
+                defaultValue={participatedInDefault}
                 placeholder="Ej. IBM Explore Day, una mentoria, un taller de IA..."
                 className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
               />

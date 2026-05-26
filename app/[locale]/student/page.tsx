@@ -16,7 +16,10 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Link } from '@/i18n/routing'
 import { requireUser } from '@/lib/auth'
-import { updatePathwayRecommendationStatus } from '@/lib/actions/student/pathway-recommendation'
+import {
+  startPathwayRecommendation,
+  updatePathwayRecommendationStatus,
+} from '@/lib/actions/student/pathway-recommendation'
 import { PageHeader } from '@/components/ui/page-header'
 import {
   StudentDashboardService,
@@ -266,6 +269,32 @@ const RECOMMENDATION_LABELS: Record<string, string> = {
   prove: 'Prove',
 }
 
+const RECOMMENDATION_CTA_LABELS: Record<string, string> = {
+  register: 'Registrarme al evento',
+  apply: 'Postular al evento',
+  attend: 'Ver evento',
+  reflect: 'Capturar reflexion',
+  update_profile: 'Actualizar perfil',
+  update_linkedin: 'Actualizar perfil',
+  update_resume: 'Actualizar CV',
+  capture_proof: 'Capturar aprendizaje',
+}
+
+const EVIDENCE_SIGNAL_LABELS: Record<string, string> = {
+  event_registration: 'registro',
+  event_attendance: 'asistencia',
+  application_submitted: 'postulacion',
+  reflection_completed: 'reflection',
+  proof_submitted: 'evidencia',
+  certificate_earned: 'certificado',
+  linkedin_updated: 'LinkedIn',
+  resume_updated: 'CV',
+  profile_updated: 'perfil',
+  mission_recap_completed: 'mission recap',
+}
+
+type DashboardRecommendation = PathwayDashboardGuidance['recommendations'][number]
+
 function RecommendationAction({
   recommendationId,
   status,
@@ -286,6 +315,83 @@ function RecommendationAction({
       </Button>
     </form>
   )
+}
+
+function StartRecommendationAction({
+  recommendationId,
+  targetPath,
+  label,
+  variant = 'default',
+}: {
+  recommendationId: string
+  targetPath: string
+  label: string
+  variant?: 'default' | 'outline' | 'ghost'
+}) {
+  return (
+    <form action={startPathwayRecommendation}>
+      <input type="hidden" name="recommendation_id" value={recommendationId} />
+      <input type="hidden" name="target_path" value={targetPath} />
+      <Button type="submit" size="sm" variant={variant}>
+        {label}
+        <ArrowRight className="h-3.5 w-3.5" />
+      </Button>
+    </form>
+  )
+}
+
+function getReflectionTarget(recommendation: DashboardRecommendation) {
+  const params = new URLSearchParams({
+    recommendationId: recommendation.id,
+    recommendationTitle: recommendation.title,
+  })
+
+  if (recommendation.source_event_id) {
+    params.set('eventId', recommendation.source_event_id)
+    params.set('eventTitle', recommendation.title)
+  }
+
+  return `/student/growth-reflection?${params.toString()}`
+}
+
+function getPrimaryRecommendationCta(recommendation: DashboardRecommendation) {
+  if (recommendation.source_event_id) {
+    const ctaType = recommendation.cta_type ?? 'attend'
+    return {
+      targetPath: `/events/${recommendation.source_event_id}`,
+      label: RECOMMENDATION_CTA_LABELS[ctaType] ?? 'Ver evento',
+    }
+  }
+
+  if (recommendation.cta_type === 'update_resume') {
+    return { targetPath: '/student/resume', label: 'Actualizar CV' }
+  }
+
+  if (
+    recommendation.source_type === 'profile_action' ||
+    recommendation.cta_type === 'update_profile' ||
+    recommendation.cta_type === 'update_linkedin'
+  ) {
+    return { targetPath: '/student/profile', label: 'Actualizar perfil' }
+  }
+
+  if (
+    recommendation.source_type === 'proof_action' ||
+    recommendation.cta_type === 'reflect' ||
+    recommendation.cta_type === 'capture_proof'
+  ) {
+    return {
+      targetPath: getReflectionTarget(recommendation),
+      label: RECOMMENDATION_CTA_LABELS[recommendation.cta_type ?? 'reflect'] ?? 'Capturar reflexion',
+    }
+  }
+
+  return null
+}
+
+function getMatchedReasons(value: unknown) {
+  if (!Array.isArray(value)) return []
+  return value.filter((reason): reason is string => typeof reason === 'string' && reason.trim().length > 0).slice(0, 3)
 }
 
 function PathwayGuidanceCard({ guidance }: { guidance: PathwayDashboardGuidance | null }) {
@@ -343,52 +449,90 @@ function PathwayGuidanceCard({ guidance }: { guidance: PathwayDashboardGuidance 
         </div>
 
         <div className="space-y-3">
-          {guidance.recommendations.map((recommendation) => (
-            <div
-              key={recommendation.id}
-              className="rounded-lg border border-border/70 bg-background p-4"
-            >
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="secondary" size="sm">
-                  {RECOMMENDATION_LABELS[recommendation.category] ?? recommendation.category}
-                </Badge>
-                <h3 className="text-sm font-semibold text-foreground">{recommendation.title}</h3>
-              </div>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">{recommendation.body}</p>
-              <p className="mt-2 text-xs leading-5 text-muted-foreground">
-                {recommendation.reason}
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {recommendation.status === 'active' ? (
-                  <RecommendationAction
-                    recommendationId={recommendation.id}
-                    status="started"
-                    label="Marcar empezado"
-                  />
-                ) : null}
-                {recommendation.status !== 'completed' ? (
-                  <RecommendationAction
-                    recommendationId={recommendation.id}
-                    status="completed"
-                    label="Completar"
-                    variant="default"
-                  />
-                ) : (
-                  <Badge variant="success" size="sm">
-                    Completado
+          {guidance.recommendations.map((recommendation) => {
+            const primaryCta = getPrimaryRecommendationCta(recommendation)
+            const reflectionTarget = getReflectionTarget(recommendation)
+            const matchedReasons = getMatchedReasons(recommendation.matched_reasons)
+            const showReflectionCta =
+              recommendation.status !== 'completed' &&
+              primaryCta?.targetPath !== reflectionTarget
+
+            return (
+              <div
+                key={recommendation.id}
+                className="rounded-lg border border-border/70 bg-background p-4"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="secondary" size="sm">
+                    {RECOMMENDATION_LABELS[recommendation.category] ?? recommendation.category}
                   </Badge>
-                )}
-                {recommendation.status !== 'completed' ? (
-                  <RecommendationAction
-                    recommendationId={recommendation.id}
-                    status="dismissed"
-                    label="No aplica"
-                    variant="ghost"
-                  />
+                  {recommendation.source_event_id ? (
+                    <Badge variant="outline" size="sm">Evento LEAD</Badge>
+                  ) : null}
+                  {recommendation.cta_type ? (
+                    <Badge variant="outline" size="sm">
+                      {RECOMMENDATION_CTA_LABELS[recommendation.cta_type] ?? recommendation.cta_type}
+                    </Badge>
+                  ) : null}
+                  {recommendation.status === 'started' ? (
+                    <Badge variant="warning" size="sm">En progreso</Badge>
+                  ) : null}
+                  {recommendation.status === 'completed' ? (
+                    <Badge variant="success" size="sm">Completado</Badge>
+                  ) : null}
+                </div>
+
+                <h3 className="mt-3 text-sm font-semibold text-foreground">{recommendation.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">{recommendation.body}</p>
+                <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                  {recommendation.reason}
+                </p>
+
+                {matchedReasons.length > 0 || recommendation.evidence_signal ? (
+                  <div className="mt-3 rounded-lg border border-border/70 bg-muted/25 p-3 text-xs leading-5 text-muted-foreground">
+                    {matchedReasons.length > 0 ? (
+                      <p>
+                        <span className="font-semibold text-foreground">Por que aparece: </span>
+                        {matchedReasons.join(' ')}
+                      </p>
+                    ) : null}
+                    {recommendation.evidence_signal ? (
+                      <p className={matchedReasons.length > 0 ? 'mt-1' : ''}>
+                        <span className="font-semibold text-foreground">Evidencia: </span>
+                        {EVIDENCE_SIGNAL_LABELS[recommendation.evidence_signal] ?? recommendation.evidence_signal}
+                      </p>
+                    ) : null}
+                  </div>
                 ) : null}
+
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {recommendation.status !== 'completed' && primaryCta ? (
+                    <StartRecommendationAction
+                      recommendationId={recommendation.id}
+                      targetPath={primaryCta.targetPath}
+                      label={primaryCta.label}
+                    />
+                  ) : null}
+                  {showReflectionCta ? (
+                    <StartRecommendationAction
+                      recommendationId={recommendation.id}
+                      targetPath={reflectionTarget}
+                      label="Capturar aprendizaje"
+                      variant={primaryCta ? 'outline' : 'default'}
+                    />
+                  ) : null}
+                  {recommendation.status !== 'completed' ? (
+                    <RecommendationAction
+                      recommendationId={recommendation.id}
+                      status="dismissed"
+                      label="No aplica"
+                      variant="ghost"
+                    />
+                  ) : null}
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </CardContent>
     </Card>
