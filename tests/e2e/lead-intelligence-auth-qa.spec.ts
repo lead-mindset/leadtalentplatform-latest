@@ -1260,6 +1260,10 @@ test.describe('LEAD intelligence authenticated QA', () => {
 
     if (registrationError) throw new Error(`load event registration after Pathway CTA: ${registrationError.message}`)
     expect(registration.status).toBe('registered')
+    await expect(page.getByText('Basicos del check-in')).toHaveCount(0)
+    await expect(page.getByText('Recomendaciones')).toHaveCount(1)
+    await expect(page.getByText('Para entrar rapido')).toHaveCount(1)
+    await expect(page.getByText('Ten el brillo alto cuando llegues al check-in.')).toHaveCount(1)
     await capture(page, testInfo, 'student event recommendation completes registration')
   })
 
