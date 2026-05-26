@@ -1379,7 +1379,7 @@ export function EventForm({
               <div className="space-y-2">
                 <FieldLabel required={pathwayEligible}>OKR principal</FieldLabel>
                 <Select
-                  value={pathwayPrimaryOkr || undefined}
+                  value={pathwayPrimaryOkr}
                   disabled={pathwayDisabled}
                   onValueChange={(value) => setPathwayPrimaryOkr(value as LeadOkrKey)}
                 >
@@ -1398,7 +1398,7 @@ export function EventForm({
               <div className="space-y-2">
                 <FieldLabel required={pathwayEligible}>Objetivo para el estudiante</FieldLabel>
                 <Select
-                  value={pathwayStudentGoal || undefined}
+                  value={pathwayStudentGoal}
                   disabled={pathwayDisabled}
                   onValueChange={(value) => setPathwayStudentGoal(value as PathwayPrimaryFocusKey)}
                 >
@@ -1480,7 +1480,7 @@ export function EventForm({
               <div className="space-y-2">
                 <FieldLabel required={pathwayEligible}>Para quien es este evento</FieldLabel>
                 <Select
-                  value={pathwayAudience || undefined}
+                  value={pathwayAudience}
                   disabled={pathwayDisabled}
                   onValueChange={(value) => setPathwayAudience(value as LeadEventAudienceKey)}
                 >
@@ -1499,7 +1499,7 @@ export function EventForm({
               <div className="space-y-2">
                 <FieldLabel required={pathwayEligible}>Boton que vera el estudiante</FieldLabel>
                 <Select
-                  value={pathwayCtaType || undefined}
+                  value={pathwayCtaType}
                   disabled={pathwayDisabled}
                   onValueChange={(value) => setPathwayCtaType(value as LeadRecommendationCtaType)}
                 >
@@ -1519,7 +1519,7 @@ export function EventForm({
             <div className="space-y-2">
               <FieldLabel required={pathwayEligible}>Que puede capturar despues</FieldLabel>
               <Select
-                value={pathwayProofOutcome || undefined}
+                value={pathwayProofOutcome}
                 disabled={pathwayDisabled}
                 onValueChange={(value) => setPathwayProofOutcome(value as LeadProofOutcomeKey)}
               >

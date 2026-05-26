@@ -66,10 +66,8 @@ describe('updateEvent', () => {
         growthStageFit: ['candidate'],
         studentOutcomes: ['professional_readiness'],
         proofOutcome: 'reflection',
-        evidenceSignals: ['event_registration'],
         audience: 'active_member',
         ctaType: 'register',
-        recommendationSafety: 'manual_review',
       },
     })
 
@@ -85,6 +83,9 @@ describe('updateEvent', () => {
     expect(EventPathwayMetadataService.upsertForEvent).toHaveBeenCalledWith({}, expect.objectContaining({
       eventId: 'event-1',
       primaryOkr: 'empower',
+      evidenceSignals: undefined,
+      recommendationSafety: undefined,
+      metadataStatus: undefined,
     }))
   })
 
