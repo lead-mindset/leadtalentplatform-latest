@@ -57,12 +57,12 @@ export function toEventPathwayMetadataInput({
     growthStageFit: payload.growthStageFit ?? [],
     studentOutcomes: payload.studentOutcomes ?? [],
     proofOutcome: payload.proofOutcome ?? null,
-    evidenceSignals: payload.evidenceSignals ?? [],
+    evidenceSignals: payload.evidenceSignals,
     audience: payload.audience ?? null,
     ctaType: payload.ctaType ?? null,
-    coordinationRisk: payload.coordinationRisk ?? 'low',
-    recommendationSafety: payload.recommendationSafety ?? 'manual_review',
-    metadataStatus: payload.metadataStatus ?? 'draft',
+    coordinationRisk: payload.coordinationRisk,
+    recommendationSafety: payload.recommendationSafety,
+    metadataStatus: payload.metadataStatus,
     notes: payload.notes?.trim() ? payload.notes.trim() : null,
   }
 }

@@ -18,12 +18,78 @@ const EVENT_CHAPTER_ID = '91000000-0000-4000-8000-000000000259'
 const PATHWAY_FLAG_ID = '91000000-0000-4000-8000-000000000260'
 const EVENT_TITLE = 'QA Pathway Event: AI Career Sprint'
 const OUTPUT_DIR = path.join('outputs', 'issue-256-pathway-metadata-ui')
+const INTERNAL_PATHWAY_LABELS = [
+  'Seguridad de recomendacion',
+  'Senales de evidencia',
+  'Riesgo operativo',
+  'Estado de metadata',
+  'Notas internas',
+]
+const OKR_OPTIONS = ['Inspire', 'Unite', 'Empower', 'Elevate']
+const FOCUS_OPTIONS = [
+  'Exploracion de carrera',
+  'Experiencia tecnica',
+  'Preparacion para oportunidades',
+  'Comunidad y mentorias',
+  'Liderazgo',
+]
+const PILLAR_OPTIONS = [
+  'LEAD Academia',
+  'Academic Excellence',
+  "Women's Excellence",
+  'Professional Development',
+  'Leadership Development',
+  'Community Outreach',
+  'Chapter Development',
+]
+const GROWTH_STAGE_OPTIONS = ['Explorer', 'Builder', 'Leader', 'Candidate', 'Emerging professional']
+const STUDENT_OUTCOME_OPTIONS = [
+  'Orientacion a la mision',
+  'Sentido de pertenencia',
+  'Exposicion profesional',
+  'Habilidad tecnica',
+  'Proyecto o innovacion',
+  'Evidencia concreta',
+  'Preparacion profesional',
+  'Perfil mas visible',
+  'Confianza de liderazgo',
+  'Trabajo en equipo',
+  'Reflexion de aprendizaje',
+  'Servicio a la comunidad',
+]
+const AUDIENCE_OPTIONS = [
+  'Nuevos miembros',
+  'Miembros activos',
+  'Chapter leaders',
+  'Todos los estudiantes',
+  'Personas listas para postular',
+  'Publico abierto',
+  'Solo chapter',
+]
+const EVENT_CTA_OPTIONS = ['Registrarse', 'Postular', 'Asistir']
+const NON_EVENT_CTA_OPTIONS = [
+  'Reflexionar',
+  'Actualizar perfil',
+  'Actualizar LinkedIn',
+  'Actualizar resume',
+  'Capturar evidencia',
+]
+const PROOF_OPTIONS = [
+  'Sin evidencia posterior',
+  'Growth Reflection',
+  'Certificado',
+  'Pitch deck',
+  'Actualizacion de LinkedIn',
+  'Bullet de resume',
+  'Nota de proyecto',
+  'Item de portafolio',
+]
 
 type SupabaseAdmin = SupabaseClient<Database>
 
 let admin: SupabaseAdmin
 
-test.setTimeout(120_000)
+test.setTimeout(180_000)
 
 function loadLocalEnv() {
   const envPath = path.resolve(process.cwd(), '.env.local')
@@ -124,6 +190,103 @@ async function loginAs(page: Page, email: string) {
   }
 
   await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
+}
+
+async function openNewEventPathwayStep(page: Page, title: string) {
+  await page.goto('/es/chapter/events/new', { waitUntil: 'domcontentloaded' })
+  await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
+
+  await expect(page.locator('#title')).toBeVisible()
+  await page.locator('#title').fill(title)
+  await page.getByRole('button', { name: /Siguiente/i }).click()
+
+  await expect(page.locator('#startAt')).toBeVisible()
+  await page.locator('label').filter({ hasText: /^Virtual$/ }).click()
+  await page.locator('#startAt').fill(dateTimeLocal(10, 14))
+  await page.locator('#endAt').fill(dateTimeLocal(10, 16))
+  await page.locator('#meetingUrl').fill('https://example.com/lead-pathway-edge')
+  await page.getByRole('button', { name: /Siguiente/i }).click()
+
+  await expect(page.getByText('Modelo de registro')).toBeVisible()
+  await page.getByRole('button', { name: /Siguiente/i }).click()
+
+  await expect(page.getByText('Recomendar este evento a estudiantes')).toBeVisible()
+}
+
+async function chooseComboboxOption(page: Page, comboboxIndex: number, optionName: string) {
+  const combobox = page.getByRole('combobox').nth(comboboxIndex)
+  await expect(combobox).toBeEnabled()
+  await combobox.click()
+  await expect(page.getByRole('option', { name: optionName, exact: true })).toBeVisible()
+  await page.getByRole('option', { name: optionName, exact: true }).click()
+}
+
+async function expectComboboxOptions(
+  page: Page,
+  comboboxIndex: number,
+  visibleOptions: string[],
+  hiddenOptions: string[] = []
+) {
+  await page.getByRole('combobox').nth(comboboxIndex).click()
+  for (const option of visibleOptions) {
+    await expect(page.getByRole('option', { name: option, exact: true })).toBeVisible()
+  }
+  for (const option of hiddenOptions) {
+    await expect(page.getByRole('option', { name: option, exact: true })).toHaveCount(0)
+  }
+  await page.keyboard.press('Escape')
+}
+
+async function chooseEveryComboboxOption(
+  page: Page,
+  comboboxIndex: number,
+  options: string[],
+  finalOption: string
+) {
+  for (const option of options) {
+    await chooseComboboxOption(page, comboboxIndex, option)
+  }
+  if (options[options.length - 1] !== finalOption) {
+    await chooseComboboxOption(page, comboboxIndex, finalOption)
+  }
+}
+
+async function checkEveryCheckboxOption(page: Page, options: string[]) {
+  for (const option of options) {
+    const checkbox = page.getByRole('checkbox', { name: option, exact: true })
+    await expect(checkbox).toBeEnabled()
+    await checkbox.click()
+    await expect(checkbox).toBeChecked()
+  }
+}
+
+async function cleanupEventsByTitle(adminClient: SupabaseAdmin, title: string) {
+  const { data, error } = await adminClient
+    .from('event')
+    .select('id')
+    .eq('title', title)
+
+  if (error) throw new Error(`load events for cleanup: ${error.message}`)
+
+  const eventIds = (data ?? []).map((event) => event.id)
+  if (eventIds.length === 0) return
+
+  assertNoDbError(
+    await adminClient.from('event_pathway_metadata').delete().in('event_id', eventIds),
+    'cleanup created event pathway metadata'
+  )
+  assertNoDbError(
+    await adminClient.from('event_application_question').delete().in('event_id', eventIds),
+    'cleanup created event application questions'
+  )
+  assertNoDbError(
+    await adminClient.from('event_chapter').delete().in('event_id', eventIds),
+    'cleanup created event chapters'
+  )
+  assertNoDbError(
+    await adminClient.from('event').delete().in('id', eventIds),
+    'cleanup created events'
+  )
 }
 
 async function seedPathwayRecommendation(adminClient: SupabaseAdmin) {
@@ -325,6 +488,137 @@ test.describe('LEAD intelligence authenticated QA', () => {
     await expect(page.getByText('Selecciona al menos un pilar LEAD').first()).toBeVisible()
     await expect(page.getByText('Selecciona el boton que vera el estudiante').first()).toBeVisible()
     await capture(page, testInfo, 'chapter pathway required validation')
+  })
+
+  test('chapter Pathway step hides internal controls and lets non-Pathway events continue', async ({ page }, testInfo) => {
+    await loginAs(page, 'eboard@test.com')
+    await openNewEventPathwayStep(page, `QA Pathway Toggle Off ${testInfo.project.name}`)
+
+    await expect(page.getByRole('checkbox', { name: 'Permitir recomendacion en Pathway' })).not.toBeChecked()
+    for (const label of INTERNAL_PATHWAY_LABELS) {
+      await expect(page.getByText(label, { exact: true })).toHaveCount(0)
+    }
+
+    await expect(page.getByRole('combobox').first()).toBeDisabled()
+    await expect(page.getByRole('checkbox', { name: 'Inspire', exact: true })).toBeDisabled()
+
+    await page.getByRole('button', { name: /Siguiente/i }).click()
+    await expect(page.getByText('Resumen del evento')).toBeVisible()
+    await expect(page.getByText('No elegible')).toBeVisible()
+
+    await page.getByRole('button', { name: /Atras|Atrás/i }).click()
+    await expect(page.getByText('Recomendar este evento a estudiantes')).toBeVisible()
+    await capture(page, testInfo, 'chapter pathway toggle off review edge')
+  })
+
+  test('chapter can exercise all visible Pathway options and save derived metadata', async ({ page }, testInfo) => {
+    const title = `QA Pathway Options ${testInfo.project.name} ${Date.now()}`
+    await cleanupEventsByTitle(admin, title)
+
+    try {
+      await loginAs(page, 'eboard@test.com')
+      await openNewEventPathwayStep(page, title)
+
+      await page.getByRole('checkbox', { name: 'Permitir recomendacion en Pathway' }).click()
+      await expect(page.getByRole('combobox').first()).toBeEnabled()
+
+      await chooseEveryComboboxOption(page, 0, OKR_OPTIONS, 'Empower')
+      await chooseEveryComboboxOption(page, 1, FOCUS_OPTIONS, 'Preparacion para oportunidades')
+      await checkEveryCheckboxOption(page, PILLAR_OPTIONS)
+      await checkEveryCheckboxOption(page, GROWTH_STAGE_OPTIONS)
+      await checkEveryCheckboxOption(page, STUDENT_OUTCOME_OPTIONS)
+      await expectComboboxOptions(page, 3, EVENT_CTA_OPTIONS, NON_EVENT_CTA_OPTIONS)
+      await chooseEveryComboboxOption(page, 2, AUDIENCE_OPTIONS, 'Miembros activos')
+      await chooseEveryComboboxOption(page, 3, EVENT_CTA_OPTIONS, 'Registrarse')
+      await chooseEveryComboboxOption(page, 4, PROOF_OPTIONS, 'Item de portafolio')
+
+      await capture(page, testInfo, 'chapter pathway all options selected')
+      await page.getByRole('button', { name: /Siguiente/i }).click()
+      await expect(page.getByText('Resumen del evento')).toBeVisible()
+      await expect(page.getByText('Empower')).toBeVisible()
+      await expect(page.getByText('Preparacion para oportunidades')).toBeVisible()
+      await page.getByRole('button', { name: 'Guardar como borrador' }).click()
+      await page.waitForURL(/\/es\/chapter\/events\/[0-9a-f-]+$/, { timeout: 60_000 })
+
+      const { data: event, error: eventError } = await admin
+        .from('event')
+        .select('id,is_published')
+        .eq('title', title)
+        .single()
+
+      if (eventError) throw new Error(`load created event: ${eventError.message}`)
+      expect(event.is_published).toBe(false)
+
+      const { data: metadata, error: metadataError } = await admin
+        .from('event_pathway_metadata')
+        .select('*')
+        .eq('event_id', event.id)
+        .single()
+
+      if (metadataError) throw new Error(`load created event Pathway metadata: ${metadataError.message}`)
+
+      expect(metadata.is_pathway_eligible).toBe(true)
+      expect(metadata.primary_okr).toBe('empower')
+      expect(metadata.pillar_keys).toEqual(expect.arrayContaining([
+        'lead_academia',
+        'academic_excellence',
+        'womens_excellence',
+        'professional_development',
+        'leadership_development',
+        'community_outreach',
+        'chapter_development',
+      ]))
+      expect(metadata.growth_stage_fit).toEqual(expect.arrayContaining([
+        'explorer',
+        'builder',
+        'leader',
+        'candidate',
+        'emerging_professional',
+      ]))
+      expect(metadata.student_outcomes).toEqual(expect.arrayContaining([
+        'mission_orientation',
+        'belonging',
+        'career_exposure',
+        'technical_skill',
+        'innovation_project',
+        'proof_artifact',
+        'professional_readiness',
+        'profile_visibility',
+        'leadership_confidence',
+        'teamwork',
+        'reflection',
+        'community_service',
+      ]))
+      expect(metadata.evidence_signals).toEqual(expect.arrayContaining([
+        'event_registration',
+        'proof_submitted',
+      ]))
+      expect(metadata.recommendation_safety).toBe('recommend_only_if_event_active')
+      expect(metadata.metadata_status).toBe('ready')
+      expect(metadata.coordination_risk).toBe('low')
+      await capture(page, testInfo, 'chapter pathway draft saved with derived metadata')
+    } finally {
+      await cleanupEventsByTitle(admin, title)
+    }
+  })
+
+  test('application access forces the Pathway CTA back to Postular only', async ({ page }, testInfo) => {
+    await loginAs(page, 'eboard@test.com')
+    await openNewEventPathwayStep(page, `QA Pathway Application CTA ${testInfo.project.name}`)
+
+    await page.getByRole('checkbox', { name: 'Permitir recomendacion en Pathway' }).click()
+    await chooseComboboxOption(page, 3, 'Registrarse')
+    await expect(page.getByRole('combobox').nth(3)).toContainText('Registrarse')
+
+    await page.getByRole('button', { name: /Atras|Atrás/i }).click()
+    await expect(page.getByText('Modelo de registro')).toBeVisible()
+    await page.getByText(/Postulaci.n requerida/).click()
+    await page.getByRole('button', { name: /Siguiente/i }).click()
+
+    await expect(page.getByText('Recomendar este evento a estudiantes')).toBeVisible()
+    await expect(page.getByRole('combobox').nth(3)).toContainText('Postular')
+    await expectComboboxOptions(page, 3, ['Postular'], ['Registrarse', 'Asistir'])
+    await capture(page, testInfo, 'chapter pathway application cta forced to apply')
   })
 
   test('student dashboard renders event-backed recommendation CTAs', async ({ page }, testInfo) => {

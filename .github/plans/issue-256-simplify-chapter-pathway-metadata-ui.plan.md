@@ -55,12 +55,19 @@ The database constraint still requires eligible events to have `evidence_signals
 - [x] Update service validation/tests if recommendation safety should default rather than be required from UI.
 - [x] Update Playwright copy assertions.
 
+## Review Hardening
+
+- [x] Reviewed PR #257 diff across UI, action adapter, service, and Playwright coverage.
+- [x] Fixed action adapter fallback behavior so omitted hidden metadata is defaulted by `EventPathwayMetadataService`, not prefilled as `manual_review` / `draft`.
+- [x] Made Pathway select controls controlled from first render to remove browser controlled/uncontrolled warnings.
+- [x] Added Playwright edge coverage for toggle-off flow, hidden internal controls, disabled controls, all visible select and checkbox options, draft-save metadata persistence, and application-access CTA filtering.
+
 ## Validation
 
 - [x] `pnpm run lint` - passed with existing repo warnings only.
 - [x] `pnpm exec tsc --noEmit` - passed.
 - [x] `pnpm exec vitest run lib/services/__tests__/event-pathway-metadata.service.test.ts lib/actions/events/__tests__/create-event.test.ts lib/actions/events/__tests__/update-event.test.ts` - 3 files / 11 tests passed.
-- [x] `pnpm exec playwright test tests/e2e/lead-intelligence-auth-qa.spec.ts --project=desktop-chromium --project=mobile-chromium --reporter=line` - 8 tests passed.
+- [x] `pnpm exec playwright test tests/e2e/lead-intelligence-auth-qa.spec.ts --project=desktop-chromium --project=mobile-chromium --reporter=line` - 14 tests passed.
 - [x] Screenshots recorded in `outputs/issue-256-pathway-metadata-ui/`.
 
 ## Rollback

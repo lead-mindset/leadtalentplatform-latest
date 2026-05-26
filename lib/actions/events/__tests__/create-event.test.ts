@@ -114,10 +114,8 @@ describe('createEvent', () => {
         growthStageFit: ['candidate'],
         studentOutcomes: ['professional_readiness'],
         proofOutcome: 'reflection',
-        evidenceSignals: ['event_registration'],
         audience: 'active_member',
         ctaType: 'register',
-        recommendationSafety: 'manual_review',
       },
     })
 
@@ -131,13 +129,16 @@ describe('createEvent', () => {
       isPathwayEligible: true,
       primaryOkr: 'empower',
       pillarKeys: ['professional_development'],
+      evidenceSignals: undefined,
+      recommendationSafety: undefined,
+      metadataStatus: undefined,
     }))
   })
 
   it('removes the created event if Pathway metadata cannot be saved', async () => {
     vi.mocked(EventPathwayMetadataService.upsertForEvent).mockResolvedValueOnce({
       success: false,
-      error: 'Recommendation safety is required when Pathway eligibility is enabled.',
+      error: 'Unable to save event Pathway metadata',
     })
 
     const result = await createEvent({
@@ -159,7 +160,7 @@ describe('createEvent', () => {
     })
 
     expect(result).toEqual({
-      error: 'Recommendation safety is required when Pathway eligibility is enabled.',
+      error: 'Unable to save event Pathway metadata',
     })
     expect(EventService.deleteEvent).toHaveBeenCalledWith({}, 'event-1')
   })
