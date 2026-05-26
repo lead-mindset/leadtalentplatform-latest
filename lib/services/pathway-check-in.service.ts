@@ -2,6 +2,11 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/database.generated'
 import type { PathwayCheckInRow, PathwayRecommendationRow } from '@/lib/types'
 import { logger } from '@/lib/logger'
+import {
+  PathwayIntelligenceService,
+  generateFallbackPathwayRecommendations,
+  type PathwayIntelligenceRecommendation,
+} from '@/lib/services/pathway-intelligence.service'
 
 export type PathwayCheckInStatus = 'not_started' | 'in_progress' | 'completed'
 export type PathwayGrowthStage =
@@ -45,13 +50,7 @@ export type PathwayClassification = {
   primary_focus: PathwayPrimaryFocus
 }
 
-export type GeneratedPathwayRecommendation = {
-  category: PathwayRecommendationCategory
-  title: string
-  body: string
-  reason: string
-  sort_order: number
-}
+export type GeneratedPathwayRecommendation = PathwayIntelligenceRecommendation
 
 export type ChapterAggregateTrend = {
   value: string
@@ -118,6 +117,11 @@ const RECOMMENDATION_SELECT = `
   body,
   reason,
   sort_order,
+  source_type,
+  source_event_id,
+  cta_type,
+  evidence_signal,
+  matched_reasons,
   created_at,
   updated_at
 `
@@ -252,65 +256,11 @@ export function classifyPathwayCheckIn(
   }
 }
 
-const FOCUS_LABELS: Record<PathwayPrimaryFocus, string> = {
-  career_exploration: 'career paths',
-  technical_experience: 'technical experience',
-  opportunity_readiness: 'opportunity readiness',
-  community_mentorship: 'community and mentorship',
-  leadership: 'leadership',
-}
-
-function learnTitle(focus: PathwayPrimaryFocus) {
-  if (focus === 'technical_experience') return 'Choose one hands-on technical session'
-  if (focus === 'opportunity_readiness') return 'Join one career-readiness workshop'
-  if (focus === 'leadership') return 'Attend one leadership learning moment'
-  if (focus === 'community_mentorship') return 'Learn how your LEAD chapter works'
-  return 'Explore one STEM or career pathway'
-}
-
-function proveTitle(focus: PathwayPrimaryFocus) {
-  if (focus === 'technical_experience') return 'Create one small project proof'
-  if (focus === 'opportunity_readiness') return 'Draft one opportunity-ready profile update'
-  if (focus === 'leadership') return 'Document one leadership action you can take'
-  if (focus === 'community_mentorship') return 'Write one reflection about who can support you'
-  return 'Capture one insight about a path you want to explore'
-}
-
 export function generatePathwayRecommendations(params: {
   answers: PathwayCheckInAnswers
   classification: PathwayClassification
 }): GeneratedPathwayRecommendation[] {
-  const focusLabel = FOCUS_LABELS[params.classification.primary_focus]
-  const timeText =
-    params.answers.monthly_time_commitment === 'one_hour'
-      ? 'small enough for a one-hour month'
-      : params.answers.monthly_time_commitment === 'two_to_four_hours'
-        ? 'realistic for two to four hours this month'
-        : 'strong enough for a deeper five-hour push this month'
-
-  return [
-    {
-      category: 'learn',
-      title: learnTitle(params.classification.primary_focus),
-      body: `Pick one event, workshop, program, or resource that helps you understand ${focusLabel} through action.`,
-      reason: `Suggested because your check-in points to ${focusLabel} and a step that is ${timeText}.`,
-      sort_order: 1,
-    },
-    {
-      category: 'connect',
-      title: 'Ask for one chapter touchpoint',
-      body: 'Reach out to a chapter leader, mentor, or peer and ask what one next step they would recommend for your goal.',
-      reason: 'Suggested because LEAD works best when students are not trying to figure everything out alone.',
-      sort_order: 2,
-    },
-    {
-      category: 'prove',
-      title: proveTitle(params.classification.primary_focus),
-      body: 'Create a tiny artifact: a reflection, project note, resume bullet draft, or short summary of what you learned.',
-      reason: `Suggested so your participation starts becoming proof of growth, not just activity.`,
-      sort_order: 3,
-    },
-  ]
+  return generateFallbackPathwayRecommendations(params)
 }
 
 export const PathwayCheckInService = {
@@ -383,7 +333,8 @@ export const PathwayCheckInService = {
     const checkInId = (data as Pick<PathwayCheckInRow, 'id'> | null)?.id
     if (!checkInId) return { success: false, error: 'Unable to save pathway check-in' }
 
-    const recommendations = generatePathwayRecommendations({
+    const recommendations = await PathwayIntelligenceService.generateRecommendations(supabase, {
+      chapterId: params.chapterId,
       answers: params.answers,
       classification,
     })
@@ -415,6 +366,11 @@ export const PathwayCheckInService = {
         body: recommendation.body,
         reason: recommendation.reason,
         sort_order: recommendation.sort_order,
+        source_type: recommendation.source_type,
+        source_event_id: recommendation.source_event_id,
+        cta_type: recommendation.cta_type,
+        evidence_signal: recommendation.evidence_signal,
+        matched_reasons: recommendation.matched_reasons,
       }))
     )
 
