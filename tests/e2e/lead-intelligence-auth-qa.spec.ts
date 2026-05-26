@@ -17,7 +17,7 @@ const PROOF_RECOMMENDATION_ID = '91000000-0000-4000-8000-000000000258'
 const EVENT_CHAPTER_ID = '91000000-0000-4000-8000-000000000259'
 const PATHWAY_FLAG_ID = '91000000-0000-4000-8000-000000000260'
 const EVENT_TITLE = 'QA Pathway Event: AI Career Sprint'
-const OUTPUT_DIR = path.join('outputs', 'issue-253-lead-intelligence-auth-qa')
+const OUTPUT_DIR = path.join('outputs', 'issue-256-pathway-metadata-ui')
 
 type SupabaseAdmin = SupabaseClient<Database>
 
@@ -313,17 +313,17 @@ test.describe('LEAD intelligence authenticated QA', () => {
     await expect(page.getByText('Modelo de registro')).toBeVisible()
     await page.getByRole('button', { name: /Siguiente/i }).click()
 
-    await expect(page.getByText('Pathway recommendation fit')).toBeVisible()
-    await expect(page.getByText('Pathway no recomendara este evento')).toBeVisible()
-    await page.getByText('Hacer elegible para Pathway').click()
-    await expect(page.getByText('Valor para el estudiante')).toBeVisible()
-    await expect(page.getByText('Accion, evidencia y seguridad')).toBeVisible()
+    await expect(page.getByText('Recomendar este evento a estudiantes')).toBeVisible()
+    await expect(page.getByText('Este evento no aparecera en recomendaciones de Pathway')).toBeVisible()
+    await page.getByText('Permitir recomendacion en Pathway').click()
+    await expect(page.getByText('Por que vale la pena recomendarlo')).toBeVisible()
+    await expect(page.getByText('Como se recomendara este evento')).toBeVisible()
     await capture(page, testInfo, 'chapter pathway metadata section enabled')
 
     await page.getByRole('button', { name: /Siguiente/i }).click()
     await expect(page.getByText('Selecciona el OKR principal').first()).toBeVisible()
     await expect(page.getByText('Selecciona al menos un pilar LEAD').first()).toBeVisible()
-    await expect(page.getByText('Selecciona la accion que Pathway debe recomendar').first()).toBeVisible()
+    await expect(page.getByText('Selecciona el boton que vera el estudiante').first()).toBeVisible()
     await capture(page, testInfo, 'chapter pathway required validation')
   })
 

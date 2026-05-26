@@ -23,20 +23,14 @@ import type {
   EventPathwayMetadataRow,
 } from '@/lib/types'
 import {
-  EVENT_PATHWAY_METADATA_STATUSES,
-  LEAD_COORDINATION_RISK_KEYS,
   LEAD_EVENT_AUDIENCE_KEYS,
-  LEAD_EVIDENCE_SIGNAL_KEYS,
   LEAD_OKR_KEYS,
   LEAD_PILLAR_KEYS,
   LEAD_PROOF_OUTCOME_KEYS,
   LEAD_RECOMMENDATION_CTA_TYPES,
-  LEAD_RECOMMENDATION_SAFETY_KEYS,
   LEAD_STUDENT_OUTCOME_KEYS,
   PATHWAY_GROWTH_STAGE_KEYS,
   PATHWAY_PRIMARY_FOCUS_KEYS,
-  type EventPathwayMetadataStatus,
-  type LeadCoordinationRiskKey,
   type LeadEventAudienceKey,
   type LeadEvidenceSignalKey,
   type LeadOkrKey,
@@ -160,19 +154,6 @@ const proofOutcomeLabels: Record<LeadProofOutcomeKey, string> = {
   portfolio_item: 'Item de portafolio',
 }
 
-const evidenceSignalLabels: Record<LeadEvidenceSignalKey, string> = {
-  event_registration: 'Registro al evento',
-  event_attendance: 'Asistencia',
-  application_submitted: 'Postulacion enviada',
-  reflection_completed: 'Reflection completada',
-  proof_submitted: 'Evidencia subida',
-  certificate_earned: 'Certificado obtenido',
-  linkedin_updated: 'LinkedIn actualizado',
-  resume_updated: 'Resume actualizado',
-  profile_updated: 'Perfil actualizado',
-  mission_recap_completed: 'Mission recap completado',
-}
-
 const audienceLabels: Record<LeadEventAudienceKey, string> = {
   new_member: 'Nuevos miembros',
   active_member: 'Miembros activos',
@@ -194,37 +175,14 @@ const ctaTypeLabels: Record<LeadRecommendationCtaType, string> = {
   capture_proof: 'Capturar evidencia',
 }
 
-const coordinationRiskLabels: Record<LeadCoordinationRiskKey, string> = {
-  low: 'Bajo',
-  medium: 'Medio',
-  high: 'Alto',
-}
-
-const recommendationSafetyLabels: Record<LeadRecommendationSafetyKey, string> = {
-  recommendable_now: 'Recomendable ahora',
-  recommend_only_if_event_active: 'Solo si el evento sigue activo',
-  manual_review: 'Revision manual',
-  not_recommendable: 'No recomendar',
-}
-
-const metadataStatusLabels: Record<EventPathwayMetadataStatus, string> = {
-  draft: 'Borrador',
-  ready: 'Listo',
-  archived: 'Archivado',
-}
-
 const okrOptions: Array<TaxonomyOption<LeadOkrKey>> = LEAD_OKR_KEYS.map((value) => ({ value, label: okrLabels[value] }))
 const pillarOptions: Array<TaxonomyOption<LeadPillarKey>> = LEAD_PILLAR_KEYS.map((value) => ({ value, label: pillarLabels[value] }))
 const focusOptions: Array<TaxonomyOption<PathwayPrimaryFocusKey>> = PATHWAY_PRIMARY_FOCUS_KEYS.map((value) => ({ value, label: focusLabels[value] }))
 const growthStageOptions: Array<TaxonomyOption<PathwayGrowthStageKey>> = PATHWAY_GROWTH_STAGE_KEYS.map((value) => ({ value, label: growthStageLabels[value] }))
 const studentOutcomeOptions: Array<TaxonomyOption<LeadStudentOutcomeKey>> = LEAD_STUDENT_OUTCOME_KEYS.map((value) => ({ value, label: studentOutcomeLabels[value] }))
 const proofOutcomeOptions: Array<TaxonomyOption<LeadProofOutcomeKey>> = LEAD_PROOF_OUTCOME_KEYS.map((value) => ({ value, label: proofOutcomeLabels[value] }))
-const evidenceSignalOptions: Array<TaxonomyOption<LeadEvidenceSignalKey>> = LEAD_EVIDENCE_SIGNAL_KEYS.map((value) => ({ value, label: evidenceSignalLabels[value] }))
 const audienceOptions: Array<TaxonomyOption<LeadEventAudienceKey>> = LEAD_EVENT_AUDIENCE_KEYS.map((value) => ({ value, label: audienceLabels[value] }))
 const ctaTypeOptions: Array<TaxonomyOption<LeadRecommendationCtaType>> = LEAD_RECOMMENDATION_CTA_TYPES.map((value) => ({ value, label: ctaTypeLabels[value] }))
-const coordinationRiskOptions: Array<TaxonomyOption<LeadCoordinationRiskKey>> = LEAD_COORDINATION_RISK_KEYS.map((value) => ({ value, label: coordinationRiskLabels[value] }))
-const recommendationSafetyOptions: Array<TaxonomyOption<LeadRecommendationSafetyKey>> = LEAD_RECOMMENDATION_SAFETY_KEYS.map((value) => ({ value, label: recommendationSafetyLabels[value] }))
-const metadataStatusOptions: Array<TaxonomyOption<EventPathwayMetadataStatus>> = EVENT_PATHWAY_METADATA_STATUSES.map((value) => ({ value, label: metadataStatusLabels[value] }))
 
 const EMPTY_APPLICATION_QUESTIONS: EventApplicationQuestionRow[] = []
 
@@ -353,6 +311,62 @@ function fromDateTimeLocal(value: string) {
   return d.toISOString()
 }
 
+function uniqueEvidenceSignals(signals: LeadEvidenceSignalKey[]) {
+  return [...new Set(signals)]
+}
+
+function deriveEvidenceSignals({
+  accessModel,
+  ctaType,
+  proofOutcome,
+}: {
+  accessModel: EventAccessModel
+  ctaType: LeadRecommendationCtaType | ''
+  proofOutcome: LeadProofOutcomeKey | ''
+}): LeadEvidenceSignalKey[] {
+  const signals: LeadEvidenceSignalKey[] = []
+
+  if (accessModel === 'application' || ctaType === 'apply') {
+    signals.push('application_submitted')
+  } else if (ctaType === 'attend') {
+    signals.push('event_attendance')
+  } else if (ctaType === 'register') {
+    signals.push('event_registration')
+  }
+
+  if (ctaType === 'update_profile') signals.push('profile_updated')
+  if (ctaType === 'update_linkedin') signals.push('linkedin_updated')
+  if (ctaType === 'update_resume') signals.push('resume_updated')
+  if (ctaType === 'reflect') signals.push('reflection_completed')
+  if (ctaType === 'capture_proof') signals.push('proof_submitted')
+
+  switch (proofOutcome) {
+    case 'reflection':
+      signals.push('reflection_completed')
+      break
+    case 'certificate':
+      signals.push('certificate_earned')
+      break
+    case 'linkedin_update':
+      signals.push('linkedin_updated')
+      break
+    case 'resume_bullet':
+      signals.push('resume_updated')
+      break
+    case 'pitch_deck':
+    case 'project_note':
+    case 'portfolio_item':
+      signals.push('proof_submitted')
+      break
+  }
+
+  return uniqueEvidenceSignals(signals)
+}
+
+function getRecommendationSafety(pathwayEligible: boolean): LeadRecommendationSafetyKey {
+  return pathwayEligible ? 'recommend_only_if_event_active' : 'manual_review'
+}
+
 export function EventForm({
   mode,
   initial,
@@ -408,13 +422,8 @@ export function EventForm({
     growthStageFit: filterTaxonomyValues(pathwayMetadata?.growth_stage_fit, PATHWAY_GROWTH_STAGE_KEYS),
     studentOutcomes: filterTaxonomyValues(pathwayMetadata?.student_outcomes, LEAD_STUDENT_OUTCOME_KEYS),
     proofOutcome: (pathwayMetadata?.proof_outcome ?? '') as LeadProofOutcomeKey | '',
-    evidenceSignals: filterTaxonomyValues(pathwayMetadata?.evidence_signals, LEAD_EVIDENCE_SIGNAL_KEYS),
     audience: (pathwayMetadata?.audience ?? '') as LeadEventAudienceKey | '',
     ctaType: (pathwayMetadata?.cta_type ?? '') as LeadRecommendationCtaType | '',
-    coordinationRisk: (pathwayMetadata?.coordination_risk ?? 'low') as LeadCoordinationRiskKey,
-    recommendationSafety: (pathwayMetadata?.recommendation_safety ?? '') as LeadRecommendationSafetyKey | '',
-    metadataStatus: (pathwayMetadata?.metadata_status ?? 'draft') as EventPathwayMetadataStatus,
-    notes: pathwayMetadata?.notes ?? '',
   }), [pathwayMetadata])
 
   const [title, setTitle] = useState(defaults.title)
@@ -446,13 +455,8 @@ export function EventForm({
   const [pathwayGrowthStageFit, setPathwayGrowthStageFit] = useState<PathwayGrowthStageKey[]>(pathwayDefaults.growthStageFit)
   const [pathwayStudentOutcomes, setPathwayStudentOutcomes] = useState<LeadStudentOutcomeKey[]>(pathwayDefaults.studentOutcomes)
   const [pathwayProofOutcome, setPathwayProofOutcome] = useState<LeadProofOutcomeKey | ''>(pathwayDefaults.proofOutcome)
-  const [pathwayEvidenceSignals, setPathwayEvidenceSignals] = useState<LeadEvidenceSignalKey[]>(pathwayDefaults.evidenceSignals)
   const [pathwayAudience, setPathwayAudience] = useState<LeadEventAudienceKey | ''>(pathwayDefaults.audience)
   const [pathwayCtaType, setPathwayCtaType] = useState<LeadRecommendationCtaType | ''>(pathwayDefaults.ctaType)
-  const [pathwayCoordinationRisk, setPathwayCoordinationRisk] = useState<LeadCoordinationRiskKey>(pathwayDefaults.coordinationRisk)
-  const [pathwayRecommendationSafety, setPathwayRecommendationSafety] = useState<LeadRecommendationSafetyKey | ''>(pathwayDefaults.recommendationSafety)
-  const [pathwayMetadataStatus, setPathwayMetadataStatus] = useState<EventPathwayMetadataStatus>(pathwayDefaults.metadataStatus)
-  const [pathwayNotes, setPathwayNotes] = useState(pathwayDefaults.notes)
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
   const [isAutoSaving, setIsAutoSaving] = useState(false)
   const [isDraggingCover, setIsDraggingCover] = useState(false)
@@ -490,13 +494,8 @@ export function EventForm({
     setPathwayGrowthStageFit(pathwayDefaults.growthStageFit)
     setPathwayStudentOutcomes(pathwayDefaults.studentOutcomes)
     setPathwayProofOutcome(pathwayDefaults.proofOutcome)
-    setPathwayEvidenceSignals(pathwayDefaults.evidenceSignals)
     setPathwayAudience(pathwayDefaults.audience)
     setPathwayCtaType(pathwayDefaults.ctaType)
-    setPathwayCoordinationRisk(pathwayDefaults.coordinationRisk)
-    setPathwayRecommendationSafety(pathwayDefaults.recommendationSafety)
-    setPathwayMetadataStatus(pathwayDefaults.metadataStatus)
-    setPathwayNotes(pathwayDefaults.notes)
   }, [initial, applicationQuestions, pathwayDefaults])
 
   useEffect(() => {
@@ -531,6 +530,14 @@ export function EventForm({
   }
 
   const pathwayMetadataPayload = useMemo(() => {
+    const evidenceSignals = pathwayEligible
+      ? deriveEvidenceSignals({
+          accessModel,
+          ctaType: pathwayCtaType,
+          proofOutcome: pathwayProofOutcome,
+        })
+      : []
+
     const hasPathwayMetadata = Boolean(pathwayMetadata) ||
       pathwayEligible ||
       Boolean(pathwayPrimaryOkr) ||
@@ -540,11 +547,8 @@ export function EventForm({
       pathwayGrowthStageFit.length > 0 ||
       pathwayStudentOutcomes.length > 0 ||
       Boolean(pathwayProofOutcome) ||
-      pathwayEvidenceSignals.length > 0 ||
       Boolean(pathwayAudience) ||
-      Boolean(pathwayCtaType) ||
-      Boolean(pathwayRecommendationSafety) ||
-      pathwayNotes.trim().length > 0
+      Boolean(pathwayCtaType)
 
     if (!hasPathwayMetadata) return undefined
 
@@ -557,15 +561,15 @@ export function EventForm({
       growthStageFit: pathwayGrowthStageFit,
       studentOutcomes: pathwayStudentOutcomes,
       proofOutcome: pathwayProofOutcome || null,
-      evidenceSignals: pathwayEvidenceSignals,
+      evidenceSignals,
       audience: pathwayAudience || null,
       ctaType: pathwayCtaType || null,
-      coordinationRisk: pathwayCoordinationRisk,
-      recommendationSafety: pathwayRecommendationSafety || undefined,
-      metadataStatus: pathwayMetadataStatus,
-      notes: pathwayNotes.trim() || null,
+      coordinationRisk: pathwayMetadata?.coordination_risk ?? 'low',
+      recommendationSafety: getRecommendationSafety(pathwayEligible),
+      metadataStatus: pathwayEligible ? 'ready' : pathwayMetadata?.metadata_status ?? 'draft',
+      notes: pathwayMetadata?.notes ?? null,
     }
-  }, [pathwayMetadata, pathwayEligible, pathwayPrimaryOkr, pathwayOkrAlignment, pathwayPillarKeys, pathwayStudentGoal, pathwayGrowthStageFit, pathwayStudentOutcomes, pathwayProofOutcome, pathwayEvidenceSignals, pathwayAudience, pathwayCtaType, pathwayCoordinationRisk, pathwayRecommendationSafety, pathwayMetadataStatus, pathwayNotes])
+  }, [accessModel, pathwayMetadata, pathwayEligible, pathwayPrimaryOkr, pathwayOkrAlignment, pathwayPillarKeys, pathwayStudentGoal, pathwayGrowthStageFit, pathwayStudentOutcomes, pathwayProofOutcome, pathwayAudience, pathwayCtaType])
 
   const validateFields = (checkMode: 'step' | 'all', currentStep?: number, targetPublished = true) => {
     setFieldErrors({})
@@ -642,11 +646,9 @@ export function EventForm({
       if (!pathwayStudentGoal) { errors.pathway_student_goal = 'Selecciona el objetivo del estudiante'; isValid = false }
       if (pathwayGrowthStageFit.length === 0) { errors.pathway_growth_stage_fit = 'Selecciona al menos una etapa Pathway'; isValid = false }
       if (pathwayStudentOutcomes.length === 0) { errors.pathway_student_outcomes = 'Selecciona al menos un resultado esperado'; isValid = false }
-      if (!pathwayProofOutcome) { errors.pathway_proof_outcome = 'Selecciona que evidencia viene despues'; isValid = false }
-      if (pathwayEvidenceSignals.length === 0) { errors.pathway_evidence_signals = 'Selecciona al menos una senal de evidencia'; isValid = false }
-      if (!pathwayAudience) { errors.pathway_audience = 'Selecciona para quien es mejor este evento'; isValid = false }
-      if (!pathwayCtaType) { errors.pathway_cta_type = 'Selecciona la accion que Pathway debe recomendar'; isValid = false }
-      if (!pathwayRecommendationSafety) { errors.pathway_recommendation_safety = 'Selecciona la seguridad de recomendacion'; isValid = false }
+      if (!pathwayProofOutcome) { errors.pathway_proof_outcome = 'Selecciona que puede capturar el estudiante despues'; isValid = false }
+      if (!pathwayAudience) { errors.pathway_audience = 'Selecciona para quien es este evento'; isValid = false }
+      if (!pathwayCtaType) { errors.pathway_cta_type = 'Selecciona el boton que vera el estudiante'; isValid = false }
       if (accessModel === 'application' && pathwayCtaType && pathwayCtaType !== 'apply') {
         errors.pathway_cta_type = 'Los eventos con postulacion deben usar CTA de postular'
         isValid = false
@@ -1332,15 +1334,15 @@ export function EventForm({
                 <Sparkles className="h-5 w-5" />
               </div>
               <div className="space-y-1">
-                <div className="text-xl font-semibold">Pathway recommendation fit</div>
+                <div className="text-xl font-semibold">Recomendar este evento a estudiantes</div>
                 <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
-                  Usa esto solo cuando el evento tenga un resultado claro para estudiantes. Si lo dejas apagado, el evento funciona igual que siempre.
+                  Pathway ayuda a estudiantes a encontrar su siguiente mejor accion en LEAD. Activalo solo si este evento tiene un beneficio claro para ellos.
                 </p>
               </div>
             </div>
 
             <label className="flex min-w-64 cursor-pointer items-center justify-between gap-4 rounded-lg border bg-muted/30 p-4">
-              <span className="text-sm font-semibold">Hacer elegible para Pathway</span>
+              <span className="text-sm font-semibold">Permitir recomendacion en Pathway</span>
               <Checkbox
                 checked={pathwayEligible}
                 onCheckedChange={(checked) => {
@@ -1356,7 +1358,7 @@ export function EventForm({
 
           {!pathwayEligible ? (
             <div className="mt-6 rounded-lg border bg-muted/30 p-4 text-sm text-muted-foreground">
-              Pathway no recomendara este evento. Puedes guardar o publicar sin llenar estos campos.
+              Este evento no aparecera en recomendaciones de Pathway. Puedes guardar o publicar sin completar esta seccion.
             </div>
           ) : null}
         </section>
@@ -1367,8 +1369,8 @@ export function EventForm({
               <Target className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-xl font-semibold">Valor para el estudiante</div>
-              <div className="text-sm text-muted-foreground">Define por que este evento merece aparecer como una siguiente accion.</div>
+              <div className="text-xl font-semibold">Por que vale la pena recomendarlo</div>
+              <div className="text-sm text-muted-foreground">Define el objetivo, etapa y resultado que este evento apoya.</div>
             </div>
           </div>
 
@@ -1394,7 +1396,7 @@ export function EventForm({
               </div>
 
               <div className="space-y-2">
-                <FieldLabel required={pathwayEligible}>Objetivo Pathway</FieldLabel>
+                <FieldLabel required={pathwayEligible}>Objetivo para el estudiante</FieldLabel>
                 <Select
                   value={pathwayStudentGoal || undefined}
                   disabled={pathwayDisabled}
@@ -1437,7 +1439,7 @@ export function EventForm({
             </div>
 
             <div className="space-y-2">
-              <FieldLabel required={pathwayEligible}>Etapa del estudiante</FieldLabel>
+              <FieldLabel required={pathwayEligible}>Para que momento del estudiante</FieldLabel>
               <CheckboxOptionGrid
                 idPrefix="pathway-stage"
                 options={growthStageOptions}
@@ -1468,15 +1470,15 @@ export function EventForm({
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-xl font-semibold">Accion, evidencia y seguridad</div>
-              <div className="text-sm text-muted-foreground">Pathway debe saber que pedirle al estudiante y cuando es seguro recomendarlo.</div>
+              <div className="text-xl font-semibold">Como se recomendara este evento</div>
+              <div className="text-sm text-muted-foreground">Define lo que vera el estudiante y que puede capturar despues.</div>
             </div>
           </div>
 
           <div className="grid gap-6">
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-2">
-                <FieldLabel required={pathwayEligible}>Audiencia</FieldLabel>
+                <FieldLabel required={pathwayEligible}>Para quien es este evento</FieldLabel>
                 <Select
                   value={pathwayAudience || undefined}
                   disabled={pathwayDisabled}
@@ -1495,7 +1497,7 @@ export function EventForm({
               </div>
 
               <div className="space-y-2">
-                <FieldLabel required={pathwayEligible}>CTA recomendado</FieldLabel>
+                <FieldLabel required={pathwayEligible}>Boton que vera el estudiante</FieldLabel>
                 <Select
                   value={pathwayCtaType || undefined}
                   disabled={pathwayDisabled}
@@ -1514,106 +1516,23 @@ export function EventForm({
               </div>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="space-y-2">
-                <FieldLabel required={pathwayEligible}>Evidencia posterior</FieldLabel>
-                <Select
-                  value={pathwayProofOutcome || undefined}
-                  disabled={pathwayDisabled}
-                  onValueChange={(value) => setPathwayProofOutcome(value as LeadProofOutcomeKey)}
-                >
-                  <SelectTrigger className={fieldErrors.pathway_proof_outcome ? 'border-destructive focus:ring-destructive' : ''}>
-                    <SelectValue placeholder="Selecciona evidencia" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {proofOutcomeOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {fieldErrors.pathway_proof_outcome && <div className="text-xs text-destructive">{fieldErrors.pathway_proof_outcome}</div>}
-              </div>
-
-              <div className="space-y-2">
-                <FieldLabel required={pathwayEligible}>Seguridad de recomendacion</FieldLabel>
-                <Select
-                  value={pathwayRecommendationSafety || undefined}
-                  disabled={pathwayDisabled}
-                  onValueChange={(value) => setPathwayRecommendationSafety(value as LeadRecommendationSafetyKey)}
-                >
-                  <SelectTrigger className={fieldErrors.pathway_recommendation_safety ? 'border-destructive focus:ring-destructive' : ''}>
-                    <SelectValue placeholder="Selecciona seguridad" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {recommendationSafetyOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {fieldErrors.pathway_recommendation_safety && <div className="text-xs text-destructive">{fieldErrors.pathway_recommendation_safety}</div>}
-              </div>
-            </div>
-
             <div className="space-y-2">
-              <FieldLabel required={pathwayEligible}>Senales de evidencia</FieldLabel>
-              <CheckboxOptionGrid
-                idPrefix="pathway-evidence"
-                options={evidenceSignalOptions}
-                values={pathwayEvidenceSignals}
+              <FieldLabel required={pathwayEligible}>Que puede capturar despues</FieldLabel>
+              <Select
+                value={pathwayProofOutcome || undefined}
                 disabled={pathwayDisabled}
-                onChange={setPathwayEvidenceSignals}
-              />
-              {fieldErrors.pathway_evidence_signals && <div className="text-xs text-destructive">{fieldErrors.pathway_evidence_signals}</div>}
-            </div>
-
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="space-y-2">
-                <FieldLabel required={false}>Riesgo operativo</FieldLabel>
-                <Select
-                  value={pathwayCoordinationRisk}
-                  disabled={pathwayDisabled}
-                  onValueChange={(value) => setPathwayCoordinationRisk(value as LeadCoordinationRiskKey)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {coordinationRiskOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <FieldLabel required={false}>Estado de metadata</FieldLabel>
-                <Select
-                  value={pathwayMetadataStatus}
-                  disabled={pathwayDisabled}
-                  onValueChange={(value) => setPathwayMetadataStatus(value as EventPathwayMetadataStatus)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {metadataStatusOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <FieldLabel htmlFor="pathway-notes" required={false}>Notas internas</FieldLabel>
-              <Textarea
-                id="pathway-notes"
-                value={pathwayNotes}
-                disabled={pathwayDisabled}
-                onChange={(event) => setPathwayNotes(event.target.value)}
-                placeholder="Contexto breve para el equipo. No escribas datos sensibles de estudiantes."
-                className="min-h-24 bg-muted/40"
-              />
+                onValueChange={(value) => setPathwayProofOutcome(value as LeadProofOutcomeKey)}
+              >
+                <SelectTrigger className={fieldErrors.pathway_proof_outcome ? 'border-destructive focus:ring-destructive' : ''}>
+                  <SelectValue placeholder="Selecciona que puede capturar" />
+                </SelectTrigger>
+                <SelectContent>
+                  {proofOutcomeOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {fieldErrors.pathway_proof_outcome && <div className="text-xs text-destructive">{fieldErrors.pathway_proof_outcome}</div>}
             </div>
           </div>
         </section>
@@ -1693,12 +1612,21 @@ export function EventForm({
                 </div>
               </li>
               <li className="flex items-start gap-3">
-                {!pathwayEligible || (pathwayPrimaryOkr && pathwayPillarKeys.length > 0 && pathwayStudentGoal && pathwayCtaType && pathwayRecommendationSafety)
+                {!pathwayEligible || (
+                  pathwayPrimaryOkr &&
+                  pathwayPillarKeys.length > 0 &&
+                  pathwayStudentGoal &&
+                  pathwayGrowthStageFit.length > 0 &&
+                  pathwayStudentOutcomes.length > 0 &&
+                  pathwayAudience &&
+                  pathwayCtaType &&
+                  pathwayProofOutcome
+                )
                   ? <Check className="w-5 h-5 text-success mt-0.5" />
                   : <div className="w-5 h-5 rounded-full border-2 mt-0.5" />}
                 <div>
-                  <div className="text-sm font-medium">Pathway revisado</div>
-                  <div className="text-xs text-muted-foreground">Solo se exige si marcas el evento como elegible</div>
+                  <div className="text-sm font-medium">Recomendacion revisada</div>
+                  <div className="text-xs text-muted-foreground">Solo se exige si permites recomendar este evento</div>
                 </div>
               </li>
             </ul>
@@ -1900,12 +1828,12 @@ export function EventForm({
                 {step === 4 && (
                   <>
                     <li className="space-y-1">
-                      <div className="text-sm font-semibold">Pathway opcional</div>
-                      <div className="text-xs leading-relaxed text-muted-foreground">Activalo solo si el evento tiene una accion y evidencia claras para estudiantes.</div>
+                      <div className="text-sm font-semibold">Recomendacion opcional</div>
+                      <div className="text-xs leading-relaxed text-muted-foreground">Activala solo si el evento tiene un beneficio y siguiente paso claros para estudiantes.</div>
                     </li>
                     <li className="space-y-1">
                       <div className="text-sm font-semibold">Postulacion clara</div>
-                      <div className="text-xs leading-relaxed text-muted-foreground">Si el evento requiere postulacion, Pathway debe pedir postular, no prometer cupo.</div>
+                      <div className="text-xs leading-relaxed text-muted-foreground">Si el evento requiere postulacion, el boton del estudiante debe pedir postular, no prometer cupo.</div>
                     </li>
                   </>
                 )}
