@@ -1383,7 +1383,10 @@ export function EventForm({
                   disabled={pathwayDisabled}
                   onValueChange={(value) => setPathwayPrimaryOkr(value as LeadOkrKey)}
                 >
-                  <SelectTrigger className={fieldErrors.pathway_primary_okr ? 'border-destructive focus:ring-destructive' : ''}>
+                  <SelectTrigger
+                    aria-label="OKR principal"
+                    className={fieldErrors.pathway_primary_okr ? 'border-destructive focus:ring-destructive' : ''}
+                  >
                     <SelectValue placeholder="Selecciona OKR" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1402,7 +1405,10 @@ export function EventForm({
                   disabled={pathwayDisabled}
                   onValueChange={(value) => setPathwayStudentGoal(value as PathwayPrimaryFocusKey)}
                 >
-                  <SelectTrigger className={fieldErrors.pathway_student_goal ? 'border-destructive focus:ring-destructive' : ''}>
+                  <SelectTrigger
+                    aria-label="Objetivo para el estudiante"
+                    className={fieldErrors.pathway_student_goal ? 'border-destructive focus:ring-destructive' : ''}
+                  >
                     <SelectValue placeholder="Selecciona objetivo" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1484,7 +1490,10 @@ export function EventForm({
                   disabled={pathwayDisabled}
                   onValueChange={(value) => setPathwayAudience(value as LeadEventAudienceKey)}
                 >
-                  <SelectTrigger className={fieldErrors.pathway_audience ? 'border-destructive focus:ring-destructive' : ''}>
+                  <SelectTrigger
+                    aria-label="Para quien es este evento"
+                    className={fieldErrors.pathway_audience ? 'border-destructive focus:ring-destructive' : ''}
+                  >
                     <SelectValue placeholder="Selecciona audiencia" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1503,7 +1512,10 @@ export function EventForm({
                   disabled={pathwayDisabled}
                   onValueChange={(value) => setPathwayCtaType(value as LeadRecommendationCtaType)}
                 >
-                  <SelectTrigger className={fieldErrors.pathway_cta_type ? 'border-destructive focus:ring-destructive' : ''}>
+                  <SelectTrigger
+                    aria-label="Boton que vera el estudiante"
+                    className={fieldErrors.pathway_cta_type ? 'border-destructive focus:ring-destructive' : ''}
+                  >
                     <SelectValue placeholder={accessModel === 'application' ? 'Postular' : 'Selecciona accion'} />
                   </SelectTrigger>
                   <SelectContent>
@@ -1523,7 +1535,10 @@ export function EventForm({
                 disabled={pathwayDisabled}
                 onValueChange={(value) => setPathwayProofOutcome(value as LeadProofOutcomeKey)}
               >
-                <SelectTrigger className={fieldErrors.pathway_proof_outcome ? 'border-destructive focus:ring-destructive' : ''}>
+                <SelectTrigger
+                  aria-label="Que puede capturar despues"
+                  className={fieldErrors.pathway_proof_outcome ? 'border-destructive focus:ring-destructive' : ''}
+                >
                   <SelectValue placeholder="Selecciona que puede capturar" />
                 </SelectTrigger>
                 <SelectContent>

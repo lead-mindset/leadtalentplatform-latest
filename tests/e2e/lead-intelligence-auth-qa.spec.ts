@@ -1,4 +1,5 @@
 import { expect, test, type Page, type TestInfo } from '@playwright/test'
+import { AxeBuilder } from '@axe-core/playwright'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -16,8 +17,14 @@ const PROFILE_RECOMMENDATION_ID = '91000000-0000-4000-8000-000000000257'
 const PROOF_RECOMMENDATION_ID = '91000000-0000-4000-8000-000000000258'
 const EVENT_CHAPTER_ID = '91000000-0000-4000-8000-000000000259'
 const PATHWAY_FLAG_ID = '91000000-0000-4000-8000-000000000260'
+const APPLICATION_QUESTION_ID = '91000000-0000-4000-8000-000000000261'
+const EDIT_EVENT_ID = '91000000-0000-4000-8000-000000000262'
+const EDIT_EVENT_CHAPTER_ID = '91000000-0000-4000-8000-000000000263'
+const OTHER_CHECK_IN_ID = '91000000-0000-4000-8000-000000000264'
+const OTHER_RECOMMENDATION_ID = '91000000-0000-4000-8000-000000000265'
 const EVENT_TITLE = 'QA Pathway Event: AI Career Sprint'
-const OUTPUT_DIR = path.join('outputs', 'issue-256-pathway-metadata-ui')
+const EDIT_EVENT_TITLE = 'QA Pathway Edit Metadata Event'
+const OUTPUT_DIR = path.join('outputs', 'pathway-comprehensive-userflow-qa')
 const INTERNAL_PATHWAY_LABELS = [
   'Seguridad de recomendacion',
   'Senales de evidencia',
@@ -129,6 +136,24 @@ function getAdminClient(): SupabaseAdmin {
   })
 }
 
+function getAnonClient(): SupabaseAdmin {
+  loadLocalEnv()
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !anonKey) {
+    throw new Error('Missing local Supabase anon credentials for lead intelligence QA setup.')
+  }
+
+  return createClient<Database>(supabaseUrl, anonKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  })
+}
+
 function assertNoDbError(result: { error: { message: string } | null }, context: string) {
   if (result.error) {
     throw new Error(`${context}: ${result.error.message}`)
@@ -159,6 +184,34 @@ async function capture(page: Page, testInfo: TestInfo, name: string) {
     path: outputPath,
     contentType: 'image/png',
   })
+}
+
+async function expectNoCriticalA11y(page: Page, testInfo: TestInfo, name: string) {
+  const results = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+    .analyze()
+  const critical = results.violations
+    .filter((violation) => violation.impact === 'critical')
+    .map((violation) => ({
+      id: violation.id,
+      help: violation.help,
+      nodes: violation.nodes.slice(0, 5).map((node) => ({
+        target: node.target,
+        html: node.html.replace(/\s+/g, ' ').slice(0, 240),
+      })),
+    }))
+
+  if (critical.length > 0) {
+    fs.mkdirSync(OUTPUT_DIR, { recursive: true })
+    const outputPath = path.join(OUTPUT_DIR, `${artifactName(name, testInfo.project.name)}.json`)
+    fs.writeFileSync(outputPath, `${JSON.stringify(critical, null, 2)}\n`)
+    await testInfo.attach(`${name} critical accessibility violations`, {
+      path: outputPath,
+      contentType: 'application/json',
+    })
+  }
+
+  expect(critical, `${name} critical accessibility violations`).toEqual([])
 }
 
 async function loginAs(page: Page, email: string) {
@@ -289,6 +342,85 @@ async function cleanupEventsByTitle(adminClient: SupabaseAdmin, title: string) {
   )
 }
 
+async function cleanupEventById(adminClient: SupabaseAdmin, eventId: string) {
+  const { data: registrations, error: registrationLoadError } = await adminClient
+    .from('event_registration')
+    .select('id')
+    .eq('event_id', eventId)
+
+  if (registrationLoadError) {
+    throw new Error(`load event registrations for cleanup: ${registrationLoadError.message}`)
+  }
+
+  const registrationIds = (registrations ?? []).map((registration) => registration.id)
+  if (registrationIds.length > 0) {
+    assertNoDbError(
+      await adminClient.from('event_application_answer').delete().in('registration_id', registrationIds),
+      'cleanup event application answers'
+    )
+  }
+  assertNoDbError(
+    await adminClient.from('event_application_question').delete().eq('event_id', eventId),
+    'cleanup event application questions'
+  )
+  assertNoDbError(
+    await adminClient.from('event_pathway_metadata').delete().eq('event_id', eventId),
+    'cleanup event pathway metadata by id'
+  )
+  assertNoDbError(
+    await adminClient.from('event_registration').delete().eq('event_id', eventId),
+    'cleanup event registrations by id'
+  )
+  assertNoDbError(
+    await adminClient.from('event_chapter').delete().eq('event_id', eventId),
+    'cleanup event chapters by id'
+  )
+  assertNoDbError(
+    await adminClient.from('event').delete().eq('id', eventId),
+    'cleanup event by id'
+  )
+}
+
+async function setPathwayFlags(
+  adminClient: SupabaseAdmin,
+  flags: {
+    enable_check_in?: boolean
+    enable_recommendation_card?: boolean
+    enable_growth_reflection?: boolean
+    enable_chapter_insights?: boolean
+  }
+) {
+  assertNoDbError(
+    await adminClient
+      .from('pathway_feature_flag')
+      .update({
+        ...flags,
+        updated_by_id: EBOARD_ID,
+      })
+      .eq('chapter_id', CHAPTER_ID),
+    'update pathway feature flags'
+  )
+}
+
+async function expectRecommendationStatus(
+  adminClient: SupabaseAdmin,
+  recommendationId: string,
+  status: string
+) {
+  await expect
+    .poll(async () => {
+      const { data, error } = await adminClient
+        .from('pathway_recommendation')
+        .select('status')
+        .eq('id', recommendationId)
+        .single()
+
+      if (error) throw new Error(`load recommendation ${recommendationId}: ${error.message}`)
+      return data.status
+    }, { timeout: 15_000 })
+    .toBe(status)
+}
+
 async function seedPathwayRecommendation(adminClient: SupabaseAdmin) {
   const recommendationIds = [
     EVENT_RECOMMENDATION_ID,
@@ -302,6 +434,22 @@ async function seedPathwayRecommendation(adminClient: SupabaseAdmin) {
     await adminClient.from('growth_reflection').delete().in('recommendation_id', recommendationIds),
     'cleanup growth reflections'
   )
+  const { data: qaRegistrations, error: qaRegistrationLoadError } = await adminClient
+    .from('event_registration')
+    .select('id')
+    .eq('event_id', EVENT_ID)
+
+  if (qaRegistrationLoadError) {
+    throw new Error(`load qa event registrations for cleanup: ${qaRegistrationLoadError.message}`)
+  }
+
+  const qaRegistrationIds = (qaRegistrations ?? []).map((registration) => registration.id)
+  if (qaRegistrationIds.length > 0) {
+    assertNoDbError(
+      await adminClient.from('event_application_answer').delete().in('registration_id', qaRegistrationIds),
+      'cleanup qa event application answers'
+    )
+  }
   assertNoDbError(
     await adminClient.from('pathway_recommendation').delete().in('id', recommendationIds),
     'cleanup pathway recommendations'
@@ -313,6 +461,10 @@ async function seedPathwayRecommendation(adminClient: SupabaseAdmin) {
   assertNoDbError(
     await adminClient.from('event_pathway_metadata').delete().eq('event_id', EVENT_ID),
     'cleanup event pathway metadata'
+  )
+  assertNoDbError(
+    await adminClient.from('event_application_question').delete().eq('event_id', EVENT_ID),
+    'cleanup event application questions'
   )
   assertNoDbError(
     await adminClient.from('event_registration').delete().eq('event_id', EVENT_ID),
@@ -441,6 +593,105 @@ async function seedPathwayRecommendation(adminClient: SupabaseAdmin) {
   )
 }
 
+async function seedEditablePathwayEvent(adminClient: SupabaseAdmin) {
+  const startAt = new Date(Date.now() + 9 * 24 * 60 * 60 * 1000)
+  const endAt = new Date(startAt.getTime() + 90 * 60 * 1000)
+
+  await cleanupEventById(adminClient, EDIT_EVENT_ID)
+
+  assertNoDbError(
+    await adminClient.from('event').insert({
+      id: EDIT_EVENT_ID,
+      title: EDIT_EVENT_TITLE,
+      description: 'Editable QA event for Pathway metadata reload coverage.',
+      chapter_id: CHAPTER_ID,
+      created_by_id: EBOARD_ID,
+      start_at: startAt.toISOString(),
+      end_at: endAt.toISOString(),
+      event_type: 'online',
+      meeting_url: 'https://example.com/lead-edit-pathway',
+      access_model: 'open',
+      is_published: false,
+    }),
+    'insert editable pathway event'
+  )
+  assertNoDbError(
+    await adminClient.from('event_chapter').insert({
+      id: EDIT_EVENT_CHAPTER_ID,
+      event_id: EDIT_EVENT_ID,
+      chapter_id: CHAPTER_ID,
+      added_by_id: EBOARD_ID,
+    }),
+    'insert editable pathway event chapter'
+  )
+  assertNoDbError(
+    await adminClient.from('event_pathway_metadata').insert({
+      event_id: EDIT_EVENT_ID,
+      is_pathway_eligible: true,
+      primary_okr: 'empower',
+      okr_alignment: ['empower'],
+      pillar_keys: ['professional_development'],
+      student_goal: 'opportunity_readiness',
+      growth_stage_fit: ['builder', 'candidate'],
+      student_outcomes: ['professional_readiness', 'proof_artifact'],
+      proof_outcome: 'reflection',
+      evidence_signals: ['event_registration', 'reflection_completed'],
+      audience: 'active_member',
+      cta_type: 'register',
+      recommendation_safety: 'recommend_only_if_event_active',
+      coordination_risk: 'low',
+      metadata_status: 'ready',
+      created_by_id: EBOARD_ID,
+      updated_by_id: EBOARD_ID,
+    }),
+    'insert editable pathway metadata'
+  )
+}
+
+async function switchSeedEventToApplication(adminClient: SupabaseAdmin) {
+  assertNoDbError(
+    await adminClient.from('event_registration').delete().eq('event_id', EVENT_ID),
+    'cleanup application-mode event registrations'
+  )
+  assertNoDbError(
+    await adminClient.from('event_application_question').delete().eq('event_id', EVENT_ID),
+    'cleanup application-mode questions'
+  )
+  assertNoDbError(
+    await adminClient
+      .from('event')
+      .update({
+        access_model: 'application',
+      })
+      .eq('id', EVENT_ID),
+    'switch qa event to application access'
+  )
+  assertNoDbError(
+    await adminClient.from('event_application_question').insert({
+      id: APPLICATION_QUESTION_ID,
+      event_id: EVENT_ID,
+      question_text: 'Why is this Pathway event a good next step for you?',
+      question_type: 'long_text',
+      is_required: true,
+      sort_order: 1,
+    }),
+    'insert application question for qa event'
+  )
+  assertNoDbError(
+    await adminClient
+      .from('pathway_recommendation')
+      .update({
+        cta_type: 'apply',
+        title: `Apply for ${EVENT_TITLE}`,
+        body: 'This event uses application access and must be framed as a postulation.',
+        evidence_signal: 'application_submitted',
+        status: 'active',
+      })
+      .eq('id', EVENT_RECOMMENDATION_ID),
+    'switch qa recommendation to application CTA'
+  )
+}
+
 async function resetMemberPathwayState(adminClient: SupabaseAdmin) {
   assertNoDbError(
     await adminClient.from('growth_reflection').delete().eq('user_id', MEMBER_ID),
@@ -453,6 +704,17 @@ async function resetMemberPathwayState(adminClient: SupabaseAdmin) {
   assertNoDbError(
     await adminClient.from('pathway_check_in').delete().eq('user_id', MEMBER_ID),
     'cleanup member pathway check-in'
+  )
+}
+
+async function cleanupCrossStudentRlsFixture(adminClient: SupabaseAdmin) {
+  assertNoDbError(
+    await adminClient.from('pathway_recommendation').delete().eq('id', OTHER_RECOMMENDATION_ID),
+    'cleanup cross-student recommendation fixture'
+  )
+  assertNoDbError(
+    await adminClient.from('pathway_check_in').delete().eq('id', OTHER_CHECK_IN_ID),
+    'cleanup cross-student check-in fixture'
   )
 }
 
@@ -472,6 +734,64 @@ test.describe('LEAD intelligence authenticated QA', () => {
     await loginAs(page, 'member@test.com')
     await expect(page).toHaveURL(/\/es\/student/)
     await capture(page, testInfo, 'member seeded login restored')
+  })
+
+  test('Pathway rollout flags hide student guidance and disable direct Check-In', async ({ page }, testInfo) => {
+    await seedPathwayRecommendation(admin)
+
+    try {
+      await setPathwayFlags(admin, {
+        enable_check_in: false,
+        enable_recommendation_card: false,
+        enable_growth_reflection: false,
+      })
+
+      await loginAs(page, 'member@test.com')
+      await page.goto('/es/student', { waitUntil: 'domcontentloaded' })
+      await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
+
+      await expect(page.getByText('Tus Next Three Moves')).toHaveCount(0)
+      await expect(page.getByText('Tus proximos pasos')).toHaveCount(0)
+      await capture(page, testInfo, 'pathway rollout disabled dashboard hidden')
+
+      await page.goto('/es/student/pathway-check-in', { waitUntil: 'domcontentloaded' })
+      await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
+      await expect(page.getByText('Check-In aun no disponible')).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Completar Check-In' })).toHaveCount(0)
+      await capture(page, testInfo, 'pathway rollout disabled check-in blocked')
+    } finally {
+      await seedPathwayRecommendation(admin)
+    }
+  })
+
+  test('student dashboard prompts Check-In before completion and completed state persists', async ({ page }, testInfo) => {
+    await resetMemberPathwayState(admin)
+
+    try {
+      await loginAs(page, 'member@test.com')
+      await page.goto('/es/student', { waitUntil: 'domcontentloaded' })
+      await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
+
+      await expect(page.getByText('Tus proximos pasos')).toBeVisible()
+      await expect(page.getByRole('link', { name: 'Empezar Check-In' })).toBeVisible()
+      await expect(page.getByText('Tus Next Three Moves')).toHaveCount(0)
+      await capture(page, testInfo, 'pathway dashboard no check-in prompt')
+
+      await page.goto('/es/student/pathway-check-in', { waitUntil: 'domcontentloaded' })
+      await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
+      await expect(page.getByRole('heading', { name: 'Pathway Check-In' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Completar Check-In' })).toBeVisible()
+      await capture(page, testInfo, 'pathway check-in form before completion')
+
+      await seedPathwayRecommendation(admin)
+      await page.goto('/es/student/pathway-check-in', { waitUntil: 'domcontentloaded' })
+      await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
+      await expect(page.getByText('Tu Check-In esta completo')).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Completar Check-In' })).toHaveCount(0)
+      await capture(page, testInfo, 'pathway check-in completed revisit state')
+    } finally {
+      await seedPathwayRecommendation(admin)
+    }
   })
 
   test('Pathway Check-In form completes and generates Next Three Moves', async ({ page }, testInfo) => {
@@ -527,6 +847,116 @@ test.describe('LEAD intelligence authenticated QA', () => {
       await capture(page, testInfo, 'pathway check-in completed generated recommendations')
     } finally {
       await seedPathwayRecommendation(admin)
+    }
+  })
+
+  test('RLS blocks cross-student Pathway recommendation reads and writes', async ({}, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop-chromium', 'DB-only RLS check runs once.')
+
+    await cleanupCrossStudentRlsFixture(admin)
+    const anon = getAnonClient()
+
+    try {
+      assertNoDbError(
+        await admin.from('pathway_check_in').insert({
+          id: OTHER_CHECK_IN_ID,
+          user_id: EBOARD_ID,
+          chapter_id: CHAPTER_ID,
+          status: 'completed',
+          looking_for: 'Private eboard fixture',
+          current_blocker: 'Private blocker',
+          study_interest: 'Private interest',
+          confidence_level: 3,
+          monthly_time_commitment: 'one_hour',
+          growth_stage: 'builder',
+          primary_focus: 'technical_experience',
+          submitted_at: new Date().toISOString(),
+        }),
+        'insert cross-student check-in fixture'
+      )
+      assertNoDbError(
+        await admin.from('pathway_recommendation').insert({
+          id: OTHER_RECOMMENDATION_ID,
+          check_in_id: OTHER_CHECK_IN_ID,
+          user_id: EBOARD_ID,
+          category: 'learn',
+          status: 'active',
+          title: 'Private recommendation',
+          body: 'Private recommendation body.',
+          reason: 'Private recommendation reason.',
+          sort_order: 1,
+          source_type: 'fixed_action',
+          source_event_id: null,
+          cta_type: 'attend',
+          evidence_signal: 'event_attendance',
+          matched_reasons: ['Private fixture'],
+        }),
+        'insert cross-student recommendation fixture'
+      )
+
+      const signIn = await anon.auth.signInWithPassword({
+        email: 'member@test.com',
+        password: PASSWORD,
+      })
+      expect(signIn.error).toBeNull()
+
+      const { data: hiddenRows, error: hiddenRowsError } = await anon
+        .from('pathway_recommendation')
+        .select('id')
+        .eq('id', OTHER_RECOMMENDATION_ID)
+
+      expect(hiddenRowsError).toBeNull()
+      expect(hiddenRows).toEqual([])
+
+      const crossUpdate = await anon
+        .from('pathway_recommendation')
+        .update({ status: 'dismissed' })
+        .eq('id', OTHER_RECOMMENDATION_ID)
+        .select('id, status')
+
+      expect(crossUpdate.error).toBeNull()
+      expect(crossUpdate.data).toEqual([])
+
+      const crossDelete = await anon
+        .from('pathway_recommendation')
+        .delete()
+        .eq('id', OTHER_RECOMMENDATION_ID)
+        .select('id')
+
+      expect(crossDelete.error).toBeNull()
+      expect(crossDelete.data).toEqual([])
+
+      const { data: untouchedRecommendation, error: untouchedRecommendationError } = await admin
+        .from('pathway_recommendation')
+        .select('status')
+        .eq('id', OTHER_RECOMMENDATION_ID)
+        .single()
+
+      if (untouchedRecommendationError) {
+        throw new Error(`load untouched recommendation fixture: ${untouchedRecommendationError.message}`)
+      }
+      expect(untouchedRecommendation.status).toBe('active')
+
+      const crossInsert = await anon.from('pathway_recommendation').insert({
+        check_in_id: OTHER_CHECK_IN_ID,
+        user_id: MEMBER_ID,
+        category: 'connect',
+        status: 'active',
+        title: 'Blocked cross-student insert',
+        body: 'This insert should be rejected by RLS.',
+        reason: 'The check-in belongs to a different user.',
+        sort_order: 2,
+        source_type: 'profile_action',
+        source_event_id: null,
+        cta_type: 'update_profile',
+        evidence_signal: 'profile_updated',
+        matched_reasons: ['Blocked fixture'],
+      })
+
+      expect(crossInsert.error?.message ?? '').toContain('row-level security')
+    } finally {
+      await anon.auth.signOut()
+      await cleanupCrossStudentRlsFixture(admin)
     }
   })
 
@@ -692,7 +1122,106 @@ test.describe('LEAD intelligence authenticated QA', () => {
     await capture(page, testInfo, 'chapter pathway application cta forced to apply')
   })
 
+  test('chapter edit form reloads and can disable existing Pathway metadata', async ({ page }, testInfo) => {
+    await seedEditablePathwayEvent(admin)
+
+    try {
+      await loginAs(page, 'eboard@test.com')
+      await page.goto(`/es/chapter/events/${EDIT_EVENT_ID}`, { waitUntil: 'domcontentloaded' })
+      await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
+
+      await expect(page.getByRole('heading', { name: 'Editar evento' })).toBeVisible()
+      await expect(page.getByText('Recomendar este evento a estudiantes')).toBeVisible()
+      await expect(page.getByRole('checkbox', { name: 'Permitir recomendacion en Pathway' })).toBeChecked()
+      await expect(page.getByText('Empower').first()).toBeVisible()
+      await expect(page.getByText('Preparacion para oportunidades').first()).toBeVisible()
+      await expect(page.getByText('Miembros activos').first()).toBeVisible()
+      await expect(page.getByText('Registrarse').first()).toBeVisible()
+      await expect(page.getByText('Growth Reflection').first()).toBeVisible()
+      await capture(page, testInfo, 'chapter edit pathway metadata reloaded')
+
+      await page.getByRole('checkbox', { name: 'Permitir recomendacion en Pathway' }).click()
+      await expect(page.getByText('Este evento no aparecera en recomendaciones de Pathway')).toBeVisible()
+      await page.getByRole('button', { name: 'Guardar borrador' }).click()
+
+      await expect
+        .poll(async () => {
+          const { data, error } = await admin
+            .from('event_pathway_metadata')
+            .select('is_pathway_eligible')
+            .eq('event_id', EDIT_EVENT_ID)
+            .single()
+
+          if (error) throw new Error(`load edit event metadata: ${error.message}`)
+          return data.is_pathway_eligible
+        }, { timeout: 30_000 })
+        .toBe(false)
+      await capture(page, testInfo, 'chapter edit pathway metadata disabled')
+    } finally {
+      await cleanupEventById(admin, EDIT_EVENT_ID)
+    }
+  })
+
+  test('student profile and proof recommendation CTAs mark started and route safely', async ({ page }, testInfo) => {
+    await seedPathwayRecommendation(admin)
+
+    try {
+      await loginAs(page, 'member@test.com')
+      await page.goto('/es/student', { waitUntil: 'domcontentloaded' })
+      await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
+
+      const profileCard = page
+        .getByRole('heading', { name: 'Refresh your LEAD profile' })
+        .locator('xpath=ancestor::*[contains(@class, "rounded-lg")][1]')
+      await profileCard.getByRole('button', { name: 'Actualizar perfil' }).click()
+      await page.waitForURL(/\/(?:es\/)?student\/profile/, { timeout: 60_000 })
+      await expectRecommendationStatus(admin, PROFILE_RECOMMENDATION_ID, 'started')
+      await capture(page, testInfo, 'student profile recommendation started')
+
+      await page.goto('/es/student', { waitUntil: 'domcontentloaded' })
+      await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
+      const proofCard = page
+        .getByRole('heading', { name: 'Capture one learning proof' })
+        .locator('xpath=ancestor::*[contains(@class, "rounded-lg")][1]')
+      await proofCard.getByRole('button', { name: 'Capturar aprendizaje' }).click()
+      await page.waitForURL(new RegExp(`/(?:es/)?student/growth-reflection.*recommendationId=${PROOF_RECOMMENDATION_ID}`), {
+        timeout: 60_000,
+      })
+      await expect(page.locator('input[name="recommendation_id"]')).toHaveValue(PROOF_RECOMMENDATION_ID)
+      await expectRecommendationStatus(admin, PROOF_RECOMMENDATION_ID, 'started')
+      await capture(page, testInfo, 'student proof recommendation started')
+    } finally {
+      await seedPathwayRecommendation(admin)
+    }
+  })
+
+  test('student can dismiss a recommendation and remove it from dashboard guidance', async ({ page }, testInfo) => {
+    await seedPathwayRecommendation(admin)
+
+    try {
+      await loginAs(page, 'member@test.com')
+      await page.goto('/es/student', { waitUntil: 'domcontentloaded' })
+      await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
+
+      const profileCard = page
+        .getByRole('heading', { name: 'Refresh your LEAD profile' })
+        .locator('xpath=ancestor::*[contains(@class, "rounded-lg")][1]')
+      await profileCard.getByRole('button', { name: 'No aplica' }).click()
+      await expectRecommendationStatus(admin, PROFILE_RECOMMENDATION_ID, 'dismissed')
+
+      await page.reload({ waitUntil: 'domcontentloaded' })
+      await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
+      await expect(page.getByText('Refresh your LEAD profile')).toHaveCount(0)
+      await expect(page.getByText(EVENT_TITLE)).toBeVisible()
+      await capture(page, testInfo, 'student recommendation dismissed')
+    } finally {
+      await seedPathwayRecommendation(admin)
+    }
+  })
+
   test('student dashboard renders event-backed recommendation CTAs', async ({ page }, testInfo) => {
+    await seedPathwayRecommendation(admin)
+
     await loginAs(page, 'member@test.com')
     await page.goto('/es/student', { waitUntil: 'domcontentloaded' })
     await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
@@ -717,6 +1246,61 @@ test.describe('LEAD intelligence authenticated QA', () => {
     if (error) throw new Error(`load recommendation after event CTA: ${error.message}`)
     expect(data.status).toBe('started')
     await capture(page, testInfo, 'student event recommendation cta starts recommendation')
+
+    await expect(page.getByRole('heading', { name: EVENT_TITLE })).toBeVisible()
+    await page.getByRole('button', { name: /^Registrarme$/ }).click()
+    await page.waitForURL(new RegExp(`/(?:es/)?student/events\\?event=${EVENT_ID}`), { timeout: 60_000 })
+
+    const { data: registration, error: registrationError } = await admin
+      .from('event_registration')
+      .select('status')
+      .eq('event_id', EVENT_ID)
+      .eq('user_id', MEMBER_ID)
+      .single()
+
+    if (registrationError) throw new Error(`load event registration after Pathway CTA: ${registrationError.message}`)
+    expect(registration.status).toBe('registered')
+    await capture(page, testInfo, 'student event recommendation completes registration')
+  })
+
+  test('application event recommendation uses postulation flow and pending-review state', async ({ page }, testInfo) => {
+    await seedPathwayRecommendation(admin)
+    await switchSeedEventToApplication(admin)
+
+    try {
+      await loginAs(page, 'member@test.com')
+      await page.goto('/es/student', { waitUntil: 'domcontentloaded' })
+      await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
+
+      await expect(page.getByRole('button', { name: 'Postular al evento' })).toBeVisible()
+      await page.getByRole('button', { name: 'Postular al evento' }).click()
+      await page.waitForURL(new RegExp(`/(?:es/)?events/${EVENT_ID}`), { timeout: 60_000 })
+      await expect(page.getByText('Envia tu postulacion y el equipo anfitrion revisara tus respuestas.')).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Postular ahora' })).toBeVisible()
+      await capture(page, testInfo, 'student application recommendation lands on postulation event')
+
+      await page.getByRole('button', { name: 'Postular ahora' }).click()
+      await expect(page.getByRole('dialog')).toBeVisible()
+      await page.getByRole('button', { name: 'Enviar postulacion' }).click()
+      await expect(page.getByText('Esta pregunta es obligatoria.')).toBeVisible()
+      await page.locator('textarea').fill('This event maps directly to my current Pathway next step.')
+      await page.getByRole('button', { name: 'Enviar postulacion' }).click()
+      await expect(page.getByText('Tu postulacion esta en revision.')).toBeVisible({ timeout: 60_000 })
+
+      const { data: registration, error: registrationError } = await admin
+        .from('event_registration')
+        .select('status')
+        .eq('event_id', EVENT_ID)
+        .eq('user_id', MEMBER_ID)
+        .single()
+
+      if (registrationError) throw new Error(`load application registration: ${registrationError.message}`)
+      expect(registration.status).toBe('pending_review')
+      await expectRecommendationStatus(admin, EVENT_RECOMMENDATION_ID, 'started')
+      await capture(page, testInfo, 'student application recommendation submitted pending review')
+    } finally {
+      await seedPathwayRecommendation(admin)
+    }
   })
 
   test('Growth Reflection carries event and recommendation context into proof capture', async ({ page }, testInfo) => {
@@ -752,5 +1336,34 @@ test.describe('LEAD intelligence authenticated QA', () => {
     if (error) throw new Error(`load recommendation after reflection: ${error.message}`)
     expect(data.status).toBe('completed')
     await capture(page, testInfo, 'growth reflection saved recommendation completed')
+  })
+
+  test('Pathway critical accessibility smoke passes on student and chapter surfaces', async ({ page }, testInfo) => {
+    await seedPathwayRecommendation(admin)
+
+    await loginAs(page, 'member@test.com')
+    await page.goto('/es/student', { waitUntil: 'domcontentloaded' })
+    await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
+    await expectNoCriticalA11y(page, testInfo, 'pathway student dashboard')
+
+    await page.goto('/es/student/pathway-check-in', { waitUntil: 'domcontentloaded' })
+    await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
+    await expectNoCriticalA11y(page, testInfo, 'pathway check-in completed')
+
+    const params = new URLSearchParams({
+      eventId: EVENT_ID,
+      eventTitle: EVENT_TITLE,
+      recommendationId: EVENT_RECOMMENDATION_ID,
+      recommendationTitle: EVENT_TITLE,
+    })
+    await page.goto(`/es/student/growth-reflection?${params.toString()}`, { waitUntil: 'domcontentloaded' })
+    await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
+    await expectNoCriticalA11y(page, testInfo, 'pathway growth reflection')
+
+    await page.context().clearCookies()
+    await loginAs(page, 'eboard@test.com')
+    await openNewEventPathwayStep(page, `QA Pathway A11y ${testInfo.project.name}`)
+    await expectNoCriticalA11y(page, testInfo, 'chapter pathway metadata step')
+    await capture(page, testInfo, 'pathway critical accessibility smoke')
   })
 })
