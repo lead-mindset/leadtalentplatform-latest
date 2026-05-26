@@ -441,6 +441,21 @@ async function seedPathwayRecommendation(adminClient: SupabaseAdmin) {
   )
 }
 
+async function resetMemberPathwayState(adminClient: SupabaseAdmin) {
+  assertNoDbError(
+    await adminClient.from('growth_reflection').delete().eq('user_id', MEMBER_ID),
+    'cleanup member growth reflections'
+  )
+  assertNoDbError(
+    await adminClient.from('pathway_recommendation').delete().eq('user_id', MEMBER_ID),
+    'cleanup member pathway recommendations'
+  )
+  assertNoDbError(
+    await adminClient.from('pathway_check_in').delete().eq('user_id', MEMBER_ID),
+    'cleanup member pathway check-in'
+  )
+}
+
 test.beforeAll(async () => {
   admin = getAdminClient()
   await seedPathwayRecommendation(admin)
@@ -457,6 +472,62 @@ test.describe('LEAD intelligence authenticated QA', () => {
     await loginAs(page, 'member@test.com')
     await expect(page).toHaveURL(/\/es\/student/)
     await capture(page, testInfo, 'member seeded login restored')
+  })
+
+  test('Pathway Check-In form completes and generates Next Three Moves', async ({ page }, testInfo) => {
+    await resetMemberPathwayState(admin)
+
+    try {
+      await loginAs(page, 'member@test.com')
+      await page.goto('/es/student/pathway-check-in', { waitUntil: 'domcontentloaded' })
+      await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
+
+      await expect(page.getByRole('heading', { name: 'Pathway Check-In' })).toBeVisible()
+      await page.locator('label').filter({ hasText: 'Prepararme para oportunidades' }).click()
+      await page.locator('label').filter({ hasText: 'Necesito preparacion profesional' }).click()
+      await page.locator('input[name="study_interest"]').fill('AI product systems')
+      await page.locator('label').filter({ hasText: /^4$/ }).click()
+      await page.locator('label').filter({ hasText: '2 a 4 horas al mes' }).click()
+      await page.getByRole('button', { name: 'Completar Check-In' }).click()
+      await page.waitForURL(/\/es\/student\/pathway-check-in\?completed=1/, { timeout: 60_000 })
+
+      await expect(page.getByText('Tu Check-In esta completo')).toBeVisible()
+      const { data: checkIn, error: checkInError } = await admin
+        .from('pathway_check_in')
+        .select('id,status,growth_stage,primary_focus')
+        .eq('user_id', MEMBER_ID)
+        .single()
+
+      if (checkInError) throw new Error(`load generated pathway check-in: ${checkInError.message}`)
+      expect(checkIn.status).toBe('completed')
+      expect(checkIn.growth_stage).toBe('candidate')
+      expect(checkIn.primary_focus).toBe('opportunity_readiness')
+
+      const { data: recommendations, error: recommendationError } = await admin
+        .from('pathway_recommendation')
+        .select('id,category,status')
+        .eq('check_in_id', checkIn.id)
+        .order('sort_order')
+
+      if (recommendationError) {
+        throw new Error(`load generated pathway recommendations: ${recommendationError.message}`)
+      }
+
+      expect(recommendations).toHaveLength(3)
+      expect(recommendations?.map((recommendation) => recommendation.category)).toEqual([
+        'learn',
+        'connect',
+        'prove',
+      ])
+      expect(recommendations?.map((recommendation) => recommendation.status)).toEqual([
+        'active',
+        'active',
+        'active',
+      ])
+      await capture(page, testInfo, 'pathway check-in completed generated recommendations')
+    } finally {
+      await seedPathwayRecommendation(admin)
+    }
   })
 
   test('chapter event Pathway metadata section validates required fields only when eligibility is enabled', async ({ page }, testInfo) => {
@@ -633,6 +704,19 @@ test.describe('LEAD intelligence authenticated QA', () => {
     await expect(page.getByRole('button', { name: 'Capturar aprendizaje' }).first()).toBeVisible()
     await expect(page.getByRole('button', { name: 'Actualizar perfil' })).toBeVisible()
     await capture(page, testInfo, 'student recommendation ctas')
+
+    await page.getByRole('button', { name: 'Registrarme al evento' }).click()
+    await page.waitForURL(new RegExp(`/(?:es/)?events/${EVENT_ID}`), { timeout: 60_000 })
+
+    const { data, error } = await admin
+      .from('pathway_recommendation')
+      .select('status')
+      .eq('id', EVENT_RECOMMENDATION_ID)
+      .single()
+
+    if (error) throw new Error(`load recommendation after event CTA: ${error.message}`)
+    expect(data.status).toBe('started')
+    await capture(page, testInfo, 'student event recommendation cta starts recommendation')
   })
 
   test('Growth Reflection carries event and recommendation context into proof capture', async ({ page }, testInfo) => {

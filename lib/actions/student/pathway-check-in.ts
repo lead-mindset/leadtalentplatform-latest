@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { isRedirectError } from 'next/dist/client/components/redirect-error'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
@@ -57,6 +58,8 @@ export async function submitPathwayCheckIn(formData: FormData): Promise<void> {
 
     if (!result.success) redirect(`/${locale}/student/pathway-check-in?error=save`)
   } catch (error) {
+    if (isRedirectError(error)) throw error
+
     console.error('Pathway check-in submission error:', error)
     redirect(`/${locale}/student/pathway-check-in?error=server`)
   }
