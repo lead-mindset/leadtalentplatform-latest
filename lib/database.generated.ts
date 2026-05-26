@@ -807,6 +807,111 @@ export type Database = {
           },
         ]
       }
+      event_pathway_metadata: {
+        Row: {
+          audience: string | null
+          coordination_risk: string
+          created_at: string
+          created_by_id: string | null
+          cta_type: string | null
+          event_id: string
+          evidence_signals: string[]
+          growth_stage_fit: string[]
+          is_pathway_eligible: boolean
+          metadata_status: string
+          notes: string | null
+          okr_alignment: string[]
+          pillar_keys: string[]
+          primary_okr: string | null
+          proof_outcome: string | null
+          recommendation_safety: string
+          student_goal: string | null
+          student_outcomes: string[]
+          updated_at: string
+          updated_by_id: string | null
+        }
+        Insert: {
+          audience?: string | null
+          coordination_risk?: string
+          created_at?: string
+          created_by_id?: string | null
+          cta_type?: string | null
+          event_id: string
+          evidence_signals?: string[]
+          growth_stage_fit?: string[]
+          is_pathway_eligible?: boolean
+          metadata_status?: string
+          notes?: string | null
+          okr_alignment?: string[]
+          pillar_keys?: string[]
+          primary_okr?: string | null
+          proof_outcome?: string | null
+          recommendation_safety?: string
+          student_goal?: string | null
+          student_outcomes?: string[]
+          updated_at?: string
+          updated_by_id?: string | null
+        }
+        Update: {
+          audience?: string | null
+          coordination_risk?: string
+          created_at?: string
+          created_by_id?: string | null
+          cta_type?: string | null
+          event_id?: string
+          evidence_signals?: string[]
+          growth_stage_fit?: string[]
+          is_pathway_eligible?: boolean
+          metadata_status?: string
+          notes?: string | null
+          okr_alignment?: string[]
+          pillar_keys?: string[]
+          primary_okr?: string | null
+          proof_outcome?: string | null
+          recommendation_safety?: string
+          student_goal?: string | null
+          student_outcomes?: string[]
+          updated_at?: string
+          updated_by_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_pathway_metadata_created_by_id_fkey"
+            columns: ["created_by_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_pathway_metadata_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "event"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_pathway_metadata_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "event_with_chapter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_pathway_metadata_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "published_event_listing"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_pathway_metadata_updated_by_id_fkey"
+            columns: ["updated_by_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       funding_request: {
         Row: {
           accountability_due_at: string | null
@@ -1426,9 +1531,14 @@ export type Database = {
           category: string
           check_in_id: string
           created_at: string
+          cta_type: string | null
+          evidence_signal: string | null
           id: string
+          matched_reasons: Json
           reason: string
           sort_order: number
+          source_event_id: string | null
+          source_type: string
           status: string
           title: string
           updated_at: string
@@ -1439,9 +1549,14 @@ export type Database = {
           category: string
           check_in_id: string
           created_at?: string
+          cta_type?: string | null
+          evidence_signal?: string | null
           id?: string
+          matched_reasons?: Json
           reason: string
           sort_order: number
+          source_event_id?: string | null
+          source_type?: string
           status?: string
           title: string
           updated_at?: string
@@ -1452,9 +1567,14 @@ export type Database = {
           category?: string
           check_in_id?: string
           created_at?: string
+          cta_type?: string | null
+          evidence_signal?: string | null
           id?: string
+          matched_reasons?: Json
           reason?: string
           sort_order?: number
+          source_event_id?: string | null
+          source_type?: string
           status?: string
           title?: string
           updated_at?: string
@@ -1466,6 +1586,27 @@ export type Database = {
             columns: ["check_in_id"]
             isOneToOne: false
             referencedRelation: "pathway_check_in"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pathway_recommendation_source_event_id_fkey"
+            columns: ["source_event_id"]
+            isOneToOne: false
+            referencedRelation: "event"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pathway_recommendation_source_event_id_fkey"
+            columns: ["source_event_id"]
+            isOneToOne: false
+            referencedRelation: "event_with_chapter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pathway_recommendation_source_event_id_fkey"
+            columns: ["source_event_id"]
+            isOneToOne: false
+            referencedRelation: "published_event_listing"
             referencedColumns: ["id"]
           },
           {

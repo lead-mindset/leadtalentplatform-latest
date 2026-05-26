@@ -52,6 +52,29 @@ export const GrowthReflectionService = {
       return { success: false, error: 'Unable to create growth reflection' }
     }
 
+    if (params.status === 'completed' && params.data.recommendation_id) {
+      const { error: recommendationError } = await supabase
+        .from('pathway_recommendation')
+        .update({
+          status: 'completed',
+          updated_at: now,
+        })
+        .eq('id', params.data.recommendation_id)
+        .eq('user_id', params.userId)
+
+      if (recommendationError) {
+        logger.error(
+          {
+            context: 'GrowthReflectionService.createReflection.recommendationUpdate',
+            userId: params.userId,
+            recommendationId: params.data.recommendation_id,
+            error: recommendationError,
+          },
+          'Failed to complete linked pathway recommendation'
+        )
+      }
+    }
+
     return { success: true }
   },
 

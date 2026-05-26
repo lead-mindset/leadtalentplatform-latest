@@ -69,13 +69,30 @@ function createSaveMock(params?: {
     eq: vi.fn(async () => ({ error: params?.deleteError ?? null })),
     insert: vi.fn(async () => ({ error: params?.insertError ?? null })),
   }
-  const from = vi.fn((table: string) =>
-    table === 'pathway_check_in' ? checkInBuilder : recommendationBuilder
-  )
+  const metadataBuilder = {
+    select: vi.fn(() => metadataBuilder),
+    eq: vi.fn(() => metadataBuilder),
+    in: vi.fn(async () => ({ data: [], error: null })),
+  }
+  const eventBuilder = {
+    select: vi.fn(() => eventBuilder),
+    in: vi.fn(() => eventBuilder),
+    eq: vi.fn(() => eventBuilder),
+    gte: vi.fn(() => eventBuilder),
+    order: vi.fn(async () => ({ data: [], error: null })),
+  }
+  const from = vi.fn((table: string) => {
+    if (table === 'pathway_check_in') return checkInBuilder
+    if (table === 'event_pathway_metadata') return metadataBuilder
+    if (table === 'event') return eventBuilder
+    return recommendationBuilder
+  })
   return {
     supabase: { from } as unknown as SupabaseClient<Database>,
     checkInBuilder,
     recommendationBuilder,
+    metadataBuilder,
+    eventBuilder,
   }
 }
 
@@ -224,9 +241,24 @@ describe('PathwayCheckInService', () => {
     expect(recommendationBuilder.delete).toHaveBeenCalled()
     expect(recommendationBuilder.eq).toHaveBeenCalledWith('check_in_id', 'check-in-1')
     expect(recommendationBuilder.insert).toHaveBeenCalledWith([
-      expect.objectContaining({ category: 'learn', status: 'active', sort_order: 1 }),
-      expect.objectContaining({ category: 'connect', status: 'active', sort_order: 2 }),
-      expect.objectContaining({ category: 'prove', status: 'active', sort_order: 3 }),
+      expect.objectContaining({
+        category: 'learn',
+        status: 'active',
+        sort_order: 1,
+        source_type: 'fixed_action',
+      }),
+      expect.objectContaining({
+        category: 'connect',
+        status: 'active',
+        sort_order: 2,
+        source_type: 'profile_action',
+      }),
+      expect.objectContaining({
+        category: 'prove',
+        status: 'active',
+        sort_order: 3,
+        source_type: 'proof_action',
+      }),
     ])
     vi.useRealTimers()
   })
@@ -271,6 +303,12 @@ describe('PathwayCheckInService', () => {
       'prove',
     ])
     expect(recommendations.every((recommendation) => recommendation.reason.length > 20)).toBe(true)
+    expect(recommendations.map((recommendation) => recommendation.title)).not.toContain(
+      'Ask for one chapter touchpoint'
+    )
+    expect(recommendations.map((recommendation) => recommendation.body).join(' ')).not.toContain(
+      'chapter leader'
+    )
   })
 
   it('returns an error when recommendations cannot be saved', async () => {

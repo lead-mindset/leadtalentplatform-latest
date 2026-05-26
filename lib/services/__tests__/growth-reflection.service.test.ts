@@ -30,6 +30,28 @@ function createSelectMock(result: { data: unknown[] | null; error: unknown }) {
   }
 }
 
+function createInsertAndRecommendationUpdateMock(
+  insertResult: { error: unknown },
+  updateResult: { error: unknown }
+) {
+  const insertBuilder = {
+    insert: vi.fn(async () => insertResult),
+  }
+  const updateBuilder = {
+    update: vi.fn(() => updateBuilder),
+    eq: vi.fn(),
+  }
+  updateBuilder.eq.mockReturnValueOnce(updateBuilder).mockResolvedValueOnce(updateResult)
+
+  return {
+    supabase: {
+      from: vi.fn((table: string) => table === 'growth_reflection' ? insertBuilder : updateBuilder),
+    } as unknown as SupabaseClient<Database>,
+    insertBuilder,
+    updateBuilder,
+  }
+}
+
 const reflectionData = {
   participated_in: 'AI workshop',
   learned: 'How to frame an AI product problem',
@@ -106,6 +128,35 @@ describe('GrowthReflectionService', () => {
         visibility: 'private',
       })
     )
+  })
+
+  it('completes the linked recommendation when proof is completed', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-05-11T12:30:00Z'))
+    const { supabase, updateBuilder } = createInsertAndRecommendationUpdateMock(
+      { error: null },
+      { error: null }
+    )
+
+    await expect(
+      GrowthReflectionService.createReflection(supabase, {
+        userId: 'user-1',
+        status: 'completed',
+        data: {
+          ...reflectionData,
+          event_id: 'event-1',
+          recommendation_id: 'recommendation-1',
+        },
+      })
+    ).resolves.toEqual({ success: true })
+
+    expect(updateBuilder.update).toHaveBeenCalledWith({
+      status: 'completed',
+      updated_at: '2026-05-11T12:30:00.000Z',
+    })
+    expect(updateBuilder.eq).toHaveBeenNthCalledWith(1, 'id', 'recommendation-1')
+    expect(updateBuilder.eq).toHaveBeenNthCalledWith(2, 'user_id', 'user-1')
+    vi.useRealTimers()
   })
 
   it('returns an error when the reflection cannot be created', async () => {
