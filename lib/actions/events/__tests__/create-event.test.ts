@@ -3,6 +3,7 @@ import { createEvent } from '../create-event'
 import { requireChapterEditor } from '@/lib/auth'
 import { ChapterPermissionService } from '@/lib/services/chapter-permission.service'
 import { EventApplicationService } from '@/lib/services/event-application.service'
+import { EventPathwayMetadataService } from '@/lib/services/event-pathway-metadata.service'
 import { EventService } from '@/lib/services/event.service'
 
 vi.mock('next/cache', () => ({
@@ -34,6 +35,12 @@ vi.mock('@/lib/services/event-application.service', () => ({
   },
 }))
 
+vi.mock('@/lib/services/event-pathway-metadata.service', () => ({
+  EventPathwayMetadataService: {
+    upsertForEvent: vi.fn(),
+  },
+}))
+
 const baseInput = {
   title: 'Draft event',
   startAt: '2026-06-01T15:00',
@@ -58,6 +65,10 @@ describe('createEvent', () => {
       is_published: false,
     } as never)
     vi.mocked(EventApplicationService.upsertQuestionsForEvent).mockResolvedValue({ success: true })
+    vi.mocked(EventPathwayMetadataService.upsertForEvent).mockResolvedValue({
+      success: true,
+      data: { event_id: 'event-1' },
+    } as never)
   })
 
   it('allows application events to be saved as drafts before questions are complete', async () => {
@@ -76,6 +87,7 @@ describe('createEvent', () => {
       questions: [],
       requireCompleteQuestions: false,
     })
+    expect(EventPathwayMetadataService.upsertForEvent).not.toHaveBeenCalled()
   })
 
   it('blocks publishing an application event without at least one question', async () => {
@@ -87,5 +99,68 @@ describe('createEvent', () => {
 
     expect(result).toEqual({ error: 'Validation failed' })
     expect(EventService.createEvent).not.toHaveBeenCalled()
+  })
+
+  it('persists Pathway metadata when provided', async () => {
+    const result = await createEvent({
+      ...baseInput,
+      accessModel: 'open',
+      isPublished: false,
+      pathwayMetadata: {
+        isPathwayEligible: true,
+        primaryOkr: 'empower',
+        pillarKeys: ['professional_development'],
+        studentGoal: 'opportunity_readiness',
+        growthStageFit: ['candidate'],
+        studentOutcomes: ['professional_readiness'],
+        proofOutcome: 'reflection',
+        evidenceSignals: ['event_registration'],
+        audience: 'active_member',
+        ctaType: 'register',
+        recommendationSafety: 'manual_review',
+      },
+    })
+
+    expect(result).toEqual({
+      success: true,
+      event: expect.objectContaining({ id: 'event-1' }),
+    })
+    expect(EventPathwayMetadataService.upsertForEvent).toHaveBeenCalledWith({}, expect.objectContaining({
+      eventId: 'event-1',
+      actorUserId: 'eboard-1',
+      isPathwayEligible: true,
+      primaryOkr: 'empower',
+      pillarKeys: ['professional_development'],
+    }))
+  })
+
+  it('removes the created event if Pathway metadata cannot be saved', async () => {
+    vi.mocked(EventPathwayMetadataService.upsertForEvent).mockResolvedValueOnce({
+      success: false,
+      error: 'Recommendation safety is required when Pathway eligibility is enabled.',
+    })
+
+    const result = await createEvent({
+      ...baseInput,
+      accessModel: 'open',
+      isPublished: false,
+      pathwayMetadata: {
+        isPathwayEligible: true,
+        primaryOkr: 'empower',
+        pillarKeys: ['professional_development'],
+        studentGoal: 'opportunity_readiness',
+        growthStageFit: ['candidate'],
+        studentOutcomes: ['professional_readiness'],
+        proofOutcome: 'reflection',
+        evidenceSignals: ['event_registration'],
+        audience: 'active_member',
+        ctaType: 'register',
+      },
+    })
+
+    expect(result).toEqual({
+      error: 'Recommendation safety is required when Pathway eligibility is enabled.',
+    })
+    expect(EventService.deleteEvent).toHaveBeenCalledWith({}, 'event-1')
   })
 })

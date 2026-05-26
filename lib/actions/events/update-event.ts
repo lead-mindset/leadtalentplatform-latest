@@ -4,9 +4,14 @@ import { z } from 'zod'
 import { revalidatePath, revalidateTag } from 'next/cache'
 import { EventService } from '@/lib/services/event.service'
 import { EventApplicationService } from '@/lib/services/event-application.service'
+import { EventPathwayMetadataService } from '@/lib/services/event-pathway-metadata.service'
 import { PUBLIC_EVENTS_CACHE_TAG } from '@/lib/data/public-events'
 import type { EventRow, EventType } from '@/lib/types'
 import { assertCanManageEvent } from './access'
+import {
+  EventPathwayMetadataActionSchema,
+  toEventPathwayMetadataInput,
+} from './pathway-metadata-input'
 
 const ApplicationQuestionSchema = z.object({
   id: z.string().uuid().optional(),
@@ -38,6 +43,7 @@ const UpdateEventSchema = z.object({
   locationRegion: z.string().nullable().optional(),
   locationLatitude: z.number().nullable().optional(),
   locationLongitude: z.number().nullable().optional(),
+  pathwayMetadata: EventPathwayMetadataActionSchema.optional(),
 }).refine(
   (data) => {
     if (data.isPublished === true && data.accessModel === 'application') {
@@ -81,6 +87,16 @@ export async function updateEvent(input: UpdateEventInput): Promise<UpdateEventR
   }
 
   const d = parsed.data
+  const pathwayMetadataInput = toEventPathwayMetadataInput({
+    payload: d.pathwayMetadata,
+    eventId: existing.id,
+    actorUserId: user.id,
+  })
+  if (pathwayMetadataInput) {
+    const validation = EventPathwayMetadataService.validate(pathwayMetadataInput)
+    if (!validation.valid) return { error: validation.errors.join(' ') }
+  }
+
   const event = await EventService.updateEvent(supabase, existing.id, {
     title: d.title,
     description: d.description,
@@ -116,6 +132,15 @@ export async function updateEvent(input: UpdateEventInput): Promise<UpdateEventR
     })
 
     if (!questionsResult.success) return { error: questionsResult.error }
+  }
+
+  if (pathwayMetadataInput) {
+    const metadataResult = await EventPathwayMetadataService.upsertForEvent(
+      supabase,
+      pathwayMetadataInput
+    )
+
+    if (!metadataResult.success) return { error: metadataResult.error }
   }
 
   revalidateTag(PUBLIC_EVENTS_CACHE_TAG, { expire: 0 })

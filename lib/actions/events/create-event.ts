@@ -5,9 +5,14 @@ import { revalidatePath, revalidateTag } from 'next/cache';
 import { requireChapterEditor } from '@/lib/auth';
 import { EventService } from '@/lib/services/event.service';
 import { EventApplicationService } from '@/lib/services/event-application.service';
+import { EventPathwayMetadataService } from '@/lib/services/event-pathway-metadata.service';
 import { ChapterPermissionService } from '@/lib/services/chapter-permission.service';
 import { PUBLIC_EVENTS_CACHE_TAG } from '@/lib/data/public-events';
 import type { EventRow } from '@/lib/types';
+import {
+  EventPathwayMetadataActionSchema,
+  toEventPathwayMetadataInput,
+} from './pathway-metadata-input';
 
 const ApplicationQuestionSchema = z.object({
   id: z.string().uuid().optional(),
@@ -39,6 +44,7 @@ const EventInputSchema = z
     locationRegion: z.string().optional(),
     locationLatitude: z.number().optional().nullable(),
     locationLongitude: z.number().optional().nullable(),
+    pathwayMetadata: EventPathwayMetadataActionSchema.optional(),
   })
   .refine(
     (data) => {
@@ -124,6 +130,24 @@ export async function createEvent(input: CreateEventInput): Promise<CreateEventR
       if (!questionsResult.success) {
         await EventService.deleteEvent(supabase, event.id);
         return { error: questionsResult.error };
+      }
+    }
+
+    const pathwayMetadataInput = toEventPathwayMetadataInput({
+      payload: data.pathwayMetadata,
+      eventId: event.id,
+      actorUserId: user.id,
+    });
+
+    if (pathwayMetadataInput) {
+      const metadataResult = await EventPathwayMetadataService.upsertForEvent(
+        supabase,
+        pathwayMetadataInput
+      );
+
+      if (!metadataResult.success) {
+        await EventService.deleteEvent(supabase, event.id);
+        return { error: metadataResult.error };
       }
     }
 

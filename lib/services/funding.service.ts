@@ -1,5 +1,11 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/database.generated'
+import {
+  LEAD_OKR_KEYS,
+  LEAD_PILLAR_KEYS,
+  type LeadOkrKey,
+  type LeadPillarKey,
+} from '@/lib/lead-taxonomy'
 import { logger } from '@/lib/logger'
 import { ChapterPermissionService } from '@/lib/services/chapter-permission.service'
 
@@ -13,17 +19,9 @@ export const FUNDING_REQUEST_STATUSES = [
   'closed',
 ] as const
 
-export const FUNDING_OKR_KEYS = ['inspire', 'unite', 'empower', 'elevate'] as const
+export const FUNDING_OKR_KEYS = LEAD_OKR_KEYS
 
-export const FUNDING_PILLAR_KEYS = [
-  'lead_academia',
-  'academic_excellence',
-  'womens_excellence',
-  'professional_development',
-  'leadership_development',
-  'community_outreach',
-  'chapter_development',
-] as const
+export const FUNDING_PILLAR_KEYS = LEAD_PILLAR_KEYS
 
 export const FUNDING_BUDGET_CATEGORIES = [
   'food_refreshments',
@@ -48,8 +46,8 @@ export const FUNDING_SOURCE_KEYS = [
 export const FUNDING_FILE_TYPES = ['supporting_material', 'receipt', 'evidence'] as const
 
 export type FundingRequestStatus = (typeof FUNDING_REQUEST_STATUSES)[number]
-export type FundingOkrKey = (typeof FUNDING_OKR_KEYS)[number]
-export type FundingPillarKey = (typeof FUNDING_PILLAR_KEYS)[number]
+export type FundingOkrKey = LeadOkrKey
+export type FundingPillarKey = LeadPillarKey
 export type FundingBudgetCategory = (typeof FUNDING_BUDGET_CATEGORIES)[number]
 export type FundingSourceKey = (typeof FUNDING_SOURCE_KEYS)[number]
 export type FundingFileType = (typeof FUNDING_FILE_TYPES)[number]

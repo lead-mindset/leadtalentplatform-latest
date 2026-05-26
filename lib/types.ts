@@ -130,6 +130,9 @@ export type SavedStudentRow = Database["public"]["Tables"]["saved_student"]["Row
 export type EventRow = Database["public"]["Tables"]["event"]["Row"];
 
 export type EventChapterRow = Database["public"]["Tables"]["event_chapter"]["Row"];
+export type EventPathwayMetadataRow = Database["public"]["Tables"]["event_pathway_metadata"]["Row"];
+export type EventPathwayMetadataInsert = Database["public"]["Tables"]["event_pathway_metadata"]["Insert"];
+export type EventPathwayMetadataUpdate = Database["public"]["Tables"]["event_pathway_metadata"]["Update"];
 
 export type EventChapterInsert = Omit<EventChapterRow, 'id' | 'added_at'>;
 
