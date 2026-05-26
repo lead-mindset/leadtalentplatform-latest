@@ -108,7 +108,7 @@ function getRegistrationMessage(registration: RegistrationWithEvent, qrDataUrl: 
     return qrDataUrl
       ? {
           title: 'Codigo listo',
-          body: 'Muestra este codigo al llegar. Mantén el brillo alto para facilitar el check-in.',
+          body: 'Muestra este codigo al llegar.',
           variant: 'success' as const,
         }
       : {
@@ -226,7 +226,6 @@ function EventRegistrationCard({
         {canShowQr && qrDataUrl ? (
           <div className="space-y-3">
             <QrPanel qrDataUrl={qrDataUrl} />
-            <EventDayGuidance compact />
             {calendarEvent ? <EventCalendarActions event={calendarEvent} layout="stack" /> : null}
           </div>
         ) : null}
@@ -346,45 +345,21 @@ function CurrentTicket({
         </div>
       </CardHeader>
 
-      <CardContent className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
-        <div className="space-y-5">
-          <EventMeta registration={registration} />
+      <CardContent className="space-y-5">
+        <EventMeta registration={registration} />
 
-          <div className="rounded-lg border border-border bg-muted/30 p-4">
-            <div className="flex items-start gap-3">
-              <Badge variant={message.variant} size="sm" className="mt-0.5 shrink-0">
-                {message.title}
-              </Badge>
-              <p className="text-sm leading-6 text-muted-foreground">{message.body}</p>
-            </div>
-          </div>
-
-          {calendarEvent ? (
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-foreground">Agendalo antes de cerrar esta pagina</p>
-              <EventCalendarActions event={calendarEvent} />
-            </div>
-          ) : null}
-
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <Button asChild className="w-full sm:w-auto">
-              <Link href={`/events/${registration.event_id}`}>Ver detalle</Link>
-            </Button>
-            {canCancel ? (
-              <CancelRegistrationDialog
-                registrationId={registration.id}
-                eventId={registration.event_id}
-                eventTitle={registration.event?.title ?? 'this event'}
-                triggerClassName="w-full sm:w-auto"
-              />
-            ) : null}
+        <div className="rounded-lg border border-border bg-muted/30 p-4">
+          <div className="flex items-start gap-3">
+            <Badge variant={message.variant} size="sm" className="mt-0.5 shrink-0">
+              {message.title}
+            </Badge>
+            <p className="text-sm leading-6 text-muted-foreground">{message.body}</p>
           </div>
         </div>
 
         {qrDataUrl ? (
-          <div className="space-y-3">
+          <div className="max-w-80">
             <QrPanel qrDataUrl={qrDataUrl} />
-            <EventDayGuidance compact />
           </div>
         ) : (
           <div className="flex min-h-64 flex-col items-center justify-center rounded-lg border border-dashed border-border bg-muted/30 p-6 text-center">
@@ -395,6 +370,27 @@ function CurrentTicket({
             </p>
           </div>
         )}
+
+        {calendarEvent ? (
+          <div className="space-y-2">
+            <p className="text-sm font-semibold text-foreground">Agendalo antes de cerrar esta pagina</p>
+            <EventCalendarActions event={calendarEvent} />
+          </div>
+        ) : null}
+
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button asChild className="w-full sm:w-auto">
+            <Link href={`/events/${registration.event_id}`}>Ver detalle</Link>
+          </Button>
+          {canCancel ? (
+            <CancelRegistrationDialog
+              registrationId={registration.id}
+              eventId={registration.event_id}
+              eventTitle={registration.event?.title ?? 'this event'}
+              triggerClassName="w-full sm:w-auto"
+            />
+          ) : null}
+        </div>
       </CardContent>
     </Card>
   )
@@ -446,6 +442,7 @@ export default async function StudentEventsPage({
     (registration) => registration.status === 'cancelled'
   )
   const currentTicket = activeRegistrations[0] ?? null
+  const currentTicketQrDataUrl = currentTicket ? qrByRegistrationId.get(currentTicket.id) ?? null : null
   const visibleActiveRegistrations = activeRegistrations.filter(
     (registration) => registration.id !== currentTicket?.id
   )
@@ -473,7 +470,7 @@ export default async function StudentEventsPage({
             {currentTicket ? (
               <CurrentTicket
                 registration={currentTicket}
-                qrDataUrl={qrByRegistrationId.get(currentTicket.id) ?? null}
+                qrDataUrl={currentTicketQrDataUrl}
               />
             ) : (
               <Card className="rounded-lg border-dashed">
@@ -582,14 +579,20 @@ export default async function StudentEventsPage({
             </Tabs>
           </section>
 
-          <aside className="space-y-4">
+          <aside className="space-y-3 xl:sticky xl:top-24 xl:self-start">
+            <div className="space-y-1">
+              <h2 className="text-lg font-semibold text-foreground">Recomendaciones</h2>
+              <p className="text-sm leading-6 text-muted-foreground">
+                Consejos generales para usar tu QR en cualquier evento.
+              </p>
+            </div>
             <Card className="rounded-lg">
               <CardHeader>
-                <CardTitle className="text-base">Basicos del check-in</CardTitle>
-                <CardDescription>Detalles simples para entrar mas rapido al evento.</CardDescription>
+                <CardTitle className="text-base">Para entrar rapido</CardTitle>
+                <CardDescription>Aplica a cualquier codigo QR de tus eventos.</CardDescription>
               </CardHeader>
               <CardContent>
-                <EventDayGuidance compact className="border-0 bg-transparent p-0" />
+                <EventDayGuidance compact showTitle={false} className="border-0 bg-transparent p-0" />
               </CardContent>
             </Card>
           </aside>
