@@ -10,6 +10,7 @@ import {
   Sparkles,
   Users,
 } from 'lucide-react'
+import { Suspense } from 'react'
 import { MainContainer } from '@/components/global/main-container'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -27,15 +28,13 @@ import {
   type StudentDashboardChapterOption,
 } from '@/lib/services/student-dashboard.service'
 import {
-  PathwayCheckInService,
   type PathwayDashboardGuidance,
 } from '@/lib/services/pathway-check-in.service'
-import { PathwayRolloutService } from '@/lib/services/pathway-rollout.service'
 import {
-  GrowthReflectionService,
   type GrowthReflectionProgress,
 } from '@/lib/services/growth-reflection.service'
 import { ChapterApplicationCard } from './_components/chapter-application-card'
+import { getStudentDashboardSecondaryData } from '@/lib/actions/student/dashboard'
 
 type ParticipantApplicationCardProps = {
   dashboard: StudentActivationDashboard
@@ -597,21 +596,83 @@ function PersonalProgressCard({
   )
 }
 
+function StudentDashboardDetailsSkeleton() {
+  return (
+    <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+      <div className="space-y-6">
+        <Card className="rounded-lg">
+          <CardHeader>
+            <CardTitle className="h-5 w-48 rounded bg-muted" />
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="h-4 w-full rounded bg-muted" />
+            <div className="h-4 w-3/4 rounded bg-muted" />
+          </CardContent>
+        </Card>
+        <Card className="rounded-lg">
+          <CardHeader>
+            <CardTitle className="h-5 w-40 rounded bg-muted" />
+          </CardHeader>
+          <CardContent>
+            <div className="h-20 rounded bg-muted" />
+          </CardContent>
+        </Card>
+      </div>
+      <div className="space-y-6">
+        <Card className="rounded-lg">
+          <CardHeader>
+            <CardTitle className="h-5 w-44 rounded bg-muted" />
+          </CardHeader>
+          <CardContent>
+            <div className="h-32 rounded bg-muted" />
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}
+
+async function StudentDashboardDetails({
+  userId,
+  dashboard,
+}: {
+  userId: string
+  dashboard: StudentActivationDashboard
+}) {
+  const {
+    pathwayFlags,
+    pathwayGuidance,
+    reflectionProgress,
+    chapterOptions,
+  } = await getStudentDashboardSecondaryData({
+    userId,
+    chapterId: dashboard.membership?.chapter_id ?? null,
+    status: dashboard.status,
+  })
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+      <div className="space-y-6">
+        {pathwayFlags.enable_recommendation_card ? (
+          <PathwayGuidanceCard guidance={pathwayGuidance} />
+        ) : null}
+        <ParticipantApplicationCard dashboard={dashboard} chapterOptions={chapterOptions} />
+        <ProfileReadinessCard dashboard={dashboard} />
+      </div>
+      <div className="space-y-6">
+        <PersonalProgressCard
+          pathwayGuidance={pathwayGuidance}
+          reflectionProgress={reflectionProgress}
+        />
+        <MembershipDetailsCard dashboard={dashboard} />
+      </div>
+    </div>
+  )
+}
+
 export default async function StudentDashboard() {
   const { supabase, user } = await requireUser()
   const dashboard = await StudentDashboardService.getActivationDashboard(supabase, user.id)
-  const pathwayFlags = await PathwayRolloutService.getFlagsForChapter(
-    supabase,
-    dashboard.membership?.chapter_id
-  )
-  const pathwayGuidance = pathwayFlags.enable_recommendation_card
-    ? await PathwayCheckInService.getDashboardGuidanceForUser(supabase, user.id)
-    : null
-  const reflectionProgress = await GrowthReflectionService.getProgressForUser(supabase, user.id)
-  const chapterOptions =
-    dashboard.status === 'participant'
-      ? await StudentDashboardService.getChapterApplicationOptions(supabase)
-      : []
   const content = STATUS_CONTENT[dashboard.status]
   const StatusIcon = content.icon
 
@@ -646,22 +707,9 @@ export default async function StudentDashboard() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="space-y-6">
-          {pathwayFlags.enable_recommendation_card ? (
-            <PathwayGuidanceCard guidance={pathwayGuidance} />
-          ) : null}
-          <ParticipantApplicationCard dashboard={dashboard} chapterOptions={chapterOptions} />
-          <ProfileReadinessCard dashboard={dashboard} />
-        </div>
-        <div className="space-y-6">
-          <PersonalProgressCard
-            pathwayGuidance={pathwayGuidance}
-            reflectionProgress={reflectionProgress}
-          />
-          <MembershipDetailsCard dashboard={dashboard} />
-        </div>
-      </div>
+      <Suspense fallback={<StudentDashboardDetailsSkeleton />}>
+        <StudentDashboardDetails userId={user.id} dashboard={dashboard} />
+      </Suspense>
     </MainContainer>
   )
 }
