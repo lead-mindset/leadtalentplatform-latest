@@ -240,6 +240,79 @@ order by chapter_id, preapproval_type, role_level;
 7. Approved members without e-board grants land in the student/member dashboard.
 8. Users without preapproval can still sign up normally and request chapter membership through the web app.
 
+## President / VP Launch Guion
+
+Use this structure when introducing presidents and vice presidents to the platform.
+
+### 1. Purpose Of The Platform
+
+LEAD Talent Platform is the chapter operating layer. It is not only a signup form. Chapters use it to manage membership, official e-board roles, events, registrations, check-in, and evidence of chapter work.
+
+Plain-language framing:
+
+```text
+La plataforma separa tres cosas: membresia, rol y permisos.
+Ser miembro significa pertenecer al chapter.
+Tener un rol e-board significa tener una responsabilidad oficial.
+Tener permisos significa poder operar ciertas partes del dashboard.
+```
+
+### 2. What Presidents / VPs Do First
+
+1. Open the platform link.
+2. Create an account or sign in using the exact email that received the invitation.
+3. Complete onboarding/profile.
+4. Confirm the first workspace is the chapter dashboard.
+5. Review members, applicants, and chapter events.
+6. Invite regular e-board members only after confirming the chapter context is correct.
+
+### 3. How Chapter Leaders Onboard E-board Members
+
+Presidents and VPs can invite regular e-board members from the chapter members page.
+
+Current MVP rules:
+
+- Allowed invite roles: `chief_of_staff`, `director`, `coordinator`.
+- President and vice president assignment stays central/admin controlled.
+- Any valid email can be invited.
+- The invite expires after 30 days.
+- The invited person must sign up or sign in with the exact invited email.
+- When the invited person completes onboarding, the existing preapproval flow approves membership, creates the e-board role, grants permissions, and routes chapter-dashboard users into `/chapter`.
+- If an invite is wrong and still active, cancel it and create a corrected invite.
+- If an invite expires before acceptance, re-invite from the pending invite list.
+- Do not edit active invites in place.
+
+### 4. Where To Ask For Help
+
+If the email, chapter, role, or access looks wrong, contact `abriones@leadmindset.org` before creating a second account or asking the invitee to use another email.
+
+## President / VP Email Draft
+
+Subject: `Activa tu rol de chapter en LEAD Talent Platform`
+
+```text
+Hola,
+
+Has sido invitado/a a activar tu rol de liderazgo en LEAD Talent Platform.
+
+Para activar tu acceso:
+
+1. Entra a {platform_url}.
+2. Crea tu cuenta o inicia sesion usando exactamente este correo: {invited_email}.
+3. Completa el onboarding.
+4. Confirma que puedes entrar al dashboard de tu chapter.
+
+Desde la plataforma podras revisar miembros, gestionar postulantes, crear eventos, operar registros/check-in e invitar a miembros e-board regulares de tu chapter.
+
+Importante:
+- Presidencia y vicepresidencia se corrigen desde administracion central.
+- Los miembros e-board invitados deben usar exactamente el correo que recibio la invitacion.
+- Si el correo, chapter o rol no se ve correcto, escribe a abriones@leadmindset.org antes de crear una segunda cuenta.
+
+Gracias,
+LEAD Platform Team
+```
+
 ## Chapter Leader Training Flow
 
 Use one call per chapter, then a short follow-up after the first event or applicant action.
@@ -262,9 +335,14 @@ Recommended agenda:
    - President/VP can assign regular e-board roles to approved members.
    - President/VP cannot assign or remove president/VP status.
    - Admin corrects president/VP status centrally.
-8. Confirm support path:
-   - Wrong email, chapter, role, missing member, or extra access goes to Abigail/admin.
-9. End with one operating expectation:
+8. Review e-board invitations:
+   - President/VP can invite regular e-board roles by email.
+   - Active invites can be canceled before acceptance.
+   - Expired invites can be re-invited after 30 days.
+   - Invitees must use the exact invited email.
+9. Confirm support path:
+   - Wrong email, chapter, role, missing member, or extra access goes to `abriones@leadmindset.org`.
+10. End with one operating expectation:
    - The platform should become the chapter's working system for events, membership, and evidence, not only a signup form.
 
 Suggested Spanish framing for the call:

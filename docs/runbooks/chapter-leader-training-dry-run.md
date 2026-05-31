@@ -41,6 +41,8 @@ The dry run is successful only if the chapter leader can complete the core workf
 - Register for the event as a participant from a separate account.
 - Review registrations or applications.
 - Understand who can assign regular e-board roles.
+- Invite a regular e-board member or explain the invite flow safely.
+- Understand active invite cancellation and expired invite re-invitation.
 - Explain the support path for wrong email, wrong chapter, wrong role, missing member, or extra access.
 
 ## Stop Conditions
@@ -62,7 +64,7 @@ Pause the dry run and mark the gate blocked if any of these happen:
 | 5-10 min | Account access | Leader signs in and confirms dashboard landing. |
 | 10-20 min | Membership workflow | Review members, applicants, approve/reject test entries. |
 | 20-35 min | Event workflow | Create, publish, share, and register for a test event. |
-| 35-45 min | E-board workflow | Explain regular e-board assignment and central president/VP control. |
+| 35-45 min | E-board workflow | Explain regular e-board assignment, invite flow, and central president/VP control. |
 | 45-55 min | Support cases | Walk through wrong email/chapter/role/member/access scenarios. |
 | 55-60 min | Feedback | Capture questions, blockers, and confidence level. |
 
@@ -135,12 +137,18 @@ Leader task:
 1. Identify an approved test member.
 2. Assign or discuss assigning a regular e-board role.
 3. Confirm president/VP status remains centrally controlled.
+4. Open the e-board invitation area.
+5. Create or discuss creating a regular e-board invite with email, role, functional area, and display title.
+6. Review active and expired invite states.
+7. Cancel a test active invite or explain when cancellation is appropriate.
+8. Re-invite an expired test invite or explain the 30-day expiration rule.
 
 Facilitator checks:
 
 - Did the leader understand the rule?
 - Did the UI make regular e-board vs president/VP boundaries clear?
-- Did the leader know when to escalate to Abigail/admin?
+- Did the leader understand exact-email activation?
+- Did the leader know to escalate wrong email/chapter/role/access to `abriones@leadmindset.org` before a second account is created?
 
 ## Spanish Facilitator Framing
 
