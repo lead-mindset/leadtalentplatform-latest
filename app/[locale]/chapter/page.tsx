@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { Suspense } from 'react'
+import { Suspense, cache } from 'react'
 import { Icons } from '@/components/ui/icons'
 import { requireChapterMember } from '@/lib/auth'
 import type { MemberWithProfile, RecentActivityMember } from '@/lib/types'
@@ -55,6 +55,23 @@ function StatCard({
       <CardContent>
         <div className={`text-2xl font-bold ${valueClass}`}>{value}</div>
         {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
+      </CardContent>
+    </Card>
+  )
+}
+
+function StatCardSkeleton({ label, icon: Icon }: { label: string; icon: React.ElementType }) {
+  return (
+    <Card className="animate-pulse">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium text-muted-foreground">
+          {label}
+        </CardTitle>
+        <Icon className="h-4 w-4 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        <div className="h-8 w-12 rounded bg-muted" />
+        <div className="mt-2 h-3 w-28 rounded bg-muted" />
       </CardContent>
     </Card>
   )
@@ -241,6 +258,55 @@ function EventOpsList({
   )
 }
 
+const getUpcomingChapterEvents = cache(async function getUpcomingChapterEvents() {
+  const events = await getChapterEvents()
+  const now = new Date()
+
+  return events.filter((event) => new Date(event.end_at) >= now)
+})
+
+async function UpcomingEventsStatCard() {
+  const upcomingEvents = await getUpcomingChapterEvents()
+
+  return (
+    <StatCard
+      label="Eventos proximos"
+      value={upcomingEvents.length}
+      sub="Listos para operar"
+      icon={Icons.UserCheck}
+      variant="success"
+    />
+  )
+}
+
+function EventOpsListSkeleton() {
+  return (
+    <div className="space-y-3 animate-pulse">
+      {[...Array(2)].map((_, index) => (
+        <Card key={index}>
+          <CardContent className="py-4 space-y-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-2">
+                <div className="h-4 w-44 rounded bg-muted" />
+                <div className="h-3 w-28 rounded bg-muted" />
+              </div>
+              <div className="h-8 w-24 rounded bg-muted" />
+            </div>
+            <div className="h-3 w-32 rounded bg-muted" />
+            <div className="h-2 rounded-full bg-muted" />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  )
+}
+
+async function UpcomingEventOps() {
+  const upcomingEvents = await getUpcomingChapterEvents()
+
+  return <EventOpsList events={upcomingEvents} />
+}
+
 async function ChapterContent() {
   const { supabase, user, chapter_id } = await requireChapterMember()
 
@@ -265,10 +331,7 @@ async function ChapterContent() {
     )
   }
 
-  const [overviewRoster, chapterEvents] = await Promise.all([
-    getChapterOverviewRoster(chapter_id, 4),
-    getChapterEvents(),
-  ])
+  const overviewRoster = await getChapterOverviewRoster(chapter_id, 4)
   const allMembers = overviewRoster?.members ?? []
   const recentActivity = overviewRoster?.recentActivity ?? []
   const memberPermissions = overviewRoster?.permissions ?? null
@@ -280,7 +343,6 @@ async function ChapterContent() {
   const pending_members = allMembers.filter(
     m => m.person_profile && m.chapter_membership?.status === 'pending'
   )
-  const upcomingEventsCount = chapterEvents.filter((event) => new Date(event.end_at) >= new Date()).length
 
   return (
     <MainContainer className="py-8 space-y-8">
@@ -335,13 +397,9 @@ async function ChapterContent() {
           icon={Icons.Clock}
           variant="warning"
         />
-        <StatCard
-          label="Eventos proximos"
-          value={upcomingEventsCount}
-          sub="Listos para operar"
-          icon={Icons.UserCheck}
-          variant="success"
-        />
+        <Suspense fallback={<StatCardSkeleton label="Eventos proximos" icon={Icons.UserCheck} />}>
+          <UpcomingEventsStatCard />
+        </Suspense>
         <StatCard
           label="Tasa de aprobacion"
           value={approvalRate}
@@ -397,7 +455,9 @@ async function ChapterContent() {
             <h2 className="text-base font-semibold">Eventos proximos</h2>
             <p className="text-sm text-muted-foreground">Monitorea el volumen de registros antes del evento.</p>
           </div>
-          <EventOpsList events={chapterEvents.filter((event) => new Date(event.end_at) >= new Date())} />
+          <Suspense fallback={<EventOpsListSkeleton />}>
+            <UpcomingEventOps />
+          </Suspense>
         </div>
 
         <div className="space-y-4">
