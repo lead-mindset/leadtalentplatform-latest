@@ -23,6 +23,7 @@ type MockBuilder = {
   update: MockFn
   insert: MockFn
   eq: MockFn
+  neq: MockFn
   is: MockFn
   match: MockFn
   in: MockFn
@@ -55,6 +56,7 @@ function createBuilder(defaultValue: QueryResult = { data: null, error: null }):
     update: vi.fn(() => builder),
     insert: vi.fn(() => builder),
     eq: vi.fn(() => builder),
+    neq: vi.fn(() => builder),
     is: vi.fn(() => builder),
     match: vi.fn(() => builder),
     in: vi.fn(() => builder),
@@ -303,6 +305,49 @@ describe('ChapterInviteService', () => {
       expect.objectContaining({
         status: 'accepted',
         accepted_by_user_id: 'user-1',
+      })
+    )
+  })
+
+  it('accepts a protected invite without treating the same pending invite as a conflict', async () => {
+    const { mockSupabase, tableMocks } = buildMockSupabase()
+    tableMocks.chapter_invite._setResult({
+      data: inviteRow({
+        email: 'president@test.com',
+        invite_type: 'protected_leader',
+        normalized_email: 'president@test.com',
+        role_level: 'president',
+        functional_area: 'general_leadership',
+        display_title: 'Presidencia',
+      }),
+      error: null,
+    })
+    tableMocks.chapter_membership._setResult({ data: [], error: null })
+    tableMocks.chapter_membership._setResult({ data: null, error: null })
+    tableMocks.chapter_membership._setResult({ data: null, error: null })
+    tableMocks.chapter_role_assignment._setResult({ data: null, error: null })
+    tableMocks.chapter_invite._setResult({ data: null, error: null })
+    tableMocks.chapter_role_assignment._setResult({ data: null, error: null })
+    tableMocks.chapter_role_assignment._setResult({ data: null, error: null })
+    tableMocks.chapter_role_assignment._setResult({ data: { id: 'role-1', role_level: 'president' }, error: null })
+    tableMocks.chapter_invite._setResult({ data: null, error: null })
+
+    const result = await ChapterInviteService.acceptInvite(mockSupabase, {
+      token: 'token-123',
+      userId: 'user-1',
+      email: 'president@test.com',
+      now: new Date('2026-05-31T00:00:00.000Z'),
+      generateMemberId: async () => 'LEAD-UNI-0001',
+    })
+
+    expect(result.success).toBe(true)
+    if (!result.success) return
+    expect(result.roleAssignmentId).toBe('role-1')
+    expect(tableMocks.chapter_invite.neq).toHaveBeenCalledWith('id', 'invite-1')
+    expect(tableMocks.chapter_role_assignment.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        role_level: 'president',
+        source_chapter_invite_id: 'invite-1',
       })
     )
   })

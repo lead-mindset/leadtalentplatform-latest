@@ -14,8 +14,10 @@ import {
   Clock,
   XCircle,
 } from 'lucide-react'
+import { getProtectedLeadershipInviteState } from '@/lib/actions/admin/chapter-invites'
 import { getChapterById, getChapterMembers } from '@/lib/actions/admin/get-data'
 import { formatLeadDate } from '@/lib/utils/date-format'
+import { ProtectedLeadershipInvites } from './protected-leadership-invites'
 
 export default async function ChapterDetailPage({
   params,
@@ -28,6 +30,7 @@ export default async function ChapterDetailPage({
   if (!chapter) notFound()
   const resolvedChapter = chapter ?? notFound()
   const members = await getChapterMembers(resolvedChapter.id)
+  const protectedLeadership = await getProtectedLeadershipInviteState(resolvedChapter.id)
   const approved_members  = members.filter(m => m.chapter_membership?.status === 'approved')
   const pending_members   = members.filter(m => m.person_profile && m.chapter_membership?.status === 'pending')
   const rejected_members  = members.filter(m => m.chapter_membership?.status === 'rejected')
@@ -113,6 +116,12 @@ export default async function ChapterDetailPage({
             </div>
           </CardContent>
         </Card>
+
+        <ProtectedLeadershipInvites
+          chapterId={resolvedChapter.id}
+          activeLeaders={protectedLeadership.activeLeaders}
+          invites={protectedLeadership.invites}
+        />
 
         {/* ── Member sections ── */}
         <div className="space-y-4">

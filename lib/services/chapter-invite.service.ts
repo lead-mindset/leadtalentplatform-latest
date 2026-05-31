@@ -253,7 +253,7 @@ async function hasPendingInviteForEmail(
 
 async function hasProtectedRoleConflict(
   supabase: SupabaseClient<Database>,
-  params: { chapterId: string; roleLevel: string }
+  params: { chapterId: string; roleLevel: string; excludeInviteId?: string }
 ) {
   if (!isProtectedRole(params.roleLevel)) return false
 
@@ -275,7 +275,7 @@ async function hasProtectedRoleConflict(
 
   if (activeRole) return true
 
-  const { data: pendingInvite, error: inviteError } = await supabase
+  let pendingInviteQuery = supabase
     .from('chapter_invite')
     .select('id')
     .match({
@@ -284,6 +284,12 @@ async function hasProtectedRoleConflict(
       status: 'pending',
       invite_type: 'protected_leader',
     })
+
+  if (params.excludeInviteId) {
+    pendingInviteQuery = pendingInviteQuery.neq('id', params.excludeInviteId)
+  }
+
+  const { data: pendingInvite, error: inviteError } = await pendingInviteQuery
     .limit(1)
     .maybeSingle()
 
@@ -430,6 +436,7 @@ async function ensureRoleAssignment(
     const conflict = await hasProtectedRoleConflict(supabase, {
       chapterId: invite.chapter_id,
       roleLevel: invite.role_level,
+      excludeInviteId: invite.id,
     })
     if (conflict) {
       return { success: false, error: 'This protected chapter role is already assigned or pending.' }
