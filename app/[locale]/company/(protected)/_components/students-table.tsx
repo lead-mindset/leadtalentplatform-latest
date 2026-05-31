@@ -1,71 +1,19 @@
-'use client'
-
-import { useState, useTransition } from 'react'
 import type { StudentForRecruiter } from '@/lib/types'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Heart, Building2, GraduationCap, Loader2, Mail, Sparkles } from 'lucide-react'
+import { Building2, GraduationCap, Mail, Sparkles } from 'lucide-react'
 import Link from 'next/link'
-import { toggleSaveStudentAction } from '@/lib/actions/company/toggle-save'
-import { toast } from 'sonner'
-import { cn } from '@/lib/utils'
+import { SaveStudentButton } from './save-student-button'
 
 interface StudentsTableProps {
   students: StudentForRecruiter[]
   savedStudentIds?: string[]
 }
 
-function SaveButton({
-  studentId,
-  initialSaved,
-  studentName,
-}: {
-  studentId: string
-  initialSaved: boolean
-  studentName: string
-}) {
-  const [isSaved, setIsSaved] = useState(initialSaved)
-  const [isPending, startTransition] = useTransition()
-
-  const handleToggle = () => {
-    startTransition(async () => {
-      // Optimistic update
-      setIsSaved(prev => !prev)
-
-      const result = await toggleSaveStudentAction(studentId, isSaved)
-
-      if (!result.success) {
-        // Revert on failure
-        setIsSaved(isSaved)
-        toast.error(result.error || 'No se pudo actualizar el guardado')
-      } else {
-        toast.success(result.isSaved ? `${studentName} se guardo en tu lista de talento` : `${studentName} se quito de talento guardado`)
-      }
-    })
-  }
-
-  return (
-    <Button
-      variant={isSaved ? 'default' : 'outline'}
-      size="sm"
-      className="gap-1.5"
-      onClick={handleToggle}
-      disabled={isPending}
-      aria-label={isSaved ? `Quitar ${studentName} de talento guardado` : `Guardar ${studentName} en talento guardado`}
-      title={isSaved ? 'Quitar de talento guardado' : 'Guardar perfil'}
-    >
-      {isPending ? (
-        <Loader2 className="h-3 w-3 animate-spin" />
-      ) : (
-        <Heart className={cn('h-3 w-3', isSaved && 'fill-current')} />
-      )}
-      <span className="hidden xl:inline">{isSaved ? 'Guardado' : 'Guardar'}</span>
-    </Button>
-  )
-}
-
 export function StudentsTable({ students, savedStudentIds = [] }: StudentsTableProps) {
+  const savedStudentIdSet = new Set(savedStudentIds)
+
   return (
     <div className="overflow-hidden rounded-lg border bg-card">
       <div className="hidden lg:block">
@@ -139,10 +87,12 @@ export function StudentsTable({ students, savedStudentIds = [] }: StudentsTableP
               </TableCell>
               <TableCell className="sticky right-0 z-10 bg-card px-4 py-3 text-right align-top shadow-[-12px_0_18px_-18px_rgba(15,23,42,0.6)]">
                 <div className="flex justify-end gap-2">
-                  <SaveButton
+                  <SaveStudentButton
                     studentId={student.id}
-                    initialSaved={savedStudentIds.includes(student.id)}
+                    initialSaved={savedStudentIdSet.has(student.id)}
                     studentName={student.name}
+                    compact
+                    responsiveLabel
                   />
                   <Button asChild variant="outline" size="sm">
                     <Link href={`/company/students/${student.id}`}>Perfil</Link>
@@ -169,10 +119,12 @@ export function StudentsTable({ students, savedStudentIds = [] }: StudentsTableP
                     <span className="truncate">{student.email}</span>
                   </div>
                 </div>
-                <SaveButton
+                <SaveStudentButton
                   studentId={student.id}
-                  initialSaved={savedStudentIds.includes(student.id)}
+                  initialSaved={savedStudentIdSet.has(student.id)}
                   studentName={student.name}
+                  compact
+                  responsiveLabel
                 />
               </div>
 
