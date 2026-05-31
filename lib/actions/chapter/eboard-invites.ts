@@ -71,6 +71,7 @@ export async function createChapterEboardInvite(input: unknown): Promise<ActionR
     const emailResult = await sendChapterEboardInviteEmail(result.invite.email, {
       chapterName,
       displayTitle: result.invite.display_title ?? parsed.data.displayTitle,
+      token: result.token,
     })
 
     if (!emailResult.success) {
@@ -138,6 +139,7 @@ export async function reinviteExpiredChapterEboardInvite(input: unknown): Promis
     const emailResult = await sendChapterEboardInviteEmail(result.invite.email, {
       chapterName,
       displayTitle: result.invite.display_title ?? 'E-board',
+      token: result.token,
     })
 
     if (!emailResult.success) {

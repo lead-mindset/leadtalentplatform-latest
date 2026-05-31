@@ -36,6 +36,7 @@ describe('transactional email senders', () => {
     await sendChapterEboardInviteEmail('leader@example.edu', {
       chapterName: 'LEAD UNI',
       displayTitle: 'Directora de Eventos',
+      token: 'chapter-token-123',
     })
 
     expect(sendTransactionalEmailMock).toHaveBeenCalledWith(
@@ -50,7 +51,7 @@ describe('transactional email senders', () => {
     expect(html).toContain('LEAD UNI')
     expect(html).toContain('leader@example.edu')
     expect(html).toContain('abriones@leadmindset.org')
-    expect(html).toContain('https://leadqa.vercel.app/es/auth/sign-up')
+    expect(html).toContain('https://leadqa.vercel.app/es/chapter/invites/accept?token=chapter-token-123')
   })
 
   it('sends member approval with member id and LEAD Americas copy', async () => {

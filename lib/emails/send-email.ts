@@ -285,11 +285,12 @@ export async function sendChapterEboardInviteEmail(
   params: {
     chapterName: string
     displayTitle: string
+    token: string
     locale?: Locale
   }
 ): Promise<TransactionalEmailResult> {
   const resolvedLocale = safeLocale(params.locale)
-  const inviteUrl = appPath(resolvedLocale, '/auth/sign-up')
+  const inviteUrl = appPath(resolvedLocale, `/chapter/invites/accept?token=${encodeURIComponent(params.token)}`)
   const html = await renderEmail(
     ChapterEboardInviteEmail({
       chapterName: params.chapterName,

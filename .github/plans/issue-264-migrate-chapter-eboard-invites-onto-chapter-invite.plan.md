@@ -9,12 +9,12 @@ Move the current chapter-leader regular e-board invite flow from `chapter_preapp
 
 ## Tasks
 
-- [ ] Refactor `lib/services/chapter-eboard-invite.service.ts` to delegate lifecycle operations to `ChapterInviteService`.
-- [ ] Update `lib/actions/chapter/eboard-invites.ts` to use raw invite tokens returned by create/reinvite when sending email.
-- [ ] Update `sendChapterEboardInviteEmail` and `ChapterEboardInviteEmail` copy to use the explicit accept route and stop promising automatic onboarding activation.
-- [ ] Preserve the existing chapter members invite management UI behavior and types.
-- [ ] Update e-board invite service/action/email tests.
-- [ ] Validate targeted invite tests, TypeScript, and lint.
+- [x] Refactor `lib/services/chapter-eboard-invite.service.ts` to delegate lifecycle operations to `ChapterInviteService`.
+- [x] Update `lib/actions/chapter/eboard-invites.ts` to use raw invite tokens returned by create/reinvite when sending email.
+- [x] Update `sendChapterEboardInviteEmail` and `ChapterEboardInviteEmail` copy to use the explicit accept route and stop promising automatic onboarding activation.
+- [x] Preserve the existing chapter members invite management UI behavior and types.
+- [x] Update e-board invite service/action/email tests.
+- [x] Validate targeted invite tests, TypeScript, and lint.
 
 ## Validation
 

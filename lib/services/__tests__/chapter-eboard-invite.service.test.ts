@@ -1,8 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/database.generated'
+import { ChapterInviteService } from '@/lib/services/chapter-invite.service'
 import { ChapterPermissionService } from '@/lib/services/chapter-permission.service'
 import { ChapterEboardInviteService } from '../chapter-eboard-invite.service'
+
+vi.mock('@/lib/services/chapter-invite.service', () => ({
+  ChapterInviteService: {
+    createInvite: vi.fn(),
+    listChapterInvites: vi.fn(),
+    normalizeInviteEmail: vi.fn((email: string) => email.trim().toLowerCase()),
+    reinviteExpiredInvite: vi.fn(),
+    revokeInvite: vi.fn(),
+  },
+}))
 
 vi.mock('@/lib/services/chapter-permission.service', () => ({
   ChapterPermissionService: {
@@ -10,174 +21,74 @@ vi.mock('@/lib/services/chapter-permission.service', () => ({
   },
 }))
 
-type MockFn = ReturnType<typeof vi.fn>
-type QueryResult = { data: unknown; error: { message?: string } | null }
-
-type MockBuilder = {
-  select: MockFn
-  update: MockFn
-  insert: MockFn
-  eq: MockFn
-  is: MockFn
-  gt: MockFn
-  limit: MockFn
-  order: MockFn
-  single: MockFn
-  maybeSingle: MockFn
-  then: MockFn
-  _setResult: (value: QueryResult) => void
-}
-
-type TableName = 'chapter_preapproval'
-
-function createBuilder(defaultValue: QueryResult = { data: null, error: null }): MockBuilder {
-  const valueQueue: QueryResult[] = []
-  let fallback = defaultValue
-
-  const shiftValue = () => {
-    if (valueQueue.length > 0) {
-      return valueQueue.shift() ?? fallback
-    }
-    return fallback
-  }
-
-  const builder = {
-    select: vi.fn(() => builder),
-    update: vi.fn(() => builder),
-    insert: vi.fn(() => builder),
-    eq: vi.fn(() => builder),
-    is: vi.fn(() => builder),
-    gt: vi.fn(() => builder),
-    limit: vi.fn(() => builder),
-    order: vi.fn(() => builder),
-    single: vi.fn(() => Promise.resolve(shiftValue())),
-    maybeSingle: vi.fn(() => Promise.resolve(shiftValue())),
-    then: vi.fn((resolve: (value: QueryResult) => unknown) => resolve(shiftValue())),
-    _setResult: (value: QueryResult) => {
-      valueQueue.push(value)
-      fallback = value
-    },
-  }
-
-  return builder
-}
-
-function buildMockSupabase() {
-  const tableMocks: Record<TableName, MockBuilder> = {
-    chapter_preapproval: createBuilder(),
-  }
-
-  const mockSupabase = {
-    from: vi.fn((table: TableName) => tableMocks[table]),
-  } as unknown as SupabaseClient<Database>
-
-  return { mockSupabase, tableMocks }
-}
-
-function inviteRow(overrides: Record<string, unknown> = {}) {
+function invite(overrides: Record<string, unknown> = {}) {
   return {
-    id: 'invite-1',
-    email: 'Leader@Test.com',
-    normalized_email: 'leader@test.com',
+    accepted_at: null,
+    accepted_by_user_id: null,
     chapter_id: 'leaduni',
-    preapproval_type: 'eboard',
-    role_level: 'director',
-    functional_area: 'events_experience',
+    created_at: '2026-05-31T00:00:00.000Z',
+    created_by_role: 'chapter_leader',
+    created_by_user_id: 'president-1',
     display_title: 'Directora de Eventos',
-    raw_title: 'Directora de Eventos',
+    email: 'leader@example.edu',
     expires_at: '2099-12-31T00:00:00.000Z',
-    consumed_at: null,
-    consumed_by_user_id: null,
-    revoked_at: null,
-    revoked_by_id: null,
-    created_by_id: 'president-1',
-    source: 'chapter_leader_invite',
-    notes: null,
-    created_at: '2026-05-30T00:00:00.000Z',
-    updated_at: '2026-05-30T00:00:00.000Z',
+    functional_area: 'events_experience',
+    id: 'invite-1',
+    invite_type: 'regular_eboard',
+    raw_title: 'Directora de Eventos',
+    role_level: 'director',
+    status: 'pending',
     ...overrides,
   }
 }
 
 describe('ChapterEboardInviteService', () => {
+  const mockSupabase = {} as SupabaseClient<Database>
+
   beforeEach(() => {
+    vi.mocked(ChapterInviteService.createInvite).mockReset()
+    vi.mocked(ChapterInviteService.listChapterInvites).mockReset()
+    vi.mocked(ChapterInviteService.reinviteExpiredInvite).mockReset()
+    vi.mocked(ChapterInviteService.revokeInvite).mockReset()
     vi.mocked(ChapterPermissionService.hasChapterPermission).mockReset()
     vi.mocked(ChapterPermissionService.hasChapterPermission).mockResolvedValue(true)
   })
 
-  it('creates a 30-day e-board preapproval for an authorized chapter leader', async () => {
-    const { mockSupabase, tableMocks } = buildMockSupabase()
-    tableMocks.chapter_preapproval._setResult({ data: null, error: null })
-    tableMocks.chapter_preapproval._setResult({ data: inviteRow(), error: null })
+  it('creates a regular e-board chapter invite through the dedicated invite service', async () => {
+    vi.mocked(ChapterInviteService.createInvite).mockResolvedValue({
+      success: true,
+      invite: invite(),
+      token: 'token-123',
+    })
 
     const result = await ChapterEboardInviteService.createChapterEboardInvite(mockSupabase, {
       actorUserId: 'president-1',
       chapterId: 'leaduni',
-      email: ' Leader@Test.com ',
+      email: 'leader@example.edu',
       roleLevel: 'director',
       functionalArea: 'events_experience',
       displayTitle: 'Directora de Eventos',
     })
 
-    expect(result).toEqual(
+    expect(result.success).toBe(true)
+    expect(ChapterInviteService.createInvite).toHaveBeenCalledWith(
+      mockSupabase,
       expect.objectContaining({
-        success: true,
-        invite: expect.objectContaining({
-          id: 'invite-1',
-          email: 'Leader@Test.com',
-          role_level: 'director',
-          status: 'active',
-        }),
+        actorUserId: 'president-1',
+        chapterId: 'leaduni',
+        email: 'leader@example.edu',
+        inviteType: 'regular_eboard',
+        roleLevel: 'director',
       })
     )
-    expect(ChapterPermissionService.hasChapterPermission).toHaveBeenCalledWith(mockSupabase, {
-      userId: 'president-1',
-      chapterId: 'leaduni',
-      permissionKey: 'chapter.roles.assign_eboard',
-    })
-    expect(tableMocks.chapter_preapproval.insert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        email: 'Leader@Test.com',
-        normalized_email: 'leader@test.com',
-        chapter_id: 'leaduni',
-        preapproval_type: 'eboard',
-        role_level: 'director',
-        functional_area: 'events_experience',
-        display_title: 'Directora de Eventos',
-        raw_title: 'Directora de Eventos',
-        created_by_id: 'president-1',
-        source: 'chapter_leader_invite',
-      })
-    )
+    if (result.success) expect(result.token).toBe('token-123')
   })
 
-  it('rejects invite creation without e-board assignment permission', async () => {
-    const { mockSupabase, tableMocks } = buildMockSupabase()
-    vi.mocked(ChapterPermissionService.hasChapterPermission).mockResolvedValue(false)
-
-    const result = await ChapterEboardInviteService.createChapterEboardInvite(mockSupabase, {
-      actorUserId: 'member-1',
-      chapterId: 'leaduni',
-      email: 'member@test.com',
-      roleLevel: 'director',
-      functionalArea: 'events_experience',
-      displayTitle: 'Directora de Eventos',
-    })
-
-    expect(result).toEqual({
-      success: false,
-      error: 'You do not have permission to invite e-board members for this chapter.',
-    })
-    expect(tableMocks.chapter_preapproval.insert).not.toHaveBeenCalled()
-  })
-
-  it('rejects protected president or vice president invites', async () => {
-    const { mockSupabase, tableMocks } = buildMockSupabase()
-
+  it('rejects president and vice president invites from the chapter e-board wrapper', async () => {
     const result = await ChapterEboardInviteService.createChapterEboardInvite(mockSupabase, {
       actorUserId: 'president-1',
       chapterId: 'leaduni',
-      email: 'vp@test.com',
+      email: 'vp@example.edu',
       roleLevel: 'vice_president',
       functionalArea: 'general_leadership',
       displayTitle: 'Vicepresidenta',
@@ -187,82 +98,59 @@ describe('ChapterEboardInviteService', () => {
       success: false,
       error: 'Chapter leaders can only invite regular e-board roles.',
     })
-    expect(tableMocks.chapter_preapproval.insert).not.toHaveBeenCalled()
+    expect(ChapterInviteService.createInvite).not.toHaveBeenCalled()
   })
 
-  it('rejects duplicate active unaccepted invites for the same email and chapter', async () => {
-    const { mockSupabase, tableMocks } = buildMockSupabase()
-    tableMocks.chapter_preapproval._setResult({ data: { id: 'existing-invite' }, error: null })
+  it('lists only regular e-board invites and maps pending expired rows to UI statuses', async () => {
+    vi.mocked(ChapterInviteService.listChapterInvites).mockResolvedValue({
+      success: true,
+      invites: [
+        invite({ id: 'active-1', status: 'pending' }),
+        invite({ id: 'expired-1', status: 'expired' }),
+      ],
+    })
 
-    const result = await ChapterEboardInviteService.createChapterEboardInvite(mockSupabase, {
-      actorUserId: 'president-1',
+    const result = await ChapterEboardInviteService.listChapterEboardInvites(mockSupabase, 'leaduni')
+
+    expect(ChapterInviteService.listChapterInvites).toHaveBeenCalledWith(mockSupabase, {
       chapterId: 'leaduni',
-      email: 'leader@test.com',
-      roleLevel: 'director',
-      functionalArea: 'events_experience',
-      displayTitle: 'Directora de Eventos',
+      inviteTypes: ['regular_eboard'],
     })
-
     expect(result).toEqual({
-      success: false,
-      error: 'An active invite already exists for this email and chapter.',
+      success: true,
+      invites: [
+        expect.objectContaining({ id: 'active-1', status: 'active' }),
+        expect.objectContaining({ id: 'expired-1', status: 'expired' }),
+      ],
     })
-    expect(tableMocks.chapter_preapproval.insert).not.toHaveBeenCalled()
   })
 
-  it('rejects fresh creation when an expired unaccepted invite should be re-invited instead', async () => {
-    const { mockSupabase, tableMocks } = buildMockSupabase()
-    tableMocks.chapter_preapproval._setResult({
-      data: { id: 'expired-invite', expires_at: '2026-01-01T00:00:00.000Z' },
-      error: null,
-    })
-
-    const result = await ChapterEboardInviteService.createChapterEboardInvite(mockSupabase, {
-      actorUserId: 'president-1',
-      chapterId: 'leaduni',
-      email: 'leader@test.com',
-      roleLevel: 'director',
-      functionalArea: 'events_experience',
-      displayTitle: 'Directora de Eventos',
-    })
-
-    expect(result).toEqual({
-      success: false,
-      error: 'An expired invite already exists for this email. Use re-invite from the pending invite list.',
-    })
-    expect(tableMocks.chapter_preapproval.insert).not.toHaveBeenCalled()
-  })
-
-  it('cancels active unaccepted invites for the actor chapter', async () => {
-    const { mockSupabase, tableMocks } = buildMockSupabase()
-    tableMocks.chapter_preapproval._setResult({ data: inviteRow(), error: null })
-    tableMocks.chapter_preapproval._setResult({ data: null, error: null })
+  it('requires chapter e-board permission before canceling an invite', async () => {
+    vi.mocked(ChapterPermissionService.hasChapterPermission).mockResolvedValue(false)
 
     const result = await ChapterEboardInviteService.cancelChapterEboardInvite(mockSupabase, {
-      actorUserId: 'president-1',
+      actorUserId: 'member-1',
       chapterId: 'leaduni',
       inviteId: 'invite-1',
     })
 
-    expect(result).toEqual({ success: true })
-    expect(tableMocks.chapter_preapproval.update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        revoked_by_id: 'president-1',
-        notes: 'Canceled by chapter leader before acceptance',
-      })
-    )
-    expect(tableMocks.chapter_preapproval.eq).toHaveBeenCalledWith('id', 'invite-1')
+    expect(result).toEqual({
+      success: false,
+      error: 'You do not have permission to manage e-board invites for this chapter.',
+    })
+    expect(ChapterInviteService.revokeInvite).not.toHaveBeenCalled()
   })
 
-  it('re-invites expired unaccepted invites by revoking old invite and inserting a fresh one', async () => {
-    const { mockSupabase, tableMocks } = buildMockSupabase()
-    tableMocks.chapter_preapproval._setResult({
-      data: inviteRow({ expires_at: '2026-01-01T00:00:00.000Z', notes: 'first invite' }),
-      error: null,
+  it('reinvites expired e-board invites through the dedicated invite service', async () => {
+    vi.mocked(ChapterInviteService.listChapterInvites).mockResolvedValue({
+      success: true,
+      invites: [invite({ status: 'expired' })],
     })
-    tableMocks.chapter_preapproval._setResult({ data: null, error: null })
-    tableMocks.chapter_preapproval._setResult({ data: null, error: null })
-    tableMocks.chapter_preapproval._setResult({ data: inviteRow({ id: 'invite-2' }), error: null })
+    vi.mocked(ChapterInviteService.reinviteExpiredInvite).mockResolvedValue({
+      success: true,
+      invite: invite({ id: 'invite-2', status: 'pending' }),
+      token: 'token-456',
+    })
 
     const result = await ChapterEboardInviteService.reinviteExpiredChapterEboardInvite(mockSupabase, {
       actorUserId: 'president-1',
@@ -270,48 +158,11 @@ describe('ChapterEboardInviteService', () => {
       inviteId: 'invite-1',
     })
 
-    expect(result).toEqual(
-      expect.objectContaining({
-        success: true,
-        invite: expect.objectContaining({ id: 'invite-2' }),
-      })
-    )
-    expect(tableMocks.chapter_preapproval.update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        revoked_by_id: 'president-1',
-        notes: 'first invite | Re-invited by chapter leader after expiration',
-      })
-    )
-    expect(tableMocks.chapter_preapproval.insert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        email: 'Leader@Test.com',
-        normalized_email: 'leader@test.com',
-        chapter_id: 'leaduni',
-        source: 'chapter_leader_invite',
-      })
-    )
-  })
-
-  it('lists active and expired unaccepted chapter leader invites', async () => {
-    const { mockSupabase, tableMocks } = buildMockSupabase()
-    tableMocks.chapter_preapproval._setResult({
-      data: [
-        inviteRow({ id: 'active', expires_at: '2099-12-31T00:00:00.000Z' }),
-        inviteRow({ id: 'expired', expires_at: '2026-01-01T00:00:00.000Z' }),
-      ],
-      error: null,
+    expect(result.success).toBe(true)
+    expect(ChapterInviteService.reinviteExpiredInvite).toHaveBeenCalledWith(mockSupabase, {
+      actorUserId: 'president-1',
+      inviteId: 'invite-1',
     })
-
-    const result = await ChapterEboardInviteService.listChapterEboardInvites(mockSupabase, 'leaduni')
-
-    expect(result).toEqual({
-      success: true,
-      invites: [
-        expect.objectContaining({ id: 'active', status: 'active' }),
-        expect.objectContaining({ id: 'expired', status: 'expired' }),
-      ],
-    })
-    expect(tableMocks.chapter_preapproval.eq).toHaveBeenCalledWith('chapter_id', 'leaduni')
-    expect(tableMocks.chapter_preapproval.eq).toHaveBeenCalledWith('source', 'chapter_leader_invite')
+    if (result.success) expect(result.token).toBe('token-456')
   })
 })
