@@ -18,6 +18,8 @@ import { cn } from '@/lib/utils'
 import type { EventWithDetails } from '@/lib/types'
 
 const EVENT_TIME_ZONE = 'America/Lima'
+const INITIAL_UPCOMING_EVENT_LIMIT = 12
+const INITIAL_PAST_EVENT_LIMIT = 6
 const EVENT_LOCALES = {
   en: 'en-US',
   es: 'es-PE',
@@ -63,6 +65,8 @@ const EVENT_COPY = {
     emptyBody: 'Check back soon for new LEAD opportunities.',
     pastTitle: 'Past events',
     pastDescription: 'Explore previous programs and LEAD community activity.',
+    moreUpcoming: (count: number) => `${count} more upcoming event${count === 1 ? '' : 's'} will appear here as the page grows.`,
+    morePast: (count: number) => `${count} more past event${count === 1 ? '' : 's'} are archived by the LEAD team.`,
     loading: 'Loading events...',
   },
   es: {
@@ -102,6 +106,8 @@ const EVENT_COPY = {
     emptyBody: 'Vuelve pronto para ver nuevas oportunidades de LEAD.',
     pastTitle: 'Eventos pasados',
     pastDescription: 'Explora programas anteriores y actividad de la comunidad LEAD.',
+    moreUpcoming: (count: number) => `${count} evento${count === 1 ? '' : 's'} proximo${count === 1 ? '' : 's'} mas apareceran aqui a medida que crezca la pagina.`,
+    morePast: (count: number) => `${count} evento${count === 1 ? '' : 's'} pasado${count === 1 ? '' : 's'} mas quedan archivados por el equipo LEAD.`,
     loading: 'Cargando eventos...',
   },
 } as const
@@ -330,6 +336,10 @@ async function EventsContent({ locale }: { locale: PublicEventsLocale }) {
     .filter((event) => new Date(event.end_at).getTime() < now)
     .sort((a, b) => new Date(b.start_at).getTime() - new Date(a.start_at).getTime())
   const openEvents = upcomingEvents.length
+  const visibleUpcomingEvents = upcomingEvents.slice(0, INITIAL_UPCOMING_EVENT_LIMIT)
+  const hiddenUpcomingCount = Math.max(0, upcomingEvents.length - visibleUpcomingEvents.length)
+  const visiblePastEvents = pastEvents.slice(0, INITIAL_PAST_EVENT_LIMIT)
+  const hiddenPastCount = Math.max(0, pastEvents.length - visiblePastEvents.length)
 
   return (
     <main className="min-h-screen bg-background">
@@ -390,9 +400,14 @@ async function EventsContent({ locale }: { locale: PublicEventsLocale }) {
             </Card>
           ) : (
             <div className="space-y-4">
-              {upcomingEvents.map((event) => (
+              {visibleUpcomingEvents.map((event) => (
                 <EventCard key={event.id} event={event} locale={locale} />
               ))}
+              {hiddenUpcomingCount > 0 ? (
+                <p className="rounded-lg border bg-card px-4 py-3 text-sm text-muted-foreground">
+                  {copy.moreUpcoming(hiddenUpcomingCount)}
+                </p>
+              ) : null}
             </div>
           )}
         </section>
@@ -407,9 +422,14 @@ async function EventsContent({ locale }: { locale: PublicEventsLocale }) {
             </div>
 
             <div className="space-y-4">
-              {pastEvents.map((event) => (
+              {visiblePastEvents.map((event) => (
                 <EventCard key={event.id} event={event} locale={locale} />
               ))}
+              {hiddenPastCount > 0 ? (
+                <p className="rounded-lg border bg-card px-4 py-3 text-sm text-muted-foreground">
+                  {copy.morePast(hiddenPastCount)}
+                </p>
+              ) : null}
             </div>
           </section>
         )}
