@@ -34,9 +34,10 @@ type BasicOnboardingValues = z.input<ReturnType<typeof createBasicOnboardingSche
 
 type OnboardingProps = {
   initialValues?: Partial<BasicOnboardingValues>
+  nextPath?: string | null
 }
 
-export default function Onboarding({ initialValues }: OnboardingProps) {
+export default function Onboarding({ initialValues, nextPath }: OnboardingProps) {
   const t = useTranslations('onboarding')
   const tCommon = useTranslations('common')
   const tValidation = useTranslations()
@@ -136,6 +137,7 @@ export default function Onboarding({ initialValues }: OnboardingProps) {
         formData.append(key, String(value))
       }
     })
+    if (nextPath) formData.append('next', nextPath)
 
     try {
       const result = await submitOnboarding(formData)

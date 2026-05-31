@@ -9,12 +9,12 @@ Add a recipient-facing `/chapter/invites/accept?token=...` flow that works for e
 
 ## Tasks
 
-- [ ] Add thin server actions for token validation and invite acceptance.
-- [ ] Add `/[locale]/chapter/invites/accept/page.tsx` and a small client component for accept submission states.
-- [ ] Show signed-out, email mismatch, missing profile, expired, revoked, already accepted, and ready-to-accept states.
-- [ ] Preserve invite return path through login/signup and onboarding where needed.
-- [ ] Add action/UI tests where practical and service acceptance tests in #263.
-- [ ] Validate targeted tests and browser smoke screenshots.
+- [x] Add thin server actions for token validation and invite acceptance.
+- [x] Add `/[locale]/chapter/invites/accept/page.tsx` and a small client component for accept submission states.
+- [x] Show signed-out, email mismatch, missing profile, expired, revoked, already accepted, and ready-to-accept states.
+- [x] Preserve invite return path through login/signup and onboarding where needed.
+- [x] Add action/UI tests where practical and service acceptance tests in #263.
+- [x] Validate targeted tests and browser smoke screenshots.
 
 ## Validation
 
