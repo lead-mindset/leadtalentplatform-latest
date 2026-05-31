@@ -71,36 +71,6 @@ type AdminUserCompanyAccessRow = Pick<
 
 type AdminChapterCountRow = ChapterRow
 
-type AdminProfileSummaryRow = Pick<
-  PersonProfileRow,
-  | 'id'
-  | 'user_id'
-  | 'university'
-  | 'major_or_interest'
-  | 'graduation_year'
-  | 'linkedin_url'
-  | 'portfolio_url'
-  | 'skills'
-  | 'is_recruiter_visible'
-  | 'updated_at'
-  | 'created_at'
-  | 'gender'
-> & {
-  user:
-    | Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'role' | 'created_at' | 'updated_at' | 'deactivated_at'>
-    | Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'role' | 'created_at' | 'updated_at' | 'deactivated_at'>[]
-    | null
-  chapter_membership: Pick<ChapterMembershipRow, 'chapter_id' | 'status' | 'position' | 'member_id' | 'joined_at'> & {
-    chapter:
-      | Pick<ChapterRow, 'id' | 'name' | 'university' | 'city' | 'region' | 'created_at' | 'updated_at' | 'instagram_url' | 'latitude' | 'longitude' | 'location_point'>
-      | Pick<ChapterRow, 'id' | 'name' | 'university' | 'city' | 'region' | 'created_at' | 'updated_at' | 'instagram_url' | 'latitude' | 'longitude' | 'location_point'>[]
-      | null
-  }
-  chapter_role_assignment?: ActiveChapterRoleAssignment | null
-}
-
-
-
 type RecentApprovalRaw = {
   user_id: string
   updated_at: string
@@ -208,7 +178,6 @@ function toNamedContact(user: UserContactSummary | undefined): { name: string; e
 type AdminUsersProfileRow = {
   user_id: string
   chapter_id: string
-  chapter: { name: string } | { name: string }[] | null
   status: ChapterMembershipRow['status']
 }
 
@@ -480,101 +449,9 @@ export type InviteResult = { success: true; inviteLink?: string } | { success: f
 
 const CHAPTER_SELECT = 'id, name, university, city, region, created_at, updated_at, instagram_url, latitude, longitude, location_point'
 
-const ADMIN_PROFILE_SELECT = `
-  id,
-  user_id,
-  university,
-  major_or_interest,
-  graduation_year,
-  linkedin_url,
-  portfolio_url,
-  skills,
-  is_recruiter_visible,
-  updated_at,
-  created_at,
-  gender,
-  user:user!inner (
-    id,
-    email,
-    name,
-    phone,
-    role,
-    created_at,
-    updated_at,
-    deactivated_at
-  ),
-  chapter_membership!inner (
-    chapter_id,
-    status,
-    position,
-    member_id,
-    joined_at,
-    chapter (
-      id,
-      name,
-      university,
-      city,
-      region,
-      created_at,
-      updated_at,
-      instagram_url,
-      latitude,
-      longitude,
-      location_point
-    )
-  )
-`
-
 // ───────────────────────────────────────────────────────────────
 // Internal helper functions (get-data.ts)
 // ───────────────────────────────────────────────────────────────
-
-function mapAdminProfile(profile: AdminProfileSummaryRow): MemberWithProfile | null {
-  const user = Array.isArray(profile.user) ? profile.user[0] : profile.user
-  const chapter = Array.isArray(profile.chapter_membership.chapter)
-    ? profile.chapter_membership.chapter[0]
-    : profile.chapter_membership.chapter
-
-  if (!user) return null
-  const skillsValue = profile.skills
-  const skills = Array.isArray(skillsValue)
-    ? skillsValue.filter((skill): skill is string => typeof skill === 'string')
-    : null
-
-  return {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    phone: user.phone ?? null,
-    role: user.role as MemberWithProfile['role'],
-    created_at: user.created_at,
-    updated_at: user.updated_at,
-    deactivated_at: user.deactivated_at ?? null,
-    person_profile: {
-      id: profile.id,
-      user_id: profile.user_id,
-      university: profile.university,
-      major_or_interest: profile.major_or_interest,
-      graduation_year: profile.graduation_year,
-      linkedin_url: profile.linkedin_url,
-      portfolio_url: profile.portfolio_url,
-      skills,
-      is_recruiter_visible: profile.is_recruiter_visible,
-      updated_at: profile.updated_at,
-      created_at: profile.created_at,
-      gender: profile.gender,
-    },
-    chapter_membership: {
-      chapter_id: profile.chapter_membership.chapter_id,
-      status: profile.chapter_membership.status,
-      position: profile.chapter_membership.position,
-      member_id: profile.chapter_membership.member_id,
-      joined_at: profile.chapter_membership.joined_at,
-    },
-    chapter_role_assignment: profile.chapter_role_assignment ?? null,
-    chapter: chapter ?? null,
-  }
-}
 
 // ───────────────────────────────────────────────────────────────
 // Internal helper functions (users.ts)
@@ -1123,20 +1000,7 @@ export const AdminService = {
   // getChapterMembers
   // ───────────────────────────────────────────────────────────────
   async getChapterMembers(supabase: SupabaseClient<Database>, chapter_id: string): Promise<MemberWithProfile[]> {
-    const { data, error } = await supabase
-      .from('person_profile')
-      .select(ADMIN_PROFILE_SELECT)
-      .eq('chapter_membership.chapter_id', chapter_id)
-      .order('created_at', { ascending: false })
-
-    if (error || !data) {
-      logger.error({ context: 'admin/getChapterMembers', error: error }, 'Error')
-      return []
-    }
-
-    return (data as unknown as AdminProfileSummaryRow[])
-      .map(mapAdminProfile)
-      .filter((m): m is MemberWithProfile => m !== null)
+    return ChapterMembershipService.getChapterRoster(supabase, chapter_id)
   },
 
   // ───────────────────────────────────────────────────────────────
@@ -1735,23 +1599,29 @@ export const AdminService = {
 
     const personProfileSet = new Set((personProfiles ?? []).map((p) => p.user_id))
 
-    // Fetch chapter_membership with chapter info
+    // Fetch memberships and chapter names separately. Local Supabase does not expose
+    // every FK relationship in the REST schema cache, so relationship hints here can
+    // hide valid users behind an empty admin table.
     const { data: memberships, error: membershipsError } = await supabase
       .from('chapter_membership')
-      .select('user_id, chapter_id, status, chapter:chapter!chapter_membership_chapter_id_fkey(name)')
+      .select('user_id, chapter_id, status')
       .in('user_id', userIds)
 
     if (membershipsError) {
-      return []
+      logger.error({ context: 'admin/queryFilteredUsers/memberships', error: membershipsError }, 'Failed to fetch user memberships')
     }
 
     const typedMemberships = (memberships ?? []) as unknown as AdminUsersProfileRow[]
+    const chapterNameMap = await fetchChapterNameMap(
+      supabase,
+      typedMemberships.map((membership) => membership.chapter_id)
+    )
     const profileMap = new Map<string, AdminUsersProfileSummary>(
       typedMemberships.map((membership) => [
         membership.user_id,
         {
           chapter_id: membership.chapter_id,
-          chapter_name: Array.isArray(membership.chapter) ? membership.chapter[0]?.name ?? null : membership.chapter?.name ?? null,
+          chapter_name: chapterNameMap.get(membership.chapter_id)?.name ?? null,
           has_person_profile: personProfileSet.has(membership.user_id),
           status: membership.status,
         },

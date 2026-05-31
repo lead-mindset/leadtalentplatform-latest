@@ -7,7 +7,7 @@ import {
   Monitor,
   Users,
 } from 'lucide-react'
-import { getCachedPublishedEvents } from '@/lib/data/public-events'
+import { getCachedPublishedEventPreview } from '@/lib/data/public-events'
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -18,6 +18,8 @@ import { cn } from '@/lib/utils'
 import type { EventWithDetails } from '@/lib/types'
 
 const EVENT_TIME_ZONE = 'America/Lima'
+const INITIAL_UPCOMING_EVENT_LIMIT = 12
+const INITIAL_PAST_EVENT_LIMIT = 6
 const EVENT_LOCALES = {
   en: 'en-US',
   es: 'es-PE',
@@ -63,6 +65,8 @@ const EVENT_COPY = {
     emptyBody: 'Check back soon for new LEAD opportunities.',
     pastTitle: 'Past events',
     pastDescription: 'Explore previous programs and LEAD community activity.',
+    moreUpcoming: 'More upcoming events will appear here as the page grows.',
+    morePast: 'More past events are archived by the LEAD team.',
     loading: 'Loading events...',
   },
   es: {
@@ -102,6 +106,8 @@ const EVENT_COPY = {
     emptyBody: 'Vuelve pronto para ver nuevas oportunidades de LEAD.',
     pastTitle: 'Eventos pasados',
     pastDescription: 'Explora programas anteriores y actividad de la comunidad LEAD.',
+    moreUpcoming: 'Mas eventos proximos apareceran aqui a medida que crezca la pagina.',
+    morePast: 'Mas eventos pasados quedan archivados por el equipo LEAD.',
     loading: 'Cargando eventos...',
   },
 } as const
@@ -208,6 +214,12 @@ function getEventActionLabel(event: EventWithDetails, locale: PublicEventsLocale
   }
 
   return event.access_model === 'application' ? copy.apply : copy.register
+}
+
+function getEventPreviewNowIso() {
+  const now = new Date()
+  now.setSeconds(0, 0)
+  return now.toISOString()
 }
 
 function EventCard({ event, locale }: { event: EventWithDetails; locale: PublicEventsLocale }) {
@@ -321,15 +333,18 @@ function EventCard({ event, locale }: { event: EventWithDetails; locale: PublicE
 
 async function EventsContent({ locale }: { locale: PublicEventsLocale }) {
   const copy = EVENT_COPY[locale]
-  const events: EventWithDetails[] = await getCachedPublishedEvents()
-  const now = Date.now()
-  const upcomingEvents = events
-    .filter((event) => new Date(event.end_at).getTime() >= now)
-    .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime())
-  const pastEvents = events
-    .filter((event) => new Date(event.end_at).getTime() < now)
-    .sort((a, b) => new Date(b.start_at).getTime() - new Date(a.start_at).getTime())
-  const openEvents = upcomingEvents.length
+  const {
+    upcomingEvents,
+    pastEvents,
+    hasMoreUpcoming,
+    hasMorePast,
+  } = await getCachedPublishedEventPreview({
+    nowIso: getEventPreviewNowIso(),
+    upcomingLimit: INITIAL_UPCOMING_EVENT_LIMIT,
+    pastLimit: INITIAL_PAST_EVENT_LIMIT,
+  })
+  const publishedSummary = `${upcomingEvents.length + pastEvents.length}${hasMoreUpcoming || hasMorePast ? '+' : ''}`
+  const openEventsSummary = `${upcomingEvents.length}${hasMoreUpcoming ? '+' : ''}`
 
   return (
     <main className="min-h-screen bg-background">
@@ -352,11 +367,11 @@ async function EventsContent({ locale }: { locale: PublicEventsLocale }) {
 
             <div className="grid grid-cols-2 gap-3 sm:flex">
               <div className="rounded-lg border bg-card px-4 py-3">
-                <p className="text-2xl font-semibold">{events.length}</p>
+                <p className="text-2xl font-semibold">{publishedSummary}</p>
                 <p className="text-xs text-muted-foreground">{copy.published}</p>
               </div>
               <div className="rounded-lg border bg-card px-4 py-3">
-                <p className="text-2xl font-semibold">{openEvents}</p>
+                <p className="text-2xl font-semibold">{openEventsSummary}</p>
                 <p className="text-xs text-muted-foreground">{copy.upcoming}</p>
               </div>
             </div>
@@ -393,6 +408,11 @@ async function EventsContent({ locale }: { locale: PublicEventsLocale }) {
               {upcomingEvents.map((event) => (
                 <EventCard key={event.id} event={event} locale={locale} />
               ))}
+              {hasMoreUpcoming ? (
+                <p className="rounded-lg border bg-card px-4 py-3 text-sm text-muted-foreground">
+                  {copy.moreUpcoming}
+                </p>
+              ) : null}
             </div>
           )}
         </section>
@@ -410,6 +430,11 @@ async function EventsContent({ locale }: { locale: PublicEventsLocale }) {
               {pastEvents.map((event) => (
                 <EventCard key={event.id} event={event} locale={locale} />
               ))}
+              {hasMorePast ? (
+                <p className="rounded-lg border bg-card px-4 py-3 text-sm text-muted-foreground">
+                  {copy.morePast}
+                </p>
+              ) : null}
             </div>
           </section>
         )}

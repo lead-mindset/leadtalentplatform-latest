@@ -262,7 +262,121 @@ export type Database = {
           },
         ]
       }
-      chapter_preapproval: {
+        chapter_invite: {
+          Row: {
+            accepted_at: string | null
+            accepted_by_user_id: string | null
+            chapter_id: string
+            created_at: string
+            created_by_role: string
+            created_by_user_id: string | null
+            display_title: string
+            email: string
+            expires_at: string
+            functional_area: string
+            id: string
+            invite_type: string
+            metadata: Json
+            normalized_email: string
+            raw_title: string | null
+            replaced_by_invite_id: string | null
+            revoked_at: string | null
+            revoked_by_user_id: string | null
+            role_level: string
+            source: string
+            status: string
+            token_hash: string
+            updated_at: string
+          }
+          Insert: {
+            accepted_at?: string | null
+            accepted_by_user_id?: string | null
+            chapter_id: string
+            created_at?: string
+            created_by_role: string
+            created_by_user_id?: string | null
+            display_title: string
+            email: string
+            expires_at?: string
+            functional_area: string
+            id?: string
+            invite_type: string
+            metadata?: Json
+            normalized_email: string
+            raw_title?: string | null
+            replaced_by_invite_id?: string | null
+            revoked_at?: string | null
+            revoked_by_user_id?: string | null
+            role_level: string
+            source?: string
+            status?: string
+            token_hash: string
+            updated_at?: string
+          }
+          Update: {
+            accepted_at?: string | null
+            accepted_by_user_id?: string | null
+            chapter_id?: string
+            created_at?: string
+            created_by_role?: string
+            created_by_user_id?: string | null
+            display_title?: string
+            email?: string
+            expires_at?: string
+            functional_area?: string
+            id?: string
+            invite_type?: string
+            metadata?: Json
+            normalized_email?: string
+            raw_title?: string | null
+            replaced_by_invite_id?: string | null
+            revoked_at?: string | null
+            revoked_by_user_id?: string | null
+            role_level?: string
+            source?: string
+            status?: string
+            token_hash?: string
+            updated_at?: string
+          }
+          Relationships: [
+            {
+              foreignKeyName: "chapter_invite_accepted_by_user_id_fkey"
+              columns: ["accepted_by_user_id"]
+              isOneToOne: false
+              referencedRelation: "user"
+              referencedColumns: ["id"]
+            },
+            {
+              foreignKeyName: "chapter_invite_chapter_id_fkey"
+              columns: ["chapter_id"]
+              isOneToOne: false
+              referencedRelation: "chapter"
+              referencedColumns: ["id"]
+            },
+            {
+              foreignKeyName: "chapter_invite_created_by_user_id_fkey"
+              columns: ["created_by_user_id"]
+              isOneToOne: false
+              referencedRelation: "user"
+              referencedColumns: ["id"]
+            },
+            {
+              foreignKeyName: "chapter_invite_replaced_by_invite_id_fkey"
+              columns: ["replaced_by_invite_id"]
+              isOneToOne: false
+              referencedRelation: "chapter_invite"
+              referencedColumns: ["id"]
+            },
+            {
+              foreignKeyName: "chapter_invite_revoked_by_user_id_fkey"
+              columns: ["revoked_by_user_id"]
+              isOneToOne: false
+              referencedRelation: "user"
+              referencedColumns: ["id"]
+            },
+          ]
+        }
+        chapter_preapproval: {
         Row: {
           chapter_id: string
           consumed_at: string | null
@@ -369,8 +483,9 @@ export type Database = {
           is_primary: boolean
           raw_title: string | null
           role_level: string
-          source: string
-          source_preapproval_id: string | null
+            source: string
+            source_chapter_invite_id: string | null
+            source_preapproval_id: string | null
           starts_at: string
           status: string
           updated_at: string
@@ -387,8 +502,9 @@ export type Database = {
           is_primary?: boolean
           raw_title?: string | null
           role_level: string
-          source?: string
-          source_preapproval_id?: string | null
+            source?: string
+            source_chapter_invite_id?: string | null
+            source_preapproval_id?: string | null
           starts_at?: string
           status?: string
           updated_at?: string
@@ -405,8 +521,9 @@ export type Database = {
           is_primary?: boolean
           raw_title?: string | null
           role_level?: string
-          source?: string
-          source_preapproval_id?: string | null
+            source?: string
+            source_chapter_invite_id?: string | null
+            source_preapproval_id?: string | null
           starts_at?: string
           status?: string
           updated_at?: string
@@ -427,8 +544,15 @@ export type Database = {
             referencedRelation: "chapter"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "chapter_role_assignment_source_preapproval_id_fkey"
+            {
+              foreignKeyName: "chapter_role_assignment_source_chapter_invite_id_fkey"
+              columns: ["source_chapter_invite_id"]
+              isOneToOne: false
+              referencedRelation: "chapter_invite"
+              referencedColumns: ["id"]
+            },
+            {
+              foreignKeyName: "chapter_role_assignment_source_preapproval_id_fkey"
             columns: ["source_preapproval_id"]
             isOneToOne: false
             referencedRelation: "chapter_preapproval"

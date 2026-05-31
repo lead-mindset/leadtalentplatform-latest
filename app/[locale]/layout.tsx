@@ -8,7 +8,6 @@ import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { Suspense } from 'react';
 import { Raleway, Montserrat } from "next/font/google";
-import { GoogleMapsProvider } from "@/components/global/google-maps-provider";
 import { getConfiguredAppUrl } from "@/lib/app-url";
 
 const raleway = Raleway({
@@ -83,13 +82,11 @@ export default async function LocaleLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <GoogleMapsProvider>
-            <Suspense fallback={null}>
-              <LocaleContent params={Promise.resolve({ locale: htmlLang })}>
-                {children}
-              </LocaleContent>
-            </Suspense>
-          </GoogleMapsProvider>
+          <Suspense fallback={null}>
+            <LocaleContent params={Promise.resolve({ locale: htmlLang })}>
+              {children}
+            </LocaleContent>
+          </Suspense>
         </ThemeProvider>
       </body>
     </html>

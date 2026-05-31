@@ -16,10 +16,17 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import { Link, useRouter } from '@/i18n/routing';
+import { useSearchParams } from 'next/navigation';
 import { useState } from "react";
 import { GoogleButton } from "./google-button";
 import { useTranslations } from 'next-intl';
 import { getAuthErrorKey } from '@/lib/auth-errors'
+
+function getSafeNextPath(value: string | null) {
+  if (!value || !value.startsWith('/') || value.startsWith('//')) return null
+  if (value.startsWith('/auth/')) return null
+  return value
+}
 
 export function SignUpForm({
   className,
@@ -33,6 +40,7 @@ export function SignUpForm({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const t = useTranslations('auth');
   const locale = useLocale(); // This will get 'en' or 'es'
 
@@ -54,6 +62,7 @@ export function SignUpForm({
     }
 
     try {
+      const nextPath = getSafeNextPath(searchParams.get('next'))
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -61,11 +70,11 @@ export function SignUpForm({
           data: {
             locale: locale,
           },
-          emailRedirectTo: `${window.location.origin}/${locale}/auth/callback`
+          emailRedirectTo: `${window.location.origin}/${locale}/auth/callback${nextPath ? `?next=${encodeURIComponent(nextPath)}` : ''}`
         },
       });
       if (error) throw error;
-      router.push(data.session ? "/onboarding" : "/auth/sign-up-success");
+      router.push(data.session ? (nextPath ?? "/onboarding") : "/auth/sign-up-success");
     } catch (error: unknown) {
       setError(t(getAuthErrorKey(error)));
     } finally {

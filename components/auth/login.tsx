@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Eye, EyeOff, Info } from "lucide-react";
 import { Link, useRouter } from '@/i18n/routing';
+import { useSearchParams } from 'next/navigation';
 import { useState } from "react";
 import { GoogleButton } from "./google-button";
 import { useLocale, useTranslations } from 'next-intl';
@@ -22,6 +23,12 @@ import { getAuthErrorKey } from '@/lib/auth-errors'
 import { resolvePostLoginRedirect } from '@/lib/actions/auth/resolve-post-login-redirect'
 
 const POST_LOGIN_REDIRECT_RETRY_DELAYS_MS = [0, 250, 750]
+
+function getSafeNextPath(value: string | null) {
+  if (!value || !value.startsWith('/') || value.startsWith('//')) return null
+  if (value.startsWith('/auth/')) return null
+  return value
+}
 
 async function resolvePostLoginRedirectWithRetry() {
   let lastResult: Awaited<ReturnType<typeof resolvePostLoginRedirect>> | null = null
@@ -52,6 +59,7 @@ export function LoginForm({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const t = useTranslations('auth');
   const locale = useLocale();
   const isEnglish = locale === 'en';
@@ -71,6 +79,12 @@ export function LoginForm({
       if (!data.user?.id) {
         setError(t('anErrorOccurred'));
         return;
+      }
+
+      const nextPath = getSafeNextPath(searchParams.get('next'))
+      if (nextPath) {
+        router.push(nextPath)
+        return
       }
 
       const redirectResult = await resolvePostLoginRedirectWithRetry()

@@ -30,6 +30,30 @@ describe('transactional email senders', () => {
     )
   })
 
+  it('sends chapter e-board invites with role, chapter, and exact email guidance', async () => {
+    const { sendChapterEboardInviteEmail } = await import('../send-email')
+
+    await sendChapterEboardInviteEmail('leader@example.edu', {
+      chapterName: 'LEAD UNI',
+      displayTitle: 'Directora de Eventos',
+      token: 'chapter-token-123',
+    })
+
+    expect(sendTransactionalEmailMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: 'leader@example.edu',
+        subject: 'Activa tu rol en LEAD Talent Platform',
+        critical: true,
+      })
+    )
+    const html = sendTransactionalEmailMock.mock.calls[0][0].html
+    expect(html).toContain('Directora de Eventos')
+    expect(html).toContain('LEAD UNI')
+    expect(html).toContain('leader@example.edu')
+    expect(html).toContain('abriones@leadmindset.org')
+    expect(html).toContain('https://leadqa.vercel.app/es/chapter/invites/accept?token=chapter-token-123')
+  })
+
   it('sends member approval with member id and LEAD Americas copy', async () => {
     const { sendMemberApprovalEmail } = await import('../send-email')
 

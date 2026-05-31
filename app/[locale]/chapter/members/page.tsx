@@ -3,13 +3,19 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Icons } from '@/components/ui/icons'
 import type { MemberWithProfile } from '@/lib/types'
-import { getChapterMemberPermissions, getChapterMembers, getMemberStats } from '@/lib/actions/chapter/get-data'
+import {
+  getChapterEboardInvites,
+  getChapterMemberPermissions,
+  getChapterMembers,
+  getMemberStats,
+} from '@/lib/actions/chapter/get-data'
 import type { ChapterMemberPermissionFlags } from '@/lib/services/chapter.service'
 import { MembersList } from './components/members-list'
 import { Breadcrumb } from '@/components/ui/breadcrumb'
 import { MainContainer } from '@/components/global/main-container'
 import { MembersTabs, type MemberStatusCounts } from './components/member-tabs'
 import { PageHeader } from '@/components/ui/page-header'
+import { EboardInviteManagement } from './components/eboard-invite-management'
 
 export type MemberFilterStatus = 'pending' | 'active' | 'rejected' | 'inactive' | 'alumni'
 
@@ -100,6 +106,7 @@ export default async function ChapterMembersPage({
   }
 
   const allMembers = await getChapterMembers(chapter_id)
+  const eboardInvites = permissions.canAssignEboard ? await getChapterEboardInvites(chapter_id) : []
   const stats = getMemberStats(allMembers)
   const counts: MemberStatusCounts = {
     pending: stats.pending,
@@ -135,6 +142,10 @@ export default async function ChapterMembersPage({
       />
 
       <div className="space-y-4">
+        {permissions.canAssignEboard ? (
+          <EboardInviteManagement invites={eboardInvites} />
+        ) : null}
+
         <MembersTabs currentStatus={safeStatus} counts={counts} visibleStatuses={visibleStatuses} />
 
         {displayMembers.length === 0 ? (

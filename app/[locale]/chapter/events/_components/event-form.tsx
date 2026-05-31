@@ -842,6 +842,7 @@ export function EventForm({
     { num: 4, title: 'Pathway' },
     { num: 5, title: 'Revision' },
   ]
+  const currentStep = steps.find((item) => item.num === step) ?? steps[0]
   const fieldErrorEntries = Object.entries(fieldErrors).filter(([, message]) => message)
 
   const renderErrorSummary = () => {
@@ -1731,7 +1732,32 @@ export function EventForm({
   return (
     <div className="w-full max-w-6xl mx-auto space-y-8 pb-16">
       <div className="mb-12">
-        <div className="flex justify-between items-center mb-8 max-w-3xl mx-auto px-4">
+        <div className="mb-6 rounded-lg border bg-card/70 p-4 sm:hidden">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Paso {step} de {steps.length}
+              </p>
+              <p className="text-base font-semibold text-foreground">{currentStep.title}</p>
+            </div>
+            <div className="flex items-center gap-1.5" aria-hidden="true">
+              {steps.map((item) => (
+                <span
+                  key={item.num}
+                  className={`h-2.5 rounded-full transition-all ${
+                    item.num === step
+                      ? 'w-7 bg-primary'
+                      : item.num < step
+                      ? 'w-2.5 bg-primary/70'
+                      : 'w-2.5 bg-muted'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="hidden justify-between items-center mb-8 max-w-3xl mx-auto px-4 sm:flex">
           {steps.map((s, i) => (
             <React.Fragment key={s.num}>
               <div className="flex flex-col items-center gap-2 relative z-10">

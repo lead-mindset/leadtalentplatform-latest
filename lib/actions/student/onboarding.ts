@@ -13,6 +13,13 @@ import {
 
 const SUPPORTED_LOCALES = new Set(['en', 'es'])
 
+function getSafeNextPath(value: FormDataEntryValue | null) {
+  if (typeof value !== 'string') return null
+  if (!value.startsWith('/') || value.startsWith('//')) return null
+  if (value.startsWith('/auth/')) return null
+  return value
+}
+
 async function getRequestLocale() {
   const referer = (await headers()).get('referer')
   if (!referer) return 'en'
@@ -27,7 +34,8 @@ async function getRequestLocale() {
 
 export async function submitOnboarding(formData: FormData) {
   const locale = await getRequestLocale()
-  let redirectPath = '/student'
+  const nextPath = getSafeNextPath(formData.get('next'))
+  let redirectPath = nextPath ?? '/student'
 
   try {
     const supabase = await createClient()
@@ -58,7 +66,7 @@ export async function submitOnboarding(formData: FormData) {
       return { error: result.error }
     }
 
-    redirectPath = result.postOnboardingRedirectPath ?? redirectPath
+    redirectPath = nextPath ?? result.postOnboardingRedirectPath ?? redirectPath
   } catch (error) {
     console.error('Onboarding submission error:', error)
     return { error: 'Internal server error' }

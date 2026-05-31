@@ -26,6 +26,30 @@ const EVENT_MUTATION_SELECT =
 const EVENT_REGISTRATION_LOOKUP_SELECT =
   'id, title, is_published, start_at';
 
+const PUBLISHED_EVENT_LISTING_SELECT = `
+  id,
+  title,
+  start_at,
+  end_at,
+  location,
+  event_type,
+  capacity,
+  is_published,
+  access_model,
+  chapter_id,
+  created_by_id,
+  created_at,
+  updated_at,
+  location_name,
+  location_city,
+  location_region,
+  chapter_name,
+  chapter_university,
+  chapter_city,
+  chapter_region,
+  registrations_count
+`;
+
 type EventWithChapterViewRow = Database['public']['Views']['event_with_chapter']['Row']
 
 type PublishedEventListRow = Pick<
@@ -99,6 +123,60 @@ function isDuplicateError(err: { message?: string } | null): boolean {
 
 function isActiveRegistrationStatus(status: RegistrationStatus | string | undefined): boolean {
   return status === 'registered' || status === 'attended';
+}
+
+function mapPublishedEventListRows(rows: PublishedEventListRow[]): EventWithDetails[] {
+  return rows.map((event) => {
+    const chapter = event.chapter_name ? {
+      id: event.chapter_id,
+      name: event.chapter_name,
+      university: event.chapter_university,
+      city: event.chapter_city,
+      region: event.chapter_region,
+      created_at: null,
+      updated_at: null,
+      instagram_url: null,
+      latitude: null,
+      longitude: null,
+      location_point: null,
+    } : null
+
+    return {
+      id: event.id ?? '',
+      title: event.title ?? '',
+      description: null,
+      cover_image: null,
+      start_at: event.start_at ?? '',
+      end_at: event.end_at ?? '',
+      location: event.location,
+      meeting_url: null,
+      event_type: event.event_type ?? 'in_person',
+      capacity: event.capacity,
+      is_published: event.is_published ?? false,
+      access_model: event.access_model ?? 'open',
+      application_form_url: null,
+      chapter_id: event.chapter_id,
+      created_by_id: event.created_by_id ?? '',
+      created_at: event.created_at ?? '',
+      updated_at: event.updated_at ?? '',
+      location_address: null,
+      location_city: event.location_city,
+      location_latitude: null,
+      location_longitude: null,
+      location_name: event.location_name,
+      location_point: null,
+      location_region: event.location_region,
+      chapter: chapter as unknown as EventWithDetails['chapter'],
+      owner_chapter: chapter as unknown as EventWithDetails['owner_chapter'],
+      event_chapter: [],
+      collaborators: [],
+      created_by: null,
+      _count: {
+        registrations: event.registrations_count ?? 0,
+        chapters: 0,
+      },
+    } as EventWithDetails
+  })
 }
 
 // ───────────────────────────────────────────────────────────────
@@ -915,29 +993,7 @@ export const EventService = {
   ): Promise<EventWithDetails[]> {
     const { data, error } = await supabase
       .from('published_event_listing')
-      .select(`
-        id,
-        title,
-        start_at,
-        end_at,
-        location,
-        event_type,
-        capacity,
-        is_published,
-        access_model,
-        chapter_id,
-        created_by_id,
-        created_at,
-        updated_at,
-        location_name,
-        location_city,
-        location_region,
-        chapter_name,
-        chapter_university,
-        chapter_city,
-        chapter_region,
-        registrations_count
-      `)
+      .select(PUBLISHED_EVENT_LISTING_SELECT)
       .order('start_at', { ascending: true })
 
     if (error || !data) {
@@ -946,58 +1002,72 @@ export const EventService = {
     }
 
     const eventRows = data as unknown as PublishedEventListRow[]
-    return eventRows
-      .map((event) => {
-        const chapter = event.chapter_name ? {
-          id: event.chapter_id,
-          name: event.chapter_name,
-          university: event.chapter_university,
-          city: event.chapter_city,
-          region: event.chapter_region,
-          created_at: null,
-          updated_at: null,
-          instagram_url: null,
-          latitude: null,
-          longitude: null,
-          location_point: null,
-        } : null
+    return mapPublishedEventListRows(eventRows)
+  },
 
-        return {
-          id: event.id ?? '',
-          title: event.title ?? '',
-          description: null,
-          cover_image: null,
-          start_at: event.start_at ?? '',
-          end_at: event.end_at ?? '',
-          location: event.location,
-          meeting_url: null,
-          event_type: event.event_type ?? 'in_person',
-          capacity: event.capacity,
-          is_published: event.is_published ?? false,
-          access_model: event.access_model ?? 'open',
-          application_form_url: null,
-          chapter_id: event.chapter_id,
-          created_by_id: event.created_by_id ?? '',
-          created_at: event.created_at ?? '',
-          updated_at: event.updated_at ?? '',
-          location_address: null,
-          location_city: event.location_city,
-          location_latitude: null,
-          location_longitude: null,
-          location_name: event.location_name,
-          location_point: null,
-          location_region: event.location_region,
-          chapter: chapter as unknown as EventWithDetails['chapter'],
-          owner_chapter: chapter as unknown as EventWithDetails['owner_chapter'],
-          event_chapter: [],
-          collaborators: [],
-          created_by: null,
-          _count: {
-            registrations: event.registrations_count ?? 0,
-            chapters: 0,
-          },
-        } as EventWithDetails
-      })
+  async getPublishedEventPreview(
+    supabase: SupabaseClient<Database>,
+    params: {
+      nowIso: string
+      upcomingLimit: number
+      pastLimit: number
+    }
+  ): Promise<{
+    upcomingEvents: EventWithDetails[]
+    pastEvents: EventWithDetails[]
+    hasMoreUpcoming: boolean
+    hasMorePast: boolean
+  }> {
+    const upcomingLimit = Math.max(0, params.upcomingLimit)
+    const pastLimit = Math.max(0, params.pastLimit)
+
+    const [upcomingResult, pastResult] = await Promise.all([
+      supabase
+        .from('published_event_listing')
+        .select(PUBLISHED_EVENT_LISTING_SELECT)
+        .gte('end_at', params.nowIso)
+        .order('start_at', { ascending: true })
+        .limit(upcomingLimit + 1),
+      supabase
+        .from('published_event_listing')
+        .select(PUBLISHED_EVENT_LISTING_SELECT)
+        .lt('end_at', params.nowIso)
+        .order('start_at', { ascending: false })
+        .limit(pastLimit + 1),
+    ])
+
+    const { data: upcomingData, error: upcomingError } = upcomingResult
+    const { data: pastData, error: pastError } = pastResult
+
+    if (upcomingError || !upcomingData) {
+      logger.error({ context: 'getPublishedEventPreview.upcoming', error: upcomingError }, 'Error')
+      return {
+        upcomingEvents: [],
+        pastEvents: [],
+        hasMoreUpcoming: false,
+        hasMorePast: false,
+      }
+    }
+
+    if (pastError || !pastData) {
+      logger.error({ context: 'getPublishedEventPreview.past', error: pastError }, 'Error')
+      return {
+        upcomingEvents: mapPublishedEventListRows((upcomingData as unknown as PublishedEventListRow[]).slice(0, upcomingLimit)),
+        pastEvents: [],
+        hasMoreUpcoming: upcomingData.length > upcomingLimit,
+        hasMorePast: false,
+      }
+    }
+
+    const upcomingRows = upcomingData as unknown as PublishedEventListRow[]
+    const pastRows = pastData as unknown as PublishedEventListRow[]
+
+    return {
+      upcomingEvents: mapPublishedEventListRows(upcomingRows.slice(0, upcomingLimit)),
+      pastEvents: mapPublishedEventListRows(pastRows.slice(0, pastLimit)),
+      hasMoreUpcoming: upcomingRows.length > upcomingLimit,
+      hasMorePast: pastRows.length > pastLimit,
+    }
   },
 
   // ───────────────────────────────────────────────────────────────
