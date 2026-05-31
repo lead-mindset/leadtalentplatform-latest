@@ -202,6 +202,7 @@ export type AdminDashboardStats = {
   total_students: number
   active_chapters: number
   events_this_month: number
+  pending_chapter_approvals: number
   recruiter_opt_in_rate: number
 }
 
@@ -608,6 +609,7 @@ export const AdminService = {
       chapterMembersResult,
       monthlyEventsResult,
       approvedProfilesResult,
+      pendingChapterApprovalsResult,
       visibleApprovedProfilesResult,
     ] = await Promise.all([
       supabase.from('user').select('id', { count: 'exact', head: true }).eq('role', 'member'),
@@ -621,6 +623,10 @@ export const AdminService = {
         .from('chapter_membership')
         .select('user_id', { count: 'exact', head: true })
         .eq('status', 'approved'),
+      supabase
+        .from('chapter_membership')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'pending'),
       supabase
         .from('person_profile')
         .select('user_id', { count: 'exact', head: true })
@@ -638,6 +644,7 @@ export const AdminService = {
       total_students: studentsResult.count ?? 0,
       active_chapters: chapter_ids.size,
       events_this_month: monthlyEventsResult.count ?? 0,
+      pending_chapter_approvals: pendingChapterApprovalsResult.count ?? 0,
       recruiter_opt_in_rate: approvedCount > 0 ? Math.round((visibleApprovedCount / approvedCount) * 100) : 0,
     }
   },
