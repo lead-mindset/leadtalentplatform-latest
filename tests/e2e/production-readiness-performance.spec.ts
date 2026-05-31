@@ -85,9 +85,11 @@ declare global {
 async function loginAs(page: Page, email: string) {
   await page.context().clearCookies()
   await page.goto('/en/auth/login', { waitUntil: 'domcontentloaded' })
+  await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
   await page.locator('#email').fill(email)
   await page.locator('#password').fill(PASSWORD)
-  await page.getByRole('button', { name: /sign in|iniciar/i }).click()
+  await page.locator('form').getByRole('button', { name: /sign in|iniciar/i }).click()
+  await page.waitForURL(/\/en\/(student|chapter|company|admin)/, { timeout: 10_000 })
   await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
 }
 
