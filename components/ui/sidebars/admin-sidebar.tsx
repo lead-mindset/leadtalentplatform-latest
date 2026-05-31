@@ -11,7 +11,7 @@ import { ADMIN_NAV } from '@/lib/nav-config'
 import type { AdminStats } from '@/lib/types'
 
 interface AdminNavigationProps {
-  stats: AdminStats
+  stats?: AdminStats
 }
 
 export function AdminNavigation({ stats }: AdminNavigationProps) {
@@ -26,14 +26,18 @@ export function AdminNavigation({ stats }: AdminNavigationProps) {
               item={item}
               exact={item.id === 'overview'}
               badge={
-                item.id === 'chapters' ? stats.total_chapters :
-                item.id === 'users' ? stats.total_users :
-                item.id === 'companies' ? stats.total_companies :
+                stats && item.id === 'chapters' ? stats.total_chapters :
+                stats && item.id === 'users' ? stats.total_users :
+                stats && item.id === 'companies' ? stats.total_companies :
                 undefined
               }
               showPing={
-                (item.id === 'invites' && stats.pending_invites > 0) ||
-                (item.id === 'users' && stats.pending_approvals > 0)
+                Boolean(
+                  stats && (
+                    (item.id === 'invites' && stats.pending_invites > 0) ||
+                    (item.id === 'users' && stats.pending_approvals > 0)
+                  )
+                )
               }
             />
           ))}

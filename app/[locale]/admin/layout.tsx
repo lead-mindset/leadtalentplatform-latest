@@ -2,7 +2,7 @@ import { SidebarLayout } from '@/components/ui/sidebars/sidebar-layout'
 import { BaseSidebar } from '@/components/ui/sidebars/base-sidebar'
 import { AdminNavigation } from '@/components/ui/sidebars/admin-sidebar'
 import { Badge } from '@/components/ui/badge'
-import { requireAdmin, getSidebarStatsForAdmin } from '@/lib/auth'
+import { requireAdmin } from '@/lib/auth'
 import type { ReactNode } from 'react'
 
 interface AdminLayoutProps {
@@ -10,8 +10,7 @@ interface AdminLayoutProps {
 }
 
 export default async function AdminLayout({ children }: AdminLayoutProps) {
-  const { supabase, user } = await requireAdmin()
-  const stats = await getSidebarStatsForAdmin(supabase)
+  const { user } = await requireAdmin()
   
   return (
     <SidebarLayout
@@ -24,7 +23,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
           userEmail={user.email}
           userRole={user.role}
         >
-          <AdminNavigation stats={stats} />
+          <AdminNavigation />
         </BaseSidebar>
       }
     >

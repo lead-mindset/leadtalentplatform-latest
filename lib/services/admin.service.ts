@@ -839,10 +839,7 @@ export const AdminService = {
       companiesResult,
       totalProfilesResult,
       completeProfilesResult,
-      pendingApprovalsResult,
       visibleProfilesResult,
-      activeRecruitersResult,
-      pendingInvitesResult,
     ] = await Promise.all([
       supabase.from('user').select('id', { count: 'exact', head: true }),
       supabase.from('chapter').select('id', { count: 'exact', head: true }),
@@ -850,24 +847,9 @@ export const AdminService = {
       supabase.from('person_profile').select('user_id', { count: 'exact', head: true }),
       supabase.from('person_profile').select('user_id', { count: 'exact', head: true }), // Assuming complete means a profile exists
       supabase
-        .from('chapter_membership')
-        .select('user_id', { count: 'exact', head: true })
-        .eq('status', 'pending'),
-      supabase
         .from('person_profile')
         .select('user_id', { count: 'exact', head: true })
         .eq('is_recruiter_visible', true),
-      supabase
-        .from('recruiter_access')
-        .select('id', { count: 'exact', head: true })
-        .eq('is_active', true)
-        .is('revoked_at', null),
-      supabase
-        .from('recruiter_access')
-        .select('id', { count: 'exact', head: true })
-        .is('accepted_at', null)
-        .is('revoked_at', null)
-        .gt('invite_expires_at', new Date().toISOString()),
     ])
 
     const results = [
@@ -876,10 +858,7 @@ export const AdminService = {
       companiesResult,
       totalProfilesResult,
       completeProfilesResult,
-      pendingApprovalsResult,
       visibleProfilesResult,
-      activeRecruitersResult,
-      pendingInvitesResult,
     ]
     results.forEach((r, i) => {
       if (r.error)
@@ -896,10 +875,10 @@ export const AdminService = {
       total_companies: companiesResult.count ?? 0,
       totalProfiles,
       complete_profiles,
-      pending_approvals: pendingApprovalsResult.count ?? 0,
+      pending_approvals: 0,
       visibleProfiles: visibleProfilesResult.count ?? 0,
-      active_recruiters: activeRecruitersResult.count ?? 0,
-      pending_invites: pendingInvitesResult.count ?? 0,
+      active_recruiters: 0,
+      pending_invites: 0,
       completion_rate,
     }
   },
