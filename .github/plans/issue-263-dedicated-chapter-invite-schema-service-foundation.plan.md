@@ -16,12 +16,12 @@ Add the dedicated `chapter_invite` persistence model and core service contract t
 
 ## Tasks
 
-- [ ] Add `chapter_invite` migration with token hash, lifecycle status, role metadata, created/accepted/revoked fields, protected-role pending uniqueness, and service-role/admin RLS.
-- [ ] Extend `chapter_role_assignment` and `chapter_permission_grant` source constraints so accepted invites can create linked role assignments and grants.
-- [ ] Update generated database types for `chapter_invite` and role-assignment invite linkage.
-- [ ] Add `lib/services/chapter-invite.service.ts` with token creation/hash helpers, create/list/validate/revoke/reinvite/accept contracts, and conflict handling.
-- [ ] Add focused service tests for token hashing, pending duplicate protection, protected-role conflict checks, token state validation, wrong-email acceptance rejection, and accepted-token idempotency.
-- [ ] Validate with targeted tests, TypeScript, and lint or document any broader pre-existing warnings.
+- [x] Add `chapter_invite` migration with token hash, lifecycle status, role metadata, created/accepted/revoked fields, protected-role pending uniqueness, and service-role/admin RLS.
+- [x] Extend `chapter_role_assignment` and `chapter_permission_grant` source constraints so accepted invites can create linked role assignments and grants.
+- [x] Update generated database types for `chapter_invite` and role-assignment invite linkage.
+- [x] Add `lib/services/chapter-invite.service.ts` with token creation/hash helpers, create/list/validate/revoke/reinvite/accept contracts, and conflict handling.
+- [x] Add focused service tests for token hashing, pending duplicate protection, protected-role conflict checks, token state validation, wrong-email acceptance rejection, and accepted-token idempotency.
+- [x] Validate with targeted tests, TypeScript, and lint or document any broader pre-existing warnings.
 
 ## Validation
 

@@ -36,7 +36,7 @@ export type ChapterRoleLevel =
   | 'coordinator'
   | 'member'
 
-type ChapterGrantSource = 'role_template' | 'manual_admin' | 'preapproval' | 'migration'
+type ChapterGrantSource = 'role_template' | 'manual_admin' | 'preapproval' | 'chapter_invite' | 'migration'
 
 type PermissionTarget = {
   userId: string
