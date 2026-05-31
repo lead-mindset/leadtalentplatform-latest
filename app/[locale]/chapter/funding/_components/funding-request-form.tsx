@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { useLocale } from 'next-intl'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -86,7 +87,9 @@ export function FundingRequestForm({
   initial?: FundingRequestFormInitial
 }) {
   const router = useRouter()
+  const locale = useLocale()
   const [isPending, startTransition] = useTransition()
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [eventId, setEventId] = useState(initial?.request.event_id ?? '')
   const [title, setTitle] = useState(initial?.request.title ?? '')
   const [purpose, setPurpose] = useState(initial?.request.purpose ?? '')
@@ -173,34 +176,46 @@ export function FundingRequestForm({
   }
 
   function submitFlow(shouldSubmit: boolean) {
+    if (isSubmitting) return
+    setIsSubmitting(true)
     startTransition(() => {
       void (async () => {
-        const payload = buildPayload()
-        const draftResult = initial
-          ? await saveFundingDraft({ ...payload, requestId: initial.request.id })
-          : await createFundingDraft(payload)
-        if (!draftResult.success) {
-          toast.error(draftResult.error)
-          return
-        }
-
-        if (shouldSubmit) {
-          const submitResult = await submitFundingRequest({ requestId: draftResult.requestId })
-          if (!submitResult.success) {
-            toast.error(submitResult.error)
-            router.push('/chapter/funding')
+        try {
+          const payload = buildPayload()
+          const fundingPath = `/${locale}/chapter/funding`
+          const draftResult = initial
+            ? await saveFundingDraft({ ...payload, requestId: initial.request.id })
+            : await createFundingDraft(payload)
+          if (!draftResult.success) {
+            toast.error(draftResult.error)
             return
           }
-          toast.success('Solicitud enviada a revisión.')
-        } else {
-          toast.success('Borrador guardado.')
-        }
 
-        router.push('/chapter/funding')
-        router.refresh()
+          if (shouldSubmit) {
+            const submitResult = await submitFundingRequest({ requestId: draftResult.requestId })
+            if (!submitResult.success) {
+              toast.error(submitResult.error)
+              router.push(fundingPath)
+              return
+            }
+            toast.success('Solicitud enviada a revisión.')
+          } else {
+            toast.success('Borrador guardado.')
+          }
+
+          router.push(fundingPath)
+          router.refresh()
+        } catch (error) {
+          console.error('Funding request submission failed', error)
+          toast.error('No se pudo guardar la solicitud. Intenta nuevamente.')
+        } finally {
+          setIsSubmitting(false)
+        }
       })()
     })
   }
+
+  const isBusy = isPending || isSubmitting
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
@@ -439,9 +454,9 @@ export function FundingRequestForm({
               type="button"
               className="w-full"
               onClick={() => submitFlow(true)}
-              disabled={isPending}
+              disabled={isBusy}
             >
-              {isPending ? <Icons.Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {isBusy ? <Icons.Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Enviar solicitud
             </Button>
             <Button
@@ -449,7 +464,7 @@ export function FundingRequestForm({
               variant="outline"
               className="w-full"
               onClick={() => submitFlow(false)}
-              disabled={isPending}
+              disabled={isBusy}
             >
               Guardar borrador
             </Button>

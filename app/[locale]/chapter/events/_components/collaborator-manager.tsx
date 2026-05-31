@@ -33,6 +33,11 @@ type Collaborator = {
   }
 }
 
+function isNavigationAbortLikeError(error: unknown) {
+  if (!(error instanceof Error)) return false
+  return /failed to fetch|abort|cancel|navigation/i.test(error.message)
+}
+
 export function CollaboratorManager({
   eventId,
   ownerChapterId,
@@ -104,7 +109,7 @@ export function CollaboratorManager({
           }
         }
       } catch (error) {
-        if (!isCancelled) {
+        if (!isCancelled && !isNavigationAbortLikeError(error)) {
           console.error('Failed to load chapter data:', error)
         }
       } finally {

@@ -12,3 +12,13 @@ export const getCachedPublishedEvents = unstable_cache(
     tags: [PUBLIC_EVENTS_CACHE_TAG],
   }
 )
+
+export const getCachedPublishedEventPreview = unstable_cache(
+  async (params: { nowIso: string; upcomingLimit: number; pastLimit: number }) =>
+    EventService.getPublishedEventPreview(createPublicServerClient(), params),
+  ['published-event-preview-v1'],
+  {
+    revalidate: 60,
+    tags: [PUBLIC_EVENTS_CACHE_TAG],
+  }
+)

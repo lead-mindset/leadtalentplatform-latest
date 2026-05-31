@@ -540,7 +540,7 @@ export function EventContent({
                     title={`Mapa de ${locationName}`}
                     src={mapEmbedUrl}
                     className="h-64 w-full border-0 md:h-80"
-                    loading="eager"
+                    loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
                     allowFullScreen
                   />

@@ -5,10 +5,19 @@ import { PersonProfileService } from '@/lib/services/person-profile.service'
 
 type OnboardingPageProps = {
   params: Promise<{ locale: string }>
+  searchParams: Promise<{ next?: string }>
 }
 
-export default async function OnboardingPage({ params }: OnboardingPageProps) {
+function getSafeNextPath(value?: string) {
+  if (!value || !value.startsWith('/') || value.startsWith('//')) return null
+  if (value.startsWith('/auth/')) return null
+  return value
+}
+
+export default async function OnboardingPage({ params, searchParams }: OnboardingPageProps) {
   const { locale } = await params
+  const { next } = await searchParams
+  const nextPath = getSafeNextPath(next)
   const supabase = await createClient()
   const {
     data: { user },
@@ -21,7 +30,7 @@ export default async function OnboardingPage({ params }: OnboardingPageProps) {
   const profile = await PersonProfileService.getBasicProfile(supabase, user.id)
 
   if (profile) {
-    redirect(`/${locale}/events`)
+    redirect(`/${locale}${nextPath ?? '/events'}`)
   }
 
   return (
@@ -34,6 +43,7 @@ export default async function OnboardingPage({ params }: OnboardingPageProps) {
               ? user.user_metadata.name
               : '',
       }}
+      nextPath={nextPath}
     />
   )
 }

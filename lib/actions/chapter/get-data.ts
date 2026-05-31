@@ -6,6 +6,8 @@ import {
 } from '@/lib/services/chapter.service'
 import { ChapterPermissionService } from '@/lib/services/chapter-permission.service'
 import { getApprovedChapterMembership, requireUser } from '@/lib/auth'
+import { ChapterEboardInviteService } from '@/lib/services/chapter-eboard-invite.service'
+import { createServiceClient } from '@/lib/supabase/server-service'
 import type { MemberWithProfile } from '@/lib/types'
 
 type AuthorizedChapterRoster = {
@@ -55,6 +57,18 @@ export async function getChapterMemberPermissions(
 ): Promise<ChapterMemberPermissionFlags | null> {
   const auth = await authorizeChapterRosterRead(chapter_id)
   return auth?.permissions ?? null
+}
+
+export async function getChapterEboardInvites(chapter_id: string) {
+  const auth = await authorizeChapterRosterRead(chapter_id)
+  if (!auth?.permissions.canAssignEboard) return []
+
+  const result = await ChapterEboardInviteService.listChapterEboardInvites(
+    createServiceClient(),
+    chapter_id
+  )
+
+  return result.success ? result.invites : []
 }
 
 export async function getChapterOverviewRoster(

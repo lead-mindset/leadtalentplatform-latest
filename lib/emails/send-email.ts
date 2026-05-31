@@ -9,6 +9,7 @@ import ChapterApplicationSubmittedEmail from '../../emails/templates/ChapterAppl
 import ChapterApplicationRejectedEmail from '../../emails/templates/ChapterApplicationRejectedEmail'
 import EventRegistrationConfirmedEmail from '../../emails/templates/EventRegistrationConfirmedEmail'
 import CompanyInviteEmail from '../../emails/templates/CompanyInviteEmail'
+import ChapterEboardInviteEmail from '../../emails/templates/ChapterEboardInviteEmail'
 import { sendTransactionalEmail, type TransactionalEmailResult } from './provider'
 
 type Locale = 'en' | 'es'
@@ -274,6 +275,37 @@ export async function sendCompanyRepresentativeInviteEmail(
     subject: resolvedLocale === 'es'
       ? `Invitacion de ${companyName} a LEAD Talent Platform`
       : `${companyName} invitation to LEAD Talent Platform`,
+    html,
+    critical: true,
+  })
+}
+
+export async function sendChapterEboardInviteEmail(
+  to: string,
+  params: {
+    chapterName: string
+    displayTitle: string
+    token: string
+    locale?: Locale
+  }
+): Promise<TransactionalEmailResult> {
+  const resolvedLocale = safeLocale(params.locale)
+  const inviteUrl = appPath(resolvedLocale, `/chapter/invites/accept?token=${encodeURIComponent(params.token)}`)
+  const html = await renderEmail(
+    ChapterEboardInviteEmail({
+      chapterName: params.chapterName,
+      displayTitle: params.displayTitle,
+      invitedEmail: to,
+      inviteUrl,
+      locale: resolvedLocale,
+    })
+  )
+
+  return sendTransactionalEmail({
+    to,
+    subject: resolvedLocale === 'es'
+      ? 'Activa tu rol en LEAD Talent Platform'
+      : 'Activate your LEAD Talent Platform role',
     html,
     critical: true,
   })

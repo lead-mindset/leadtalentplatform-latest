@@ -25,10 +25,34 @@ Do not make chapter leaders global admins. Most presidents, vice presidents, and
 
 - Real chapter email lists must never be committed to migrations, seed files, PRDs, issues, screenshots, or docs.
 - Keep real CSVs or SQL scratch files outside the repo, or use a protected Supabase SQL editor session.
-- Preapproval is exact-email based. If a leader signs up with a different email, the platform should treat them as a normal user.
+- Preapproval and invites are exact-email based. If a leader signs up with a different email, the platform should treat them as a normal user.
 - `chapter_membership.position` should stay lifecycle/context data, usually `member`; official responsibility belongs in `chapter_role_assignment`.
 - Product access belongs in `chapter_permission_grant`; do not grant access by changing `public.user.role` to `editor`.
 - Default preapproval expiration is 6 months unless the insert explicitly sets another `expires_at`.
+- Dedicated `chapter_invite` links expire after 30 days. Re-invite expired links instead of editing old links in place.
+
+## Invite And Preapproval Responsibilities
+
+`chapter_invite` is the active invite lifecycle for people who should receive a link:
+
+| Invite type | Who creates it | Roles | Acceptance behavior |
+| --- | --- | --- | --- |
+| `protected_leader` | Admin only | `president`, `vice_president` | Recipient opens the token link, signs in with the invited email, completes onboarding if needed, and accepts the role. |
+| `regular_eboard` | President/VP or chapter leader with `chapter.roles.assign_eboard` | `chief_of_staff`, `director`, `coordinator` | Recipient opens the token link, signs in with the invited email, completes onboarding if needed, and accepts the e-board role. |
+| `member` | Reserved for future/admin flows | `member` | Not part of the current chapter-leader UI. |
+
+Use `chapter_invite` when a person needs a clear link, a visible pending invite, cancellation, and 30-day re-invite behavior.
+
+Use `chapter_preapproval` only for bulk, admin-loaded, verified activation lists that do not need per-recipient invite links from the app. It remains useful for controlled imports, but chapter-leader e-board invites and admin President/VP invites should use `chapter_invite`.
+
+Sustainable model:
+
+- Admins invite or correct President/VP from `/admin/chapters/[id]`.
+- Presidents/VPs invite regular e-board members from `/chapter/members`.
+- Recipients accept through `/chapter/invites/accept?token=...`.
+- The service creates or updates approved membership, creates the scoped role assignment, grants role-template permissions, and consumes the invite.
+- Expired invites are re-invited after 30 days, creating a new token and revoking/replacing the old pending invite.
+- Wrong active invites should be revoked before sending a corrected invite.
 
 ## Input Format From Chapters
 
@@ -229,16 +253,88 @@ order by chapter_id, preapproval_type, role_level;
 
 ## Activation Flow
 
-1. Abigail sends invitation emails outside the repo using the exact preapproved emails.
-2. The user creates an account with that same email.
-3. The user completes onboarding/profile.
-4. The preapproval claim service runs server-side:
-   - `member` preapproval creates or updates approved `chapter_membership`.
-   - `eboard` preapproval also creates active `chapter_role_assignment` and grants role-template permissions.
-5. President/VP users land in the chapter dashboard.
-6. Regular e-board users land in the chapter dashboard with narrower access.
-7. Approved members without e-board grants land in the student/member dashboard.
-8. Users without preapproval can still sign up normally and request chapter membership through the web app.
+1. Admin sends President/VP invites from the admin chapter detail page, or imports preapprovals for a controlled bulk list.
+2. President/VP opens the invite link, creates an account or signs in with the exact invited email, completes onboarding if needed, and accepts the invite.
+3. The dedicated invite service approves chapter membership, creates the protected role assignment, grants permissions, and marks the invite accepted.
+4. President/VP users land in the chapter dashboard.
+5. President/VP invites regular e-board members from the chapter members page.
+6. Regular e-board invitees open the invite link, sign in with the exact invited email, complete onboarding if needed, and accept the invite.
+7. Regular e-board users land in the chapter dashboard with narrower access.
+8. Approved members without e-board grants land in the student/member dashboard.
+9. Users without an invite or preapproval can still sign up normally and request chapter membership through the web app.
+
+## President / VP Launch Guion
+
+Use this structure when introducing presidents and vice presidents to the platform.
+
+### 1. Purpose Of The Platform
+
+LEAD Talent Platform is the chapter operating layer. It is not only a signup form. Chapters use it to manage membership, official e-board roles, events, registrations, check-in, and evidence of chapter work.
+
+Plain-language framing:
+
+```text
+La plataforma separa tres cosas: membresia, rol y permisos.
+Ser miembro significa pertenecer al chapter.
+Tener un rol e-board significa tener una responsabilidad oficial.
+Tener permisos significa poder operar ciertas partes del dashboard.
+```
+
+### 2. What Presidents / VPs Do First
+
+1. Open the platform link.
+2. Create an account or sign in using the exact email that received the invitation.
+3. Complete onboarding/profile.
+4. Confirm the first workspace is the chapter dashboard.
+5. Review members, applicants, and chapter events.
+6. Invite regular e-board members only after confirming the chapter context is correct.
+
+### 3. How Chapter Leaders Onboard E-board Members
+
+Presidents and VPs can invite regular e-board members from the chapter members page.
+
+Current MVP rules:
+
+- Allowed invite roles: `chief_of_staff`, `director`, `coordinator`.
+- President and vice president assignment stays central/admin controlled.
+- Any valid email can be invited.
+- The invite expires after 30 days.
+- The invited person must sign up or sign in with the exact invited email.
+- When the invited person accepts the token link, the dedicated invite flow approves membership, creates the e-board role, grants permissions, and routes chapter-dashboard users into `/chapter`.
+- If an invite is wrong and still active, cancel it and create a corrected invite.
+- If an invite expires before acceptance, re-invite from the pending invite list.
+- Do not edit active invites in place.
+
+### 4. Where To Ask For Help
+
+If the email, chapter, role, or access looks wrong, contact `abriones@leadmindset.org` before creating a second account or asking the invitee to use another email.
+
+## President / VP Email Draft
+
+Subject: `Activa tu rol de chapter en LEAD Talent Platform`
+
+```text
+Hola,
+
+Has sido invitado/a a activar tu rol de liderazgo en LEAD Talent Platform.
+
+Para activar tu acceso:
+
+1. Entra a {platform_url}.
+2. Crea tu cuenta o inicia sesion usando exactamente este correo: {invited_email}.
+3. Completa el onboarding.
+4. Confirma que puedes entrar al dashboard de tu chapter.
+
+Desde la plataforma podras revisar miembros, gestionar postulantes, crear eventos, operar registros/check-in e invitar a miembros e-board regulares de tu chapter.
+
+Importante:
+- Presidencia y vicepresidencia se corrigen desde administracion central.
+- Los miembros e-board invitados deben usar exactamente el correo que recibio la invitacion.
+- Si el correo, chapter o rol no se ve correcto, escribe a abriones@leadmindset.org antes de crear una segunda cuenta.
+
+Gracias,
+LEAD Platform Team
+```
 
 ## Chapter Leader Training Flow
 
@@ -262,9 +358,14 @@ Recommended agenda:
    - President/VP can assign regular e-board roles to approved members.
    - President/VP cannot assign or remove president/VP status.
    - Admin corrects president/VP status centrally.
-8. Confirm support path:
-   - Wrong email, chapter, role, missing member, or extra access goes to Abigail/admin.
-9. End with one operating expectation:
+8. Review e-board invitations:
+   - President/VP can invite regular e-board roles by email.
+   - Active invites can be canceled before acceptance.
+   - Expired invites can be re-invited after 30 days.
+   - Invitees must use the exact invited email.
+9. Confirm support path:
+   - Wrong email, chapter, role, missing member, or extra access goes to `abriones@leadmindset.org`.
+10. End with one operating expectation:
    - The platform should become the chapter's working system for events, membership, and evidence, not only a signup form.
 
 Suggested Spanish framing for the call:
@@ -280,9 +381,9 @@ Prefer revocation/deactivation over deletion so the audit trail remains useful.
 
 | Case | Before activation | After activation |
 | --- | --- | --- |
-| Wrong email | Revoke the unclaimed preapproval and insert a new one for the correct email. | Verify the user account email. If the wrong person activated, revoke grants, deactivate role, and escalate before touching membership. |
-| Wrong chapter | Revoke the unclaimed preapproval and insert a new one for the correct chapter. | Escalate. Deactivate wrong chapter role/grants and mark wrong membership inactive only after confirming no event ownership or chapter data must be preserved. |
-| Wrong role | Revoke and reinsert if unclaimed. | Use admin correction UI for president/VP or protected roles. President/VP can adjust regular e-board roles from the roster. |
+| Wrong email | Revoke the unclaimed invite or preapproval and create a new one for the correct email. | Verify the user account email. If the wrong person activated, revoke grants, deactivate role, and escalate before touching membership. |
+| Wrong chapter | Revoke the unclaimed invite or preapproval and create a new one for the correct chapter. | Escalate. Deactivate wrong chapter role/grants and mark wrong membership inactive only after confirming no event ownership or chapter data must be preserved. |
+| Wrong role | Revoke and recreate if unclaimed. | Use admin correction UI for president/VP or protected roles. President/VP can adjust regular e-board roles from the roster. |
 | Missing member | Add a `member` preapproval if the person belongs to the verified list, or let them apply normally through the web app. | If already signed up normally, insert/claim path may not run again automatically; handle through admin support or approve their pending membership. |
 | Duplicate email | Resolve before insert. One active email across multiple chapters is unsafe for launch. | Escalate. Confirm intended chapter, then revoke/deactivate the unintended access path. |
 | Extra access | Revoke the unclaimed e-board preapproval or replace it with `member`. | Deactivate the role assignment and revoke linked permission grants. Keep membership approved unless membership itself is wrong. |
@@ -306,6 +407,30 @@ where cp.normalized_email = lower(btrim('leader@example.edu'))
   and cp.chapter_id = 'leaduni'
   and cp.consumed_at is null
   and cp.revoked_at is null;
+```
+
+### Revoke Unclaimed Dedicated Invite
+
+Prefer the admin or chapter UI. If direct database correction is required, keep it scoped by email and chapter.
+
+```sql
+update public.chapter_invite ci
+set status = 'revoked',
+    revoked_at = now(),
+    revoked_by_user_id = actor.id,
+    updated_at = now()
+from (
+  select id
+  from public."user"
+  where email = '<admin-email>'
+    and role = 'admin'
+  limit 1
+) actor
+where ci.normalized_email = lower(btrim('leader@example.edu'))
+  and ci.chapter_id = 'leaduni'
+  and ci.status = 'pending'
+  and ci.accepted_at is null
+  and ci.revoked_at is null;
 ```
 
 ### Remove Extra E-board Access
@@ -359,10 +484,13 @@ Complete this for the first pilot chapter before expanding.
 - [ ] Chapter ID confirmed.
 - [ ] President and vice president emails verified.
 - [ ] E-board/member list checked for duplicate emails and ambiguous chapters.
-- [ ] Preapprovals inserted with no real data committed to git.
-- [ ] President signs up, completes onboarding, and lands in chapter dashboard.
-- [ ] Vice president signs up, completes onboarding, and lands in chapter dashboard.
-- [ ] One regular e-board member can access the dashboard and create/edit event drafts.
+- [ ] Admin President/VP invites sent from the chapter detail page, or preapprovals inserted for a bulk controlled list.
+- [ ] No real email data committed to git.
+- [ ] President accepts the invite, completes onboarding if needed, and lands in chapter dashboard.
+- [ ] Vice president accepts the invite, completes onboarding if needed, and lands in chapter dashboard.
+- [ ] President/VP invites one regular e-board member from the chapter members page.
+- [ ] One regular e-board member accepts the invite, accesses the dashboard, and can create/edit event drafts.
+- [ ] One expired invite can be re-invited after 30 days in the relevant UI.
 - [ ] One approved member without e-board grants lands in the student/member dashboard.
 - [ ] President/VP can see approved members, applicants, inactive/rejected tabs, and e-board assignment controls.
 - [ ] Regular e-board can see approved member info but not applicant/revoke/role controls.
