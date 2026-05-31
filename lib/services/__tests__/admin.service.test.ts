@@ -292,6 +292,10 @@ describe('AdminService', () => {
         ],
         error: null,
       })
+      tableMocks.chapter._builder._setThenValue({
+        data: [{ id: 'ch-1', name: 'MIT' }],
+        error: null,
+      })
 
       const result = await AdminService.getUsersList(mockSupabase as unknown as SupabaseClient, {}, { page: 1, pageSize: 25 })
 
@@ -300,6 +304,33 @@ describe('AdminService', () => {
       // Default sort is created_at desc, so Bob (2024-01-02) comes before Alice (2024-01-01)
       expect(result.items[0].profile_status).toBe('no_profile')
       expect(result.items[1].profile_status).toBe('complete')
+      expect(result.items[1].chapter_name).toBe('MIT')
+    })
+
+    it('should not hide users when membership lookup fails', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.user._builder._setThenValue({
+        data: [
+          { id: 'user-1', name: 'Alice', email: 'alice@test.com', role: 'member', created_at: '2024-01-01', deactivated_at: null },
+        ],
+        error: null,
+      })
+
+      tableMocks.person_profile._builder._setThenValue({
+        data: [{ user_id: 'user-1' }],
+        error: null,
+      })
+      tableMocks.chapter_membership._builder._setThenValue({
+        data: null,
+        error: { message: 'relationship not found' },
+      })
+
+      const result = await AdminService.getUsersList(mockSupabase as unknown as SupabaseClient, {}, { page: 1, pageSize: 25 })
+
+      expect(result.items).toHaveLength(1)
+      expect(result.total).toBe(1)
+      expect(result.items[0].email).toBe('alice@test.com')
     })
 
     it('should filter by search query', async () => {
