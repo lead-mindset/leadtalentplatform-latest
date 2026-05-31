@@ -12,13 +12,19 @@ export const metadata = {
   description: 'Connect with LEAD events, student talent, and partner company opportunities.',
 }
 
-export default function MarketingHomePage() {
+type MarketingHomePageProps = {
+  params: Promise<{ locale: string }>;
+};
+
+export default async function MarketingHomePage({ params }: MarketingHomePageProps) {
+  const { locale } = await params;
+
   return (
     <div className="min-h-screen flex flex-col text-foreground antialiased relative overflow-hidden">
       <div className="relative z-10">
         <Navbar />
         <main className="flex-1">
-          <Hero />
+          <Hero locale={locale} />
           <Allies />
           <ValueCards />
           <CompanyBand />
