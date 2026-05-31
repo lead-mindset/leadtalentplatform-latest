@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { ElementType } from 'react'
+import { Suspense } from 'react'
 import {
   Activity,
   Building2,
@@ -117,91 +118,115 @@ function ManagementLink({
   )
 }
 
-export default async function AdminOverviewPage() {
-  const [
-    dashboardStats,
-    systemStats,
-    chapterActivity,
-    recentJoins,
-    pendingCompanyInvites,
-  ] = await Promise.all([
+function StatTileSkeleton() {
+  return (
+    <div className="rounded-lg border bg-card p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="w-full">
+          <div className="h-4 w-24 rounded bg-muted" />
+          <div className="mt-3 h-8 w-12 rounded bg-muted" />
+        </div>
+        <div className="h-9 w-9 shrink-0 rounded-full bg-muted" />
+      </div>
+      <div className="mt-2 h-3 w-32 rounded bg-muted" />
+    </div>
+  )
+}
+
+function StatsSkeleton() {
+  return (
+    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
+      {Array.from({ length: 6 }).map((_, index) => (
+        <StatTileSkeleton key={index} />
+      ))}
+    </div>
+  )
+}
+
+function PanelSkeleton({ title }: { title: string }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>Loading latest admin data.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <div key={index} className="rounded-lg border p-3">
+            <div className="h-4 w-40 rounded bg-muted" />
+            <div className="mt-2 h-3 w-56 rounded bg-muted" />
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  )
+}
+
+async function AdminStatsSection() {
+  const [dashboardStats, systemStats] = await Promise.all([
     getAdminDashboardStats(),
     getSystemStats(),
+  ])
+
+  return (
+    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
+      <StatTile
+        label="Users"
+        value={systemStats.total_users}
+        helper="Accounts in the platform"
+        icon={Users}
+      />
+      <StatTile
+        label="Chapters"
+        value={systemStats.total_chapters}
+        helper={`${dashboardStats.active_chapters} with members`}
+        icon={Building2}
+      />
+      <StatTile
+        label="Companies"
+        value={systemStats.total_companies}
+        helper="Organizations in admin"
+        icon={Building2}
+      />
+      <StatTile
+        label="Events"
+        value={dashboardStats.events_this_month}
+        helper="Starting this month"
+        icon={CalendarDays}
+      />
+      <StatTile
+        label="Pending approvals"
+        value={systemStats.pending_approvals}
+        helper="Chapter applications"
+        icon={Clock}
+        tone={systemStats.pending_approvals > 0 ? 'attention' : 'success'}
+      />
+      <StatTile
+        label="Company visibility"
+        value={`${dashboardStats.recruiter_opt_in_rate}%`}
+        helper="Approved visible profiles"
+        icon={CheckCircle2}
+        tone="success"
+      />
+    </div>
+  )
+}
+
+async function AdminQueuesSection() {
+  const [chapterActivity, pendingCompanyInvites, systemStats] = await Promise.all([
     getChapterActivityList(),
-    getRecentJoins(8),
     getPendingRecruiterRequests(),
+    getSystemStats(),
   ])
 
   const pendingChapterApprovals = chapterActivity.reduce(
     (total, chapter) => total + chapter.pending_approvals,
     0
   )
+  const pendingCompanyInviteCount = pendingCompanyInvites.length
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-3xl font-bold tracking-tight">Admin Overview</h1>
-            <Badge variant={pendingChapterApprovals + systemStats.pending_invites > 0 ? 'warning' : 'success'}>
-              {pendingChapterApprovals + systemStats.pending_invites > 0 ? 'Needs review' : 'Clear'}
-            </Badge>
-          </div>
-          <p className="max-w-3xl text-muted-foreground">
-            Monitor operational queues, platform coverage, and management entry points.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button asChild variant="outline">
-            <Link href="/admin/activity">Activity</Link>
-          </Button>
-          <Button asChild>
-            <Link href="/admin/invites">Review invites</Link>
-          </Button>
-        </div>
-      </div>
-
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
-        <StatTile
-          label="Users"
-          value={systemStats.total_users}
-          helper="Accounts in the platform"
-          icon={Users}
-        />
-        <StatTile
-          label="Chapters"
-          value={systemStats.total_chapters}
-          helper={`${dashboardStats.active_chapters} with members`}
-          icon={Building2}
-        />
-        <StatTile
-          label="Companies"
-          value={systemStats.total_companies}
-          helper="Organizations in admin"
-          icon={Building2}
-        />
-        <StatTile
-          label="Events"
-          value={dashboardStats.events_this_month}
-          helper="Starting this month"
-          icon={CalendarDays}
-        />
-        <StatTile
-          label="Pending approvals"
-          value={pendingChapterApprovals}
-          helper="Chapter applications"
-          icon={Clock}
-          tone={pendingChapterApprovals > 0 ? 'attention' : 'success'}
-        />
-        <StatTile
-          label="Company visibility"
-          value={`${dashboardStats.recruiter_opt_in_rate}%`}
-          helper="Approved visible profiles"
-          icon={CheckCircle2}
-          tone="success"
-        />
-      </div>
-
+    <>
       <div className="grid gap-4 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
         <Card>
           <CardHeader>
@@ -211,7 +236,7 @@ export default async function AdminOverviewPage() {
           <CardContent className="space-y-3">
             <QueueRow
               label="Company access invites"
-              value={systemStats.pending_invites}
+              value={pendingCompanyInviteCount}
               href="/admin/invites"
               helper="Sent but not accepted or revoked"
             />
@@ -245,56 +270,10 @@ export default async function AdminOverviewPage() {
                     <div className="min-w-0">
                       <p className="truncate font-medium">{chapter.name}</p>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        {chapter.member_count} members · {chapter.pending_approvals} pending
+                        {chapter.member_count} members {' '}&middot;{' '}{chapter.pending_approvals} pending
                       </p>
                     </div>
                     <p className="shrink-0 text-sm text-muted-foreground">{formatDate(chapter.last_event_at)}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-3">
-        <Card className="xl:col-span-2">
-          <CardHeader>
-            <CardTitle>Management</CardTitle>
-            <CardDescription>Common admin destinations, kept close without adding extra navigation.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3 sm:grid-cols-2">
-            <ManagementLink label="Users" href="/admin/users" helper="Roles, profiles, approvals" icon={Users} />
-            <ManagementLink label="Chapters" href="/admin/chapters" helper="Metadata and editors" icon={Building2} />
-            <ManagementLink label="Companies" href="/admin/companies" helper="Organizations and access" icon={Building2} />
-            <ManagementLink label="Events" href="/admin/events" helper="Platform event oversight" icon={CalendarDays} />
-            <ManagementLink label="Invites" href="/admin/invites" helper="Company access queue" icon={Mail} />
-            <ManagementLink label="Activity" href="/admin/activity" helper="Recent admin changes" icon={Activity} />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Joins</CardTitle>
-            <CardDescription>Latest accounts created.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {recentJoins.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No recent joins.</p>
-            ) : (
-              <div className="divide-y">
-                {recentJoins.map((join) => (
-                  <div key={join.id} className="py-3 first:pt-0 last:pb-0">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="truncate font-medium">{join.name}</p>
-                        <p className="truncate text-sm text-muted-foreground">{join.email}</p>
-                      </div>
-                      <Badge variant="outline">{join.role}</Badge>
-                    </div>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {join.chapter_name ?? 'No chapter'} · {formatDate(join.created_at)}
-                    </p>
                   </div>
                 ))}
               </div>
@@ -324,6 +303,100 @@ export default async function AdminOverviewPage() {
           </CardContent>
         </Card>
       )}
+    </>
+  )
+}
+
+async function RecentJoinsSection() {
+  const recentJoins = await getRecentJoins(8)
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Recent Joins</CardTitle>
+        <CardDescription>Latest accounts created.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {recentJoins.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No recent joins.</p>
+        ) : (
+          <div className="divide-y">
+            {recentJoins.map((join) => (
+              <div key={join.id} className="py-3 first:pt-0 last:pb-0">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{join.name}</p>
+                    <p className="truncate text-sm text-muted-foreground">{join.email}</p>
+                  </div>
+                  <Badge variant="outline">{join.role}</Badge>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {join.chapter_name ?? 'No chapter'} {' '}&middot;{' '}{formatDate(join.created_at)}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+export default function AdminOverviewPage() {
+  return (
+    <div className="space-y-8">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">Admin Overview</h1>
+          <p className="max-w-3xl text-muted-foreground">
+            Monitor operational queues, platform coverage, and management entry points.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline">
+            <Link href="/admin/activity">Activity</Link>
+          </Button>
+          <Button asChild>
+            <Link href="/admin/invites">Review invites</Link>
+          </Button>
+        </div>
+      </div>
+
+      <Suspense fallback={<StatsSkeleton />}>
+        <AdminStatsSection />
+      </Suspense>
+
+      <Suspense
+        fallback={
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+            <PanelSkeleton title="Priority Queue" />
+            <PanelSkeleton title="Chapter Activity" />
+          </div>
+        }
+      >
+        <AdminQueuesSection />
+      </Suspense>
+
+      <div className="grid gap-4 xl:grid-cols-3">
+        <Card className="xl:col-span-2">
+          <CardHeader>
+            <CardTitle>Management</CardTitle>
+            <CardDescription>Common admin destinations, kept close without adding extra navigation.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-3 sm:grid-cols-2">
+            <ManagementLink label="Users" href="/admin/users" helper="Roles, profiles, approvals" icon={Users} />
+            <ManagementLink label="Chapters" href="/admin/chapters" helper="Metadata and editors" icon={Building2} />
+            <ManagementLink label="Companies" href="/admin/companies" helper="Organizations and access" icon={Building2} />
+            <ManagementLink label="Events" href="/admin/events" helper="Platform event oversight" icon={CalendarDays} />
+            <ManagementLink label="Invites" href="/admin/invites" helper="Company access queue" icon={Mail} />
+            <ManagementLink label="Activity" href="/admin/activity" helper="Recent admin changes" icon={Activity} />
+          </CardContent>
+        </Card>
+
+        <Suspense fallback={<PanelSkeleton title="Recent Joins" />}>
+          <RecentJoinsSection />
+        </Suspense>
+      </div>
     </div>
   )
 }
