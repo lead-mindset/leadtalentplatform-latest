@@ -15,7 +15,8 @@ import {
   XCircle,
 } from 'lucide-react'
 import { getProtectedLeadershipInviteState } from '@/lib/actions/admin/chapter-invites'
-import { getChapterById, getChapterMembers } from '@/lib/actions/admin/get-data'
+import { getChapterById } from '@/lib/actions/admin/chapters'
+import { getChapterMembers } from '@/lib/actions/admin/get-data'
 import { formatLeadDate } from '@/lib/utils/date-format'
 import { ProtectedLeadershipInvites } from './protected-leadership-invites'
 

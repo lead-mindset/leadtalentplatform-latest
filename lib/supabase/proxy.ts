@@ -3,9 +3,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { hasEnvVars } from "../utils";
 import { routing } from "@/i18n/routing";
 
-const PUBLIC_ROUTES = ['/', '/login', '/auth', '/company/onboard', '/company/login'];
+const PUBLIC_ROUTES = ['/', '/login', '/auth', '/company/onboard', '/company/login', '/chapter/invites/accept'];
 
-function isPublicRoute(pathname: string): boolean {
+export function isPublicRoute(pathname: string): boolean {
   // Remove locale prefix if present (e.g., /en/auth/login -> /auth/login)
   const pathWithoutLocale = pathname.replace(/^\/(en|es)/, '') || '/';
 
