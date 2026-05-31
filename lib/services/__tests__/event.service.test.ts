@@ -12,6 +12,8 @@ interface MockChain {
   in: ReturnType<typeof vi.fn>
   or: ReturnType<typeof vi.fn>
   ilike: ReturnType<typeof vi.fn>
+  gte: ReturnType<typeof vi.fn>
+  lt: ReturnType<typeof vi.fn>
   limit: ReturnType<typeof vi.fn>
   order: ReturnType<typeof vi.fn>
   range: ReturnType<typeof vi.fn>
@@ -54,6 +56,8 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
     in: vi.fn().mockReturnThis(),
     or: vi.fn().mockReturnThis(),
     ilike: vi.fn().mockReturnThis(),
+    gte: vi.fn().mockReturnThis(),
+    lt: vi.fn().mockReturnThis(),
     limit: vi.fn().mockReturnThis(),
     order: vi.fn().mockReturnThis(),
     range: vi.fn().mockReturnThis(),
@@ -1181,6 +1185,115 @@ describe('EventService', () => {
   // ───────────────────────────────────────────────────────────────
   // getEventById
   // ───────────────────────────────────────────────────────────────
+  describe('getPublishedEventPreview', () => {
+    it('should query bounded upcoming and past previews', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+      const nowIso = '2026-05-31T12:00:00.000Z'
+
+      tableMocks.published_event_listing._selectChain.then
+        .mockImplementationOnce((resolve: (value: unknown) => unknown) =>
+          resolve({
+            data: [
+              {
+                id: 'upcoming-1',
+                title: 'Upcoming 1',
+                start_at: '2026-06-01T12:00:00.000Z',
+                end_at: '2026-06-01T13:00:00.000Z',
+                location: null,
+                event_type: 'in_person',
+                capacity: 20,
+                is_published: true,
+                access_model: 'open',
+                chapter_id: 'ch-1',
+                created_by_id: 'user-1',
+                created_at: nowIso,
+                updated_at: nowIso,
+                location_name: 'Campus',
+                location_city: 'Lima',
+                location_region: 'Lima',
+                chapter_name: 'Chapter 1',
+                chapter_university: 'Uni 1',
+                chapter_city: 'Lima',
+                chapter_region: 'Lima',
+                registrations_count: 7,
+              },
+              {
+                id: 'upcoming-2',
+                title: 'Upcoming 2',
+                start_at: '2026-06-02T12:00:00.000Z',
+                end_at: '2026-06-02T13:00:00.000Z',
+                location: null,
+                event_type: 'online',
+                capacity: null,
+                is_published: true,
+                access_model: 'application',
+                chapter_id: 'ch-1',
+                created_by_id: 'user-1',
+                created_at: nowIso,
+                updated_at: nowIso,
+                location_name: null,
+                location_city: null,
+                location_region: null,
+                chapter_name: 'Chapter 1',
+                chapter_university: 'Uni 1',
+                chapter_city: 'Lima',
+                chapter_region: 'Lima',
+                registrations_count: 0,
+              },
+            ],
+            error: null,
+          })
+        )
+        .mockImplementationOnce((resolve: (value: unknown) => unknown) =>
+          resolve({
+            data: [
+              {
+                id: 'past-1',
+                title: 'Past 1',
+                start_at: '2026-05-01T12:00:00.000Z',
+                end_at: '2026-05-01T13:00:00.000Z',
+                location: null,
+                event_type: 'hybrid',
+                capacity: null,
+                is_published: true,
+                access_model: 'open',
+                chapter_id: 'ch-1',
+                created_by_id: 'user-1',
+                created_at: nowIso,
+                updated_at: nowIso,
+                location_name: 'Auditorium',
+                location_city: 'Lima',
+                location_region: 'Lima',
+                chapter_name: 'Chapter 1',
+                chapter_university: 'Uni 1',
+                chapter_city: 'Lima',
+                chapter_region: 'Lima',
+                registrations_count: 11,
+              },
+            ],
+            error: null,
+          })
+        )
+
+      const result = await EventService.getPublishedEventPreview(mockSupabase as unknown as SupabaseClient, {
+        nowIso,
+        upcomingLimit: 1,
+        pastLimit: 0,
+      })
+
+      expect(result.upcomingEvents).toHaveLength(1)
+      expect(result.upcomingEvents[0].id).toBe('upcoming-1')
+      expect(result.upcomingEvents[0]._count.registrations).toBe(7)
+      expect(result.pastEvents).toHaveLength(0)
+      expect(result.hasMoreUpcoming).toBe(true)
+      expect(result.hasMorePast).toBe(true)
+      expect(tableMocks.published_event_listing._selectChain.gte).toHaveBeenCalledWith('end_at', nowIso)
+      expect(tableMocks.published_event_listing._selectChain.lt).toHaveBeenCalledWith('end_at', nowIso)
+      expect(tableMocks.published_event_listing._selectChain.limit).toHaveBeenCalledWith(2)
+      expect(tableMocks.published_event_listing._selectChain.limit).toHaveBeenCalledWith(1)
+    })
+  })
+
   describe('getEventById', () => {
     it('should return event with details', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
