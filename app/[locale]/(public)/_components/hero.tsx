@@ -1,18 +1,14 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useLocale } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
 import { MainContainer } from "@/components/global/main-container";
-import GradientText from "@/components/ui/gradient-text";
-import Aurora from "@/components/ui/aurora";
 
 const PUBLIC_HERO_VIDEO_PATH = "/video3.mp4";
 
-export function Hero() {
-  const locale = useLocale();
-  const [videoSrc, setVideoSrc] = useState<string | undefined>();
+type HeroProps = {
+  locale: string;
+};
+
+export function Hero({ locale }: HeroProps) {
   const isEnglish = locale === "en";
   const copy = isEnglish
     ? {
@@ -34,10 +30,6 @@ export function Hero() {
         secondary: "Explorar eventos",
       };
 
-  useEffect(() => {
-    setVideoSrc(new URL(PUBLIC_HERO_VIDEO_PATH, window.location.origin).toString());
-  }, []);
-
   return (
     <section className="relative h-screen flex flex-col items-center justify-center text-center overflow-hidden bg-background">
       <div className="absolute inset-0 z-0">
@@ -46,36 +38,26 @@ export function Hero() {
           muted
           loop
           playsInline
-          src={videoSrc}
+          preload="metadata"
+          src={PUBLIC_HERO_VIDEO_PATH}
           className="w-full h-full object-cover"
+          aria-hidden="true"
         />
       </div>
-      <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/30 to-background z-10"></div>
-      <div className="absolute inset-0 z-10 w-full h-full pointer-events-none">
-        <Aurora
-          colorStops={["#e2315f","#8037c4","#5227FF"]}
-          blend={0.5}
-          amplitude={1.0}
-          speed={0.5}
-        />
-      </div>
-      <div className="absolute w-full h-full inset-0 bg-background opacity-60 z-15 pointer-events-none"></div>
+      <div className="absolute inset-0 z-10 bg-[radial-gradient(circle_at_50%_18%,rgba(216,76,197,0.22),transparent_32%),linear-gradient(to_bottom,rgba(9,9,11,0.22),rgba(9,9,11,0.48)_48%,hsl(var(--background)))]" />
+      <div className="absolute inset-0 z-[15] bg-background/45 pointer-events-none" />
 
       <MainContainer className="relative z-20 flex flex-col items-center justify-center py-16">
         <h1 className="fluid-hero text-foreground mb-6">
-          {copy.titleLead} <br/><GradientText 
-            colors={["#d84cc5", "#c53c73", "#a92da7"]}
-            animationSpeed={3}
-            showBorder={false}
-            className="inline font-extrabold"
-          >
+          {copy.titleLead} <br />
+          <span className="inline bg-gradient-to-r from-[#d84cc5] via-[#c53c73] to-[#a92da7] bg-clip-text font-extrabold text-transparent">
             {copy.highlight}
-          </GradientText>
+          </span>
         </h1>
         <p className="fluid-body-lg text-muted-foreground max-w-3xl mx-auto mb-10 font-medium">
           {copy.body}
         </p>
-        
+
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
           <Button size="lg" className="px-8 py-4 sm:px-10 sm:py-5 text-base sm:text-lg font-bold rounded-full" asChild>
             <Link href={copy.primaryHref}>{copy.primary}</Link>
