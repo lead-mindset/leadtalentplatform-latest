@@ -196,10 +196,10 @@ async function AdminStatsSection() {
       />
       <StatTile
         label="Pending approvals"
-        value={systemStats.pending_approvals}
+        value={dashboardStats.pending_chapter_approvals}
         helper="Chapter applications"
         icon={Clock}
-        tone={systemStats.pending_approvals > 0 ? 'attention' : 'success'}
+        tone={dashboardStats.pending_chapter_approvals > 0 ? 'attention' : 'success'}
       />
       <StatTile
         label="Company visibility"

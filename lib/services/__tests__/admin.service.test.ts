@@ -187,6 +187,8 @@ describe('AdminService', () => {
       tableMocks.event._builder._setThenValue({ data: [], error: null, count: 5 })
       // Mock approved profiles count
       tableMocks.chapter_membership._builder._setThenValue({ data: [], error: null, count: 80 })
+      // Mock pending chapter approvals count
+      tableMocks.chapter_membership._builder._setThenValue({ data: [], error: null, count: 7 })
       // Mock visible approved profiles count
       tableMocks.person_profile._builder._setThenValue({ data: [], error: null, count: 60 })
 
@@ -195,6 +197,7 @@ describe('AdminService', () => {
       expect(result.total_students).toBe(100)
       expect(result.active_chapters).toBe(2)
       expect(result.events_this_month).toBe(5)
+      expect(result.pending_chapter_approvals).toBe(7)
       expect(result.recruiter_opt_in_rate).toBe(75) // 60/80 = 75%
     })
 
@@ -204,6 +207,7 @@ describe('AdminService', () => {
       tableMocks.user._builder._setThenValue({ data: [], error: null, count: 0 })
       tableMocks.chapter_membership._builder._setThenValue({ data: [], error: null })
       tableMocks.event._builder._setThenValue({ data: [], error: null, count: 0 })
+      tableMocks.chapter_membership._builder._setThenValue({ data: [], error: null, count: 0 })
       tableMocks.person_profile._builder._setThenValue({ data: [], error: null, count: 0 })
       tableMocks.person_profile._builder._setThenValue({ data: [], error: null, count: 0 })
 
