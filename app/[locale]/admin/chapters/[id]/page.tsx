@@ -43,7 +43,7 @@ export default async function ChapterDetailPage({
         <Button asChild variant="ghost" size="sm">
           <Link href="/admin/chapters">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Chapters
+            Volver a capitulos
           </Link>
         </Button>
       </div>
@@ -57,25 +57,25 @@ export default async function ChapterDetailPage({
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Members</CardTitle>
+              <CardTitle className="text-sm font-medium">Miembros</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{members.length}</div>
-              <p className="text-xs text-muted-foreground mt-1">Total chapter members</p>
+              <p className="text-xs text-muted-foreground mt-1">Miembros del chapter</p>
             </CardContent>
           </Card>
 
           {(resolvedChapter.city || resolvedChapter.region) && (
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Location</CardTitle>
+                <CardTitle className="text-sm font-medium">Ubicacion</CardTitle>
                 <MapPin className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{resolvedChapter.city || resolvedChapter.region}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {resolvedChapter.city && resolvedChapter.region ? resolvedChapter.region : 'Chapter location'}
+                  {resolvedChapter.city && resolvedChapter.region ? resolvedChapter.region : 'Ubicacion del chapter'}
                 </p>
               </CardContent>
             </Card>
@@ -84,14 +84,14 @@ export default async function ChapterDetailPage({
           {resolvedChapter.created_at && (
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Created</CardTitle>
+                <CardTitle className="text-sm font-medium">Creado</CardTitle>
                 <Calendar className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
                   {formatLeadDate(resolvedChapter.created_at)}
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">Chapter established</p>
+                <p className="text-xs text-muted-foreground mt-1">Chapter registrado</p>
               </CardContent>
             </Card>
           )}
@@ -99,17 +99,17 @@ export default async function ChapterDetailPage({
 
         <Card>
           <CardHeader>
-            <CardTitle>Chapter Information</CardTitle>
-            <CardDescription>Details about this chapter</CardDescription>
+            <CardTitle>Informacion del chapter</CardTitle>
+            <CardDescription>Datos base para administracion</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Chapter ID</p>
+                <p className="text-sm font-medium text-muted-foreground">ID del chapter</p>
                 <p className="text-sm font-mono mt-1">{resolvedChapter.id}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Last Updated</p>
+                <p className="text-sm font-medium text-muted-foreground">Ultima actualizacion</p>
                 <p className="text-sm mt-1">
                   {formatLeadDate(resolvedChapter.updated_at)}
                 </p>
@@ -126,14 +126,14 @@ export default async function ChapterDetailPage({
 
         {/* ── Member sections ── */}
         <div className="space-y-4">
-          <h2 className="text-2xl font-bold">Members ({members.length})</h2>
+          <h2 className="text-2xl font-bold">Miembros ({members.length})</h2>
 
           {pending_members.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Clock className="h-5 w-5 text-warning" />
-                  Pending Approval ({pending_members.length})
+                  Pendientes de aprobacion ({pending_members.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -150,7 +150,7 @@ export default async function ChapterDetailPage({
                             variant="outline"
                             className="border-warning text-warning"
                           >
-                            Pending
+                            Pendiente
                           </Badge>
                         </div>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -167,7 +167,7 @@ export default async function ChapterDetailPage({
                         </div>
                       </div>
                       <Button asChild size="sm">
-                        <Link href={`/admin/users/${member.id}`}>Review</Link>
+                        <Link href={`/admin/users/${member.id}`}>Revisar</Link>
                       </Button>
                     </div>
                   ))}
@@ -181,7 +181,7 @@ export default async function ChapterDetailPage({
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-success" />
-                  Approved Members ({approved_members.length})
+                  Miembros aprobados ({approved_members.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -198,10 +198,10 @@ export default async function ChapterDetailPage({
                             variant="outline"
                             className="border-success text-success"
                           >
-                            Approved
+                            Aprobado
                           </Badge>
                           {member.person_profile?.is_recruiter_visible && (
-                            <Badge variant="secondary">Visible to Partner Companies</Badge>
+                            <Badge variant="secondary">Visible para empresas</Badge>
                           )}
                         </div>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -218,7 +218,7 @@ export default async function ChapterDetailPage({
                         </div>
                       </div>
                       <Button asChild size="sm" variant="outline">
-                        <Link href={`/admin/users/${member.id}`}>View</Link>
+                        <Link href={`/admin/users/${member.id}`}>Ver</Link>
                       </Button>
                     </div>
                   ))}
@@ -232,7 +232,7 @@ export default async function ChapterDetailPage({
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <XCircle className="h-5 w-5 text-destructive" />
-                  Rejected ({rejected_members.length})
+                  Rechazados ({rejected_members.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -246,7 +246,7 @@ export default async function ChapterDetailPage({
                         <div className="flex items-center gap-2">
                           <p className="font-medium">{member.name}</p>
                           <Badge variant="outline" className="border-destructive text-destructive">
-                            Rejected
+                            Rechazado
                           </Badge>
                         </div>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -263,7 +263,7 @@ export default async function ChapterDetailPage({
                         </div>
                       </div>
                       <Button asChild size="sm" variant="outline">
-                        <Link href={`/admin/users/${member.id}`}>Review</Link>
+                        <Link href={`/admin/users/${member.id}`}>Revisar</Link>
                       </Button>
                     </div>
                   ))}
@@ -277,7 +277,7 @@ export default async function ChapterDetailPage({
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <XCircle className="h-5 w-5 text-muted-foreground" />
-                  Incomplete Profiles ({incomplete_members.length})
+                  Perfiles incompletos ({incomplete_members.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -291,7 +291,7 @@ export default async function ChapterDetailPage({
                         <div className="flex items-center gap-2">
                           <p className="font-medium">{member.name}</p>
                           <Badge variant="outline" className="text-muted-foreground">
-                            Incomplete
+                            Incompleto
                           </Badge>
                         </div>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -302,7 +302,7 @@ export default async function ChapterDetailPage({
                         </div>
                       </div>
                       <Button asChild size="sm" variant="outline">
-                        <Link href={`/admin/users/${member.id}`}>View</Link>
+                        <Link href={`/admin/users/${member.id}`}>Ver</Link>
                       </Button>
                     </div>
                   ))}
@@ -315,9 +315,9 @@ export default async function ChapterDetailPage({
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <Users className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No members yet</h3>
+                <h3 className="text-lg font-semibold mb-2">Aun no hay miembros</h3>
                 <p className="text-sm text-muted-foreground">
-                  This chapter doesn&apos;t have any members yet
+                  Este chapter todavia no tiene miembros registrados.
                 </p>
               </CardContent>
             </Card>

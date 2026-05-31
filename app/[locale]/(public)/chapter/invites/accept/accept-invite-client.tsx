@@ -23,7 +23,7 @@ export function AcceptInviteClient({ token }: Props) {
         return
       }
 
-      toast.success(result.message ?? 'Invitacion aceptada')
+      toast.success(result.message ?? 'Listo, tu rol esta activo.')
       router.push('/chapter')
       router.refresh()
     })
@@ -32,7 +32,7 @@ export function AcceptInviteClient({ token }: Props) {
   return (
     <Button onClick={acceptInvite} disabled={isPending} className="w-full sm:w-auto">
       {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
-      Aceptar invitacion
+      {isPending ? 'Activando...' : 'Activar mi rol'}
     </Button>
   )
 }

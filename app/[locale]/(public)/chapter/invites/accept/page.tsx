@@ -28,6 +28,13 @@ function statusCopy(state: 'expired' | 'revoked' | 'accepted') {
   return 'Esta invitacion ya fue aceptada.'
 }
 
+function badgeCopy(state: string) {
+  if (state === 'expired') return 'Expirada'
+  if (state === 'revoked') return 'Cancelada'
+  if (state === 'accepted') return 'Aceptada'
+  return 'Pendiente'
+}
+
 export default async function ChapterInviteAcceptPage({ params, searchParams }: PageProps) {
   await params
   const { token = '' } = await searchParams
@@ -48,6 +55,7 @@ export default async function ChapterInviteAcceptPage({ params, searchParams }: 
   }
 
   const invite = acceptance.invite
+  const chapterName = acceptance.chapterName
   const returnPath = getReturnPath(token)
 
   return (
@@ -55,30 +63,30 @@ export default async function ChapterInviteAcceptPage({ params, searchParams }: 
       <Card>
         <CardHeader>
           <div className="flex flex-wrap items-center gap-2">
-            <CardTitle>Invitacion de chapter</CardTitle>
-            <Badge variant="outline">{acceptance.state === 'expired' ? 'Expirada' : invite.status}</Badge>
+            <CardTitle>Acepta tu rol en {chapterName}</CardTitle>
+            <Badge variant="outline">{badgeCopy(acceptance.state)}</Badge>
           </div>
           <CardDescription>
-            Revisa el chapter, rol y correo antes de aceptar.
+            Entra con el correo invitado. Despues de aceptar, tu acceso queda activo al instante.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="rounded-lg border bg-muted/30 p-4 text-sm">
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <p className="text-muted-foreground">Correo invitado</p>
+                <p className="text-muted-foreground">Correo que debe usarse</p>
                 <p className="font-medium">{invite.email}</p>
               </div>
               <div>
                 <p className="text-muted-foreground">Chapter</p>
-                <p className="font-medium">{invite.chapter_id}</p>
+                <p className="font-medium">{chapterName}</p>
               </div>
               <div>
                 <p className="text-muted-foreground">Rol</p>
                 <p className="font-medium">{invite.display_title}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Tipo</p>
+                <p className="text-muted-foreground">Area</p>
                 <p className="font-medium">
                   {CHAPTER_ROLE_LEVEL_LABELS[invite.role_level as keyof typeof CHAPTER_ROLE_LEVEL_LABELS] ?? invite.role_level}
                   {' / '}
@@ -96,11 +104,15 @@ export default async function ChapterInviteAcceptPage({ params, searchParams }: 
           ) : null}
 
           {acceptance.state === 'signed_out' ? (
-            <div className="flex flex-col gap-2 sm:flex-row">
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Entra o crea tu cuenta con el correo invitado para continuar.
+              </p>
+              <div className="flex flex-col gap-2 sm:flex-row">
               <Button asChild>
                 <Link href={`/auth/login?next=${encodeURIComponent(returnPath)}`}>
                   <LogIn className="mr-2 h-4 w-4" />
-                  Iniciar sesion
+                  Entrar con este correo
                 </Link>
               </Button>
               <Button asChild variant="outline">
@@ -109,6 +121,7 @@ export default async function ChapterInviteAcceptPage({ params, searchParams }: 
                   Crear cuenta
                 </Link>
               </Button>
+              </div>
             </div>
           ) : null}
 
@@ -138,7 +151,7 @@ export default async function ChapterInviteAcceptPage({ params, searchParams }: 
           ) : null}
 
           <p className="text-xs text-muted-foreground">
-            Si el correo, chapter o rol no se ve correcto, contacta a abriones@leadmindset.org antes de aceptar.
+            Algo no coincide? Escribe a abriones@leadmindset.org antes de aceptar.
           </p>
         </CardContent>
       </Card>

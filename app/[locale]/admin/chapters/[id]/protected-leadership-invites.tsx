@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useEffect, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { MailPlus, RefreshCcw, ShieldCheck, XCircle } from 'lucide-react'
@@ -84,12 +84,23 @@ export function ProtectedLeadershipInvites({ chapterId, activeLeaders, invites }
     return blocked
   }, [activeLeaders, invites])
 
+  const availableRoles = useMemo(
+    () => PROTECTED_ROLE_OPTIONS.filter((option) => !blockedRoles.has(option.value)),
+    [blockedRoles]
+  )
   const isRoleBlocked = blockedRoles.has(roleLevel)
+  const hasAvailableRole = availableRoles.length > 0
   const canSubmit = email.trim().length > 0 && effectiveTitle.length >= 2 && !isRoleBlocked
+
+  useEffect(() => {
+    if (isRoleBlocked && availableRoles[0]) {
+      setRoleLevel(availableRoles[0].value)
+    }
+  }, [availableRoles, isRoleBlocked])
 
   function resetForm() {
     setEmail('')
-    setRoleLevel(DEFAULT_ROLE)
+    setRoleLevel(availableRoles[0]?.value ?? DEFAULT_ROLE)
     setFunctionalArea(DEFAULT_AREA)
     setDisplayTitle('')
   }
@@ -152,10 +163,10 @@ export function ProtectedLeadershipInvites({ chapterId, activeLeaders, invites }
           <div className="flex flex-wrap items-center gap-2">
             <ShieldCheck className="h-5 w-5 text-primary" />
             <h2 className="text-base font-semibold">Presidencia y vicepresidencia</h2>
-            <Badge variant="outline">{activeLeaders.length} activas</Badge>
+            <Badge variant="outline">{hasAvailableRole ? `${activeLeaders.length} activas` : 'Completo'}</Badge>
           </div>
           <p className="max-w-2xl text-sm text-muted-foreground">
-            Invita lideres protegidos desde el capitulo. Solo puede existir una Presidencia y una Vicepresidencia activa o pendiente.
+            Agrega Presidencia o Vicepresidencia con un enlace directo. La persona solo debe entrar con ese mismo correo.
           </p>
         </div>
       </div>
@@ -171,7 +182,7 @@ export function ProtectedLeadershipInvites({ chapterId, activeLeaders, invites }
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-sm font-medium">{option.label}</p>
-                  <p className="text-xs text-muted-foreground">Rol protegido</p>
+                  <p className="text-xs text-muted-foreground">Un solo asiento por chapter</p>
                 </div>
                 <Badge variant={active ? 'default' : pending ? 'outline' : 'secondary'}>
                   {active ? 'Activa' : pending ? 'Pendiente' : 'Disponible'}
@@ -210,7 +221,7 @@ export function ProtectedLeadershipInvites({ chapterId, activeLeaders, invites }
                 </div>
               ) : (
                 <p className="mt-3 text-sm text-muted-foreground">
-                  Lista para invitar.
+                  Lista para enviar enlace.
                 </p>
               )}
             </div>
@@ -218,75 +229,81 @@ export function ProtectedLeadershipInvites({ chapterId, activeLeaders, invites }
         })}
       </div>
 
-      <form
-        className="grid gap-4 rounded-md border bg-muted/20 p-3"
-        onSubmit={(event) => {
-          event.preventDefault()
-          if (canSubmit && !isPending) submitInvite()
-        }}
-      >
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.8fr)_minmax(0,1fr)]">
-          <Input
-            label="Correo"
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="presidenta@example.edu"
-            autoComplete="email"
-            required
-          />
+      {hasAvailableRole ? (
+        <form
+          className="grid gap-4 rounded-md border bg-muted/20 p-3"
+          onSubmit={(event) => {
+            event.preventDefault()
+            if (canSubmit && !isPending) submitInvite()
+          }}
+        >
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.8fr)_minmax(0,1fr)]">
+            <Input
+              label="Correo"
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder={roleLevel === 'president' ? 'presidencia@universidad.edu' : 'vicepresidencia@universidad.edu'}
+              helperText="Debe ser el correo que usara para entrar a la plataforma."
+              autoComplete="email"
+              required
+            />
 
-          <div className="space-y-2">
-            <Label>Rol</Label>
-            <Select value={roleLevel} onValueChange={(value) => setRoleLevel(value as ProtectedRoleLevel)}>
-              <SelectTrigger className="w-full" aria-label="Rol protegido">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PROTECTED_ROLE_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value} disabled={blockedRoles.has(option.value)}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-2">
+              <Label>Rol disponible</Label>
+              <Select value={roleLevel} onValueChange={(value) => setRoleLevel(value as ProtectedRoleLevel)}>
+                <SelectTrigger className="w-full" aria-label="Rol disponible">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PROTECTED_ROLE_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value} disabled={blockedRoles.has(option.value)}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Area</Label>
+              <Select value={functionalArea} onValueChange={(value) => setFunctionalArea(value as ChapterFunctionalArea)}>
+                <SelectTrigger className="w-full" aria-label="Area de liderazgo">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CHAPTER_FUNCTIONAL_AREA_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label>Area</Label>
-            <Select value={functionalArea} onValueChange={(value) => setFunctionalArea(value as ChapterFunctionalArea)}>
-              <SelectTrigger className="w-full" aria-label="Area de liderazgo">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {CHAPTER_FUNCTIONAL_AREA_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+            <Input
+              label="Cargo visible"
+              value={displayTitle}
+              onChange={(event) => setDisplayTitle(event.target.value)}
+              placeholder={suggestedTitle(roleLevel)}
+              helperText={`${email.trim() || 'correo@universidad.edu'} recibira un enlace valido por 30 dias para activar ${effectiveTitle}.`}
+            />
+            <Button type="submit" className="w-full sm:w-auto" disabled={!canSubmit || isPending}>
+              <MailPlus className="mr-2 h-4 w-4" />
+              {isPending ? 'Enviando...' : 'Enviar enlace'}
+            </Button>
           </div>
+        </form>
+      ) : (
+        <div className="rounded-md border bg-muted/20 p-3 text-sm">
+          <p className="font-medium">Presidencia y vicepresidencia ya estan cubiertas.</p>
+          <p className="mt-1 text-muted-foreground">
+            No hay enlaces pendientes por enviar. Si necesitas corregir un rol, actualiza el perfil de la persona o contacta soporte.
+          </p>
         </div>
-
-        <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-          <Input
-            label="Cargo visible"
-            value={displayTitle}
-            onChange={(event) => setDisplayTitle(event.target.value)}
-            placeholder={suggestedTitle(roleLevel)}
-            helperText={
-              isRoleBlocked
-                ? 'Este rol ya tiene una persona activa o una invitacion pendiente.'
-                : `${email.trim() || 'correo@universidad.edu'} recibira un enlace para aceptar ${effectiveTitle}.`
-            }
-          />
-          <Button type="submit" className="w-full sm:w-auto" disabled={!canSubmit || isPending}>
-            <MailPlus className="mr-2 h-4 w-4" />
-            {isPending ? 'Enviando...' : 'Enviar invitacion'}
-          </Button>
-        </div>
-      </form>
+      )}
 
       {invites.length > 0 && (
         <div className="divide-y rounded-md border">

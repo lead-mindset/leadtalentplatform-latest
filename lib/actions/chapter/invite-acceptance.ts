@@ -35,6 +35,6 @@ export async function acceptChapterInvite(input: unknown): Promise<ActionResult>
 
   return {
     success: true,
-    message: result.accepted ? 'Invite accepted.' : 'Invite already accepted.',
+    message: result.accepted ? 'Listo, tu rol esta activo.' : 'Esta invitacion ya estaba aceptada.',
   }
 }

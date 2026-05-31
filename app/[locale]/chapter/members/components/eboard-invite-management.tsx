@@ -104,7 +104,7 @@ export function EboardInviteManagement({ invites }: Props) {
       }
 
       toast.success('Invitacion enviada', {
-        description: 'La persona queda preaprobada por 30 dias usando ese correo.',
+        description: 'El enlace queda activo por 30 dias y solo funciona con ese correo.',
       })
       setOpen(false)
       resetForm()
@@ -149,7 +149,7 @@ export function EboardInviteManagement({ invites }: Props) {
             <Badge variant="outline">{invites.length} pendientes</Badge>
           </div>
           <p className="max-w-2xl text-sm text-muted-foreground">
-            Envía un enlace de acceso. Cuando la persona cree su cuenta con ese correo, el sistema la reconoce como e-board de este capítulo.
+            Envia un enlace de acceso. Cuando la persona entre con ese correo, su rol e-board queda listo en este chapter.
           </p>
         </div>
 
@@ -162,9 +162,9 @@ export function EboardInviteManagement({ invites }: Props) {
           </DialogTrigger>
           <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-xl">
             <DialogHeader>
-              <DialogTitle>Invitar miembro e-board</DialogTitle>
+              <DialogTitle>Invitar e-board del chapter</DialogTitle>
               <DialogDescription>
-                Solo necesitas el correo. El enlace vence en 30 dias y puedes reenviarlo si expira.
+                Escribe el correo, elige el rol y envia el enlace. Vence en 30 dias.
               </DialogDescription>
             </DialogHeader>
 
@@ -181,7 +181,7 @@ export function EboardInviteManagement({ invites }: Props) {
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="lider@example.edu"
-                helperText="Debe ser el mismo correo que usara para crear su cuenta."
+                helperText="La persona debe iniciar sesion o crear cuenta con este mismo correo."
                 autoComplete="email"
                 autoFocus
                 required
@@ -189,9 +189,9 @@ export function EboardInviteManagement({ invites }: Props) {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Rol que recibira</Label>
+                  <Label>Rol</Label>
                   <Select value={roleLevel} onValueChange={(value) => setRoleLevel(value as RegularEboardRoleLevel)}>
-                    <SelectTrigger className="w-full" aria-label="Rol que recibira">
+                    <SelectTrigger className="w-full" aria-label="Rol">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -205,7 +205,7 @@ export function EboardInviteManagement({ invites }: Props) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Area de trabajo</Label>
+                  <Label>Area</Label>
                   <Select value={functionalArea} onValueChange={(value) => setFunctionalArea(value as ChapterFunctionalArea)}>
                     <SelectTrigger className="w-full" aria-label="Area de trabajo">
                       <SelectValue />
@@ -222,17 +222,17 @@ export function EboardInviteManagement({ invites }: Props) {
               </div>
 
               <Input
-                label="Nombre del cargo visible"
+                label="Titulo visible"
                 value={displayTitle}
                 onChange={(event) => setDisplayTitle(event.target.value)}
                 placeholder={suggestedDisplayTitle}
-                helperText={`Opcional. Si lo dejas vacio, se mostrara: ${suggestedDisplayTitle}.`}
+                helperText={`Opcional. Si lo dejas vacio, se usara: ${suggestedDisplayTitle}.`}
               />
 
               <div className="rounded-md border bg-muted/30 p-3 text-sm">
-                <p className="font-medium">Resumen antes de enviar</p>
+                <p className="font-medium">Antes de enviar</p>
                 <p className="mt-1 text-muted-foreground">
-                  {email.trim() || 'correo@universidad.edu'} recibira un enlace para unirse como{' '}
+                  {email.trim() || 'correo@universidad.edu'} recibira un enlace de 30 dias para activar{' '}
                   <span className="font-medium text-foreground">{effectiveDisplayTitle}</span>.
                 </p>
               </div>
@@ -255,7 +255,7 @@ export function EboardInviteManagement({ invites }: Props) {
 
       {invites.length === 0 ? (
         <div className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
-          No hay invitaciones pendientes. Cuando envies una, aparecera aqui para cancelar o reenviar despues de 30 dias.
+          Aun no hay invitaciones e-board. Cuando envies una, podras cancelarla o reenviarla si expira.
         </div>
       ) : (
         <div className="divide-y rounded-md border">
