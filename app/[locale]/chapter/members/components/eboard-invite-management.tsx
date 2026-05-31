@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -44,7 +45,7 @@ type Props = {
 }
 
 const DEFAULT_ROLE: RegularEboardRoleLevel = 'director'
-const DEFAULT_AREA: ChapterFunctionalArea = 'other'
+const DEFAULT_AREA: ChapterFunctionalArea = 'events_experience'
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat('es', {
@@ -58,6 +59,17 @@ function statusLabel(status: ChapterEboardInvite['status']) {
   return status === 'expired' ? 'Expirada' : 'Activa'
 }
 
+function getSuggestedDisplayTitle(
+  roleLevel: RegularEboardRoleLevel,
+  functionalArea: ChapterFunctionalArea
+) {
+  const roleLabel = CHAPTER_ROLE_LEVEL_LABELS[roleLevel]
+  const areaLabel = CHAPTER_FUNCTIONAL_AREA_LABELS[functionalArea]
+
+  if (functionalArea === 'other') return roleLabel
+  return `${roleLabel} - ${areaLabel}`
+}
+
 export function EboardInviteManagement({ invites }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -66,6 +78,9 @@ export function EboardInviteManagement({ invites }: Props) {
   const [displayTitle, setDisplayTitle] = useState('')
   const [roleLevel, setRoleLevel] = useState<RegularEboardRoleLevel>(DEFAULT_ROLE)
   const [functionalArea, setFunctionalArea] = useState<ChapterFunctionalArea>(DEFAULT_AREA)
+  const suggestedDisplayTitle = getSuggestedDisplayTitle(roleLevel, functionalArea)
+  const effectiveDisplayTitle = displayTitle.trim() || suggestedDisplayTitle
+  const canSubmit = email.trim().length > 0 && effectiveDisplayTitle.length >= 2
 
   function resetForm() {
     setEmail('')
@@ -78,7 +93,7 @@ export function EboardInviteManagement({ invites }: Props) {
     startTransition(async () => {
       const result = await createChapterEboardInvite({
         email,
-        displayTitle,
+        displayTitle: effectiveDisplayTitle,
         roleLevel,
         functionalArea,
       })
@@ -88,7 +103,9 @@ export function EboardInviteManagement({ invites }: Props) {
         return
       }
 
-      toast.success('Invitacion enviada')
+      toast.success('Invitacion enviada', {
+        description: 'La persona queda preaprobada por 30 dias usando ese correo.',
+      })
       setOpen(false)
       resetForm()
       router.refresh()
@@ -116,7 +133,9 @@ export function EboardInviteManagement({ invites }: Props) {
         return
       }
 
-      toast.success('Invitacion reenviada')
+      toast.success('Invitacion reenviada', {
+        description: 'El enlace queda activo por 30 dias mas.',
+      })
       router.refresh()
     })
   }
@@ -130,7 +149,7 @@ export function EboardInviteManagement({ invites }: Props) {
             <Badge variant="outline">{invites.length} pendientes</Badge>
           </div>
           <p className="max-w-2xl text-sm text-muted-foreground">
-            Invita roles e-board regulares. Presidencia y vicepresidencia siguen bajo control admin.
+            Envía un enlace de acceso. Cuando la persona cree su cuenta con ese correo, el sistema la reconoce como e-board de este capítulo.
           </p>
         </div>
 
@@ -141,35 +160,38 @@ export function EboardInviteManagement({ invites }: Props) {
               Invitar e-board
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-xl">
             <DialogHeader>
               <DialogTitle>Invitar miembro e-board</DialogTitle>
               <DialogDescription>
-                La persona debe crear su cuenta usando exactamente el correo invitado.
+                Solo necesitas el correo. El enlace vence en 30 dias y puedes reenviarlo si expira.
               </DialogDescription>
             </DialogHeader>
 
-            <div className="grid gap-4">
+            <form
+              className="grid gap-4"
+              onSubmit={(event) => {
+                event.preventDefault()
+                if (canSubmit && !isPending) submitInvite()
+              }}
+            >
               <Input
-                label="Correo"
+                label="Correo de la persona"
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="lider@example.edu"
-              />
-
-              <Input
-                label="Titulo visible"
-                value={displayTitle}
-                onChange={(event) => setDisplayTitle(event.target.value)}
-                placeholder="Ej. Directora de Eventos"
+                helperText="Debe ser el mismo correo que usara para crear su cuenta."
+                autoComplete="email"
+                autoFocus
+                required
               />
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Nivel</Label>
+                  <Label>Rol que recibira</Label>
                   <Select value={roleLevel} onValueChange={(value) => setRoleLevel(value as RegularEboardRoleLevel)}>
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger className="w-full" aria-label="Rol que recibira">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -183,9 +205,9 @@ export function EboardInviteManagement({ invites }: Props) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Area funcional</Label>
+                  <Label>Area de trabajo</Label>
                   <Select value={functionalArea} onValueChange={(value) => setFunctionalArea(value as ChapterFunctionalArea)}>
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger className="w-full" aria-label="Area de trabajo">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -198,24 +220,42 @@ export function EboardInviteManagement({ invites }: Props) {
                   </Select>
                 </div>
               </div>
-            </div>
 
-            <DialogFooter>
-              <Button
-                onClick={submitInvite}
-                disabled={isPending || email.trim().length === 0 || displayTitle.trim().length < 2}
-              >
-                <Send className="mr-2 h-4 w-4" />
-                Enviar invitacion
-              </Button>
-            </DialogFooter>
+              <Input
+                label="Nombre del cargo visible"
+                value={displayTitle}
+                onChange={(event) => setDisplayTitle(event.target.value)}
+                placeholder={suggestedDisplayTitle}
+                helperText={`Opcional. Si lo dejas vacio, se mostrara: ${suggestedDisplayTitle}.`}
+              />
+
+              <div className="rounded-md border bg-muted/30 p-3 text-sm">
+                <p className="font-medium">Resumen antes de enviar</p>
+                <p className="mt-1 text-muted-foreground">
+                  {email.trim() || 'correo@universidad.edu'} recibira un enlace para unirse como{' '}
+                  <span className="font-medium text-foreground">{effectiveDisplayTitle}</span>.
+                </p>
+              </div>
+
+              <DialogFooter className="pt-1">
+                <DialogClose asChild>
+                  <Button type="button" variant="outline" disabled={isPending}>
+                    Cancelar
+                  </Button>
+                </DialogClose>
+                <Button type="submit" disabled={isPending || !canSubmit}>
+                  <Send className="mr-2 h-4 w-4" />
+                  {isPending ? 'Enviando...' : 'Enviar invitacion'}
+                </Button>
+              </DialogFooter>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
 
       {invites.length === 0 ? (
         <div className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
-          No hay invitaciones e-board pendientes.
+          No hay invitaciones pendientes. Cuando envies una, aparecera aqui para cancelar o reenviar despues de 30 dias.
         </div>
       ) : (
         <div className="divide-y rounded-md border">
