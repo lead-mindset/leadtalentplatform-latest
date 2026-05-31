@@ -2,7 +2,7 @@ import { SidebarLayout } from '@/components/ui/sidebars/sidebar-layout'
 import { BaseSidebar } from '@/components/ui/sidebars/base-sidebar'
 import { StudentNavigation } from '@/components/ui/sidebars/student-sidebar'
 import { MobileUserBadge } from '@/components/ui/sidebars/mobile-user-badge'
-import { requireUser, getSidebarStatsForEditor, getChapterDashboardMembership } from '@/lib/auth'
+import { requireUser, getChapterDashboardMembership } from '@/lib/auth'
 import { getStudentWorkspaceRedirectPath } from '@/lib/auth-redirects'
 import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
@@ -34,12 +34,6 @@ export default async function StudentLayout({
   const dashboardMembership = await getChapterDashboardMembership(supabase, user.id)
   const canManageChapter = Boolean(dashboardMembership?.chapter_id)
 
-  let has_pending_approvals = false
-  if (dashboardMembership?.chapter_id) {
-    const stats = await getSidebarStatsForEditor(supabase, dashboardMembership.chapter_id)
-    has_pending_approvals = stats.has_pending_approvals
-  }
-
   return (
     <SidebarLayout
       mobileTitle="Mi LEAD"
@@ -59,7 +53,7 @@ export default async function StudentLayout({
         >
           <StudentNavigation
             userRole={user.role}
-            has_pending_approvals={has_pending_approvals}
+            has_pending_approvals={false}
             canManageChapter={canManageChapter}
           />
         </BaseSidebar>
