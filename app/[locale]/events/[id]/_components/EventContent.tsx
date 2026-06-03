@@ -153,6 +153,7 @@ export function EventContent({
   isLoggedIn,
   hasBasicProfile,
   onboardingUrl,
+  registrationBlockedReason,
 }: {
   event: EventWithDetails | null
   myRegistration: MyRegistration
@@ -160,6 +161,7 @@ export function EventContent({
   isLoggedIn: boolean
   hasBasicProfile: boolean
   onboardingUrl: string
+  registrationBlockedReason: string | null
 }) {
   const router = useRouter()
   const [showApplyModal, setShowApplyModal] = useState(false)
@@ -226,7 +228,7 @@ export function EventContent({
       router.push(onboardingUrl)
       return
     }
-    if (isApplicationRequired) {
+    if (!registrationBlockedReason && isApplicationRequired) {
       setApplicationError(null)
       setShowApplyModal(true)
     }
@@ -320,7 +322,7 @@ export function EventContent({
             </div>
 
             <section className="space-y-3">
-              <p className="text-sm font-medium text-muted-foreground">Hosted by</p>
+              <p className="text-sm font-medium text-muted-foreground">Organizado por</p>
               <div className="space-y-2 border-t border-border pt-3">
                 <div className="flex items-center gap-3">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
@@ -405,7 +407,7 @@ export function EventContent({
 
             <Card className="overflow-hidden border-primary/10">
               <div className="border-b bg-muted/25 px-5 py-3 text-sm font-medium text-muted-foreground">
-                Registration
+                Registro
               </div>
               <CardContent className="space-y-4 p-5">
                 <div className="flex items-start gap-3">
@@ -434,6 +436,7 @@ export function EventContent({
                     loginUrl={`/auth/login?next=/events/${event.id}`}
                     onboardingUrl={onboardingUrl}
                     registrationClosed={registrationClosed}
+                    registrationBlockedReason={registrationBlockedReason}
                     isRegistered={isRegistered}
                     hadCancelledRegistration={isCancelled}
                     canCancel={
@@ -475,16 +478,24 @@ export function EventContent({
                         </Button>
                       </div>
                     ) : isPending || isRejected ? null : (
+                      registrationBlockedReason ? (
+                        <div className="rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm">
+                          {registrationBlockedReason}
+                        </div>
+                      ) : null
+                    )}
+
+                    {!isPending && !isRejected && !isRegistered ? (
                       <Button
                         size="lg"
                         onClick={handlePrimaryAction}
-                        disabled={isSubmitting || registrationClosed || isFull}
+                        disabled={isSubmitting || registrationClosed || isFull || Boolean(registrationBlockedReason)}
                         className="w-full"
                       >
                         {isSubmitting ? 'Procesando...' : isLoggedIn ? 'Postular ahora' : 'Inicia sesion para postular'}
                         <ArrowRight className="h-4 w-4" />
                       </Button>
-                    )}
+                    ) : null}
 
                     {!isLoggedIn ? (
                       <p className="text-xs text-muted-foreground">
@@ -507,7 +518,7 @@ export function EventContent({
             </Card>
 
             <section className="space-y-3">
-              <h2 className="text-xl font-semibold tracking-tight">About Event</h2>
+              <h2 className="text-xl font-semibold tracking-tight">Sobre el evento</h2>
               <div className="prose prose-sm max-w-none text-muted-foreground dark:prose-invert md:prose-base">
                 {event.description ? (
                   <p className="whitespace-pre-wrap">{event.description}</p>

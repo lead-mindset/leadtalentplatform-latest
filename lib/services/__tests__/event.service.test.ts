@@ -112,6 +112,14 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
       select: vi.fn().mockReturnValue(selectChain),
       _selectChain: selectChain,
     },
+    chapter_membership: {
+      select: vi.fn().mockReturnValue(selectChain),
+      _selectChain: selectChain,
+    },
+    event_pathway_metadata: {
+      select: vi.fn().mockReturnValue(selectChain),
+      _selectChain: selectChain,
+    },
     event_with_chapter: {
       select: vi.fn().mockReturnValue(selectChain),
       _selectChain: selectChain,
@@ -534,6 +542,87 @@ describe('EventService', () => {
       expect(subscribeSpy).not.toHaveBeenCalled()
     })
 
+    it('should reject active-member-only event registration for users without approved membership', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.event_registration._selectChain.maybeSingle
+        .mockResolvedValueOnce({
+          data: null,
+          error: null,
+        })
+        .mockResolvedValueOnce({
+          data: { audience: 'active_member' },
+          error: null,
+        })
+        .mockResolvedValueOnce({
+          data: null,
+          error: null,
+        })
+
+      const result = await EventService.registerForEvent(mockSupabase as unknown as SupabaseClient, 'evt-1', 'user-1')
+
+      expect(result).toEqual({
+        success: false,
+        error: 'Este evento es exclusivo para miembros activos de LEAD.',
+      })
+      expect(tableMocks.event_registration.insert).not.toHaveBeenCalled()
+      expect(tableMocks.event_registration.update).not.toHaveBeenCalled()
+    })
+
+    it('should allow active-member-only event registration for approved members', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.event_registration._selectChain.maybeSingle
+        .mockResolvedValueOnce({
+          data: null,
+          error: null,
+        })
+        .mockResolvedValueOnce({
+          data: { audience: 'active_member' },
+          error: null,
+        })
+        .mockResolvedValueOnce({
+          data: { id: 'membership-1', status: 'approved' },
+          error: null,
+        })
+
+      tableMocks.event_registration._insertChain.single.mockResolvedValueOnce({
+        data: { id: 'reg-1', status: 'registered' },
+        error: null,
+      })
+
+      const result = await EventService.registerForEvent(mockSupabase as unknown as SupabaseClient, 'evt-1', 'user-1')
+
+      expect(result.success).toBe(true)
+      expect(tableMocks.event_registration.insert).toHaveBeenCalled()
+    })
+
+    it('should not revive cancelled active-member-only registrations for users without approved membership', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.event_registration._selectChain.maybeSingle
+        .mockResolvedValueOnce({
+          data: { id: 'reg-1', status: 'cancelled' },
+          error: null,
+        })
+        .mockResolvedValueOnce({
+          data: { audience: 'active_member' },
+          error: null,
+        })
+        .mockResolvedValueOnce({
+          data: null,
+          error: null,
+        })
+
+      const result = await EventService.registerForEvent(mockSupabase as unknown as SupabaseClient, 'evt-1', 'user-1')
+
+      expect(result).toEqual({
+        success: false,
+        error: 'Este evento es exclusivo para miembros activos de LEAD.',
+      })
+      expect(tableMocks.event_registration.update).not.toHaveBeenCalled()
+    })
+
     it('should return already active registration', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
@@ -619,10 +708,36 @@ describe('EventService', () => {
       })
     })
 
+    it('should reject active-member-only event applications for alumni and other non-active members', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.event_registration._selectChain.maybeSingle
+        .mockResolvedValueOnce({
+          data: { audience: 'active_member' },
+          error: null,
+        })
+        .mockResolvedValueOnce({
+          data: null,
+          error: null,
+        })
+
+      const result = await EventService.applyForEvent(mockSupabase as unknown as SupabaseClient, 'evt-1', 'user-1')
+
+      expect(result).toEqual({
+        success: false,
+        error: 'Este evento es exclusivo para miembros activos de LEAD.',
+      })
+      expect(tableMocks.event_registration.insert).not.toHaveBeenCalled()
+    })
+
     it('should handle duplicate key race condition', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
       tableMocks.event_registration._selectChain.maybeSingle
+        .mockResolvedValueOnce({
+          data: null,
+          error: null,
+        })
         .mockResolvedValueOnce({
           data: null,
           error: null,
