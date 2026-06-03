@@ -6,6 +6,7 @@ import { ChapterRoleAssignmentService } from '@/lib/services/chapter-role-assign
 vi.mock('@/lib/services/chapter-role-assignment.service', () => ({
   ChapterRoleAssignmentService: {
     assignChapterRole: vi.fn(),
+    deactivateChapterRole: vi.fn(),
   },
 }))
 
@@ -166,6 +167,9 @@ describe('AdminService', () => {
       success: true,
       roleAssignmentId: 'role-1',
       grantedPermissions: ['chapter.dashboard.access'],
+    })
+    vi.mocked(ChapterRoleAssignmentService.deactivateChapterRole).mockResolvedValue({
+      success: true,
     })
   })
 
@@ -335,6 +339,23 @@ describe('AdminService', () => {
       expect(result.items).toHaveLength(1)
       expect(result.total).toBe(1)
       expect(result.items[0].email).toBe('alice@test.com')
+    })
+
+    it('should return an explicit error when the primary users query fails', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.user._builder._setThenValue({
+        data: null,
+        error: { message: 'permission denied' },
+      })
+
+      const result = await AdminService.getUsersList(mockSupabase as unknown as SupabaseClient, {}, { page: 1, pageSize: 25 })
+
+      expect(result.items).toEqual([])
+      expect(result.total).toBe(0)
+      expect(result.error).toBe('No se pudieron cargar los usuarios. Revisa la conexion o intenta nuevamente.')
+      expect(tableMocks.person_profile.select).not.toHaveBeenCalled()
+      expect(tableMocks.chapter_membership.select).not.toHaveBeenCalled()
     })
 
     it('should filter by search query', async () => {
@@ -1243,8 +1264,8 @@ describe('AdminService', () => {
           chapterId: 'leaduni',
           roleLevel: 'chief_of_staff',
           functionalArea: 'strategy_operations',
-          displayTitle: 'Legacy Chapter Editor',
-          rawTitle: 'legacy_editor',
+          displayTitle: 'Editor de capitulo',
+          rawTitle: 'chapter_editor',
         }
       )
       expect(tableMocks.lead_identity.insert).toHaveBeenCalledWith(
@@ -1255,6 +1276,59 @@ describe('AdminService', () => {
           issued_by_id: 'admin-1',
         })
       )
+    })
+
+    it('removes editor assignment through scoped role deactivation without changing global role', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.chapter_membership._builder._setThenValue({
+        data: { user_id: 'user-1', chapter_id: 'leaduni' },
+        error: null,
+      })
+      tableMocks.chapter_role_assignment._builder._setThenValue({
+        data: { id: 'role-1' },
+        error: null,
+      })
+
+      const result = await AdminService.removeEditor(
+        mockSupabase as unknown as SupabaseClient,
+        'user-1',
+        'leaduni',
+        'admin-1'
+      )
+
+      expect(result.success).toBe(true)
+      expect(tableMocks.user.update).not.toHaveBeenCalled()
+      expect(ChapterRoleAssignmentService.deactivateChapterRole).toHaveBeenCalledWith(mockSupabase, {
+        actorUserId: 'admin-1',
+        roleAssignmentId: 'role-1',
+        revokeReason: 'Removed from admin chapter editor assignment.',
+      })
+    })
+
+    it('rejects editor removal when no active scoped assignment exists', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.chapter_membership._builder._setThenValue({
+        data: { user_id: 'user-1', chapter_id: 'leaduni' },
+        error: null,
+      })
+      tableMocks.chapter_role_assignment._builder._setThenValue({
+        data: null,
+        error: null,
+      })
+
+      const result = await AdminService.removeEditor(
+        mockSupabase as unknown as SupabaseClient,
+        'user-1',
+        'leaduni',
+        'admin-1'
+      )
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('No active chapter editor assignment found.')
+      expect(tableMocks.user.update).not.toHaveBeenCalled()
+      expect(ChapterRoleAssignmentService.deactivateChapterRole).not.toHaveBeenCalled()
     })
   })
 })

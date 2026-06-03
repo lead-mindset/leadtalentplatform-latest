@@ -281,6 +281,7 @@ export type UsersListResponse = {
   total: number
   page: number
   pageSize: number
+  error?: string
 }
 
 export type ActionResult = { success: true } | { success: false; error: string }
@@ -1570,7 +1571,8 @@ export const AdminService = {
 
     const { data: users, error: usersError } = await userQuery.order('created_at', { ascending: false })
     if (usersError || !users) {
-      return []
+      logger.error({ context: 'admin/queryFilteredUsers/users', error: usersError }, 'Failed to fetch users')
+      throw new Error('No se pudieron cargar los usuarios. Revisa la conexion o intenta nuevamente.')
     }
 
     const typedUsers = users as Pick<UserRow, 'id' | 'name' | 'email' | 'role' | 'created_at' | 'deactivated_at'>[]
@@ -1650,7 +1652,17 @@ export const AdminService = {
     filters: UsersFilters,
     pagination: UsersPagination
   ): Promise<UsersListResponse> {
-    const rows = await this.queryFilteredUsers(supabase, filters)
+    let rows: AdminUserListItem[] = []
+    let error: string | undefined
+
+    try {
+      rows = await this.queryFilteredUsers(supabase, filters)
+    } catch (err) {
+      error = err instanceof Error
+        ? err.message
+        : 'No se pudieron cargar los usuarios. Revisa la conexion o intenta nuevamente.'
+    }
+
     const sortBy = pagination.sortBy ?? 'created_at'
     const sortOrder = pagination.sortOrder ?? 'desc'
     const sorted = sortAdminUserRows(rows, sortBy, sortOrder)
@@ -1664,6 +1676,7 @@ export const AdminService = {
       total: sorted.length,
       page: safePage,
       pageSize: pagination.pageSize,
+      error,
     }
   },
 
@@ -2089,8 +2102,8 @@ export const AdminService = {
       chapterId: chapter_id,
       roleLevel: 'chief_of_staff',
       functionalArea: 'strategy_operations',
-      displayTitle: 'Legacy Chapter Editor',
-      rawTitle: 'legacy_editor',
+      displayTitle: 'Editor de capitulo',
+      rawTitle: 'chapter_editor',
     })
 
     if (!roleAssignmentResult.success) {
@@ -2114,7 +2127,12 @@ export const AdminService = {
   // ───────────────────────────────────────────────────────────────
   // removeEditor
   // ───────────────────────────────────────────────────────────────
-  async removeEditor(supabase: SupabaseClient<Database>, userId: string, chapter_id: string): Promise<ActionResult> {
+  async removeEditor(
+    supabase: SupabaseClient<Database>,
+    userId: string,
+    chapter_id: string,
+    actorUserId?: string
+  ): Promise<ActionResult> {
     const { data: membership } = await supabase
       .from('chapter_membership')
       .select('user_id, chapter_id')
@@ -2125,13 +2143,31 @@ export const AdminService = {
       return { success: false, error: 'User does not belong to this chapter.' }
     }
 
-    const { error } = await supabase.from('user').update({ role: 'member' }).eq('id', userId)
-    if (error) {
-      logger.error({ context: 'admin/chapters', error: error }, 'removeEditor error')
-      return { success: false, error: 'Failed to remove editor.' }
+    const { data: assignment, error: assignmentError } = await supabase
+      .from('chapter_role_assignment')
+      .select('id')
+      .match({
+        user_id: userId,
+        chapter_id,
+        status: 'active',
+      })
+      .eq('is_primary', true)
+      .maybeSingle()
+
+    if (assignmentError) {
+      logger.error({ context: 'admin/chapters/removeEditor/assignment', error: assignmentError }, 'removeEditor error')
+      return { success: false, error: 'Failed to remove chapter editor.' }
     }
 
-    return { success: true }
+    if (!assignment?.id) {
+      return { success: false, error: 'No active chapter editor assignment found.' }
+    }
+
+    return ChapterRoleAssignmentService.deactivateChapterRole(supabase, {
+      actorUserId: actorUserId ?? userId,
+      roleAssignmentId: assignment.id,
+      revokeReason: 'Removed from admin chapter editor assignment.',
+    })
   },
 
   // ───────────────────────────────────────────────────────────────

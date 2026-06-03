@@ -39,7 +39,7 @@ export default async function AdminUsersPage({
   const page = Math.max(1, Number(params.page ?? '1') || 1)
   const pageSize = (PAGE_SIZES.has(String(params.pageSize)) ? Number(params.pageSize) : 25) as 25 | 50 | 100
 
-  const [{ items, total }, chapters] = await Promise.all([
+  const [{ items, total, error }, chapters] = await Promise.all([
     getUsersList(
       {
         search,
@@ -57,7 +57,7 @@ export default async function AdminUsersPage({
       <PageHeader
         eyebrow="Administracion"
         title="Gestion de usuarios"
-        description="Busca, filtra, actualiza roles, desactiva usuarios y exporta resultados filtrados."
+        description="Busca, filtra, actualiza roles, desactiva usuarios y exporta resultados filtrados. Esta vista es de operacion administrativa; permisos de Staff deben definirse por alcance antes de tratarlos como Admin."
       />
 
       <UsersManagementClient
@@ -69,6 +69,7 @@ export default async function AdminUsersPage({
         chapterFilters={chapterFilters}
         approvalFilters={approvalFilters}
         search={search}
+        loadError={error ?? null}
         chapterOptions={chapters.map((chapter: { id: string; name: string }) => ({
           id: chapter.id,
           name: chapter.name,

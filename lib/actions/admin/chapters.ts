@@ -121,8 +121,8 @@ export async function assignEditor(userId: string, chapter_id: string): Promise<
 }
 
 export async function removeEditor(userId: string, chapter_id: string): Promise<ActionResult> {
-  const { supabase } = await requireAdmin()
-  const result = await AdminService.removeEditor(supabase, userId, chapter_id)
+  const { supabase, user } = await requireAdmin()
+  const result = await AdminService.removeEditor(supabase, userId, chapter_id, user.id)
   if (result.success) {
     revalidatePath('/admin/chapters')
   }
