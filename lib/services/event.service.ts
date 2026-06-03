@@ -26,6 +26,8 @@ const EVENT_MUTATION_SELECT =
 const EVENT_REGISTRATION_LOOKUP_SELECT =
   'id, title, is_published, start_at';
 
+export const ACTIVE_MEMBER_ONLY_EVENT_ERROR = 'Este evento es exclusivo para miembros activos de LEAD.';
+
 const PUBLISHED_EVENT_LISTING_SELECT = `
   id,
   title,
@@ -229,6 +231,10 @@ export type ApplicationResult =
   | { success: true; registration: EventRegistrationRow }
   | { success: false; error: string };
 
+export type EventRegistrationEligibilityResult =
+  | { success: true; activeMemberOnly: boolean }
+  | { success: false; error: string; activeMemberOnly: boolean };
+
 export type CheckInCounter = {
   checkedIn: number;
   total: number;
@@ -358,6 +364,40 @@ export const EventService = {
     return { ok: true, event };
   },
 
+  async validateUserEventRegistrationEligibility(
+    supabase: SupabaseClient<Database>,
+    eventId: string,
+    userId: string
+  ): Promise<EventRegistrationEligibilityResult> {
+    const metadataResult = await supabase
+      .from('event_pathway_metadata')
+      .select('audience')
+      .eq('event_id', eventId)
+      .maybeSingle<{ audience: string | null }>();
+
+    const activeMemberOnly = metadataResult?.data?.audience === 'active_member';
+    if (!activeMemberOnly) {
+      return { success: true, activeMemberOnly: false };
+    }
+
+    const membershipResult = await supabase
+      .from('chapter_membership')
+      .select('id, status')
+      .eq('user_id', userId)
+      .eq('status', 'approved')
+      .maybeSingle<{ id: string; status: string }>();
+
+    if (membershipResult?.data?.status === 'approved') {
+      return { success: true, activeMemberOnly: true };
+    }
+
+    return {
+      success: false,
+      activeMemberOnly: true,
+      error: ACTIVE_MEMBER_ONLY_EVENT_ERROR,
+    };
+  },
+
   // ───────────────────────────────────────────────────────────────
   // applyForEvent
   // ───────────────────────────────────────────────────────────────
@@ -368,6 +408,11 @@ export const EventService = {
     options: EventNewsletterOptions = {}
   ): Promise<ApplicationResult> {
     const now = new Date().toISOString();
+    const eligibility = await this.validateUserEventRegistrationEligibility(supabase, eventId, userId);
+    if (!eligibility.success) {
+      return { success: false, error: eligibility.error };
+    }
+
     const questions = await EventApplicationService.getQuestionsForEvent(supabase, eventId);
 
     if (questions.length > 0) {
@@ -463,6 +508,11 @@ export const EventService = {
       };
     }
 
+    const eligibility = await this.validateUserEventRegistrationEligibility(supabase, eventId, userId);
+    if (!eligibility.success) {
+      return { success: false, error: eligibility.error };
+    }
+
     // 3. Revive cancelled registrations
     if (existing?.status === 'cancelled') {
       const { data: revived, error: reviveError } = await supabase
@@ -526,12 +576,13 @@ export const EventService = {
 
       // Handle duplicate key race condition
       if (isDuplicateError(error)) {
-        const { data: row } = await supabase
+        const duplicateLookup = await supabase
           .from('event_registration')
           .select('id, status')
           .eq('event_id', eventId)
           .eq('user_id', userId)
           .maybeSingle<{ id: string; status: RegistrationStatus }>();
+        const row = duplicateLookup?.data;
 
         if (row && isActiveRegistrationStatus(row.status)) {
           return {

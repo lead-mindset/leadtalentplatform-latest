@@ -38,6 +38,7 @@ type Props = {
   loginUrl: string
   onboardingUrl: string
   registrationClosed: boolean
+  registrationBlockedReason?: string | null
   isRegistered: boolean
   hadCancelledRegistration?: boolean
   canCancel: boolean
@@ -60,6 +61,7 @@ export function EventRegistrationCheckout({
   loginUrl,
   onboardingUrl,
   registrationClosed,
+  registrationBlockedReason = null,
   isRegistered,
   hadCancelledRegistration = false,
   canCancel,
@@ -91,7 +93,13 @@ export function EventRegistrationCheckout({
   }
 
   const registerDisabled =
-    registrationClosed || isFull || isRegistered || !isLoggedIn || !hasBasicProfile || isRedirecting
+    registrationClosed ||
+    isFull ||
+    isRegistered ||
+    !isLoggedIn ||
+    !hasBasicProfile ||
+    Boolean(registrationBlockedReason) ||
+    isRedirecting
   const qrHref = `/student/events?event=${eventId}`
 
   useEffect(() => {
@@ -114,6 +122,10 @@ export function EventRegistrationCheckout({
         ) : showLowSpots ? (
           <p className="text-sm text-muted-foreground">
             {spotsLeft === 1 ? 'Queda 1 cupo' : `Quedan ${spotsLeft} cupos`}
+          </p>
+        ) : registrationBlockedReason ? (
+          <p className="text-sm text-muted-foreground">
+            {registrationBlockedReason}
           </p>
         ) : hadCancelledRegistration ? (
           <p className="text-sm text-muted-foreground">
@@ -189,7 +201,7 @@ export function EventRegistrationCheckout({
           <div className="hidden space-y-3 md:block">
             <SubmitButton
               disabled={registerDisabled}
-              label={isRedirecting ? 'Abriendo mi QR...' : 'Registrarme'}
+              label={registrationBlockedReason ? 'Registro no disponible' : isRedirecting ? 'Abriendo mi QR...' : 'Registrarme'}
             />
             {isRedirecting ? (
               <div className="rounded-lg border border-success/30 bg-success/10 p-3" role="status">
@@ -228,6 +240,10 @@ export function EventRegistrationCheckout({
               <p className="mb-2 text-center text-xs text-muted-foreground">
                 {spotsLeft === 1 ? 'Queda 1 cupo' : `Quedan ${spotsLeft} cupos`}
               </p>
+            ) : registrationBlockedReason ? (
+              <p className="mb-2 text-center text-xs text-muted-foreground">
+                {registrationBlockedReason}
+              </p>
             ) : hadCancelledRegistration ? (
               <p className="mb-2 text-center text-xs text-muted-foreground">
                 Cancelaste antes. Toca Registrarme para inscribirte otra vez.
@@ -255,7 +271,7 @@ export function EventRegistrationCheckout({
 
             <SubmitButton
               disabled={registerDisabled}
-              label={isRedirecting ? 'Abriendo mi QR...' : 'Registrarme'}
+              label={registrationBlockedReason ? 'Registro no disponible' : isRedirecting ? 'Abriendo mi QR...' : 'Registrarme'}
             />
           </div>
         </form>
