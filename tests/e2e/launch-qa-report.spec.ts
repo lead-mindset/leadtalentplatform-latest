@@ -371,12 +371,21 @@ async function runStudentLikeFlows(qa: LaunchQaCollector) {
   await qa.visit('participant profile', '/es/student/profile', { expectedText: /perfil|profile/i })
   await qa.visit('participant resume', '/es/student/resume', { expectedText: /resume|cv|curriculum|hoja/i })
   await qa.visit('participant events', '/es/student/events', { expectedText: /eventos|events/i })
-  await qa.visit('participant blocked from chapter', '/es/chapter', { expectedUrl: /\/student/ })
-  await qa.visit('participant blocked from company', '/es/company/dashboard', { expectedUrl: /\/auth\/login|\/company\/onboard/ })
+  await qa.visit('participant blocked from chapter', '/es/chapter', {
+    expectedUrl: /\/auth\/unauthorized|\/student/,
+    expectedBehavior: 'Wrong-role participant is preserved and redirected to the safe unauthorized boundary.',
+  })
+  await qa.visit('participant blocked from company', '/es/company/dashboard', {
+    expectedUrl: /\/auth\/unauthorized|\/auth\/login|\/company\/onboard/,
+    expectedBehavior: 'Wrong-role participant is preserved and redirected to the safe unauthorized boundary.',
+  })
 
   await qa.loginAs('member@test.com', /\/student/)
   await qa.visit('member student dashboard', '/es/student', { expectedText: /miembro oficial/i })
-  await qa.visit('member blocked from chapter', '/es/chapter', { expectedUrl: /\/student/ })
+  await qa.visit('member blocked from chapter', '/es/chapter', {
+    expectedUrl: /\/auth\/unauthorized|\/student/,
+    expectedBehavior: 'Wrong-role member is preserved and redirected to the safe unauthorized boundary.',
+  })
   await qa.visit('member open event before registration', `/es/events/${OPEN_EVENT_ID}`, { expectedText: /registrarme|registrado|registro/i })
   const registeredBefore = await hasRegisteredEventState(qa['page'])
   if (!registeredBefore) {
@@ -435,7 +444,10 @@ async function runStudentLikeFlows(qa: LaunchQaCollector) {
 
   await qa.loginAs('alumni@test.com', /\/student/)
   await qa.visit('alumni student dashboard', '/es/student', { expectedText: /alumni/i })
-  await qa.visit('alumni blocked from chapter', '/es/chapter', { expectedUrl: /\/student/ })
+  await qa.visit('alumni blocked from chapter', '/es/chapter', {
+    expectedUrl: /\/auth\/unauthorized|\/student/,
+    expectedBehavior: 'Wrong-role alumni user is preserved and redirected to the safe unauthorized boundary.',
+  })
 }
 
 async function runChapterFlows(qa: LaunchQaCollector) {
@@ -561,7 +573,10 @@ async function runRecruiterFlows(qa: LaunchQaCollector) {
   await qa.visit('recruiter profile', '/es/company/profile', { expectedText: /perfil|profile|Test Company/i })
   await qa.visit('recruiter settings', '/es/company/settings', { expectedText: /settings|configuracion|empresa/i })
 
-  await qa.visit('recruiter blocked from admin', '/es/admin', { expectedUrl: /\/auth\/login/ })
+  await qa.visit('recruiter blocked from admin', '/es/admin', {
+    expectedUrl: /\/auth\/unauthorized|\/auth\/login/,
+    expectedBehavior: 'Wrong-role recruiter is preserved and redirected to the safe unauthorized boundary.',
+  })
   await qa.loginAs('recruiter@test.com', /\/company/)
   await qa.visit('recruiter direct student route blocked', '/es/student', { expectedUrl: /\/company/ })
   if (/\/student/.test(new URL(qa['page'].url()).pathname)) {
@@ -573,8 +588,11 @@ async function runRecruiterFlows(qa: LaunchQaCollector) {
       suggestedFix: 'Add recruiter redirect handling in student layout or clarify that recruiter access to student routes is intentional.',
     })
   }
-  await qa.visit('recruiter direct chapter route blocked', '/es/chapter', { expectedUrl: /\/auth\/login|\/company/ })
-  if (!/\/auth\/login|\/company/.test(new URL(qa['page'].url()).pathname)) {
+  await qa.visit('recruiter direct chapter route blocked', '/es/chapter', {
+    expectedUrl: /\/auth\/unauthorized|\/auth\/login|\/company/,
+    expectedBehavior: 'Wrong-role recruiter is preserved and redirected to the safe unauthorized boundary.',
+  })
+  if (!/\/auth\/unauthorized|\/auth\/login|\/company/.test(new URL(qa['page'].url()).pathname)) {
     const shot = await qa.screenshot('recruiter chapter route unexpected')
     qa.addFinding('major', 'Recruiter chapter route does not resolve to a company/auth boundary', {
       expected: 'Recruiters should not reach chapter operations.',
