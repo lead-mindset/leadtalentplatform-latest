@@ -17,7 +17,8 @@ import { NewsletterSubscriptionService } from '@/lib/services/newsletter-subscri
  * - All methods accept a SupabaseClient instance to remain framework-agnostic
  *   and enable easy mocking in unit tests.
  * - Uses person_profile table (migrated from student_profile in LEAD-002)
- * - Creates chapter_membership entries for chapter association
+ * - Profile edits do not create or modify chapter_membership; chapter affiliation
+ *   belongs to onboarding/application and operations workflows.
  */
 
 export type UpdateProfileParams = {

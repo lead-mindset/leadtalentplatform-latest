@@ -103,7 +103,7 @@ export async function updateProfile(formData: FormData) {
 
     return {
       success: true,
-      message: 'Profile updated successfully',
+      message: 'Perfil actualizado correctamente',
     };
   } catch (error: unknown) {
     console.error('Profile update error:', error);
