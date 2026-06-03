@@ -1,6 +1,7 @@
 import { createClient } from './supabase/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
+import { getSignedInUnauthorizedRedirectPath } from '@/lib/auth-redirects'
 import type {
   AdminStats,
   CompanyRow,
@@ -80,13 +81,27 @@ export async function requireAdmin(): Promise<{
   user: UserRow
 }> {
   const supabase = await createClient()
+  const { data: auth, error: authError } = await supabase.auth.getUser()
 
-  try {
-    const user = await assertAdmin(supabase)
-    return { supabase, user }
-  } catch {
-    return redirect('/auth/login')
+  if (authError || !auth.user) {
+    redirect('/auth/login')
   }
+
+  const { data: dbUser, error: dbError } = await supabase
+    .from('user')
+    .select(USER_SELECT)
+    .eq('id', auth.user.id)
+    .single<UserRow>()
+
+  if (dbError || !dbUser) {
+    redirect('/auth/login')
+  }
+
+  if (dbUser.role !== 'admin') {
+    redirect(getSignedInUnauthorizedRedirectPath(dbUser.role, 'admin'))
+  }
+
+  return { supabase, user: dbUser }
 }
 
 export async function requireUser(): Promise<{ 
@@ -120,7 +135,7 @@ export async function requireUserWithRole(role: string): Promise<{
   const { supabase, user } = await requireUser()
  
   if (user.role !== role) {
-    redirect('/student')
+    redirect(getSignedInUnauthorizedRedirectPath(user.role, role))
   }
  
   return { supabase, user }
@@ -184,13 +199,13 @@ export async function requireChapterMember(): Promise<{
  
   // Chapter access is scoped by approved membership plus explicit chapter grants.
   if (!['admin', 'editor', 'member'].includes(user.role)) {
-    redirect('/student')
+    redirect(getSignedInUnauthorizedRedirectPath(user.role, 'chapter'))
   }
 
   const membership = await getChapterDashboardMembership(supabase, user.id)
 
   if (!membership?.chapter_id) {
-    redirect('/student')
+    redirect(getSignedInUnauthorizedRedirectPath(user.role, 'chapter'))
   }
 
   return {
@@ -218,12 +233,12 @@ export async function requireChapterEditor(): Promise<{
   }
 
   if (!['editor', 'member'].includes(user.role)) {
-    redirect('/student')
+    redirect(getSignedInUnauthorizedRedirectPath(user.role, 'chapter'))
   }
 
   const membership = await getChapterDashboardMembership(supabase, user.id)
   if (!membership?.chapter_id) {
-    redirect('/student')
+    redirect(getSignedInUnauthorizedRedirectPath(user.role, 'chapter'))
   }
 
   return {
@@ -440,11 +455,14 @@ export async function requireRecruiter(): Promise<{
     .from('user')
     .select(USER_SELECT)
     .eq('id', authUser.id)
-    .eq('role', 'recruiter')
     .single<UserRow>()
 
   if (error || !userData) {
     redirect('/auth/login')
+  }
+
+  if (userData.role !== 'recruiter') {
+    redirect(getSignedInUnauthorizedRedirectPath(userData.role, 'company'))
   }
 
   const accessResolution = await resolveRecruiterAccess(supabase, authUser.id)

@@ -4,6 +4,26 @@ import type { Database } from '@/lib/database.generated'
 import { ChapterPermissionService } from '@/lib/services/chapter-permission.service'
 
 const CHAPTER_DASHBOARD_PATH = '/chapter'
+export const AUTH_UNAUTHORIZED_PATH = '/auth/unauthorized'
+
+export function getRoleDefaultWorkspacePath(role: Role | null | undefined) {
+  if (role === 'admin') return '/admin'
+  if (role === 'recruiter') return '/company'
+  if (role === 'member' || role === 'editor') return '/student'
+  return '/student'
+}
+
+export function getSignedInUnauthorizedRedirectPath(
+  role: Role | null | undefined,
+  reason = 'unauthorized'
+) {
+  const params = new URLSearchParams({
+    next: getRoleDefaultWorkspacePath(role),
+    reason,
+  })
+
+  return `${AUTH_UNAUTHORIZED_PATH}?${params.toString()}`
+}
 
 export function getStudentWorkspaceRedirectPath(role: Role | null | undefined) {
   if (role === 'recruiter') return '/company'

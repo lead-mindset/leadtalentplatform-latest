@@ -3,7 +3,10 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/database.generated'
 import { ChapterPermissionService } from '@/lib/services/chapter-permission.service'
 import {
+  AUTH_UNAUTHORIZED_PATH,
+  getRoleDefaultWorkspacePath,
   getPostAuthRedirectPath,
+  getSignedInUnauthorizedRedirectPath,
   getStudentWorkspaceRedirectPath,
   resolvePostAuthRedirectPath,
 } from './auth-redirects'
@@ -122,5 +125,27 @@ describe('getStudentWorkspaceRedirectPath', () => {
 
   it('fails closed for unknown non-empty roles', () => {
     expect(getStudentWorkspaceRedirectPath('unknown' as never)).toBe('/auth/error')
+  })
+})
+
+describe('signed-in unauthorized redirects', () => {
+  it('keeps signed-in users out of login when they lack access', () => {
+    expect(getSignedInUnauthorizedRedirectPath('member', 'admin')).toBe(
+      `${AUTH_UNAUTHORIZED_PATH}?next=%2Fstudent&reason=admin`
+    )
+    expect(getSignedInUnauthorizedRedirectPath('admin', 'chapter')).toBe(
+      `${AUTH_UNAUTHORIZED_PATH}?next=%2Fadmin&reason=chapter`
+    )
+    expect(getSignedInUnauthorizedRedirectPath('recruiter', 'chapter')).toBe(
+      `${AUTH_UNAUTHORIZED_PATH}?next=%2Fcompany&reason=chapter`
+    )
+  })
+
+  it('resolves default workspaces by role', () => {
+    expect(getRoleDefaultWorkspacePath('admin')).toBe('/admin')
+    expect(getRoleDefaultWorkspacePath('recruiter')).toBe('/company')
+    expect(getRoleDefaultWorkspacePath('member')).toBe('/student')
+    expect(getRoleDefaultWorkspacePath('editor')).toBe('/student')
+    expect(getRoleDefaultWorkspacePath(null)).toBe('/student')
   })
 })
