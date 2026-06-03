@@ -19,14 +19,14 @@ export default function Error({ reset }: ErrorProps) {
           <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
             <Icons.AlertCircle className="h-5 w-5 text-destructive" />
           </div>
-          <h2 className="text-xl font-semibold">Unable to load chapter events</h2>
+          <h2 className="text-xl font-semibold">No se pudieron cargar los eventos del capitulo</h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-            Refresh the page or return to the chapter overview while we reload this workspace.
+            Actualiza la pagina o vuelve al resumen del capitulo mientras recargamos este espacio.
           </p>
           <div className="mt-6 flex flex-col justify-center gap-2 sm:flex-row">
-            <Button onClick={reset}>Retry</Button>
+            <Button onClick={reset}>Reintentar</Button>
             <Button asChild variant="outline">
-              <Link href="/chapter">Chapter overview</Link>
+              <Link href="/chapter">Resumen del capitulo</Link>
             </Button>
           </div>
         </CardContent>

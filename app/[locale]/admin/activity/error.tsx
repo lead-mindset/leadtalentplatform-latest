@@ -11,13 +11,13 @@ export default function Error({ reset }: ErrorProps) {
   return (
     <div className="space-y-4 rounded-lg border bg-card p-6">
       <div>
-        <h2 className="text-lg font-semibold">Unable to load activity</h2>
+        <h2 className="text-lg font-semibold">No se pudo cargar la actividad</h2>
         <p className="text-sm text-muted-foreground">
-          Try again in a moment.
+          Intenta nuevamente en un momento.
         </p>
       </div>
       <Button onClick={reset} variant="outline">
-        Retry
+        Reintentar
       </Button>
     </div>
   )

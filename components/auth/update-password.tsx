@@ -14,8 +14,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from '@/i18n/routing';
 import { useState } from "react";
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { getAuthErrorKey } from '@/lib/auth-errors'
+import { getPasswordPolicyMessage, isStrongPassword } from '@/lib/auth-password-policy'
 
 export function UpdatePasswordForm({
   className,
@@ -26,11 +27,18 @@ export function UpdatePasswordForm({
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const t = useTranslations('auth');
+  const locale = useLocale();
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+
+    if (!isStrongPassword(password)) {
+      setError(getPasswordPolicyMessage(locale === 'en' ? 'en' : 'es'));
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const { error } = await supabase.auth.updateUser({ password });
@@ -65,6 +73,9 @@ export function UpdatePasswordForm({
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+                <p className="text-xs text-muted-foreground">
+                  {getPasswordPolicyMessage(locale === 'en' ? 'en' : 'es')}
+                </p>
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
               <Button type="submit" className="w-full" disabled={isLoading}>

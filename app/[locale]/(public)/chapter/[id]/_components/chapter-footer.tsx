@@ -24,21 +24,21 @@ export function ChapterFooter({ chapter }: { chapter: ChapterData }) {
         <div className="flex flex-wrap gap-10 text-sm font-medium">
           <div className="flex flex-col gap-3">
             <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">
-              Resources
+              Recursos
             </p>
             <Link href="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
-              Privacy Policy
+              Politica de privacidad
             </Link>
             <Link href="/terms" className="text-muted-foreground hover:text-foreground transition-colors">
-              Terms of Service
+              Terminos de servicio
             </Link>
           </div>
           <div className="flex flex-col gap-3">
             <p className="text-[10px] font-bold text-accent uppercase tracking-widest mb-1">
-              Support
+              Soporte
             </p>
             <Link href="/help" className="text-muted-foreground hover:text-foreground transition-colors">
-              Contact Us
+              Contactanos
             </Link>
             <Link href="/faq" className="text-muted-foreground hover:text-foreground transition-colors">
               FAQ
