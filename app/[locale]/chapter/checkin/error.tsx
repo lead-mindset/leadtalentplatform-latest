@@ -15,17 +15,17 @@ export default function Error({ reset }: ErrorProps) {
       <Card>
         <CardContent className="space-y-5 py-10 text-center">
           <div>
-            <h2 className="text-xl font-semibold">Unable to load check-in</h2>
+            <h2 className="text-xl font-semibold">No se pudo cargar el check-in</h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-              Retry the operator console, or return to chapter events and open check-in again.
+              Reintenta la consola operativa o vuelve a eventos del capitulo para abrir el check-in nuevamente.
             </p>
           </div>
           <div className="flex flex-col justify-center gap-2 sm:flex-row">
             <Button onClick={reset}>
-              Retry
+              Reintentar
             </Button>
             <Button asChild variant="outline">
-              <Link href="/chapter/events">Chapter events</Link>
+              <Link href="/chapter/events">Eventos del capitulo</Link>
             </Button>
           </div>
         </CardContent>

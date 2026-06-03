@@ -18,13 +18,13 @@ export default function Error({ reset }: ErrorProps) {
             <AlertCircle className="h-6 w-6 text-destructive" />
           </div>
           <div>
-            <h2 className="text-lg font-semibold">Unable to load this event</h2>
+            <h2 className="text-lg font-semibold">No se pudo cargar este evento</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Refresh the page or try again in a moment.
+              Actualiza la pagina o intenta nuevamente en un momento.
             </p>
           </div>
           <Button onClick={reset} variant="outline">
-            Retry
+            Reintentar
           </Button>
         </CardContent>
       </Card>

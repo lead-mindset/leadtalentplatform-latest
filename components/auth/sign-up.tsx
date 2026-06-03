@@ -21,6 +21,7 @@ import { useState } from "react";
 import { GoogleButton } from "./google-button";
 import { useTranslations } from 'next-intl';
 import { getAuthErrorKey } from '@/lib/auth-errors'
+import { getPasswordPolicyMessage, isStrongPassword } from '@/lib/auth-password-policy'
 
 function getSafeNextPath(value: string | null) {
   if (!value || !value.startsWith('/') || value.startsWith('//')) return null
@@ -55,8 +56,8 @@ export function SignUpForm({
       return;
     }
 
-    if (password.length < 8) {
-      setError(t('passwordTooShort'));
+    if (!isStrongPassword(password)) {
+      setError(getPasswordPolicyMessage(locale === 'en' ? 'en' : 'es'));
       setIsLoading(false);
       return;
     }
@@ -155,7 +156,7 @@ export function SignUpForm({
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {t('passwordMinLength')}
+                  {getPasswordPolicyMessage(locale === 'en' ? 'en' : 'es')}
                 </p>
               </div>
 
