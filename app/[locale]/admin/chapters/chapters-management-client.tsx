@@ -197,7 +197,7 @@ export function ChaptersManagementClient({
         }
       }
 
-      toast.success('Editors updated.')
+      toast.success('Asignaciones actualizadas.')
       setEditorOpen(null)
       router.refresh()
     })
@@ -398,11 +398,14 @@ export function ChaptersManagementClient({
       <Dialog open={Boolean(editorOpen)} onOpenChange={(open) => !open && setEditorOpen(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Assign Editors</DialogTitle>
-            <DialogDescription>{editorOpen?.name}</DialogDescription>
+            <DialogTitle>Asignar liderazgo de capitulo</DialogTitle>
+            <DialogDescription>
+              {editorOpen?.name}. Selecciona miembros aprobados para otorgar responsabilidad y permisos de operacion del capitulo.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-2 max-h-72 overflow-y-auto">
-            {(editorOpen ? availableEditorsByChapter[editorOpen.id] : [])?.map((user) => (
+            {(editorOpen ? availableEditorsByChapter[editorOpen.id] : [])?.length ? (
+              (editorOpen ? availableEditorsByChapter[editorOpen.id] : [])?.map((user) => (
               <label key={user.id} className="flex items-center gap-2 rounded border p-2">
                 <Checkbox
                   checked={selectedEditorIds.includes(user.id)}
@@ -414,11 +417,18 @@ export function ChaptersManagementClient({
                 />
                 <span className="text-sm">{user.name} ({user.email})</span>
               </label>
-            ))}
+              ))
+            ) : (
+              <div className="rounded-lg border bg-muted/30 p-4 text-sm text-muted-foreground">
+                No hay miembros aprobados disponibles para asignar en este capitulo.
+              </div>
+            )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditorOpen(null)}>Cancel</Button>
-            <Button disabled={isPending} onClick={syncEditors}>Save</Button>
+            <Button variant="outline" onClick={() => setEditorOpen(null)}>Cancelar</Button>
+            <Button disabled={isPending} onClick={syncEditors}>
+              {isPending ? 'Guardando...' : 'Guardar asignaciones'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

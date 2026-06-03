@@ -56,8 +56,8 @@ export default async function ChapterEventsPage() {
       <div className="space-y-5">
         <PageHeader
           eyebrow="Herramientas del chapter"
-          title="Eventos del chapter"
-          description="Gestiona eventos propios y colaborativos asociados a tu chapter."
+          title="Eventos del capitulo"
+          description="Gestiona eventos propios y colaborativos asociados a tu capitulo. Revisa borradores, publica con intencion y prepara el check-in antes del evento."
           actions={
             <Button asChild className="shrink-0">
             <Link href="/chapter/events/new">
@@ -104,7 +104,7 @@ export default async function ChapterEventsPage() {
             </div>
             <h2 className="text-xl font-semibold">Todavia no hay eventos</h2>
             <p className="mx-auto mt-2 mb-6 max-w-md text-sm text-muted-foreground">
-              Crea el primer evento del chapter cuando tu equipo este listo para recibir registros o postulaciones.
+              Crea el primer evento del capitulo cuando tu equipo este listo para recibir registros o postulaciones.
             </p>
             <Button asChild>
               <Link href="/chapter/events/new">

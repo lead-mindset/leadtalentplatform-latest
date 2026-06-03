@@ -55,6 +55,7 @@ type UsersManagementClientProps = {
   chapterFilters: string[]
   approvalFilters: ProfileStatusFilter[]
   search: string
+  loadError?: string | null
   chapterOptions: ChapterOption[]
 }
 
@@ -62,9 +63,10 @@ const ROLE_OPTIONS: Role[] = ['admin', 'editor', 'member', 'recruiter']
 const PROFILE_OPTIONS: ProfileStatusFilter[] = ['complete', 'pending_approval', 'incomplete', 'no_profile']
 
 function formatProfileStatus(status: ProfileStatusFilter): string {
-  if (status === 'pending_approval') return 'Pending approval'
-  if (status === 'no_profile') return 'No profile'
-  return status[0].toUpperCase() + status.slice(1)
+  if (status === 'pending_approval') return 'Pendiente de aprobacion'
+  if (status === 'no_profile') return 'Sin perfil'
+  if (status === 'complete') return 'Completo'
+  return 'Incompleto'
 }
 
 function downloadCsv(content: string) {
@@ -88,6 +90,7 @@ export function UsersManagementClient({
   chapterFilters,
   approvalFilters,
   search,
+  loadError = null,
   chapterOptions,
 }: UsersManagementClientProps) {
   const router = useRouter()
@@ -123,7 +126,7 @@ export function UsersManagementClient({
   const allVisibleSelected = users.length > 0 && users.every((user) => selectedIds.includes(user.id))
 
   const selectedLabel = useMemo(
-    () => `${selectedIds.length} selected`,
+    () => `${selectedIds.length} seleccionados`,
     [selectedIds.length]
   )
 
@@ -146,7 +149,7 @@ export function UsersManagementClient({
     startTransition(async () => {
       const result = await action()
       if (!result.success) {
-        toast.error(result.error ?? 'Action failed.')
+        toast.error(result.error ?? 'No se pudo completar la accion.')
         return
       }
       toast.success(successMessage)
@@ -164,7 +167,7 @@ export function UsersManagementClient({
         chapter_statuses: approvalFilters,
       })
       downloadCsv(csv)
-      toast.success('CSV exported.')
+      toast.success('CSV exportado.')
     })
   }
 
@@ -172,23 +175,23 @@ export function UsersManagementClient({
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
+          <CardTitle>Filtros</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
             <Input
-              aria-label="Search users by name or email"
-              placeholder="Search by name or email"
+              aria-label="Buscar usuarios por nombre o correo"
+              placeholder="Buscar por nombre o correo"
               value={searchInput}
               onChange={(event) => setSearchInput(event.target.value)}
             />
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline">Roles ({roleFilters.length || 'all'})</Button>
+                <Button variant="outline">Roles ({roleFilters.length || 'todos'})</Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
-                <DropdownMenuLabel>Filter roles</DropdownMenuLabel>
+                <DropdownMenuLabel>Filtrar roles</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {ROLE_OPTIONS.map((role) => (
                   <DropdownMenuCheckboxItem
@@ -209,10 +212,10 @@ export function UsersManagementClient({
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline">Chapters ({chapterFilters.length || 'all'})</Button>
+                <Button variant="outline">Capitulos ({chapterFilters.length || 'todos'})</Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
-                <DropdownMenuLabel>Filter chapters</DropdownMenuLabel>
+                <DropdownMenuLabel>Filtrar capitulos</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {chapterOptions.map((chapter) => (
                   <DropdownMenuCheckboxItem
@@ -233,10 +236,10 @@ export function UsersManagementClient({
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline">Profile ({approvalFilters.length || 'all'})</Button>
+                <Button variant="outline">Perfil ({approvalFilters.length || 'todos'})</Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
-                <DropdownMenuLabel>Profile status</DropdownMenuLabel>
+                <DropdownMenuLabel>Estado de perfil</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {PROFILE_OPTIONS.map((status) => (
                   <DropdownMenuCheckboxItem
@@ -269,10 +272,10 @@ export function UsersManagementClient({
                 router.push(`${pathname}?${params.toString()}`)
               }}
             >
-              Reset filters
+              Limpiar filtros
             </Button>
             <Button variant="secondary" onClick={handleExport} disabled={isPending}>
-              Export CSV
+              Exportar CSV
             </Button>
           </div>
         </CardContent>
@@ -287,39 +290,39 @@ export function UsersManagementClient({
                 variant="outline"
                 onClick={() =>
                   setConfirmState({
-                    title: 'Deactivate selected users?',
-                    description: 'Selected users will be marked as deactivated.',
+                    title: 'Desactivar usuarios seleccionados?',
+                    description: 'Los usuarios seleccionados quedaran marcados como desactivados.',
                     action: async () => {
                       runAction(
                         () => bulkUpdateUsers(selectedIds, { type: 'deactivate' }),
-                        'Users deactivated.'
+                        'Usuarios desactivados.'
                       )
                     },
                   })
                 }
               >
-                Deactivate
+                Desactivar
               </Button>
               <Button
                 variant="outline"
                 onClick={() =>
                   setConfirmState({
-                    title: 'Reactivate selected users?',
-                    description: 'Selected users will regain access.',
+                    title: 'Reactivar usuarios seleccionados?',
+                    description: 'Los usuarios seleccionados recuperaran acceso.',
                     action: async () => {
                       runAction(
                         () => bulkUpdateUsers(selectedIds, { type: 'reactivate' }),
-                        'Users reactivated.'
+                        'Usuarios reactivados.'
                       )
                     },
                   })
                 }
               >
-                Reactivate
+                Reactivar
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button>Change role</Button>
+                  <Button>Cambiar rol</Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   {ROLE_OPTIONS.map((role) => (
@@ -327,12 +330,12 @@ export function UsersManagementClient({
                       key={role}
                       onClick={() =>
                         setConfirmState({
-                          title: `Change selected users to ${role}?`,
-                          description: 'This updates the role for all selected users.',
+                          title: `Cambiar usuarios seleccionados a ${role}?`,
+                          description: 'Esto actualiza el rol de todos los usuarios seleccionados.',
                           action: async () => {
                             runAction(
                               () => bulkUpdateUsers(selectedIds, { type: 'change_role', role }),
-                              'Roles updated.'
+                              'Roles actualizados.'
                             )
                           },
                         })
@@ -362,13 +365,13 @@ export function UsersManagementClient({
                       }
                     />
                 </TableHead>
-                <TableHead className="text-left p-2">Name</TableHead>
+                <TableHead className="text-left p-2">Nombre</TableHead>
                 <TableHead className="text-left p-2">Email</TableHead>
-                <TableHead className="text-left p-2">Role</TableHead>
-                <TableHead className="text-left p-2">Chapter</TableHead>
-                <TableHead className="text-left p-2">Join Date</TableHead>
-                <TableHead className="text-left p-2">Profile Status</TableHead>
-                <TableHead className="text-left p-2">Actions</TableHead>
+                <TableHead className="text-left p-2">Rol</TableHead>
+                <TableHead className="text-left p-2">Capitulo</TableHead>
+                <TableHead className="text-left p-2">Fecha de registro</TableHead>
+                <TableHead className="text-left p-2">Estado de perfil</TableHead>
+                <TableHead className="text-left p-2">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -387,7 +390,7 @@ export function UsersManagementClient({
                     </TableCell>
                     <TableCell className="p-2 font-medium">
                       <Link className="hover:underline" href={`/admin/users/${user.id}`}>
-                        {user.name || 'No name'}
+                        {user.name || 'Sin nombre'}
                       </Link>
                     </TableCell>
                     <TableCell className="p-2">{user.email}</TableCell>
@@ -395,7 +398,7 @@ export function UsersManagementClient({
                       <Badge className={getRoleColor(user.role)}>{user.role}</Badge>
                       {user.deactivated_at && (
                         <Badge variant="outline" className="ml-2">
-                          Deactivated
+                          Desactivado
                         </Badge>
                       )}
                     </TableCell>
@@ -406,7 +409,7 @@ export function UsersManagementClient({
                       <div className="flex flex-wrap gap-2">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm">Role</Button>
+                            <Button variant="outline" size="sm">Rol</Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             {ROLE_OPTIONS.map((role) => (
@@ -414,12 +417,12 @@ export function UsersManagementClient({
                                 key={role}
                                 onClick={() =>
                                   setConfirmState({
-                                    title: `Change role to ${role}?`,
-                                    description: `${user.email} will become ${role}.`,
+                                    title: `Cambiar rol a ${role}?`,
+                                    description: `${user.email} cambiara a ${role}.`,
                                     action: async () => {
                                       runAction(
                                         () => updateUserRole(user.id, role),
-                                        'Role updated.'
+                                        'Rol actualizado.'
                                       )
                                     },
                                   })
@@ -437,15 +440,15 @@ export function UsersManagementClient({
                             size="sm"
                             onClick={() =>
                               setConfirmState({
-                                title: 'Reactivate this user?',
-                                description: `${user.email} will regain access.`,
+                                title: 'Reactivar este usuario?',
+                                description: `${user.email} recuperara acceso.`,
                                 action: async () => {
-                                  runAction(() => reactivateUser(user.id), 'User reactivated.')
+                                  runAction(() => reactivateUser(user.id), 'Usuario reactivado.')
                                 },
                               })
                             }
                           >
-                            Reactivate
+                            Reactivar
                           </Button>
                         ) : (
                           <Button
@@ -453,15 +456,15 @@ export function UsersManagementClient({
                             size="sm"
                             onClick={() =>
                               setConfirmState({
-                                title: 'Deactivate this user?',
-                                description: `${user.email} will no longer be active.`,
+                                title: 'Desactivar este usuario?',
+                                description: `${user.email} dejara de estar activo.`,
                                 action: async () => {
-                                  runAction(() => deactivateUser(user.id), 'User deactivated.')
+                                  runAction(() => deactivateUser(user.id), 'Usuario desactivado.')
                                 },
                               })
                             }
                           >
-                            Deactivate
+                            Desactivar
                           </Button>
                         )}
                       </div>
@@ -471,13 +474,22 @@ export function UsersManagementClient({
             </TableBody>
           </Table>
 
-          {users.length === 0 && (
-            <p className="text-sm text-muted-foreground py-8 text-center">No users found.</p>
+          {loadError ? (
+            <div
+              className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive"
+              role="alert"
+            >
+              {loadError}
+            </div>
+          ) : users.length === 0 && (
+            <p className="text-sm text-muted-foreground py-8 text-center">
+              No se encontraron usuarios con los filtros actuales.
+            </p>
           )}
 
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm text-muted-foreground">
-              {total} users • page {page} of {totalPages}
+              {total} usuarios - pagina {page} de {totalPages}
             </p>
             <div className="flex items-center gap-2">
               <Button
@@ -486,7 +498,7 @@ export function UsersManagementClient({
                 disabled={page <= 1}
                 onClick={() => updateSingleParam('page', String(page - 1))}
               >
-                Previous
+                Anterior
               </Button>
               <Button
                 variant="outline"
@@ -494,11 +506,11 @@ export function UsersManagementClient({
                 disabled={page >= totalPages}
                 onClick={() => updateSingleParam('page', String(page + 1))}
               >
-                Next
+                Siguiente
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">Page size: {pageSize}</Button>
+                  <Button variant="outline" size="sm">Filas: {pageSize}</Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   {[25, 50, 100].map((size) => (
@@ -523,7 +535,7 @@ export function UsersManagementClient({
             <AlertDialogDescription>{confirmState?.description}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isPending}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               disabled={isPending}
               onClick={() => {
@@ -532,7 +544,7 @@ export function UsersManagementClient({
                 if (action) void action()
               }}
             >
-              Confirm
+              Confirmar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

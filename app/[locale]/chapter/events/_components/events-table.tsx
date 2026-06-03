@@ -91,11 +91,11 @@ export function EventsTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[36%] pl-4">Evento</TableHead>
+              <TableHead className="w-[34%] pl-4">Evento</TableHead>
               <TableHead>Estado</TableHead>
               <TableHead>Registro</TableHead>
               <TableHead>Postulaciones</TableHead>
-              <TableHead className="text-right pr-4">Acciones</TableHead>
+              <TableHead className="w-[30rem] text-right pr-4">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -155,10 +155,15 @@ export function EventsTable({
                     )}
                   </TableCell>
                   <TableCell className="pr-4 align-top">
-                    <div className="flex flex-wrap justify-end gap-2">
+                    <div className="grid grid-cols-3 justify-end gap-2 xl:flex xl:flex-wrap">
                       <Button asChild size="sm" variant="outline">
                         <Link href={`/chapter/events/${event.id}`}>Editar</Link>
                       </Button>
+                      {event.is_published ? (
+                        <Button asChild size="sm" variant="outline">
+                          <Link href={`/events/${event.id}`}>Vista publica</Link>
+                        </Button>
+                      ) : null}
                       {event.is_published ? (
                         <EventShareButton
                           eventId={event.id}
@@ -262,6 +267,11 @@ function MobileEventRow({
         <Button asChild size="sm" variant="outline">
           <Link href={`/chapter/events/${event.id}`}>Editar</Link>
         </Button>
+        {event.is_published ? (
+          <Button asChild size="sm" variant="outline">
+            <Link href={`/events/${event.id}`}>Vista publica</Link>
+          </Button>
+        ) : null}
         {event.is_published ? (
           <EventShareButton
             eventId={event.id}
