@@ -291,7 +291,11 @@ export function FundingAccountabilityPanel({
               </p>
             ) : (
               detail.files.map(item => (
-                <div key={item.id} className="flex flex-col gap-3 rounded-md border border-border/60 p-3 sm:flex-row sm:items-center sm:justify-between">
+                <div
+                  key={item.id}
+                  data-testid="funding-file-row"
+                  className="flex flex-col gap-3 rounded-md border border-border/60 p-3 sm:flex-row sm:items-center sm:justify-between"
+                >
                   <div className="min-w-0 space-y-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge variant="secondary">{FUNDING_FILE_TYPE_LABELS[item.file_type as FundingFileType]}</Badge>
