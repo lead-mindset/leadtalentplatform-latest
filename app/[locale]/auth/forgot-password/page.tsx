@@ -1,8 +1,12 @@
 import { ForgotPasswordForm } from "@/components/auth/forgot-password";
+import { getAuthMetadata } from "../_metadata";
 
-export const metadata = {
-  title: 'Forgot Password - LEAD Talent Platform',
-  description: 'Reset your LEAD Talent Platform account password.',
+export function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  return getAuthMetadata(params, 'forgotPassword')
 }
 
 export default function Page() {

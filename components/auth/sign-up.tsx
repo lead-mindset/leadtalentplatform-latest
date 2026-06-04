@@ -21,6 +21,7 @@ import { useState } from "react";
 import { GoogleButton } from "./google-button";
 import { useTranslations } from 'next-intl';
 import { getAuthErrorKey } from '@/lib/auth-errors'
+import { getAuthEmailValidationMessage, isValidAuthEmail } from '@/lib/auth-form-validation'
 import { getPasswordPolicyMessage, isStrongPassword } from '@/lib/auth-password-policy'
 
 function getSafeNextPath(value: string | null) {
@@ -49,6 +50,12 @@ export function SignUpForm({
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+
+    if (!isValidAuthEmail(email)) {
+      setError(getAuthEmailValidationMessage(locale === 'en' ? 'en' : 'es'));
+      setIsLoading(false);
+      return;
+    }
 
     if (password !== repeatPassword) {
       setError(t('passwordsDoNotMatch'));
@@ -108,7 +115,7 @@ export function SignUpForm({
               </div>
             </div>
 
-            <form onSubmit={handleSignUp} className="space-y-5">
+            <form onSubmit={handleSignUp} className="space-y-5" noValidate>
               <div className="space-y-2">
                 <Label htmlFor="email">{t('emailAddress')}</Label>
                 <Input
@@ -121,6 +128,7 @@ export function SignUpForm({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
+                  title={getAuthEmailValidationMessage(locale === 'en' ? 'en' : 'es')}
                   aria-describedby={error ? "error-message" : undefined}
                 />
               </div>

@@ -1,4 +1,13 @@
 import { UpdatePasswordForm } from "@/components/auth/update-password";
+import { getAuthMetadata } from "../_metadata";
+
+export function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  return getAuthMetadata(params, 'updatePassword')
+}
 
 export default function Page() {
   return (

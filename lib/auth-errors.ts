@@ -4,6 +4,7 @@ const SUPABASE_ERROR_MAP: Record<string, string> = {
   'user already registered': 'userAlreadyRegistered',
   'password should be at least 6 characters': 'passwordTooShort',
   'too many requests': 'tooManyRequests',
+  'failed to fetch': 'networkError',
   'network request failed': 'networkError',
   'user not found': 'userNotFound',
   'email already in use': 'emailAlreadyInUse',

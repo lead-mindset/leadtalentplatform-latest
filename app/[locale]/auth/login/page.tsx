@@ -1,8 +1,12 @@
 import { LoginForm } from "@/components/auth/login";
+import { getAuthMetadata } from "../_metadata";
 
-export const metadata = {
-  title: 'Sign In - LEAD Talent Platform',
-  description: 'Sign in to your LEAD Talent Platform account.',
+export function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  return getAuthMetadata(params, 'login')
 }
 
 export default function Page() {

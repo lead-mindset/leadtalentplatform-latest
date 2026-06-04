@@ -1,8 +1,12 @@
 import { SignUpForm } from "@/components/auth/sign-up";
+import { getAuthMetadata } from "../_metadata";
 
-export const metadata = {
-  title: 'Sign Up - LEAD Talent Platform',
-  description: 'Create your LEAD Talent Platform account.',
+export function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  return getAuthMetadata(params, 'signUp')
 }
 
 export default function Page() {
