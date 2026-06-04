@@ -102,7 +102,7 @@ test.describe.serial('Lead Funding v1', () => {
     await expect(page.getByText('En revisión').first()).toBeVisible()
 
     await page.goto(`/es/chapter/funding/${APPROVED_REQUEST_ID}`, { waitUntil: 'networkidle' })
-    await expect(page.getByRole('heading', { name: /Refrigerios para Career Readiness Clinic/i })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /Refrigerios para Clinica de empleabilidad/i })).toBeVisible()
     await page.locator('#actual-spend').fill('345')
     await page.locator('#result-summary').fill('QA: se valida que el capítulo pueda registrar resultado e impacto.')
     await page.locator('#accountability-note').fill('QA: evidencia de comprobante para piloto controlado.')
@@ -136,7 +136,7 @@ test.describe.serial('Lead Funding v1', () => {
     await assertNoHorizontalOverflow(page)
 
     await page.goto('/es/admin/funding?status=approved', { waitUntil: 'networkidle' })
-    await expect(page.getByText('Refrigerios para Career Readiness Clinic')).toBeVisible()
+    await expect(page.getByText('Refrigerios para Clinica de empleabilidad')).toBeVisible()
     await expect(page.getByText('Cierre y regularización')).toBeVisible()
     await expect(page.getByRole('button', { name: /Cerrar solicitud/i })).toBeVisible()
     await screenshot(page, testInfo, 'admin-close')

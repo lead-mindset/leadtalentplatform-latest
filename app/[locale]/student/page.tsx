@@ -35,6 +35,7 @@ import {
 } from '@/lib/services/growth-reflection.service'
 import { ChapterApplicationCard } from './_components/chapter-application-card'
 import { getStudentDashboardSecondaryData } from '@/lib/actions/student/dashboard'
+import { presentLaunchEventTitle, presentLaunchProfileFocus } from '@/lib/launch-copy'
 
 type ParticipantApplicationCardProps = {
   dashboard: StudentActivationDashboard
@@ -90,6 +91,7 @@ function formatPosition(position: string | null) {
 
 function ProfileReadinessCard({ dashboard }: { dashboard: StudentActivationDashboard }) {
   const profile = dashboard.profile
+  const focus = presentLaunchProfileFocus(profile?.major_or_interest)
 
   return (
     <Card className="rounded-lg">
@@ -113,7 +115,7 @@ function ProfileReadinessCard({ dashboard }: { dashboard: StudentActivationDashb
           <div className="rounded-lg border border-border/70 bg-muted/25 p-3">
             <p className="font-semibold text-foreground">Enfoque</p>
             <p className="mt-1 text-muted-foreground">
-              {profile?.major_or_interest ?? 'Aun no agregado'}
+              {focus ?? 'Aun no agregado'}
             </p>
           </div>
         </div>
@@ -153,7 +155,7 @@ function MembershipDetailsCard({ dashboard }: { dashboard: StudentActivationDash
                 <p className="mt-1 text-muted-foreground">{formatPosition(membership.position)}</p>
               </div>
               <div className="rounded-lg border border-border/70 bg-muted/25 p-3">
-                <p className="font-semibold text-foreground">Member ID</p>
+                <p className="font-semibold text-foreground">ID de miembro</p>
                 <p className="mt-1 text-muted-foreground">
                   {dashboard.status === 'official_member' && membership.member_id
                     ? membership.member_id
@@ -342,12 +344,12 @@ function StartRecommendationAction({
 function getReflectionTarget(recommendation: DashboardRecommendation) {
   const params = new URLSearchParams({
     recommendationId: recommendation.id,
-    recommendationTitle: recommendation.title,
+    recommendationTitle: presentRecommendationCopy(recommendation.title),
   })
 
   if (recommendation.source_event_id) {
     params.set('eventId', recommendation.source_event_id)
-    params.set('eventTitle', recommendation.title)
+    params.set('eventTitle', presentLaunchEventTitle(recommendation.title))
   }
 
   return `/student/growth-reflection?${params.toString()}`
@@ -391,6 +393,34 @@ function getPrimaryRecommendationCta(recommendation: DashboardRecommendation) {
 function getMatchedReasons(value: unknown) {
   if (!Array.isArray(value)) return []
   return value.filter((reason): reason is string => typeof reason === 'string' && reason.trim().length > 0).slice(0, 3)
+}
+
+const RECOMMENDATION_COPY_LABELS: Record<string, string> = {
+  'QA Pathway Event: AI Career Sprint': 'Evento QA Pathway: Sprint de carrera en IA',
+  'Register for the LEAD AI Career Sprint and capture one practical learning afterward.':
+    'Registrate al sprint de carrera en IA de LEAD y captura un aprendizaje practico despues.',
+  'Matched because your focus is opportunity readiness and the event is ready to recommend.':
+    'Aparece porque tu enfoque es preparacion para oportunidades y el evento esta listo para recomendarse.',
+  'Refresh your LEAD profile': 'Actualiza tu perfil LEAD',
+  'Make sure your profile reflects your current interests before new opportunities appear.':
+    'Asegura que tu perfil refleje tus intereses actuales antes de que aparezcan nuevas oportunidades.',
+  'Profile clarity helps Pathway recommend better next steps.':
+    'Un perfil claro ayuda a Pathway a recomendar mejores siguientes pasos.',
+  'Capture one learning proof': 'Captura una evidencia de aprendizaje',
+  'Turn a recent LEAD experience into a private Growth Reflection.':
+    'Convierte una experiencia LEAD reciente en una reflexion privada de crecimiento.',
+  'A small proof artifact makes progress concrete.':
+    'Una pequena evidencia hace que tu avance sea concreto.',
+  'opportunity readiness': 'preparacion para oportunidades',
+  'professional readiness': 'preparacion profesional',
+  'OKR Elevate Student outcome: professional readiness': 'OKR Elevate. Resultado del estudiante: preparacion profesional',
+  'Student outcome: professional readiness': 'Resultado del estudiante: preparacion profesional',
+  'Profile readiness': 'Perfil listo',
+  'Proof loop': 'Ciclo de evidencia',
+}
+
+function presentRecommendationCopy(value: string) {
+  return RECOMMENDATION_COPY_LABELS[value] ?? value
 }
 
 function PathwayGuidanceCard({ guidance }: { guidance: PathwayDashboardGuidance | null }) {
@@ -481,10 +511,14 @@ function PathwayGuidanceCard({ guidance }: { guidance: PathwayDashboardGuidance 
                   ) : null}
                 </div>
 
-                <h3 className="mt-3 text-sm font-semibold text-foreground">{recommendation.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">{recommendation.body}</p>
+                <h3 className="mt-3 text-sm font-semibold text-foreground">
+                  {presentRecommendationCopy(recommendation.title)}
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  {presentRecommendationCopy(recommendation.body)}
+                </p>
                 <p className="mt-2 text-xs leading-5 text-muted-foreground">
-                  {recommendation.reason}
+                  {presentRecommendationCopy(recommendation.reason)}
                 </p>
 
                 {matchedReasons.length > 0 || recommendation.evidence_signal ? (
@@ -492,7 +526,7 @@ function PathwayGuidanceCard({ guidance }: { guidance: PathwayDashboardGuidance 
                     {matchedReasons.length > 0 ? (
                       <p>
                         <span className="font-semibold text-foreground">Por que aparece: </span>
-                        {matchedReasons.join(' ')}
+                        {matchedReasons.map(presentRecommendationCopy).join(' ')}
                       </p>
                     ) : null}
                     {recommendation.evidence_signal ? (
