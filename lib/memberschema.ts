@@ -8,6 +8,7 @@ export type ChapterIntent = (typeof CHAPTER_INTENT_VALUES)[number]
 
 const URL_SCHEME = /^[a-z][a-z\d+\-.]*:/i
 const HTTP_URL_SCHEME = /^https?:\/\//i
+const PROFILE_PHONE_PATTERN = /^\+?[1-9]\d{6,14}$/
 
 export function normalizeOptionalUrl(value: unknown): string | null {
   if (typeof value !== 'string') return null
@@ -32,11 +33,32 @@ const optionalUrl = (t: Translator) =>
       message: t('validation.invalidUrl'),
     })
 
+export function normalizeProfilePhone(value: unknown): string {
+  if (typeof value !== 'string') return ''
+
+  const trimmed = value.trim()
+  if (!trimmed) return ''
+
+  const startsWithPlus = trimmed.startsWith('+')
+  const digits = trimmed.replace(/\D/g, '')
+
+  return startsWithPlus ? `+${digits}` : digits
+}
+
+export function isValidProfilePhone(value: string): boolean {
+  return PROFILE_PHONE_PATTERN.test(value)
+}
+
 export function createBaseProfileSchema(t: Translator) {
   return z.object({
     full_name: z.string().min(1, t('validation.nameRequired')),
 
-    phone: z.string().min(5, t('validation.phoneInvalid')),
+    phone: z.preprocess(
+      normalizeProfilePhone,
+      z.string().refine(isValidProfilePhone, {
+        message: t('validation.phoneInvalid'),
+      })
+    ),
 
     gender: z.enum(['man', 'woman', 'non_binary', 'prefer_not_to_say'], {
       message: t('validation.selectGender'),

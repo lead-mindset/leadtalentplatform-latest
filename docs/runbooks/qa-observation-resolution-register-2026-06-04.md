@@ -57,11 +57,11 @@ This register is the source of truth for the 112 QA observations. It records whe
 | 31 | Account recovery | Federated-account recovery ambiguity | needs-leadership-decision | Requires provider/account policy decision. | #295 |
 | 32 | Recovery copy | Recovery semantic/context mismatch | fixed | AUTH-01 keeps recovery copy Spanish-first and exposes accessible recovery error/success states. | #295 |
 | 33 | Auth email expectations | Transactional email expectation copy | needs-leadership-decision | Email/provider behavior should be defined. | #295 |
-| 34 | Onboarding data | Phone normalization / E.164 | future-active-route-polish | Needs onboarding validation slice. | #296 |
-| 35 | Onboarding validation | Form restriction/profile integrity | future-active-route-polish | Needs onboarding validation slice. | #296 |
-| 36 | Onboarding flow | Capture efficiency / form UX | future-active-route-polish | Needs onboarding UX slice. | #296 |
-| 37 | Onboarding logic | Conditional business validation | needs-leadership-decision | Chapter-intent rules may need product decision. | #296 |
-| 38 | Onboarding completion | Closing copy / user clarity | future-active-route-polish | Needs onboarding Spanish copy polish. | #296 |
+| 34 | Onboarding data | Phone normalization / E.164 | fixed | ONBOARD-01 normalizes phone formatting before persistence and validates 7-15 digits with optional international `+`; country inference remains intentionally out of scope. | #296 |
+| 35 | Onboarding validation | Form restriction/profile integrity | fixed | ONBOARD-01 keeps profile validation in the shared schema and adds tests for normalized and invalid phone inputs. | #296 |
+| 36 | Onboarding flow | Capture efficiency / form UX | fixed | ONBOARD-01 clarifies reusable profile, chapter application, and newsletter choices without requiring chapter membership for events-only users. | #296 |
+| 37 | Onboarding logic | Conditional business validation | fixed | Active launch rule is explicit: events-only creates no membership, applicants create pending membership, existing-member claims remain pending unless preapproval activates them. | #296 |
+| 38 | Onboarding completion | Closing copy / user clarity | fixed | ONBOARD-01 adds Spanish-first intent/status copy and visible submit error feedback. | #296 |
 | 39 | Student routing | Dashboard route separation | guarded-for-pilot | Launch QA validates student/member route boundaries. | #297 |
 | 40 | Student dashboard | Responsive layout robustness | future-active-route-polish | Needs member route visual pass. | #297 |
 | 41 | Student copy | Mixed terminology/user metadata language | future-active-route-polish | Needs member route copy pass. | #297 |
