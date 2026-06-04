@@ -55,7 +55,7 @@ export default async function ChapterEventsPage() {
 
       <div className="space-y-5">
         <PageHeader
-          eyebrow="Herramientas del chapter"
+          eyebrow="Herramientas del capitulo"
           title="Eventos del capitulo"
           description="Gestiona eventos propios y colaborativos asociados a tu capitulo. Revisa borradores, publica con intencion y prepara el check-in antes del evento."
           actions={
