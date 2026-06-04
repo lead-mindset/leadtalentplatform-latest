@@ -569,7 +569,7 @@ async function runRecruiterFlows(qa: LaunchQaCollector) {
     })
   }
   await qa.visit('recruiter saved talent', '/es/company/saved', { expectedText: /guardado|talento|saved/i })
-  await qa.visit('recruiter student detail', `/es/company/students/${MEMBER_USER_ID}`, { expectedText: /Test Member|Industrial Engineering/i })
+  await qa.visit('recruiter student detail', `/es/company/students/${MEMBER_USER_ID}`, { expectedText: /Test Member|Ingenieria industrial/i })
   await qa.visit('recruiter profile', '/es/company/profile', { expectedText: /perfil|profile|Test Company/i })
   await qa.visit('recruiter settings', '/es/company/settings', { expectedText: /settings|configuracion|empresa/i })
 

@@ -22,8 +22,8 @@ const EDIT_EVENT_ID = '91000000-0000-4000-8000-000000000262'
 const EDIT_EVENT_CHAPTER_ID = '91000000-0000-4000-8000-000000000263'
 const OTHER_CHECK_IN_ID = '91000000-0000-4000-8000-000000000264'
 const OTHER_RECOMMENDATION_ID = '91000000-0000-4000-8000-000000000265'
-const EVENT_TITLE = 'QA Pathway Event: AI Career Sprint'
-const EDIT_EVENT_TITLE = 'QA Pathway Edit Metadata Event'
+const EVENT_TITLE = 'Evento QA Pathway: Sprint de carrera en IA'
+const EDIT_EVENT_TITLE = 'Evento QA Pathway para editar metadata'
 const OUTPUT_DIR = path.join('outputs', 'pathway-comprehensive-userflow-qa')
 const INTERNAL_PATHWAY_LABELS = [
   'Seguridad de recomendacion',
@@ -547,14 +547,14 @@ async function seedPathwayRecommendation(adminClient: SupabaseAdmin) {
         category: 'learn',
         status: 'active',
         title: EVENT_TITLE,
-        body: 'Register for the LEAD AI Career Sprint and capture one practical learning afterward.',
-        reason: 'Matched because your focus is opportunity readiness and the event is ready to recommend.',
+        body: 'Registrate al sprint de carrera en IA de LEAD y captura un aprendizaje practico despues.',
+        reason: 'Aparece porque tu enfoque es preparacion para oportunidades y el evento esta listo para recomendarse.',
         sort_order: 1,
         source_type: 'event',
         source_event_id: EVENT_ID,
         cta_type: 'register',
         evidence_signal: 'event_registration',
-        matched_reasons: ['OKR Elevate', 'Student outcome: professional readiness'],
+        matched_reasons: ['OKR Elevate', 'Resultado del estudiante: preparacion profesional'],
       },
       {
         id: PROFILE_RECOMMENDATION_ID,
@@ -562,15 +562,15 @@ async function seedPathwayRecommendation(adminClient: SupabaseAdmin) {
         user_id: MEMBER_ID,
         category: 'connect',
         status: 'active',
-        title: 'Refresh your LEAD profile',
-        body: 'Make sure your profile reflects your current interests before new opportunities appear.',
-        reason: 'Profile clarity helps Pathway recommend better next steps.',
+        title: 'Actualiza tu perfil LEAD',
+        body: 'Asegura que tu perfil refleje tus intereses actuales antes de que aparezcan nuevas oportunidades.',
+        reason: 'Un perfil claro ayuda a Pathway a recomendar mejores siguientes pasos.',
         sort_order: 2,
         source_type: 'profile_action',
         source_event_id: null,
         cta_type: 'update_profile',
         evidence_signal: 'profile_updated',
-        matched_reasons: ['Profile readiness'],
+        matched_reasons: ['Perfil listo'],
       },
       {
         id: PROOF_RECOMMENDATION_ID,
@@ -578,15 +578,15 @@ async function seedPathwayRecommendation(adminClient: SupabaseAdmin) {
         user_id: MEMBER_ID,
         category: 'prove',
         status: 'active',
-        title: 'Capture one learning proof',
-        body: 'Turn a recent LEAD experience into a private Growth Reflection.',
-        reason: 'A small proof artifact makes progress concrete.',
+        title: 'Captura una evidencia de aprendizaje',
+        body: 'Convierte una experiencia LEAD reciente en una reflexion privada de crecimiento.',
+        reason: 'Una pequena evidencia hace que tu avance sea concreto.',
         sort_order: 3,
         source_type: 'proof_action',
         source_event_id: null,
         cta_type: 'capture_proof',
         evidence_signal: 'reflection_completed',
-        matched_reasons: ['Proof loop'],
+        matched_reasons: ['Ciclo de evidencia'],
       },
     ]),
     'insert qa pathway recommendations'
@@ -1171,7 +1171,7 @@ test.describe('LEAD intelligence authenticated QA', () => {
       await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
 
       const profileCard = page
-        .getByRole('heading', { name: 'Refresh your LEAD profile' })
+        .getByRole('heading', { name: 'Actualiza tu perfil LEAD' })
         .locator('xpath=ancestor::*[contains(@class, "rounded-lg")][1]')
       await profileCard.getByRole('button', { name: 'Actualizar perfil' }).click()
       await page.waitForURL(/\/(?:es\/)?student\/profile/, { timeout: 60_000 })
@@ -1181,7 +1181,7 @@ test.describe('LEAD intelligence authenticated QA', () => {
       await page.goto('/es/student', { waitUntil: 'domcontentloaded' })
       await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
       const proofCard = page
-        .getByRole('heading', { name: 'Capture one learning proof' })
+        .getByRole('heading', { name: 'Captura una evidencia de aprendizaje' })
         .locator('xpath=ancestor::*[contains(@class, "rounded-lg")][1]')
       await proofCard.getByRole('button', { name: 'Capturar aprendizaje' }).click()
       await page.waitForURL(new RegExp(`/(?:es/)?student/growth-reflection.*recommendationId=${PROOF_RECOMMENDATION_ID}`), {
@@ -1204,14 +1204,14 @@ test.describe('LEAD intelligence authenticated QA', () => {
       await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
 
       const profileCard = page
-        .getByRole('heading', { name: 'Refresh your LEAD profile' })
+        .getByRole('heading', { name: 'Actualiza tu perfil LEAD' })
         .locator('xpath=ancestor::*[contains(@class, "rounded-lg")][1]')
       await profileCard.getByRole('button', { name: 'No aplica' }).click()
       await expectRecommendationStatus(admin, PROFILE_RECOMMENDATION_ID, 'dismissed')
 
       await page.reload({ waitUntil: 'domcontentloaded' })
       await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
-      await expect(page.getByText('Refresh your LEAD profile')).toHaveCount(0)
+      await expect(page.getByText('Actualiza tu perfil LEAD')).toHaveCount(0)
       await expect(page.getByText(EVENT_TITLE)).toBeVisible()
       await capture(page, testInfo, 'student recommendation dismissed')
     } finally {
