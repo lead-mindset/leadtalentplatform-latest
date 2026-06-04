@@ -69,8 +69,10 @@ async function assertNoHorizontalOverflow(page: Page) {
 
 test.describe.serial('Lead Funding v1', () => {
   test('chapter president can submit a request and upload accountability evidence', async ({ page }, testInfo) => {
-    const title = `QA financiamiento ${testInfo.project.name} ${Date.now()}`
-    const fileName = `receipt-${testInfo.project.name}.pdf`
+    const runId = `${testInfo.project.name}-${Date.now()}`
+    const title = `QA financiamiento ${runId}`
+    const fileName = `receipt-${runId}.pdf`
+    const fileNote = `Comprobante QA ${runId}`
 
     await loginAs(page, 'president@test.com')
 
@@ -111,9 +113,14 @@ test.describe.serial('Lead Funding v1', () => {
       mimeType: 'application/pdf',
       buffer: Buffer.from('%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF'),
     })
-    await page.locator('#file-notes').fill('Comprobante de QA para flujo de evidencia.')
+    await page.locator('#file-notes').fill(fileNote)
     await page.getByRole('button', { name: /Subir archivo/i }).click()
-    await expect(page.getByText('Comprobante de QA para flujo de evidencia.')).toBeVisible({ timeout: 30_000 })
+    const uploadedEvidence = page
+      .getByTestId('funding-file-row')
+      .filter({ hasText: fileName })
+      .filter({ hasText: fileNote })
+    await expect(uploadedEvidence).toHaveCount(1, { timeout: 30_000 })
+    await expect(uploadedEvidence).toBeVisible()
     await screenshot(page, testInfo, 'chapter-accountability')
     await assertNoHorizontalOverflow(page)
   })
