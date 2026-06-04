@@ -27,6 +27,7 @@ Core principles:
 - Event eligibility must be enforced in services/API and reflected in UI.
 - Admin/staff operations must work before chapter leaders are activated.
 - Chapter leadership assignment must use scoped permissions, not broad global role shortcuts.
+- Staff/Admin and chapter leadership boundaries follow `docs/handbook/PILOT_ROLE_PERMISSION_MATRIX.md`.
 - This version is Spanish-first. English polish comes later.
 - Recruiter/company and Alumni stay deferred until the core launch workflow is stable.
 - UI consistency comes from tightening the existing design system into a launch UI contract, not replacing it.
@@ -52,6 +53,8 @@ Wants reliable user, chapter, role, and event management before granting chapter
 ### Staff
 
 Needs a LEAD staff identity and operational support access, but should not automatically receive unrestricted system authority unless explicitly granted.
+
+Staff identity is a `lead_identity` decision. Admin access is a `public.user.role` or future explicit permission decision. The launch should not infer one from the other.
 
 ### Deferred Users
 
@@ -117,6 +120,8 @@ The stabilization must preserve the existing service-layer architecture:
   - `lead_identity` owns official LEAD identity display.
   - `recruiter_access` remains invite-only and separate.
 
+Pilot role and permission matrix source: `docs/handbook/PILOT_ROLE_PERMISSION_MATRIX.md`.
+
 ## 7. Tools and Features
 
 ### Safe Authorization and Landing
@@ -145,6 +150,9 @@ The stabilization must preserve the existing service-layer architecture:
 - Staff should have a restricted or explicitly granted operational boundary.
 - Assign Editors becomes a real chapter-leadership assignment flow.
 - Assignments should use `chapter_role_assignment` and `chapter_permission_grant`, not global role shortcuts.
+- President and Vice President are chapter leadership authorities for their own chapter during the pilot.
+- Chapter Editor is an operator role and does not automatically receive protected leadership authority.
+- Regular e-board users receive only the explicit chapter permission grants needed for their scope.
 
 ### Spanish-First Launch Routes
 
@@ -300,7 +308,7 @@ Source materials:
 
 - `docs/proposals/qa-validation-synthesis-2026-06-03.md`
 - `docs/handbook/LAUNCH_UI_STANDARD.md`
+- `docs/handbook/PILOT_ROLE_PERMISSION_MATRIX.md`
 - `docs/PRODUCT-SPECIFICATION.md`
 - `docs/handbook/TESTING.md`
 - `docs/adr/001-service-layer-pattern.md`
-- Extracted PDF text and screenshots under `.codex/qa_pdf_analysis/`

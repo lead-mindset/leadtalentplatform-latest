@@ -7,6 +7,8 @@ This document is the launch-specific UI and product contract for the next contro
 
 The missing launch layer is usage discipline: which routes are active, which roles are in scope, which copy language is allowed, and how shared primitives should be applied during QA stabilization.
 
+Role and permission decisions for this rollout live in `docs/handbook/PILOT_ROLE_PERMISSION_MATRIX.md`.
+
 ## Launch Scope
 
 ### Active roles
@@ -24,6 +26,16 @@ The missing launch layer is usage discipline: which routes are active, which rol
 - Alumni-specific workflows
 
 Deferred roles may receive safe route handling and non-destructive guardrails, but they should not drive first-launch scope.
+
+### Role boundaries
+
+- Staff and Admin are separate concepts.
+- Staff is an official LEAD identity/support status.
+- Admin is system authority.
+- Staff identity alone does not grant unrestricted admin access.
+- Chapter Editor is not the same as President or Vice President.
+- President and Vice President are pilot chapter leaders for their own chapter.
+- Alumni and Recruiter/company representative workflows remain deferred.
 
 ### Active Spanish routes
 
