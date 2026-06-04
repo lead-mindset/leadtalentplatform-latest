@@ -114,18 +114,18 @@ This register is the source of truth for the 112 QA observations. It records whe
 | 88 | Staff sidebar | Staff accounts see admin-like sidebar | guarded-for-pilot | Staff/Admin boundary documented; future UI tiers may differ. | #299 |
 | 89 | Staff dashboard | Staff UI identical to Admin | guarded-for-pilot | Staff identity != admin authority documented in ADR/matrix. | #299 |
 | 90 | Login roles | Corporate/staff login identity differentiation | needs-leadership-decision | Staff/Admin identity is documented; a separate corporate/staff login entry point is a product decision, not required for the controlled pilot. | #295 |
-| 91 | Company dashboard | Organization card copy/placeholder tone | deferred-company | Company/recruiter deferred. | #301 |
-| 92 | Company metrics | Talent metric cards unclear | deferred-company | Company/recruiter deferred. | #301 |
-| 93 | Talent table | Action column responsiveness | deferred-company | Company/recruiter deferred. | #301 |
-| 94 | Talent search | Skills search insufficient | deferred-company | Company/recruiter deferred. | #301 |
-| 95 | Talent metrics | Promotions counter unclear | deferred-company | Company/recruiter deferred. | #301 |
-| 96 | Talent filters | Filter criteria insufficient | deferred-company | Company/recruiter deferred. | #301 |
-| 97 | Profile detail | Access/verification explanation unclear | deferred-company | Company/recruiter deferred. | #301 |
-| 98 | Profile detail | Technical note visible to users | deferred-company | Company/recruiter deferred. | #301 |
-| 99 | Saved talent | Missing annotations/tools | deferred-company | Company/recruiter deferred. | #301 |
-| 100 | Saved talent table | Action column responsiveness | deferred-company | Company/recruiter deferred. | #301 |
+| 91 | Company dashboard | Organization card copy/placeholder tone | deferred-company | Company/recruiter is out of active Spanish-first launch scope; future terminology is `Representante de empresa` and `Portal de empresas`. | #301 |
+| 92 | Company metrics | Talent metric cards unclear | deferred-company | Future company metrics require approved discovery, consent, and audit scope before UI polish. | #301 |
+| 93 | Talent table | Action column responsiveness | deferred-company | Talent browsing/table UX is deferred until company representative access is approved. | #301 |
+| 94 | Talent search | Skills search insufficient | deferred-company | Search fields and ranking are a product decision for the deferred company scope. | #301 |
+| 95 | Talent metrics | Promotions counter unclear | deferred-company | Talent metrics are deferred with company discovery scope. | #301 |
+| 96 | Talent filters | Filter criteria insufficient | deferred-company | Filters are deferred until allowed profile fields and consent rules are approved. | #301 |
+| 97 | Profile detail | Access/verification explanation unclear | deferred-company | Profile-read rules, verification language, and audit expectations are deferred to company scope. | #301 |
+| 98 | Profile detail | Technical note visible to users | deferred-company | Company profile-detail polish is deferred; no active launch user experience ships here. | #301 |
+| 99 | Saved talent | Missing annotations/tools | deferred-company | Saved talent and notes require product decisions on privacy, sharing, and audit logging. | #301 |
+| 100 | Saved talent table | Action column responsiveness | deferred-company | Saved talent table UX is deferred with saved talent scope. | #301 |
 | 101 | Student route security | Critical route-control failure | fixed | Student workspace role boundaries and launch QA guardrails passed. | #297 |
-| 102 | Recruiter history | Missing talent read/access history | deferred-company | Company/recruiter deferred. | #301 |
+| 102 | Recruiter history | Missing talent read/access history | deferred-company | Resume/profile access history is required before future company implementation and is deferred from active launch. | #301 |
 | 103 | Alumni nav | Alumni sidebar label contradiction | deferred-alumni | Alumni deferred. | #302 |
 | 104 | Alumni chapter card | Alumni position/status semantics unclear | deferred-alumni | Alumni deferred. | #302 |
 | 105 | Alumni ID | Member ID pending copy wrong for alumni | deferred-alumni | Alumni deferred. | #302 |
