@@ -167,8 +167,8 @@
       "linkedin": "LinkedIn Profile",
       "portfolio": "Portfolio",
       "portfolioPlaceholder": "https://your-site.com",
-      "visibility": "Make my profile visible to companies invited by LEAD",
-      "visibilityDesc": "Optional. Approved representatives can view your professional profile. You can change this later; it does not guarantee opportunities.",
+      "visibility": "Prepare my profile for authorized opportunities",
+      "visibilityDesc": "Optional. This preference does not automatically publish your profile or activate company access by itself.",
       "emailNotifications": "Email Notifications",
       "emailNotificationsLabel": "Keep me updated about LEAD",
       "emailNotificationsDesc": "Receive emails about events, workshops, and opportunities"

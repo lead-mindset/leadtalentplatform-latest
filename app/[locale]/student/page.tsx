@@ -52,7 +52,7 @@ const STATUS_CONTENT = {
   pending: {
     badge: 'En revision',
     title: 'Tu solicitud de capitulo esta en revision.',
-    body: 'El equipo del capitulo puede revisar tu solicitud. Mientras esperas, mantén tu perfil actualizado y registrate a eventos publicos.',
+    body: 'El equipo del capitulo puede revisar tu solicitud. Mientras esperas, manten tu perfil actualizado y registrate a eventos publicos.',
     badgeVariant: 'warning' as const,
     icon: Clock3,
   },
@@ -65,8 +65,8 @@ const STATUS_CONTENT = {
   },
   alumni: {
     badge: 'Alumni',
-    title: 'Estas registrado como alumni de LEAD.',
-    body: 'Tu historial de capitulo se mantiene. Puedes seguir actualizando tu perfil y participar en eventos relevantes.',
+    title: 'Tu estado Alumni esta registrado.',
+    body: 'Alumni queda fuera del primer lanzamiento activo. Tu perfil se mantiene editable, pero la experiencia Alumni completa se definira despues.',
     badgeVariant: 'secondary' as const,
     icon: IdCard,
   },
@@ -247,25 +247,25 @@ function PrimaryActions({ dashboard }: { dashboard: StudentActivationDashboard }
 }
 
 const GROWTH_STAGE_LABELS: Record<string, string> = {
-  explorer: 'Explorer',
-  builder: 'Builder',
-  leader: 'Leader',
-  candidate: 'Candidate',
-  emerging_professional: 'Emerging Professional',
+  explorer: 'Explorador',
+  builder: 'Constructor',
+  leader: 'Lider',
+  candidate: 'Candidato',
+  emerging_professional: 'Profesional emergente',
 }
 
 const PRIMARY_FOCUS_LABELS: Record<string, string> = {
-  career_exploration: 'Career exploration',
-  technical_experience: 'Technical experience',
-  opportunity_readiness: 'Opportunity readiness',
-  community_mentorship: 'Community and mentorship',
-  leadership: 'Leadership',
+  career_exploration: 'Exploracion profesional',
+  technical_experience: 'Experiencia tecnica',
+  opportunity_readiness: 'Preparacion para oportunidades',
+  community_mentorship: 'Comunidad y mentoria',
+  leadership: 'Liderazgo',
 }
 
 const RECOMMENDATION_LABELS: Record<string, string> = {
-  learn: 'Learn',
-  connect: 'Connect',
-  prove: 'Prove',
+  learn: 'Aprender',
+  connect: 'Conectar',
+  prove: 'Demostrar',
 }
 
 const RECOMMENDATION_CTA_LABELS: Record<string, string> = {
@@ -283,13 +283,13 @@ const EVIDENCE_SIGNAL_LABELS: Record<string, string> = {
   event_registration: 'registro',
   event_attendance: 'asistencia',
   application_submitted: 'postulacion',
-  reflection_completed: 'reflection',
+  reflection_completed: 'reflexion',
   proof_submitted: 'evidencia',
   certificate_earned: 'certificado',
   linkedin_updated: 'LinkedIn',
   resume_updated: 'CV',
   profile_updated: 'perfil',
-  mission_recap_completed: 'mission recap',
+  mission_recap_completed: 'resumen de mision',
 }
 
 type DashboardRecommendation = PathwayDashboardGuidance['recommendations'][number]
@@ -421,7 +421,7 @@ function PathwayGuidanceCard({ guidance }: { guidance: PathwayDashboardGuidance 
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Sparkles className="h-5 w-5 text-primary" />
-          Tus Next Three Moves
+          Tus proximos tres movimientos
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
@@ -434,13 +434,13 @@ function PathwayGuidanceCard({ guidance }: { guidance: PathwayDashboardGuidance 
 
         <div className="grid gap-3 text-sm sm:grid-cols-2">
           <div className="rounded-lg border border-border/70 bg-muted/25 p-3">
-            <p className="font-semibold text-foreground">Growth stage</p>
+            <p className="font-semibold text-foreground">Etapa de crecimiento</p>
             <p className="mt-1 text-muted-foreground">
               {GROWTH_STAGE_LABELS[guidance.row.growth_stage ?? ''] ?? 'En progreso'}
             </p>
           </div>
           <div className="rounded-lg border border-border/70 bg-muted/25 p-3">
-            <p className="font-semibold text-foreground">Primary focus</p>
+            <p className="font-semibold text-foreground">Enfoque principal</p>
             <p className="mt-1 text-muted-foreground">
               {PRIMARY_FOCUS_LABELS[guidance.row.primary_focus ?? ''] ?? 'Tu siguiente paso'}
             </p>
@@ -550,17 +550,17 @@ function PersonalProgressCard({
 
   const metrics = [
     {
-      label: 'Next moves completados',
+      label: 'Movimientos completados',
       value: completedMoves,
       helper: 'Acciones pequenas que ya convertiste en avance.',
     },
     {
-      label: 'Growth Reflections completadas',
+      label: 'Reflexiones completadas',
       value: reflectionProgress.completedReflections,
       helper: 'Momentos que transformaste en aprendizaje claro.',
     },
     {
-      label: 'Proof items creados',
+      label: 'Evidencias creadas',
       value: reflectionProgress.proofItemsCreated,
       helper: 'Evidencia personal que puedes convertir en historias, perfil o entrevistas.',
     },

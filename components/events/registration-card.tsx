@@ -44,23 +44,23 @@ export function RegistrationCard({
       await onRegister()
       toast.success(
         requiresApplication 
-          ? "Application submitted successfully!" 
-          : "You're registered! Check your email for details."
+          ? "Postulacion enviada correctamente."
+          : "Registro confirmado. Revisa tu correo para mas detalles."
       )
     } catch (error) {
-      toast.error("Something went wrong. Please try again.")
+      toast.error("Algo salio mal. Intentalo nuevamente.")
     } finally {
       setIsLoading(false)
     }
   }
 
   const getCtaLabel = () => {
-    if (isPast) return "Event Ended"
-    if (isRegistered) return "Registered"
-    if (registrationStatus === "pending") return "Under Review"
-    if (registrationStatus === "rejected") return "Not Selected"
-    if (requiresApplication) return "Apply to Attend"
-    return "Register"
+    if (isPast) return "Evento finalizado"
+    if (isRegistered) return "Registrado"
+    if (registrationStatus === "pending") return "En revision"
+    if (registrationStatus === "rejected") return "No seleccionado"
+    if (requiresApplication) return "Postular"
+    return "Registrarme"
   }
 
   const getCtaVariant = () => {
@@ -83,14 +83,14 @@ export function RegistrationCard({
           )}
         >
           {isPast ? (
-            "Past Event"
+            "Evento pasado"
           ) : isRegistered ? (
             <>
               <Check className="mr-1 h-3 w-3" />
-              Registered
+              Registrado
             </>
           ) : (
-            "Open Registration"
+            "Registro abierto"
           )}
         </Badge>
       </div>
@@ -98,11 +98,11 @@ export function RegistrationCard({
       {}
       <div className="space-y-1">
         <p className="font-semibold text-lg">
-          {new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric' }).format(startAt)}
+          {new Intl.DateTimeFormat('es-PE', { weekday: 'long', month: 'long', day: 'numeric' }).format(startAt)}
         </p>
         <p className="text-muted-foreground">
-          {new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(startAt)}
-          {endAt && ` - ${new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(endAt)}`}
+          {new Intl.DateTimeFormat('es-PE', { hour: 'numeric', minute: '2-digit' }).format(startAt)}
+          {endAt && ` - ${new Intl.DateTimeFormat('es-PE', { hour: 'numeric', minute: '2-digit' }).format(endAt)}`}
         </p>
       </div>
 
@@ -119,7 +119,7 @@ export function RegistrationCard({
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Processing...
+            Procesando...
           </>
         ) : (
           getCtaLabel()
@@ -134,18 +134,18 @@ export function RegistrationCard({
           className="flex-1"
           onClick={() => {
 
-            toast.info("Calendar integration coming soon!")
+            toast.info("La integracion de calendario estara disponible pronto.")
           }}
         >
           <CalendarPlus className="mr-2 h-4 w-4" />
-          Add to Calendar
+          Agregar al calendario
         </Button>
       </div>
 
       {}
       {requiresApplication && !isRegistered && !isPast && (
         <p className="text-xs text-muted-foreground text-center">
-          This event requires an application. You&apos;ll be notified once reviewed.
+          Este evento requiere postulacion. Te avisaremos cuando termine la revision.
         </p>
       )}
     </Card>

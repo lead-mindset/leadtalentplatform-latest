@@ -64,14 +64,14 @@ This register is the source of truth for the 112 QA observations. It records whe
 | 38 | Onboarding completion | Closing copy / user clarity | fixed | ONBOARD-01 adds Spanish-first intent/status copy and visible submit error feedback. | #296 |
 | 39 | Student routing | Dashboard route separation | guarded-for-pilot | Launch QA validates student/member route boundaries. | #297 |
 | 40 | Student dashboard | Responsive layout robustness | future-active-route-polish | Needs member route visual pass. | #297 |
-| 41 | Student copy | Mixed terminology/user metadata language | future-active-route-polish | Needs member route copy pass. | #297 |
+| 41 | Student copy | Mixed terminology/user metadata language | fixed | STUDENT-01 translates member dashboard labels, event-card CTAs, sidebar labels, and resume/profile visibility copy for Spanish-first launch. | #297 |
 | 42 | RBAC routing | Wrong-role routes destroyed session | fixed | QALS-02 safe authorization implemented and validated. | #294 |
 | 43 | My events | Active tab count stale/inconsistent | future-active-route-polish | Needs member event state polish. | #297 |
-| 44 | QR ticket | Date/time timezone presentation | future-active-route-polish | Needs QR/date formatting slice. | #297 |
-| 45 | CV/resume | English copy in resume/ticket surfaces | future-active-route-polish | Needs member route Spanish pass. | #297 |
-| 46 | Explore events | Private layout persistence/routing | future-active-route-polish | Needs member event route polish. | #297 |
-| 47 | Event detail | Context preservation after event navigation | future-active-route-polish | Needs member event UX polish. | #297 |
-| 48 | Sidebar | Role-conditional navigation rendering | future-active-route-polish | Needs member/sidebar route polish. | #297 |
+| 44 | QR ticket | Date/time timezone presentation | fixed | Student event tickets and reusable event cards format dates in Spanish with timezone context. | #297 |
+| 45 | CV/resume | English copy in resume/ticket surfaces | fixed | STUDENT-01 polishes CV, QR/ticket, event-card, and dashboard visible copy for Spanish-first launch. | #297 |
+| 46 | Explore events | Private layout persistence/routing | future-active-route-polish | Public/private event layout is usable, but full member-route browser QA remains. | #297 |
+| 47 | Event detail | Context preservation after event navigation | fixed | Event registration redirects to `/student/events?event=...` and the page scrolls to the highlighted registration. | #297 |
+| 48 | Sidebar | Role-conditional navigation rendering | fixed | STUDENT-01 translates student sidebar labels and keeps member route labels scoped to the student workspace. | #297 |
 | 49 | Student copy | Accent/brand string issues | future-design-system | Active-route copy audit remains. | #300 |
 | 50 | Profile privacy | Toggle state accessibility | future-design-system | Active profile accessibility pass remains. | #300 |
 | 51 | Explore events | Role-oriented event data/filtering | future-active-route-polish | Needs member event discovery polish. | #297 |
@@ -79,15 +79,15 @@ This register is the source of truth for the 112 QA observations. It records whe
 | 53 | Member dashboard | User ID displayed too prominently | future-active-route-polish | Needs dashboard information-density polish. | #297 |
 | 54 | Member ID state | Static Member ID warning contradicted status | future-active-route-polish | Needs member dashboard state polish. | #297 |
 | 55 | Profile edit | Chapter affiliation self-editable | fixed | QALS-03 protects chapter membership data. | #297 |
-| 56 | Profile privacy | Profile visibility toggle unclear | future-active-route-polish | Needs profile privacy UX polish. | #297 |
-| 57 | Resume resources | Placeholder resource links | future-active-route-polish | Needs resume route content decision/polish. | #297 |
-| 58 | Event registration | Cancel registration unclear/missing | future-active-route-polish | Registration lifecycle improved; route polish remains. | #297 |
+| 56 | Profile privacy | Profile visibility toggle unclear | fixed | STUDENT-01 reframes profile visibility as an optional preference for authorized opportunities, not automatic company access. | #297 |
+| 57 | Resume resources | Placeholder resource links | fixed | Resume resources remain marked `Pronto` with copy explaining the user should upload a current PDF for now. | #297 |
+| 58 | Event registration | Cancel registration unclear/missing | fixed | Student event cards expose cancel actions for active confirmed registrations and explain QR/status lifecycle. | #297 |
 | 59 | Application form | Highlight/border field affordance issue | future-active-route-polish | Needs application form visual polish. | #297 |
 | 60 | Application form | Re-asks data already known | future-active-route-polish | Needs application form data reuse decision. | #297 |
 | 61 | Event list | Chapter-exclusive events visible broadly | guarded-for-pilot | Eligibility/route guardrails improved; filtering polish remains. | #297 |
-| 62 | Event history | Old events listed without grouping/pagination | future-active-route-polish | Needs event history UX slice. | #297 |
+| 62 | Event history | Old events listed without grouping/pagination | fixed | Student events groups active tickets, applications, history, and cancelled registrations in separate tabs. | #297 |
 | 63 | Chapter landing | Editor landed in student dashboard | fixed | Chapter operators land in chapter workspace in launch QA. | #298 |
-| 64 | Profile nav | Profile menu structure ambiguity | future-active-route-polish | Needs navigation polish. | #297 |
+| 64 | Profile nav | Profile menu structure ambiguity | fixed | STUDENT-01 translates student profile/sidebar submenu labels and clarifies CV/profile/member ID destinations. | #297 |
 | 65 | Chapter event form | Form copy in English | future-active-route-polish | Chapter route polish remains. | #298 |
 | 66 | Chapter events table | Row actions not visible/usable | fixed | QALS-07/admin events UI polish and launch QA passed. | #298 |
 | 67 | Chapter event form | Missing expected event option | future-active-route-polish | Needs event form product/UX slice. | #298 |
