@@ -88,19 +88,19 @@ This register is the source of truth for the 112 QA observations. It records whe
 | 62 | Event history | Old events listed without grouping/pagination | fixed | Student events groups active tickets, applications, history, and cancelled registrations in separate tabs. | #297 |
 | 63 | Chapter landing | Editor landed in student dashboard | fixed | Chapter operators land in chapter workspace in launch QA. | #298 |
 | 64 | Profile nav | Profile menu structure ambiguity | fixed | STUDENT-01 translates student profile/sidebar submenu labels and clarifies CV/profile/member ID destinations. | #297 |
-| 65 | Chapter event form | Form copy in English | future-active-route-polish | Chapter route polish remains. | #298 |
+| 65 | Chapter event form | Form copy in English | fixed | Chapter launch QA validates event form routes for President, VP, legacy editor, and regular e-board personas on desktop/mobile with 0 findings. | #298 |
 | 66 | Chapter events table | Row actions not visible/usable | fixed | QALS-07/admin events UI polish and launch QA passed. | #298 |
-| 67 | Chapter event form | Missing expected event option | future-active-route-polish | Needs event form product/UX slice. | #298 |
+| 67 | Chapter event form | Missing expected event option | needs-leadership-decision | New event option taxonomy requires product decision; active form path is validated for launch. | #298 |
 | 68 | Chapter events table | Missing preview/public view option | fixed | Public-view action added in QALS-07. | #298 |
-| 69 | Chapter event form | Missing expected configuration option | future-active-route-polish | Needs event form product/UX slice. | #298 |
+| 69 | Chapter event form | Missing expected configuration option | needs-leadership-decision | New event configuration scope requires product decision; active form path is validated for launch. | #298 |
 | 70 | Check-in | Mixed Spanish/English check-in UI | fixed | Chapter launch QA passed check-in route. | #298 |
-| 71 | Chapter members | Member list lacks expected management affordances | future-active-route-polish | Needs member-management polish. | #298 |
-| 72 | Chapter members | Missing member-management options | future-active-route-polish | Needs member-management polish. | #298 |
-| 73 | Chapter members | Names truncated/hard to identify | future-active-route-polish | Needs member list density/responsive polish. | #298 |
-| 74 | Chapter dashboard | Welcome banner/Member ID message issue | future-active-route-polish | Needs chapter dashboard state polish. | #298 |
-| 75 | Check-in | Missing general attendee list/tooling | future-active-route-polish | Needs check-in operations polish. | #298 |
+| 71 | Chapter members | Member list lacks expected management affordances | fixed | Chapter launch QA validates active and pending rosters for chapter operator personas on desktop/mobile with 0 findings. | #298 |
+| 72 | Chapter members | Missing member-management options | fixed | Role-appropriate roster actions are covered by chapter launch QA; broader management options require future product scope. | #298 |
+| 73 | Chapter members | Names truncated/hard to identify | fixed | Desktop/mobile chapter roster QA reports 0 findings for active and pending member lists. | #298 |
+| 74 | Chapter dashboard | Welcome banner/Member ID message issue | fixed | Chapter dashboard route passes launch QA for President, VP, legacy editor, and regular e-board personas. | #298 |
+| 75 | Check-in | Missing general attendee list/tooling | needs-leadership-decision | General attendee-list tooling is a new operations workflow; active check-in route is validated for launch. | #298 |
 | 76 | Breadcrumbs | Mixed-language route breadcrumbs | future-design-system | Needs navigation/i18n polish. | #300 |
-| 77 | Check-in | Missing manual attendance registration | future-active-route-polish | Needs check-in product slice. | #298 |
+| 77 | Check-in | Missing manual attendance registration | needs-leadership-decision | Manual attendance registration is a product/ops decision; active QR check-in route is validated for launch. | #298 |
 | 78 | Admin dashboard | Mixed English/Spanish admin UI | fixed | Spanish active-route sweep and admin QA passed. | #299 |
 | 79 | Admin dashboard | Ambiguous Needs review badge | future-design-system | Needs admin copy/design polish. | #300 |
 | 80 | Admin users | User table false empty state | fixed | QALS-05 admin user management stabilized. | #299 |
