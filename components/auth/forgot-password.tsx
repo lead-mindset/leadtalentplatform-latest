@@ -16,6 +16,9 @@ import {Link} from '@/i18n/routing';
 import { useState } from "react";
 import {useLocale, useTranslations} from 'next-intl';
 import { getAuthErrorKey } from '@/lib/auth-errors'
+import { getAuthEmailValidationMessage, isValidAuthEmail } from '@/lib/auth-form-validation'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { AlertCircle } from 'lucide-react'
 
 export function ForgotPasswordForm({
   className,
@@ -32,6 +35,12 @@ export function ForgotPasswordForm({
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+
+    if (!isValidAuthEmail(email)) {
+      setError(getAuthEmailValidationMessage(locale === 'en' ? 'en' : 'es'));
+      setIsLoading(false);
+      return;
+    }
 
     try {
 
@@ -74,7 +83,7 @@ export function ForgotPasswordForm({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleForgotPassword}>
+            <form onSubmit={handleForgotPassword} noValidate>
               <div className="flex flex-col gap-6">
                 <div className="grid gap-2">
                   <Label htmlFor="email">{t('email')}</Label>
@@ -85,10 +94,18 @@ export function ForgotPasswordForm({
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    disabled={isLoading}
+                    title={getAuthEmailValidationMessage(locale === 'en' ? 'en' : 'es')}
+                    aria-describedby={error ? 'error-message' : undefined}
                   />
                 </div>
-                {error && <p className="text-sm text-red-500">{error}</p>}
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                {error && (
+                  <Alert variant="destructive" id="error-message">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+                <Button type="submit" className="w-full" disabled={isLoading} aria-busy={isLoading}>
                   {isLoading ? t('sending') : t('sendResetEmail')}
                 </Button>
               </div>

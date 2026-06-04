@@ -17,6 +17,8 @@ import { useState } from "react";
 import { useLocale, useTranslations } from 'next-intl';
 import { getAuthErrorKey } from '@/lib/auth-errors'
 import { getPasswordPolicyMessage, isStrongPassword } from '@/lib/auth-password-policy'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { AlertCircle } from 'lucide-react'
 
 export function UpdatePasswordForm({
   className,
@@ -72,13 +74,20 @@ export function UpdatePasswordForm({
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
+                  aria-describedby={error ? 'error-message password-policy' : 'password-policy'}
                 />
-                <p className="text-xs text-muted-foreground">
+                <p id="password-policy" className="text-xs text-muted-foreground">
                   {getPasswordPolicyMessage(locale === 'en' ? 'en' : 'es')}
                 </p>
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              {error && (
+                <Alert variant="destructive" id="error-message">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              <Button type="submit" className="w-full" disabled={isLoading} aria-busy={isLoading}>
                 {isLoading ? t('saving') : t('saveNewPassword')}
               </Button>
             </div>

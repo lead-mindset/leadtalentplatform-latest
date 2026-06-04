@@ -21,6 +21,7 @@ import { GoogleButton } from "./google-button";
 import { useLocale, useTranslations } from 'next-intl';
 import { getAuthErrorKey } from '@/lib/auth-errors'
 import { resolvePostLoginRedirect } from '@/lib/actions/auth/resolve-post-login-redirect'
+import { getAuthEmailValidationMessage, isValidAuthEmail } from '@/lib/auth-form-validation'
 
 const POST_LOGIN_REDIRECT_RETRY_DELAYS_MS = [0, 250, 750]
 
@@ -68,6 +69,12 @@ export function LoginForm({
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+
+    if (!isValidAuthEmail(email)) {
+      setError(getAuthEmailValidationMessage(locale === 'en' ? 'en' : 'es'));
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -140,7 +147,7 @@ export function LoginForm({
               </div>
             </div>
 
-            <form onSubmit={handleLogin} className="space-y-5">
+            <form onSubmit={handleLogin} className="space-y-5" noValidate>
               <div className="space-y-2">
                 <Label htmlFor="email">{t('emailAddress')}</Label>
                 <Input
@@ -153,6 +160,7 @@ export function LoginForm({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
+                  title={getAuthEmailValidationMessage(locale === 'en' ? 'en' : 'es')}
                   aria-describedby={error ? "error-message" : undefined}
                 />
               </div>

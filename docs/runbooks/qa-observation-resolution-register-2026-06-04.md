@@ -39,23 +39,23 @@ This register is the source of truth for the 112 QA observations. It records whe
 | 13 | Partners copy | Mixed-language partner copy | future-design-system | Active Spanish copy pass should finish public surfaces. | #300 |
 | 14 | Public layout | Qualitative reach/stat copy needs governance | future-design-system | Needs public-page content decision and visual pass. | #300 |
 | 15 | Signup security | Password policy too weak | fixed | QALS-08 strengthened password policy. | #295 |
-| 16 | Signup security | Password recommendation / policy standardization | needs-leadership-decision | App policy improved; final org/security policy still requires decision. | #295 |
-| 17 | Transactional email | Email branding/identity consistency | needs-leadership-decision | Email provider/branding scope is outside PR #293. | #295 |
-| 18 | Login layout | Login navigation/layout consistency | future-active-route-polish | Active auth polish remains after pilot blockers. | #295 |
+| 16 | Signup security | Password recommendation / policy standardization | needs-leadership-decision | App policy requires 8+ characters, letter, number, and symbol; final org/security policy still requires decision. | #295 |
+| 17 | Transactional email | Email branding/identity consistency | needs-leadership-decision | Email provider/branding scope remains outside AUTH-01 and requires provider/brand decision. | #295 |
+| 18 | Login layout | Login navigation/layout consistency | fixed | AUTH-01 added localized metadata, app-controlled validation, and accessible auth feedback. | #295 |
 | 19 | OAuth | OAuth/account data parity | needs-leadership-decision | Requires provider/account-model decision. | #295 |
 | 20 | OAuth | User control over federated identity linking | needs-leadership-decision | Requires provider/account-model decision. | #295 |
 | 21 | Registration consent | Terms/privacy consent model | needs-leadership-decision | Legal/compliance decision required before implementation. | #295 |
-| 22 | Registration DOM | Consent/terms order in UI/DOM | future-active-route-polish | Auth UI polish can fix after consent decision. | #295 |
+| 22 | Registration DOM | Consent/terms order in UI/DOM | needs-leadership-decision | Terms/privacy links remain visible; explicit acceptance model requires legal/product decision before code changes. | #295 |
 | 23 | Frontend architecture | Need design governance/system discipline | future-design-system | Launch UI contract exists; full design-system work remains. | #300 |
 | 24 | Auth layout | Auth suite symmetry/heading consistency | future-design-system | Active auth visual polish remains. | #300 |
-| 25 | Login errors | Invalid login error appeared in English | fixed | Spanish auth states validated in launch QA. | #295 |
+| 25 | Login errors | Invalid login error appeared in English | fixed | Spanish auth states validated in launch QA; AUTH-01 also maps fetch failures to network error copy. | #295 |
 | 26 | Auth API policy | Rate limiting/provider policy unclear | needs-leadership-decision | Requires Supabase/provider policy decision. | #295 |
 | 27 | Login button | Button text/visual click affordance | future-design-system | Active auth visual polish remains. | #300 |
-| 28 | Login guidance | Missing guided path after login issue | future-active-route-polish | Auth recovery/feedback slice should refine. | #295 |
-| 29 | Login/register validation | Native/format validation language inconsistency | future-active-route-polish | App-controlled messages improved; browser/native cases need pass. | #295 |
-| 30 | Auth submit states | Post-submit loading/success/error states | future-active-route-polish | Launch QA passed; deeper auth state polish remains. | #295 |
+| 28 | Login guidance | Missing guided path after login issue | fixed | AUTH-01 exposes app-controlled invalid email/error states and preserves safe `next` redirect for Google OAuth. | #295 |
+| 29 | Login/register validation | Native/format validation language inconsistency | fixed | AUTH-01 disables native form validation on active auth forms and uses app-controlled email validation copy. | #295 |
+| 30 | Auth submit states | Post-submit loading/success/error states | fixed | AUTH-01 added accessible loading/error states for password and Google auth plus recovery/update forms. | #295 |
 | 31 | Account recovery | Federated-account recovery ambiguity | needs-leadership-decision | Requires provider/account policy decision. | #295 |
-| 32 | Recovery copy | Recovery semantic/context mismatch | future-active-route-polish | Active auth recovery polish remains. | #295 |
+| 32 | Recovery copy | Recovery semantic/context mismatch | fixed | AUTH-01 keeps recovery copy Spanish-first and exposes accessible recovery error/success states. | #295 |
 | 33 | Auth email expectations | Transactional email expectation copy | needs-leadership-decision | Email/provider behavior should be defined. | #295 |
 | 34 | Onboarding data | Phone normalization / E.164 | future-active-route-polish | Needs onboarding validation slice. | #296 |
 | 35 | Onboarding validation | Form restriction/profile integrity | future-active-route-polish | Needs onboarding validation slice. | #296 |
@@ -113,7 +113,7 @@ This register is the source of truth for the 112 QA observations. It records whe
 | 87 | Admin companies | Revoke access confirmation/copy | future-active-route-polish | Needs admin company access polish. | #299 |
 | 88 | Staff sidebar | Staff accounts see admin-like sidebar | guarded-for-pilot | Staff/Admin boundary documented; future UI tiers may differ. | #299 |
 | 89 | Staff dashboard | Staff UI identical to Admin | guarded-for-pilot | Staff identity != admin authority documented in ADR/matrix. | #299 |
-| 90 | Login roles | Corporate/staff login identity differentiation | future-active-route-polish | Active auth identity copy can be improved later. | #295 |
+| 90 | Login roles | Corporate/staff login identity differentiation | needs-leadership-decision | Staff/Admin identity is documented; a separate corporate/staff login entry point is a product decision, not required for the controlled pilot. | #295 |
 | 91 | Company dashboard | Organization card copy/placeholder tone | deferred-company | Company/recruiter deferred. | #301 |
 | 92 | Company metrics | Talent metric cards unclear | deferred-company | Company/recruiter deferred. | #301 |
 | 93 | Talent table | Action column responsiveness | deferred-company | Company/recruiter deferred. | #301 |
@@ -142,4 +142,3 @@ This register is the source of truth for the 112 QA observations. It records whe
 1. #294 creates and maintains this register.
 2. #295-#300 address active launch route polish by journey/domain.
 3. #301 and #302 define deferred company/recruiter and Alumni product scope before implementation.
-
