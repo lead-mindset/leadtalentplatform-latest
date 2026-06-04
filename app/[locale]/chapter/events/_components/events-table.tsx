@@ -31,6 +31,7 @@ import type { EventWithDetails } from '@/lib/types'
 import { useRouter } from 'next/navigation'
 import LocalDate from './local_date'
 import { Icons } from '@/components/ui/icons'
+import { presentLaunchEventTitle } from '@/lib/launch-copy'
 
 function statusForEvent(event: EventWithDetails): {
   label: 'Borrador' | 'Publicado' | 'Finalizado'
@@ -119,7 +120,7 @@ export function EventsTable({
                           href={`/chapter/events/${event.id}`}
                           className="truncate font-medium text-foreground hover:text-primary"
                         >
-                          {event.title}
+                          {presentLaunchEventTitle(event.title)}
                         </Link>
                       </div>
                       <LocalDate isoString={event.start_at} />
@@ -189,8 +190,9 @@ export function EventsTable({
                       {canArchiveEvents ? (
                         <DeleteEventButton
                           disabled={isPending}
-                          eventTitle={event.title}
+                          eventTitle={presentLaunchEventTitle(event.title)}
                           onConfirm={() => onDelete(event.id)}
+                          tone="destructive"
                         />
                       ) : null}
                     </div>
@@ -242,7 +244,7 @@ function MobileEventRow({
         <div className="min-w-0 space-y-2">
           <div className="flex items-center gap-2">
             <OwnershipIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <p className="break-words font-medium">{event.title}</p>
+            <p className="break-words font-medium">{presentLaunchEventTitle(event.title)}</p>
           </div>
           <LocalDate isoString={event.start_at} />
           <div className="flex flex-wrap gap-2">
@@ -295,8 +297,9 @@ function MobileEventRow({
         {canArchiveEvents ? (
           <DeleteEventButton
             disabled={isPending}
-            eventTitle={event.title}
+            eventTitle={presentLaunchEventTitle(event.title)}
             onConfirm={() => onDelete(event.id)}
+            tone="quiet"
           />
         ) : null}
       </div>
@@ -308,20 +311,30 @@ function DeleteEventButton({
   disabled,
   eventTitle,
   onConfirm,
+  tone,
 }: {
   disabled: boolean
   eventTitle: string
   onConfirm: () => void
+  tone: 'destructive' | 'quiet'
 }) {
+  const isQuiet = tone === 'quiet'
+
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button
           size="sm"
-          variant="destructive"
+          variant={isQuiet ? 'outline' : 'destructive'}
           aria-disabled={disabled}
           tabIndex={disabled ? -1 : undefined}
-          className={disabled ? 'pointer-events-none bg-muted! text-muted-foreground! hover:bg-muted!' : undefined}
+          className={
+            disabled
+              ? 'pointer-events-none bg-muted! text-muted-foreground! hover:bg-muted!'
+              : isQuiet
+                ? 'border-destructive/40 text-destructive hover:bg-destructive/10'
+                : undefined
+          }
         >
           Eliminar
         </Button>
