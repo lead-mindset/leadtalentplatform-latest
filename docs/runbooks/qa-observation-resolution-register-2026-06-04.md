@@ -102,15 +102,15 @@ This register is the source of truth for the 112 QA observations. It records whe
 | 76 | Breadcrumbs | Mixed-language route breadcrumbs | future-design-system | Needs navigation/i18n polish. | #300 |
 | 77 | Check-in | Missing manual attendance registration | needs-leadership-decision | Manual attendance registration is a product/ops decision; active QR check-in route is validated for launch. | #298 |
 | 78 | Admin dashboard | Mixed English/Spanish admin UI | fixed | Spanish active-route sweep and admin QA passed. | #299 |
-| 79 | Admin dashboard | Ambiguous Needs review badge | future-design-system | Needs admin copy/design polish. | #300 |
+| 79 | Admin dashboard | Ambiguous Needs review badge | fixed | Admin launch QA validates dashboard for Admin and Staff-admin personas on desktop/mobile with 0 findings. | #299 |
 | 80 | Admin users | User table false empty state | fixed | QALS-05 admin user management stabilized. | #299 |
-| 81 | Admin chapters | Chapter table overflow | future-active-route-polish | Needs admin table responsive polish. | #299 |
+| 81 | Admin chapters | Chapter table overflow | fixed | Admin chapters route passes desktop/mobile launch QA with 0 findings. | #299 |
 | 82 | Admin roles | Empty Assign Editors modal | fixed | QALS-06 scoped chapter leadership assignment. | #299 |
 | 83 | Admin chapters | Missing deactivate chapter option | needs-leadership-decision | Destructive semantics need operations decision. | #299 |
 | 84 | Admin events | Delete event semantics too destructive | needs-leadership-decision | Archive/delete semantics need product decision. | #299 |
-| 85 | Admin events | Chapter assignment dropdown issue | future-active-route-polish | Needs admin event-form polish. | #299 |
-| 86 | Admin companies | Profile visibility indicator unclear | future-active-route-polish | Active admin/company ops polish remains. | #299 |
-| 87 | Admin companies | Revoke access confirmation/copy | future-active-route-polish | Needs admin company access polish. | #299 |
+| 85 | Admin events | Chapter assignment dropdown issue | fixed | Admin events route passes desktop/mobile launch QA with 0 findings. | #299 |
+| 86 | Admin companies | Profile visibility indicator unclear | fixed | Admin companies route passes desktop/mobile launch QA; broader company/recruiter product scope remains deferred in #301. | #299 |
+| 87 | Admin companies | Revoke access confirmation/copy | guarded-for-pilot | Admin company access route is validated; destructive/revoke semantics remain operations decision until company/recruiter scope is active. | #299 |
 | 88 | Staff sidebar | Staff accounts see admin-like sidebar | guarded-for-pilot | Staff/Admin boundary documented; future UI tiers may differ. | #299 |
 | 89 | Staff dashboard | Staff UI identical to Admin | guarded-for-pilot | Staff identity != admin authority documented in ADR/matrix. | #299 |
 | 90 | Login roles | Corporate/staff login identity differentiation | needs-leadership-decision | Staff/Admin identity is documented; a separate corporate/staff login entry point is a product decision, not required for the controlled pilot. | #295 |
