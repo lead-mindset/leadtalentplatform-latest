@@ -42,6 +42,7 @@ Out:
 - `pnpm exec tsc --noEmit`
 - `pnpm lint`
 - `git diff --check`
+- `LAUNCH_QA_SCOPE=public-student pnpm exec playwright test tests/e2e/launch-qa-report.spec.ts --reporter=line`
 
 ## Risks
 
