@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { EventRow } from '@/lib/types'
 import { AdminEventForm } from '../_components/admin-event-form'
 import { getChapters } from '@/lib/actions/admin/create-chapter'
+import { PageHeader } from '@/components/ui/page-header'
 
 export default async function AdminEventDetailPage({
   params,
@@ -27,14 +28,16 @@ export default async function AdminEventDetailPage({
 
   return (
     <div className="p-4 max-w-3xl mx-auto space-y-6">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Manage Event</h1>
-          <p className="text-muted-foreground mt-1">Edit details, chapter scope, and publishing.</p>
-        </div>
+      <div className="flex items-start justify-between gap-3">
+        <PageHeader
+          eyebrow="Administracion"
+          title="Gestionar evento"
+          description="Edita detalles, alcance de capitulo y publicacion."
+          className="mb-0"
+        />
         <div className="flex items-center gap-2">
           <Button asChild variant="outline">
-            <Link href="/admin/events">Back</Link>
+            <Link href="/admin/events">Volver</Link>
           </Button>
           {event?.id && (
             <Button asChild variant="outline">
@@ -46,7 +49,7 @@ export default async function AdminEventDetailPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>{event?.title ?? 'Event'}</CardTitle>
+          <CardTitle>{event?.title ?? 'Evento'}</CardTitle>
         </CardHeader>
         <CardContent>
           <AdminEventForm mode="edit" chapters={chapters} initial={event ?? null} />

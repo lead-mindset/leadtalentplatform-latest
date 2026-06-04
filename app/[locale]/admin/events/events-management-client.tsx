@@ -33,12 +33,19 @@ type Props = {
 
 const STATUS_OPTIONS = ['published', 'draft', 'upcoming', 'past']
 const SORT_COLUMNS: Array<[string, string]> = [
-  ['title', 'Title'],
-  ['startAt', 'Start'],
-  ['chapters', 'Chapters'],
-  ['status', 'Status'],
-  ['registrations', 'Registrations'],
+  ['title', 'Evento'],
+  ['startAt', 'Inicio'],
+  ['chapter', 'Capitulos'],
+  ['status', 'Estado'],
+  ['registrations', 'Registros'],
 ]
+
+const STATUS_LABELS: Record<string, string> = {
+  published: 'Publicado',
+  draft: 'Borrador',
+  upcoming: 'Proximo',
+  past: 'Finalizado',
+}
 
 function getStatus(item: AdminEventListItem) {
   const now = Date.now()
@@ -115,24 +122,24 @@ export function EventsManagementClient({
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
-          <CardDescription>Search event titles and filter by chapter or lifecycle state.</CardDescription>
+          <CardTitle>Filtros</CardTitle>
+          <CardDescription>Busca eventos y filtra por capitulo o estado del ciclo de vida.</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex flex-col gap-2 md:flex-row">
             <Input
-              aria-label="Search events by title"
+              aria-label="Buscar eventos por titulo"
               className="md:w-80"
               defaultValue={search}
-              placeholder="Search event title"
+              placeholder="Buscar por titulo"
               onChange={(event) => updateParam('search', event.target.value)}
             />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline">Chapters ({chapterFilters.length || 'all'})</Button>
+                <Button variant="outline">Capitulos ({chapterFilters.length || 'todos'})</Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
-                <DropdownMenuLabel>Filter chapters</DropdownMenuLabel>
+                <DropdownMenuLabel>Filtrar capitulos</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {chapterOptions.map((chapter) => (
                   <DropdownMenuCheckboxItem
@@ -147,10 +154,10 @@ export function EventsManagementClient({
             </DropdownMenu>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline">Status ({statusFilters.length || 'all'})</Button>
+                <Button variant="outline">Estado ({statusFilters.length || 'todos'})</Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
-                <DropdownMenuLabel>Filter status</DropdownMenuLabel>
+                <DropdownMenuLabel>Filtrar estado</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {STATUS_OPTIONS.map((status) => (
                   <DropdownMenuCheckboxItem
@@ -158,15 +165,15 @@ export function EventsManagementClient({
                     checked={statusFilters.includes(status)}
                     onCheckedChange={() => toggleMulti('status', status, statusFilters)}
                   >
-                    {status}
+                    {STATUS_LABELS[status]}
                   </DropdownMenuCheckboxItem>
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={resetFilters}>Reset</Button>
-            <Button asChild><Link href="/admin/events/new">New event</Link></Button>
+            <Button variant="outline" onClick={resetFilters}>Limpiar filtros</Button>
+            <Button asChild><Link href="/admin/events/new">Nuevo evento</Link></Button>
           </div>
         </CardContent>
       </Card>
@@ -183,11 +190,11 @@ export function EventsManagementClient({
                         className="min-h-6 rounded-sm px-1 py-1 hover:underline"
                         onClick={() => toggleSort(key)}
                       >
-                        {label}{sortBy === key ? ` ${sortOrder === 'asc' ? 'up' : 'down'}` : ''}
+                        {label}{sortBy === key ? ` ${sortOrder === 'asc' ? 'asc' : 'desc'}` : ''}
                       </button>
                     </TableHead>
                   ))}
-                  <TableHead className="w-[12rem]">Actions</TableHead>
+                  <TableHead className="w-[12rem]">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -205,12 +212,12 @@ export function EventsManagementClient({
                           {event.chapter && <Badge variant="info">{event.chapter.name}</Badge>}
                           {event.event_chapter?.map((collaborator) => (
                             <Badge key={collaborator.id} variant="secondary">
-                              {collaborator.chapter?.name || 'Unknown chapter'}
+                              {collaborator.chapter?.name || 'Capitulo no identificado'}
                             </Badge>
                           ))}
                         </div>
                       </TableCell>
-                      <TableCell><Badge variant={statusVariant(status)}>{status}</Badge></TableCell>
+                      <TableCell><Badge variant={statusVariant(status)}>{STATUS_LABELS[status]}</Badge></TableCell>
                       <TableCell>
                         <Badge variant={event.capacity !== null && event.registrations >= event.capacity ? 'warning' : 'outline'}>
                           {event.registrations}{event.capacity !== null ? ` / ${event.capacity}` : ''}
@@ -219,10 +226,10 @@ export function EventsManagementClient({
                       <TableCell>
                         <div className="flex flex-wrap gap-2">
                           <Button asChild size="sm" variant="outline">
-                            <Link href={`/admin/events/${event.id}`}>Manage</Link>
+                            <Link href={`/admin/events/${event.id}`}>Gestionar</Link>
                           </Button>
                           <Button asChild size="sm" variant="outline">
-                            <Link href={`/events/${event.id}`}>Public</Link>
+                            <Link href={`/events/${event.id}`}>Vista publica</Link>
                           </Button>
                         </div>
                       </TableCell>
@@ -235,20 +242,20 @@ export function EventsManagementClient({
 
           {items.length === 0 && (
             <div className="py-10 text-center">
-              <CardTitle className="mb-2 text-lg">{hasFilters ? 'No events match your filters' : 'No events created yet'}</CardTitle>
-              <p className="text-sm text-muted-foreground">{hasFilters ? 'Clear filters or try a different search.' : 'Create the first event or wait for chapter editors to add one.'}</p>
+              <CardTitle className="mb-2 text-lg">{hasFilters ? 'No hay eventos con esos filtros' : 'Aun no hay eventos creados'}</CardTitle>
+              <p className="text-sm text-muted-foreground">{hasFilters ? 'Limpia los filtros o prueba otra busqueda.' : 'Crea el primer evento o espera a que un editor de capitulo agregue uno.'}</p>
               <div className="mt-4 flex justify-center gap-2">
-                {hasFilters && <Button variant="outline" onClick={resetFilters}>Clear filters</Button>}
-                <Button asChild><Link href="/admin/events/new">New event</Link></Button>
+                {hasFilters && <Button variant="outline" onClick={resetFilters}>Limpiar filtros</Button>}
+                <Button asChild><Link href="/admin/events/new">Nuevo evento</Link></Button>
               </div>
             </div>
           )}
 
           <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <p className="text-sm text-muted-foreground">{total} total - page {page} / {totalPages}</p>
+            <p className="text-sm text-muted-foreground">{total} total - pagina {page} de {totalPages}</p>
             <div className="flex flex-wrap items-center gap-2">
-              <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => updateParam('page', String(page - 1))}>Previous</Button>
-              <Button size="sm" variant="outline" disabled={page >= totalPages} onClick={() => updateParam('page', String(page + 1))}>Next</Button>
+              <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => updateParam('page', String(page - 1))}>Anterior</Button>
+              <Button size="sm" variant="outline" disabled={page >= totalPages} onClick={() => updateParam('page', String(page + 1))}>Siguiente</Button>
               {[25, 50, 100].map((size) => (
                 <Button key={size} size="sm" variant={pageSize === size ? 'default' : 'outline'} onClick={() => updateParam('pageSize', String(size))}>{size}</Button>
               ))}

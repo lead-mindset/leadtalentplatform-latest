@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { AdminEventForm } from '../_components/admin-event-form'
 import { getChapters } from '@/lib/actions/admin/create-chapter'
+import { PageHeader } from '@/components/ui/page-header'
 
 export default async function NewAdminEventPage() {
   const chaptersRes = await getChapters()
@@ -10,19 +11,21 @@ export default async function NewAdminEventPage() {
 
   return (
     <div className="p-4 max-w-3xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">New Event</h1>
-          <p className="text-muted-foreground mt-1">Create a global or chapter event.</p>
-        </div>
+      <div className="flex items-start justify-between gap-3">
+        <PageHeader
+          eyebrow="Administracion"
+          title="Nuevo evento"
+          description="Crea un evento global o asociado a un capitulo."
+          className="mb-0"
+        />
         <Button asChild variant="outline">
-          <Link href="/admin/events">Back</Link>
+          <Link href="/admin/events">Volver</Link>
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Event details</CardTitle>
+          <CardTitle>Detalles del evento</CardTitle>
         </CardHeader>
         <CardContent>
           <AdminEventForm mode="create" chapters={chapters} />
