@@ -6,12 +6,13 @@ import { Icons } from '@/components/ui/icons'
 import { LocationDisplay } from './location-display'
 
 function formatDateTime(date: Date) {
-  return date.toLocaleString(undefined, {
+  return date.toLocaleString('es-PE', {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
+    timeZoneName: 'short',
   })
 }
 
@@ -66,11 +67,11 @@ export function EventCard({
   const isApplicationRequired = accessModel === 'application'
 
   const getButtonLabel = () => {
-    if (isRegistered) return 'Registered'
-    if (registrationStatus === 'pending_review') return 'Under Review'
-    if (registrationStatus === 'rejected') return 'Not Selected'
-    if (isApplicationRequired) return 'Apply'
-    return 'Register'
+    if (isRegistered) return 'Registrado'
+    if (registrationStatus === 'pending_review') return 'En revision'
+    if (registrationStatus === 'rejected') return 'No seleccionado'
+    if (isApplicationRequired) return 'Postular'
+    return 'Registrarme'
   }
 
   const isButtonDisabled =
@@ -85,13 +86,13 @@ export function EventCard({
           <Image src={coverImage} alt={title} fill className="object-cover" />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
-            <span className="text-muted-foreground">No image</span>
+            <span className="text-muted-foreground">Sin imagen</span>
           </div>
         )}
 
         {isApplicationRequired ? (
           <Badge variant="secondary" className="absolute right-2 top-2">
-            Application Required
+            Requiere postulacion
           </Badge>
         ) : null}
       </div>
@@ -124,14 +125,14 @@ export function EventCard({
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Icons.Users />
             <span>
-              {registeredCount} / {capacity} registered
+              {registeredCount} / {capacity} registrados
             </span>
           </div>
         ) : null}
 
         <div className="flex gap-2 pt-2">
           <Button type="button" variant="outline" className="flex-1" onClick={onViewDetails}>
-            View Details
+            Ver detalle
           </Button>
 
           <Button

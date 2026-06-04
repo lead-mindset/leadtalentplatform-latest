@@ -15,7 +15,7 @@ export default async function StudentResumePage() {
       <PageHeader
         eyebrow="Mi LEAD"
         title="Mi CV"
-        description="Mantén actualizado tu CV para futuras oportunidades con empresas aliadas. Solo se comparte cuando tu perfil profesional está habilitado."
+        description="Mantén actualizado tu CV para futuras oportunidades autorizadas. Solo se usa cuando tu preferencia profesional lo permite."
         badge={
           resume ? (
             <Badge variant="success" size="lg">

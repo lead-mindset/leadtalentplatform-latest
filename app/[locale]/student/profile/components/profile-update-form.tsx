@@ -151,19 +151,21 @@ export default function ProfileUpdateForm({
           <div className="rounded-lg bg-primary/5 border border-primary/10 p-4">
             <div className="flex items-center gap-2 mb-2">
               <Icons.IdCard className="h-4 w-4 text-primary" />
-              <p className="text-sm text-muted-foreground">Tu Member ID</p>
+              <p className="text-sm text-muted-foreground">Tu identificador de miembro</p>
             </div>
             <div className="flex items-center gap-2">
               <code className="px-3 py-1.5 bg-background rounded-md border border-border text-lg font-mono font-semibold text-primary">
                 {initialData.memberId}
               </code>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">Este es tu identificador unico como miembro de LEAD</p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Este identificador solo aparece cuando tu membresia de capitulo esta aprobada.
+            </p>
           </div>
         ) : initialData.approvalStatus === 'pending' && (
           <div className="rounded-lg bg-muted p-4">
             <p className="text-sm text-muted-foreground">
-              El Member ID se asigna despues de revisar tu solicitud.
+              Tu identificador de miembro se asigna despues de aprobar tu solicitud de capitulo.
             </p>
           </div>
         )}
