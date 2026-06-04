@@ -17,6 +17,7 @@ import {
 import CareerCommandSelect from './ui/career-combobox'
 import { SkillsCombobox } from './ui/skills-combobox'
 import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Icons } from '@/components/ui/icons'
@@ -47,6 +48,7 @@ export default function Onboarding({ initialValues, nextPath }: OnboardingProps)
   const translatedGender = useTranslatedGender()
 
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const [lastAutoNewsletterChapterId, setLastAutoNewsletterChapterId] = useState<string | null>(null)
 
   const basicOnboardingSchema = createBasicOnboardingSchema(tValidation)
@@ -85,6 +87,14 @@ export default function Onboarding({ initialValues, nextPath }: OnboardingProps)
   const selectedChapterId = useWatch({ control, name: 'selectedChapterId' })
   const needsChapterSelection =
     chapterIntent === 'already_member' || chapterIntent === 'apply_to_chapter'
+  const chapterIntentHelper =
+    chapterIntent === 'already_member'
+      ? t('chapterIntentAlreadyMemberStatus')
+      : chapterIntent === 'apply_to_chapter'
+        ? t('chapterIntentApplyStatus')
+        : chapterIntent === 'events_only'
+          ? t('chapterIntentEventsOnlyStatus')
+          : null
 
   const stepFields: Record<number, (keyof BasicOnboardingValues)[]> = {
     1: ['full_name', 'phone', 'gender'],
@@ -127,6 +137,7 @@ export default function Onboarding({ initialValues, nextPath }: OnboardingProps)
 
     const data = getValues()
     setIsSubmitting(true)
+    setSubmitError(null)
 
     const formData = new FormData()
     Object.entries(data).forEach(([key, value]) => {
@@ -141,9 +152,13 @@ export default function Onboarding({ initialValues, nextPath }: OnboardingProps)
 
     try {
       const result = await submitOnboarding(formData)
-      if (result?.error) console.error(result.error, result.details)
+      if (result?.error) {
+        console.error(result.error, result.details)
+        setSubmitError(t('saveError'))
+      }
     } catch (error) {
       console.error(error)
+      setSubmitError(t('saveError'))
     } finally {
       setIsSubmitting(false)
     }
@@ -425,6 +440,11 @@ export default function Onboarding({ initialValues, nextPath }: OnboardingProps)
                           />
                         </div>
                         <FieldError message={errors.chapterIntent?.message} />
+                        {chapterIntentHelper ? (
+                          <div className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm leading-5 text-muted-foreground">
+                            {chapterIntentHelper}
+                          </div>
+                        ) : null}
                       </div>
                     )}
                   />
@@ -587,6 +607,12 @@ export default function Onboarding({ initialValues, nextPath }: OnboardingProps)
 
                   {isSubmitting ? (
                     <p className="text-sm text-muted-foreground">{t('saving')}</p>
+                  ) : null}
+
+                  {submitError ? (
+                    <Alert variant="destructive" id="onboarding-submit-error">
+                      <AlertDescription>{submitError}</AlertDescription>
+                    </Alert>
                   ) : null}
                 </div>
               </FormStepper>

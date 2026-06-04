@@ -88,6 +88,37 @@ describe('basic onboarding helpers', () => {
     })
   })
 
+  it('normalizes phone formatting before saving reusable profile data', () => {
+    const formData = validFormData()
+    formData.set('phone', ' +51 (999) 999-999 ')
+
+    const parsed = parseBasicOnboardingFormData(formData, t)
+
+    expect(parsed.success).toBe(true)
+    if (!parsed.success) return
+
+    expect(parsed.data.phone).toBe('+51999999999')
+  })
+
+  it('rejects phone values that cannot be normalized to a valid profile phone', () => {
+    const formData = validFormData()
+    formData.set('phone', 'abc-123')
+
+    const parsed = parseBasicOnboardingFormData(formData, t)
+
+    expect(parsed.success).toBe(false)
+    if (parsed.success) return
+
+    expect(parsed.error.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: ['phone'],
+          message: 'validation.phoneInvalid',
+        }),
+      ])
+    )
+  })
+
   it('accepts chapter-related intent when a valid chapter is selected', () => {
     const formData = validFormData()
     formData.set('chapterIntent', 'already_member')

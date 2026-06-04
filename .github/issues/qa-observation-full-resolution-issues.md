@@ -34,3 +34,4 @@ This issue set turns the remaining QA observations into grouped, independently r
 - #301 and #302 are definition issues only. They should not ship UI/product changes until leadership approves the scope.
 - This issue set supports full accountability for the 112 observations without changing the controlled-pilot launch boundary.
 - AUTH-01 implementation covers active auth metadata, app-controlled validation, visible loading/error states, and OAuth redirect/error guardrails. Consent, provider rate limiting, transactional email branding, federated recovery, and corporate/staff login differentiation remain decision items.
+- ONBOARD-01 implementation covers phone normalization, shared onboarding validation, public participant/applicant/member-review copy, and visible save-error feedback. Country-specific E.164 inference, Alumni onboarding, and recruiter/company activation remain out of first-launch scope.
