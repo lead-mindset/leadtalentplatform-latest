@@ -4,6 +4,8 @@
 
 Accepted (May 2026)
 
+Amended (June 2026): clarified Staff/Admin separation and pilot chapter leadership taxonomy.
+
 ## Context
 
 LEAD Talent Platform is moving from a small chapter-operator model to a chapter operating system that must support presidents, vice presidents, official e-board members, regular members, admins, company representatives, LEAD Spark, Impact Metrics, LEAD Pulse, and future LEAD Funding workflows.
@@ -15,6 +17,7 @@ The previous model treated chapter operators mostly as `public.user.role = 'edit
 3. Presidents, vice presidents, chief of staff, directors, coordinators, and pillar leads need clean reporting fields without becoming new global app roles.
 4. Recruiter/company access must remain separate from chapter membership and chapter operations.
 5. Sensitive changes such as applicant approval, membership removal, e-board assignment, and event archive actions need auditability.
+6. Staff identity must not be confused with unrestricted system authority.
 
 ## Decision
 
@@ -24,6 +27,8 @@ We will separate chapter operations into four concerns:
 2. **Official responsibility**: `chapter_role_assignment` says what responsibility a person holds in a chapter, using normalized `role_level`, `functional_area`, and human-readable `display_title`.
 3. **Product capability**: `chapter_permission_grant` says what chapter-scoped actions a person can perform in the product.
 4. **Sensitive history**: `chapter_audit_log` records sensitive preapproval, membership, role, permission, and event lifecycle changes.
+
+Official LEAD identity remains separate from app authorization. `lead_identity` records public/official LEAD status such as founder, staff, chapter member, chapter editor, or alumni. It does not grant admin authority by itself.
 
 `public.user.role` remains a broad global app role:
 
@@ -43,7 +48,7 @@ approved chapter_membership
 = allowed
 ```
 
-Admin bypass remains explicit through `public.user.role = 'admin'`. Recruiter/company access remains explicit through `public.user.role = 'recruiter'` plus active accepted `recruiter_access`.
+Admin bypass remains explicit through `public.user.role = 'admin'`. Staff identity does not imply admin bypass; staff users need explicit admin app role assignment or a future scoped staff permission tier. Recruiter/company access remains explicit through `public.user.role = 'recruiter'` plus active accepted `recruiter_access`.
 
 ## Launch Permission Model
 
@@ -95,6 +100,13 @@ Do not create `pillar_lead` or similar chapter titles as global app roles. For c
 
 President and vice president assignment is central/admin controlled for launch. Presidents and vice presidents may assign regular e-board roles only to approved members of their own chapter.
 
+For the controlled pilot:
+
+- President and Vice President are chapter leadership authorities for their own chapter.
+- Chapter Editor is an operator role and not automatically a President/VP equivalent.
+- Regular e-board roles are scoped helpers unless explicit permission grants expand their authority.
+- Alumni and company representative workflows remain deferred from first-launch chapter operations.
+
 ## RLS And Services
 
 Authorization must be enforced in services and server actions, not only through hidden UI buttons. RLS helpers should move toward a permission grant helper such as:
@@ -124,6 +136,7 @@ Services should expose shared helpers such as:
 - Real chapter titles are preserved without forcing every title into `public.user.role`.
 - President/VP, chief of staff, and regular e-board boundaries are explicit and testable.
 - Recruiter and admin behavior stays separate from chapter operations.
+- Staff identity and admin authority stay separate, reducing accidental over-permissioning.
 - LEAD Pulse, LEAD Funding, Impact Metrics, and recognition workflows can add module-specific permissions later.
 
 ### Negative
@@ -143,11 +156,13 @@ This decision satisfies issue #193 by documenting:
 - `lead_identity` as official public LEAD status/display.
 - `recruiter_access` as company portal authorization.
 - Legacy `editor` as backcompat only while guards migrate to permissions.
+- Staff as identity/support status, not automatic admin authority.
 
 ## References
 
 - Related: ADR 001 - Service Layer Pattern
 - Related: ADR 002 - Automated Database Type Generation
+- Related: `docs/handbook/PILOT_ROLE_PERMISSION_MATRIX.md`
 - Related: `.github/PRDs/chapter-scoped-roles-permissions-and-preapproval.prd.md`
 - Related: GitHub issue #193
 
