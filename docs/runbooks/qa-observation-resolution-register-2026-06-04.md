@@ -63,13 +63,13 @@ This register is the source of truth for the 112 QA observations. It records whe
 | 37 | Onboarding logic | Conditional business validation | fixed | Active launch rule is explicit: events-only creates no membership, applicants create pending membership, existing-member claims remain pending unless preapproval activates them. | #296 |
 | 38 | Onboarding completion | Closing copy / user clarity | fixed | ONBOARD-01 adds Spanish-first intent/status copy and visible submit error feedback. | #296 |
 | 39 | Student routing | Dashboard route separation | guarded-for-pilot | Launch QA validates student/member route boundaries. | #297 |
-| 40 | Student dashboard | Responsive layout robustness | future-active-route-polish | Needs member route visual pass. | #297 |
+| 40 | Student dashboard | Responsive layout robustness | fixed | Public/student launch QA passed desktop and mobile with 0 findings after STUDENT-01 polish. | #297 |
 | 41 | Student copy | Mixed terminology/user metadata language | fixed | STUDENT-01 translates member dashboard labels, event-card CTAs, sidebar labels, and resume/profile visibility copy for Spanish-first launch. | #297 |
 | 42 | RBAC routing | Wrong-role routes destroyed session | fixed | QALS-02 safe authorization implemented and validated. | #294 |
-| 43 | My events | Active tab count stale/inconsistent | future-active-route-polish | Needs member event state polish. | #297 |
+| 43 | My events | Active tab count stale/inconsistent | fixed | Student events groups current ticket separately and counts remaining active/application/history/cancelled tabs; launch QA passed with 0 findings. | #297 |
 | 44 | QR ticket | Date/time timezone presentation | fixed | Student event tickets and reusable event cards format dates in Spanish with timezone context. | #297 |
 | 45 | CV/resume | English copy in resume/ticket surfaces | fixed | STUDENT-01 polishes CV, QR/ticket, event-card, and dashboard visible copy for Spanish-first launch. | #297 |
-| 46 | Explore events | Private layout persistence/routing | future-active-route-polish | Public/private event layout is usable, but full member-route browser QA remains. | #297 |
+| 46 | Explore events | Private layout persistence/routing | fixed | Public/student launch QA validates anonymous, participant, member, and alumni event route transitions on desktop and mobile. | #297 |
 | 47 | Event detail | Context preservation after event navigation | fixed | Event registration redirects to `/student/events?event=...` and the page scrolls to the highlighted registration. | #297 |
 | 48 | Sidebar | Role-conditional navigation rendering | fixed | STUDENT-01 translates student sidebar labels and keeps member route labels scoped to the student workspace. | #297 |
 | 49 | Student copy | Accent/brand string issues | future-design-system | Active-route copy audit remains. | #300 |
@@ -82,8 +82,8 @@ This register is the source of truth for the 112 QA observations. It records whe
 | 56 | Profile privacy | Profile visibility toggle unclear | fixed | STUDENT-01 reframes profile visibility as an optional preference for authorized opportunities, not automatic company access. | #297 |
 | 57 | Resume resources | Placeholder resource links | fixed | Resume resources remain marked `Pronto` with copy explaining the user should upload a current PDF for now. | #297 |
 | 58 | Event registration | Cancel registration unclear/missing | fixed | Student event cards expose cancel actions for active confirmed registrations and explain QR/status lifecycle. | #297 |
-| 59 | Application form | Highlight/border field affordance issue | future-active-route-polish | Needs application form visual polish. | #297 |
-| 60 | Application form | Re-asks data already known | future-active-route-polish | Needs application form data reuse decision. | #297 |
+| 59 | Application form | Highlight/border field affordance issue | fixed | Launch QA validates application event modal/form path on desktop and mobile with no findings. | #297 |
+| 60 | Application form | Re-asks data already known | needs-leadership-decision | Current launch keeps application answers explicit. Auto-prefill/data reuse requires product decision per event question model. | #297 |
 | 61 | Event list | Chapter-exclusive events visible broadly | guarded-for-pilot | Eligibility/route guardrails improved; filtering polish remains. | #297 |
 | 62 | Event history | Old events listed without grouping/pagination | fixed | Student events groups active tickets, applications, history, and cancelled registrations in separate tabs. | #297 |
 | 63 | Chapter landing | Editor landed in student dashboard | fixed | Chapter operators land in chapter workspace in launch QA. | #298 |
