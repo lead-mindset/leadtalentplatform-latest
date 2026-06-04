@@ -24,7 +24,7 @@ import {
 import { formatLeadDate } from '@/lib/utils/date-format'
 
 function formatDate(value: string | null) {
-  return formatLeadDate(value, 'No activity')
+  return formatLeadDate(value, 'Sin actividad')
 }
 
 function StatTile({
@@ -48,17 +48,17 @@ function StatTile({
         : 'bg-muted text-muted-foreground'
 
   return (
-    <div className="rounded-lg border bg-card p-4">
+    <div className="rounded-lg border bg-card p-3.5">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-medium text-muted-foreground">{label}</p>
-          <p className="mt-3 text-2xl font-semibold tracking-tight tabular-nums">{value}</p>
+          <p className="mt-2 text-2xl font-semibold tracking-tight tabular-nums">{value}</p>
         </div>
         <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${toneClass}`}>
           <Icon className="h-4 w-4" />
         </div>
       </div>
-      <p className="mt-2 text-xs text-muted-foreground">{helper}</p>
+      <p className="mt-1.5 text-xs leading-5 text-muted-foreground">{helper}</p>
     </div>
   )
 }
@@ -77,7 +77,7 @@ function QueueRow({
   return (
     <Link
       href={href}
-      className="flex items-center justify-between gap-4 rounded-lg border p-3 transition-colors hover:bg-muted/50"
+      className="flex items-center justify-between gap-4 rounded-lg border p-2.5 transition-colors hover:bg-muted/50"
     >
       <div className="min-w-0">
         <p className="font-medium">{label}</p>
@@ -105,7 +105,7 @@ function ManagementLink({
   return (
     <Link
       href={href}
-      className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
+      className="flex items-center gap-3 rounded-lg border p-2.5 transition-colors hover:bg-muted/50"
     >
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted">
         <Icon className="h-4 w-4 text-muted-foreground" />
@@ -148,7 +148,7 @@ function PanelSkeleton({ title }: { title: string }) {
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
-        <CardDescription>Loading latest admin data.</CardDescription>
+        <CardDescription>Cargando datos recientes de administracion.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         {Array.from({ length: 3 }).map((_, index) => (
@@ -171,40 +171,40 @@ async function AdminStatsSection() {
   return (
     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
       <StatTile
-        label="Users"
+        label="Usuarios"
         value={systemStats.total_users}
-        helper="Accounts in the platform"
+        helper="Cuentas en la plataforma"
         icon={Users}
       />
       <StatTile
-        label="Chapters"
+        label="Capitulos"
         value={systemStats.total_chapters}
-        helper={`${dashboardStats.active_chapters} with members`}
+        helper={`${dashboardStats.active_chapters} con miembros`}
         icon={Building2}
       />
       <StatTile
-        label="Companies"
+        label="Empresas"
         value={systemStats.total_companies}
-        helper="Organizations in admin"
+        helper="Acceso controlado por invitacion"
         icon={Building2}
       />
       <StatTile
-        label="Events"
+        label="Eventos"
         value={dashboardStats.events_this_month}
-        helper="Starting this month"
+        helper="Inician este mes"
         icon={CalendarDays}
       />
       <StatTile
-        label="Pending approvals"
+        label="Aprobaciones"
         value={dashboardStats.pending_chapter_approvals}
-        helper="Chapter applications"
+        helper="Solicitudes de capitulo"
         icon={Clock}
         tone={dashboardStats.pending_chapter_approvals > 0 ? 'attention' : 'success'}
       />
       <StatTile
-        label="Company visibility"
+        label="Visibilidad empresa"
         value={`${dashboardStats.recruiter_opt_in_rate}%`}
-        helper="Approved visible profiles"
+        helper="Perfiles aprobados visibles"
         icon={CheckCircle2}
         tone="success"
       />
@@ -227,50 +227,50 @@ async function AdminQueuesSection() {
 
   return (
     <>
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <Card>
-          <CardHeader>
-            <CardTitle>Priority Queue</CardTitle>
-            <CardDescription>Items that need admin or chapter follow-up.</CardDescription>
+          <CardHeader className="pb-3">
+            <CardTitle>Cola prioritaria</CardTitle>
+            <CardDescription>Elementos que requieren seguimiento administrativo o del capitulo.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <QueueRow
-              label="Company access invites"
+              label="Invitaciones de empresa"
               value={pendingCompanyInviteCount}
               href="/admin/invites"
-              helper="Sent but not accepted or revoked"
+              helper="Enviadas, no aceptadas o revocadas"
             />
             <QueueRow
-              label="Chapter approvals"
+              label="Aprobaciones de capitulo"
               value={pendingChapterApprovals}
               href="/admin/chapters"
-              helper="Pending chapter membership applications"
+              helper="Solicitudes de membresia pendientes"
             />
             <QueueRow
-              label="Profiles visible to companies"
+              label="Perfiles visibles a empresas"
               value={systemStats.visibleProfiles}
               href="/admin/users"
-              helper="Recruitable approved profiles"
+              helper="Perfiles aprobados con visibilidad activa"
             />
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Chapter Activity</CardTitle>
-            <CardDescription>Membership size, open approvals, and latest event activity.</CardDescription>
+          <CardHeader className="pb-3">
+            <CardTitle>Actividad de capitulos</CardTitle>
+            <CardDescription>Miembros, aprobaciones abiertas y actividad reciente de eventos.</CardDescription>
           </CardHeader>
           <CardContent>
             {chapterActivity.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No chapter activity yet.</p>
+              <p className="text-sm text-muted-foreground">Aun no hay actividad de capitulos.</p>
             ) : (
               <div className="divide-y">
-                {chapterActivity.slice(0, 8).map((chapter) => (
-                  <div key={chapter.id} className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
+                {chapterActivity.slice(0, 6).map((chapter) => (
+                  <div key={chapter.id} className="flex items-center justify-between gap-4 py-2.5 first:pt-0 last:pb-0">
                     <div className="min-w-0">
                       <p className="truncate font-medium">{chapter.name}</p>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        {chapter.member_count} members {' '}&middot;{' '}{chapter.pending_approvals} pending
+                        {chapter.member_count} miembros {' '}&middot;{' '}{chapter.pending_approvals} pendientes
                       </p>
                     </div>
                     <p className="shrink-0 text-sm text-muted-foreground">{formatDate(chapter.last_event_at)}</p>
@@ -285,18 +285,18 @@ async function AdminQueuesSection() {
       {pendingCompanyInvites.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Pending Company Access</CardTitle>
-            <CardDescription>Most recent company representatives waiting to accept access.</CardDescription>
+            <CardTitle>Acceso de empresas pendiente</CardTitle>
+            <CardDescription>Representantes de empresa esperando aceptar acceso.</CardDescription>
           </CardHeader>
           <CardContent className="divide-y">
             {pendingCompanyInvites.map((request) => (
               <div key={request.id} className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
                 <div className="min-w-0">
                   <p className="truncate font-medium">{request.recruiter_email}</p>
-                  <p className="truncate text-sm text-muted-foreground">{request.company_name ?? 'Unknown company'}</p>
+                <p className="truncate text-sm text-muted-foreground">{request.company_name ?? 'Empresa sin nombre'}</p>
                 </div>
                 <Button asChild variant="outline" size="sm">
-                  <Link href="/admin/invites">Open</Link>
+                  <Link href="/admin/invites">Abrir</Link>
                 </Button>
               </div>
             ))}
@@ -313,12 +313,12 @@ async function RecentJoinsSection() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recent Joins</CardTitle>
-        <CardDescription>Latest accounts created.</CardDescription>
+        <CardTitle>Altas recientes</CardTitle>
+        <CardDescription>Ultimas cuentas creadas.</CardDescription>
       </CardHeader>
       <CardContent>
         {recentJoins.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No recent joins.</p>
+          <p className="text-sm text-muted-foreground">No hay altas recientes.</p>
         ) : (
           <div className="divide-y">
             {recentJoins.map((join) => (
@@ -331,7 +331,7 @@ async function RecentJoinsSection() {
                   <Badge variant="outline">{join.role}</Badge>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {join.chapter_name ?? 'No chapter'} {' '}&middot;{' '}{formatDate(join.created_at)}
+                  {join.chapter_name ?? 'Sin capitulo'} {' '}&middot;{' '}{formatDate(join.created_at)}
                 </p>
               </div>
             ))}
@@ -344,20 +344,20 @@ async function RecentJoinsSection() {
 
 export default function AdminOverviewPage() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Admin Overview</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Resumen administrativo</h1>
           <p className="max-w-3xl text-muted-foreground">
-            Monitor operational queues, platform coverage, and management entry points.
+            Monitorea colas operativas, cobertura de plataforma y accesos de gestion.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline">
-            <Link href="/admin/activity">Activity</Link>
+            <Link href="/admin/activity">Actividad</Link>
           </Button>
           <Button asChild>
-            <Link href="/admin/invites">Review invites</Link>
+            <Link href="/admin/invites">Revisar invitaciones</Link>
           </Button>
         </div>
       </div>
@@ -368,32 +368,32 @@ export default function AdminOverviewPage() {
 
       <Suspense
         fallback={
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
-            <PanelSkeleton title="Priority Queue" />
-            <PanelSkeleton title="Chapter Activity" />
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+            <PanelSkeleton title="Cola prioritaria" />
+            <PanelSkeleton title="Actividad de capitulos" />
           </div>
         }
       >
         <AdminQueuesSection />
       </Suspense>
 
-      <div className="grid gap-4 xl:grid-cols-3">
+      <div className="grid items-start gap-4 xl:grid-cols-3">
         <Card className="xl:col-span-2">
-          <CardHeader>
-            <CardTitle>Management</CardTitle>
-            <CardDescription>Common admin destinations, kept close without adding extra navigation.</CardDescription>
+          <CardHeader className="pb-3">
+            <CardTitle>Gestion</CardTitle>
+            <CardDescription>Accesos operativos frecuentes sin navegacion adicional.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-2">
-            <ManagementLink label="Users" href="/admin/users" helper="Roles, profiles, approvals" icon={Users} />
-            <ManagementLink label="Chapters" href="/admin/chapters" helper="Metadata and editors" icon={Building2} />
-            <ManagementLink label="Companies" href="/admin/companies" helper="Organizations and access" icon={Building2} />
-            <ManagementLink label="Events" href="/admin/events" helper="Platform event oversight" icon={CalendarDays} />
-            <ManagementLink label="Invites" href="/admin/invites" helper="Company access queue" icon={Mail} />
-            <ManagementLink label="Activity" href="/admin/activity" helper="Recent admin changes" icon={Activity} />
+            <ManagementLink label="Usuarios" href="/admin/users" helper="Roles, perfiles y aprobaciones" icon={Users} />
+            <ManagementLink label="Capitulos" href="/admin/chapters" helper="Metadata y editores" icon={Building2} />
+            <ManagementLink label="Empresas" href="/admin/companies" helper="Organizaciones y acceso" icon={Building2} />
+            <ManagementLink label="Eventos" href="/admin/events" helper="Supervision de eventos" icon={CalendarDays} />
+            <ManagementLink label="Invitaciones" href="/admin/invites" helper="Acceso por invitacion" icon={Mail} />
+            <ManagementLink label="Actividad" href="/admin/activity" helper="Cambios administrativos" icon={Activity} />
           </CardContent>
         </Card>
 
-        <Suspense fallback={<PanelSkeleton title="Recent Joins" />}>
+        <Suspense fallback={<PanelSkeleton title="Altas recientes" />}>
           <RecentJoinsSection />
         </Suspense>
       </div>
