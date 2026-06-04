@@ -137,11 +137,11 @@ export const CAREER_VALUES = [
 export function getRoleColor(role: string) {
   switch (role) {
     case 'admin':
-      return 'bg-chart-3 text-primary-foreground'
+      return 'bg-chart-3 text-white'
     case 'editor':
-      return 'bg-chart-2 text-primary-foreground'
+      return 'bg-chart-2 text-white'
     case 'recruiter':
-      return 'bg-chart-1 text-primary-foreground'
+      return 'bg-chart-1 text-white'
     default:
       return 'bg-muted text-muted-foreground'
   }
