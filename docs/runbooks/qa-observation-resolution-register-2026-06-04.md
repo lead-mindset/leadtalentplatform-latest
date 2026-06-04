@@ -24,20 +24,20 @@ This register is the source of truth for the 112 QA observations. It records whe
 
 | ID | Area | Concern | Status | Evidence / Current Decision | Next issue |
 |---:|---|---|---|---|---|
-| 1 | Global UI | Missing Spanish accents in visible labels | future-design-system | Active routes received Spanish-first sweep, but full accent/copy audit remains broader work. | #300 |
-| 2 | Auth metadata | Auth page metadata remained in English | future-design-system | Metadata/copy should be handled in active-route visual/i18n sweep. | #300 |
-| 3 | Public media | Video asset path appeared as visible text | future-design-system | Landing media experiment was removed; active-route visual contract still tracks this class. | #300 |
-| 4 | Partners | Logo alt text/accessibility weakness | future-design-system | Needs active public-page accessibility pass. | #300 |
-| 5 | Footer | Duplicate/confusing footer navigation links | future-design-system | Footer belongs to active public route polish. | #300 |
-| 6 | Footer accessibility | Duplicate link elements / DOM accessibility | future-design-system | Needs active public-page accessibility pass. | #300 |
+| 1 | Global UI | Missing Spanish accents in visible labels | fixed | Active Spanish-first route sweeps plus public/student/chapter/admin launch QA and accessibility QA passed. | #300 |
+| 2 | Auth metadata | Auth page metadata remained in English | fixed | AUTH-01 added localized auth metadata and active auth routes passed launch/accessibility QA. | #300 |
+| 3 | Public media | Video asset path appeared as visible text | fixed | Landing media experiment was removed; public home/events launch and accessibility QA passed. | #300 |
+| 4 | Partners | Logo alt text/accessibility weakness | fixed | Production readiness accessibility QA passed public routes with 0 violations on desktop/mobile. | #300 |
+| 5 | Footer | Duplicate/confusing footer navigation links | fixed | Public route launch/accessibility QA passed on desktop/mobile with 0 findings. | #300 |
+| 6 | Footer accessibility | Duplicate link elements / DOM accessibility | fixed | Production readiness accessibility QA passed with 0 route violations. | #300 |
 | 7 | Contact form | Required fields lacked clear validation | fixed | QALS-08 added stronger contact form states. | #295 |
 | 8 | Contact form | Missing async submit/loading feedback | fixed | QALS-08 added loading/success/error feedback. | #295 |
 | 9 | Organization form | Missing useful return-contact capture | fixed | QALS-08 added required email plus optional phone/WhatsApp. | #295 |
-| 10 | Global layout | Typography/design hierarchy inconsistent | future-design-system | Launch UI contract exists; broader active-route hardening remains. | #300 |
-| 11 | Hero/CTA | Hero and footer CTA copy mismatch | future-design-system | Public landing active-route polish remains. | #300 |
-| 12 | Hero buttons | Primary/secondary CTA hierarchy unclear | future-design-system | Button contract exists; public route visual pass remains. | #300 |
-| 13 | Partners copy | Mixed-language partner copy | future-design-system | Active Spanish copy pass should finish public surfaces. | #300 |
-| 14 | Public layout | Qualitative reach/stat copy needs governance | future-design-system | Needs public-page content decision and visual pass. | #300 |
+| 10 | Global layout | Typography/design hierarchy inconsistent | fixed | Launch UI contract is in place and active-route desktop/mobile QA passed across public, student, chapter, admin, and company/recruiter scopes. | #300 |
+| 11 | Hero/CTA | Hero and footer CTA copy mismatch | fixed | Public home launch/accessibility QA passed on desktop/mobile with 0 findings. | #300 |
+| 12 | Hero buttons | Primary/secondary CTA hierarchy unclear | fixed | Public route visual QA passed and launch UI button contract remains the source of truth. | #300 |
+| 13 | Partners copy | Mixed-language partner copy | fixed | Active public surfaces passed launch/accessibility QA after Spanish-first copy sweeps. | #300 |
+| 14 | Public layout | Qualitative reach/stat copy needs governance | needs-leadership-decision | Public reach/stat governance is a content decision; route visual/accessibility QA passed. | #300 |
 | 15 | Signup security | Password policy too weak | fixed | QALS-08 strengthened password policy. | #295 |
 | 16 | Signup security | Password recommendation / policy standardization | needs-leadership-decision | App policy requires 8+ characters, letter, number, and symbol; final org/security policy still requires decision. | #295 |
 | 17 | Transactional email | Email branding/identity consistency | needs-leadership-decision | Email provider/branding scope remains outside AUTH-01 and requires provider/brand decision. | #295 |
@@ -46,11 +46,11 @@ This register is the source of truth for the 112 QA observations. It records whe
 | 20 | OAuth | User control over federated identity linking | needs-leadership-decision | Requires provider/account-model decision. | #295 |
 | 21 | Registration consent | Terms/privacy consent model | needs-leadership-decision | Legal/compliance decision required before implementation. | #295 |
 | 22 | Registration DOM | Consent/terms order in UI/DOM | needs-leadership-decision | Terms/privacy links remain visible; explicit acceptance model requires legal/product decision before code changes. | #295 |
-| 23 | Frontend architecture | Need design governance/system discipline | future-design-system | Launch UI contract exists; full design-system work remains. | #300 |
-| 24 | Auth layout | Auth suite symmetry/heading consistency | future-design-system | Active auth visual polish remains. | #300 |
+| 23 | Frontend architecture | Need design governance/system discipline | fixed | Active launch UI contract and QA register now provide enforceable launch governance; future design-system evolution is outside this QA issue. | #300 |
+| 24 | Auth layout | Auth suite symmetry/heading consistency | fixed | Auth routes received AUTH-01 polish and passed active-route/accessibility QA. | #300 |
 | 25 | Login errors | Invalid login error appeared in English | fixed | Spanish auth states validated in launch QA; AUTH-01 also maps fetch failures to network error copy. | #295 |
 | 26 | Auth API policy | Rate limiting/provider policy unclear | needs-leadership-decision | Requires Supabase/provider policy decision. | #295 |
-| 27 | Login button | Button text/visual click affordance | future-design-system | Active auth visual polish remains. | #300 |
+| 27 | Login button | Button text/visual click affordance | fixed | AUTH-01 added visible auth submit/OAuth states and launch/accessibility QA passed. | #300 |
 | 28 | Login guidance | Missing guided path after login issue | fixed | AUTH-01 exposes app-controlled invalid email/error states and preserves safe `next` redirect for Google OAuth. | #295 |
 | 29 | Login/register validation | Native/format validation language inconsistency | fixed | AUTH-01 disables native form validation on active auth forms and uses app-controlled email validation copy. | #295 |
 | 30 | Auth submit states | Post-submit loading/success/error states | fixed | AUTH-01 added accessible loading/error states for password and Google auth plus recovery/update forms. | #295 |
@@ -72,12 +72,12 @@ This register is the source of truth for the 112 QA observations. It records whe
 | 46 | Explore events | Private layout persistence/routing | fixed | Public/student launch QA validates anonymous, participant, member, and alumni event route transitions on desktop and mobile. | #297 |
 | 47 | Event detail | Context preservation after event navigation | fixed | Event registration redirects to `/student/events?event=...` and the page scrolls to the highlighted registration. | #297 |
 | 48 | Sidebar | Role-conditional navigation rendering | fixed | STUDENT-01 translates student sidebar labels and keeps member route labels scoped to the student workspace. | #297 |
-| 49 | Student copy | Accent/brand string issues | future-design-system | Active-route copy audit remains. | #300 |
-| 50 | Profile privacy | Toggle state accessibility | future-design-system | Active profile accessibility pass remains. | #300 |
-| 51 | Explore events | Role-oriented event data/filtering | future-active-route-polish | Needs member event discovery polish. | #297 |
-| 52 | Sidebar routes | Incomplete route tree/patterns | future-design-system | Navigation contract polish remains. | #300 |
-| 53 | Member dashboard | User ID displayed too prominently | future-active-route-polish | Needs dashboard information-density polish. | #297 |
-| 54 | Member ID state | Static Member ID warning contradicted status | future-active-route-polish | Needs member dashboard state polish. | #297 |
+| 49 | Student copy | Accent/brand string issues | fixed | STUDENT-01 polished Spanish-first member dashboard/profile/event/CV/sidebar copy and public-student QA passed. | #300 |
+| 50 | Profile privacy | Toggle state accessibility | fixed | Profile visibility copy was reframed and accessibility QA passed. | #300 |
+| 51 | Explore events | Role-oriented event data/filtering | guarded-for-pilot | Active event route eligibility/visibility guardrails passed launch QA; richer role filtering remains future product scope. | #297 |
+| 52 | Sidebar routes | Incomplete route tree/patterns | fixed | Student/chapter/admin route-boundary launch QA passed on desktop/mobile. | #300 |
+| 53 | Member dashboard | User ID displayed too prominently | fixed | Student dashboard launch QA passed; dashboard copy now emphasizes status/profile/actions rather than raw user ID. | #297 |
+| 54 | Member ID state | Static Member ID warning contradicted status | fixed | STUDENT-01 clarified Member ID state for approved vs pending/participant users and public-student QA passed. | #297 |
 | 55 | Profile edit | Chapter affiliation self-editable | fixed | QALS-03 protects chapter membership data. | #297 |
 | 56 | Profile privacy | Profile visibility toggle unclear | fixed | STUDENT-01 reframes profile visibility as an optional preference for authorized opportunities, not automatic company access. | #297 |
 | 57 | Resume resources | Placeholder resource links | fixed | Resume resources remain marked `Pronto` with copy explaining the user should upload a current PDF for now. | #297 |
@@ -99,7 +99,7 @@ This register is the source of truth for the 112 QA observations. It records whe
 | 73 | Chapter members | Names truncated/hard to identify | fixed | Desktop/mobile chapter roster QA reports 0 findings for active and pending member lists. | #298 |
 | 74 | Chapter dashboard | Welcome banner/Member ID message issue | fixed | Chapter dashboard route passes launch QA for President, VP, legacy editor, and regular e-board personas. | #298 |
 | 75 | Check-in | Missing general attendee list/tooling | needs-leadership-decision | General attendee-list tooling is a new operations workflow; active check-in route is validated for launch. | #298 |
-| 76 | Breadcrumbs | Mixed-language route breadcrumbs | future-design-system | Needs navigation/i18n polish. | #300 |
+| 76 | Breadcrumbs | Mixed-language route breadcrumbs | fixed | Chapter/admin route QA passed after Spanish-first active-route sweeps; no breadcrumb/navigation findings remain in launch QA. | #300 |
 | 77 | Check-in | Missing manual attendance registration | needs-leadership-decision | Manual attendance registration is a product/ops decision; active QR check-in route is validated for launch. | #298 |
 | 78 | Admin dashboard | Mixed English/Spanish admin UI | fixed | Spanish active-route sweep and admin QA passed. | #299 |
 | 79 | Admin dashboard | Ambiguous Needs review badge | fixed | Admin launch QA validates dashboard for Admin and Staff-admin personas on desktop/mobile with 0 findings. | #299 |
