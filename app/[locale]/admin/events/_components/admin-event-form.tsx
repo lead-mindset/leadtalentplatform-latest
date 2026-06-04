@@ -7,6 +7,17 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import type { ChapterRow, EventRow, EventType } from '@/lib/types'
 import { createEvent, type CreateEventInput } from '@/lib/actions/events/create-event'
 import { updateEvent, type UpdateEventInput } from '@/lib/actions/events/update-event'
@@ -74,7 +85,7 @@ export function AdminEventForm({
   async function onSubmit() {
     setError(null)
     startTransition(async () => {
-const payload: CreateEventInput = {
+      const payload: CreateEventInput = {
         title,
         description: description || undefined,
         coverImage: coverImage || undefined,
@@ -131,12 +142,12 @@ const payload: CreateEventInput = {
 
       <div className="grid gap-4">
         <div className="space-y-2">
-          <Label htmlFor="title">Title</Label>
+          <Label htmlFor="title">Titulo *</Label>
           <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="description">Description</Label>
+          <Label htmlFor="description">Descripcion</Label>
           <Textarea
             id="description"
             value={description}
@@ -147,41 +158,41 @@ const payload: CreateEventInput = {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="startAt">Start</Label>
+            <Label htmlFor="startAt">Inicio *</Label>
             <Input id="startAt" type="datetime-local" value={startAt} onChange={(e) => setStartAt(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="endAt">End</Label>
+            <Label htmlFor="endAt">Fin *</Label>
             <Input id="endAt" type="datetime-local" value={endAt} onChange={(e) => setEndAt(e.target.value)} />
           </div>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label>Event type</Label>
+            <Label>Tipo de evento</Label>
             <Select value={eventType} onValueChange={(v) => setEventType(v as EventType)}>
               <SelectTrigger>
-                <SelectValue placeholder="Select type" />
+                <SelectValue placeholder="Selecciona un tipo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="in_person">In-person</SelectItem>
-                <SelectItem value="online">Online</SelectItem>
-                <SelectItem value="hybrid">Hybrid</SelectItem>
+                <SelectItem value="in_person">Presencial</SelectItem>
+                <SelectItem value="online">En linea</SelectItem>
+                <SelectItem value="hybrid">Hibrido</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="capacity">Capacity (optional)</Label>
-            <Input id="capacity" inputMode="numeric" value={capacity} onChange={(e) => setCapacity(e.target.value)} placeholder="Unlimited" />
+            <Label htmlFor="capacity">Capacidad opcional</Label>
+            <Input id="capacity" inputMode="numeric" value={capacity} onChange={(e) => setCapacity(e.target.value)} placeholder="Sin limite" />
           </div>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="chapter_id">Chapter</Label>
+            <Label htmlFor="chapter_id">Capitulo</Label>
             <Select value={chapter_id ?? 'global'} onValueChange={setChapterId}>
               <SelectTrigger>
-                <SelectValue placeholder="Select chapter" />
+                <SelectValue placeholder="Selecciona un capitulo" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="global">Global</SelectItem>
@@ -194,18 +205,18 @@ const payload: CreateEventInput = {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="location">Location (optional)</Label>
+            <Label htmlFor="location">Ubicacion opcional</Label>
             <Input id="location" value={location} onChange={(e) => setLocation(e.target.value)} />
           </div>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="meetingUrl">Meeting URL (optional)</Label>
+            <Label htmlFor="meetingUrl">URL de reunion opcional</Label>
             <Input id="meetingUrl" value={meetingUrl} onChange={(e) => setMeetingUrl(e.target.value)} placeholder="https://..." />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="coverImage">Cover image URL (optional)</Label>
+            <Label htmlFor="coverImage">URL de imagen de portada opcional</Label>
             <Input id="coverImage" value={coverImage} onChange={(e) => setCoverImage(e.target.value)} placeholder="https://..." />
           </div>
         </div>
@@ -218,18 +229,36 @@ const payload: CreateEventInput = {
             checked={isPublished}
             onChange={(e) => setIsPublished(e.target.checked)}
           />
-          <Label htmlFor="isPublished">Published</Label>
+          <Label htmlFor="isPublished">Publicado</Label>
         </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
         {mode === 'edit' && (
-          <Button type="button" variant="destructive" onClick={onDelete} disabled={isPending}>
-            Delete
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button type="button" variant="destructive" disabled={isPending}>
+                Eliminar
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Eliminar evento</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Esta accion eliminara el evento. Usala solo si no hay registros o actividad operativa asociada.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={isPending}>Cancelar</AlertDialogCancel>
+                <AlertDialogAction disabled={isPending} onClick={onDelete}>
+                  Eliminar evento
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         )}
         <Button type="button" onClick={onSubmit} disabled={isPending}>
-          {mode === 'create' ? 'Create event' : 'Save changes'}
+          {isPending ? 'Guardando...' : mode === 'create' ? 'Crear evento' : 'Guardar cambios'}
         </Button>
       </div>
     </div>
