@@ -126,16 +126,16 @@ This register is the source of truth for the 112 QA observations. It records whe
 | 100 | Saved talent table | Action column responsiveness | deferred-company | Saved talent table UX is deferred with saved talent scope. | #301 |
 | 101 | Student route security | Critical route-control failure | fixed | Student workspace role boundaries and launch QA guardrails passed. | #297 |
 | 102 | Recruiter history | Missing talent read/access history | deferred-company | Resume/profile access history is required before future company implementation and is deferred from active launch. | #301 |
-| 103 | Alumni nav | Alumni sidebar label contradiction | deferred-alumni | Alumni deferred. | #302 |
-| 104 | Alumni chapter card | Alumni position/status semantics unclear | deferred-alumni | Alumni deferred. | #302 |
-| 105 | Alumni ID | Member ID pending copy wrong for alumni | deferred-alumni | Alumni deferred. | #302 |
-| 106 | Alumni profile | Generic/new-member profile messages | deferred-alumni | Alumni deferred. | #302 |
-| 107 | Alumni privacy | Visibility copy inappropriate | deferred-alumni | Alumni deferred. | #302 |
-| 108 | Alumni eligibility | Alumni could register for active-member-only events | guarded-for-pilot | QALS-04 blocks active-member-only eligibility. | #302 |
-| 109 | Alumni profile edit | Alumni could mutate chapter affiliation | guarded-for-pilot | QALS-03 protects membership affiliation. | #302 |
-| 110 | Alumni history | Attendance history not preserved/displayed | deferred-alumni | Alumni deferred. | #302 |
-| 111 | Alumni trajectory | Missing journey/trajectory content | deferred-alumni | Alumni deferred. | #302 |
-| 112 | Alumni re-engagement | Missing institutional re-engagement channel | deferred-alumni | Alumni deferred. | #302 |
+| 103 | Alumni nav | Alumni sidebar label contradiction | deferred-alumni | Alumni is deferred as a full product experience; no dedicated Alumni dashboard ships in the active launch. | #302 |
+| 104 | Alumni chapter card | Alumni position/status semantics unclear | deferred-alumni | Alumni is treated as historical membership state, not active chapter leadership. | #302 |
+| 105 | Alumni ID | Member ID pending copy wrong for alumni | deferred-alumni | Existing Member IDs should remain historical; future copy must avoid pending active-member activation language. | #302 |
+| 106 | Alumni profile | Generic/new-member profile messages | deferred-alumni | Alumni profile copy and identity treatment are deferred to Alumni scope. | #302 |
+| 107 | Alumni privacy | Visibility copy inappropriate | deferred-alumni | Alumni company/recruiter visibility is explicitly deferred until Alumni and company scope are approved together. | #302 |
+| 108 | Alumni eligibility | Alumni could register for active-member-only events | guarded-for-pilot | Launch default blocks active-member-only eligibility; public-event participation may follow public participant rules when the event is open. | #302 |
+| 109 | Alumni profile edit | Alumni could mutate chapter affiliation | guarded-for-pilot | QALS-03 protects membership affiliation; Alumni should not self-edit chapter affiliation, position, or Member ID. | #302 |
+| 110 | Alumni history | Attendance history not preserved/displayed | deferred-alumni | Attendance history and participation timeline are deferred Alumni product areas. | #302 |
+| 111 | Alumni trajectory | Missing journey/trajectory content | deferred-alumni | Professional trajectory/journey content is deferred to Alumni scope. | #302 |
+| 112 | Alumni re-engagement | Missing institutional re-engagement channel | deferred-alumni | Alumni re-engagement workflows are deferred and require leadership approval before implementation. | #302 |
 
 ## Follow-Up Order
 
