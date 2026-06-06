@@ -1347,3 +1347,13 @@ p { font-size: var(--fluid-body); line-height: 1.7; font-family: var(--font-mont
     font-family: inherit;
   }
 }
+
+p.text-xs,
+span.text-xs,
+div.text-xs {
+  font-family: var(--md-sys-typescale-body-small-font-family);
+  font-size: var(--md-sys-typescale-body-small-font-size);
+  line-height: var(--md-sys-typescale-body-small-line-height);
+  font-weight: var(--md-sys-typescale-body-small-font-weight);
+  letter-spacing: var(--md-sys-typescale-body-small-letter-spacing);
+}
