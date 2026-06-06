@@ -91,11 +91,15 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         {...props}
       >
-        <span className="inline-flex min-w-0 w-full items-center justify-[inherit] gap-2 [&>svg]:shrink-0">
-          {icon && iconPosition === "left" && <span className="shrink-0">{icon}</span>}
-          {children}
-          {icon && iconPosition === "right" && <span className="shrink-0">{icon}</span>}
-        </span>
+        {icon ? (
+          <span className="inline-flex min-w-0 items-center justify-center gap-2 [&>svg]:shrink-0">
+            {iconPosition === "left" && <span className="shrink-0">{icon}</span>}
+            {children}
+            {iconPosition === "right" && <span className="shrink-0">{icon}</span>}
+          </span>
+        ) : (
+          children
+        )}
       </Comp>
     )
   }
