@@ -15,7 +15,7 @@ export default async function StudentResumePage() {
       <PageHeader
         eyebrow="Mi LEAD"
         title="Mi CV"
-        description="Mantén actualizado tu CV para futuras oportunidades autorizadas. Solo se usa cuando tu preferencia profesional lo permite."
+        description="Sube un PDF actualizado para mantener tu perfil listo. LEAD solo lo usa en oportunidades autorizadas por tu configuración profesional."
         badge={
           resume ? (
             <Badge variant="success" size="lg">
@@ -35,13 +35,11 @@ export default async function StudentResumePage() {
         </div>
 
         <aside className="space-y-4 xl:sticky xl:top-6 xl:col-span-4">
-          <Card>
+          <Card className="rounded-lg">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                  <Icons.Crown className="h-4 w-4 text-primary" />
-                </span>
-                Consejos rápidos
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Icons.FileText className="h-5 w-5 text-primary" />
+                Revisión rápida
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -54,19 +52,17 @@ export default async function StudentResumePage() {
                 ].map((tip) => (
                   <li key={tip} className="flex gap-3">
                     <Icons.CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                    <span className="text-sm leading-relaxed text-muted-foreground">{tip}</span>
+                    <span className="text-sm leading-6 text-muted-foreground">{tip}</span>
                   </li>
                 ))}
               </ul>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="rounded-lg">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-info/10">
-                  <Icons.BookOpen className="h-4 w-4 text-info" />
-                </span>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Icons.BookOpen className="h-5 w-5 text-info" />
                 Recursos
               </CardTitle>
             </CardHeader>
