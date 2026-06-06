@@ -134,6 +134,65 @@ export type Database = {
           },
         ]
       }
+      chapter_activation_interest: {
+        Row: {
+          created_at: string
+          id: string
+          interested_people_context: string
+          lead_value: string
+          long_term_commitment: string
+          motivation: string
+          opportunities: string
+          review_notes: string | null
+          status: string
+          team_status: string
+          university_context: string
+          university_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          interested_people_context: string
+          lead_value: string
+          long_term_commitment: string
+          motivation: string
+          opportunities: string
+          review_notes?: string | null
+          status?: string
+          team_status: string
+          university_context: string
+          university_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          interested_people_context?: string
+          lead_value?: string
+          long_term_commitment?: string
+          motivation?: string
+          opportunities?: string
+          review_notes?: string | null
+          status?: string
+          team_status?: string
+          university_context?: string
+          university_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chapter_activation_interest_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chapter_membership: {
         Row: {
           approved_by_id: string | null

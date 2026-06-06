@@ -102,6 +102,9 @@ export type UserRow = Database["public"]["Tables"]["user"]["Row"];
 export type ChapterRow = Database["public"]["Tables"]["chapter"]["Row"];
 
 export type PersonProfileRow = Database["public"]["Tables"]["person_profile"]["Row"];
+export type ChapterActivationInterestRow = Database["public"]["Tables"]["chapter_activation_interest"]["Row"];
+export type ChapterActivationInterestInsert = Database["public"]["Tables"]["chapter_activation_interest"]["Insert"];
+export type ChapterActivationInterestUpdate = Database["public"]["Tables"]["chapter_activation_interest"]["Update"];
 export type ChapterMembershipRow = Database["public"]["Tables"]["chapter_membership"]["Row"];
 export type ChapterRoleAssignmentRow = Database["public"]["Tables"]["chapter_role_assignment"]["Row"];
 export type LeadIdentityRow = Database["public"]["Tables"]["lead_identity"]["Row"];
