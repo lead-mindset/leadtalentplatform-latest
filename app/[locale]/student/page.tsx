@@ -697,7 +697,9 @@ async function StudentDashboardDetails({
         {pathwayFlags.enable_recommendation_card ? (
           <PathwayGuidanceCard guidance={pathwayGuidance} />
         ) : null}
-        <ChapterActivationInterestCard latestInterest={latestActivationInterest} />
+        {dashboard.status === 'participant' ? (
+          <ChapterActivationInterestCard latestInterest={latestActivationInterest} />
+        ) : null}
         <ParticipantApplicationCard dashboard={dashboard} chapterOptions={chapterOptions} />
         <ProfileReadinessCard dashboard={dashboard} />
       </div>
