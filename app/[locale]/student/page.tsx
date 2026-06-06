@@ -27,6 +27,7 @@ import {
   type StudentActivationDashboard,
   type StudentDashboardChapterOption,
 } from '@/lib/services/student-dashboard.service'
+import type { ChapterActivationInterestRow } from '@/lib/types'
 import {
   type PathwayDashboardGuidance,
 } from '@/lib/services/pathway-check-in.service'
@@ -34,8 +35,10 @@ import {
   type GrowthReflectionProgress,
 } from '@/lib/services/growth-reflection.service'
 import { ChapterApplicationCard } from './_components/chapter-application-card'
+import { ChapterActivationInterestCard } from './_components/chapter-activation-interest-card'
 import { getStudentDashboardSecondaryData } from '@/lib/actions/student/dashboard'
 import { presentLaunchEventTitle, presentLaunchProfileFocus } from '@/lib/launch-copy'
+import { ChapterActivationInterestService } from '@/lib/services/chapter-activation-interest.service'
 
 type ParticipantApplicationCardProps = {
   dashboard: StudentActivationDashboard
@@ -669,9 +672,14 @@ function StudentDashboardDetailsSkeleton() {
 async function StudentDashboardDetails({
   userId,
   dashboard,
+  latestActivationInterest,
 }: {
   userId: string
   dashboard: StudentActivationDashboard
+  latestActivationInterest: Pick<
+    ChapterActivationInterestRow,
+    'id' | 'status' | 'university_name' | 'created_at'
+  > | null
 }) {
   const {
     pathwayFlags,
@@ -683,13 +691,13 @@ async function StudentDashboardDetails({
     chapterId: dashboard.membership?.chapter_id ?? null,
     status: dashboard.status,
   })
-
   return (
     <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
       <div className="space-y-6">
         {pathwayFlags.enable_recommendation_card ? (
           <PathwayGuidanceCard guidance={pathwayGuidance} />
         ) : null}
+        <ChapterActivationInterestCard latestInterest={latestActivationInterest} />
         <ParticipantApplicationCard dashboard={dashboard} chapterOptions={chapterOptions} />
         <ProfileReadinessCard dashboard={dashboard} />
       </div>
@@ -707,6 +715,10 @@ async function StudentDashboardDetails({
 export default async function StudentDashboard() {
   const { supabase, user } = await requireUser()
   const dashboard = await StudentDashboardService.getActivationDashboard(supabase, user.id)
+  const latestActivationInterest = await ChapterActivationInterestService.getLatestForUser(
+    supabase,
+    user.id
+  )
   const content = STATUS_CONTENT[dashboard.status]
   const StatusIcon = content.icon
 
@@ -742,7 +754,11 @@ export default async function StudentDashboard() {
       </Card>
 
       <Suspense fallback={<StudentDashboardDetailsSkeleton />}>
-        <StudentDashboardDetails userId={user.id} dashboard={dashboard} />
+        <StudentDashboardDetails
+          userId={user.id}
+          dashboard={dashboard}
+          latestActivationInterest={latestActivationInterest}
+        />
       </Suspense>
     </MainContainer>
   )
