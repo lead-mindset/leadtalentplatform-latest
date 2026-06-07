@@ -65,9 +65,9 @@ export function MembersList({
     try {
       const result = await approveMembersBulk(selectedUserIds)
       if ('error' in result) {
-        const message = result.error || 'No se pudo aprobar miembros en bloque'
+        const message = result.error || 'No se pudo aprobar a los miembros en bloque'
         toast.error(message)
-        setFeedback({ type: 'error', title: 'La aprobacion en bloque fallo', message })
+        setFeedback({ type: 'error', title: 'La aprobación en bloque falló', message })
         return
       }
 
@@ -89,9 +89,9 @@ export function MembersList({
       setSelectedUserIds([])
       router.refresh()
     } catch {
-      const message = 'Ocurrio un error inesperado al aprobar miembros'
+      const message = 'Ocurrió un error inesperado al aprobar miembros'
       toast.error(message)
-      setFeedback({ type: 'error', title: 'La aprobacion en bloque fallo', message })
+      setFeedback({ type: 'error', title: 'La aprobación en bloque falló', message })
     } finally {
       setIsSubmitting(false)
     }
@@ -123,7 +123,7 @@ export function MembersList({
             </Button>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            La aprobacion en bloque solo incluye postulantes pendientes con perfil basico completo. La autorizacion del mismo capitulo sigue protegida por el servicio.
+            La aprobación en bloque solo incluye postulantes pendientes con perfil básico completo. La autorización del mismo capítulo sigue protegida por el servicio.
           </p>
         </div>
       )}

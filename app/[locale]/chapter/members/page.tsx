@@ -1,7 +1,10 @@
 import { requireChapterMember } from '@/lib/auth'
-import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
+import { Breadcrumb } from '@/components/ui/breadcrumb'
+import { MainContainer } from '@/components/global/main-container'
 import { Icons } from '@/components/ui/icons'
+import { PageHeader } from '@/components/ui/page-header'
 import type { MemberWithProfile } from '@/lib/types'
 import {
   getChapterEboardInvites,
@@ -10,12 +13,9 @@ import {
   getMemberStats,
 } from '@/lib/actions/chapter/get-data'
 import type { ChapterMemberPermissionFlags } from '@/lib/services/chapter.service'
-import { MembersList } from './components/members-list'
-import { Breadcrumb } from '@/components/ui/breadcrumb'
-import { MainContainer } from '@/components/global/main-container'
-import { MembersTabs, type MemberStatusCounts } from './components/member-tabs'
-import { PageHeader } from '@/components/ui/page-header'
 import { EboardInviteManagement } from './components/eboard-invite-management'
+import { MembersList } from './components/members-list'
+import { MembersTabs, type MemberStatusCounts } from './components/member-tabs'
 
 export type MemberFilterStatus = 'pending' | 'active' | 'rejected' | 'inactive' | 'alumni'
 
@@ -76,9 +76,9 @@ export default async function ChapterMembersPage({
             <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-warning/10">
               <Icons.AlertCircle className="h-5 w-5 text-warning" />
             </div>
-          <h1 className="text-xl font-semibold">Sin capítulo asignado</h1>
+            <h1 className="text-xl font-semibold">Sin capítulo asignado</h1>
             <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-          No tienes un capítulo asignado. Contacta a una persona administradora.
+              No tienes un capítulo asignado. Contacta a una persona administradora.
             </p>
           </CardContent>
         </Card>
@@ -97,7 +97,7 @@ export default async function ChapterMembersPage({
             </div>
             <h1 className="text-xl font-semibold">Sin permisos de miembros</h1>
             <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-          Tu rol de capítulo no tiene permisos para ver esta lista.
+              Tu rol de capítulo no tiene permisos para ver esta lista.
             </p>
           </CardContent>
         </Card>
@@ -156,7 +156,7 @@ export default async function ChapterMembersPage({
               </div>
               <h2 className="text-lg font-semibold">No hay miembros en esta vista</h2>
               <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-                Cambia el filtro de estado para revisar otros registros de membresia.
+                Cambia el filtro de estado para revisar otros registros de membresía.
               </p>
             </CardContent>
           </Card>

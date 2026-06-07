@@ -37,7 +37,7 @@ export function MemberActionButtons({
         toast.error(result.error || 'No se pudo aprobar al miembro')
       }
     } catch {
-      toast.error('Ocurrio un error inesperado')
+      toast.error('Ocurrió un error inesperado')
     } finally {
       setIsLoading(false)
     }
@@ -48,7 +48,7 @@ export function MemberActionButtons({
     try {
       const result = await rejectMember(userId, rejectReason || undefined)
       if (result.success) {
-        toast.success(`La postulacion de ${userName} fue rechazada`)
+        toast.success(`La postulación de ${userName} fue rechazada`)
         setShowRejectReason(false)
         setRejectReason('')
         router.refresh()
@@ -56,7 +56,7 @@ export function MemberActionButtons({
         toast.error(result.error || 'No se pudo rechazar al miembro')
       }
     } catch {
-      toast.error('Ocurrio un error inesperado')
+      toast.error('Ocurrió un error inesperado')
     } finally {
       setIsLoading(false)
     }
@@ -65,7 +65,7 @@ export function MemberActionButtons({
   async function handleRevoke() {
     const reason = revokeReason.trim()
     if (!reason) {
-      toast.error('Ingresa un motivo para revocar la membresia')
+      toast.error('Ingresa un motivo para revocar la membresía')
       return
     }
 
@@ -78,10 +78,10 @@ export function MemberActionButtons({
         setRevokeReason('')
         router.refresh()
       } else {
-        toast.error(result.error || 'No se pudo revocar la membresia')
+        toast.error(result.error || 'No se pudo revocar la membresía')
       }
     } catch {
-      toast.error('Ocurrio un error inesperado')
+      toast.error('Ocurrió un error inesperado')
     } finally {
       setIsLoading(false)
     }
@@ -122,7 +122,7 @@ export function MemberActionButtons({
               rows={3}
             />
             <p className="text-xs text-muted-foreground">
-              Esta nota queda interna. La persona postulante puede volver a revision si se mueve a pendiente.
+              Esta nota queda interna. La persona postulante puede volver a revisión si se mueve a pendiente.
             </p>
             <Button
               onClick={handleReject}
@@ -152,14 +152,14 @@ export function MemberActionButtons({
         className="w-full"
       >
         <XCircle className="mr-2 h-4 w-4" />
-        Revocar membresia
+        Revocar membresía
       </Button>
       {showRevokeReason ? (
         <div className="space-y-2">
           <Textarea
             value={revokeReason}
             onChange={(event) => setRevokeReason(event.target.value)}
-            placeholder="Motivo requerido para auditoria interna"
+            placeholder="Motivo requerido para auditoría interna"
             rows={3}
           />
           <Button
@@ -173,7 +173,7 @@ export function MemberActionButtons({
             ) : (
               <XCircle className="mr-2 h-4 w-4" />
             )}
-            Confirmar revocacion
+            Confirmar revocación
           </Button>
         </div>
       ) : null}

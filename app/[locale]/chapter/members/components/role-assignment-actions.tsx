@@ -149,7 +149,7 @@ export function RoleAssignmentActions({ targetUserId, targetName, assignment }: 
               <DialogHeader>
                 <DialogTitle>Asignar rol e-board</DialogTitle>
                 <DialogDescription>
-                  Define el nivel, area y titulo visible para {targetName}.
+                  Define el nivel, área y título visible para {targetName}.
                 </DialogDescription>
               </DialogHeader>
 
@@ -171,7 +171,7 @@ export function RoleAssignmentActions({ targetUserId, targetName, assignment }: 
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Area funcional</Label>
+                  <Label>Área funcional</Label>
                   <Select value={functionalArea} onValueChange={(value) => setFunctionalArea(value as ChapterFunctionalArea)}>
                     <SelectTrigger className="w-full">
                       <SelectValue />
@@ -187,11 +187,11 @@ export function RoleAssignmentActions({ targetUserId, targetName, assignment }: 
                 </div>
 
                 <Input
-                  label="Titulo visible"
+                  label="Título visible"
                   value={displayTitle}
                   onChange={(event) => setDisplayTitle(event.target.value)}
                   placeholder="Ej. Directora de Marketing"
-                  helperText="Este titulo aparece en la plataforma; el nivel normalizado se usa para permisos."
+                  helperText="Este título aparece en la plataforma; el nivel normalizado se usa para permisos."
                 />
               </div>
 
@@ -219,13 +219,13 @@ export function RoleAssignmentActions({ targetUserId, targetName, assignment }: 
                 <DialogHeader>
                   <DialogTitle>Retirar rol e-board</DialogTitle>
                   <DialogDescription>
-                    La membresia seguira aprobada. Solo se desactivara el rol y sus permisos.
+                    La membresía seguirá aprobada. Solo se desactivará el rol y sus permisos.
                   </DialogDescription>
                 </DialogHeader>
                 <Textarea
                   value={removeReason}
                   onChange={(event) => setRemoveReason(event.target.value)}
-                  placeholder="Motivo requerido para auditoria interna"
+                  placeholder="Motivo requerido para auditoría interna"
                   rows={4}
                 />
                 <DialogFooter>
