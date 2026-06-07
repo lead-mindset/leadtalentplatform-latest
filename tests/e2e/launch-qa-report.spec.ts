@@ -45,6 +45,16 @@ function slug(value: string) {
     .slice(0, 120)
 }
 
+function isKnownDevPerformanceMeasureError(message: string) {
+  // Next dev instrumentation can emit this during fast server-layout redirects.
+  // Keep the filter exact so app-origin exceptions still fail launch QA.
+  return (
+    /Failed to execute 'measure' on 'Performance'/.test(message) &&
+    /cannot have a negative time stamp/.test(message) &&
+    /\u200B?(ChapterLayout|CompanyLayout|StudentLayout|CompanyPage)/.test(message)
+  )
+}
+
 async function firstVisible(locator: Locator): Promise<Locator | null> {
   const count = await locator.count()
   for (let index = 0; index < count; index += 1) {
@@ -90,6 +100,8 @@ class LaunchQaCollector {
     })
 
     this.page.on('pageerror', (error) => {
+      if (isKnownDevPerformanceMeasureError(error.message)) return
+
       this.addFinding('major', 'Uncaught browser exception', {
         expected: 'No uncaught JavaScript exceptions during launch flows.',
         actual: error.message,
