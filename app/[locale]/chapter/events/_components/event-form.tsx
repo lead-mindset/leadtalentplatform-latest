@@ -646,11 +646,11 @@ export function EventForm({
       if (!pathwayStudentGoal) { errors.pathway_student_goal = 'Selecciona el objetivo del estudiante'; isValid = false }
       if (pathwayGrowthStageFit.length === 0) { errors.pathway_growth_stage_fit = 'Selecciona al menos una etapa Pathway'; isValid = false }
       if (pathwayStudentOutcomes.length === 0) { errors.pathway_student_outcomes = 'Selecciona al menos un resultado esperado'; isValid = false }
-      if (!pathwayProofOutcome) { errors.pathway_proof_outcome = 'Selecciona que puede capturar el estudiante despues'; isValid = false }
+      if (!pathwayProofOutcome) { errors.pathway_proof_outcome = 'Selecciona qué puede capturar el estudiante después'; isValid = false }
       if (!pathwayAudience) { errors.pathway_audience = 'Selecciona para quien es este evento'; isValid = false }
       if (!pathwayCtaType) { errors.pathway_cta_type = 'Selecciona el boton que vera el estudiante'; isValid = false }
       if (accessModel === 'application' && pathwayCtaType && pathwayCtaType !== 'apply') {
-        errors.pathway_cta_type = 'Los eventos con postulacion deben usar CTA de postular'
+        errors.pathway_cta_type = 'Los eventos con postulación deben usar CTA de postular'
         isValid = false
       }
     }
@@ -1337,7 +1337,7 @@ export function EventForm({
               <div className="space-y-1">
                 <div className="text-xl font-semibold">Recomendar este evento a estudiantes</div>
                 <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
-                  Pathway ayuda a estudiantes a encontrar su siguiente mejor accion en LEAD. Activalo solo si este evento tiene un beneficio claro para ellos.
+                  Pathway ayuda a estudiantes a encontrar su siguiente mejor acción en LEAD. Actívalo solo si este evento tiene un beneficio claro para ellos.
                 </p>
               </div>
             </div>
@@ -1478,7 +1478,7 @@ export function EventForm({
             </div>
             <div>
               <div className="text-xl font-semibold">Como se recomendara este evento</div>
-              <div className="text-sm text-muted-foreground">Define lo que vera el estudiante y que puede capturar despues.</div>
+              <div className="text-sm text-muted-foreground">Define lo que verá el estudiante y qué puede capturar después.</div>
             </div>
           </div>
 
@@ -1517,7 +1517,7 @@ export function EventForm({
                     aria-label="Boton que vera el estudiante"
                     className={fieldErrors.pathway_cta_type ? 'border-destructive focus:ring-destructive' : ''}
                   >
-                    <SelectValue placeholder={accessModel === 'application' ? 'Postular' : 'Selecciona accion'} />
+                    <SelectValue placeholder={accessModel === 'application' ? 'Postular' : 'Selecciona acción'} />
                   </SelectTrigger>
                   <SelectContent>
                     {availableCtaOptions.map((option) => (
@@ -1530,14 +1530,14 @@ export function EventForm({
             </div>
 
             <div className="space-y-2">
-              <FieldLabel required={pathwayEligible}>Que puede capturar despues</FieldLabel>
+              <FieldLabel required={pathwayEligible}>Qué puede capturar después</FieldLabel>
               <Select
                 value={pathwayProofOutcome}
                 disabled={pathwayDisabled}
                 onValueChange={(value) => setPathwayProofOutcome(value as LeadProofOutcomeKey)}
               >
                 <SelectTrigger
-                  aria-label="Que puede capturar despues"
+                  aria-label="Qué puede capturar después"
                   className={fieldErrors.pathway_proof_outcome ? 'border-destructive focus:ring-destructive' : ''}
                 >
                   <SelectValue placeholder="Selecciona que puede capturar" />
@@ -1873,8 +1873,8 @@ export function EventForm({
                       <div className="text-xs leading-relaxed text-muted-foreground">Activala solo si el evento tiene un beneficio y siguiente paso claros para estudiantes.</div>
                     </li>
                     <li className="space-y-1">
-                      <div className="text-sm font-semibold">Postulacion clara</div>
-                      <div className="text-xs leading-relaxed text-muted-foreground">Si el evento requiere postulacion, el boton del estudiante debe pedir postular, no prometer cupo.</div>
+                      <div className="text-sm font-semibold">Postulación clara</div>
+                      <div className="text-xs leading-relaxed text-muted-foreground">Si el evento requiere postulación, el botón del estudiante debe pedir postular, no prometer cupo.</div>
                     </li>
                   </>
                 )}

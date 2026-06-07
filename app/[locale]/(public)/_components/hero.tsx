@@ -24,7 +24,7 @@ export function Hero({ locale }: HeroProps) {
         titleLead: "Impulsa tu camino en",
         highlight: "la comunidad LEAD.",
         body:
-          "Crea tu perfil, participa en eventos y conecta con tu capitulo cuando estes listo. LEAD reune estudiantes, lideres y oportunidades en una sola comunidad.",
+          "Crea tu perfil, participa en eventos y conecta con tu capítulo cuando estés listo. LEAD reúne estudiantes, líderes y oportunidades en una sola comunidad.",
         primary: "Crear perfil",
         primaryHref: "/auth/sign-up",
         secondary: "Explorar eventos",

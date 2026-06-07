@@ -90,7 +90,7 @@ async function ActivityLog() {
             <Activity className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <p className="text-muted-foreground">Todavia no hay actividad</p>
             <p className="text-sm text-muted-foreground mt-2">
-              Los eventos del sistema apareceran aqui
+              Los eventos del sistema aparecerán aquí
             </p>
           </div>
         ) : (
@@ -172,7 +172,7 @@ export default function AdminActivityPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="Administracion"
+        eyebrow="Administración"
         title="Actividad del sistema"
         description="Bitacora de eventos recientes de la plataforma y acciones administrativas."
       />

@@ -43,7 +43,7 @@ const DIRECTORY_COPY = {
     viewChapter: 'Ver chapter',
     emptyTitle: 'Aun no hay chapters publicos disponibles',
     emptyBody:
-      'Los chapters apareceran aqui cuando su informacion publica este lista para revision.',
+      'Los chapters aparecerán aquí cuando su información pública esté lista para revisión.',
     loading: 'Cargando chapters...',
   },
 } as const

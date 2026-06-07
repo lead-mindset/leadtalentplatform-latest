@@ -44,7 +44,7 @@ export function RegistrationCard({
       await onRegister()
       toast.success(
         requiresApplication 
-          ? "Postulacion enviada correctamente."
+          ? "Postulación enviada correctamente."
           : "Registro confirmado. Revisa tu correo para mas detalles."
       )
     } catch (error) {
@@ -57,7 +57,7 @@ export function RegistrationCard({
   const getCtaLabel = () => {
     if (isPast) return "Evento finalizado"
     if (isRegistered) return "Registrado"
-    if (registrationStatus === "pending") return "En revision"
+    if (registrationStatus === "pending") return "En revisión"
     if (registrationStatus === "rejected") return "No seleccionado"
     if (requiresApplication) return "Postular"
     return "Registrarme"
@@ -145,7 +145,7 @@ export function RegistrationCard({
       {}
       {requiresApplication && !isRegistered && !isPast && (
         <p className="text-xs text-muted-foreground text-center">
-          Este evento requiere postulacion. Te avisaremos cuando termine la revision.
+          Este evento requiere postulación. Te avisaremos cuando termine la revisión.
         </p>
       )}
     </Card>

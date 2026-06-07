@@ -70,7 +70,7 @@ export function ApplyModal({
     const nextErrors: Record<string, string> = {}
 
     if (questions.length === 0) {
-      nextErrors._form = 'Este evento aun no tiene preguntas de postulacion configuradas.'
+      nextErrors._form = 'Este evento aún no tiene preguntas de postulación configuradas.'
     }
 
     for (const question of questions) {
@@ -150,7 +150,7 @@ export function ApplyModal({
         <DialogHeader className="pb-4">
           <DialogTitle className="text-xl font-semibold">Postular a {eventTitle}</DialogTitle>
           <DialogDescription>
-            Responde estas preguntas dentro de LEAD. Tu postulacion quedara en revision.
+            Responde estas preguntas dentro de LEAD. Tu postulación quedará en revisión.
           </DialogDescription>
         </DialogHeader>
 
@@ -245,7 +245,7 @@ export function ApplyModal({
               className="mt-0.5"
             />
             <span className="text-sm text-muted-foreground">
-              Enviarme novedades del capitulo anfitrion y capitulos colaboradores de este evento.
+              Enviarme novedades del capítulo anfitrión y capítulos colaboradores de este evento.
             </span>
           </label>
         </div>
@@ -261,7 +261,7 @@ export function ApplyModal({
                 Enviando
               </>
             ) : (
-              'Enviar postulacion'
+              'Enviar postulación'
             )}
           </Button>
         </DialogFooter>

@@ -53,14 +53,14 @@ const STATUS_CONTENT = {
   participant: {
     badge: 'Participante',
     title: 'Tu perfil de participante LEAD esta listo.',
-    body: 'Ya puedes explorar eventos publicos. Si eres parte de un capitulo o quieres unirte, envia una solicitud para revision.',
+    body: 'Ya puedes explorar eventos públicos. Si eres parte de un capítulo o quieres unirte, envía una solicitud para revisión.',
     badgeVariant: 'info' as const,
     icon: Users,
   },
   pending: {
-    badge: 'En revision',
-    title: 'Tu solicitud de capitulo esta en revision.',
-    body: 'El equipo del capitulo puede revisar tu solicitud. Mientras esperas, manten tu perfil actualizado y registrate a eventos publicos.',
+    badge: 'En revisión',
+    title: 'Tu solicitud de capítulo está en revisión.',
+    body: 'El equipo del capítulo puede revisar tu solicitud. Mientras esperas, mantén tu perfil actualizado y regístrate a eventos públicos.',
     badgeVariant: 'warning' as const,
     icon: Clock3,
   },
@@ -74,7 +74,7 @@ const STATUS_CONTENT = {
   alumni: {
     badge: 'Alumni',
     title: 'Tu estado Alumni esta registrado.',
-    body: 'Alumni queda fuera del primer lanzamiento activo. Tu perfil se mantiene editable, pero la experiencia Alumni completa se definira despues.',
+    body: 'Alumni queda fuera del primer lanzamiento activo. Tu perfil se mantiene editable, pero la experiencia Alumni completa se definirá después.',
     badgeVariant: 'secondary' as const,
     icon: IdCard,
   },
@@ -111,8 +111,8 @@ function ProfileReadinessCard({ dashboard }: { dashboard: StudentActivationDashb
       <CardContent className="space-y-4">
         <p className="text-sm leading-6 text-muted-foreground">
           {dashboard.hasProfile
-            ? 'Tu perfil basico esta listo para registros a eventos y revision de capitulo.'
-            : 'Completa tu perfil basico antes de postular a un capitulo o registrarte a eventos.'}
+            ? 'Tu perfil básico está listo para registros a eventos y revisión de capítulo.'
+            : 'Completa tu perfil básico antes de postular a un capítulo o registrarte a eventos.'}
         </p>
         <div className="grid gap-3 text-sm sm:grid-cols-2">
           <div className="rounded-lg border border-border/70 bg-muted/25 p-3">
@@ -142,7 +142,7 @@ function MembershipDetailsCard({ dashboard }: { dashboard: StudentActivationDash
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <IdCard className="h-5 w-5 text-primary" />
-          Estado de capitulo
+          Estado de capítulo
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -153,7 +153,7 @@ function MembershipDetailsCard({ dashboard }: { dashboard: StudentActivationDash
                 {membership.chapter?.name ?? membership.chapter_id}
               </p>
               <p className="mt-1 text-sm text-muted-foreground">
-                {membership.chapter?.university ?? 'Detalles del capitulo'}
+                {membership.chapter?.university ?? 'Detalles del capítulo'}
               </p>
             </div>
             <div className="grid gap-3 text-sm sm:grid-cols-2">
@@ -166,14 +166,14 @@ function MembershipDetailsCard({ dashboard }: { dashboard: StudentActivationDash
                 <p className="mt-1 text-muted-foreground">
                   {dashboard.status === 'official_member' && membership.member_id
                     ? membership.member_id
-                    : 'Disponible despues de la aprobacion'}
+                    : 'Disponible después de la aprobación'}
                 </p>
               </div>
             </div>
           </div>
         ) : (
           <p className="text-sm leading-6 text-muted-foreground">
-            Aun no tienes una solicitud de capitulo. Al postular, se crea una solicitud pendiente
+            Aún no tienes una solicitud de capítulo. Al postular, se crea una solicitud pendiente
             para que el equipo la revise.
           </p>
         )}
@@ -195,7 +195,7 @@ function ParticipantApplicationCard({
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Users className="h-5 w-5 text-primary" />
-          Unirte a un capitulo
+          Unirte a un capítulo
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -209,7 +209,7 @@ function ParticipantApplicationCard({
           </Alert>
         ) : null}
         <p className="text-sm leading-6 text-muted-foreground">
-          Envia una solicitud cuando estes listo. Quedara pendiente hasta que el equipo del capitulo
+          Envía una solicitud cuando estés listo. Quedará pendiente hasta que el equipo del capítulo
           la revise.
         </p>
         {chapterOptionsLoadState === 'unavailable' ? (
@@ -313,7 +313,7 @@ const RECOMMENDATION_CTA_LABELS: Record<string, string> = {
 const EVIDENCE_SIGNAL_LABELS: Record<string, string> = {
   event_registration: 'registro',
   event_attendance: 'asistencia',
-  application_submitted: 'postulacion',
+  application_submitted: 'postulación',
   reflection_completed: 'reflexion',
   proof_submitted: 'evidencia',
   certificate_earned: 'certificado',
@@ -427,7 +427,7 @@ function getMatchedReasons(value: unknown) {
 const RECOMMENDATION_COPY_LABELS: Record<string, string> = {
   'QA Pathway Event: AI Career Sprint': 'Evento QA Pathway: Sprint de carrera en IA',
   'Register for the LEAD AI Career Sprint and capture one practical learning afterward.':
-    'Registrate al sprint de carrera en IA de LEAD y captura un aprendizaje practico despues.',
+    'Regístrate al sprint de carrera en IA de LEAD y captura un aprendizaje práctico después.',
   'Matched because your focus is opportunity readiness and the event is ready to recommend.':
     'Aparece porque tu enfoque es preparacion para oportunidades y el evento esta listo para recomendarse.',
   'Refresh your LEAD profile': 'Actualiza tu perfil LEAD',
@@ -459,7 +459,7 @@ function PathwayGuidanceCard({ guidance }: { guidance: PathwayDashboardGuidance 
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Route className="h-5 w-5 text-primary" />
-            Tus proximos pasos
+            Tus próximos pasos
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -480,7 +480,7 @@ function PathwayGuidanceCard({ guidance }: { guidance: PathwayDashboardGuidance 
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Sparkles className="h-5 w-5 text-primary" />
-          Tus proximos tres movimientos
+          Tus próximos tres movimientos
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
@@ -792,7 +792,7 @@ export default async function StudentDashboard() {
             <p className="text-sm leading-6 text-muted-foreground">
               {dashboard.membership?.chapter?.name
                 ? `${dashboard.membership.chapter.name} - ${dashboard.membership.chapter.university}`
-                : 'Tu actividad de eventos y capitulos aparecera aqui cuando uses la plataforma.'}
+                : 'Tu actividad de eventos y capítulos aparecerá aquí cuando uses la plataforma.'}
             </p>
           </div>
         </CardContent>

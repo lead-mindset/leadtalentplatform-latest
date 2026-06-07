@@ -146,7 +146,7 @@ export function EventRegistrationCheckout({
       {!isLoggedIn ? (
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Inicia sesion para registrarte y recibir tu codigo QR de check-in.
+            Inicia sesión para registrarte y recibir tu código QR de check-in.
           </p>
           <Button asChild className="w-full">
             <Link href={loginUrl}>Iniciar sesion</Link>
@@ -178,7 +178,7 @@ export function EventRegistrationCheckout({
             <p className="text-sm text-muted-foreground">La cancelacion no esta disponible.</p>
           )}
           <Button asChild className="w-full">
-            <Link href={qrHref}>Ver mi codigo QR</Link>
+            <Link href={qrHref}>Ver mi código QR</Link>
           </Button>
         </div>
       ) : (
@@ -194,7 +194,7 @@ export function EventRegistrationCheckout({
               className="mt-0.5"
             />
             <span className="text-muted-foreground">
-              Enviarme novedades del capitulo anfitrion y capitulos colaboradores de este evento.
+              Enviarme novedades del capítulo anfitrión y capítulos colaboradores de este evento.
             </span>
           </label>
 
@@ -207,7 +207,7 @@ export function EventRegistrationCheckout({
               <div className="rounded-lg border border-success/30 bg-success/10 p-3" role="status">
                 <p className="text-sm font-semibold text-foreground">Registro confirmado</p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Estamos abriendo tu codigo QR. Tambien puedes agregar el evento a tu calendario.
+                  Estamos abriendo tu código QR. También puedes agregar el evento a tu calendario.
                 </p>
                 <EventCalendarActions event={calendarEvent} layout="stack" className="mt-3" />
               </div>

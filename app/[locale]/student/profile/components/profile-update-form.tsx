@@ -51,9 +51,9 @@ export default function ProfileUpdateForm({
   const chapterLabel =
     translatedChapters.find((option) => option.value === initialData.lead_chapter)?.label ||
     initialData.lead_chapter ||
-    'Sin capitulo asignado'
+    'Sin capítulo asignado'
   const membershipStatusLabels: Record<NonNullable<ProfileData['approvalStatus']>, string> = {
-    pending: 'Pendiente de revision',
+    pending: 'Pendiente de revisión',
     approved: 'Miembro aprobado',
     rejected: 'Solicitud rechazada',
     alumni: 'Alumni',
@@ -159,13 +159,13 @@ export default function ProfileUpdateForm({
               </code>
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              Este identificador solo aparece cuando tu membresia de capitulo esta aprobada.
+              Este identificador solo aparece cuando tu membresía de capítulo está aprobada.
             </p>
           </div>
         ) : initialData.approvalStatus === 'pending' && (
           <div className="rounded-lg bg-muted p-4">
             <p className="text-sm text-muted-foreground">
-              Tu identificador de miembro se asigna despues de aprobar tu solicitud de capitulo.
+              Tu identificador de miembro se asigna después de aprobar tu solicitud de capítulo.
             </p>
           </div>
         )}
@@ -239,7 +239,7 @@ export default function ProfileUpdateForm({
                   </p>
                   <p className="text-base font-semibold text-foreground">{chapterLabel}</p>
                   <p className="text-xs leading-relaxed text-muted-foreground">
-                    Tu capitulo y estado de membresia se gestionan mediante revision del equipo.
+                    Tu capítulo y estado de membresía se gestionan mediante revisión del equipo.
                     Si necesitas corregirlo, contacta a tu chapter leader o a operaciones.
                   </p>
                 </div>

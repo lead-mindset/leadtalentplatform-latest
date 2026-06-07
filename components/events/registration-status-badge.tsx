@@ -15,7 +15,7 @@ interface RegistrationStatusBadgeProps {
 const statusConfig = {
   pending_review: {
     icon: Icons.Clock,
-    label: 'En revision',
+    label: 'En revisión',
     variant: 'warning',
   },
   registered: {

@@ -71,7 +71,7 @@ function statusConfig(status: ApplicationReviewCardProps['application']['status'
     return { label: 'Rechazada', variant: 'destructive' as const }
   }
 
-  return { label: 'Pendiente de revision', variant: 'warning' as const }
+  return { label: 'Pendiente de revisión', variant: 'warning' as const }
 }
 
 export function ApplicationReviewCard({
@@ -192,7 +192,7 @@ export function ApplicationReviewCard({
 
           <div className="min-w-0 space-y-3">
             <div className="flex items-center justify-between gap-3">
-              <h4 className="text-sm font-semibold">Respuestas de postulacion</h4>
+              <h4 className="text-sm font-semibold">Respuestas de postulación</h4>
               <Badge variant="neutral" size="sm">
                 {applicationAnswers.length} respuesta{applicationAnswers.length === 1 ? '' : 's'}
               </Badge>
@@ -203,7 +203,7 @@ export function ApplicationReviewCard({
                 {applicationAnswers.map((answer) => (
                   <div key={answer.id} className="rounded-lg border bg-background p-3">
                     <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                      {answer.event_application_question?.question_text ?? 'Pregunta de postulacion'}
+                      {answer.event_application_question?.question_text ?? 'Pregunta de postulación'}
                     </p>
                     <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-foreground">
                       {answerValue(answer)}
@@ -245,9 +245,9 @@ export function ApplicationReviewCard({
       <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>¿Rechazar postulacion?</DialogTitle>
+            <DialogTitle>¿Rechazar postulación?</DialogTitle>
             <DialogDescription>
-              Rechazar la postulacion de {application.User.name} para este evento.
+              Rechazar la postulación de {application.User.name} para este evento.
               {!showCheckbox && (
                 <span className="mt-2 block text-sm text-muted-foreground">
                   La persona postulante recibira una notificacion por correo. La nota opcional queda interna en v1.
@@ -261,7 +261,7 @@ export function ApplicationReviewCard({
               Nota interna (opcional)
             </label>
             <Textarea
-              placeholder="Agrega contexto interno para esta decision..."
+              placeholder="Agrega contexto interno para esta decisión..."
               value={rejectNote}
               onChange={(e) => setRejectNote(e.target.value)}
               rows={3}
@@ -276,7 +276,7 @@ export function ApplicationReviewCard({
               Cancelar
             </Button>
             <Button variant="destructive" onClick={handleReject} disabled={isActionPending}>
-              {isActionPending ? 'Procesando...' : 'Rechazar postulacion'}
+              {isActionPending ? 'Procesando...' : 'Rechazar postulación'}
             </Button>
           </DialogFooter>
         </DialogContent>

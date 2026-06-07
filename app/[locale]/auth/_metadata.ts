@@ -31,12 +31,12 @@ const AUTH_METADATA: Record<'en' | 'es', Record<AuthMetadataKey, Metadata>> = {
       description: 'Crea tu cuenta en la Plataforma de Talento LEAD.',
     },
     forgotPassword: {
-      title: 'Restablecer contrasena - Plataforma de Talento LEAD',
-      description: 'Solicita un enlace para restablecer la contrasena de tu cuenta LEAD.',
+      title: 'Restablecer contraseña - Plataforma de Talento LEAD',
+      description: 'Solicita un enlace para restablecer la contraseña de tu cuenta LEAD.',
     },
     updatePassword: {
-      title: 'Actualizar contrasena - Plataforma de Talento LEAD',
-      description: 'Guarda una nueva contrasena para tu cuenta LEAD.',
+      title: 'Actualizar contraseña - Plataforma de Talento LEAD',
+      description: 'Guarda una nueva contraseña para tu cuenta LEAD.',
     },
   },
 }

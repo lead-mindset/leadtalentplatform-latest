@@ -13,7 +13,7 @@ export default function Error({ reset }: ErrorProps) {
       <div>
         <h2 className="text-lg font-semibold">No se pudo cargar tu perfil</h2>
         <p className="text-sm text-muted-foreground">
-          Actualiza la pagina o intenta nuevamente.
+          Actualiza la página o intenta nuevamente.
         </p>
       </div>
       <Button onClick={reset} variant="outline">

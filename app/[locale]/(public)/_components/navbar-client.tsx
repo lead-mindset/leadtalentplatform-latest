@@ -60,7 +60,7 @@ export function NavbarClient({ visibleLinks, user, dashboardHref }: Props) {
       Partners: "Aliados",
       Help: "Ayuda",
       Dashboard: "Panel",
-      "Chapter tools": "Herramientas de capitulo",
+      "Chapter tools": "Herramientas de capítulo",
       Admin: "Admin",
     };
     return labels[label] ?? label;

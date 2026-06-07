@@ -30,7 +30,7 @@ export function ChapterApplicationCard({ chapters, disabled = false }: ChapterAp
     event.preventDefault()
 
     if (!chapterId) {
-      setError('Elige un capitulo para continuar.')
+      setError('Elige un capítulo para continuar.')
       return
     }
 
@@ -39,13 +39,13 @@ export function ChapterApplicationCard({ chapters, disabled = false }: ChapterAp
       const result = await applyToChapter({ chapterId })
 
       if (!result.success) {
-        const message = result.error ?? 'No se pudo enviar tu solicitud de capitulo.'
+        const message = result.error ?? 'No se pudo enviar tu solicitud de capítulo.'
         setError(message)
         toast.error(message)
         return
       }
 
-      toast.success('Tu solicitud de capitulo esta pendiente de revision.')
+      toast.success('Tu solicitud de capítulo está pendiente de revisión.')
       router.refresh()
     })
   }
@@ -54,7 +54,7 @@ export function ChapterApplicationCard({ chapters, disabled = false }: ChapterAp
     <form className="space-y-3" onSubmit={handleSubmit}>
       <div className="space-y-2">
         <label className="text-sm font-semibold text-foreground" htmlFor="chapter-application">
-          Capitulo
+          Capítulo
         </label>
         <Select
           value={chapterId}
@@ -62,7 +62,7 @@ export function ChapterApplicationCard({ chapters, disabled = false }: ChapterAp
           disabled={disabled || isPending || !hasChapters}
         >
           <SelectTrigger id="chapter-application" className="h-11 w-full rounded-lg">
-            <SelectValue placeholder={hasChapters ? 'Elige tu capitulo' : 'No hay capitulos disponibles'} />
+            <SelectValue placeholder={hasChapters ? 'Elige tu capítulo' : 'No hay capítulos disponibles'} />
           </SelectTrigger>
           <SelectContent>
             {chapters.map((chapter) => {
@@ -84,7 +84,7 @@ export function ChapterApplicationCard({ chapters, disabled = false }: ChapterAp
         className="w-full sm:w-auto"
         disabled={disabled || isPending || !hasChapters}
       >
-        {isPending ? 'Enviando...' : 'Postular a capitulo'}
+        {isPending ? 'Enviando...' : 'Postular a capítulo'}
       </Button>
     </form>
   )

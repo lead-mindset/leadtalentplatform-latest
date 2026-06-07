@@ -89,7 +89,7 @@ export async function POST(request: Request) {
 
     const subject = isRecovery
       ? locale === 'es'
-        ? 'Restablece tu contrasena de LEAD Talent Platform'
+        ? 'Restablece tu contraseña de LEAD Talent Platform'
         : 'Reset your LEAD Talent Platform password'
       : locale === 'es'
         ? 'Confirma tu cuenta en LEAD Talent Platform'

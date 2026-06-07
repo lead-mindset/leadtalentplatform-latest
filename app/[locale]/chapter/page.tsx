@@ -97,7 +97,7 @@ function PendingInbox({
           </div>
           <p className="font-medium text-foreground">Todo al dia</p>
           <p className="text-sm text-muted-foreground mt-1">
-            No hay miembros esperando aprobacion
+            No hay miembros esperando aprobación
           </p>
         </CardContent>
       </Card>
@@ -133,7 +133,7 @@ function RecentApprovals({ members }: { members: RecentActivityMember[] }) {
   if (members.length === 0) {
     return (
       <p className="text-sm text-muted-foreground py-4 text-center">
-        Los miembros aprobados apareceran aqui
+        Los miembros aprobados aparecerán aquí
       </p>
     )
   }
@@ -199,7 +199,7 @@ function EventOpsList({
     return (
       <Card>
         <CardContent className="py-10 text-center text-sm text-muted-foreground">
-          Todavia no hay eventos proximos del capitulo. Crea el primero para abrir registros.
+          Todavía no hay eventos próximos del capítulo. Crea el primero para abrir registros.
         </CardContent>
       </Card>
     )
@@ -270,7 +270,7 @@ async function UpcomingEventsStatCard() {
 
   return (
     <StatCard
-      label="Eventos proximos"
+      label="Eventos próximos"
       value={upcomingEvents.length}
       sub="Listos para operar"
       icon={Icons.UserCheck}
@@ -320,11 +320,11 @@ async function ChapterContent() {
     return (
       <Card className="max-w-md mx-auto mt-20">
         <CardHeader>
-          <CardTitle>Sin capitulo asignado</CardTitle>
+          <CardTitle>Sin capítulo asignado</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            No tienes un capitulo asignado. Contacta a una persona administradora.
+            No tienes un capítulo asignado. Contacta a una persona administradora.
           </p>
         </CardContent>
       </Card>
@@ -351,7 +351,7 @@ async function ChapterContent() {
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Resumen del capitulo</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Resumen del capítulo</h1>
           <p className="max-w-2xl text-muted-foreground">
             {chapter?.name} - {chapter?.university}
           </p>
@@ -372,9 +372,9 @@ async function ChapterContent() {
       {stats.total === 0 && (
         <Card>
           <CardContent className="py-8 text-center space-y-3">
-            <p className="font-medium">Tu capitulo todavia no tiene miembros.</p>
+            <p className="font-medium">Tu capítulo todavía no tiene miembros.</p>
             <p className="text-sm text-muted-foreground">
-              Comparte las indicaciones de postulacion para que estudiantes completen su perfil y aparezcan aqui.
+              Comparte las indicaciones de postulación para que estudiantes completen su perfil y aparezcan aquí.
             </p>
             <Button asChild variant="outline">
               <Link href="/chapter/members">Gestionar miembros</Link>
@@ -387,21 +387,21 @@ async function ChapterContent() {
         <StatCard
           label="Miembros"
           value={stats.total}
-          sub="En tu capitulo"
+          sub="En tu capítulo"
           icon={Icons.Users}
         />
         <StatCard
           label="Pendientes"
           value={stats.pending}
-          sub="Necesitan revision"
+          sub="Necesitan revisión"
           icon={Icons.Clock}
           variant="warning"
         />
-        <Suspense fallback={<StatCardSkeleton label="Eventos proximos" icon={Icons.UserCheck} />}>
+        <Suspense fallback={<StatCardSkeleton label="Eventos próximos" icon={Icons.UserCheck} />}>
           <UpcomingEventsStatCard />
         </Suspense>
         <StatCard
-          label="Tasa de aprobacion"
+          label="Tasa de aprobación"
           value={approvalRate}
           sub="Porcentaje de miembros aprobados"
           icon={Icons.TrendingUp}
@@ -417,7 +417,7 @@ async function ChapterContent() {
                 <div>
                   <h2 className="text-base font-semibold">Aprobaciones pendientes</h2>
                   <p className="text-sm text-muted-foreground">
-                    {stats.pending} miembro{stats.pending > 1 ? 's' : ''} esperando tu decision
+                    {stats.pending} miembro{stats.pending > 1 ? 's' : ''} esperando tu decisión
                   </p>
                 </div>
                 {stats.pending > 3 && (
@@ -452,7 +452,7 @@ async function ChapterContent() {
           )}
 
           <div className="space-y-2">
-            <h2 className="text-base font-semibold">Eventos proximos</h2>
+            <h2 className="text-base font-semibold">Eventos próximos</h2>
             <p className="text-sm text-muted-foreground">Monitorea el volumen de registros antes del evento.</p>
           </div>
           <Suspense fallback={<EventOpsListSkeleton />}>

@@ -126,7 +126,7 @@ export function EventApplicationsClient({
   const rejectedApps = applications.filter((application) => application.status === 'rejected')
   const selectedCount = selectedApplications.size
   const registeredCount = approvedApps.length
-  const capacityLabel = event.capacity === null ? 'Sin limite' : `${registeredCount}/${event.capacity}`
+  const capacityLabel = event.capacity === null ? 'Sin límite' : `${registeredCount}/${event.capacity}`
 
   const refreshPage = () => {
     router.refresh()
@@ -149,7 +149,7 @@ export function EventApplicationsClient({
       } catch (error) {
         setFeedback({
           type: 'error',
-          title: 'No se pudo completar la accion',
+          title: 'No se pudo completar la acción',
           message: error instanceof Error ? error.message : 'Intentalo de nuevo.',
         })
       }
@@ -159,14 +159,14 @@ export function EventApplicationsClient({
   const handleApprove = async (applicationId: string) => {
     runAction(
       () => bulkApproveApplications(event.id, [applicationId]),
-      'Postulacion aprobada'
+      'Postulación aprobada'
     )
   }
 
   const handleReject = async (applicationId: string) => {
     runAction(
       () => bulkRejectApplications(event.id, [applicationId]),
-      'Postulacion rechazada'
+      'Postulación rechazada'
     )
   }
 
@@ -176,7 +176,9 @@ export function EventApplicationsClient({
 
     runAction(
       () => bulkApproveApplications(event.id, selectedIds),
-      `${selectedIds.length} postulacion${selectedIds.length === 1 ? '' : 'es'} aprobada${selectedIds.length === 1 ? '' : 's'}`
+      selectedIds.length === 1
+        ? '1 postulación aprobada'
+        : `${selectedIds.length} postulaciones aprobadas`
     )
   }
 
@@ -186,7 +188,9 @@ export function EventApplicationsClient({
 
     runAction(
       () => bulkRejectApplications(event.id, selectedIds),
-      `${selectedIds.length} postulacion${selectedIds.length === 1 ? '' : 'es'} rechazada${selectedIds.length === 1 ? '' : 's'}`
+      selectedIds.length === 1
+        ? '1 postulación rechazada'
+        : `${selectedIds.length} postulaciones rechazadas`
     )
     setShowBulkRejectDialog(false)
   }
@@ -241,11 +245,11 @@ export function EventApplicationsClient({
               </Link>
             </Button>
           <PageHeader
-            eyebrow="Herramientas del capitulo"
+            eyebrow="Herramientas del capítulo"
             title="Revision de postulaciones"
             badge={
               <Badge variant={event.accessModel === 'application' ? 'info' : 'outline'}>
-                {event.accessModel === 'application' ? 'Requiere postulacion' : 'Registro abierto'}
+                {event.accessModel === 'application' ? 'Requiere postulación' : 'Registro abierto'}
               </Badge>
             }
             description={event.title}
@@ -261,7 +265,7 @@ export function EventApplicationsClient({
           <SummaryBlock
             label="Pendientes"
             value={pendingApps.length}
-            helper="Necesitan revision"
+            helper="Necesitan revisión"
             variant="warning"
           />
           <SummaryBlock
@@ -279,7 +283,7 @@ export function EventApplicationsClient({
           <SummaryBlock
             label="Capacidad"
             value={capacityLabel}
-            helper={event.capacity === null ? 'Sin limite fijo' : 'Aprobadas contra el limite'}
+            helper={event.capacity === null ? 'Sin límite fijo' : 'Aprobadas contra el límite'}
           />
         </div>
 
@@ -356,7 +360,7 @@ export function EventApplicationsClient({
             {renderApplications(pendingApps, {
               icon: Users,
               title: 'Todas las postulaciones fueron revisadas',
-              description: 'No hay postulaciones pendientes que necesiten decision editorial.',
+              description: 'No hay postulaciones pendientes que necesiten decisión editorial.',
             })}
           </TabsContent>
 
@@ -364,7 +368,7 @@ export function EventApplicationsClient({
             {renderApplications(approvedApps, {
               icon: CheckCircle,
               title: 'No hay postulaciones aprobadas',
-              description: 'Las postulaciones aprobadas apareceran aqui.',
+              description: 'Las postulaciones aprobadas aparecerán aquí.',
             })}
           </TabsContent>
 
@@ -372,7 +376,7 @@ export function EventApplicationsClient({
             {renderApplications(rejectedApps, {
               icon: XCircle,
               title: 'No hay postulaciones rechazadas',
-              description: 'Las postulaciones rechazadas apareceran aqui como referencia.',
+              description: 'Las postulaciones rechazadas aparecerán aquí como referencia.',
             })}
           </TabsContent>
         </Tabs>
@@ -383,7 +387,7 @@ export function EventApplicationsClient({
           <AlertDialogHeader>
             <AlertDialogTitle>¿Rechazar postulaciones seleccionadas?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esto rechazara {selectedCount} postulacion{selectedCount === 1 ? '' : 'es'} pendiente{selectedCount === 1 ? '' : 's'} y notificara a la persona postulante. Usa esta accion solo despues de revisar.
+              Esto rechazará {selectedCount === 1 ? '1 postulación pendiente' : `${selectedCount} postulaciones pendientes`} y notificará a la persona postulante. Usa esta acción solo después de revisar.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

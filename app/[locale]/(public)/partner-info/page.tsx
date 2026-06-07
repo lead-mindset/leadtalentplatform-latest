@@ -65,7 +65,7 @@ export default async function PartnerInfo({ params }: PartnerInfoProps) {
           {
             title: 'Eventos y postulaciones',
             description:
-              'Apoya programas de capitulos, talleres y eventos con postulacion usando flujos claros.',
+              'Apoya programas de capítulos, talleres y eventos con postulación usando flujos claros.',
           },
         ],
         nextTitle: 'Siguientes pasos',
