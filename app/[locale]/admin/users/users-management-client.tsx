@@ -212,10 +212,10 @@ export function UsersManagementClient({
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline">Capitulos ({chapterFilters.length || 'todos'})</Button>
+                  <Button variant="outline">Capítulos ({chapterFilters.length || 'todos'})</Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
-                <DropdownMenuLabel>Filtrar capitulos</DropdownMenuLabel>
+                  <DropdownMenuLabel>Filtrar capítulos</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {chapterOptions.map((chapter) => (
                   <DropdownMenuCheckboxItem
@@ -368,7 +368,7 @@ export function UsersManagementClient({
                 <TableHead className="text-left p-2">Nombre</TableHead>
                 <TableHead className="text-left p-2">Email</TableHead>
                 <TableHead className="text-left p-2">Rol</TableHead>
-                <TableHead className="text-left p-2">Capitulo</TableHead>
+                <TableHead className="text-left p-2">Capítulo</TableHead>
                 <TableHead className="text-left p-2">Fecha de registro</TableHead>
                 <TableHead className="text-left p-2">Estado de perfil</TableHead>
                 <TableHead className="text-left p-2">Acciones</TableHead>
@@ -489,7 +489,7 @@ export function UsersManagementClient({
 
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm text-muted-foreground">
-              {total} usuarios - pagina {page} de {totalPages}
+              {total} usuarios - página {page} de {totalPages}
             </p>
             <div className="flex items-center gap-2">
               <Button

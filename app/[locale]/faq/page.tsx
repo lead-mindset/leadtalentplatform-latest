@@ -3,274 +3,264 @@ import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export const metadata: Metadata = {
-  title: 'FAQ - LEAD',
-  description: 'Frequently asked questions about LEAD Talent Platform',
+  title: 'Preguntas frecuentes - LEAD',
+  description: 'Preguntas frecuentes sobre LEAD Talent Platform',
 }
 
 export default function FAQPage() {
   return (
-    <div className="container max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8">
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold tracking-tight">Frequently Asked Questions</h1>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Find answers to common questions about LEAD and how we can help you succeed in tech.
+    <div className="container mx-auto max-w-4xl space-y-8 px-4 py-8 sm:px-6">
+      <div className="space-y-4 text-center">
+        <h1 className="text-4xl font-bold tracking-tight">Preguntas frecuentes</h1>
+        <p className="mx-auto max-w-2xl text-xl text-muted-foreground">
+          Respuestas claras sobre LEAD, sus capítulos, eventos y oportunidades.
         </p>
       </div>
 
       <div className="space-y-8">
-        <div className="space-y-4">
+        <section className="space-y-4">
           <h2 className="text-2xl font-bold tracking-tight">General</h2>
           <div className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">What is LEAD?</CardTitle>
+                <CardTitle className="text-lg">¿Qué es LEAD?</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  LEAD (Leadership, Education, and Development) is a talent platform that connects 
-                  students with opportunities in the technology industry. We provide educational 
-                  resources, networking events, mentorship, and direct access to job opportunities 
-                  from our partner companies.
+                  LEAD es una plataforma de talento que conecta a estudiantes con oportunidades en
+                  tecnología. Reúne recursos educativos, eventos, mentoría, comunidad y acceso a
+                  oportunidades profesionales con organizaciones aliadas.
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Who can join LEAD?</CardTitle>
+                <CardTitle className="text-lg">¿Quién puede unirse a LEAD?</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  LEAD is open to all students interested in pursuing a career in technology. 
-                  Whether you&apos;re just starting your journey or already have experience, we have 
-                  programs and resources tailored to your needs.
+                  LEAD está abierto a estudiantes interesados en construir una carrera en tecnología.
+                  Puedes estar empezando, explorando tu camino o preparándote para prácticas y roles
+                  profesionales.
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">How much does it cost to join?</CardTitle>
+                <CardTitle className="text-lg">¿Tiene algún costo?</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  LEAD membership is completely free for students. We believe that financial 
-                  barriers should not prevent anyone from accessing quality tech education and 
-                  opportunities.
+                  La membresía estudiantil de LEAD es gratuita. La misión es reducir barreras y abrir
+                  acceso a formación, comunidad y oportunidades de calidad.
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Where are LEAD chapters located?</CardTitle>
+                <CardTitle className="text-lg">¿Dónde hay capítulos de LEAD?</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  LEAD has chapters at universities across the country. Check our events page 
-                  to see if there&apos;s a chapter near you, or contact us about starting a new chapter 
-                  at your school.
+                  LEAD trabaja con capítulos universitarios. Puedes revisar los eventos disponibles
+                  para encontrar actividad cerca de ti o expresar interés si quieres impulsar LEAD en
+                  tu universidad.
                 </p>
               </CardContent>
             </Card>
           </div>
-        </div>
+        </section>
 
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold tracking-tight">Membership</h2>
+        <section className="space-y-4">
+          <h2 className="text-2xl font-bold tracking-tight">Membresía</h2>
           <div className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">How do I become a member?</CardTitle>
+                <CardTitle className="text-lg">¿Cómo me convierto en miembro?</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Simply sign up on our platform and complete your profile. Once your profile 
-                  is approved by your local chapter, you&apos;ll have full access to all LEAD 
-                  resources and events.
+                  Crea tu cuenta, completa tu perfil y sigue el flujo de tu capítulo. Cuando tu
+                  membresía sea aprobada, tendrás acceso a las experiencias y recursos disponibles
+                  para miembros.
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">What&apos;s the approval process?</CardTitle>
+                <CardTitle className="text-lg">¿Cómo funciona la aprobación?</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  After you sign up and complete your profile, it will be reviewed by the chapter 
-                  editors at your university. This typically takes 1-2 business days. You&apos;ll 
-                  receive an email once your profile is approved.
+                  Cada capítulo revisa las solicitudes según su proceso local. La plataforma muestra
+                  tu estado para que sepas si estás como participante, en revisión, miembro oficial o
+                  alumni.
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">What are the benefits of membership?</CardTitle>
+                <CardTitle className="text-lg">¿Qué beneficios tiene la membresía?</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground mb-3">
-                  As a LEAD member, you get access to:
-                </p>
-                <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                  <li>Exclusive workshops and events</li>
-                  <li>One-on-one mentorship opportunities</li>
-                  <li>Job and internship postings from partner companies</li>
-                  <li>Resume reviews and career guidance</li>
-                  <li>Networking with industry professionals</li>
-                  <li>Leadership opportunities within chapters</li>
+                <p className="mb-3 text-muted-foreground">Como miembro de LEAD puedes acceder a:</p>
+                <ul className="list-inside list-disc space-y-1 text-sm text-muted-foreground">
+                  <li>Talleres, eventos y experiencias de aprendizaje.</li>
+                  <li>Mentoría y orientación profesional.</li>
+                  <li>Preparación de CV, entrevistas y portafolio.</li>
+                  <li>Conexiones con comunidad, capítulos y aliados.</li>
+                  <li>Oportunidades de liderazgo dentro de tu capítulo.</li>
                 </ul>
               </CardContent>
             </Card>
           </div>
-        </div>
+        </section>
 
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold tracking-tight">Events</h2>
+        <section className="space-y-4">
+          <h2 className="text-2xl font-bold tracking-tight">Eventos</h2>
           <div className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">What types of events does LEAD host?</CardTitle>
+                <CardTitle className="text-lg">¿Qué tipos de eventos organiza LEAD?</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground mb-3">
-                  LEAD hosts a variety of events including:
-                </p>
-                <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                  <li>Technical workshops and skill-building sessions</li>
-                  <li>Career development and networking events</li>
-                  <li>Hackathons and coding competitions</li>
-                  <li>Industry speaker series</li>
-                  <li>Company information sessions and recruiting events</li>
-                  <li>Social mixers and community building activities</li>
+                <p className="mb-3 text-muted-foreground">Los eventos pueden incluir:</p>
+                <ul className="list-inside list-disc space-y-1 text-sm text-muted-foreground">
+                  <li>Talleres técnicos y sesiones de habilidades.</li>
+                  <li>Eventos de carrera, networking y liderazgo.</li>
+                  <li>Charlas con profesionales e industrias aliadas.</li>
+                  <li>Experiencias de comunidad y colaboración.</li>
+                  <li>Actividades organizadas por capítulos locales.</li>
                 </ul>
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">How do I register for events?</CardTitle>
+                <CardTitle className="text-lg">¿Cómo me registro a un evento?</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Once you&apos;re an approved member, you can register for events through our platform. 
-                  Some events may require an application or have limited capacity, so register early 
-                  to secure your spot.
+                  Entra al evento desde la plataforma y sigue el flujo de registro. Algunos eventos
+                  pueden requerir postulación, aprobación o cupos limitados.
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Are events virtual or in-person?</CardTitle>
+                <CardTitle className="text-lg">¿Los eventos son virtuales o presenciales?</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  We offer both virtual and in-person events to accommodate different preferences 
-                  and locations. Virtual events are accessible to all members regardless of location, 
-                  while in-person events are hosted by local chapters.
+                  Puede haber eventos virtuales, presenciales o híbridos. La modalidad, ubicación y
+                  requisitos aparecen en la página de cada evento.
                 </p>
               </CardContent>
             </Card>
           </div>
-        </div>
+        </section>
 
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold tracking-tight">Career & Opportunities</h2>
+        <section className="space-y-4">
+          <h2 className="text-2xl font-bold tracking-tight">Carrera y oportunidades</h2>
           <div className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">How can LEAD help me find a job?</CardTitle>
+                <CardTitle className="text-lg">¿Cómo puede ayudarme LEAD con mi carrera?</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground mb-3">
-                  LEAD connects you with job opportunities through:
-                </p>
-                <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                  <li>Exclusive job postings from partner companies</li>
-                  <li>Direct recruitment events and career fairs</li>
-                  <li>Resume reviews and interview preparation</li>
-                  <li>Mentorship from industry professionals</li>
-                  <li>Networking opportunities with hiring managers</li>
+                <p className="mb-3 text-muted-foreground">LEAD te ayuda a construir señal profesional mediante:</p>
+                <ul className="list-inside list-disc space-y-1 text-sm text-muted-foreground">
+                  <li>Eventos y retos alineados con habilidades reales.</li>
+                  <li>Revisión de CV, perfil y materiales profesionales.</li>
+                  <li>Mentoría y conversaciones con personas de la industria.</li>
+                  <li>Oportunidades compartidas por aliados y capítulos.</li>
                 </ul>
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Can partner companies see my profile?</CardTitle>
+                <CardTitle className="text-lg">¿Las empresas pueden ver mi perfil?</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Yes, you can choose to make your profile visible to company representatives from our partner
-                  companies. This increases your chances of being discovered for opportunities that
-                  match your skills and interests.
+                  Solo si activas la visibilidad para representantes de empresas aliadas y cumples
+                  con los requisitos de membresía aprobada. Puedes controlar esa visibilidad desde
+                  tu perfil cuando la función esté disponible para tu rol.
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Are there internship opportunities?</CardTitle>
+                <CardTitle className="text-lg">¿Hay oportunidades de prácticas?</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Absolutely! Many of our partner companies offer internship opportunities exclusively 
-                  to LEAD members. These internships provide valuable experience and can lead to 
-                  full-time positions after graduation.
+                  LEAD puede compartir oportunidades de prácticas, programas, becas o eventos de
+                  reclutamiento según la disponibilidad de sus aliados y capítulos.
                 </p>
               </CardContent>
             </Card>
           </div>
-        </div>
+        </section>
 
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold tracking-tight">Technical Support</h2>
+        <section className="space-y-4">
+          <h2 className="text-2xl font-bold tracking-tight">Soporte</h2>
           <div className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">I&apos;m having trouble with my profile. What should I do?</CardTitle>
+                <CardTitle className="text-lg">Tengo problemas con mi perfil. ¿Qué hago?</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  If you&apos;re experiencing issues with your profile, first try refreshing the page 
-                  and clearing your browser cache. If the problem persists, contact your local 
-                  chapter leaders or reach out to our support team.
+                  Primero actualiza la página e intenta nuevamente. Si el problema continúa,
+                  contacta a tu capítulo o al equipo de soporte con tu correo, captura y descripción
+                  del caso.
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">How does event check-in work?</CardTitle>
+                <CardTitle className="text-lg">¿Cómo funciona el check-in con QR?</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  For in-person events, you&apos;ll receive a QR code after registering. Simply show 
-                  this QR code at the event entrance for quick check-in. Virtual events don&apos;t 
-                  require check-in.
+                  Para eventos presenciales con check-in, la plataforma puede generar un código QR
+                  después del registro. Muéstralo al equipo organizador para confirmar tu asistencia.
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">What browsers are supported?</CardTitle>
+                <CardTitle className="text-lg">¿Qué navegadores puedo usar?</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  LEAD works best on modern browsers including Chrome, Firefox, Safari, and Edge. 
-                  We recommend using the latest version of your preferred browser for the best experience.
+                  LEAD funciona mejor en versiones recientes de Chrome, Firefox, Safari y Edge.
                 </p>
               </CardContent>
             </Card>
           </div>
-        </div>
+        </section>
       </div>
 
-      <Card className="bg-primary/5 border-primary/20">
+      <Card className="border-primary/20 bg-primary/5">
         <CardContent className="py-8 text-center">
-          <h3 className="text-2xl font-bold mb-4">Still Have Questions?</h3>
-          <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Can&apos;t find the answer you&apos;re looking for? Our team is here to help. Reach out to us 
-            and we&apos;ll get back to you as soon as possible.
+          <h3 className="mb-4 text-2xl font-bold">¿Aún tienes preguntas?</h3>
+          <p className="mx-auto mb-6 max-w-2xl text-muted-foreground">
+            Si no encontraste la respuesta, escríbenos con el contexto de tu caso y el equipo te
+            orientará.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="mailto:support@leadtech.org" className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
-              Contact Support
+          <div className="flex flex-col justify-center gap-4 sm:flex-row">
+            <a
+              href="mailto:support@leadtech.org"
+              className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+            >
+              Contactar soporte
             </a>
-            <Link href="/events" className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
-              View Events
+            <Link
+              href="/events"
+              className="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+            >
+              Ver eventos
             </Link>
           </div>
         </CardContent>

@@ -35,7 +35,7 @@ const STATUS_OPTIONS = ['published', 'draft', 'upcoming', 'past']
 const SORT_COLUMNS: Array<[string, string]> = [
   ['title', 'Evento'],
   ['startAt', 'Inicio'],
-  ['chapter', 'Capitulos'],
+  ['chapter', 'Capítulos'],
   ['status', 'Estado'],
   ['registrations', 'Registros'],
 ]
@@ -43,7 +43,7 @@ const SORT_COLUMNS: Array<[string, string]> = [
 const STATUS_LABELS: Record<string, string> = {
   published: 'Publicado',
   draft: 'Borrador',
-  upcoming: 'Proximo',
+  upcoming: 'Próximo',
   past: 'Finalizado',
 }
 
@@ -123,7 +123,7 @@ export function EventsManagementClient({
       <Card>
         <CardHeader>
           <CardTitle>Filtros</CardTitle>
-          <CardDescription>Busca eventos y filtra por capitulo o estado del ciclo de vida.</CardDescription>
+          <CardDescription>Busca eventos y filtra por capítulo o estado del ciclo de vida.</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex flex-col gap-2 md:flex-row">
@@ -136,10 +136,10 @@ export function EventsManagementClient({
             />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline">Capitulos ({chapterFilters.length || 'todos'})</Button>
+              <Button variant="outline">Capítulos ({chapterFilters.length || 'todos'})</Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
-                <DropdownMenuLabel>Filtrar capitulos</DropdownMenuLabel>
+              <DropdownMenuLabel>Filtrar capítulos</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {chapterOptions.map((chapter) => (
                   <DropdownMenuCheckboxItem
@@ -212,7 +212,7 @@ export function EventsManagementClient({
                           {event.chapter && <Badge variant="info">{event.chapter.name}</Badge>}
                           {event.event_chapter?.map((collaborator) => (
                             <Badge key={collaborator.id} variant="secondary">
-                              {collaborator.chapter?.name || 'Capitulo no identificado'}
+                          {collaborator.chapter?.name || 'Capítulo no identificado'}
                             </Badge>
                           ))}
                         </div>
@@ -242,8 +242,8 @@ export function EventsManagementClient({
 
           {items.length === 0 && (
             <div className="py-10 text-center">
-              <CardTitle className="mb-2 text-lg">{hasFilters ? 'No hay eventos con esos filtros' : 'Aun no hay eventos creados'}</CardTitle>
-              <p className="text-sm text-muted-foreground">{hasFilters ? 'Limpia los filtros o prueba otra busqueda.' : 'Crea el primer evento o espera a que un editor de capitulo agregue uno.'}</p>
+                <CardTitle className="mb-2 text-lg">{hasFilters ? 'No hay eventos con esos filtros' : 'Aún no hay eventos creados'}</CardTitle>
+                <p className="text-sm text-muted-foreground">{hasFilters ? 'Limpia los filtros o prueba otra búsqueda.' : 'Crea el primer evento o espera a que un editor de capítulo agregue uno.'}</p>
               <div className="mt-4 flex justify-center gap-2">
                 {hasFilters && <Button variant="outline" onClick={resetFilters}>Limpiar filtros</Button>}
                 <Button asChild><Link href="/admin/events/new">Nuevo evento</Link></Button>
@@ -252,7 +252,7 @@ export function EventsManagementClient({
           )}
 
           <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <p className="text-sm text-muted-foreground">{total} total - pagina {page} de {totalPages}</p>
+            <p className="text-sm text-muted-foreground">{total} total - página {page} de {totalPages}</p>
             <div className="flex flex-wrap items-center gap-2">
               <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => updateParam('page', String(page - 1))}>Anterior</Button>
               <Button size="sm" variant="outline" disabled={page >= totalPages} onClick={() => updateParam('page', String(page + 1))}>Siguiente</Button>

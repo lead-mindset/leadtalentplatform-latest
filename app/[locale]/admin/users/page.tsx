@@ -55,9 +55,9 @@ export default async function AdminUsersPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Administracion"
-        title="Gestion de usuarios"
-        description="Busca, filtra, actualiza roles, desactiva usuarios y exporta resultados filtrados. Esta vista es de operacion administrativa; permisos de Staff deben definirse por alcance antes de tratarlos como Admin."
+        eyebrow="Administración"
+        title="Gestión de usuarios"
+        description="Busca, filtra, actualiza roles, desactiva usuarios y exporta resultados filtrados. Esta vista es de operación administrativa; permisos de Staff deben definirse por alcance antes de tratarlos como Admin."
       />
 
       <UsersManagementClient
