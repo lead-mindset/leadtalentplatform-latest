@@ -54,7 +54,7 @@ export default function ProfileForm({ user, company, accessInfo }: ProfileFormPr
 
       if (!result.success) {
         toast.error('No se pudo actualizar el perfil', {
-          description: result.error || 'Algo salio mal',
+          description: result.error || 'Algo salió mal',
         })
       } else {
         toast.success('Perfil actualizado', {
@@ -62,8 +62,8 @@ export default function ProfileForm({ user, company, accessInfo }: ProfileFormPr
         })
       }
     } catch {
-      toast.error('Ocurrio un error inesperado', {
-        description: 'Intentalo de nuevo mas tarde',
+      toast.error('Ocurrió un error inesperado', {
+        description: 'Inténtalo de nuevo más tarde',
       })
     } finally {
       setLoading(false)
@@ -77,7 +77,7 @@ export default function ProfileForm({ user, company, accessInfo }: ProfileFormPr
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Building2 className="h-5 w-5" />
-              Informacion de empresa
+              Información de empresa
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -104,7 +104,7 @@ export default function ProfileForm({ user, company, accessInfo }: ProfileFormPr
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
-            Informacion personal
+            Información personal
           </CardTitle>
           <CardDescription>
             Actualiza tus datos personales y de contacto
@@ -112,7 +112,7 @@ export default function ProfileForm({ user, company, accessInfo }: ProfileFormPr
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Correo electronico</Label>
+            <Label htmlFor="email">Correo electrónico</Label>
             <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
               <Mail className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm">{user.email}</span>
@@ -141,7 +141,7 @@ export default function ProfileForm({ user, company, accessInfo }: ProfileFormPr
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="phone">Telefono</Label>
+            <Label htmlFor="phone">Teléfono</Label>
             <div className="relative">
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input

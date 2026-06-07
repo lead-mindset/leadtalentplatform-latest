@@ -11,9 +11,9 @@ export default function Error({ reset }: ErrorProps) {
   return (
     <div className="space-y-4 rounded-lg border bg-card p-6">
       <div>
-        <h2 className="text-lg font-semibold">No se pudieron cargar los capitulos</h2>
+        <h2 className="text-lg font-semibold">No se pudieron cargar los capítulos</h2>
         <p className="text-sm text-muted-foreground">
-          Actualiza la pagina o intenta nuevamente.
+          Actualiza la página o intenta nuevamente.
         </p>
       </div>
       <Button onClick={reset} variant="outline">

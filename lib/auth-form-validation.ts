@@ -8,4 +8,3 @@ export function getAuthEmailValidationMessage(locale: AuthFormLocale = 'es'): st
   if (locale === 'en') return 'Enter a valid email address.'
   return 'Ingresa un correo electronico valido.'
 }
-

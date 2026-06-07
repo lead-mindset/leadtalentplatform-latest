@@ -1,8 +1,8 @@
 # Implementation Report: Chapter Activation Interest
 
-**Issues**: #306, #307, #308  
-**PRD**: `.github/PRDs/christopher-grounded-chapter-activation-interest.prd.md`  
-**Branch**: `codex/full-role-playwright-production-qa`  
+**Issues**: #306, #307, #308
+**PRD**: `.github/PRDs/christopher-grounded-chapter-activation-interest.prd.md`
+**Branch**: `codex/full-role-playwright-production-qa`
 **Status**: COMPLETE
 
 ## Summary

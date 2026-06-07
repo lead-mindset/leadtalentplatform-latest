@@ -6,8 +6,8 @@ Add a Spanish-first student dashboard card that explains LEAD concretely and let
 
 ## User Story
 
-As a student curious about bringing LEAD to my university  
-I want a guided, low-pressure form  
+As a student curious about bringing LEAD to my university
+I want a guided, low-pressure form
 So that I can start a conversation without needing a perfect plan or prior leadership experience.
 
 ## Metadata

@@ -40,4 +40,3 @@ Out:
 
 - Overstating completion: mitigated by using `guarded-for-pilot`, `deferred-company`, and `deferred-alumni`.
 - Creating noisy follow-up work: mitigated by grouped issues rather than 112 individual tickets.
-

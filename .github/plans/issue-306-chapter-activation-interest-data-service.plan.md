@@ -6,8 +6,8 @@ Add a separate activation-interest intake model for students who want to bring L
 
 ## User Story
 
-As a student exploring LEAD for my university  
-I want to submit activation interest without becoming a chapter member  
+As a student exploring LEAD for my university
+I want to submit activation interest without becoming a chapter member
 So that LEAD can review my context and guide the next step.
 
 ## Metadata

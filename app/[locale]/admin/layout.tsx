@@ -14,12 +14,12 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
   
   return (
     <SidebarLayout
-      mobileTitle="Administracion"
+      mobileTitle="Administración"
       mobileSubtitle="Platform management"
       headerRight={<Badge variant="outline">Admin</Badge>}
       sidebar={
         <BaseSidebar
-          userName={user.name ?? 'Administracion'}
+          userName={user.name ?? 'Administración'}
           userEmail={user.email}
           userRole={user.role}
         >

@@ -15,4 +15,3 @@ describe('auth form validation', () => {
     expect(getAuthEmailValidationMessage('en')).toBe('Enter a valid email address.')
   })
 })
-

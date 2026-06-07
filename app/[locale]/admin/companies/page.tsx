@@ -30,7 +30,7 @@ export default async function AdminCompaniesPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Administracion"
+        eyebrow="Administración"
         title="Empresas"
         description="Gestiona organizaciones, acceso de representantes de empresa e invitaciones."
       />

@@ -58,4 +58,3 @@ The exact implementation names may evolve, but launch issues should map capabili
 - Chapter Editor is an operator role, not automatically chapter leadership authority.
 - Regular e-board roles are scoped helpers unless grants explicitly expand their authority.
 - Alumni and company representative workflows remain deferred from first launch.
-

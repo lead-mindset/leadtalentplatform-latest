@@ -48,4 +48,3 @@ export async function getAuthMetadata(
   const { locale } = await params
   return AUTH_METADATA[locale === 'en' ? 'en' : 'es'][key]
 }
-

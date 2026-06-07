@@ -23,12 +23,12 @@ export default function CompanyError({
         <CardHeader>
           <div className="flex items-center gap-2">
             <AlertCircle className="h-5 w-5 text-destructive" />
-            <CardTitle>Algo salio mal</CardTitle>
+            <CardTitle>Algo salió mal</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Ocurrio un error al cargar esta pagina. Intentalo de nuevo.
+            Ocurrió un error al cargar esta página. Inténtalo de nuevo.
           </p>
           {error.message ? (
             <div className="rounded-lg bg-muted p-3">
