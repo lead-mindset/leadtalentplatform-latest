@@ -113,45 +113,45 @@ const pillarLabels: Record<LeadPillarKey, string> = {
 }
 
 const focusLabels: Record<PathwayPrimaryFocusKey, string> = {
-  career_exploration: 'Exploracion de carrera',
-  technical_experience: 'Experiencia tecnica',
-  opportunity_readiness: 'Preparacion para oportunidades',
-  community_mentorship: 'Comunidad y mentorias',
+  career_exploration: 'Exploración de carrera',
+  technical_experience: 'Experiencia técnica',
+  opportunity_readiness: 'Preparación para oportunidades',
+  community_mentorship: 'Comunidad y mentorías',
   leadership: 'Liderazgo',
 }
 
 const growthStageLabels: Record<PathwayGrowthStageKey, string> = {
-  explorer: 'Explorer',
-  builder: 'Builder',
+  explorer: 'Exploración',
+  builder: 'Construcción',
   leader: 'Leader',
-  candidate: 'Candidate',
-  emerging_professional: 'Emerging professional',
+  candidate: 'Candidatura',
+  emerging_professional: 'Profesional emergente',
 }
 
 const studentOutcomeLabels: Record<LeadStudentOutcomeKey, string> = {
-  mission_orientation: 'Orientacion a la mision',
+  mission_orientation: 'Orientación a la misión',
   belonging: 'Sentido de pertenencia',
-  career_exposure: 'Exposicion profesional',
-  technical_skill: 'Habilidad tecnica',
-  innovation_project: 'Proyecto o innovacion',
+  career_exposure: 'Exposición profesional',
+  technical_skill: 'Habilidad técnica',
+  innovation_project: 'Proyecto o innovación',
   proof_artifact: 'Evidencia concreta',
-  professional_readiness: 'Preparacion profesional',
-  profile_visibility: 'Perfil mas visible',
+  professional_readiness: 'Preparación profesional',
+  profile_visibility: 'Perfil más visible',
   leadership_confidence: 'Confianza de liderazgo',
   teamwork: 'Trabajo en equipo',
-  reflection: 'Reflexion de aprendizaje',
+  reflection: 'Reflexión de aprendizaje',
   community_service: 'Servicio a la comunidad',
 }
 
 const proofOutcomeLabels: Record<LeadProofOutcomeKey, string> = {
   none: 'Sin evidencia posterior',
-  reflection: 'Growth Reflection',
+  reflection: 'Reflexión privada',
   certificate: 'Certificado',
   pitch_deck: 'Pitch deck',
-  linkedin_update: 'Actualizacion de LinkedIn',
-  resume_bullet: 'Bullet de resume',
+  linkedin_update: 'Actualización de LinkedIn',
+  resume_bullet: 'Bullet de CV',
   project_note: 'Nota de proyecto',
-  portfolio_item: 'Item de portafolio',
+  portfolio_item: 'Ítem de portafolio',
 }
 
 const audienceLabels: Record<LeadEventAudienceKey, string> = {
@@ -171,7 +171,7 @@ const ctaTypeLabels: Record<LeadRecommendationCtaType, string> = {
   reflect: 'Reflexionar',
   update_profile: 'Actualizar perfil',
   update_linkedin: 'Actualizar LinkedIn',
-  update_resume: 'Actualizar resume',
+  update_resume: 'Actualizar CV',
   capture_proof: 'Capturar evidencia',
 }
 

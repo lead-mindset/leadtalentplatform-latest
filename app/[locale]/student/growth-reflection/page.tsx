@@ -51,7 +51,7 @@ export default async function GrowthReflectionPage({
       <PageHeader
         eyebrow="Mi LEAD"
         title="Reflexión de crecimiento"
-        description="Convierte una experiencia en prueba privada de crecimiento. Luego podrás decidir si la transformas en otra cosa."
+        description="Convierte una experiencia LEAD en evidencia privada de aprendizaje. Tú decides después si la usas para tu perfil, CV o entrevistas."
         badge={
           <div className="flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-sm font-medium text-muted-foreground">
             <BookOpenCheck className="h-4 w-4" />
@@ -89,7 +89,7 @@ export default async function GrowthReflectionPage({
             />
             <TextAreaField
               name="skill_or_mindset"
-              label="¿Qué skill o mindset practicaste?"
+              label="¿Qué habilidad o mentalidad practicaste?"
               placeholder="Ej. comunicación, curiosidad, liderazgo, pensamiento técnico..."
             />
             <TextAreaField

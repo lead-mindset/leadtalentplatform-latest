@@ -288,7 +288,7 @@ const GROWTH_STAGE_LABELS: Record<string, string> = {
 const PRIMARY_FOCUS_LABELS: Record<string, string> = {
   career_exploration: 'Exploracion profesional',
   technical_experience: 'Experiencia tecnica',
-  opportunity_readiness: 'Preparacion para oportunidades',
+  opportunity_readiness: 'Preparación para oportunidades',
   community_mentorship: 'Comunidad y mentoria',
   leadership: 'Liderazgo',
 }
@@ -303,7 +303,7 @@ const RECOMMENDATION_CTA_LABELS: Record<string, string> = {
   register: 'Registrarme al evento',
   apply: 'Postular al evento',
   attend: 'Ver evento',
-  reflect: 'Capturar reflexion',
+  reflect: 'Capturar reflexión',
   update_profile: 'Actualizar perfil',
   update_linkedin: 'Actualizar perfil',
   update_resume: 'Actualizar CV',
@@ -314,13 +314,13 @@ const EVIDENCE_SIGNAL_LABELS: Record<string, string> = {
   event_registration: 'registro',
   event_attendance: 'asistencia',
   application_submitted: 'postulación',
-  reflection_completed: 'reflexion',
+  reflection_completed: 'reflexión',
   proof_submitted: 'evidencia',
   certificate_earned: 'certificado',
   linkedin_updated: 'LinkedIn',
   resume_updated: 'CV',
   profile_updated: 'perfil',
-  mission_recap_completed: 'resumen de mision',
+  mission_recap_completed: 'resumen de misión',
 }
 
 type DashboardRecommendation = PathwayDashboardGuidance['recommendations'][number]
@@ -412,7 +412,7 @@ function getPrimaryRecommendationCta(recommendation: DashboardRecommendation) {
   ) {
     return {
       targetPath: getReflectionTarget(recommendation),
-      label: RECOMMENDATION_CTA_LABELS[recommendation.cta_type ?? 'reflect'] ?? 'Capturar reflexion',
+      label: RECOMMENDATION_CTA_LABELS[recommendation.cta_type ?? 'reflect'] ?? 'Capturar reflexión',
     }
   }
 
@@ -429,7 +429,7 @@ const RECOMMENDATION_COPY_LABELS: Record<string, string> = {
   'Register for the LEAD AI Career Sprint and capture one practical learning afterward.':
     'Regístrate al sprint de carrera en IA de LEAD y captura un aprendizaje práctico después.',
   'Matched because your focus is opportunity readiness and the event is ready to recommend.':
-    'Aparece porque tu enfoque es preparacion para oportunidades y el evento esta listo para recomendarse.',
+    'Aparece porque tu enfoque es preparación para oportunidades y el evento está listo para recomendarse.',
   'Refresh your LEAD profile': 'Actualiza tu perfil LEAD',
   'Make sure your profile reflects your current interests before new opportunities appear.':
     'Asegura que tu perfil refleje tus intereses actuales antes de que aparezcan nuevas oportunidades.',
@@ -437,13 +437,13 @@ const RECOMMENDATION_COPY_LABELS: Record<string, string> = {
     'Un perfil claro ayuda a Pathway a recomendar mejores siguientes pasos.',
   'Capture one learning proof': 'Captura una evidencia de aprendizaje',
   'Turn a recent LEAD experience into a private Growth Reflection.':
-    'Convierte una experiencia LEAD reciente en una reflexion privada de crecimiento.',
+    'Convierte una experiencia LEAD reciente en una reflexión privada de crecimiento.',
   'A small proof artifact makes progress concrete.':
-    'Una pequena evidencia hace que tu avance sea concreto.',
-  'opportunity readiness': 'preparacion para oportunidades',
-  'professional readiness': 'preparacion profesional',
-  'OKR Elevate Student outcome: professional readiness': 'OKR Elevate. Resultado del estudiante: preparacion profesional',
-  'Student outcome: professional readiness': 'Resultado del estudiante: preparacion profesional',
+    'Una pequeña evidencia hace que tu avance sea concreto.',
+  'opportunity readiness': 'preparación para oportunidades',
+  'professional readiness': 'preparación profesional',
+  'OKR Elevate Student outcome: professional readiness': 'OKR Elevate. Resultado del estudiante: preparación profesional',
+  'Student outcome: professional readiness': 'Resultado del estudiante: preparación profesional',
   'Profile readiness': 'Perfil listo',
   'Proof loop': 'Ciclo de evidencia',
 }
@@ -464,8 +464,8 @@ function PathwayGuidanceCard({ guidance }: { guidance: PathwayDashboardGuidance 
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm leading-6 text-muted-foreground">
-            Completa un Check-In de 3 minutos para recibir tres movimientos claros: que aprender,
-            con quien conectar y que pequena prueba construir.
+            Completa un Check-In de 3 minutos para recibir tres movimientos claros: qué aprender,
+            con quién conectar y qué pequeña prueba construir.
           </p>
           <Button asChild className="w-full sm:w-auto">
             <Link href="/student/pathway-check-in">Empezar Check-In</Link>
@@ -615,7 +615,7 @@ function PersonalProgressCard({
     {
       label: 'Movimientos completados',
       value: completedMoves,
-      helper: 'Acciones pequenas que ya convertiste en avance.',
+      helper: 'Acciones pequeñas que ya convertiste en avance.',
     },
     {
       label: 'Reflexiones completadas',
@@ -639,7 +639,7 @@ function PersonalProgressCard({
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm leading-6 text-muted-foreground">
-          Sin rankings ni comparaciones. Solo senales de lo que ya estas construyendo.
+          Sin rankings ni comparaciones. Solo señales de lo que ya estás construyendo.
         </p>
         <div className="grid gap-3">
           {metrics.map((metric) => (
