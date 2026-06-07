@@ -314,15 +314,15 @@ Mitigation: Store reviewer-ready data now; defer admin queue unless separately p
 
 ### SharePoint Source References
 
-- `LEAD Mission & Vision 2025.docx`  
+- `LEAD Mission & Vision 2025.docx`
   `Shared Documents/LEAD Peru/0. LEAD Marketing & Presentations/Content/Mission & Vision/`
-- `FINAL Lead Bylaws.docx`  
+- `FINAL Lead Bylaws.docx`
   `Shared Documents/LEAD Peru/LEAD Peru Docs/Chapters/Onboarding/`
-- `FINAL Chapter Agreement  LEAD.docx`  
+- `FINAL Chapter Agreement  LEAD.docx`
   `Shared Documents/LEAD Peru/LEAD Peru Docs/Chapters/Onboarding/`
-- `LEAD Talent Platform.docx`  
+- `LEAD Talent Platform.docx`
   `Shared Documents/LEAD Americas Board/Digital transformation/`
-- `Validacion.docx` and `Informa de validacion.pdf`  
+- `Validacion.docx` and `Informa de validacion.pdf`
   `Shared Documents/LEAD Americas Board/Digital transformation/Talent platform/`
-- `LEAD - Discover Day.docx`  
+- `LEAD - Discover Day.docx`
   `Shared Documents/LEAD Peru/8. LEAD Discover Events/July 2025/`

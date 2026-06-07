@@ -17,7 +17,7 @@ interface AdminNavigationProps {
 export function AdminNavigation({ stats }: AdminNavigationProps) {
   return (
     <SidebarGroup>
-      <SidebarGroupLabel className="text-sidebar-foreground font-medium">Administracion</SidebarGroupLabel>
+      <SidebarGroupLabel className="text-sidebar-foreground font-medium">Administración</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
           {ADMIN_NAV.map((item) => (

@@ -17,7 +17,7 @@ export default async function ProfilePage() {
       <PageHeader
         eyebrow="Portal de empresa"
         title="Perfil de representante"
-        description={`Gestiona tu informacion de perfil para ${company?.name || 'tu empresa'} y confirma tu estado de acceso.`}
+        description={`Gestiona tu información de perfil para ${company?.name || 'tu empresa'} y confirma tu estado de acceso.`}
       />
 
       <ProfileForm

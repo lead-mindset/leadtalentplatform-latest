@@ -37,9 +37,9 @@ export default async function AdminChaptersPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Administracion"
-        title="Capitulos"
-        description="Gestiona metadatos de capitulos, asignacion de editores, conteos de membresia y validaciones de eliminacion segura."
+        eyebrow="Administración"
+        title="Capítulos"
+        description="Gestiona metadatos de capítulos, asignación de editores, conteos de membresía y validaciones de eliminación segura."
       />
       <ChaptersManagementClient
         items={list.items}

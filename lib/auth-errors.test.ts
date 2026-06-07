@@ -16,4 +16,3 @@ describe('auth error mapping', () => {
     expect(getAuthErrorKey(new Error('Unexpected provider response'))).toBe('anErrorOccurred')
   })
 })
-

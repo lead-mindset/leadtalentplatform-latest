@@ -6,8 +6,8 @@ Capture validation and rollout evidence for the chapter activation interest slic
 
 ## User Story
 
-As a reviewer  
-I want validation evidence and deferred scope documented  
+As a reviewer
+I want validation evidence and deferred scope documented
 So that I can assess whether the feature is launch-safe.
 
 ## Metadata

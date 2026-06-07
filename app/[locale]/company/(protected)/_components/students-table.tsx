@@ -21,9 +21,9 @@ export function StudentsTable({ students, savedStudentIds = [] }: StudentsTableP
         <TableHeader>
           <TableRow className="bg-muted/40">
             <TableHead className="min-w-[220px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Perfil</TableHead>
-            <TableHead className="min-w-[210px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Capitulo</TableHead>
-            <TableHead className="min-w-[180px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Area</TableHead>
-            <TableHead className="w-[130px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Graduacion</TableHead>
+            <TableHead className="min-w-[210px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Capítulo</TableHead>
+            <TableHead className="min-w-[180px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Área</TableHead>
+            <TableHead className="w-[130px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Graduación</TableHead>
             <TableHead className="min-w-[240px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Habilidades</TableHead>
             <TableHead className="sticky right-0 z-20 w-[150px] bg-card px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground shadow-[-12px_0_18px_-18px_rgba(15,23,42,0.6)]">Acciones</TableHead>
           </TableRow>
@@ -50,14 +50,14 @@ export function StudentsTable({ students, savedStudentIds = [] }: StudentsTableP
                     </div>
                   </div>
                 ) : (
-                  <span className="text-sm text-muted-foreground">Capitulo no registrado</span>
+                  <span className="text-sm text-muted-foreground">Capítulo no registrado</span>
                 )}
               </TableCell>
               <TableCell className="px-4 py-3 align-top">
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-muted-foreground shrink-0" />
                   <span className="text-sm">
-                    {student.person_profile?.major_or_interest || 'Area no especificada'}
+                    {student.person_profile?.major_or_interest || 'Área no especificada'}
                   </span>
                 </div>
               </TableCell>
@@ -133,7 +133,7 @@ export function StudentsTable({ students, savedStudentIds = [] }: StudentsTableP
                   <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                   <div className="min-w-0">
                     <p className="font-medium">
-                      {student.chapter?.name ?? 'Capitulo no registrado'}
+                      {student.chapter?.name ?? 'Capítulo no registrado'}
                     </p>
                     {student.chapter?.university ? (
                       <p className="text-xs text-muted-foreground">{student.chapter.university}</p>
@@ -142,14 +142,14 @@ export function StudentsTable({ students, savedStudentIds = [] }: StudentsTableP
                 </div>
                 <div className="flex items-start gap-2">
                   <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                  <span>{student.person_profile?.major_or_interest || 'Area no especificada'}</span>
+                  <span>{student.person_profile?.major_or_interest || 'Área no especificada'}</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <GraduationCap className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                   <span>
                     {student.person_profile?.graduation_year
-                      ? `Promocion ${student.person_profile.graduation_year}`
-                      : 'Ano de graduacion no registrado'}
+                      ? `Promoción ${student.person_profile.graduation_year}`
+                      : 'Año de graduación no registrado'}
                   </span>
                 </div>
               </div>

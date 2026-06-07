@@ -107,7 +107,7 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
             <Users className="mx-auto h-12 w-12 opacity-50 mb-3" />
             <p className="font-medium">No hay perfiles visibles que coincidan con tus filtros</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Prueba ajustar la busqueda, capitulo, area de interes o ano de graduacion.
+              Prueba ajustar la búsqueda, capítulo, área de interés o año de graduación.
             </p>
           </CardContent>
         </Card>

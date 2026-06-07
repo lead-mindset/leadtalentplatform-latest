@@ -159,4 +159,3 @@ All launch blockers identified for the controlled pilot have been resolved or gu
 - Future admin, chapter, onboarding, event, and company feature hardening.
 
 This is a good launch-readiness outcome because the PR avoids encoding unclear business assumptions. It should be described as: controlled pilot ready after review, not full-platform QA complete.
-

@@ -96,11 +96,11 @@ export function BrowseFilters({
           onValueChange={val => updateParam('major', val)}
           disabled={isPending}
         >
-          <SelectTrigger className="w-[12.5rem]" aria-label="Filtrar por area">
-            <SelectValue placeholder="Todas las areas" />
+          <SelectTrigger className="w-[12.5rem]" aria-label="Filtrar por área">
+            <SelectValue placeholder="Todas las áreas" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todas las areas</SelectItem>
+            <SelectItem value="all">Todas las áreas</SelectItem>
             {majors.map(major => (
               <SelectItem key={major} value={major}>
                 {major}
@@ -114,14 +114,14 @@ export function BrowseFilters({
           onValueChange={val => updateParam('year', val)}
           disabled={isPending}
         >
-          <SelectTrigger className="w-[10rem]" aria-label="Filtrar por promocion">
-            <SelectValue placeholder="Todos los anos" />
+          <SelectTrigger className="w-[10rem]" aria-label="Filtrar por promoción">
+            <SelectValue placeholder="Todos los años" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos los anos</SelectItem>
+            <SelectItem value="all">Todos los años</SelectItem>
             {years.map(year => (
               <SelectItem key={year} value={String(year)}>
-                Promocion {year}
+                Promoción {year}
               </SelectItem>
             ))}
           </SelectContent>
@@ -132,11 +132,11 @@ export function BrowseFilters({
           onValueChange={val => updateParam('chapter', val)}
           disabled={isPending}
         >
-          <SelectTrigger className="w-[12.5rem]" aria-label="Filtrar por capitulo">
-            <SelectValue placeholder="Todos los capitulos" />
+          <SelectTrigger className="w-[12.5rem]" aria-label="Filtrar por capítulo">
+            <SelectValue placeholder="Todos los capítulos" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos los capitulos</SelectItem>
+            <SelectItem value="all">Todos los capítulos</SelectItem>
             {chapters.map(([id, name]) => (
               <SelectItem key={id} value={id}>
                 {name}

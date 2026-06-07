@@ -14,7 +14,7 @@ export default async function CompanyLayout({ children }: CompanyLayoutProps) {
   return (
     <SidebarLayout
       mobileTitle="Empresa"
-      mobileSubtitle="Talent access"
+      mobileSubtitle="Acceso a talento"
       sidebar={
         <BaseSidebar
           userName={user.name ?? 'Representante de empresa'}
