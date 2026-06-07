@@ -16,13 +16,7 @@ import type {
 const TALENT_UNAVAILABLE_ERROR = 'Profile not found or unavailable.'
 const COMPANY_DATA_UNAVAILABLE_ERROR = 'Company talent data is temporarily unavailable.'
 
-// ───────────────────────────────────────────────────────────────
-// Shared select string — keeps both query functions consistent
-// ───────────────────────────────────────────────────────────────
-
-// ───────────────────────────────────────────────────────────────
 // Types
-// ───────────────────────────────────────────────────────────────
 
 export type RecruiterProfileRow = Pick<
   PersonProfileRow,
@@ -105,13 +99,7 @@ export type CompanyDataResult<T> =
   | { success: true; data: T }
   | { success: false; data: T; error: string }
 
-// ───────────────────────────────────────────────────────────────
-// Helpers
-// ───────────────────────────────────────────────────────────────
-
-// ───────────────────────────────────────────────────────────────
-// Service
-// ───────────────────────────────────────────────────────────────
+// Shared company talent visibility helpers
 
 async function loadVisibleStudents(
   supabase: SupabaseClient<Database>,
@@ -329,7 +317,7 @@ export const CompanyService = {
   },
 
   /**
-   * Returns saved student IDs for a recruiter — lightweight, for checking save state.
+   * Returns saved student IDs for a recruiter - lightweight, for checking save state.
    */
   async getSavedStudentIds(
     supabase: SupabaseClient<Database>,
@@ -349,7 +337,7 @@ export const CompanyService = {
   },
 
   /**
-   * Company stats using a count query — does not fetch full student records.
+   * Company stats using a count query - does not fetch full student records.
    */
   async getCompanyStats(
     supabase: SupabaseClient<Database>,
@@ -500,9 +488,7 @@ export const CompanyService = {
     return { success: true, data: !!data }
   },
 
-  // ───────────────────────────────────────────────────────────────
   // Profile actions
-  // ───────────────────────────────────────────────────────────────
 
   async getTalentResumeMetadata(
     supabase: SupabaseClient<Database>,
