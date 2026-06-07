@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { type EmailOtpType } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 import { isValidLocale, routing } from "@/i18n/routing";
+import { logger } from "@/lib/logger";
 
 function getSafeNextPath(value: string | null, locale: string) {
   if (!value) return null;
@@ -29,7 +30,16 @@ export async function GET(request: NextRequest) {
     ? localeFromPath
     : routing.defaultLocale;
 
-  console.log("[confirm] params:", { token_hash: token_hash?.slice(0, 20), type, locale });
+  logger.info(
+    {
+      context: "auth/confirm",
+      hasTokenHash: Boolean(token_hash),
+      hasType: Boolean(type),
+      type: type ?? "missing",
+      locale,
+    },
+    "Auth confirmation request received"
+  );
 
   if (!token_hash || !type) {
     return NextResponse.redirect(`${siteUrl}/${locale}/auth/error?error=Missing+token_hash+or+type`);
@@ -38,7 +48,19 @@ export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const { error } = await supabase.auth.verifyOtp({ type, token_hash });
 
-  console.log("[confirm] verifyOtp error:", error ?? "none");
+  if (error) {
+    logger.warn(
+      {
+        context: "auth/confirm",
+        type,
+        locale,
+        errorName: error.name,
+        status: "status" in error ? error.status : undefined,
+        code: "code" in error ? error.code : undefined,
+      },
+      "Auth confirmation verification failed"
+    );
+  }
 
   if (error) {
     return NextResponse.redirect(
