@@ -164,14 +164,14 @@ function EventMeta({ registration }: { registration: RegistrationWithEvent }) {
 
 function QrPanel({ qrDataUrl }: { qrDataUrl: string }) {
   return (
-    <div className="rounded-lg border border-border bg-white p-3 text-center shadow-sm">
-      <div className="mx-auto flex aspect-square w-full max-w-[15rem] items-center justify-center">
+    <div className="w-full max-w-full rounded-lg border border-border bg-white p-3 text-center shadow-sm">
+      <div className="mx-auto flex aspect-square w-full max-w-[14rem] items-center justify-center sm:max-w-[15rem]">
         <Image
           src={qrDataUrl}
           alt="Event check-in QR code"
           width={240}
           height={240}
-          className="h-auto w-full max-w-[15rem]"
+          className="h-auto w-full max-w-[14rem] sm:max-w-[15rem]"
           unoptimized
         />
       </div>
@@ -196,7 +196,7 @@ function EventRegistrationCard({
   return (
     <Card
       id={`event-reg-${registration.event_id}`}
-      className="scroll-mt-24 overflow-hidden rounded-lg"
+      className="min-w-0 scroll-mt-24 overflow-hidden rounded-lg"
     >
       <CardHeader className="gap-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -214,12 +214,12 @@ function EventRegistrationCard({
       </CardHeader>
 
       <CardContent className="space-y-4">
-        <div className="rounded-lg border border-border bg-muted/30 p-3">
-          <div className="flex items-start gap-3">
-            <Badge variant={message.variant} size="sm" className="mt-0.5 shrink-0">
+        <div className="min-w-0 rounded-lg border border-border bg-muted/30 p-3">
+          <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:gap-3">
+            <Badge variant={message.variant} size="sm" className="w-fit shrink-0 sm:mt-0.5">
               {message.title}
             </Badge>
-            <p className="text-sm leading-6 text-muted-foreground">{message.body}</p>
+            <p className="min-w-0 text-sm leading-6 text-muted-foreground">{message.body}</p>
           </div>
         </div>
 
@@ -326,10 +326,10 @@ function CurrentTicket({
     : null
 
   return (
-    <Card className="rounded-lg">
+    <Card className="min-w-0 overflow-hidden rounded-lg">
       <CardHeader className="gap-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-2">
+          <div className="min-w-0 space-y-2">
             <Badge variant="outline">Ticket actual</Badge>
             <CardTitle className="break-words text-2xl leading-8">
               {registration.event?.title ?? 'Tu próximo evento'}
@@ -348,17 +348,17 @@ function CurrentTicket({
       <CardContent className="space-y-5">
         <EventMeta registration={registration} />
 
-        <div className="rounded-lg border border-border bg-muted/30 p-4">
-          <div className="flex items-start gap-3">
-            <Badge variant={message.variant} size="sm" className="mt-0.5 shrink-0">
+        <div className="min-w-0 rounded-lg border border-border bg-muted/30 p-4">
+          <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:gap-3">
+            <Badge variant={message.variant} size="sm" className="w-fit shrink-0 sm:mt-0.5">
               {message.title}
             </Badge>
-            <p className="text-sm leading-6 text-muted-foreground">{message.body}</p>
+            <p className="min-w-0 text-sm leading-6 text-muted-foreground">{message.body}</p>
           </div>
         </div>
 
         {qrDataUrl ? (
-          <div className="max-w-80">
+          <div className="mx-auto w-full max-w-[17.5rem] sm:max-w-80">
             <QrPanel qrDataUrl={qrDataUrl} />
           </div>
         ) : (
@@ -378,7 +378,7 @@ function CurrentTicket({
           </div>
         ) : null}
 
-        <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="flex min-w-0 flex-col gap-2 sm:flex-row">
           <Button asChild className="w-full sm:w-auto">
             <Link href={`/events/${registration.event_id}`}>Ver detalle</Link>
           </Button>
@@ -465,8 +465,8 @@ export default async function StudentEventsPage({
       {registrations.length === 0 ? (
         <EmptyState />
       ) : (
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
-          <section className="space-y-6">
+        <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
+          <section className="min-w-0 space-y-6">
             {currentTicket ? (
               <CurrentTicket
                 registration={currentTicket}
@@ -488,15 +488,23 @@ export default async function StudentEventsPage({
               </Card>
             )}
 
-            <Tabs defaultValue="active" className="space-y-4">
-              <TabsList className="flex w-full justify-start overflow-x-auto">
-                <TabsTrigger value="active">Activos ({visibleActiveRegistrations.length})</TabsTrigger>
-                <TabsTrigger value="applications">
+            <Tabs defaultValue="active" className="min-w-0 space-y-4">
+              <TabsList
+                className={`grid h-auto w-full gap-1 overflow-visible p-1 ${
+                  cancelledRegistrations.length > 0 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'
+                }`}
+              >
+                <TabsTrigger className="h-9 min-w-0 px-1.5 text-xs leading-tight sm:px-3 sm:text-sm" value="active">
+                  Activos ({visibleActiveRegistrations.length})
+                </TabsTrigger>
+                <TabsTrigger className="h-9 min-w-0 px-1.5 text-xs leading-tight sm:px-3 sm:text-sm" value="applications">
                   Postulaciones ({applicationRegistrations.length})
                 </TabsTrigger>
-                <TabsTrigger value="history">Historial ({historyRegistrations.length})</TabsTrigger>
+                <TabsTrigger className="h-9 min-w-0 px-1.5 text-xs leading-tight sm:px-3 sm:text-sm" value="history">
+                  Historial ({historyRegistrations.length})
+                </TabsTrigger>
                 {cancelledRegistrations.length > 0 ? (
-                  <TabsTrigger value="cancelled">
+                  <TabsTrigger className="h-9 min-w-0 px-1.5 text-xs leading-tight sm:px-3 sm:text-sm" value="cancelled">
                     Cancelados ({cancelledRegistrations.length})
                   </TabsTrigger>
                 ) : null}
