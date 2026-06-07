@@ -228,7 +228,6 @@ export function EventsManagementClient({
                       >
                         {event.title}
                       </Link>
-                      <p className="break-all text-xs text-muted-foreground">{event.id}</p>
                     </div>
 
                     <dl className="grid gap-2 text-sm">
@@ -251,6 +250,13 @@ export function EventsManagementClient({
                         </dd>
                       </div>
                     </dl>
+
+                    <details className="rounded-md border border-dashed border-border bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+                      <summary className="cursor-pointer font-medium text-foreground/80">
+                        ID técnico
+                      </summary>
+                      <p className="mt-2 break-all font-mono text-[11px] leading-5">{event.id}</p>
+                    </details>
 
                     {renderEventActions(event, true)}
                   </div>
