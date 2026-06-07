@@ -3,6 +3,7 @@ import { BaseSidebar } from '@/components/ui/sidebars/base-sidebar'
 import { AdminNavigation } from '@/components/ui/sidebars/admin-sidebar'
 import { Badge } from '@/components/ui/badge'
 import { requireAdmin } from '@/lib/auth'
+import { getTranslations } from 'next-intl/server'
 import type { ReactNode } from 'react'
 
 interface AdminLayoutProps {
@@ -11,15 +12,16 @@ interface AdminLayoutProps {
 
 export default async function AdminLayout({ children }: AdminLayoutProps) {
   const { user } = await requireAdmin()
+  const t = await getTranslations('adminShell')
 
   return (
     <SidebarLayout
-      mobileTitle="Administración"
-      mobileSubtitle="Gestión de la plataforma"
+      mobileTitle={t('mobileTitle')}
+      mobileSubtitle={t('mobileSubtitle')}
       headerRight={<Badge variant="outline">Admin</Badge>}
       sidebar={
         <BaseSidebar
-          userName={user.name ?? 'Administración'}
+          userName={user.name ?? t('mobileTitle')}
           userEmail={user.email}
           userRole={user.role}
         >

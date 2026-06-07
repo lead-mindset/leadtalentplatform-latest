@@ -37,6 +37,10 @@
     "logout": "Log out",
     "events": "Events"
   },
+  "adminShell": {
+    "mobileTitle": "Admin",
+    "mobileSubtitle": "Platform management"
+  },
   "auth": {
     "email": "Email",
     "password": "Password",
