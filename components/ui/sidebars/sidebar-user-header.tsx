@@ -13,7 +13,7 @@ const ROLE_LABELS: Record<Role, string> = {
   member:    'Miembro',
   editor:    'Editor de chapter',
   admin:     'Admin',
-  recruiter: 'Representante de empresa',
+  recruiter: 'Empresa',
 }
 
 export function SidebarUserHeader({ name, email, role, memberId }: SidebarUserHeaderProps) {

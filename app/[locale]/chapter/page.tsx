@@ -216,10 +216,10 @@ function EventOpsList({
 
         return (
           <Card key={event.id}>
-            <CardContent className="py-4 space-y-2">
-              <div className="flex items-start justify-between gap-3">
+            <CardContent className="space-y-3 py-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
-                  <p className="font-medium truncate">{event.title}</p>
+                  <p className="font-medium leading-5">{event.title}</p>
                   <p className="text-xs text-muted-foreground">
                     {new Date(event.start_at).toLocaleString(undefined, {
                       month: 'short',
@@ -229,12 +229,12 @@ function EventOpsList({
                     })}
                   </p>
                 </div>
-                <div className="flex shrink-0 gap-2">
-                  <Button asChild size="sm" variant="outline">
+                <div className="grid shrink-0 gap-2 sm:flex">
+                  <Button asChild size="sm" variant="outline" className="w-full sm:w-auto">
                       <Link href={`/chapter/events/${event.id}`}>Gestionar</Link>
                   </Button>
                   {event.is_published && (
-                    <Button asChild size="sm" variant="outline">
+                    <Button asChild size="sm" variant="outline" className="w-full sm:w-auto">
                       <Link href={`/chapter/events/${event.id}/checkin`}>Check-in</Link>
                     </Button>
                   )}
