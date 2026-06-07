@@ -10,6 +10,11 @@ interface ResumeAccessButtonProps {
   profileId: string
 }
 
+export const RESUME_ACCESS_COPY = {
+  open: 'Abrir CV',
+  success: 'CV abierto en una nueva pesta\u00f1a',
+} as const
+
 export function ResumeAccessButton({ profileId }: ResumeAccessButtonProps) {
   const [isPending, startTransition] = useTransition()
 
@@ -23,7 +28,7 @@ export function ResumeAccessButton({ profileId }: ResumeAccessButtonProps) {
       }
 
       window.open(result.url, '_blank', 'noopener,noreferrer')
-      toast.success('CV abierto en una nueva pestaña')
+      toast.success(RESUME_ACCESS_COPY.success)
     })
   }
 
@@ -34,7 +39,7 @@ export function ResumeAccessButton({ profileId }: ResumeAccessButtonProps) {
       ) : (
         <FileText className="h-4 w-4" />
       )}
-      Abrir CV
+      {RESUME_ACCESS_COPY.open}
     </Button>
   )
 }
