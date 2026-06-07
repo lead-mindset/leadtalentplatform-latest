@@ -23,7 +23,7 @@ export function ResumeAccessButton({ profileId }: ResumeAccessButtonProps) {
       }
 
       window.open(result.url, '_blank', 'noopener,noreferrer')
-      toast.success('Resume opened in a new tab')
+      toast.success('CV abierto en una nueva pestaña')
     })
   }
 
@@ -34,7 +34,7 @@ export function ResumeAccessButton({ profileId }: ResumeAccessButtonProps) {
       ) : (
         <FileText className="h-4 w-4" />
       )}
-      Open Resume
+      Abrir CV
     </Button>
   )
 }

@@ -103,8 +103,8 @@ export function EboardInviteManagement({ invites }: Props) {
         return
       }
 
-      toast.success('Invitacion enviada', {
-        description: 'El enlace queda activo por 30 dias y solo funciona con ese correo.',
+        toast.success('Invitación enviada', {
+          description: 'El enlace queda activo por 30 días y solo funciona con ese correo.',
       })
       setOpen(false)
       resetForm()
@@ -120,7 +120,7 @@ export function EboardInviteManagement({ invites }: Props) {
         return
       }
 
-      toast.success('Invitacion cancelada')
+      toast.success('Invitación cancelada')
       router.refresh()
     })
   }
@@ -133,8 +133,8 @@ export function EboardInviteManagement({ invites }: Props) {
         return
       }
 
-      toast.success('Invitacion reenviada', {
-        description: 'El enlace queda activo por 30 dias mas.',
+      toast.success('Invitación reenviada', {
+        description: 'El enlace queda activo por 30 días más.',
       })
       router.refresh()
     })
@@ -149,7 +149,7 @@ export function EboardInviteManagement({ invites }: Props) {
             <Badge variant="outline">{invites.length} pendientes</Badge>
           </div>
           <p className="max-w-2xl text-sm text-muted-foreground">
-            Envia un enlace de acceso. Cuando la persona entre con ese correo, su rol e-board queda listo en este chapter.
+            Envía un enlace de acceso. Cuando la persona entre con ese correo, su rol e-board queda listo en este capítulo.
           </p>
         </div>
 
@@ -162,9 +162,9 @@ export function EboardInviteManagement({ invites }: Props) {
           </DialogTrigger>
           <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-xl">
             <DialogHeader>
-              <DialogTitle>Invitar e-board del chapter</DialogTitle>
+              <DialogTitle>Invitar e-board del capítulo</DialogTitle>
               <DialogDescription>
-                Escribe el correo, elige el rol y envia el enlace. Vence en 30 dias.
+                Escribe el correo, elige el rol y envía el enlace. Vence en 30 días.
               </DialogDescription>
             </DialogHeader>
 
@@ -181,7 +181,7 @@ export function EboardInviteManagement({ invites }: Props) {
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="lider@example.edu"
-                helperText="La persona debe iniciar sesion o crear cuenta con este mismo correo."
+                helperText="La persona debe iniciar sesión o crear cuenta con este mismo correo."
                 autoComplete="email"
                 autoFocus
                 required
@@ -232,7 +232,7 @@ export function EboardInviteManagement({ invites }: Props) {
               <div className="rounded-md border bg-muted/30 p-3 text-sm">
                 <p className="font-medium">Antes de enviar</p>
                 <p className="mt-1 text-muted-foreground">
-                  {email.trim() || 'correo@universidad.edu'} recibira un enlace de 30 dias para activar{' '}
+                  {email.trim() || 'correo@universidad.edu'} recibirá un enlace de 30 días para activar{' '}
                   <span className="font-medium text-foreground">{effectiveDisplayTitle}</span>.
                 </p>
               </div>
@@ -245,7 +245,7 @@ export function EboardInviteManagement({ invites }: Props) {
                 </DialogClose>
                 <Button type="submit" disabled={isPending || !canSubmit}>
                   <Send className="mr-2 h-4 w-4" />
-                  {isPending ? 'Enviando...' : 'Enviar invitacion'}
+                {isPending ? 'Enviando...' : 'Enviar invitación'}
                 </Button>
               </DialogFooter>
             </form>
@@ -255,7 +255,7 @@ export function EboardInviteManagement({ invites }: Props) {
 
       {invites.length === 0 ? (
         <div className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
-          Aun no hay invitaciones e-board. Cuando envies una, podras cancelarla o reenviarla si expira.
+              Aún no hay invitaciones e-board. Cuando envíes una, podrás cancelarla o reenviarla si expira.
         </div>
       ) : (
         <div className="divide-y rounded-md border">

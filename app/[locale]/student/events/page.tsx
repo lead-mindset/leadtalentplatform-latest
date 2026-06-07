@@ -107,8 +107,8 @@ function getRegistrationMessage(registration: RegistrationWithEvent, qrDataUrl: 
   if (registration.status === 'registered') {
     return qrDataUrl
       ? {
-          title: 'Codigo listo',
-          body: 'Muestra este codigo al llegar.',
+      title: 'Código listo',
+      body: 'Muestra este código al llegar.',
           variant: 'success' as const,
         }
       : {
@@ -120,8 +120,8 @@ function getRegistrationMessage(registration: RegistrationWithEvent, qrDataUrl: 
 
   if (registration.status === 'pending_review') {
     return {
-      title: lifecycle?.label ?? 'Postulacion enviada',
-      body: lifecycle?.description ?? 'El equipo te escribira por correo despues de revisarla.',
+      title: lifecycle?.label ?? 'Postulación enviada',
+      body: lifecycle?.description ?? 'El equipo te escribirá por correo después de revisarla.',
       variant: 'warning' as const,
     }
   }
@@ -176,7 +176,7 @@ function QrPanel({ qrDataUrl }: { qrDataUrl: string }) {
         />
       </div>
       <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-[#111827]">
-        Codigo de check-in del evento
+          Código de check-in del evento
       </p>
     </div>
   )
@@ -238,12 +238,12 @@ function EventRegistrationCard({
                 <div className="space-y-1">
                   <p className="text-sm font-semibold text-foreground">Convertir en aprendizaje</p>
                   <p className="text-sm leading-6 text-muted-foreground">
-                    Opcional: captura lo que aprendiste mientras esta experiencia sigue fresca.
+              Opcional: captura lo que aprendiste mientras esta experiencia sigue fresca.
                   </p>
                 </div>
               </div>
               <Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
-                <Link href={reflectionHref(registration)}>Crear reflexion</Link>
+              <Link href={reflectionHref(registration)}>Crear reflexión</Link>
               </Button>
             </div>
           </div>
@@ -275,9 +275,9 @@ function EmptyState() {
           <Icons.Calendar className="h-6 w-6" />
         </span>
         <div className="space-y-1">
-          <h2 className="text-lg font-semibold">Aun no tienes registros a eventos</h2>
+          <h2 className="text-lg font-semibold">Aún no tienes registros a eventos</h2>
           <p className="max-w-md text-sm text-muted-foreground">
-            Explora eventos publicos y registrate o postula cuando encuentres algo que encaje con tus objetivos.
+            Explora eventos públicos y regístrate o postula cuando encuentres algo que encaje con tus objetivos.
           </p>
         </div>
         <Button asChild>
@@ -332,7 +332,7 @@ function CurrentTicket({
           <div className="space-y-2">
             <Badge variant="outline">Ticket actual</Badge>
             <CardTitle className="break-words text-2xl leading-8">
-              {registration.event?.title ?? 'Tu proximo evento'}
+              {registration.event?.title ?? 'Tu próximo evento'}
             </CardTitle>
             <CardDescription>
               Ten esto listo en tu celular cuando llegues.
@@ -364,16 +364,16 @@ function CurrentTicket({
         ) : (
           <div className="flex min-h-64 flex-col items-center justify-center rounded-lg border border-dashed border-border bg-muted/30 p-6 text-center">
             <QrCode className="mb-3 h-8 w-8 text-muted-foreground" />
-            <p className="text-sm font-medium text-foreground">QR aun no disponible</p>
+                  <p className="text-sm font-medium text-foreground">QR aún no disponible</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Solo los registros confirmados muestran aqui su codigo de check-in del evento.
+                    Solo los registros confirmados muestran aquí su código de check-in del evento.
             </p>
           </div>
         )}
 
         {calendarEvent ? (
           <div className="space-y-2">
-            <p className="text-sm font-semibold text-foreground">Agendalo antes de cerrar esta pagina</p>
+                  <p className="text-sm font-semibold text-foreground">Agéndalo antes de cerrar esta página</p>
             <EventCalendarActions event={calendarEvent} />
           </div>
         ) : null}
@@ -454,7 +454,7 @@ export default async function StudentEventsPage({
       <PageHeader
         eyebrow="Mi LEAD"
         title="Mis eventos"
-        description="Revisa tus registros, decisiones de postulacion y codigos QR de check-in en un solo lugar."
+        description="Revisa tus registros, decisiones de postulación y códigos QR de check-in en un solo lugar."
         actions={
           <Button asChild>
             <Link href="/events">Explorar eventos</Link>
@@ -478,7 +478,7 @@ export default async function StudentEventsPage({
                   <div className="space-y-1">
                     <h2 className="text-lg font-semibold">No tienes un ticket activo ahora</h2>
                     <p className="text-sm text-muted-foreground">
-                      Los proximos eventos registrados con QR apareceran primero aqui.
+              Los próximos eventos registrados con QR aparecerán primero aquí.
                     </p>
                   </div>
                   <Button asChild variant="outline">
@@ -507,7 +507,7 @@ export default async function StudentEventsPage({
                   <TabEmptyState
                     icon={<Icons.Ticket className="h-5 w-5" />}
                     title="No hay otros tickets activos"
-                    description="Tu proximo ticket se muestra arriba. Otros registros futuros apareceran aqui."
+              description="Tu próximo ticket se muestra arriba. Otros registros futuros aparecerán aquí."
                   />
                 ) : (
                   <div className="grid gap-4 lg:grid-cols-2">
@@ -528,7 +528,7 @@ export default async function StudentEventsPage({
                   <TabEmptyState
                     icon={<Icons.Clock className="h-5 w-5" />}
                     title="No hay postulaciones en espera"
-                    description="Los eventos con postulacion apareceran aqui mientras se revisan."
+              description="Los eventos con postulación aparecerán aquí mientras se revisan."
                   />
                 ) : (
                   <div className="grid gap-4 lg:grid-cols-2">
@@ -547,7 +547,7 @@ export default async function StudentEventsPage({
                 {historyRegistrations.length === 0 ? (
                   <TabEmptyState
                     icon={<Icons.Calendar className="h-5 w-5" />}
-                    title="Aun no hay historial de eventos"
+              title="Aún no hay historial de eventos"
                     description="Los eventos pasados y registros completados apareceran aqui."
                   />
                 ) : (
@@ -589,7 +589,7 @@ export default async function StudentEventsPage({
             <Card className="rounded-lg">
               <CardHeader>
                 <CardTitle className="text-base">Para entrar rapido</CardTitle>
-                <CardDescription>Aplica a cualquier codigo QR de tus eventos.</CardDescription>
+          <CardDescription>Aplica a cualquier código QR de tus eventos.</CardDescription>
               </CardHeader>
               <CardContent>
                 <EventDayGuidance compact showTitle={false} className="border-0 bg-transparent p-0" />

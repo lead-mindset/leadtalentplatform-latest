@@ -50,8 +50,8 @@ export default async function GrowthReflectionPage({
     <MainContainer maxWidth="3xl" className="space-y-6 py-6 pb-24 sm:py-8">
       <PageHeader
         eyebrow="Mi LEAD"
-        title="Growth Reflection"
-        description="Convierte una experiencia en prueba privada de crecimiento. Luego podras decidir si la transformas en otra cosa."
+        title="Reflexión de crecimiento"
+        description="Convierte una experiencia en prueba privada de crecimiento. Luego podrás decidir si la transformas en otra cosa."
         badge={
           <div className="flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-sm font-medium text-muted-foreground">
             <BookOpenCheck className="h-4 w-4" />
@@ -62,7 +62,7 @@ export default async function GrowthReflectionPage({
 
       <Card className="rounded-lg">
         <CardHeader>
-          <CardTitle className="text-lg">Tu reflexion</CardTitle>
+          <CardTitle className="text-lg">Tu reflexión</CardTitle>
         </CardHeader>
         <CardContent>
           <form action={submitGrowthReflection} className="space-y-5">
@@ -72,39 +72,39 @@ export default async function GrowthReflectionPage({
             ) : null}
             <label className="space-y-2">
               <span className="block text-sm font-semibold text-foreground">
-                Que experiencia de LEAD quieres capturar?
+                ¿Qué experiencia de LEAD quieres capturar?
               </span>
               <input
                 required
                 name="participated_in"
                 defaultValue={participatedInDefault}
-                placeholder="Ej. IBM Explore Day, una mentoria, un taller de IA..."
+                placeholder="Ej. IBM Explore Day, una mentoría, un taller de IA..."
                 className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
               />
             </label>
             <TextAreaField
               name="learned"
-              label="Que aprendiste?"
-              placeholder="Escribe una idea, habilidad o decision que ahora entiendes mejor."
+              label="¿Qué aprendiste?"
+              placeholder="Escribe una idea, habilidad o decisión que ahora entiendes mejor."
             />
             <TextAreaField
               name="skill_or_mindset"
-              label="Que skill o mindset practicaste?"
-              placeholder="Ej. comunicacion, curiosidad, liderazgo, pensamiento tecnico..."
+              label="¿Qué skill o mindset practicaste?"
+              placeholder="Ej. comunicación, curiosidad, liderazgo, pensamiento técnico..."
             />
             <TextAreaField
               name="goal_connection"
-              label="Como conecta esto con tus metas?"
+              label="¿Cómo conecta esto con tus metas?"
               placeholder="Conecta la experiencia con el camino que quieres construir."
             />
             <TextAreaField
               name="next_move"
-              label="Cual es tu siguiente movimiento?"
-              placeholder="Una accion pequena y concreta para seguir avanzando."
+              label="¿Cuál es tu siguiente movimiento?"
+              placeholder="Una acción pequeña y concreta para seguir avanzando."
             />
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button type="submit" name="status" value="completed" className="w-full sm:w-auto">
-                Guardar reflexion
+                Guardar reflexión
               </Button>
               <Button
                 type="submit"

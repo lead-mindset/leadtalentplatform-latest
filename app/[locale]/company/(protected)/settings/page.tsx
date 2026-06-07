@@ -10,23 +10,23 @@ export default async function CompanySettingsPage() {
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-3xl font-bold mb-2">Settings</h1>
+        <h1 className="text-3xl font-bold mb-2">Configuración</h1>
         <p className="text-muted-foreground">
-          Manage your account and preferences
+          Revisa los datos de tu cuenta y organización.
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Company Information</CardTitle>
-          <CardDescription>Your organization details</CardDescription>
+          <CardTitle>Información de la organización</CardTitle>
+          <CardDescription>Datos asociados a tu acceso de empresa.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
             <Building className="h-5 w-5 text-muted-foreground" />
             <div>
               <p className="font-medium">{user.company?.name}</p>
-              <p className="text-sm text-muted-foreground">Company Name</p>
+              <p className="text-sm text-muted-foreground">Nombre de la organización</p>
             </div>
           </div>
         </CardContent>
@@ -34,12 +34,12 @@ export default async function CompanySettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Personal Information</CardTitle>
-          <CardDescription>Your account details</CardDescription>
+          <CardTitle>Información personal</CardTitle>
+          <CardDescription>Datos de la cuenta con acceso a talento.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Full Name</Label>
+            <Label htmlFor="name">Nombre completo</Label>
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 text-muted-foreground" />
               <Input id="name" value={user.name ?? ''} disabled />
@@ -56,7 +56,7 @@ export default async function CompanySettingsPage() {
 
           {user.phone && (
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
+            <Label htmlFor="phone">Teléfono</Label>
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-muted-foreground" />
                 <Input id="phone" value={user.phone} disabled />
@@ -66,7 +66,7 @@ export default async function CompanySettingsPage() {
 
           <div className="pt-4 border-t">
             <p className="text-sm text-muted-foreground">
-              To update your information, please contact your administrator.
+              Para actualizar tu información, contacta a la persona administradora.
             </p>
           </div>
         </CardContent>

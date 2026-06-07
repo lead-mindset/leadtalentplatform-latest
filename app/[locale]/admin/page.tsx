@@ -148,7 +148,7 @@ function PanelSkeleton({ title }: { title: string }) {
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
-        <CardDescription>Cargando datos recientes de administracion.</CardDescription>
+      <CardDescription>Cargando datos recientes de administración.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         {Array.from({ length: 3 }).map((_, index) => (
@@ -177,7 +177,7 @@ async function AdminStatsSection() {
         icon={Users}
       />
       <StatTile
-        label="Capitulos"
+      label="Capítulos"
         value={systemStats.total_chapters}
         helper={`${dashboardStats.active_chapters} con miembros`}
         icon={Building2}
@@ -185,7 +185,7 @@ async function AdminStatsSection() {
       <StatTile
         label="Empresas"
         value={systemStats.total_companies}
-        helper="Acceso controlado por invitacion"
+      helper="Acceso controlado por invitación"
         icon={Building2}
       />
       <StatTile
@@ -197,7 +197,7 @@ async function AdminStatsSection() {
       <StatTile
         label="Aprobaciones"
         value={dashboardStats.pending_chapter_approvals}
-        helper="Solicitudes de capitulo"
+      helper="Solicitudes de capítulo"
         icon={Clock}
         tone={dashboardStats.pending_chapter_approvals > 0 ? 'attention' : 'success'}
       />
@@ -231,7 +231,7 @@ async function AdminQueuesSection() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle>Cola prioritaria</CardTitle>
-            <CardDescription>Elementos que requieren seguimiento administrativo o del capitulo.</CardDescription>
+        <CardDescription>Elementos que requieren seguimiento administrativo o del capítulo.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <QueueRow
@@ -241,7 +241,7 @@ async function AdminQueuesSection() {
               helper="Enviadas, no aceptadas o revocadas"
             />
             <QueueRow
-              label="Aprobaciones de capitulo"
+          label="Aprobaciones de capítulo"
               value={pendingChapterApprovals}
               href="/admin/chapters"
               helper="Solicitudes de membresia pendientes"
@@ -257,12 +257,12 @@ async function AdminQueuesSection() {
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle>Actividad de capitulos</CardTitle>
+        <CardTitle>Actividad de capítulos</CardTitle>
             <CardDescription>Miembros, aprobaciones abiertas y actividad reciente de eventos.</CardDescription>
           </CardHeader>
           <CardContent>
             {chapterActivity.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Aun no hay actividad de capitulos.</p>
+          <p className="text-sm text-muted-foreground">Aún no hay actividad de capítulos.</p>
             ) : (
               <div className="divide-y">
                 {chapterActivity.slice(0, 6).map((chapter) => (
@@ -314,7 +314,7 @@ async function RecentJoinsSection() {
     <Card>
       <CardHeader>
         <CardTitle>Altas recientes</CardTitle>
-        <CardDescription>Ultimas cuentas creadas.</CardDescription>
+        <CardDescription>Últimas cuentas creadas.</CardDescription>
       </CardHeader>
       <CardContent>
         {recentJoins.length === 0 ? (
@@ -331,7 +331,7 @@ async function RecentJoinsSection() {
                   <Badge variant="outline">{join.role}</Badge>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {join.chapter_name ?? 'Sin capitulo'} {' '}&middot;{' '}{formatDate(join.created_at)}
+          {join.chapter_name ?? 'Sin capítulo'} {' '}&middot;{' '}{formatDate(join.created_at)}
                 </p>
               </div>
             ))}
@@ -349,7 +349,7 @@ export default function AdminOverviewPage() {
         <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">Resumen administrativo</h1>
           <p className="max-w-3xl text-muted-foreground">
-            Monitorea colas operativas, cobertura de plataforma y accesos de gestion.
+            Monitorea colas operativas, cobertura de plataforma y accesos de gestión.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -370,7 +370,7 @@ export default function AdminOverviewPage() {
         fallback={
           <div className="grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
             <PanelSkeleton title="Cola prioritaria" />
-            <PanelSkeleton title="Actividad de capitulos" />
+        <PanelSkeleton title="Actividad de capítulos" />
           </div>
         }
       >
@@ -380,15 +380,15 @@ export default function AdminOverviewPage() {
       <div className="grid items-start gap-4 xl:grid-cols-3">
         <Card className="xl:col-span-2">
           <CardHeader className="pb-3">
-            <CardTitle>Gestion</CardTitle>
+          <CardTitle>Gestión</CardTitle>
             <CardDescription>Accesos operativos frecuentes sin navegacion adicional.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-2">
             <ManagementLink label="Usuarios" href="/admin/users" helper="Roles, perfiles y aprobaciones" icon={Users} />
-            <ManagementLink label="Capitulos" href="/admin/chapters" helper="Metadata y editores" icon={Building2} />
+            <ManagementLink label="Capítulos" href="/admin/chapters" helper="Metadata y editores" icon={Building2} />
             <ManagementLink label="Empresas" href="/admin/companies" helper="Organizaciones y acceso" icon={Building2} />
             <ManagementLink label="Eventos" href="/admin/events" helper="Supervision de eventos" icon={CalendarDays} />
-            <ManagementLink label="Invitaciones" href="/admin/invites" helper="Acceso por invitacion" icon={Mail} />
+            <ManagementLink label="Invitaciones" href="/admin/invites" helper="Acceso por invitación" icon={Mail} />
             <ManagementLink label="Actividad" href="/admin/activity" helper="Cambios administrativos" icon={Activity} />
           </CardContent>
         </Card>

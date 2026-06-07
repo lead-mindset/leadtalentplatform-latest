@@ -43,12 +43,12 @@ export default async function StudentProfilePage({
   const resolvedStudent = student ?? notFound()
   const skills = resolvedStudent.person_profile?.skills ?? []
   const profileUpdatedAt = resolvedStudent.person_profile?.updated_at
-    ? new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', year: 'numeric' }).format(
+    ? new Intl.DateTimeFormat('es', { month: 'short', day: 'numeric', year: 'numeric' }).format(
         new Date(resolvedStudent.person_profile.updated_at)
       )
     : null
   const resumeUploadedAt = resume?.uploaded_at
-    ? new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', year: 'numeric' }).format(
+    ? new Intl.DateTimeFormat('es', { month: 'short', day: 'numeric', year: 'numeric' }).format(
         new Date(resume.uploaded_at)
       )
     : null
@@ -59,7 +59,7 @@ export default async function StudentProfilePage({
         <Button asChild variant="ghost" size="sm">
           <Link href="/company/browse">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Browse Talent
+            Volver a talento
           </Link>
         </Button>
       </div>
@@ -68,7 +68,7 @@ export default async function StudentProfilePage({
         <CardContent className="grid gap-6 py-6 lg:grid-cols-[1fr_280px]">
           <div className="space-y-5">
             <PageHeader
-              eyebrow="Visible LEAD profile"
+              eyebrow="Perfil LEAD visible"
               title={resolvedStudent.name}
               description={
                 <span className="flex flex-wrap items-center gap-3">
@@ -89,20 +89,20 @@ export default async function StudentProfilePage({
 
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="rounded-lg border bg-muted/20 p-4">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Focus</p>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Enfoque</p>
                 <p className="mt-1 font-semibold">
-                  {resolvedStudent.person_profile?.major_or_interest ?? 'Not listed'}
+                  {resolvedStudent.person_profile?.major_or_interest ?? 'No registrado'}
                 </p>
               </div>
               <div className="rounded-lg border bg-muted/20 p-4">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Graduation</p>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Graduación</p>
                 <p className="mt-1 font-semibold">
-                  {resolvedStudent.person_profile?.graduation_year ?? 'Not listed'}
+                  {resolvedStudent.person_profile?.graduation_year ?? 'No registrada'}
                 </p>
               </div>
               <div className="rounded-lg border bg-muted/20 p-4">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Resume</p>
-                <p className="mt-1 font-semibold">{resume ? 'Available' : 'Not uploaded'}</p>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">CV</p>
+                <p className="mt-1 font-semibold">{resume ? 'Disponible' : 'No cargado'}</p>
               </div>
             </div>
           </div>
@@ -110,10 +110,10 @@ export default async function StudentProfilePage({
           <div className="space-y-3 rounded-lg border bg-muted/20 p-4">
             <div className="flex items-center gap-2 text-sm font-medium">
               <ShieldCheck className="h-4 w-4 text-emerald-600" />
-              Company access verified
+              Acceso de empresa verificado
             </div>
             <p className="text-sm text-muted-foreground">
-              This profile is visible because the member opted in and has approved chapter membership.
+              Este perfil es visible porque la persona aceptó visibilidad y tiene membresía aprobada.
             </p>
             <div className="flex flex-col gap-2">
               <SaveStudentButton
@@ -130,8 +130,8 @@ export default async function StudentProfilePage({
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <Card>
           <CardHeader>
-            <CardTitle>Chapter Context</CardTitle>
-            <CardDescription>Membership context for company review.</CardDescription>
+            <CardTitle>Contexto de capítulo</CardTitle>
+            <CardDescription>Contexto de membresía para revisión de empresa.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {resolvedStudent.chapter && (
@@ -153,9 +153,9 @@ export default async function StudentProfilePage({
             <div className="flex items-start gap-3">
               <CheckCircle2 className="h-5 w-5 mt-0.5 text-emerald-600" />
               <div>
-                <p className="font-medium">Approved chapter member</p>
+                <p className="font-medium">Miembro de capítulo aprobado</p>
                 <p className="text-sm text-muted-foreground">
-                  Invisible or ineligible profiles are excluded before this page renders.
+                  Los perfiles invisibles o no elegibles se excluyen antes de mostrar esta página.
                 </p>
               </div>
             </div>
@@ -164,7 +164,7 @@ export default async function StudentProfilePage({
                 <Calendar className="h-5 w-5 mt-0.5 text-muted-foreground" />
                 <div>
                   <p className="font-medium">{profileUpdatedAt}</p>
-                  <p className="text-sm text-muted-foreground">Profile last updated</p>
+                  <p className="text-sm text-muted-foreground">Última actualización del perfil</p>
                 </div>
               </div>
             )}
@@ -173,8 +173,8 @@ export default async function StudentProfilePage({
 
         <Card>
           <CardHeader>
-            <CardTitle>Skills</CardTitle>
-            <CardDescription>Technical and professional signals.</CardDescription>
+            <CardTitle>Habilidades</CardTitle>
+            <CardDescription>Señales técnicas y profesionales.</CardDescription>
           </CardHeader>
           <CardContent>
             {skills.length > 0 ? (
@@ -186,7 +186,7 @@ export default async function StudentProfilePage({
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No skills listed</p>
+              <p className="text-sm text-muted-foreground">No hay habilidades registradas</p>
             )}
           </CardContent>
         </Card>
@@ -195,8 +195,8 @@ export default async function StudentProfilePage({
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Links and Resume</CardTitle>
-            <CardDescription>External materials available for company review.</CardDescription>
+            <CardTitle>Enlaces y CV</CardTitle>
+            <CardDescription>Materiales externos disponibles para revisión de empresa.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {resolvedStudent.person_profile?.linkedin_url ? (
@@ -212,7 +212,7 @@ export default async function StudentProfilePage({
                 </NextLink>
               </Button>
             ) : (
-              <p className="text-sm text-muted-foreground">No LinkedIn profile listed.</p>
+              <p className="text-sm text-muted-foreground">No hay perfil de LinkedIn registrado.</p>
             )}
             {resolvedStudent.person_profile?.portfolio_url ? (
               <Button asChild variant="outline" className="gap-2">
@@ -232,23 +232,23 @@ export default async function StudentProfilePage({
                 <div className="flex items-start gap-3">
                   <FileText className="h-5 w-5 mt-0.5 text-muted-foreground" />
                   <div>
-                    <p className="font-medium">{resume.file_name ?? 'Resume available'}</p>
+                    <p className="font-medium">{resume.file_name ?? 'CV disponible'}</p>
                     <p className="text-sm text-muted-foreground">
-                      {resumeUploadedAt ? `Uploaded ${resumeUploadedAt}` : 'Signed access opens in a new tab.'}
+                      {resumeUploadedAt ? `Cargado el ${resumeUploadedAt}` : 'El acceso firmado abre en una nueva pestaña.'}
                     </p>
                   </div>
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No resume is available for this profile.</p>
+              <p className="text-sm text-muted-foreground">No hay CV disponible para este perfil.</p>
             )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Contact Information</CardTitle>
-            <CardDescription>Use direct contact only for relevant follow-up.</CardDescription>
+            <CardTitle>Información de contacto</CardTitle>
+            <CardDescription>Usa el contacto directo solo para seguimiento relevante.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center gap-2">
@@ -267,7 +267,7 @@ export default async function StudentProfilePage({
             )}
             <div className="flex items-start gap-2 rounded-lg border bg-muted/20 p-3 text-sm text-muted-foreground">
               <Sparkles className="h-4 w-4 mt-0.5 shrink-0" />
-              Saved status stays synced with Browse Talent and Saved Talent.
+              El estado guardado se mantiene sincronizado con las vistas de talento.
             </div>
           </CardContent>
         </Card>

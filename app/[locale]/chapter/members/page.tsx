@@ -76,9 +76,9 @@ export default async function ChapterMembersPage({
             <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-warning/10">
               <Icons.AlertCircle className="h-5 w-5 text-warning" />
             </div>
-            <h1 className="text-xl font-semibold">Sin capitulo asignado</h1>
+          <h1 className="text-xl font-semibold">Sin capítulo asignado</h1>
             <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-              No tienes un capitulo asignado. Contacta a una persona administradora.
+          No tienes un capítulo asignado. Contacta a una persona administradora.
             </p>
           </CardContent>
         </Card>
@@ -97,7 +97,7 @@ export default async function ChapterMembersPage({
             </div>
             <h1 className="text-xl font-semibold">Sin permisos de miembros</h1>
             <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-              Tu rol de capitulo no tiene permisos para ver esta lista.
+          Tu rol de capítulo no tiene permisos para ver esta lista.
             </p>
           </CardContent>
         </Card>
@@ -136,8 +136,8 @@ export default async function ChapterMembersPage({
       />
 
       <PageHeader
-        eyebrow="Herramientas del capitulo"
-        title="Miembros del capitulo"
+        eyebrow="Herramientas del capítulo"
+        title="Miembros del capítulo"
         badge={<Badge variant="outline">{chapter.name}</Badge>}
       />
 

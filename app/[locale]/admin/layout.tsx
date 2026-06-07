@@ -11,11 +11,11 @@ interface AdminLayoutProps {
 
 export default async function AdminLayout({ children }: AdminLayoutProps) {
   const { user } = await requireAdmin()
-  
+
   return (
     <SidebarLayout
       mobileTitle="Administración"
-      mobileSubtitle="Platform management"
+      mobileSubtitle="Gestión de la plataforma"
       headerRight={<Badge variant="outline">Admin</Badge>}
       sidebar={
         <BaseSidebar
