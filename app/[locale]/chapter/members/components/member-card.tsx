@@ -1,10 +1,11 @@
-import type { MemberWithProfile } from "@/lib/types"
-import type { ChapterMemberPermissionFlags } from "@/lib/services/chapter.service"
-import { Badge } from "@/components/ui/badge"
-import { Checkbox } from "@/components/ui/checkbox"
+import { ChevronDown } from 'lucide-react'
+import type { MemberWithProfile } from '@/lib/types'
+import type { ChapterMemberPermissionFlags } from '@/lib/services/chapter.service'
+import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Icons } from '@/components/ui/icons'
-import { MemberActionButtons } from "./member-actions"
 import { CHAPTER_ROLE_LEVEL_LABELS } from '@/lib/chapter-role-options'
+import { MemberActionButtons } from './member-actions'
 import { RoleAssignmentActions } from './role-assignment-actions'
 
 function formatPosition(position?: string | null) {
@@ -55,6 +56,13 @@ export default function MemberCard({
     ? CHAPTER_ROLE_LEVEL_LABELS[roleAssignment.role_level as keyof typeof CHAPTER_ROLE_LEVEL_LABELS] ?? roleAssignment.role_level
     : null
   const hasMemberBadges = Boolean(profile?.is_recruiter_visible || !profile)
+  const roleControls = (
+    <RoleAssignmentActions
+      targetUserId={member.id}
+      targetName={member.name ?? member.email}
+      assignment={roleAssignment}
+    />
+  )
 
   return (
     <article className="grid min-w-0 gap-4 px-4 py-4 transition-colors hover:bg-muted/[0.035] sm:px-5 min-[1100px]:grid-cols-[minmax(9.5rem,0.9fr)_minmax(13rem,1.35fr)_minmax(10rem,0.8fr)] min-[1100px]:items-center">
@@ -104,7 +112,7 @@ export default function MemberCard({
           <>
             <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
               <span className="break-words font-medium leading-snug">
-                {profile.major_or_interest || 'Area no registrada'}
+                {profile.major_or_interest || 'Área no registrada'}
               </span>
               {graduationYear ? (
                 <>
@@ -142,7 +150,7 @@ export default function MemberCard({
           </>
         ) : (
           <div className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
-            Este miembro todavia no completo su perfil basico.
+            Este miembro todavía no completó su perfil básico.
           </div>
         )}
       </div>
@@ -187,11 +195,20 @@ export default function MemberCard({
         ) : null}
 
         {isApproved && permissions.canAssignEboard ? (
-          <RoleAssignmentActions
-            targetUserId={member.id}
-            targetName={member.name ?? member.email}
-            assignment={roleAssignment}
-          />
+          <>
+            <details className="group rounded-lg border bg-muted/20 text-left min-[1100px]:hidden">
+              <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 px-3 py-2 text-sm font-medium">
+                <span>Gestionar rol e-board</span>
+                <ChevronDown className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" />
+              </summary>
+              <div className="border-t p-3">
+                {roleControls}
+              </div>
+            </details>
+            <div className="hidden min-[1100px]:block">
+              {roleControls}
+            </div>
+          </>
         ) : null}
 
         {isRejected ? (
@@ -204,7 +221,7 @@ export default function MemberCard({
           <div className="rounded-md border bg-muted/40 p-3 text-left text-xs text-muted-foreground min-[1100px]:text-right">
             {isAlumni
               ? 'Los registros alumni son de solo lectura en esta vista.'
-              : 'Las membresias inactivas son de solo lectura en esta vista.'}
+              : 'Las membresías inactivas son de solo lectura en esta vista.'}
           </div>
         ) : null}
       </div>

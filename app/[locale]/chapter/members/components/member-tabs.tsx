@@ -39,11 +39,15 @@ export function MembersTabs({
   }
 
   return (
-    <Tabs value={currentStatus} onValueChange={handleTabChange} className="w-full">
-      <div className="-mx-1 overflow-x-auto px-1 pb-1 sm:mx-0 sm:overflow-visible sm:px-0 sm:pb-0">
-        <TabsList className="flex min-w-max justify-start gap-1 sm:w-full sm:min-w-0">
+    <Tabs value={currentStatus} onValueChange={handleTabChange} className="w-full pb-3">
+      <div className="w-full">
+        <TabsList className="grid !h-auto w-full grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-5">
           {visibleStatuses.map((status) => (
-            <TabsTrigger key={status} value={status} className="flex-none gap-2 sm:flex-1">
+            <TabsTrigger
+              key={status}
+              value={status}
+              className="h-auto min-h-9 min-w-0 gap-2 whitespace-normal px-2 py-2 text-xs sm:text-sm"
+            >
               {tabLabels[status]}
               <Badge variant={badgeVariants[status]} size="sm">
                 {counts[status]}
@@ -55,7 +59,7 @@ export function MembersTabs({
       <div className="sr-only">
         {visibleStatuses.map((status) => (
           <TabsContent key={status} value={status} forceMount>
-            {tabLabels[status]} members
+            {tabLabels[status]} miembros
           </TabsContent>
         ))}
       </div>

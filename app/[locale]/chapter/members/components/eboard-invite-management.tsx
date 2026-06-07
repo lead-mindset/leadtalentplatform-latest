@@ -103,8 +103,8 @@ export function EboardInviteManagement({ invites }: Props) {
         return
       }
 
-        toast.success('Invitación enviada', {
-          description: 'El enlace queda activo por 30 días y solo funciona con ese correo.',
+      toast.success('Invitación enviada', {
+        description: 'El enlace queda activo por 30 días y solo funciona con ese correo.',
       })
       setOpen(false)
       resetForm()
@@ -205,9 +205,9 @@ export function EboardInviteManagement({ invites }: Props) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Area</Label>
+                  <Label>Área</Label>
                   <Select value={functionalArea} onValueChange={(value) => setFunctionalArea(value as ChapterFunctionalArea)}>
-                    <SelectTrigger className="w-full" aria-label="Area de trabajo">
+                    <SelectTrigger className="w-full" aria-label="Área de trabajo">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -222,11 +222,11 @@ export function EboardInviteManagement({ invites }: Props) {
               </div>
 
               <Input
-                label="Titulo visible"
+                label="Título visible"
                 value={displayTitle}
                 onChange={(event) => setDisplayTitle(event.target.value)}
                 placeholder={suggestedDisplayTitle}
-                helperText={`Opcional. Si lo dejas vacio, se usara: ${suggestedDisplayTitle}.`}
+                helperText={`Opcional. Si lo dejas vacío, se usará: ${suggestedDisplayTitle}.`}
               />
 
               <div className="rounded-md border bg-muted/30 p-3 text-sm">
@@ -245,7 +245,7 @@ export function EboardInviteManagement({ invites }: Props) {
                 </DialogClose>
                 <Button type="submit" disabled={isPending || !canSubmit}>
                   <Send className="mr-2 h-4 w-4" />
-                {isPending ? 'Enviando...' : 'Enviar invitación'}
+                  {isPending ? 'Enviando...' : 'Enviar invitación'}
                 </Button>
               </DialogFooter>
             </form>
@@ -255,7 +255,7 @@ export function EboardInviteManagement({ invites }: Props) {
 
       {invites.length === 0 ? (
         <div className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
-              Aún no hay invitaciones e-board. Cuando envíes una, podrás cancelarla o reenviarla si expira.
+          Aún no hay invitaciones e-board. Cuando envíes una, podrás cancelarla o reenviarla si expira.
         </div>
       ) : (
         <div className="divide-y rounded-md border">
