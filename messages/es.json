@@ -37,6 +37,10 @@
     "logout": "Cerrar sesión",
     "events": "Eventos"
   },
+  "adminShell": {
+    "mobileTitle": "Administraci\u00f3n",
+    "mobileSubtitle": "Gesti\u00f3n de la plataforma"
+  },
   "auth": {
     "email": "Correo electrónico",
     "password": "Contraseña",
