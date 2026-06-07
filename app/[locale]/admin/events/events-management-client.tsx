@@ -1,7 +1,7 @@
 'use client'
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -62,6 +62,15 @@ function statusVariant(status: string) {
   return 'outline'
 }
 
+function getEventChapters(event: AdminEventListItem) {
+  const chapters = [
+    event.chapter,
+    ...(event.event_chapter?.map((collaborator) => collaborator.chapter) ?? []),
+  ].filter((chapter): chapter is NonNullable<typeof chapter> => Boolean(chapter))
+
+  return Array.from(new Map(chapters.map((chapter) => [chapter.id, chapter])).values())
+}
+
 export function EventsManagementClient({
   items,
   total,
@@ -115,6 +124,17 @@ export function EventsManagementClient({
     router.push(`${pathname}?${params.toString()}`)
   }
 
+  const renderEventActions = (event: AdminEventListItem, compact = false) => (
+    <div className={compact ? 'grid gap-2 sm:grid-cols-2' : 'flex flex-wrap gap-2'}>
+      <Button asChild size="sm" variant="outline" className={compact ? 'w-full' : undefined}>
+        <Link href={`/admin/events/${event.id}`}>Gestionar</Link>
+      </Button>
+      <Button asChild size="sm" variant="outline" className={compact ? 'w-full' : undefined}>
+        <Link href={`/events/${event.id}`}>Vista pública</Link>
+      </Button>
+    </div>
+  )
+
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const hasFilters = Boolean(search || chapterFilters.length || statusFilters.length)
 
@@ -128,18 +148,18 @@ export function EventsManagementClient({
         <CardContent className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex flex-col gap-2 md:flex-row">
             <Input
-              aria-label="Buscar eventos por titulo"
+              aria-label="Buscar eventos por título"
               className="md:w-80"
               defaultValue={search}
-              placeholder="Buscar por titulo"
+              placeholder="Buscar por título"
               onChange={(event) => updateParam('search', event.target.value)}
             />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-              <Button variant="outline">Capítulos ({chapterFilters.length || 'todos'})</Button>
+                <Button variant="outline">Capítulos ({chapterFilters.length || 'todos'})</Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
-              <DropdownMenuLabel>Filtrar capítulos</DropdownMenuLabel>
+                <DropdownMenuLabel>Filtrar capítulos</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {chapterOptions.map((chapter) => (
                   <DropdownMenuCheckboxItem
@@ -179,8 +199,67 @@ export function EventsManagementClient({
       </Card>
 
       <Card>
-        <CardContent className="pt-6">
-          <div className="overflow-x-auto">
+        <CardContent className="space-y-4 pt-6">
+          <div className="grid gap-3 md:hidden">
+            {items.map((event) => {
+              const status = getStatus(event)
+              const chapters = getEventChapters(event)
+
+              return (
+                <div key={event.id} className="rounded-lg border border-border bg-card p-4">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant={statusVariant(status)}>{STATUS_LABELS[status]}</Badge>
+                        <Badge
+                          variant={
+                            event.capacity !== null && event.registrations >= event.capacity
+                              ? 'warning'
+                              : 'outline'
+                          }
+                        >
+                          {event.registrations}
+                          {event.capacity !== null ? ` / ${event.capacity}` : ''} registros
+                        </Badge>
+                      </div>
+                      <Link
+                        className="block break-words text-base font-semibold text-foreground hover:underline"
+                        href={`/admin/events/${event.id}`}
+                      >
+                        {event.title}
+                      </Link>
+                      <p className="break-all text-xs text-muted-foreground">{event.id}</p>
+                    </div>
+
+                    <dl className="grid gap-2 text-sm">
+                      <div className="flex items-start justify-between gap-3">
+                        <dt className="text-muted-foreground">Inicio</dt>
+                        <dd className="text-right font-medium">{formatLeadDateTime(event.start_at)}</dd>
+                      </div>
+                      <div className="flex items-start justify-between gap-3">
+                        <dt className="text-muted-foreground">Capítulos</dt>
+                        <dd className="flex min-w-0 flex-1 flex-wrap justify-end gap-1 text-right">
+                          {chapters.length ? (
+                            chapters.map((chapter) => (
+                              <Badge key={chapter.id} variant="secondary">
+                                {chapter.name}
+                              </Badge>
+                            ))
+                          ) : (
+                            <span className="font-medium">Sin capítulo</span>
+                          )}
+                        </dd>
+                      </div>
+                    </dl>
+
+                    {renderEventActions(event, true)}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          <div className="hidden overflow-x-auto md:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -209,10 +288,9 @@ export function EventsManagementClient({
                       <TableCell className="whitespace-nowrap">{formatLeadDateTime(event.start_at)}</TableCell>
                       <TableCell className="min-w-[14rem]">
                         <div className="flex flex-wrap gap-1">
-                          {event.chapter && <Badge variant="info">{event.chapter.name}</Badge>}
-                          {event.event_chapter?.map((collaborator) => (
-                            <Badge key={collaborator.id} variant="secondary">
-                          {collaborator.chapter?.name || 'Capítulo no identificado'}
+                          {getEventChapters(event).map((chapter) => (
+                            <Badge key={chapter.id} variant="secondary">
+                              {chapter.name}
                             </Badge>
                           ))}
                         </div>
@@ -224,14 +302,7 @@ export function EventsManagementClient({
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex flex-wrap gap-2">
-                          <Button asChild size="sm" variant="outline">
-                            <Link href={`/admin/events/${event.id}`}>Gestionar</Link>
-                          </Button>
-                          <Button asChild size="sm" variant="outline">
-                            <Link href={`/events/${event.id}`}>Vista publica</Link>
-                          </Button>
-                        </div>
+                        {renderEventActions(event)}
                       </TableCell>
                     </TableRow>
                   )
@@ -242,8 +313,14 @@ export function EventsManagementClient({
 
           {items.length === 0 && (
             <div className="py-10 text-center">
-                <CardTitle className="mb-2 text-lg">{hasFilters ? 'No hay eventos con esos filtros' : 'Aún no hay eventos creados'}</CardTitle>
-                <p className="text-sm text-muted-foreground">{hasFilters ? 'Limpia los filtros o prueba otra búsqueda.' : 'Crea el primer evento o espera a que un editor de capítulo agregue uno.'}</p>
+              <CardTitle className="mb-2 text-lg">
+                {hasFilters ? 'No hay eventos con esos filtros' : 'Aún no hay eventos creados'}
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                {hasFilters
+                  ? 'Limpia los filtros o prueba otra búsqueda.'
+                  : 'Crea el primer evento o espera a que un editor de capítulo agregue uno.'}
+              </p>
               <div className="mt-4 flex justify-center gap-2">
                 {hasFilters && <Button variant="outline" onClick={resetFilters}>Limpiar filtros</Button>}
                 <Button asChild><Link href="/admin/events/new">Nuevo evento</Link></Button>
