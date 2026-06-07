@@ -1,20 +1,24 @@
-import { getCompanyStats, getSavedStudents } from '@/lib/actions/company/get-data'
+import { getCompanyStatsResult, getSavedStudentsResult } from '@/lib/actions/company/get-data'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { PageHeader } from '@/components/ui/page-header'
-import { Users, Heart, Building } from 'lucide-react'
+import { AlertCircle, Users, Heart, Building } from 'lucide-react'
 import Link from 'next/link'
 import { requireRecruiter } from '@/lib/auth'
 
 export default async function CompanyDashboardPage() {
   const { supabase, user } = await requireRecruiter()
 
-  const [stats, recentSaved] = await Promise.all([
-    getCompanyStats(supabase, user.id),
-    getSavedStudents(supabase, user.id),
+  const [statsResult, recentSavedResult] = await Promise.all([
+    getCompanyStatsResult(supabase, user.id),
+    getSavedStudentsResult(supabase, user.id),
   ])
 
+  const stats = statsResult.data
+  const recentSaved = recentSavedResult.data
   const recentlySaved = recentSaved.slice(0, 5)
+  const hasDataWarning = !statsResult.success || !recentSavedResult.success
 
   return (
     <div className="space-y-6">
@@ -33,6 +37,16 @@ export default async function CompanyDashboardPage() {
           </>
         }
       />
+
+      {hasDataWarning ? (
+        <Alert variant="warning">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>No pudimos cargar todos los datos de empresa</AlertTitle>
+          <AlertDescription>
+            Algunas métricas o perfiles guardados pueden estar incompletos. Intenta nuevamente en unos minutos.
+          </AlertDescription>
+        </Alert>
+      ) : null}
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
@@ -100,7 +114,11 @@ export default async function CompanyDashboardPage() {
             {recentlySaved.length === 0 ? (
               <div className="text-center py-8">
                 <Heart className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">Todavia no hay talento guardado</p>
+                <p className="text-sm text-muted-foreground">
+                  {recentSavedResult.success
+                    ? 'Todavia no hay talento guardado'
+                    : 'No pudimos cargar tus perfiles guardados'}
+                </p>
                 <Button asChild variant="link" size="sm" className="mt-2">
                   <Link href="/company/browse">Empezar a explorar</Link>
                 </Button>

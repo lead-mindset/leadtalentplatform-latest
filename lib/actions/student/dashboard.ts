@@ -17,20 +17,22 @@ export async function getStudentDashboardSecondaryData(params: {
   const supabase = await createClient()
   const pathwayFlags = await PathwayRolloutService.getFlagsForChapter(supabase, params.chapterId)
 
-  const [pathwayGuidance, reflectionProgress, chapterOptions] = await Promise.all([
+  const [pathwayGuidance, reflectionProgress, chapterOptionsResult] = await Promise.all([
     pathwayFlags.enable_recommendation_card
       ? PathwayCheckInService.getDashboardGuidanceForUser(supabase, params.userId)
       : Promise.resolve(null),
     GrowthReflectionService.getProgressForUser(supabase, params.userId),
     params.status === 'participant'
-      ? StudentDashboardService.getChapterApplicationOptions(supabase)
-      : Promise.resolve([]),
+      ? StudentDashboardService.getChapterApplicationOptionsResult(supabase)
+      : Promise.resolve({ success: true as const, data: [] }),
   ])
 
   return {
     pathwayFlags,
     pathwayGuidance,
     reflectionProgress,
-    chapterOptions,
+    chapterOptions: chapterOptionsResult.data,
+    chapterOptionsLoadState: chapterOptionsResult.success ? 'ready' as const : 'unavailable' as const,
+    chapterOptionsError: chapterOptionsResult.success ? undefined : chapterOptionsResult.error,
   }
 }

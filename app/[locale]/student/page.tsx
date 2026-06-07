@@ -1,4 +1,5 @@
 import {
+  AlertCircle,
   ArrowRight,
   CalendarDays,
   CheckCircle2,
@@ -15,6 +16,7 @@ import { MainContainer } from '@/components/global/main-container'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Link } from '@/i18n/routing'
 import { requireUser } from '@/lib/auth'
 import {
@@ -43,6 +45,8 @@ import { ChapterActivationInterestService } from '@/lib/services/chapter-activat
 type ParticipantApplicationCardProps = {
   dashboard: StudentActivationDashboard
   chapterOptions: StudentDashboardChapterOption[]
+  chapterOptionsLoadState?: 'ready' | 'unavailable'
+  chapterOptionsError?: string
 }
 
 const STATUS_CONTENT = {
@@ -178,7 +182,12 @@ function MembershipDetailsCard({ dashboard }: { dashboard: StudentActivationDash
   )
 }
 
-function ParticipantApplicationCard({ dashboard, chapterOptions }: ParticipantApplicationCardProps) {
+function ParticipantApplicationCard({
+  dashboard,
+  chapterOptions,
+  chapterOptionsLoadState = 'ready',
+  chapterOptionsError,
+}: ParticipantApplicationCardProps) {
   if (dashboard.status !== 'participant') return null
 
   return (
@@ -190,11 +199,28 @@ function ParticipantApplicationCard({ dashboard, chapterOptions }: ParticipantAp
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {dashboard.loadState === 'unavailable' ? (
+          <Alert variant="warning">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>No pudimos confirmar todos tus datos</AlertTitle>
+            <AlertDescription>
+              Estamos mostrando una vista limitada mientras se recupera la información. Vuelve a intentarlo en unos minutos.
+            </AlertDescription>
+          </Alert>
+        ) : null}
         <p className="text-sm leading-6 text-muted-foreground">
           Envia una solicitud cuando estes listo. Quedara pendiente hasta que el equipo del capitulo
           la revise.
         </p>
-        {dashboard.hasProfile ? (
+        {chapterOptionsLoadState === 'unavailable' ? (
+          <Alert variant="warning">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>No pudimos cargar los capítulos</AlertTitle>
+            <AlertDescription>
+              {chapterOptionsError ?? 'Intenta nuevamente en unos minutos antes de enviar una solicitud.'}
+            </AlertDescription>
+          </Alert>
+        ) : dashboard.hasProfile ? (
           <ChapterApplicationCard chapters={chapterOptions} />
         ) : (
           <div className="space-y-3">
@@ -686,6 +712,8 @@ async function StudentDashboardDetails({
     pathwayGuidance,
     reflectionProgress,
     chapterOptions,
+    chapterOptionsLoadState,
+    chapterOptionsError,
   } = await getStudentDashboardSecondaryData({
     userId,
     chapterId: dashboard.membership?.chapter_id ?? null,
@@ -700,7 +728,12 @@ async function StudentDashboardDetails({
         {dashboard.status === 'participant' ? (
           <ChapterActivationInterestCard latestInterest={latestActivationInterest} />
         ) : null}
-        <ParticipantApplicationCard dashboard={dashboard} chapterOptions={chapterOptions} />
+        <ParticipantApplicationCard
+          dashboard={dashboard}
+          chapterOptions={chapterOptions}
+          chapterOptionsLoadState={chapterOptionsLoadState}
+          chapterOptionsError={chapterOptionsError}
+        />
         <ProfileReadinessCard dashboard={dashboard} />
       </div>
       <div className="space-y-6">
@@ -736,6 +769,16 @@ export default async function StudentDashboard() {
         }
         description={content.body}
       />
+
+      {dashboard.loadState === 'unavailable' ? (
+        <Alert variant="warning">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Información temporalmente incompleta</AlertTitle>
+          <AlertDescription>
+            No pudimos confirmar todos tus datos de perfil o membresía. Algunas secciones pueden verse limitadas hasta que la carga se recupere.
+          </AlertDescription>
+        </Alert>
+      ) : null}
 
       <PrimaryActions dashboard={dashboard} />
 
