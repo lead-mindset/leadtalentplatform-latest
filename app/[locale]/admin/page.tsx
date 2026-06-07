@@ -48,10 +48,10 @@ function StatTile({
         : 'bg-muted text-muted-foreground'
 
   return (
-    <div className="rounded-lg border bg-card p-3.5">
+    <div className="rounded-lg border bg-card p-4">
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">{label}</p>
+        <div className="min-w-0">
+          <p className="text-sm font-medium leading-5 text-muted-foreground">{label}</p>
           <p className="mt-2 text-2xl font-semibold tracking-tight tabular-nums">{value}</p>
         </div>
         <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${toneClass}`}>
@@ -112,7 +112,7 @@ function ManagementLink({
       </div>
       <div className="min-w-0">
         <p className="font-medium">{label}</p>
-        <p className="truncate text-sm text-muted-foreground">{helper}</p>
+        <p className="text-sm leading-5 text-muted-foreground">{helper}</p>
       </div>
     </Link>
   )
@@ -135,7 +135,7 @@ function StatTileSkeleton() {
 
 function StatsSkeleton() {
   return (
-    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
       {Array.from({ length: 6 }).map((_, index) => (
         <StatTileSkeleton key={index} />
       ))}
@@ -169,7 +169,7 @@ async function AdminStatsSection() {
   ])
 
   return (
-    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
       <StatTile
         label="Usuarios"
         value={systemStats.total_users}
