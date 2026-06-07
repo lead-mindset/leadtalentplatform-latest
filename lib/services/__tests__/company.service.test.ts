@@ -246,6 +246,21 @@ describe('CompanyService', () => {
 
       expect(result).toBeNull()
     })
+
+    it('returns unavailable result on profile load error', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.person_profile._builder._setThenValue({
+        data: null,
+        error: { message: 'DB error' },
+      })
+
+      const result = await CompanyService.getStudentByIdResult(mockSupabase as unknown as SupabaseClient, 'student-1')
+
+      expect(result.success).toBe(false)
+      expect(result.data).toBeNull()
+      expect(result.error).toBe('Company talent data is temporarily unavailable.')
+    })
   })
 
   // ───────────────────────────────────────────────────────────────
@@ -356,6 +371,21 @@ describe('CompanyService', () => {
   })
 
   describe('getSavedStudents', () => {
+    it('returns unavailable result when saved rows cannot load', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.saved_student._builder._setThenValue({
+        data: null,
+        error: { message: 'saved db unavailable' },
+      })
+
+      const result = await CompanyService.getSavedStudentsResult(mockSupabase as unknown as SupabaseClient, 'recruiter-1')
+
+      expect(result.success).toBe(false)
+      expect(result.data).toEqual([])
+      expect(result.error).toBe('Company talent data is temporarily unavailable.')
+    })
+
     it('should only return saved profiles that still pass current visibility rules', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
@@ -459,6 +489,53 @@ describe('CompanyService', () => {
       const result = await CompanyService.isStudentSaved(mockSupabase as unknown as SupabaseClient, 'recruiter-1', 'student-1')
 
       expect(result).toBe(false)
+    })
+
+    it('returns unavailable result when save status cannot load', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.saved_student._builder._setThenValue({
+        data: null,
+        error: { message: 'save status db unavailable' },
+      })
+
+      const result = await CompanyService.isStudentSavedResult(
+        mockSupabase as unknown as SupabaseClient,
+        'recruiter-1',
+        'student-1'
+      )
+
+      expect(result.success).toBe(false)
+      expect(result.data).toBe(false)
+      expect(result.error).toBe('Company talent data is temporarily unavailable.')
+    })
+  })
+
+  describe('getCompanyStatsResult', () => {
+    it('returns unavailable result while preserving fallback counts when talent load fails', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.person_profile._builder._setThenValue({
+        data: null,
+        error: { message: 'profile db unavailable' },
+      })
+      tableMocks.saved_student._builder._setThenValue({
+        data: [],
+        error: null,
+      })
+
+      const result = await CompanyService.getCompanyStatsResult(
+        mockSupabase as unknown as SupabaseClient,
+        'recruiter-1'
+      )
+
+      expect(result.success).toBe(false)
+      expect(result.data).toEqual({
+        total_students: 0,
+        saved_students: 0,
+        recent_views: 0,
+      })
+      expect(result.error).toBe('Company talent data is temporarily unavailable.')
     })
   })
 

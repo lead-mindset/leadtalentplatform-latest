@@ -6,6 +6,7 @@ import type {
   SavedStudent,
   StudentForRecruiter,
 } from '@/lib/types'
+import type { CompanyDataResult } from '@/lib/services/company.service'
 
 /**
  * Returns all students visible to recruiters.
@@ -15,6 +16,12 @@ export async function getVisibleStudents(
   supabase: SupabaseClient<Database>
 ): Promise<StudentForRecruiter[]> {
   return CompanyService.getVisibleStudents(supabase)
+}
+
+export async function getVisibleStudentsResult(
+  supabase: SupabaseClient<Database>
+): Promise<CompanyDataResult<StudentForRecruiter[]>> {
+  return CompanyService.getVisibleStudentsResult(supabase)
 }
 
 /**
@@ -27,6 +34,13 @@ export async function getStudentById(
   return CompanyService.getStudentById(supabase, studentId)
 }
 
+export async function getStudentByIdResult(
+  supabase: SupabaseClient<Database>,
+  studentId: string
+): Promise<CompanyDataResult<StudentForRecruiter | null>> {
+  return CompanyService.getStudentByIdResult(supabase, studentId)
+}
+
 /**
  * Returns saved students for a recruiter.
  */
@@ -35,6 +49,13 @@ export async function getSavedStudents(
   userId: string
 ): Promise<SavedStudent[]> {
   return CompanyService.getSavedStudents(supabase, userId)
+}
+
+export async function getSavedStudentsResult(
+  supabase: SupabaseClient<Database>,
+  userId: string
+): Promise<CompanyDataResult<SavedStudent[]>> {
+  return CompanyService.getSavedStudentsResult(supabase, userId)
 }
 
 /**
@@ -57,6 +78,13 @@ export async function getCompanyStats(
   return CompanyService.getCompanyStats(supabase, userId)
 }
 
+export async function getCompanyStatsResult(
+  supabase: SupabaseClient<Database>,
+  userId: string
+): Promise<CompanyDataResult<CompanyStats>> {
+  return CompanyService.getCompanyStatsResult(supabase, userId)
+}
+
 /**
  * Searches students with filters pushed to the database where possible.
  * Client-side fallback only for skills (array containment via Supabase is limited).
@@ -73,6 +101,18 @@ export async function searchStudents(
   return CompanyService.searchStudents(supabase, filters)
 }
 
+export async function searchStudentsResult(
+  supabase: SupabaseClient<Database>,
+  filters: {
+    query?: string
+    major?: string
+    graduation_year?: number
+    chapter_id?: string
+  }
+): Promise<CompanyDataResult<StudentForRecruiter[]>> {
+  return CompanyService.searchStudentsResult(supabase, filters)
+}
+
 export async function toggleSaveStudent(
   supabase: SupabaseClient<Database>,
   userId: string,
@@ -87,6 +127,14 @@ export async function isStudentSaved(
   studentId: string
 ): Promise<boolean> {
   return CompanyService.isStudentSaved(supabase, userId, studentId)
+}
+
+export async function isStudentSavedResult(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  studentId: string
+): Promise<CompanyDataResult<boolean>> {
+  return CompanyService.isStudentSavedResult(supabase, userId, studentId)
 }
 
 export async function getTalentResumeMetadata(

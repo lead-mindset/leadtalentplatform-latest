@@ -57,23 +57,35 @@ function membership(
 
 function buildMockSupabase(params: {
   profile?: PersonProfileRow | null
+  profileError?: unknown
   memberships?: unknown[]
+  membershipsError?: unknown
   chapters?: Array<Pick<ChapterRow, 'id' | 'name' | 'university'>>
+  chaptersError?: unknown
 }) {
   const tableMocks: Record<string, TableMock> = {
     person_profile: {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
-      maybeSingle: vi.fn().mockResolvedValue({ data: params.profile ?? null, error: null }),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: params.profile ?? null,
+        error: params.profileError ?? null,
+      }),
     },
     chapter_membership: {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
-      order: vi.fn().mockResolvedValue({ data: params.memberships ?? [], error: null }),
+      order: vi.fn().mockResolvedValue({
+        data: params.memberships ?? [],
+        error: params.membershipsError ?? null,
+      }),
     },
     chapter: {
       select: vi.fn().mockReturnThis(),
-      order: vi.fn().mockResolvedValue({ data: params.chapters ?? [], error: null }),
+      order: vi.fn().mockResolvedValue({
+        data: params.chapters ?? [],
+        error: params.chaptersError ?? null,
+      }),
     },
   }
 
@@ -174,10 +186,45 @@ describe('StudentDashboardService', () => {
       )
 
       expect(result.status).toBe('pending')
+      expect(result.loadState).toBe('ready')
       expect(mockSupabase.from).toHaveBeenCalledWith('person_profile')
       expect(mockSupabase.from).toHaveBeenCalledWith('chapter_membership')
       expect(tableMocks.person_profile.eq).toHaveBeenCalledWith('user_id', 'user-1')
       expect(tableMocks.chapter_membership.eq).toHaveBeenCalledWith('user_id', 'user-1')
+    })
+
+    it('marks profile load failures as unavailable instead of normal empty profile state', async () => {
+      const { mockSupabase } = buildMockSupabase({
+        profileError: { message: 'profile db unavailable' },
+        memberships: [membership('approved')],
+      })
+
+      const result = await StudentDashboardService.getActivationDashboard(
+        mockSupabase as unknown as SupabaseClient,
+        'user-1'
+      )
+
+      expect(result.loadState).toBe('unavailable')
+      expect(result.loadError).toContain('profile')
+      expect(result.profile).toBeNull()
+      expect(result.status).toBe('official_member')
+    })
+
+    it('marks membership load failures as unavailable instead of ordinary participant state', async () => {
+      const { mockSupabase } = buildMockSupabase({
+        profile: baseProfile,
+        membershipsError: { message: 'membership db unavailable' },
+      })
+
+      const result = await StudentDashboardService.getActivationDashboard(
+        mockSupabase as unknown as SupabaseClient,
+        'user-1'
+      )
+
+      expect(result.loadState).toBe('unavailable')
+      expect(result.loadError).toContain('memberships')
+      expect(result.status).toBe('participant')
+      expect(result.hasProfile).toBe(true)
     })
 
     it('returns chapter application options ordered by name', async () => {
@@ -191,6 +238,22 @@ describe('StudentDashboardService', () => {
       expect(result).toEqual(chapters)
       expect(mockSupabase.from).toHaveBeenCalledWith('chapter')
       expect(tableMocks.chapter.order).toHaveBeenCalledWith('name', { ascending: true })
+    })
+
+    it('returns unavailable chapter application options result on backend failure', async () => {
+      const { mockSupabase } = buildMockSupabase({
+        chaptersError: { message: 'chapter db unavailable' },
+      })
+
+      const result = await StudentDashboardService.getChapterApplicationOptionsResult(
+        mockSupabase as unknown as SupabaseClient
+      )
+
+      expect(result).toEqual({
+        success: false,
+        data: [],
+        error: 'No se pudieron cargar los capítulos disponibles.',
+      })
     })
   })
 })

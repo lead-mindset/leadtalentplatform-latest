@@ -14,6 +14,7 @@ import type {
 } from '@/lib/types'
 
 const TALENT_UNAVAILABLE_ERROR = 'Profile not found or unavailable.'
+const COMPANY_DATA_UNAVAILABLE_ERROR = 'Company talent data is temporarily unavailable.'
 
 // ───────────────────────────────────────────────────────────────
 // Shared select string — keeps both query functions consistent
@@ -100,6 +101,10 @@ type VisibleTalentFilters = {
   chapter_id?: string
 }
 
+export type CompanyDataResult<T> =
+  | { success: true; data: T }
+  | { success: false; data: T; error: string }
+
 // ───────────────────────────────────────────────────────────────
 // Helpers
 // ───────────────────────────────────────────────────────────────
@@ -112,13 +117,21 @@ async function loadVisibleStudents(
   supabase: SupabaseClient<Database>,
   filters: VisibleTalentFilters = {}
 ): Promise<StudentForRecruiter[]> {
+  const result = await loadVisibleStudentsResult(supabase, filters)
+  return result.data
+}
+
+async function loadVisibleStudentsResult(
+  supabase: SupabaseClient<Database>,
+  filters: VisibleTalentFilters = {}
+): Promise<CompanyDataResult<StudentForRecruiter[]>> {
   let profileQuery = supabase
     .from('person_profile')
     .select('user_id, major_or_interest, graduation_year, linkedin_url, portfolio_url, skills, is_recruiter_visible, updated_at')
     .eq('is_recruiter_visible', true)
 
   if (filters.studentIds) {
-    if (filters.studentIds.length === 0) return []
+    if (filters.studentIds.length === 0) return { success: true, data: [] }
     profileQuery = profileQuery.in('user_id', filters.studentIds)
   }
 
@@ -133,12 +146,12 @@ async function loadVisibleStudents(
   const { data: profiles, error: profilesError } = await profileQuery
   if (profilesError) {
     logger.error({ context: 'loadVisibleStudents', error: profilesError }, 'Profile load error')
-    return []
+    return { success: false, data: [], error: COMPANY_DATA_UNAVAILABLE_ERROR }
   }
 
   const profileRows = (profiles ?? []) as VisibleProfileRow[]
   const profileUserIds = profileRows.map((profile) => profile.user_id)
-  if (profileUserIds.length === 0) return []
+  if (profileUserIds.length === 0) return { success: true, data: [] }
 
   let membershipQuery = supabase
     .from('chapter_membership')
@@ -153,12 +166,12 @@ async function loadVisibleStudents(
   const { data: memberships, error: membershipsError } = await membershipQuery
   if (membershipsError) {
     logger.error({ context: 'loadVisibleStudents', error: membershipsError }, 'Membership load error')
-    return []
+    return { success: false, data: [], error: COMPANY_DATA_UNAVAILABLE_ERROR }
   }
 
   const membershipRows = (memberships ?? []) as VisibleMembershipRow[]
   const eligibleUserIds = membershipRows.map((membership) => membership.user_id)
-  if (eligibleUserIds.length === 0) return []
+  if (eligibleUserIds.length === 0) return { success: true, data: [] }
 
   let userQuery = supabase
     .from('user')
@@ -181,14 +194,14 @@ async function loadVisibleStudents(
 
   if (usersError || chaptersError) {
     logger.error({ context: 'loadVisibleStudents', error: usersError ?? chaptersError }, 'User/chapter load error')
-    return []
+    return { success: false, data: [], error: COMPANY_DATA_UNAVAILABLE_ERROR }
   }
 
   const profilesByUserId = new Map(profileRows.map((profile) => [profile.user_id, profile]))
   const membershipsByUserId = new Map(membershipRows.map((membership) => [membership.user_id, membership]))
   const chaptersById = new Map((chapters ?? []).map((chapter) => [chapter.id, chapter]))
 
-  return ((users ?? []) as Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'created_at'>[])
+  const data = ((users ?? []) as Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'created_at'>[])
     .map((user): StudentForRecruiter | null => {
       const profile = profilesByUserId.get(user.id)
       const membership = membershipsByUserId.get(user.id)
@@ -217,6 +230,8 @@ async function loadVisibleStudents(
     })
     .filter((student): student is StudentForRecruiter => student !== null)
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+  return { success: true, data }
 }
 
 export const CompanyService = {
@@ -231,6 +246,12 @@ export const CompanyService = {
     return loadVisibleStudents(supabase)
   },
 
+  async getVisibleStudentsResult(
+    supabase: SupabaseClient<Database>
+  ): Promise<CompanyDataResult<StudentForRecruiter[]>> {
+    return loadVisibleStudentsResult(supabase)
+  },
+
   /**
    * Returns a single student by ID, only if they are visible to recruiters.
    */
@@ -242,6 +263,15 @@ export const CompanyService = {
     return students[0] ?? null
   },
 
+  async getStudentByIdResult(
+    supabase: SupabaseClient<Database>,
+    studentId: string
+  ): Promise<CompanyDataResult<StudentForRecruiter | null>> {
+    const result = await loadVisibleStudentsResult(supabase, { studentIds: [studentId] })
+    if (!result.success) return { success: false, data: null, error: result.error }
+    return { success: true, data: result.data[0] ?? null }
+  },
+
   /**
    * Returns saved students for a recruiter.
    */
@@ -249,6 +279,14 @@ export const CompanyService = {
     supabase: SupabaseClient<Database>,
     userId: string
   ): Promise<SavedStudent[]> {
+    const result = await this.getSavedStudentsResult(supabase, userId)
+    return result.data
+  },
+
+  async getSavedStudentsResult(
+    supabase: SupabaseClient<Database>,
+    userId: string
+  ): Promise<CompanyDataResult<SavedStudent[]>> {
     const { data: savedRows, error } = await supabase
       .from('saved_student')
       .select('id, recruiter_id, student_id, saved_at, notes')
@@ -257,17 +295,21 @@ export const CompanyService = {
 
     if (error) {
       logger.error({ context: 'getSavedStudents', error: error }, 'Error')
-      return []
+      return { success: false, data: [], error: COMPANY_DATA_UNAVAILABLE_ERROR }
     }
 
-    if (!savedRows) return []
+    if (!savedRows) return { success: true, data: [] }
 
-    const students = await loadVisibleStudents(supabase, {
+    const studentsResult = await loadVisibleStudentsResult(supabase, {
       studentIds: savedRows.map((saved) => saved.student_id),
     })
+    if (!studentsResult.success) {
+      return { success: false, data: [], error: studentsResult.error }
+    }
+    const students = studentsResult.data
     const studentsById = new Map(students.map((student) => [student.id, student]))
 
-    return savedRows
+    const data = savedRows
       .map((saved): SavedStudent | null => {
         const student = studentsById.get(saved.student_id)
         if (!student) return null
@@ -282,6 +324,8 @@ export const CompanyService = {
         }
       })
       .filter((saved): saved is SavedStudent => saved !== null)
+
+    return { success: true, data }
   },
 
   /**
@@ -311,16 +355,42 @@ export const CompanyService = {
     supabase: SupabaseClient<Database>,
     userId: string
   ): Promise<CompanyStats> {
+    const result = await this.getCompanyStatsResult(supabase, userId)
+    return result.data
+  },
+
+  async getCompanyStatsResult(
+    supabase: SupabaseClient<Database>,
+    userId: string
+  ): Promise<CompanyDataResult<CompanyStats>> {
     const [visibleStudents, saved_students] = await Promise.all([
-      this.getVisibleStudents(supabase),
-      this.getSavedStudents(supabase, userId),
+      this.getVisibleStudentsResult(supabase),
+      this.getSavedStudentsResult(supabase, userId),
     ])
 
-    return {
-      total_students: visibleStudents.length,
-      saved_students: saved_students.length,
+    const data = {
+      total_students: visibleStudents.data.length,
+      saved_students: saved_students.data.length,
       recent_views: 0,
     }
+
+    if (!visibleStudents.success) {
+      return {
+        success: false,
+        data,
+        error: visibleStudents.error,
+      }
+    }
+
+    if (!saved_students.success) {
+      return {
+        success: false,
+        data,
+        error: saved_students.error,
+      }
+    }
+
+    return { success: true, data }
   },
 
   /**
@@ -337,6 +407,18 @@ export const CompanyService = {
     }
   ): Promise<StudentForRecruiter[]> {
     return loadVisibleStudents(supabase, filters)
+  },
+
+  async searchStudentsResult(
+    supabase: SupabaseClient<Database>,
+    filters: {
+      query?: string
+      major?: string
+      graduation_year?: number
+      chapter_id?: string
+    }
+  ): Promise<CompanyDataResult<StudentForRecruiter[]>> {
+    return loadVisibleStudentsResult(supabase, filters)
   },
 
   async toggleSaveStudent(
@@ -395,6 +477,15 @@ export const CompanyService = {
     userId: string,
     studentId: string
   ): Promise<boolean> {
+    const result = await this.isStudentSavedResult(supabase, userId, studentId)
+    return result.data
+  },
+
+  async isStudentSavedResult(
+    supabase: SupabaseClient<Database>,
+    userId: string,
+    studentId: string
+  ): Promise<CompanyDataResult<boolean>> {
     const { data, error } = await supabase
       .from('saved_student')
       .select('id')
@@ -404,9 +495,9 @@ export const CompanyService = {
 
     if (error) {
       logger.error({ context: 'isStudentSaved', error: error }, 'Error')
-      return false
+      return { success: false, data: false, error: COMPANY_DATA_UNAVAILABLE_ERROR }
     }
-    return !!data
+    return { success: true, data: !!data }
   },
 
   // ───────────────────────────────────────────────────────────────

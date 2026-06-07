@@ -1,8 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/database.generated'
 import type { ChapterMembershipRow, ChapterRow, PersonProfileRow } from '@/lib/types'
+import { logger } from '@/lib/logger'
 
 export type StudentActivationStatus = 'participant' | 'pending' | 'official_member' | 'alumni'
+export type StudentDashboardLoadState = 'ready' | 'unavailable'
 
 export type StudentDashboardMembership = Pick<
   ChapterMembershipRow,
@@ -18,7 +20,13 @@ export type StudentActivationDashboard = {
   profile: PersonProfileRow | null
   membership: StudentDashboardMembership | null
   hasProfile: boolean
+  loadState: StudentDashboardLoadState
+  loadError?: string
 }
+
+export type StudentChapterOptionsResult =
+  | { success: true; data: StudentDashboardChapterOption[] }
+  | { success: false; data: []; error: string }
 
 type MembershipWithChapter = Omit<StudentDashboardMembership, 'chapter'> & {
   chapter:
@@ -99,6 +107,8 @@ function statusForMembership(
 export function resolveActivationDashboard(params: {
   profile: PersonProfileRow | null
   memberships: StudentDashboardMembership[]
+  loadState?: StudentDashboardLoadState
+  loadError?: string
 }): StudentActivationDashboard {
   const membership = chooseMembership(params.memberships)
 
@@ -107,6 +117,8 @@ export function resolveActivationDashboard(params: {
     profile: params.profile,
     membership,
     hasProfile: Boolean(params.profile),
+    loadState: params.loadState ?? 'ready',
+    loadError: params.loadError,
   }
 }
 
@@ -115,7 +127,7 @@ export const StudentDashboardService = {
     supabase: SupabaseClient<Database>,
     userId: string
   ): Promise<StudentActivationDashboard> {
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('person_profile')
       .select(PROFILE_SELECT)
       .eq('user_id', userId)
@@ -127,23 +139,46 @@ export const StudentDashboardService = {
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
 
+    const loadErrors = [
+      profileError ? 'profile' : null,
+      membershipsError ? 'memberships' : null,
+    ].filter((value): value is string => Boolean(value))
+
+    if (profileError) {
+      logger.error({ context: 'StudentDashboardService.getActivationDashboard', error: profileError }, 'Profile load error')
+    }
+    if (membershipsError) {
+      logger.error({ context: 'StudentDashboardService.getActivationDashboard', error: membershipsError }, 'Membership load error')
+    }
+
     return resolveActivationDashboard({
-      profile: (profile ?? null) as PersonProfileRow | null,
-      memberships: membershipsError
-        ? []
-        : ((memberships ?? []) as unknown as MembershipWithChapter[]).map(normalizeMembership),
+      profile: profileError ? null : (profile ?? null) as PersonProfileRow | null,
+      memberships: membershipsError ? [] : ((memberships ?? []) as unknown as MembershipWithChapter[]).map(normalizeMembership),
+      loadState: loadErrors.length ? 'unavailable' : 'ready',
+      loadError: loadErrors.length ? `No se pudo cargar: ${loadErrors.join(', ')}.` : undefined,
     })
   },
 
-  async getChapterApplicationOptions(
+  async getChapterApplicationOptionsResult(
     supabase: SupabaseClient<Database>
-  ): Promise<StudentDashboardChapterOption[]> {
+  ): Promise<StudentChapterOptionsResult> {
     const { data, error } = await supabase
       .from('chapter')
       .select('id, name, university')
       .order('name', { ascending: true })
 
-    if (error) return []
-    return (data ?? []) as StudentDashboardChapterOption[]
+    if (error) {
+      logger.error({ context: 'StudentDashboardService.getChapterApplicationOptions', error }, 'Chapter options load error')
+      return { success: false, data: [], error: 'No se pudieron cargar los capítulos disponibles.' }
+    }
+
+    return { success: true, data: (data ?? []) as StudentDashboardChapterOption[] }
+  },
+
+  async getChapterApplicationOptions(
+    supabase: SupabaseClient<Database>
+  ): Promise<StudentDashboardChapterOption[]> {
+    const result = await this.getChapterApplicationOptionsResult(supabase)
+    return result.data
   },
 }
