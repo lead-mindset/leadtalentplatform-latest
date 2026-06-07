@@ -264,7 +264,9 @@ export function UsersManagementClient({
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline">Roles ({roleFilters.length || 'todos'})</Button>
+                <Button variant="outline" className="w-full justify-between">
+                  Roles ({roleFilters.length || 'todos'})
+                </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
                 <DropdownMenuLabel>Filtrar roles</DropdownMenuLabel>
@@ -288,7 +290,9 @@ export function UsersManagementClient({
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                  <Button variant="outline">Capítulos ({chapterFilters.length || 'todos'})</Button>
+                  <Button variant="outline" className="w-full justify-between">
+                    Capítulos ({chapterFilters.length || 'todos'})
+                  </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
                   <DropdownMenuLabel>Filtrar capítulos</DropdownMenuLabel>
@@ -312,7 +316,9 @@ export function UsersManagementClient({
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline">Perfil ({approvalFilters.length || 'todos'})</Button>
+                <Button variant="outline" className="w-full justify-between">
+                  Perfil ({approvalFilters.length || 'todos'})
+                </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
                 <DropdownMenuLabel>Estado de perfil</DropdownMenuLabel>
