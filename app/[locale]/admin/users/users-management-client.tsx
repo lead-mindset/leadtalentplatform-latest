@@ -171,6 +171,82 @@ export function UsersManagementClient({
     })
   }
 
+  const toggleUserSelection = (userId: string, checked: boolean | string) => {
+    setSelectedIds((prev) =>
+      checked ? Array.from(new Set([...prev, userId])) : prev.filter((id) => id !== userId)
+    )
+  }
+
+  const renderUserActions = (user: AdminUserListItem, compact = false) => (
+    <div className={compact ? 'grid gap-2 sm:grid-cols-3' : 'flex flex-wrap gap-2'}>
+      <Button asChild variant="outline" size="sm" className={compact ? 'w-full' : undefined}>
+        <Link href={`/admin/users/${user.id}`}>Ver perfil</Link>
+      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm" className={compact ? 'w-full' : undefined}>Rol</Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {ROLE_OPTIONS.map((role) => (
+            <DropdownMenuItem
+              key={role}
+              onClick={() =>
+                setConfirmState({
+                  title: `¿Cambiar rol a ${role}?`,
+                  description: `${user.email} cambiará a ${role}.`,
+                  action: async () => {
+                    runAction(
+                      () => updateUserRole(user.id, role),
+                      'Rol actualizado.'
+                    )
+                  },
+                })
+              }
+            >
+              {role}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {user.deactivated_at ? (
+        <Button
+          variant="outline"
+          size="sm"
+          className={compact ? 'w-full' : undefined}
+          onClick={() =>
+            setConfirmState({
+              title: '¿Reactivar este usuario?',
+              description: `${user.email} recuperará acceso.`,
+              action: async () => {
+                runAction(() => reactivateUser(user.id), 'Usuario reactivado.')
+              },
+            })
+          }
+        >
+          Reactivar
+        </Button>
+      ) : (
+        <Button
+          variant="outline"
+          size="sm"
+          className={compact ? 'w-full' : undefined}
+          onClick={() =>
+            setConfirmState({
+              title: '¿Desactivar este usuario?',
+              description: `${user.email} dejará de estar activo.`,
+              action: async () => {
+                runAction(() => deactivateUser(user.id), 'Usuario desactivado.')
+              },
+            })
+          }
+        >
+          Desactivar
+        </Button>
+      )}
+    </div>
+  )
+
   return (
     <div className="space-y-4">
       <Card>
@@ -353,12 +429,69 @@ export function UsersManagementClient({
 
       <Card>
         <CardContent className="pt-6 space-y-4">
+          <div className="grid gap-3 md:hidden">
+            {users.map((user) => {
+              const selected = selectedIds.includes(user.id)
+
+              return (
+                <div
+                  key={user.id}
+                  className={`rounded-lg border p-4 transition-colors ${
+                    selected ? 'border-primary bg-primary/5' : 'border-border bg-card'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      aria-label={`Seleccionar ${user.name || user.email}`}
+                      checked={selected}
+                      onCheckedChange={(checked) => toggleUserSelection(user.id, checked)}
+                      className="mt-1"
+                    />
+                    <div className="min-w-0 flex-1 space-y-3">
+                      <div className="space-y-1">
+                        <Link
+                          className="block break-words text-base font-semibold text-foreground hover:underline"
+                          href={`/admin/users/${user.id}`}
+                        >
+                          {user.name || 'Sin nombre'}
+                        </Link>
+                        <p className="break-all text-sm text-muted-foreground">{user.email}</p>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        <Badge className={getRoleColor(user.role)}>{user.role}</Badge>
+                        <Badge variant="outline">{formatProfileStatus(user.profile_status)}</Badge>
+                        {user.deactivated_at ? (
+                          <Badge variant="outline">Desactivado</Badge>
+                        ) : null}
+                      </div>
+
+                      <dl className="grid gap-2 text-sm">
+                        <div className="flex items-start justify-between gap-3">
+                          <dt className="text-muted-foreground">Capítulo</dt>
+                          <dd className="text-right font-medium">{user.chapter_name ?? 'Sin capítulo'}</dd>
+                        </div>
+                        <div className="flex items-start justify-between gap-3">
+                          <dt className="text-muted-foreground">Registro</dt>
+                          <dd className="text-right font-medium">{formatLeadDate(user.created_at)}</dd>
+                        </div>
+                      </dl>
+
+                      {renderUserActions(user, true)}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          <div className="hidden overflow-x-auto md:block">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="text-left p-2">
                     <Checkbox
-                      aria-label="Select all visible users"
+                      aria-label="Seleccionar todos los usuarios visibles"
                       checked={allVisibleSelected}
                       onCheckedChange={(checked) =>
                         setSelectedIds(checked ? users.map((user) => user.id) : [])
@@ -379,13 +512,9 @@ export function UsersManagementClient({
                   <TableRow key={user.id} className="align-top">
                     <TableCell className="p-2">
                       <Checkbox
-                        aria-label={`Select ${user.name || user.email}`}
+                        aria-label={`Seleccionar ${user.name || user.email}`}
                         checked={selectedIds.includes(user.id)}
-                        onCheckedChange={(checked) =>
-                          setSelectedIds((prev) =>
-                            checked ? [...prev, user.id] : prev.filter((id) => id !== user.id)
-                          )
-                        }
+                        onCheckedChange={(checked) => toggleUserSelection(user.id, checked)}
                       />
                     </TableCell>
                     <TableCell className="p-2 font-medium">
@@ -406,73 +535,13 @@ export function UsersManagementClient({
                     <TableCell className="p-2">{formatLeadDate(user.created_at)}</TableCell>
                     <TableCell className="p-2">{formatProfileStatus(user.profile_status)}</TableCell>
                     <TableCell className="p-2">
-                      <div className="flex flex-wrap gap-2">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm">Rol</Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {ROLE_OPTIONS.map((role) => (
-                              <DropdownMenuItem
-                                key={role}
-                                onClick={() =>
-                                  setConfirmState({
-                                    title: `Cambiar rol a ${role}?`,
-                                    description: `${user.email} cambiara a ${role}.`,
-                                    action: async () => {
-                                      runAction(
-                                        () => updateUserRole(user.id, role),
-                                        'Rol actualizado.'
-                                      )
-                                    },
-                                  })
-                                }
-                              >
-                                {role}
-                              </DropdownMenuItem>
-                            ))}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-
-                        {user.deactivated_at ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              setConfirmState({
-                                title: 'Reactivar este usuario?',
-                                description: `${user.email} recuperara acceso.`,
-                                action: async () => {
-                                  runAction(() => reactivateUser(user.id), 'Usuario reactivado.')
-                                },
-                              })
-                            }
-                          >
-                            Reactivar
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              setConfirmState({
-                                title: 'Desactivar este usuario?',
-                                description: `${user.email} dejara de estar activo.`,
-                                action: async () => {
-                                  runAction(() => deactivateUser(user.id), 'Usuario desactivado.')
-                                },
-                              })
-                            }
-                          >
-                            Desactivar
-                          </Button>
-                        )}
-                      </div>
+                      {renderUserActions(user)}
                     </TableCell>
                   </TableRow>
                 ))}
             </TableBody>
           </Table>
+          </div>
 
           {loadError ? (
             <div
