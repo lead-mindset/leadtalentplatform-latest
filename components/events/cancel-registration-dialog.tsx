@@ -37,7 +37,7 @@ export function CancelRegistrationDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>¿Cancelar registro?</AlertDialogTitle>
           <AlertDialogDescription>
-            Esto cancelara tu registro para {eventTitle}. Tu codigo QR dejara de ser valido
+            Esto cancelará tu registro para {eventTitle}. Tu código QR dejará de ser válido
             y tu cupo podria abrirse para otro participante.
           </AlertDialogDescription>
         </AlertDialogHeader>

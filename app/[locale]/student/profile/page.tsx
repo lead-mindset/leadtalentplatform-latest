@@ -50,7 +50,7 @@ export default function ProfilePage() {
       <PageHeader
         eyebrow="Mi LEAD"
         title="Mi perfil"
-        description="Gestiona los datos reutilizables de tu perfil. La membresia de capitulo y el estado de miembro se manejan por separado."
+        description="Gestiona los datos reutilizables de tu perfil. La membresía de capítulo y el estado de miembro se manejan por separado."
       />
       <div className="max-w-3xl">
         <Suspense fallback={<Loading />}>

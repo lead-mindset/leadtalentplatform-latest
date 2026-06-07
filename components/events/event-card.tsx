@@ -68,7 +68,7 @@ export function EventCard({
 
   const getButtonLabel = () => {
     if (isRegistered) return 'Registrado'
-    if (registrationStatus === 'pending_review') return 'En revision'
+    if (registrationStatus === 'pending_review') return 'En revisión'
     if (registrationStatus === 'rejected') return 'No seleccionado'
     if (isApplicationRequired) return 'Postular'
     return 'Registrarme'
@@ -92,7 +92,7 @@ export function EventCard({
 
         {isApplicationRequired ? (
           <Badge variant="secondary" className="absolute right-2 top-2">
-            Requiere postulacion
+            Requiere postulación
           </Badge>
         ) : null}
       </div>

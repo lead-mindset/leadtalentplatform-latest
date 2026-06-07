@@ -114,7 +114,7 @@ function CompletedState() {
           <h2 className="text-xl font-semibold text-foreground">Tu Check-In esta completo</h2>
           <p className="text-sm leading-6 text-muted-foreground">
             Ya tenemos tu punto de partida. En las siguientes fases, esta informacion alimentara
-            tus proximos movimientos personalizados en LEAD.
+            tus próximos movimientos personalizados en LEAD.
           </p>
           <Button asChild className="w-full sm:w-auto">
             <Link href="/student">Volver a Mi LEAD</Link>
@@ -163,7 +163,7 @@ function CheckInForm() {
 
       <Card className="rounded-lg">
         <CardHeader>
-          <CardTitle className="text-lg">4. Que tan seguro te sientes con tu proximo paso?</CardTitle>
+          <CardTitle className="text-lg">4. ¿Qué tan seguro te sientes con tu próximo paso?</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-5">

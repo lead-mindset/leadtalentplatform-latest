@@ -17,7 +17,7 @@ export default function Error({ reset }: ErrorProps) {
           <div>
             <h2 className="text-xl font-semibold">No se pudo cargar el check-in</h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-              Reintenta la consola operativa o vuelve a eventos del capitulo para abrir el check-in nuevamente.
+              Reintenta la consola operativa o vuelve a eventos del capítulo para abrir el check-in nuevamente.
             </p>
           </div>
           <div className="flex flex-col justify-center gap-2 sm:flex-row">
@@ -25,7 +25,7 @@ export default function Error({ reset }: ErrorProps) {
               Reintentar
             </Button>
             <Button asChild variant="outline">
-              <Link href="/chapter/events">Eventos del capitulo</Link>
+              <Link href="/chapter/events">Eventos del capítulo</Link>
             </Button>
           </div>
         </CardContent>

@@ -330,7 +330,7 @@ export function EventContent({
                   </div>
                   <div className="min-w-0">
                     <p className="truncate font-medium">{ownerChapterLabel}</p>
-                    <p className="text-xs text-muted-foreground">Capitulo anfitrion</p>
+                    <p className="text-xs text-muted-foreground">Capítulo anfitrión</p>
                   </div>
                 </div>
 
@@ -364,7 +364,7 @@ export function EventContent({
               <div className="space-y-3">
                 <p className="text-sm font-medium text-muted-foreground">{ownerChapterLabel}</p>
                 <h1 className="max-w-3xl text-4xl font-semibold leading-tight tracking-tight text-foreground md:text-6xl">
-                  {event.title || 'Evento sin titulo'}
+                  {event.title || 'Evento sin título'}
                 </h1>
               </div>
 
@@ -421,8 +421,8 @@ export function EventContent({
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">
                       {isApplicationRequired
-                        ? 'Envia tu postulacion y el equipo anfitrion revisara tus respuestas.'
-                        : 'Registrate para recibir tu codigo QR de check-in.'}
+                        ? 'Envía tu postulación y el equipo anfitrión revisará tus respuestas.'
+                        : 'Regístrate para recibir tu código QR de check-in.'}
                     </p>
                   </div>
                 </div>
@@ -458,7 +458,7 @@ export function EventContent({
                   <div className="space-y-3">
                     {isPending ? (
                       <div className="rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm">
-                        Tu postulacion esta en revision. Recibiras un correo cuando haya una decision.
+                        Tu postulación está en revisión. Recibirás un correo cuando haya una decisión.
                       </div>
                     ) : null}
 
@@ -471,10 +471,10 @@ export function EventContent({
                     {isRegistered ? (
                       <div className="space-y-3">
                         <div className="rounded-lg border border-success/30 bg-success/10 p-4 text-sm">
-                          Ya estas registrado en este evento. Revisa tu correo o la pagina de mis eventos para ver el QR.
+                          Ya estás registrado en este evento. Revisa tu correo o la página de mis eventos para ver el QR.
                         </div>
                         <Button asChild className="w-full">
-                          <Link href={`/student/events?event=${event.id}`}>Ver mi codigo QR</Link>
+                          <Link href={`/student/events?event=${event.id}`}>Ver mi código QR</Link>
                         </Button>
                       </div>
                     ) : isPending || isRejected ? null : (

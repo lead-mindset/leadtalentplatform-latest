@@ -77,7 +77,7 @@ export function getEventLifecycle(
     return {
       state: 'registered',
       label: 'Registrado',
-      description: 'Tu codigo QR de check-in esta listo para este evento.',
+      description: 'Tu código QR de check-in está listo para este evento.',
       badgeVariant: 'success',
       canRegister: false,
       canApply: false,
@@ -89,8 +89,8 @@ export function getEventLifecycle(
   if (registrationStatus === 'pending_review') {
     return {
       state: 'pending_review',
-      label: 'En revision',
-      description: 'Tu postulacion fue enviada y esta esperando decision del equipo.',
+      label: 'En revisión',
+      description: 'Tu postulación fue enviada y está esperando decisión del equipo.',
       badgeVariant: 'warning',
       canRegister: false,
       canApply: false,
@@ -184,8 +184,8 @@ export function getEventLifecycle(
   if (input.accessModel === 'application') {
     return {
       state: 'application_required',
-      label: 'Requiere postulacion',
-      description: 'Envia una postulacion para revision antes de asistir.',
+      label: 'Requiere postulación',
+      description: 'Envía una postulación para revisión antes de asistir.',
       badgeVariant: 'info',
       canRegister: false,
       canApply: true,
@@ -197,7 +197,7 @@ export function getEventLifecycle(
   return {
     state: 'registration_open',
     label: 'Registro abierto',
-    description: 'El registro esta abierto para este proximo evento.',
+    description: 'El registro está abierto para este próximo evento.',
     badgeVariant: 'success',
     canRegister: true,
     canApply: false,

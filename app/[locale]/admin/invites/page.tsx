@@ -325,7 +325,7 @@ export default function AdminInvitesPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="Administracion"
+        eyebrow="Administración"
         title="Invitaciones de representantes"
         description="Invita y gestiona acceso de representantes de empresa en todas las empresas."
       />

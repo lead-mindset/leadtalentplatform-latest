@@ -79,7 +79,7 @@ describe('Supabase auth email hook', () => {
 
     expect(response.status).toBe(200)
     const payload = sendTransactionalEmailMock.mock.calls[0][0]
-    expect(payload.subject).toBe('Restablece tu contrasena de LEAD Talent Platform')
+    expect(payload.subject).toBe('Restablece tu contraseña de LEAD Talent Platform')
     expect(payload.html).toContain('type=recovery')
     expect(payload.html).toContain('next=%2Fes%2Fauth%2Fupdate-password')
   })

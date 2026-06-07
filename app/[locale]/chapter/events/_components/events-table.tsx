@@ -343,7 +343,7 @@ function DeleteEventButton({
         <AlertDialogHeader>
           <AlertDialogTitle>¿Eliminar evento?</AlertDialogTitle>
           <AlertDialogDescription>
-            Esto eliminara {eventTitle}. Usa esta accion solo para eventos que ya no deben existir en las operaciones del capitulo.
+            Esto eliminará {eventTitle}. Usa esta acción solo para eventos que ya no deben existir en las operaciones del capítulo.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

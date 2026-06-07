@@ -336,7 +336,7 @@ export function DiscoverClient({
             <div className="grid border-t md:grid-cols-4">
               {[
                 ["4", "formas de explorar"],
-                [String(initialEvents.length), "eventos proximos"],
+                [String(initialEvents.length), "eventos próximos"],
                 [String(chapters.length), "chapters"],
                 [String(countries.length), "paises"],
               ].map(([value, label]) => (

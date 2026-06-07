@@ -63,7 +63,7 @@ const ROLE_OPTIONS: Role[] = ['admin', 'editor', 'member', 'recruiter']
 const PROFILE_OPTIONS: ProfileStatusFilter[] = ['complete', 'pending_approval', 'incomplete', 'no_profile']
 
 function formatProfileStatus(status: ProfileStatusFilter): string {
-  if (status === 'pending_approval') return 'Pendiente de aprobacion'
+  if (status === 'pending_approval') return 'Pendiente de aprobación'
   if (status === 'no_profile') return 'Sin perfil'
   if (status === 'complete') return 'Completo'
   return 'Incompleto'
@@ -149,7 +149,7 @@ export function UsersManagementClient({
     startTransition(async () => {
       const result = await action()
       if (!result.success) {
-        toast.error(result.error ?? 'No se pudo completar la accion.')
+        toast.error(result.error ?? 'No se pudo completar la acción.')
         return
       }
       toast.success(successMessage)

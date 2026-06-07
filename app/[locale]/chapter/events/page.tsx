@@ -55,9 +55,9 @@ export default async function ChapterEventsPage() {
 
       <div className="space-y-5">
         <PageHeader
-          eyebrow="Herramientas del capitulo"
-          title="Eventos del capitulo"
-          description="Gestiona eventos propios y colaborativos asociados a tu capitulo. Revisa borradores, publica con intencion y prepara el check-in antes del evento."
+          eyebrow="Herramientas del capítulo"
+          title="Eventos del capítulo"
+          description="Gestiona eventos propios y colaborativos asociados a tu capítulo. Revisa borradores, publica con intención y prepara el check-in antes del evento."
           actions={
             <Button asChild className="shrink-0">
             <Link href="/chapter/events/new">
@@ -78,7 +78,7 @@ export default async function ChapterEventsPage() {
           <StatBlock
             label="Borradores"
             value={draftEvents.length}
-            helper="Necesitan revision antes de publicar"
+            helper="Necesitan revisión antes de publicar"
             icon={Icons.Edit}
           />
           <StatBlock
@@ -90,7 +90,7 @@ export default async function ChapterEventsPage() {
           <StatBlock
             label="Check-in"
             value={upcomingCheckins}
-            helper="Eventos publicados proximos"
+            helper="Eventos publicados próximos"
             icon={Icons.Ticket}
           />
         </div>
@@ -104,7 +104,7 @@ export default async function ChapterEventsPage() {
             </div>
             <h2 className="text-xl font-semibold">Todavia no hay eventos</h2>
             <p className="mx-auto mt-2 mb-6 max-w-md text-sm text-muted-foreground">
-              Crea el primer evento del capitulo cuando tu equipo este listo para recibir registros o postulaciones.
+              Crea el primer evento del capítulo cuando tu equipo esté listo para recibir registros o postulaciones.
             </p>
             <Button asChild>
               <Link href="/chapter/events/new">

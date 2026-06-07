@@ -67,7 +67,7 @@ function FundingRequestCard({ request }: { request: FundingRequestRow }) {
             </p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Siguiente accion</p>
+            <p className="text-xs text-muted-foreground">Siguiente acción</p>
             <p className="font-medium">{FUNDING_STATUS_HELPER[status]}</p>
           </div>
         </div>

@@ -73,7 +73,7 @@ export default async function ChapterEventDetailPage({
             </div>
             <h1 className="text-xl font-semibold">Evento no encontrado</h1>
             <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-              Este evento puede haber sido eliminado o tu capitulo no tiene acceso para gestionarlo.
+              Este evento puede haber sido eliminado o tu capítulo no tiene acceso para gestionarlo.
             </p>
             <Button asChild className="mt-6">
               <Link href={`/${locale}/chapter/events`}>Volver a eventos</Link>

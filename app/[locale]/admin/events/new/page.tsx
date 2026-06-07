@@ -13,9 +13,9 @@ export default async function NewAdminEventPage() {
     <div className="p-4 max-w-3xl mx-auto space-y-6">
       <div className="flex items-start justify-between gap-3">
         <PageHeader
-          eyebrow="Administracion"
+          eyebrow="Administración"
           title="Nuevo evento"
-          description="Crea un evento global o asociado a un capitulo."
+          description="Crea un evento global o asociado a un capítulo."
           className="mb-0"
         />
         <Button asChild variant="outline">

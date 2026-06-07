@@ -20,12 +20,12 @@ export default function Error({ reset }: ErrorProps) {
           </div>
           <h2 className="text-xl font-semibold">No se pudieron cargar las postulaciones</h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-            Actualiza esta cola de revision o vuelve a eventos del capitulo.
+            Actualiza esta cola de revisión o vuelve a eventos del capítulo.
           </p>
           <div className="mt-6 flex flex-col justify-center gap-2 sm:flex-row">
             <Button onClick={reset}>Reintentar</Button>
             <Button asChild variant="outline">
-              <Link href="/chapter/events">Eventos del capitulo</Link>
+              <Link href="/chapter/events">Eventos del capítulo</Link>
             </Button>
           </div>
         </CardContent>

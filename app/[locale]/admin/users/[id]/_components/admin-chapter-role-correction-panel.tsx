@@ -77,7 +77,7 @@ export function AdminChapterRoleCorrectionPanel({
         return
       }
 
-      toast.success(`Rol de capitulo actualizado para ${userName}`)
+      toast.success(`Rol de capítulo actualizado para ${userName}`)
       router.refresh()
     })
   }
@@ -100,7 +100,7 @@ export function AdminChapterRoleCorrectionPanel({
         return
       }
 
-      toast.success('Rol de capitulo retirado')
+      toast.success('Rol de capítulo retirado')
       setRemoveReason('')
       router.refresh()
     })

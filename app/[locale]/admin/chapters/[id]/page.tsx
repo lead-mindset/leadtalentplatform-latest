@@ -133,7 +133,7 @@ export default async function ChapterDetailPage({
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Clock className="h-5 w-5 text-warning" />
-                  Pendientes de aprobacion ({pending_members.length})
+                  Pendientes de aprobación ({pending_members.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>

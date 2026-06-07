@@ -30,9 +30,9 @@ export default async function AdminEventDetailPage({
     <div className="p-4 max-w-3xl mx-auto space-y-6">
       <div className="flex items-start justify-between gap-3">
         <PageHeader
-          eyebrow="Administracion"
+          eyebrow="Administración"
           title="Gestionar evento"
-          description="Edita detalles, alcance de capitulo y publicacion."
+          description="Edita detalles, alcance de capítulo y publicación."
           className="mb-0"
         />
         <div className="flex items-center gap-2">

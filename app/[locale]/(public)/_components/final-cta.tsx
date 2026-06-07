@@ -24,7 +24,7 @@ export function FinalCTA() {
     : {
         title: "Unete al siguiente paso de LEAD.",
         body:
-          "Crea tu perfil, participa en eventos y postula a un capitulo cuando estes listo.",
+          "Crea tu perfil, participa en eventos y postula a un capítulo cuando estés listo.",
         primary: "Crear perfil",
         primaryHref: "/auth/sign-up",
         secondary: "Explorar LEAD",

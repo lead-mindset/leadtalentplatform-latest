@@ -183,16 +183,16 @@ export function AdminEventForm({
           </div>
           <div className="space-y-2">
             <Label htmlFor="capacity">Capacidad opcional</Label>
-            <Input id="capacity" inputMode="numeric" value={capacity} onChange={(e) => setCapacity(e.target.value)} placeholder="Sin limite" />
+            <Input id="capacity" inputMode="numeric" value={capacity} onChange={(e) => setCapacity(e.target.value)} placeholder="Sin límite" />
           </div>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="chapter_id">Capitulo</Label>
+            <Label htmlFor="chapter_id">Capítulo</Label>
             <Select value={chapter_id ?? 'global'} onValueChange={setChapterId}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecciona un capitulo" />
+                <SelectValue placeholder="Selecciona un capítulo" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="global">Global</SelectItem>
@@ -245,7 +245,7 @@ export function AdminEventForm({
               <AlertDialogHeader>
                 <AlertDialogTitle>Eliminar evento</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Esta accion eliminara el evento. Usala solo si no hay registros o actividad operativa asociada.
+                  Esta acción eliminará el evento. Úsala solo si no hay registros o actividad operativa asociada.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>

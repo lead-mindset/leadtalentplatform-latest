@@ -113,7 +113,7 @@ function getRegistrationMessage(registration: RegistrationWithEvent, qrDataUrl: 
         }
       : {
           title: lifecycle?.label ?? 'Registro confirmado',
-          body: lifecycle?.description ?? 'Ya estas registrado. Los detalles del QR apareceran aqui cuando esten disponibles.',
+          body: lifecycle?.description ?? 'Ya estás registrado. Los detalles del QR aparecerán aquí cuando estén disponibles.',
           variant: 'info' as const,
         }
   }
@@ -556,7 +556,7 @@ export default async function StudentEventsPage({
                   <TabEmptyState
                     icon={<Icons.Calendar className="h-5 w-5" />}
               title="Aún no hay historial de eventos"
-                    description="Los eventos pasados y registros completados apareceran aqui."
+                    description="Los eventos pasados y registros completados aparecerán aquí."
                   />
                 ) : (
                   <div className="grid gap-4 lg:grid-cols-2">
