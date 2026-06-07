@@ -4,13 +4,21 @@ import { requireAdmin } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { AdminService } from '@/lib/services/admin.service'
 import { sendCompanyRepresentativeInviteEmail } from '@/lib/emails/send-email'
+import { logger } from '@/lib/logger'
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Unknown error'
 }
 
-async function auditLog(action: string, details: Record<string, string | number | null | undefined>) {
-  console.log(`[AUDIT] ${new Date().toISOString()} - ${action}`, details)
+async function auditLog(action: string, details: Record<string, string | number | boolean | null | undefined>) {
+  logger.info(
+    {
+      context: 'admin/recruiter-invite',
+      action,
+      ...details,
+    },
+    'Recruiter invite action'
+  )
 }
 
 type ActionResult =
@@ -75,10 +83,10 @@ export async function createRecruiterInvite(formData: {
   }
 
   await auditLog('CREATE_INVITE', {
-    adminId: user.id,
-    recruiterEmail: formData.recruiterEmail,
-    companyId: formData.companyId,
-    inviteId: result.inviteId,
+    adminAuthenticated: Boolean(user.id),
+    recruiterEmailPresent: Boolean(formData.recruiterEmail),
+    companyIdPresent: Boolean(formData.companyId),
+    inviteIdPresent: Boolean(result.inviteId),
     expiresInDays: formData.expiresInDays ?? 7,
   })
 
@@ -116,10 +124,10 @@ export async function resendInvite(inviteId: string): Promise<ActionResult> {
   }
 
   await auditLog('RESEND_INVITE', {
-    adminId: user.id,
-    inviteId,
-    recruiterEmail: invite.recruiter_email,
-    companyId: invite.company_id,
+    adminAuthenticated: Boolean(user.id),
+    inviteIdPresent: Boolean(inviteId),
+    recruiterEmailPresent: Boolean(invite.recruiter_email),
+    companyIdPresent: Boolean(invite.company_id),
   })
 
   revalidatePath('/admin/invites')
@@ -140,10 +148,10 @@ export async function revokeInvite(inviteId: string): Promise<ActionResult> {
   }
 
   await auditLog('REVOKE_INVITE', {
-    adminId: user.id,
-    inviteId,
-    recruiterEmail: invite.recruiter_email,
-    companyId: invite.company_id,
+    adminAuthenticated: Boolean(user.id),
+    inviteIdPresent: Boolean(inviteId),
+    recruiterEmailPresent: Boolean(invite.recruiter_email),
+    companyIdPresent: Boolean(invite.company_id),
   })
 
   revalidatePath('/admin/invites')

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const requireAdminMock = vi.hoisted(() => vi.fn())
 const revalidatePathMock = vi.hoisted(() => vi.fn())
 const sendCompanyRepresentativeInviteEmailMock = vi.hoisted(() => vi.fn())
+const loggerInfoMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/lib/auth', () => ({
   requireAdmin: requireAdminMock,
@@ -14,6 +15,12 @@ vi.mock('next/cache', () => ({
 
 vi.mock('@/lib/emails/send-email', () => ({
   sendCompanyRepresentativeInviteEmail: sendCompanyRepresentativeInviteEmailMock,
+}))
+
+vi.mock('@/lib/logger', () => ({
+  logger: {
+    info: loggerInfoMock,
+  },
 }))
 
 vi.mock('@/lib/services/admin.service', () => ({
@@ -65,6 +72,22 @@ describe('company representative invite actions', () => {
       'token-123',
       'Acme'
     )
+    expect(loggerInfoMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'CREATE_INVITE',
+        adminAuthenticated: true,
+        recruiterEmailPresent: true,
+        companyIdPresent: true,
+        inviteIdPresent: true,
+      }),
+      'Recruiter invite action'
+    )
+    const auditPayload = JSON.stringify(loggerInfoMock.mock.calls)
+    expect(auditPayload).not.toContain('admin-1')
+    expect(auditPayload).not.toContain('rep@acme.com')
+    expect(auditPayload).not.toContain('company-1')
+    expect(auditPayload).not.toContain('invite-1')
+    expect(auditPayload).not.toContain('token-123')
     expect(revalidatePathMock).toHaveBeenCalledWith('/admin/invites')
   })
 
