@@ -40,19 +40,19 @@ const ACCESS_COPY = {
   es: {
     missing: {
       title: 'Se necesita acceso de empresa',
-      detail: 'Tu cuenta inicio sesion, pero todavia no tiene acceso activo de empresa. El acceso al portal se otorga por invitacion de un administrador LEAD.',
+      detail: 'Tu cuenta inició sesión, pero todavía no tiene acceso activo de empresa. El acceso al portal se otorga por invitación de un administrador LEAD.',
     },
     inactive: {
       title: 'Acceso de empresa pausado',
-      detail: 'Tu acceso existe, pero esta inactivo. Pide a tu contacto LEAD que reactive el acceso antes de continuar.',
+      detail: 'Tu acceso existe, pero está inactivo. Pide a tu contacto LEAD que reactive el acceso antes de continuar.',
     },
     revoked: {
       title: 'Acceso de empresa revocado',
-      detail: 'Este acceso fue revocado. Si parece un error, contacta al equipo LEAD para una nueva invitacion.',
+      detail: 'Este acceso fue revocado. Si parece un error, contacta al equipo LEAD para una nueva invitación.',
     },
     expired: {
       title: 'Acceso de empresa expirado',
-      detail: 'Esta invitacion o ventana de acceso expiro. Solicita una nueva invitacion al equipo LEAD.',
+      detail: 'Esta invitación o ventana de acceso expiró. Solicita una nueva invitación al equipo LEAD.',
     },
     error: {
       title: 'No se pudo verificar el acceso',
@@ -85,20 +85,20 @@ const PAGE_COPY = {
   },
   es: {
     companyAccess: 'Acceso de empresa',
-    description: 'El acceso para representantes de empresa se gestiona por invitacion.',
+    description: 'El acceso para representantes de empresa se gestiona por invitación.',
     defaultDetail:
-      'Si ya aceptaste una invitacion, continua al ingreso de empresa. Si tienes un enlace de invitacion, abrelo desde tu correo.',
+      'Si ya aceptaste una invitación, continúa al ingreso de empresa. Si tienes un enlace de invitación, ábrelo desde tu correo.',
     primaryLogin: 'Continuar al ingreso',
     companyLogin: 'Ingreso empresa',
-    inviteOnly: 'El acceso al portal de empresas es por invitacion y esta ligado al correo invitado.',
-    useInvite: 'Usa el enlace de tu correo o pide al equipo LEAD que lo reenvie.',
-    inviteIssue: 'Problema con la invitacion',
-    inviteIssueDesc: 'El acceso de empresa es por invitacion.',
+    inviteOnly: 'El acceso al portal de empresas es por invitación y está ligado al correo invitado.',
+    useInvite: 'Usa el enlace de tu correo o pide al equipo LEAD que lo reenvíe.',
+    inviteIssue: 'Problema con la invitación',
+    inviteIssueDesc: 'El acceso de empresa es por invitación.',
     getHelp: 'Obtener ayuda',
     continueAccess: 'Continuar acceso de empresa',
     inviteNeedsAccepted:
-      'Esta invitacion debe aceptarse mediante el flujo de acceso de empresa con sesion iniciada.',
-    inviteFor: (companyName: string) => `Esta invitacion es para ${companyName}.`,
+      'Esta invitación debe aceptarse mediante el flujo de acceso de empresa con sesión iniciada.',
+    inviteFor: (companyName: string) => `Esta invitación es para ${companyName}.`,
     inviteEmail: 'Correo invitado:',
     continueToAccess: 'Continuar al acceso',
     boundary: '',

@@ -60,7 +60,7 @@ export default function CompanyLoginPage() {
         nextSteps: 'Siguientes pasos:',
         step1: 'Revisa tu bandeja y correo no deseado',
         step2: 'Abre el enlace de ingreso del correo',
-        step3: 'Ingresaras automaticamente',
+        step3: 'Ingresarás automáticamente',
         expires: 'El enlace expira en 1 hora por seguridad.',
         differentEmail: 'Usar otro correo',
         title: 'Portal de empresas',
@@ -68,11 +68,11 @@ export default function CompanyLoginPage() {
         emailLabel: 'Correo corporativo',
         sending: 'Enviando...',
         sendLink: 'Enviar enlace de ingreso',
-        passwordlessTitle: 'Ingreso sin contrasena:',
-        passwordlessBody: 'Te enviaremos un enlace seguro por correo. No necesitas contrasena.',
-        accessTitle: 'Todavia no tienes acceso?',
+        passwordlessTitle: 'Ingreso sin contraseña:',
+        passwordlessBody: 'Te enviaremos un enlace seguro por correo. No necesitas contraseña.',
+        accessTitle: '¿Todavía no tienes acceso?',
         accessBody:
-          'Los representantes de empresas solo pueden ingresar con invitacion de un administrador LEAD.',
+          'Los representantes de empresas solo pueden ingresar con invitación de un administrador LEAD.',
         boundary: '',
       }
 
