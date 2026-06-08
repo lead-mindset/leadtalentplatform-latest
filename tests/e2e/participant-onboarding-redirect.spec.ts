@@ -88,7 +88,7 @@ test.describe('participant onboarding redirect', () => {
       const elapsedMs = Date.now() - startedAt
 
       await expect(page).toHaveURL(/\/es\/events$/)
-      await expect(page.getByRole('heading', { name: /encuentra tu proximo evento lead/i })).toBeVisible()
+      await expect(page.getByRole('heading', { name: /encuentra tu pr[oó]ximo evento lead/i })).toBeVisible()
       expect(elapsedMs).toBeLessThan(45_000)
       expect(pageErrors).toEqual([])
       expect(consoleErrors).toEqual([])

@@ -34,10 +34,10 @@ const INTERNAL_PATHWAY_LABELS = [
 ]
 const OKR_OPTIONS = ['Inspire', 'Unite', 'Empower', 'Elevate']
 const FOCUS_OPTIONS = [
-  'Exploracion de carrera',
-  'Experiencia tecnica',
-  'Preparacion para oportunidades',
-  'Comunidad y mentorias',
+  'Exploración de carrera',
+  'Experiencia técnica',
+  'Preparación para oportunidades',
+  'Comunidad y mentorías',
   'Liderazgo',
 ]
 const PILLAR_OPTIONS = [
@@ -49,19 +49,19 @@ const PILLAR_OPTIONS = [
   'Community Outreach',
   'Chapter Development',
 ]
-const GROWTH_STAGE_OPTIONS = ['Explorer', 'Builder', 'Leader', 'Candidate', 'Emerging professional']
+const GROWTH_STAGE_OPTIONS = ['Exploración', 'Construcción', 'Leader', 'Candidatura', 'Profesional emergente']
 const STUDENT_OUTCOME_OPTIONS = [
-  'Orientacion a la mision',
+  'Orientación a la misión',
   'Sentido de pertenencia',
-  'Exposicion profesional',
-  'Habilidad tecnica',
-  'Proyecto o innovacion',
+  'Exposición profesional',
+  'Habilidad técnica',
+  'Proyecto o innovación',
   'Evidencia concreta',
-  'Preparacion profesional',
-  'Perfil mas visible',
+  'Preparación profesional',
+  'Perfil más visible',
   'Confianza de liderazgo',
   'Trabajo en equipo',
-  'Reflexion de aprendizaje',
+  'Reflexión de aprendizaje',
   'Servicio a la comunidad',
 ]
 const AUDIENCE_OPTIONS = [
@@ -78,18 +78,18 @@ const NON_EVENT_CTA_OPTIONS = [
   'Reflexionar',
   'Actualizar perfil',
   'Actualizar LinkedIn',
-  'Actualizar resume',
+  'Actualizar CV',
   'Capturar evidencia',
 ]
 const PROOF_OPTIONS = [
   'Sin evidencia posterior',
-  'Growth Reflection',
+  'Reflexión privada',
   'Certificado',
   'Pitch deck',
-  'Actualizacion de LinkedIn',
-  'Bullet de resume',
+  'Actualización de LinkedIn',
+  'Bullet de CV',
   'Nota de proyecto',
-  'Item de portafolio',
+  'Ítem de portafolio',
 ]
 
 type SupabaseAdmin = SupabaseClient<Database>
@@ -750,8 +750,8 @@ test.describe('LEAD intelligence authenticated QA', () => {
       await page.goto('/es/student', { waitUntil: 'domcontentloaded' })
       await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
 
-      await expect(page.getByText('Tus Next Three Moves')).toHaveCount(0)
-      await expect(page.getByText('Tus proximos pasos')).toHaveCount(0)
+      await expect(page.getByText('Tus próximos tres movimientos')).toHaveCount(0)
+      await expect(page.getByText('Tus próximos pasos')).toHaveCount(0)
       await capture(page, testInfo, 'pathway rollout disabled dashboard hidden')
 
       await page.goto('/es/student/pathway-check-in', { waitUntil: 'domcontentloaded' })
@@ -772,9 +772,9 @@ test.describe('LEAD intelligence authenticated QA', () => {
       await page.goto('/es/student', { waitUntil: 'domcontentloaded' })
       await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
 
-      await expect(page.getByText('Tus proximos pasos')).toBeVisible()
+      await expect(page.getByText('Tus próximos pasos')).toBeVisible()
       await expect(page.getByRole('link', { name: 'Empezar Check-In' })).toBeVisible()
-      await expect(page.getByText('Tus Next Three Moves')).toHaveCount(0)
+      await expect(page.getByText('Tus próximos tres movimientos')).toHaveCount(0)
       await capture(page, testInfo, 'pathway dashboard no check-in prompt')
 
       await page.goto('/es/student/pathway-check-in', { waitUntil: 'domcontentloaded' })
@@ -1024,20 +1024,20 @@ test.describe('LEAD intelligence authenticated QA', () => {
       await expect(page.getByRole('combobox').first()).toBeEnabled()
 
       await chooseEveryComboboxOption(page, 0, OKR_OPTIONS, 'Empower')
-      await chooseEveryComboboxOption(page, 1, FOCUS_OPTIONS, 'Preparacion para oportunidades')
+      await chooseEveryComboboxOption(page, 1, FOCUS_OPTIONS, 'Preparación para oportunidades')
       await checkEveryCheckboxOption(page, PILLAR_OPTIONS)
       await checkEveryCheckboxOption(page, GROWTH_STAGE_OPTIONS)
       await checkEveryCheckboxOption(page, STUDENT_OUTCOME_OPTIONS)
       await expectComboboxOptions(page, 3, EVENT_CTA_OPTIONS, NON_EVENT_CTA_OPTIONS)
       await chooseEveryComboboxOption(page, 2, AUDIENCE_OPTIONS, 'Miembros activos')
       await chooseEveryComboboxOption(page, 3, EVENT_CTA_OPTIONS, 'Registrarse')
-      await chooseEveryComboboxOption(page, 4, PROOF_OPTIONS, 'Item de portafolio')
+      await chooseEveryComboboxOption(page, 4, PROOF_OPTIONS, 'Ítem de portafolio')
 
       await capture(page, testInfo, 'chapter pathway all options selected')
       await page.getByRole('button', { name: /Siguiente/i }).click()
       await expect(page.getByText('Resumen del evento')).toBeVisible()
       await expect(page.getByText('Empower')).toBeVisible()
-      await expect(page.getByText('Preparacion para oportunidades')).toBeVisible()
+      await expect(page.getByText('Preparación para oportunidades')).toBeVisible()
       await page.getByRole('button', { name: 'Guardar como borrador' }).click()
       await page.waitForURL(/\/es\/chapter\/events\/[0-9a-f-]+$/, { timeout: 60_000 })
 
@@ -1134,10 +1134,10 @@ test.describe('LEAD intelligence authenticated QA', () => {
       await expect(page.getByText('Recomendar este evento a estudiantes')).toBeVisible()
       await expect(page.getByRole('checkbox', { name: 'Permitir recomendacion en Pathway' })).toBeChecked()
       await expect(page.getByText('Empower').first()).toBeVisible()
-      await expect(page.getByText('Preparacion para oportunidades').first()).toBeVisible()
+      await expect(page.getByText('Preparación para oportunidades').first()).toBeVisible()
       await expect(page.getByText('Miembros activos').first()).toBeVisible()
       await expect(page.getByText('Registrarse').first()).toBeVisible()
-      await expect(page.getByText('Growth Reflection').first()).toBeVisible()
+      await expect(page.getByText('Reflexión privada').first()).toBeVisible()
       await capture(page, testInfo, 'chapter edit pathway metadata reloaded')
 
       await page.getByRole('checkbox', { name: 'Permitir recomendacion en Pathway' }).click()
@@ -1226,7 +1226,7 @@ test.describe('LEAD intelligence authenticated QA', () => {
     await page.goto('/es/student', { waitUntil: 'domcontentloaded' })
     await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
 
-    await expect(page.getByText('Tus Next Three Moves')).toBeVisible()
+    await expect(page.getByText('Tus próximos tres movimientos')).toBeVisible()
     await expect(page.getByText(EVENT_TITLE)).toBeVisible()
     await expect(page.getByText('Evento LEAD')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Registrarme al evento' })).toBeVisible()
@@ -1279,17 +1279,17 @@ test.describe('LEAD intelligence authenticated QA', () => {
       await expect(page.getByRole('button', { name: 'Postular al evento' })).toBeVisible()
       await page.getByRole('button', { name: 'Postular al evento' }).click()
       await page.waitForURL(new RegExp(`/(?:es/)?events/${EVENT_ID}`), { timeout: 60_000 })
-      await expect(page.getByText('Envia tu postulacion y el equipo anfitrion revisara tus respuestas.')).toBeVisible()
+      await expect(page.getByText('Envía tu postulación y el equipo anfitrión revisará tus respuestas.')).toBeVisible()
       await expect(page.getByRole('button', { name: 'Postular ahora' })).toBeVisible()
       await capture(page, testInfo, 'student application recommendation lands on postulation event')
 
       await page.getByRole('button', { name: 'Postular ahora' }).click()
       await expect(page.getByRole('dialog')).toBeVisible()
-      await page.getByRole('button', { name: 'Enviar postulacion' }).click()
+      await page.getByRole('button', { name: 'Enviar postulación' }).click()
       await expect(page.getByText('Esta pregunta es obligatoria.')).toBeVisible()
       await page.locator('textarea').fill('This event maps directly to my current Pathway next step.')
-      await page.getByRole('button', { name: 'Enviar postulacion' }).click()
-      await expect(page.getByText('Tu postulacion esta en revision.')).toBeVisible({ timeout: 60_000 })
+      await page.getByRole('button', { name: 'Enviar postulación' }).click()
+      await expect(page.getByText('Tu postulación está en revisión. Recibirás un correo cuando haya una decisión.')).toBeVisible({ timeout: 60_000 })
 
       const { data: registration, error: registrationError } = await admin
         .from('event_registration')
@@ -1318,7 +1318,7 @@ test.describe('LEAD intelligence authenticated QA', () => {
     await page.goto(`/es/student/growth-reflection?${params.toString()}`, { waitUntil: 'domcontentloaded' })
     await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined)
 
-    await expect(page.getByRole('heading', { name: 'Growth Reflection' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Reflexión de crecimiento' })).toBeVisible()
     await expect(page.locator('input[name="event_id"]')).toHaveValue(EVENT_ID)
     await expect(page.locator('input[name="recommendation_id"]')).toHaveValue(EVENT_RECOMMENDATION_ID)
     await expect(page.locator('input[name="participated_in"]')).toHaveValue(EVENT_TITLE)
@@ -1328,7 +1328,7 @@ test.describe('LEAD intelligence authenticated QA', () => {
     await page.locator('textarea[name="skill_or_mindset"]').fill('Reflection and opportunity readiness.')
     await page.locator('textarea[name="goal_connection"]').fill('This connects to building stronger career proof.')
     await page.locator('textarea[name="next_move"]').fill('Register for one relevant event and capture the learning.')
-    await page.getByRole('button', { name: 'Guardar reflexion' }).click()
+    await page.getByRole('button', { name: 'Guardar reflexión' }).click()
     await page.waitForURL(/\/(?:es\/)?student\?reflection=saved/, { timeout: 60_000 })
 
     const { data, error } = await admin
