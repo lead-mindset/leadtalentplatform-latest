@@ -332,7 +332,7 @@ function DeleteEventButton({
             disabled
               ? 'pointer-events-none bg-muted! text-muted-foreground! hover:bg-muted!'
               : isQuiet
-                ? 'border-destructive/40 text-destructive hover:bg-destructive/10'
+                ? 'border-destructive/60 bg-destructive/15 text-foreground hover:border-destructive/70 hover:bg-destructive/25 hover:text-foreground focus-visible:ring-destructive/40'
                 : undefined
           }
         >
