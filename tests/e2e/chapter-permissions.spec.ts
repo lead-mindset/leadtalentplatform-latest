@@ -61,6 +61,13 @@ async function screenshot(page: Page, name: string) {
   return outputPath
 }
 
+async function revealVisibleRoleControls(page: Page) {
+  const roleDisclosure = page.getByText('Gestionar rol e-board').first()
+  if (await roleDisclosure.isVisible().catch(() => false)) {
+    await roleDisclosure.click()
+  }
+}
+
 test.describe('chapter-scoped permission matrix', () => {
   for (const persona of chapterOperators) {
     test(`${persona.email} reaches the chapter dashboard`, async ({ page }) => {
@@ -79,8 +86,9 @@ test.describe('chapter-scoped permission matrix', () => {
     await page.waitForLoadState('networkidle')
 
     await expect(page.getByText('Test Member').first()).toBeVisible()
+    await revealVisibleRoleControls(page)
     await expect(page.getByRole('button', { name: /asignar rol|cambiar rol/i }).first()).toBeVisible()
-    await expect(page.getByRole('button', { name: /revocar membresia/i }).first()).toBeVisible()
+    await expect(page.getByRole('button', { name: /revocar membres[ií]a/i }).first()).toBeVisible()
 
     const capturePath = await screenshot(
       page,
@@ -99,7 +107,7 @@ test.describe('chapter-scoped permission matrix', () => {
 
     await expect(page.getByText('Test Member').first()).toBeVisible()
     await expect(page.getByRole('button', { name: /asignar rol|cambiar rol/i })).toHaveCount(0)
-    await expect(page.getByRole('button', { name: /revocar membresia/i })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: /revocar membres[ií]a/i })).toHaveCount(0)
   })
 
   test('approved member is redirected away from chapter operations', async ({ page }) => {
@@ -107,7 +115,9 @@ test.describe('chapter-scoped permission matrix', () => {
     await page.goto('/es/chapter')
     await page.waitForLoadState('networkidle')
 
-    await expect(page).toHaveURL(/\/es\/student/)
+    await expect(page).toHaveURL(/\/es\/auth\/unauthorized/)
+    await expect(page.getByText('Acceso no disponible')).toBeVisible()
+    await expect(page.getByRole('link', { name: /ir a mi espacio/i })).toBeVisible()
   })
 
   test('admin reaches admin correction UI and recruiter reaches company dashboard', async ({ browser }, testInfo) => {

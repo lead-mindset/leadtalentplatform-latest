@@ -366,7 +366,7 @@ async function runAnonymousFlows(qa: LaunchQaCollector) {
       suggestedFix: 'Check event registration loginUrl construction.',
     })
   }
-  await qa.visit('anonymous application event detail', `/es/events/${APPLICATION_EVENT_ID}`, { expectedText: /postular|postulacion|requiere/i })
+  await qa.visit('anonymous application event detail', `/es/events/${APPLICATION_EVENT_ID}`, { expectedText: /postular|postulaci[oó]n|requiere/i })
   await qa.visit('anonymous public chapter page', '/es/chapter/leaduni', { expectedText: /LEAD UNI/i })
   await qa.visit('anonymous login page', '/es/auth/login', { expectedText: /bienvenido|correo|email|login/i })
   await qa.visit('anonymous signup page', '/es/auth/sign-up', { expectedText: /crear|sign|email/i })
@@ -439,9 +439,9 @@ async function runStudentLikeFlows(qa: LaunchQaCollector) {
       suggestedFix: 'Inspect registerForEvent action, redirect handling, and myRegistration lookup on event detail.',
     })
   }
-  await qa.visit('member application event before submit', `/es/events/${APPLICATION_EVENT_ID}`, { expectedText: /postular|postulacion/i })
+  await qa.visit('member application event before submit', `/es/events/${APPLICATION_EVENT_ID}`, { expectedText: /postular|postulaci[oó]n/i })
   if (await qa.clickFirst('member application open modal', qa['page'].getByRole('button', { name: /postular/i }))) {
-    await qa.clickFirst('member application empty submit', qa['page'].getByRole('button', { name: /enviar postulacion/i }))
+    await qa.clickFirst('member application empty submit', qa['page'].getByRole('button', { name: /enviar postulaci[oó]n/i }))
     const requiredError = await qa['page'].getByText(/obligatoria|configuradas/i).first().isVisible().catch(() => false)
     if (!requiredError) {
       const shot = await qa.screenshot('member application missing validation')
@@ -474,8 +474,12 @@ async function runChapterFlows(qa: LaunchQaCollector) {
     await qa.loginAs(persona.email, /\/chapter/)
     await qa.visit(`${persona.label} chapter dashboard`, '/es/chapter', { expectedText: /LEAD UNI|resumen del capitulo|crear evento/i })
     await qa.visit(`${persona.label} active roster`, '/es/chapter/members?status=active', { expectedText: /Test Member/i })
+    const roleDisclosure = qa['page'].getByText('Gestionar rol e-board').first()
+    if (await roleDisclosure.isVisible().catch(() => false)) {
+      await roleDisclosure.click()
+    }
     const assignVisible = Boolean(await firstVisible(qa['page'].getByRole('button', { name: /asignar rol|cambiar rol/i })))
-    const revokeVisible = Boolean(await firstVisible(qa['page'].getByRole('button', { name: /revocar membresia/i })))
+    const revokeVisible = Boolean(await firstVisible(qa['page'].getByRole('button', { name: /revocar membres[ií]a/i })))
     if (persona.canAssign !== assignVisible) {
       const shot = await qa.screenshot(`${persona.label} assign permission mismatch`)
       qa.addFinding('major', 'E-board assignment control permission mismatch', {

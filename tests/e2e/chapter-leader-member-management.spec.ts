@@ -292,6 +292,13 @@ function memberCard(page: Page, memberName: string) {
   return page.locator('article').filter({ hasText: memberName }).first()
 }
 
+async function revealRoleControls(card: ReturnType<typeof memberCard>) {
+  const roleDisclosure = card.getByText('Gestionar rol e-board').first()
+  if (await roleDisclosure.isVisible().catch(() => false)) {
+    await roleDisclosure.click()
+  }
+}
+
 test.describe('chapter leader member management', () => {
   test.setTimeout(90_000)
 
@@ -443,11 +450,11 @@ test.describe('chapter leader member management', () => {
     await page.goto('/es/chapter/members?status=active')
     await page.waitForLoadState('networkidle')
 
-    await expect(memberCard(page, 'Test President').getByRole('button', { name: /revocar membresia/i })).toHaveCount(0)
+    await expect(memberCard(page, 'Test President').getByRole('button', { name: /revocar membres[ií]a/i })).toHaveCount(0)
 
     const card = memberCard(page, member.name)
     await expect(card).toBeVisible()
-    const revokeButton = card.getByRole('button', { name: /revocar membresia/i })
+    const revokeButton = card.getByRole('button', { name: /revocar membres[ií]a/i })
     const revokeReason = card.getByPlaceholder(/motivo requerido/i)
     await expect(revokeButton).toBeEnabled()
     await revokeButton.click()
@@ -456,7 +463,7 @@ test.describe('chapter leader member management', () => {
       await revokeReason.waitFor({ state: 'visible', timeout: 5_000 })
     })
     await revokeReason.fill('No longer active in chapter')
-    await card.getByRole('button', { name: /confirmar revocacion/i }).click()
+    await card.getByRole('button', { name: /confirmar revocaci[oó]n/i }).click()
 
     await expect.poll(async () => getMembership(admin, member.id)).toMatchObject({
       status: 'inactive',
@@ -492,6 +499,7 @@ test.describe('chapter leader member management', () => {
 
     const card = memberCard(vpPage, member.name)
     await expect(card).toBeVisible()
+    await revealRoleControls(card)
     await card.getByRole('button', { name: /asignar rol/i }).click()
 
     const dialog = vpPage.getByRole('dialog', { name: /asignar rol e-board/i })
