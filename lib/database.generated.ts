@@ -76,6 +76,65 @@ export type Database = {
         }
         Relationships: []
       }
+      chapter_activation_interest: {
+        Row: {
+          created_at: string
+          id: string
+          interested_people_context: string
+          lead_value: string
+          long_term_commitment: string
+          motivation: string
+          opportunities: string
+          review_notes: string | null
+          status: string
+          team_status: string
+          university_context: string
+          university_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          interested_people_context: string
+          lead_value: string
+          long_term_commitment: string
+          motivation: string
+          opportunities: string
+          review_notes?: string | null
+          status?: string
+          team_status: string
+          university_context: string
+          university_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          interested_people_context?: string
+          lead_value?: string
+          long_term_commitment?: string
+          motivation?: string
+          opportunities?: string
+          review_notes?: string | null
+          status?: string
+          team_status?: string
+          university_context?: string
+          university_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chapter_activation_interest_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chapter_audit_log: {
         Row: {
           action: string
@@ -134,59 +193,114 @@ export type Database = {
           },
         ]
       }
-      chapter_activation_interest: {
+      chapter_invite: {
         Row: {
+          accepted_at: string | null
+          accepted_by_user_id: string | null
+          chapter_id: string
           created_at: string
+          created_by_role: string
+          created_by_user_id: string | null
+          display_title: string
+          email: string
+          expires_at: string
+          functional_area: string
           id: string
-          interested_people_context: string
-          lead_value: string
-          long_term_commitment: string
-          motivation: string
-          opportunities: string
-          review_notes: string | null
+          invite_type: string
+          metadata: Json
+          normalized_email: string
+          raw_title: string | null
+          replaced_by_invite_id: string | null
+          revoked_at: string | null
+          revoked_by_user_id: string | null
+          role_level: string
+          source: string
           status: string
-          team_status: string
-          university_context: string
-          university_name: string
+          token_hash: string
           updated_at: string
-          user_id: string
         }
         Insert: {
+          accepted_at?: string | null
+          accepted_by_user_id?: string | null
+          chapter_id: string
           created_at?: string
+          created_by_role: string
+          created_by_user_id?: string | null
+          display_title: string
+          email: string
+          expires_at?: string
+          functional_area: string
           id?: string
-          interested_people_context: string
-          lead_value: string
-          long_term_commitment: string
-          motivation: string
-          opportunities: string
-          review_notes?: string | null
+          invite_type: string
+          metadata?: Json
+          normalized_email: string
+          raw_title?: string | null
+          replaced_by_invite_id?: string | null
+          revoked_at?: string | null
+          revoked_by_user_id?: string | null
+          role_level: string
+          source?: string
           status?: string
-          team_status: string
-          university_context: string
-          university_name: string
+          token_hash: string
           updated_at?: string
-          user_id: string
         }
         Update: {
+          accepted_at?: string | null
+          accepted_by_user_id?: string | null
+          chapter_id?: string
           created_at?: string
+          created_by_role?: string
+          created_by_user_id?: string | null
+          display_title?: string
+          email?: string
+          expires_at?: string
+          functional_area?: string
           id?: string
-          interested_people_context?: string
-          lead_value?: string
-          long_term_commitment?: string
-          motivation?: string
-          opportunities?: string
-          review_notes?: string | null
+          invite_type?: string
+          metadata?: Json
+          normalized_email?: string
+          raw_title?: string | null
+          replaced_by_invite_id?: string | null
+          revoked_at?: string | null
+          revoked_by_user_id?: string | null
+          role_level?: string
+          source?: string
           status?: string
-          team_status?: string
-          university_context?: string
-          university_name?: string
+          token_hash?: string
           updated_at?: string
-          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "chapter_activation_interest_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "chapter_invite_accepted_by_user_id_fkey"
+            columns: ["accepted_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_invite_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_invite_created_by_user_id_fkey"
+            columns: ["created_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_invite_replaced_by_invite_id_fkey"
+            columns: ["replaced_by_invite_id"]
+            isOneToOne: false
+            referencedRelation: "chapter_invite"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_invite_revoked_by_user_id_fkey"
+            columns: ["revoked_by_user_id"]
             isOneToOne: false
             referencedRelation: "user"
             referencedColumns: ["id"]
@@ -321,121 +435,7 @@ export type Database = {
           },
         ]
       }
-        chapter_invite: {
-          Row: {
-            accepted_at: string | null
-            accepted_by_user_id: string | null
-            chapter_id: string
-            created_at: string
-            created_by_role: string
-            created_by_user_id: string | null
-            display_title: string
-            email: string
-            expires_at: string
-            functional_area: string
-            id: string
-            invite_type: string
-            metadata: Json
-            normalized_email: string
-            raw_title: string | null
-            replaced_by_invite_id: string | null
-            revoked_at: string | null
-            revoked_by_user_id: string | null
-            role_level: string
-            source: string
-            status: string
-            token_hash: string
-            updated_at: string
-          }
-          Insert: {
-            accepted_at?: string | null
-            accepted_by_user_id?: string | null
-            chapter_id: string
-            created_at?: string
-            created_by_role: string
-            created_by_user_id?: string | null
-            display_title: string
-            email: string
-            expires_at?: string
-            functional_area: string
-            id?: string
-            invite_type: string
-            metadata?: Json
-            normalized_email: string
-            raw_title?: string | null
-            replaced_by_invite_id?: string | null
-            revoked_at?: string | null
-            revoked_by_user_id?: string | null
-            role_level: string
-            source?: string
-            status?: string
-            token_hash: string
-            updated_at?: string
-          }
-          Update: {
-            accepted_at?: string | null
-            accepted_by_user_id?: string | null
-            chapter_id?: string
-            created_at?: string
-            created_by_role?: string
-            created_by_user_id?: string | null
-            display_title?: string
-            email?: string
-            expires_at?: string
-            functional_area?: string
-            id?: string
-            invite_type?: string
-            metadata?: Json
-            normalized_email?: string
-            raw_title?: string | null
-            replaced_by_invite_id?: string | null
-            revoked_at?: string | null
-            revoked_by_user_id?: string | null
-            role_level?: string
-            source?: string
-            status?: string
-            token_hash?: string
-            updated_at?: string
-          }
-          Relationships: [
-            {
-              foreignKeyName: "chapter_invite_accepted_by_user_id_fkey"
-              columns: ["accepted_by_user_id"]
-              isOneToOne: false
-              referencedRelation: "user"
-              referencedColumns: ["id"]
-            },
-            {
-              foreignKeyName: "chapter_invite_chapter_id_fkey"
-              columns: ["chapter_id"]
-              isOneToOne: false
-              referencedRelation: "chapter"
-              referencedColumns: ["id"]
-            },
-            {
-              foreignKeyName: "chapter_invite_created_by_user_id_fkey"
-              columns: ["created_by_user_id"]
-              isOneToOne: false
-              referencedRelation: "user"
-              referencedColumns: ["id"]
-            },
-            {
-              foreignKeyName: "chapter_invite_replaced_by_invite_id_fkey"
-              columns: ["replaced_by_invite_id"]
-              isOneToOne: false
-              referencedRelation: "chapter_invite"
-              referencedColumns: ["id"]
-            },
-            {
-              foreignKeyName: "chapter_invite_revoked_by_user_id_fkey"
-              columns: ["revoked_by_user_id"]
-              isOneToOne: false
-              referencedRelation: "user"
-              referencedColumns: ["id"]
-            },
-          ]
-        }
-        chapter_preapproval: {
+      chapter_preapproval: {
         Row: {
           chapter_id: string
           consumed_at: string | null
@@ -542,9 +542,9 @@ export type Database = {
           is_primary: boolean
           raw_title: string | null
           role_level: string
-            source: string
-            source_chapter_invite_id: string | null
-            source_preapproval_id: string | null
+          source: string
+          source_chapter_invite_id: string | null
+          source_preapproval_id: string | null
           starts_at: string
           status: string
           updated_at: string
@@ -561,9 +561,9 @@ export type Database = {
           is_primary?: boolean
           raw_title?: string | null
           role_level: string
-            source?: string
-            source_chapter_invite_id?: string | null
-            source_preapproval_id?: string | null
+          source?: string
+          source_chapter_invite_id?: string | null
+          source_preapproval_id?: string | null
           starts_at?: string
           status?: string
           updated_at?: string
@@ -580,9 +580,9 @@ export type Database = {
           is_primary?: boolean
           raw_title?: string | null
           role_level?: string
-            source?: string
-            source_chapter_invite_id?: string | null
-            source_preapproval_id?: string | null
+          source?: string
+          source_chapter_invite_id?: string | null
+          source_preapproval_id?: string | null
           starts_at?: string
           status?: string
           updated_at?: string
@@ -603,15 +603,15 @@ export type Database = {
             referencedRelation: "chapter"
             referencedColumns: ["id"]
           },
-            {
-              foreignKeyName: "chapter_role_assignment_source_chapter_invite_id_fkey"
-              columns: ["source_chapter_invite_id"]
-              isOneToOne: false
-              referencedRelation: "chapter_invite"
-              referencedColumns: ["id"]
-            },
-            {
-              foreignKeyName: "chapter_role_assignment_source_preapproval_id_fkey"
+          {
+            foreignKeyName: "chapter_role_assignment_source_chapter_invite_id_fkey"
+            columns: ["source_chapter_invite_id"]
+            isOneToOne: false
+            referencedRelation: "chapter_invite"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_role_assignment_source_preapproval_id_fkey"
             columns: ["source_preapproval_id"]
             isOneToOne: false
             referencedRelation: "chapter_preapproval"
@@ -921,75 +921,6 @@ export type Database = {
           },
         ]
       }
-      event_registration: {
-        Row: {
-          checked_in_at: string | null
-          checked_in_by_id: string | null
-          event_id: string
-          id: string
-          qr_token: string | null
-          registered_at: string
-          status: string
-          user_id: string
-        }
-        Insert: {
-          checked_in_at?: string | null
-          checked_in_by_id?: string | null
-          event_id: string
-          id?: string
-          qr_token?: string | null
-          registered_at?: string
-          status?: string
-          user_id: string
-        }
-        Update: {
-          checked_in_at?: string | null
-          checked_in_by_id?: string | null
-          event_id?: string
-          id?: string
-          qr_token?: string | null
-          registered_at?: string
-          status?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "event_registration_checked_in_by_id_fkey"
-            columns: ["checked_in_by_id"]
-            isOneToOne: false
-            referencedRelation: "user"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "event_registration_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "event"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "event_registration_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "event_with_chapter"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "event_registration_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "published_event_listing"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "event_registration_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "user"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       event_pathway_metadata: {
         Row: {
           audience: string | null
@@ -1089,6 +1020,75 @@ export type Database = {
           {
             foreignKeyName: "event_pathway_metadata_updated_by_id_fkey"
             columns: ["updated_by_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_registration: {
+        Row: {
+          checked_in_at: string | null
+          checked_in_by_id: string | null
+          event_id: string
+          id: string
+          qr_token: string | null
+          registered_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          checked_in_at?: string | null
+          checked_in_by_id?: string | null
+          event_id: string
+          id?: string
+          qr_token?: string | null
+          registered_at?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          checked_in_at?: string | null
+          checked_in_by_id?: string | null
+          event_id?: string
+          id?: string
+          qr_token?: string | null
+          registered_at?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_registration_checked_in_by_id_fkey"
+            columns: ["checked_in_by_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_registration_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_registration_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event_with_chapter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_registration_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "published_event_listing"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_registration_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "user"
             referencedColumns: ["id"]
@@ -1421,6 +1421,93 @@ export type Database = {
           },
         ]
       }
+      growth_reflection: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          event_id: string | null
+          goal_connection: string
+          id: string
+          learned: string
+          next_move: string
+          participated_in: string
+          recommendation_id: string | null
+          skill_or_mindset: string
+          status: string
+          updated_at: string
+          user_id: string
+          visibility: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          event_id?: string | null
+          goal_connection: string
+          id?: string
+          learned: string
+          next_move: string
+          participated_in: string
+          recommendation_id?: string | null
+          skill_or_mindset: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          visibility?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          event_id?: string | null
+          goal_connection?: string
+          id?: string
+          learned?: string
+          next_move?: string
+          participated_in?: string
+          recommendation_id?: string | null
+          skill_or_mindset?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "growth_reflection_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "growth_reflection_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event_with_chapter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "growth_reflection_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "published_event_listing"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "growth_reflection_recommendation_id_fkey"
+            columns: ["recommendation_id"]
+            isOneToOne: false
+            referencedRelation: "pathway_recommendation"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "growth_reflection_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_identity: {
         Row: {
           chapter_id: string | null
@@ -1518,72 +1605,65 @@ export type Database = {
           },
         ]
       }
-      growth_reflection: {
+      pathway_check_in: {
         Row: {
-          completed_at: string | null
+          chapter_id: string | null
+          confidence_level: number | null
           created_at: string
-          event_id: string | null
-          goal_connection: string
+          current_blocker: string | null
+          growth_stage: string | null
           id: string
-          learned: string
-          next_move: string
-          participated_in: string
-          recommendation_id: string | null
-          skill_or_mindset: string
+          looking_for: string | null
+          monthly_time_commitment: string | null
+          primary_focus: string | null
           status: string
+          study_interest: string | null
+          submitted_at: string | null
           updated_at: string
           user_id: string
-          visibility: string
         }
         Insert: {
-          completed_at?: string | null
+          chapter_id?: string | null
+          confidence_level?: number | null
           created_at?: string
-          event_id?: string | null
-          goal_connection: string
+          current_blocker?: string | null
+          growth_stage?: string | null
           id?: string
-          learned: string
-          next_move: string
-          participated_in: string
-          recommendation_id?: string | null
-          skill_or_mindset: string
+          looking_for?: string | null
+          monthly_time_commitment?: string | null
+          primary_focus?: string | null
           status?: string
+          study_interest?: string | null
+          submitted_at?: string | null
           updated_at?: string
           user_id: string
-          visibility?: string
         }
         Update: {
-          completed_at?: string | null
+          chapter_id?: string | null
+          confidence_level?: number | null
           created_at?: string
-          event_id?: string | null
-          goal_connection?: string
+          current_blocker?: string | null
+          growth_stage?: string | null
           id?: string
-          learned?: string
-          next_move?: string
-          participated_in?: string
-          recommendation_id?: string | null
-          skill_or_mindset?: string
+          looking_for?: string | null
+          monthly_time_commitment?: string | null
+          primary_focus?: string | null
           status?: string
+          study_interest?: string | null
+          submitted_at?: string | null
           updated_at?: string
           user_id?: string
-          visibility?: string
         }
         Relationships: [
           {
-            foreignKeyName: "growth_reflection_event_id_fkey"
-            columns: ["event_id"]
+            foreignKeyName: "pathway_check_in_chapter_id_fkey"
+            columns: ["chapter_id"]
             isOneToOne: false
-            referencedRelation: "event"
+            referencedRelation: "chapter"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "growth_reflection_recommendation_id_fkey"
-            columns: ["recommendation_id"]
-            isOneToOne: false
-            referencedRelation: "pathway_recommendation"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "growth_reflection_user_id_fkey"
+            foreignKeyName: "pathway_check_in_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "user"
@@ -1629,7 +1709,7 @@ export type Database = {
           {
             foreignKeyName: "pathway_feature_flag_chapter_id_fkey"
             columns: ["chapter_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "chapter"
             referencedColumns: ["id"]
           },
@@ -1637,72 +1717,6 @@ export type Database = {
             foreignKeyName: "pathway_feature_flag_updated_by_id_fkey"
             columns: ["updated_by_id"]
             isOneToOne: false
-            referencedRelation: "user"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      pathway_check_in: {
-        Row: {
-          chapter_id: string | null
-          confidence_level: number | null
-          created_at: string
-          current_blocker: string | null
-          id: string
-          looking_for: string | null
-          monthly_time_commitment: string | null
-          growth_stage: string | null
-          primary_focus: string | null
-          status: string
-          study_interest: string | null
-          submitted_at: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          chapter_id?: string | null
-          confidence_level?: number | null
-          created_at?: string
-          current_blocker?: string | null
-          id?: string
-          looking_for?: string | null
-          monthly_time_commitment?: string | null
-          growth_stage?: string | null
-          primary_focus?: string | null
-          status?: string
-          study_interest?: string | null
-          submitted_at?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          chapter_id?: string | null
-          confidence_level?: number | null
-          created_at?: string
-          current_blocker?: string | null
-          id?: string
-          looking_for?: string | null
-          monthly_time_commitment?: string | null
-          growth_stage?: string | null
-          primary_focus?: string | null
-          status?: string
-          study_interest?: string | null
-          submitted_at?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "pathway_check_in_chapter_id_fkey"
-            columns: ["chapter_id"]
-            isOneToOne: false
-            referencedRelation: "chapter"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pathway_check_in_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
             referencedRelation: "user"
             referencedColumns: ["id"]
           },
