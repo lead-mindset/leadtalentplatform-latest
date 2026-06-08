@@ -35,7 +35,7 @@ type Collaborator = {
 
 function isNavigationAbortLikeError(error: unknown) {
   if (!(error instanceof Error)) return false
-  return /failed to fetch|abort|cancel|navigation/i.test(error.message)
+  return /failed to fetch|network error|abort|cancel|navigation/i.test(error.message)
 }
 
 export function CollaboratorManager({

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, useTransition, useCallback, useMemo } from 'react'
+import { useEffect, useRef, useState, useTransition, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -56,6 +56,7 @@ export function CheckinScanner({
   const [status, setStatus] = useState<StatusMessage | null>(null)
   const [wakeLockNote, setWakeLockNote] = useState<string | null>(null)
   const [scanStatus, setScanStatus] = useState<ScanStatus>('idle')
+  const [hasBarcodeDetector, setHasBarcodeDetector] = useState(false)
 
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -64,10 +65,6 @@ export function CheckinScanner({
   const statusTimerRef = useRef<number | null>(null)
   const searchTimeoutRef = useRef<number | null>(null)
   const counterIntervalRef = useRef<number | null>(null)
-
-  const hasBarcodeDetector = useMemo(() => {
-    return typeof window !== 'undefined' && 'BarcodeDetector' in window
-  }, [])
 
   // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -248,6 +245,10 @@ export function CheckinScanner({
   }
 
   // ─── effects ─────────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    setHasBarcodeDetector('BarcodeDetector' in window)
+  }, [])
 
   // Auto-prepare when QR token is populated from camera scan
   useEffect(() => {
