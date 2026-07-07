@@ -1,6 +1,7 @@
 import { createClient } from './supabase/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 import { getSignedInUnauthorizedRedirectPath } from '@/lib/auth-redirects'
 import type {
   AdminStats,
@@ -446,6 +447,8 @@ export async function requireRecruiter(): Promise<{
 }> {
   const supabase = await createClient()
   const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
+  console.log("AUTH USER", authUser?.id);
+  console.log("REQUEST HOST", (await headers()).get("host"));
 
   if (authError || !authUser) {
     redirect('/auth/login')

@@ -25,6 +25,7 @@ function getSafeNextPath(value: string | null, locale: string) {
 export async function GET(request: NextRequest) {
   const { searchParams, pathname } = new URL(request.url);
   const siteUrl = new URL(request.url).origin;
+  console.log("SITE URL", siteUrl);
   const token_hash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
 
@@ -72,6 +73,7 @@ export async function GET(request: NextRequest) {
   }
 
   const { data: { user } } = await supabase.auth.getUser();
+  console.log("USER AFTER VERIFY", user?.id);
 
   if (!user) {
     return NextResponse.redirect(`${siteUrl}/${locale}/auth/error?error=No+user+after+verify`);
