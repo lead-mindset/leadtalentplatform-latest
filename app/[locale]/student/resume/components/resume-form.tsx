@@ -3,7 +3,6 @@
 import { useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Icons } from '@/components/ui/icons'
@@ -27,7 +26,6 @@ export default function ResumeClient({
   resume: Resume | null
   onUpload: typeof uploadResume
 }) {
-  const t = useTranslations('resume')
   const router = useRouter()
   const formRef = useRef<HTMLFormElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -64,12 +62,12 @@ export default function ResumeClient({
     const nowOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate())
     const diffInDays = Math.floor((nowOnly.getTime() - dateOnly.getTime()) / (1000 * 60 * 60 * 24))
 
-    if (diffInDays === 0) return t('today')
-    if (diffInDays === 1) return t('yesterday')
-    if (diffInDays < 7) return t('daysAgo', { count: diffInDays })
+    if (diffInDays === 0) return 'Hoy'
+    if (diffInDays === 1) return 'Ayer'
+    if (diffInDays < 7) return `${diffInDays} días atrás`
     if (diffInDays < 30) {
       const weeks = Math.floor(diffInDays / 7)
-      return weeks === 1 ? t('weekAgo') : t('weeksAgo', { count: weeks })
+      return weeks === 1 ? 'Hace 1 semana' : `Hace ${weeks} semanas`
     }
     return date.toLocaleDateString('es-PE', { month: 'short', day: 'numeric', year: 'numeric' })
   }
@@ -78,14 +76,14 @@ export default function ResumeClient({
 
   return (
     <div className="w-full space-y-6">
-      <section className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
-        <div className="flex items-center gap-3 border-b border-border px-6 py-5">
+      <section className="overflow-hidden rounded-2xl border border-border bg-card">
+        <div className="flex items-center gap-3 border-b border-border px-6 py-5 sm:px-8">
           <div className="rounded-lg bg-primary/10 p-2">
             <Icons.Upload className="h-4 w-4 text-primary" />
           </div>
           <div>
             <h2 className="text-base font-semibold text-foreground">Subir CV en PDF</h2>
-            <p className="text-xs leading-4 text-muted-foreground">Archivo PDF, máximo 10 MB</p>
+            <p className="text-sm leading-5 text-muted-foreground">Solo se acepta un archivo PDF de hasta 10 MB.</p>
           </div>
         </div>
 
@@ -117,7 +115,7 @@ export default function ResumeClient({
               }
             })
           }}
-          className="space-y-4 p-6"
+          className="space-y-4 p-6 sm:p-8"
         >
           <div
             onDragOver={(event) => {
@@ -222,7 +220,7 @@ export default function ResumeClient({
           {selectedFileTooLarge ? (
             <div className="flex items-start gap-2.5 rounded-lg border border-destructive/20 bg-destructive/10 p-3.5">
               <Icons.AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
-              <p className="text-sm font-medium text-destructive">{t('fileTooLarge')}</p>
+              <p className="text-sm font-medium text-destructive">El archivo supera el límite de 10 MB.</p>
             </div>
           ) : null}
 
@@ -249,7 +247,7 @@ export default function ResumeClient({
               {isPending ? (
                 <>
                   <Icons.Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t('uploading')}
+                  Subiendo CV
                 </>
               ) : (
                 <>
@@ -263,8 +261,8 @@ export default function ResumeClient({
       </section>
 
       {resume ? (
-        <section className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
-          <div className="flex flex-col gap-3 border-b border-border px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+        <section className="overflow-hidden rounded-2xl border border-border bg-card">
+          <div className="flex flex-col gap-3 border-b border-border px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
             <div className="flex items-center gap-3">
               <div className="rounded-lg bg-emerald-500/10 p-2">
                 <Icons.FileText className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
@@ -295,7 +293,7 @@ export default function ResumeClient({
             ) : null}
           </div>
 
-          <div className="p-6">
+          <div className="p-6 sm:p-8">
             <div className="rounded-lg border border-border/70 bg-muted/25 p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">

@@ -1,7 +1,7 @@
 import QRCode from 'qrcode'
 import Image from 'next/image'
 import type { ReactNode } from 'react'
-import { BookOpenCheck, QrCode } from 'lucide-react'
+import { QrCode } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -9,7 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { getMyRegistrations } from '@/lib/actions/events/get-data'
 import { CancelRegistrationDialog } from '@/components/events/cancel-registration-dialog'
 import { EventCalendarActions } from '@/components/events/event-calendar-actions'
-import { EventDayGuidance } from '@/components/events/event-day-guidance'
 import { ScrollToHighlightedEvent } from '@/components/events/scroll-to-highlighted-event'
 import { RegistrationStatusBadge } from '@/components/events/registration-status-badge'
 import type { RegistrationStatus } from '@/lib/types'
@@ -25,6 +24,7 @@ type EventRegistrationCardProps = {
   registration: RegistrationWithEvent
   qrDataUrl: string | null
   showQr?: boolean
+  compact?: boolean
 }
 
 function formatDateTime(value: string) {
@@ -48,20 +48,6 @@ function isFutureEvent(registration: RegistrationWithEvent) {
 
 function isCheckedIn(registration: RegistrationWithEvent) {
   return Boolean(registration.checked_in_at) || registration.status === 'attended'
-}
-
-function canReflectOnEvent(registration: RegistrationWithEvent) {
-  if (isCheckedIn(registration)) return true
-  if (registration.status !== 'registered') return false
-  if (!registration.event?.start_at) return false
-  return new Date(registration.event.start_at) <= new Date()
-}
-
-function reflectionHref(registration: RegistrationWithEvent) {
-  const params = new URLSearchParams()
-  params.set('eventId', registration.event_id)
-  if (registration.event?.title) params.set('eventTitle', registration.event.title)
-  return `/student/growth-reflection?${params.toString()}`
 }
 
 function getCalendarEvent(registration: RegistrationWithEvent) {
@@ -186,6 +172,7 @@ function EventRegistrationCard({
   registration,
   qrDataUrl,
   showQr = false,
+  compact = false,
 }: EventRegistrationCardProps) {
   const event = registration.event
   const message = getRegistrationMessage(registration, qrDataUrl)
@@ -206,22 +193,26 @@ function EventRegistrationCard({
             </CardTitle>
             <EventMeta registration={registration} />
           </div>
-          <RegistrationStatusBadge
-            status={registration.status as RegistrationStatus}
-            checkedIn={isCheckedIn(registration)}
-          />
+          {!compact ? (
+            <RegistrationStatusBadge
+              status={registration.status as RegistrationStatus}
+              checkedIn={isCheckedIn(registration)}
+            />
+          ) : null}
         </div>
       </CardHeader>
 
       <CardContent className="space-y-4">
-        <div className="min-w-0 rounded-lg border border-border bg-muted/30 p-3">
-          <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:gap-3">
-            <Badge variant={message.variant} size="sm" className="w-fit shrink-0 sm:mt-0.5">
-              {message.title}
-            </Badge>
-            <p className="min-w-0 text-sm leading-6 text-muted-foreground">{message.body}</p>
+        {!compact ? (
+          <div className="min-w-0 rounded-lg border border-border bg-muted/30 p-3">
+            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:gap-3">
+              <Badge variant={message.variant} size="sm" className="w-fit shrink-0 sm:mt-0.5">
+                {message.title}
+              </Badge>
+              <p className="min-w-0 text-sm leading-6 text-muted-foreground">{message.body}</p>
+            </div>
           </div>
-        </div>
+        ) : null}
 
         {canShowQr && qrDataUrl ? (
           <div className="space-y-3">
@@ -230,30 +221,11 @@ function EventRegistrationCard({
           </div>
         ) : null}
 
-        {canReflectOnEvent(registration) ? (
-          <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex gap-3">
-                <BookOpenCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                <div className="space-y-1">
-                  <p className="text-sm font-semibold text-foreground">Convertir en aprendizaje</p>
-                  <p className="text-sm leading-6 text-muted-foreground">
-              Opcional: captura lo que aprendiste mientras esta experiencia sigue fresca.
-                  </p>
-                </div>
-              </div>
-              <Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
-              <Link href={reflectionHref(registration)}>Crear reflexión</Link>
-              </Button>
-            </div>
-          </div>
-        ) : null}
-
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button asChild variant="outline" className="w-full sm:flex-1">
             <Link href={`/events/${registration.event_id}`}>Ver detalle</Link>
           </Button>
-          {canCancel ? (
+          {!compact && canCancel ? (
             <CancelRegistrationDialog
               registrationId={registration.id}
               eventId={registration.event_id}
@@ -452,7 +424,6 @@ export default async function StudentEventsPage({
       <ScrollToHighlightedEvent eventId={highlightEventId} />
 
       <PageHeader
-        eyebrow="Mi LEAD"
         title="Mis eventos"
         description="Revisa tus registros, decisiones de postulación y códigos QR de check-in en un solo lugar."
         actions={
@@ -465,28 +436,13 @@ export default async function StudentEventsPage({
       {registrations.length === 0 ? (
         <EmptyState />
       ) : (
-        <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
-          <section className="min-w-0 space-y-6">
+        <div className="space-y-6">
             {currentTicket ? (
               <CurrentTicket
                 registration={currentTicket}
                 qrDataUrl={currentTicketQrDataUrl}
               />
-            ) : (
-              <Card className="rounded-lg border-dashed">
-                <CardContent className="flex flex-col gap-4 py-8 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="space-y-1">
-                    <h2 className="text-lg font-semibold">No tienes un ticket activo ahora</h2>
-                    <p className="text-sm text-muted-foreground">
-              Los próximos eventos registrados con QR aparecerán primero aquí.
-                    </p>
-                  </div>
-                  <Button asChild variant="outline">
-                    <Link href="/events">Buscar evento</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
+            ) : null}
 
             <Tabs defaultValue="active" className="min-w-0 space-y-4">
               <TabsList
@@ -545,6 +501,7 @@ export default async function StudentEventsPage({
                         key={registration.id}
                         registration={registration}
                         qrDataUrl={null}
+                        compact
                       />
                     ))}
                   </div>
@@ -565,6 +522,7 @@ export default async function StudentEventsPage({
                         key={registration.id}
                         registration={registration}
                         qrDataUrl={null}
+                        compact
                       />
                     ))}
                   </div>
@@ -585,27 +543,8 @@ export default async function StudentEventsPage({
                 </TabsContent>
               ) : null}
             </Tabs>
-          </section>
-
-          <aside className="space-y-3 xl:sticky xl:top-24 xl:self-start">
-            <div className="space-y-1">
-              <h2 className="text-lg font-semibold text-foreground">Recomendaciones</h2>
-              <p className="text-sm leading-6 text-muted-foreground">
-                Consejos generales para usar tu QR en cualquier evento.
-              </p>
-            </div>
-            <Card className="rounded-lg">
-              <CardHeader>
-                <CardTitle className="text-base">Para entrar rapido</CardTitle>
-          <CardDescription>Aplica a cualquier código QR de tus eventos.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <EventDayGuidance compact showTitle={false} className="border-0 bg-transparent p-0" />
-              </CardContent>
-            </Card>
-          </aside>
-        </div>
-      )}
+          </div>
+        )}
     </MainContainer>
   )
 }

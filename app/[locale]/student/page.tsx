@@ -2,11 +2,15 @@ import {
   AlertCircle,
   ArrowRight,
   CalendarDays,
+  Check,
   CheckCircle2,
   Clock3,
   Edit3,
+  ExternalLink,
   FileText,
   IdCard,
+  Instagram,
+  Linkedin,
   Route,
   Sparkles,
   Users,
@@ -30,17 +34,13 @@ import {
   type StudentDashboardChapterOption,
 } from '@/lib/services/student-dashboard.service'
 import type { ChapterActivationInterestRow } from '@/lib/types'
-import {
-  type PathwayDashboardGuidance,
-} from '@/lib/services/pathway-check-in.service'
-import {
-  type GrowthReflectionProgress,
-} from '@/lib/services/growth-reflection.service'
+import type { PathwayDashboardGuidance } from '@/lib/services/pathway-check-in.service'
 import { ChapterApplicationCard } from './_components/chapter-application-card'
 import { ChapterActivationInterestCard } from './_components/chapter-activation-interest-card'
 import { getStudentDashboardSecondaryData } from '@/lib/actions/student/dashboard'
-import { presentLaunchEventTitle, presentLaunchProfileFocus } from '@/lib/launch-copy'
+
 import { ChapterActivationInterestService } from '@/lib/services/chapter-activation-interest.service'
+import { presentLaunchEventTitle } from '@/lib/launch-copy'
 
 type ParticipantApplicationCardProps = {
   dashboard: StudentActivationDashboard
@@ -96,89 +96,30 @@ function formatPosition(position: string | null) {
   return labels[position] ?? position.split('_').join(' ')
 }
 
-function ProfileReadinessCard({ dashboard }: { dashboard: StudentActivationDashboard }) {
-  const profile = dashboard.profile
-  const focus = presentLaunchProfileFocus(profile?.major_or_interest)
-
-  return (
-    <Card className="rounded-lg">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Edit3 className="h-5 w-5 text-primary" />
-          Estado del perfil
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <p className="text-sm leading-6 text-muted-foreground">
-          {dashboard.hasProfile
-            ? 'Tu perfil básico está listo para registros a eventos y revisión de capítulo.'
-            : 'Completa tu perfil básico antes de postular a un capítulo o registrarte a eventos.'}
-        </p>
-        <div className="grid gap-3 text-sm sm:grid-cols-2">
-          <div className="rounded-lg border border-border/70 bg-muted/25 p-3">
-            <p className="font-semibold text-foreground">Universidad</p>
-            <p className="mt-1 text-muted-foreground">{profile?.university ?? 'Aun no agregado'}</p>
-          </div>
-          <div className="rounded-lg border border-border/70 bg-muted/25 p-3">
-            <p className="font-semibold text-foreground">Enfoque</p>
-            <p className="mt-1 text-muted-foreground">
-              {focus ?? 'Aun no agregado'}
-            </p>
-          </div>
-        </div>
-        <Button asChild variant="outline" className="w-full sm:w-auto">
-          <Link href="/student/profile">Editar perfil</Link>
-        </Button>
-      </CardContent>
-    </Card>
-  )
-}
-
-function MembershipDetailsCard({ dashboard }: { dashboard: StudentActivationDashboard }) {
+function ChapterBadge({ dashboard }: { dashboard: StudentActivationDashboard }) {
   const membership = dashboard.membership
 
+  if (!membership) return null
+
+  const position = formatPosition(membership.position)
+  const isDefaultPosition = !membership.position || membership.position === 'member'
+
+  const sentence =
+    dashboard.status === 'official_member'
+      ? isDefaultPosition
+        ? `Miembro de ${membership.chapter?.name ?? membership.chapter_id}`
+        : `Miembro de ${membership.chapter?.name ?? membership.chapter_id} — ${position}`
+      : dashboard.status === 'pending'
+        ? `Solicitud enviada a ${membership.chapter?.name ?? membership.chapter_id} — en revisión`
+        : null
+
+  if (!sentence) return null
+
   return (
-    <Card className="rounded-lg">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <IdCard className="h-5 w-5 text-primary" />
-          Estado de capítulo
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {membership ? (
-          <div className="space-y-3">
-            <div className="rounded-lg border border-border/70 bg-muted/25 p-3">
-              <p className="font-semibold text-foreground">
-                {membership.chapter?.name ?? membership.chapter_id}
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {membership.chapter?.university ?? 'Detalles del capítulo'}
-              </p>
-            </div>
-            <div className="grid gap-3 text-sm sm:grid-cols-2">
-              <div className="rounded-lg border border-border/70 bg-muted/25 p-3">
-                <p className="font-semibold text-foreground">Posicion</p>
-                <p className="mt-1 text-muted-foreground">{formatPosition(membership.position)}</p>
-              </div>
-              <div className="rounded-lg border border-border/70 bg-muted/25 p-3">
-                <p className="font-semibold text-foreground">ID de miembro</p>
-                <p className="mt-1 text-muted-foreground">
-                  {dashboard.status === 'official_member' && membership.member_id
-                    ? membership.member_id
-                    : 'Disponible después de la aprobación'}
-                </p>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <p className="text-sm leading-6 text-muted-foreground">
-            Aún no tienes una solicitud de capítulo. Al postular, se crea una solicitud pendiente
-            para que el equipo la revise.
-          </p>
-        )}
-      </CardContent>
-    </Card>
+    <div className="flex items-center gap-2 rounded-lg border border-border/70 bg-muted/25 px-3 py-2 text-sm text-muted-foreground">
+      <IdCard className="h-4 w-4 shrink-0 text-primary" />
+      <span>{sentence}</span>
+    </div>
   )
 }
 
@@ -601,59 +542,95 @@ function PathwayGuidanceCard({ guidance }: { guidance: PathwayDashboardGuidance 
   )
 }
 
-function PersonalProgressCard({
-  pathwayGuidance,
-  reflectionProgress,
-}: {
-  pathwayGuidance: PathwayDashboardGuidance | null
-  reflectionProgress: GrowthReflectionProgress
-}) {
-  const completedMoves =
-    pathwayGuidance && pathwayGuidance.status === 'completed' ? pathwayGuidance.progress.completed : 0
+const STEPPER_STEPS = ['Participante', 'En revisión', 'Miembro oficial'] as const
 
-  const metrics = [
-    {
-      label: 'Movimientos completados',
-      value: completedMoves,
-      helper: 'Acciones pequeñas que ya convertiste en avance.',
-    },
-    {
-      label: 'Reflexiones completadas',
-      value: reflectionProgress.completedReflections,
-      helper: 'Momentos que transformaste en aprendizaje claro.',
-    },
-    {
-      label: 'Evidencias creadas',
-      value: reflectionProgress.proofItemsCreated,
-      helper: 'Evidencia personal que puedes convertir en historias, perfil o entrevistas.',
-    },
-  ]
+const STEPPER_INDEX: Record<string, number> = {
+  participant: 0,
+  pending: 1,
+  official_member: 2,
+}
+
+function MembershipStepper({ status }: { status: StudentActivationDashboard['status'] }) {
+  if (status === 'alumni' || status === 'official_member') return null
+
+  const currentIndex = STEPPER_INDEX[status] ?? -1
+
+  return (
+    <div className="flex items-center justify-center gap-0 py-2">
+      {STEPPER_STEPS.map((label, index) => {
+        const isCompleted = index < currentIndex
+        const isCurrent = index === currentIndex
+        const isLast = index === STEPPER_STEPS.length - 1
+
+        return (
+          <div key={label} className="flex items-center">
+            <div className="flex flex-col items-center">
+              <div
+                className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-colors ${
+                  isCompleted
+                    ? 'bg-primary text-primary-foreground'
+                    : isCurrent
+                      ? 'border-2 border-primary text-primary ring-4 ring-primary/15'
+                      : 'border-2 border-muted-foreground/30 text-muted-foreground/50'
+                }`}
+              >
+                {isCompleted ? <Check className="h-4 w-4" /> : index + 1}
+              </div>
+              <span
+                className={`mt-1.5 text-xs whitespace-nowrap ${
+                  isCurrent
+                    ? 'font-semibold text-primary'
+                    : isCompleted
+                      ? 'text-muted-foreground'
+                      : 'text-muted-foreground/50'
+                }`}
+              >
+                {label}
+              </span>
+            </div>
+            {!isLast ? (
+              <div
+                className={`mx-2 h-px w-12 sm:w-20 ${
+                  index < currentIndex ? 'bg-primary' : 'bg-muted-foreground/30'
+                }`}
+              />
+            ) : null}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function StatusCallout({ status }: { status: StudentActivationDashboard['status'] }) {
+  if (status === 'official_member') return null
+
+  const config =
+    status === 'participant'
+      ? {
+          title: 'Completa tu perfil y postula a un capítulo para empezar',
+          action: { href: '/student/profile', label: 'Ir a mi perfil' },
+        }
+      : status === 'pending'
+        ? {
+            title: 'Tu solicitud está en revisión. No necesitas hacer nada — te avisaremos cuando el equipo responda.',
+          }
+        : {
+            title: 'Tu perfil Alumni está activo. Tienes acceso a eventos y networking de la comunidad.',
+          }
 
   return (
     <Card className="rounded-lg">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <CheckCircle2 className="h-5 w-5 text-primary" />
-          Tu progreso personal
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <p className="text-sm leading-6 text-muted-foreground">
-          Sin rankings ni comparaciones. Solo señales de lo que ya estás construyendo.
-        </p>
-        <div className="grid gap-3">
-          {metrics.map((metric) => (
-            <div key={metric.label} className="rounded-lg border border-border/70 bg-muted/25 p-3">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-semibold text-foreground">{metric.label}</p>
-                <span className="text-2xl font-semibold tabular-nums text-primary">
-                  {metric.value}
-                </span>
-              </div>
-              <p className="mt-1 text-xs leading-5 text-muted-foreground">{metric.helper}</p>
-            </div>
-          ))}
-        </div>
+      <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
+        <p className="text-sm text-muted-foreground">{config.title}</p>
+        {'action' in config ? (
+          <Button asChild size="sm">
+            <Link href={config.action.href}>
+              {config.action.label}
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </Button>
+        ) : null}
       </CardContent>
     </Card>
   )
@@ -661,36 +638,32 @@ function PersonalProgressCard({
 
 function StudentDashboardDetailsSkeleton() {
   return (
-    <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-      <div className="space-y-6">
-        <Card className="rounded-lg">
-          <CardHeader>
-            <CardTitle className="h-5 w-48 rounded bg-muted" />
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="h-4 w-full rounded bg-muted" />
-            <div className="h-4 w-3/4 rounded bg-muted" />
-          </CardContent>
-        </Card>
-        <Card className="rounded-lg">
-          <CardHeader>
-            <CardTitle className="h-5 w-40 rounded bg-muted" />
-          </CardHeader>
-          <CardContent>
-            <div className="h-20 rounded bg-muted" />
-          </CardContent>
-        </Card>
-      </div>
-      <div className="space-y-6">
-        <Card className="rounded-lg">
-          <CardHeader>
-            <CardTitle className="h-5 w-44 rounded bg-muted" />
-          </CardHeader>
-          <CardContent>
-            <div className="h-32 rounded bg-muted" />
-          </CardContent>
-        </Card>
-      </div>
+    <div className="space-y-6">
+      <Card className="rounded-lg">
+        <CardHeader>
+          <CardTitle className="h-5 w-48 rounded bg-muted" />
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="h-4 w-full rounded bg-muted" />
+          <div className="h-4 w-3/4 rounded bg-muted" />
+        </CardContent>
+      </Card>
+      <Card className="rounded-lg">
+        <CardHeader>
+          <CardTitle className="h-5 w-40 rounded bg-muted" />
+        </CardHeader>
+        <CardContent>
+          <div className="h-20 rounded bg-muted" />
+        </CardContent>
+      </Card>
+      <Card className="rounded-lg">
+        <CardHeader>
+          <CardTitle className="h-5 w-44 rounded bg-muted" />
+        </CardHeader>
+        <CardContent>
+          <div className="h-32 rounded bg-muted" />
+        </CardContent>
+      </Card>
     </div>
   )
 }
@@ -710,7 +683,6 @@ async function StudentDashboardDetails({
   const {
     pathwayFlags,
     pathwayGuidance,
-    reflectionProgress,
     chapterOptions,
     chapterOptionsLoadState,
     chapterOptionsError,
@@ -720,29 +692,20 @@ async function StudentDashboardDetails({
     status: dashboard.status,
   })
   return (
-    <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-      <div className="space-y-6">
-        {pathwayFlags.enable_recommendation_card ? (
-          <PathwayGuidanceCard guidance={pathwayGuidance} />
-        ) : null}
-        {dashboard.status === 'participant' ? (
-          <ChapterActivationInterestCard latestInterest={latestActivationInterest} />
-        ) : null}
-        <ParticipantApplicationCard
-          dashboard={dashboard}
-          chapterOptions={chapterOptions}
-          chapterOptionsLoadState={chapterOptionsLoadState}
-          chapterOptionsError={chapterOptionsError}
-        />
-        <ProfileReadinessCard dashboard={dashboard} />
-      </div>
-      <div className="space-y-6">
-        <PersonalProgressCard
-          pathwayGuidance={pathwayGuidance}
-          reflectionProgress={reflectionProgress}
-        />
-        <MembershipDetailsCard dashboard={dashboard} />
-      </div>
+    <div className="space-y-6">
+      <StatusCallout status={dashboard.status} />
+      {pathwayFlags.enable_recommendation_card ? (
+        <PathwayGuidanceCard guidance={pathwayGuidance} />
+      ) : null}
+      {dashboard.status === 'participant' ? (
+        <ChapterActivationInterestCard latestInterest={latestActivationInterest} />
+      ) : null}
+      <ParticipantApplicationCard
+        dashboard={dashboard}
+        chapterOptions={chapterOptions}
+        chapterOptionsLoadState={chapterOptionsLoadState}
+        chapterOptionsError={chapterOptionsError}
+      />
     </div>
   )
 }
@@ -755,20 +718,33 @@ export default async function StudentDashboard() {
     user.id
   )
   const content = STATUS_CONTENT[dashboard.status]
-  const StatusIcon = content.icon
+
+  const showStepper = dashboard.status === 'participant' || dashboard.status === 'pending'
+  const showBadge = dashboard.status === 'alumni'
 
   return (
     <MainContainer maxWidth="7xl" className="space-y-6 py-6 pb-24 sm:py-8">
       <PageHeader
-        eyebrow="Mi LEAD"
         title={`Bienvenido${user.name ? `, ${user.name}` : ''}`}
         badge={
-          <Badge variant={content.badgeVariant} size="lg">
-            {content.badge}
-          </Badge>
+          showBadge
+            ? (
+              <Badge variant={content.badgeVariant} size="lg">
+                {content.badge}
+              </Badge>
+            )
+            : undefined
         }
-        description={content.body}
+        description={
+          dashboard.status === 'official_member' && dashboard.membership?.chapter?.university
+            ? dashboard.membership.chapter.university
+            : undefined
+        }
       />
+
+      {showStepper ? <MembershipStepper status={dashboard.status} /> : null}
+
+      <ChapterBadge dashboard={dashboard} />
 
       {dashboard.loadState === 'unavailable' ? (
         <Alert variant="warning">
@@ -782,22 +758,6 @@ export default async function StudentDashboard() {
 
       <PrimaryActions dashboard={dashboard} />
 
-      <Card className="rounded-lg">
-        <CardContent className="flex flex-col gap-5 py-6 sm:flex-row sm:items-center">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <StatusIcon className="h-6 w-6" />
-          </div>
-          <div className="space-y-1">
-            <h2 className="text-xl font-semibold text-foreground">{content.title}</h2>
-            <p className="text-sm leading-6 text-muted-foreground">
-              {dashboard.membership?.chapter?.name
-                ? `${dashboard.membership.chapter.name} - ${dashboard.membership.chapter.university}`
-                : 'Tu actividad de eventos y capítulos aparecerá aquí cuando uses la plataforma.'}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
       <Suspense fallback={<StudentDashboardDetailsSkeleton />}>
         <StudentDashboardDetails
           userId={user.id}
@@ -805,6 +765,33 @@ export default async function StudentDashboard() {
           latestActivationInterest={latestActivationInterest}
         />
       </Suspense>
+
+      <Card className="rounded-lg">
+        <CardContent className="flex flex-wrap items-center justify-between gap-4 py-5">
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-foreground">Sigue a LEAD</p>
+            <p className="text-xs text-muted-foreground">
+            Entérate de eventos, convocatorias y novedades de la comunidad.
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <Button variant="outline" size="sm" asChild>
+              <a href="https://www.instagram.com/lead_americas/" target="_blank" rel="noopener noreferrer">
+                <Instagram className="h-4 w-4" />
+                Instagram
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <a href="https://www.linkedin.com/company/leadmindsetorg/posts/?feedView=all" target="_blank" rel="noopener noreferrer">
+                <Linkedin className="h-4 w-4" />
+                LinkedIn
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </MainContainer>
   )
 }

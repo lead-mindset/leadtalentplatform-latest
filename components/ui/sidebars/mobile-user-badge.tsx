@@ -25,7 +25,7 @@ export function MobileUserBadge({ name, memberId }: MobileUserBadgeProps) {
         <button className="flex items-center gap-2 outline-none">
           {memberId && (
             <Badge variant="secondary" className="text-xs font-mono bg-primary/10 text-primary border-primary/20">
-              ID: {memberId}
+              LEAD: {memberId}
             </Badge>
           )}
           <Avatar className="h-8 w-8 border border-border">
@@ -40,7 +40,7 @@ export function MobileUserBadge({ name, memberId }: MobileUserBadgeProps) {
           <p className="text-sm font-semibold">{name}</p>
           {memberId && (
             <div className="flex items-center gap-1 mt-1">
-              <span className="text-xs text-muted-foreground">ID de miembro:</span>
+              <span className="text-xs text-muted-foreground">LEAD ID:</span>
               <span className="text-xs font-mono text-primary font-semibold">{memberId}</span>
             </div>
           )}

@@ -9,7 +9,6 @@ import {
   Building2,
   CalendarDays,
   Clock,
-  ExternalLink,
   MapPinned,
   Monitor,
 } from 'lucide-react'
@@ -200,17 +199,6 @@ export function EventContent({
     capacity: event.capacity,
     registeredCount: event._count.registrations,
   })
-  const userLifecycle = myRegistration
-    ? getEventLifecycle({
-        startAt: event.start_at,
-        endAt: event.end_at,
-        accessModel: event.access_model === 'application' ? 'application' : 'open',
-        capacity: event.capacity,
-        registeredCount: event._count.registrations,
-        registrationStatus: myRegistration.status,
-        checkedInAt: myRegistration.checked_in_at,
-      })
-    : null
   const registrationClosed = ['live', 'past', 'date_pending'].includes(eventLifecycle.state)
   const isFull = eventLifecycle.state === 'full'
 
@@ -268,7 +256,6 @@ export function EventContent({
   const mapAddress = event.location_address || event.location || event.location_city || locationName
   const mapQuery = event.event_type === 'online' ? null : [locationName, mapAddress].filter(Boolean).join(', ')
   const mapEmbedUrl = mapQuery ? `https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed` : null
-  const mapExternalUrl = mapQuery ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}` : null
   const calendarEvent = {
     title: event.title || 'Evento LEAD',
     startAt: event.start_at,
@@ -311,7 +298,9 @@ export function EventContent({
                     <Badge variant="outline" className="w-fit bg-background/70 backdrop-blur">
                       Evento LEAD
                     </Badge>
-                    <CalendarDays className="h-14 w-14 text-primary" />
+                    <a href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title || 'Evento LEAD')}&dates=${encodeURIComponent(event.start_at.replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z') + '/' + event.end_at.replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z'))}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 transition-colors">
+                      <CalendarDays className="h-14 w-14" />
+                    </a>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Evento para la comunidad</p>
                       <p className="mt-1 text-2xl font-semibold text-foreground">{getEventTypeLabel(event.event_type)}</p>
@@ -348,18 +337,11 @@ export function EventContent({
               </div>
             </section>
 
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="outline"># {getEventTypeLabel(event.event_type)}</Badge>
-              {userLifecycle ? <Badge variant={userLifecycle.badgeVariant}># {userLifecycle.label}</Badge> : null}
-            </div>
           </aside>
 
           <div className="order-1 space-y-7 lg:order-2">
             <section className="space-y-5">
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge variant={eventLifecycle.badgeVariant}>{eventLifecycle.label}</Badge>
-                <Badge variant="outline">{getEventTypeLabel(event.event_type)}</Badge>
-              </div>
+              <Badge variant={eventLifecycle.badgeVariant}>{eventLifecycle.label}</Badge>
 
               <div className="space-y-3">
                 <p className="text-sm font-medium text-muted-foreground">{ownerChapterLabel}</p>
@@ -397,9 +379,11 @@ export function EventContent({
                       <MapPinned className="h-5 w-5 text-primary" />
                     )}
                   </div>
-                  <div className="min-w-0 pt-0.5">
+                   <div className="min-w-0 pt-0.5">
                     <p className="font-medium">{locationName}</p>
-                    <p className="mt-1 text-sm text-muted-foreground">{locationDetail}</p>
+                    <a href="#ubicacion" className="mt-1 inline-flex items-center gap-1 text-sm text-muted-foreground underline decoration-dotted underline-offset-4 hover:text-foreground">
+                      Ver ubicación
+                    </a>
                   </div>
                 </div>
               </div>
@@ -415,10 +399,7 @@ export function EventContent({
                     <Clock className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-medium">{eventLifecycle.label}</p>
-                      <Badge variant={availability.variant}>{availability.label}</Badge>
-                    </div>
+                    <Badge variant={availability.variant}>{availability.label}</Badge>
                     <p className="mt-1 text-sm text-muted-foreground">
                       {isApplicationRequired
                         ? 'Envía tu postulación y el equipo anfitrión revisará tus respuestas.'
@@ -528,22 +509,8 @@ export function EventContent({
               </div>
             </section>
 
-            <section className="space-y-4 border-t border-border pt-6">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold tracking-tight">Ubicacion</h2>
-                  <p className="mt-3 text-lg font-semibold">{locationName}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{locationDetail}</p>
-                </div>
-                {mapExternalUrl ? (
-                  <Button asChild variant="outline" size="sm" className="w-fit">
-                    <a href={mapExternalUrl} target="_blank" rel="noreferrer">
-                      Abrir mapa
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
-                  </Button>
-                ) : null}
-              </div>
+            <section id="ubicacion" className="space-y-4 border-t border-border pt-6">
+              <h2 className="text-xl font-semibold tracking-tight">Ubicacion</h2>
 
               {mapEmbedUrl ? (
                 <div className="overflow-hidden rounded-xl border bg-muted shadow-sm">
