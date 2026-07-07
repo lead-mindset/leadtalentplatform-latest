@@ -411,9 +411,9 @@ describe('RecruiterService', () => {
         },
         error: null,
       })
-      tableMocks.recruiter_access._builder._setThenValue({ data: null, error: null })
       tableMocks.user._builder._setThenValue({ data: { id: 'user-1' }, error: null })
       tableMocks.user._builder._setThenValue({ data: null, error: null })
+      tableMocks.recruiter_access._builder._setThenValue({ data: null, error: null })
 
       const result = await RecruiterService.acceptInvite(
         mockSupabase as unknown as SupabaseClient,
@@ -424,14 +424,14 @@ describe('RecruiterService', () => {
       )
 
       expect(result.success).toBe(true)
+      expect(tableMocks.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({ role: 'recruiter' })
+      )
       expect(tableMocks.recruiter_access.update).toHaveBeenCalledWith(
         expect.objectContaining({
           accepted_by_user_id: 'user-1',
           is_active: true,
         })
-      )
-      expect(tableMocks.user.update).toHaveBeenCalledWith(
-        expect.objectContaining({ role: 'recruiter' })
       )
     })
 

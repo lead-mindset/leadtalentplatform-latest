@@ -3,7 +3,15 @@ import { NextResponse, type NextRequest } from "next/server";
 import { hasEnvVars } from "../utils";
 import { routing } from "@/i18n/routing";
 
-const PUBLIC_ROUTES = ['/', '/login', '/auth', '/company/onboard', '/company/login', '/chapter/invites/accept'];
+const PUBLIC_ROUTES = [
+  '/',
+  '/login',
+  '/auth',
+  '/company/onboard',
+  '/company/login',
+  '/recruiter/access',
+  '/chapter/invites/accept',
+];
 
 export function isPublicRoute(pathname: string): boolean {
   // Remove locale prefix if present (e.g., /en/auth/login -> /auth/login)

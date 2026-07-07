@@ -1,7 +1,41 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { routing } from '@/i18n/routing';
+import { createServiceClient } from '@/lib/supabase/server-service'
+import { routing } from '@/i18n/routing'
 import { resolvePostAuthRedirectPath } from '@/lib/auth-redirects'
+import { RecruiterService } from '@/lib/services/recruiter.service'
+
+function getSafeNextPath(
+ value:string|null,
+ locale:string
+){
+ if(!value) return null
+
+ try {
+   const decoded = decodeURIComponent(value)
+
+   if(decoded.startsWith('//')){
+     return null
+   }
+
+   if(decoded.startsWith('/recruiter/access')){
+     return decoded
+   }
+
+   if(decoded.startsWith('/auth/')){
+     return null
+   }
+
+   if(decoded.startsWith('/')){
+     return `/${locale}${decoded}`
+   }
+
+   return null
+
+ } catch {
+   return null
+ }
+}
 
 export async function GET(
   request: Request,
@@ -10,20 +44,19 @@ export async function GET(
   const { searchParams, pathname } = new URL(request.url)
   const siteUrl = new URL(request.url).origin
   const code = searchParams.get('code')
-  let next = searchParams.get('next') ?? '/'
-  
-  const resolvedParams = await Promise.resolve(params);
-  const localeFromPath = pathname.split('/')[1];
+
+  const resolvedParams = await Promise.resolve(params)
+  const localeFromPath = pathname.split('/')[1]
   const locale =
     resolvedParams?.locale ||
     ((routing.locales as readonly string[]).includes(localeFromPath)
       ? localeFromPath
       : routing.defaultLocale)
 
-  if (!next.startsWith('/')) {
-    next = '/'
-  }
-
+const safeNext = getSafeNextPath(
+  searchParams.get('next'),
+  locale
+)
   if (!code) {
     return NextResponse.redirect(`${siteUrl}/${locale}/auth/error`)
   }
@@ -45,9 +78,36 @@ export async function GET(
     await supabase.auth.updateUser({ data: { locale } })
   }
 
-  if (next && next !== '/') {
-    return NextResponse.redirect(`${siteUrl}/${locale}${next}`)
+
+
+if (safeNext?.startsWith('/recruiter/access')) {
+  const recruiterToken = new URLSearchParams(
+    safeNext.split('?')[1] ?? ''
+  ).get('token')
+
+  if (!recruiterToken) {
+    return NextResponse.redirect(`${siteUrl}/${locale}/auth/error`)
   }
+
+  const serviceSupabase = createServiceClient()
+  const authEmail = user.email?.toLowerCase()?.trim() ?? ''
+  const authName = user.user_metadata?.full_name ?? user.user_metadata?.name ?? ''
+  const result = await RecruiterService.acceptInvite(
+    serviceSupabase,
+    user.id,
+    recruiterToken,
+    authEmail,
+    authName
+  )
+
+  if (result.success) {
+    return NextResponse.redirect(`${siteUrl}/${locale}/company/dashboard`)
+  }
+
+  return NextResponse.redirect(
+    `${siteUrl}/${locale}/auth/error?error=${encodeURIComponent(result.error)}`
+  )
+}
 
   const [{ data: userData, error: userDataError }, { data: profile, error: profileError }] =
     await Promise.all([

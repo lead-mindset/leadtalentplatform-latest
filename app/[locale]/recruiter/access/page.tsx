@@ -1,11 +1,12 @@
-import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/server'
-import { acceptInvite, validateInviteToken } from '@/lib/actions/recruiter/access'
-import { GoogleInviteSignInButton } from './google-invite-signin-button'
+import { createServiceClient } from '@/lib/supabase/server-service'
+import { validateInviteToken } from '@/lib/actions/recruiter/access'
+import { InviteEmailSignInButton } from './invite-email-signin-button'
+import { InviteAcceptButton } from './invite-accept-button'
 import { Building2, HelpCircle, Mail, ShieldCheck } from 'lucide-react'
 import { Link } from '@/i18n/routing'
 
@@ -58,10 +59,13 @@ function CompanyAccessNotes() {
 }
 
 export default async function RecruiterAccessPage({
+  params,
   searchParams,
 }: {
+  params: Promise<{ locale: string }>
   searchParams: Promise<{ token?: string }>
 }) {
+  const { locale } = await params
   const { token = '' } = await searchParams
   const validation = await validateInviteToken(token)
 
@@ -105,13 +109,13 @@ export default async function RecruiterAccessPage({
         }
       >
         <CompanyAccessNotes />
-        <GoogleInviteSignInButton token={token} />
+        <InviteEmailSignInButton email={validation.access.recruiter_email} token={token} />
       </AccessCard>
     )
   }
 
-  const signedInEmail = user.email?.toLowerCase() ?? ''
-  const invitedEmail = validation.access.recruiter_email.toLowerCase()
+  const signedInEmail = user.email?.trim().toLowerCase() ?? ''
+  const invitedEmail = validation.access.recruiter_email.trim().toLowerCase()
 
   if (signedInEmail !== invitedEmail) {
     return (
@@ -131,22 +135,26 @@ export default async function RecruiterAccessPage({
     )
   }
 
-  const accepted = await acceptInvite(token, user.id)
-  if (!accepted.success) {
-    return (
-      <AccessCard
-        title="Unable to Accept Company Access"
-        description="We could not activate company portal access for this account."
-      >
-        <Alert variant="destructive">
-          <AlertDescription>{accepted.error}</AlertDescription>
-        </Alert>
-        <Button asChild variant="outline" className="w-full">
-          <Link href="/help">Get help</Link>
-        </Button>
-      </AccessCard>
-    )
-  }
+  const serviceSupabase = createServiceClient()
+  const { data: companyData } = await serviceSupabase
+    .from('company')
+    .select('name')
+    .eq('id', validation.access.company_id)
+    .maybeSingle()
 
-  redirect('/company/dashboard')
+  return (
+    <AccessCard
+      title="Accept Company Access"
+      description={
+        <>
+          This invite will activate access to{' '}
+          <span className="font-medium">{companyData?.name ?? 'your company'}</span>{' '}
+          for <span className="font-medium">{validation.access.recruiter_email}</span>.
+        </>
+      }
+    >
+      <CompanyAccessNotes />
+      <InviteAcceptButton token={token} userId={user.id} locale={locale} />
+    </AccessCard>
+  )
 }

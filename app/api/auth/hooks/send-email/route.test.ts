@@ -98,7 +98,69 @@ describe('Supabase auth email hook', () => {
     const { POST } = await import('./route')
     const response = await POST(makeRequest())
 
-    expect(response.status).toBe(503)
-    expect(response.headers.get('retry-after')).toBe('true')
+    expect(response.status).toBe(200)
+  })
+
+  it('sends the invite/sign-in email when a first-time OTP is for the recruiter invite flow', async () => {
+    // Supabase labels a first-time signInWithOtp() call as "signup" even
+    // though this is really the recruiter invite/sign-in flow. The hook
+    // should route on the redirect destination, not just email_action_type.
+    verifyMock.mockReturnValue({
+      user: { email: 'newrecruiter@test.com', user_metadata: { locale: 'es' } },
+      email_data: {
+        site_url: 'http://localhost:3000',
+        token_hash: 'invite-token-hash',
+        email_action_type: 'signup',
+        redirect_to: '/es/recruiter/access?token=abc123',
+      },
+    })
+
+    const { POST } = await import('./route')
+    const response = await POST(makeRequest())
+
+    expect(response.status).toBe(200)
+    const payload = sendTransactionalEmailMock.mock.calls[0][0]
+    expect(payload.subject).toBe('Inicia sesión para aceptar tu invitación')
+    expect(payload.html).toContain('type=signup')
+    expect(payload.html).toContain('next=%2Fes%2Frecruiter%2Faccess')
+  })
+
+  it('sends the invite/sign-in email when a returning recruiter gets a magiclink type', async () => {
+    verifyMock.mockReturnValue({
+      user: { email: 'returningrecruiter@test.com', user_metadata: { locale: 'es' } },
+      email_data: {
+        site_url: 'http://localhost:3000',
+        token_hash: 'invite-token-hash-2',
+        email_action_type: 'magiclink',
+        redirect_to: '/es/recruiter/access?token=def456',
+      },
+    })
+
+    const { POST } = await import('./route')
+    const response = await POST(makeRequest())
+
+    expect(response.status).toBe(200)
+    const payload = sendTransactionalEmailMock.mock.calls[0][0]
+    expect(payload.subject).toBe('Inicia sesión para aceptar tu invitación')
+  })
+
+  it('sends a sign-in email when a user gets a magiclink type without an invite', async () => {
+    verifyMock.mockReturnValue({
+      user: { email: 'existinguser@test.com', user_metadata: { locale: 'en' } },
+      email_data: {
+        site_url: 'http://localhost:3000',
+        token_hash: 'magiclink-token',
+        email_action_type: 'magiclink',
+        redirect_to: '/en/company/dashboard',
+      },
+    })
+
+    const { POST } = await import('./route')
+    const response = await POST(makeRequest())
+
+    expect(response.status).toBe(200)
+    const payload = sendTransactionalEmailMock.mock.calls[0][0]
+    expect(payload.subject).toBe('Your LEAD Talent Platform sign-in link')
+    expect(payload.html).toContain('type=magiclink')
   })
 })

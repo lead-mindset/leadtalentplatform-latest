@@ -68,9 +68,12 @@ export async function sendTransactionalEmail({
     }
 
     return { success: true, id: result.data?.id }
-  } catch (error) {
-    const message = getErrorMessage(error)
-    logEmailFailure({ to, subject, error: message, critical })
-    return { success: false, error: message }
-  }
+} catch (error) {
+  console.error("RESEND RAW ERROR:", error)
+
+  const message = getErrorMessage(error)
+  logEmailFailure({ to, subject, error: message, critical })
+
+  return { success: false, error: message }
+}
 }

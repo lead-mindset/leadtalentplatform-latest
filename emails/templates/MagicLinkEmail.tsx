@@ -1,0 +1,62 @@
+import {
+  EmailLayout,
+  EMAIL_COLORS as C,
+  SUPPORT_EMAIL,
+  buttonStyle,
+  helpTextStyle,
+  infoBoxStyle,
+} from '../EmailLayout'
+
+type MagicLinkEmailProps = {
+  magicLinkUrl: string
+  locale?: 'en' | 'es'
+}
+
+export default function MagicLinkEmail({ magicLinkUrl, locale = 'es' }: MagicLinkEmailProps) {
+  const t = {
+    es: {
+      title: 'Tu enlace de ingreso',
+      preview: 'Accede a LEAD Talent Platform con este enlace seguro.',
+      greeting: 'Hola',
+      intro: 'Recibiste una solicitud para iniciar sesión en LEAD Talent Platform.',
+      cta: 'Haz clic en el botón de abajo para acceder de forma segura.',
+      button: 'Iniciar sesión',
+      noteTitle: 'Importante',
+      note: 'Este enlace expira en 1 hora por seguridad. Si no solicitaste este ingreso, puedes ignorar este mensaje.',
+      help: '¿Necesitas ayuda? Escríbenos a',
+    },
+    en: {
+      title: 'Your sign-in link',
+      preview: 'Access LEAD Talent Platform with this secure link.',
+      greeting: 'Hi',
+      intro: 'You requested to sign in to LEAD Talent Platform.',
+      cta: 'Click the button below to securely sign in.',
+      button: 'Sign in',
+      noteTitle: 'Important',
+      note: 'This link expires in 1 hour for security. If you did not request this, you can ignore this message.',
+      help: 'Need help? Email us at',
+    },
+  }[locale]
+
+  return (
+    <EmailLayout title={t.title} preview={t.preview}>
+      <p style={{ fontSize: 20, fontWeight: 700, margin: '0 0 16px 0', color: C.foreground }}>
+        {t.greeting}
+      </p>
+      <p style={{ margin: '0 0 20px 0' }}>{t.intro}</p>
+      <p style={{ margin: '0 0 28px 0', color: C.muted }}>{t.cta}</p>
+      <div style={{ textAlign: 'center', margin: '32px 0' }}>
+        <a href={magicLinkUrl} style={buttonStyle}>{t.button}</a>
+      </div>
+      <div style={infoBoxStyle}>
+        <strong>{t.noteTitle}:</strong> {t.note}
+      </div>
+      <p style={helpTextStyle}>
+        {t.help}{' '}
+        <a href={`mailto:${SUPPORT_EMAIL}`} style={{ color: C.primary, textDecoration: 'none', fontWeight: 600 }}>
+          {SUPPORT_EMAIL}
+        </a>
+      </p>
+    </EmailLayout>
+  )
+}

@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server-service'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { RecruiterService } from '@/lib/services/recruiter.service'
@@ -30,7 +31,7 @@ type TokenValidationResult =
   | { valid: false; error: string; code: 'invalid' | 'expired' | 'revoked' }
 
 export async function validateInviteToken(token: string): Promise<TokenValidationResult> {
-  const supabase = await createClient()
+  const supabase = createServiceClient()
   return RecruiterService.validateInviteToken(supabase, token)
 }
 
@@ -49,8 +50,9 @@ export async function acceptInvite(token: string, userId: string): Promise<Accep
   const authEmail = auth.user.email?.toLowerCase() ?? ''
   const authName = auth.user.user_metadata?.full_name ?? auth.user.user_metadata?.name ?? ''
 
+  const serviceSupabase = createServiceClient()
   const result = await RecruiterService.acceptInvite(
-    supabase,
+    serviceSupabase,
     parsed.data.userId,
     parsed.data.token,
     authEmail,
