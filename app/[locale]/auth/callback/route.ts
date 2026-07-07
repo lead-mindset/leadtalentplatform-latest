@@ -4,6 +4,7 @@ import { createServiceClient } from '@/lib/supabase/server-service'
 import { routing } from '@/i18n/routing'
 import { resolvePostAuthRedirectPath } from '@/lib/auth-redirects'
 import { RecruiterService } from '@/lib/services/recruiter.service'
+import { getConfiguredAppUrl } from '@/lib/app-url'
 
 function getSafeNextPath(
  value:string|null,
@@ -42,7 +43,7 @@ export async function GET(
   { params }: { params: Promise<{ locale: string }> | { locale: string } }
 ) {
   const { searchParams, pathname } = new URL(request.url)
-  const siteUrl = new URL(request.url).origin
+  const siteUrl = getConfiguredAppUrl(new URL(request.url).origin)
   const code = searchParams.get('code')
 
   const resolvedParams = await Promise.resolve(params)
