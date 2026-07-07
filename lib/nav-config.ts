@@ -27,13 +27,13 @@ export interface NavItemConfig {
 export const STUDENT_NAV: NavItemConfig[] = [
   {
     id: 'dashboard',
-    label: 'Resumen',
+    label: 'Inicio',
     href: '/student',
     icon: LayoutDashboard,
   },
   {
     id: 'browse-events',
-    label: 'Explorar eventos',
+    label: 'Eventos',
     href: '/events',
     icon: CalendarSearch,
   },
@@ -60,7 +60,7 @@ export const STUDENT_NAV: NavItemConfig[] = [
 export const CHAPTER_NAV: NavItemConfig[] = [
   {
     id: 'overview',
-    label: 'Resumen',
+    label: 'Inicio',
     href: '/chapter',
     icon: LayoutDashboard,
   },
@@ -90,7 +90,7 @@ export const CHAPTER_NAV: NavItemConfig[] = [
   },
   {
     id: 'my-profile',
-    label: 'Mi perfil',
+    label: 'Perfil',
     href: '/student/profile',
     icon: User,
   },
@@ -99,7 +99,7 @@ export const CHAPTER_NAV: NavItemConfig[] = [
 export const ADMIN_NAV: NavItemConfig[] = [
   {
     id: 'overview',
-    label: 'Resumen',
+    label: 'Inicio',
     href: '/admin',
     icon: LayoutDashboard,
   },
@@ -150,7 +150,7 @@ export const ADMIN_NAV: NavItemConfig[] = [
 export const COMPANY_NAV: NavItemConfig[] = [
   {
     id: 'dashboard',
-    label: 'Resumen',
+    label: 'Inicio',
     href: '/company/dashboard',
     icon: LayoutDashboard,
   },

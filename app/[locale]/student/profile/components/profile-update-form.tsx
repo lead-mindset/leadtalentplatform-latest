@@ -232,20 +232,22 @@ export default function ProfileUpdateForm({
             />
 
             <div className="rounded-lg border border-border/60 bg-muted/30 p-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-foreground">
-                    {t('personalInfo.leadChapter')}
-                  </p>
-                  <p className="text-base font-semibold text-foreground">{chapterLabel}</p>
-                  <p className="text-xs leading-relaxed text-muted-foreground">
-                    Tu capítulo y estado de membresía se gestionan mediante revisión del equipo.
-                    Si necesitas corregirlo, contacta a tu chapter leader o a operaciones.
-                  </p>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="space-y-1 flex-1">
+                    <p className="text-sm font-medium text-foreground">
+                      {t('personalInfo.leadChapter')}
+                    </p>
+                    <p className="text-base font-semibold text-foreground">{chapterLabel}</p>
+                  </div>
+                  <Badge variant={membershipStatus === 'approved' ? 'success' : 'secondary'} className="shrink-0">
+                    {membershipStatusLabels[membershipStatus]}
+                  </Badge>
                 </div>
-                <Badge variant={membershipStatus === 'approved' ? 'success' : 'secondary'}>
-                  {membershipStatusLabels[membershipStatus]}
-                </Badge>
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  Tu capítulo y estado de membresía se gestionan mediante revisión del equipo.
+                  Si necesitas corregirlo, contacta a tu chapter leader o a operaciones.
+                </p>
               </div>
             </div>
           </div>
@@ -317,7 +319,7 @@ export default function ProfileUpdateForm({
                         key={skill.value}
                         value={skill.value}
                         aria-label={skill.value}
-                        className="h-auto justify-start gap-2.5 px-3.5 py-1 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:border-primary data-[state=on]:shadow-sm transition-all duration-200"
+                        className="h-auto justify-start gap-2.5 px-3.5 py-1 data-[state=on]:bg-slate-700 data-[state=on]:text-white data-[state=on]:border-slate-600 data-[state=on]:shadow-sm transition-all duration-200"
                       >
                         <span className="flex-1 text-left text-sm font-medium">
                           {skill.label}

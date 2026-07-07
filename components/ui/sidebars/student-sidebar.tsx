@@ -23,7 +23,7 @@ export function StudentNavigation({
   return (
     <>
       <SidebarGroup>
-        <SidebarGroupLabel className="text-sidebar-foreground font-medium">Mi perfil</SidebarGroupLabel>
+        <SidebarGroupLabel className="text-sidebar-foreground font-medium">Navegación</SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
             {STUDENT_NAV.map((item) => (

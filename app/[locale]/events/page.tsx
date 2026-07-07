@@ -8,7 +8,6 @@ import {
   Users,
 } from 'lucide-react'
 import { getCachedPublishedEventPreview } from '@/lib/data/public-events'
-import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Link } from '@/i18n/routing'
@@ -45,22 +44,17 @@ const EVENT_COPY = {
     full: 'Full',
     oneSeat: '1 seat left',
     seatsLeft: (count: number) => `${count} seats left`,
-    detail: 'View details',
+    detail: 'View more',
     register: 'Register',
     apply: 'Apply',
     leadEvent: 'LEAD event',
     fallbackTitle: 'Untitled event',
     registrations: 'registered',
-    badge: 'LEAD events',
-    heading: 'Explore public LEAD events',
+    heading: 'Join an event',
     subheading:
-      'Browse public programs, chapter events, and application-based opportunities across the LEAD community.',
+      'Discover LEAD events that help you learn, connect, and grow with the community.',
     published: 'Published',
     upcoming: 'Upcoming/live',
-    note:
-      'Upcoming and live events appear first. Past events remain below as a public record of LEAD community activity.',
-    upcomingTitle: 'Upcoming and live events',
-    upcomingDescription: 'Select an event to view details, register, or apply.',
     emptyTitle: 'No upcoming events published yet',
     emptyBody: 'Check back soon for new LEAD opportunities.',
     pastTitle: 'Past events',
@@ -86,22 +80,17 @@ const EVENT_COPY = {
     full: 'Lleno',
     oneSeat: 'Queda 1 cupo',
     seatsLeft: (count: number) => `Quedan ${count} cupos`,
-    detail: 'Ver detalle',
+    detail: 'Ver más',
     register: 'Registrarme',
     apply: 'Postular',
     leadEvent: 'Evento LEAD',
     fallbackTitle: 'Evento sin título',
     registrations: 'registrados',
-    badge: 'Eventos LEAD',
-    heading: 'Encuentra tu próximo evento LEAD',
+    heading: 'Únete a un evento',
     subheading:
-      'Explora eventos públicos, programas de capítulos y oportunidades con postulación de la comunidad LEAD.',
+      'Descubre eventos de LEAD que te ayudan a aprender, conectar y crecer con la comunidad.',
     published: 'Publicados',
     upcoming: 'Próximos/en vivo',
-    note:
-      'Los eventos próximos y en vivo aparecen primero. Los eventos pasados quedan abajo como referencia para la comunidad LEAD.',
-    upcomingTitle: 'Eventos próximos y en vivo',
-    upcomingDescription: 'Selecciona un evento para ver detalles, registrarte o postular.',
     emptyTitle: 'Aún no hay eventos próximos publicados',
     emptyBody: 'Vuelve pronto para ver nuevas oportunidades de LEAD.',
     pastTitle: 'Eventos pasados',
@@ -144,13 +133,6 @@ function formatTime(value: string, locale: PublicEventsLocale) {
   })
 }
 
-function getEventTypeLabel(eventType: EventWithDetails['event_type'], locale: PublicEventsLocale) {
-  const copy = EVENT_COPY[locale]
-  if (eventType === 'online') return copy.online
-  if (eventType === 'hybrid') return copy.hybrid
-  return copy.inPerson
-}
-
 function getLocationLabel(event: EventWithDetails, locale: PublicEventsLocale) {
   const copy = EVENT_COPY[locale]
   if (event.event_type === 'online') return copy.online
@@ -184,25 +166,6 @@ function getEventTiming(event: EventWithDetails, locale: PublicEventsLocale) {
     : { label: copy.open, variant: 'success' as const }
 }
 
-function getAvailabilityLabel(event: EventWithDetails, locale: PublicEventsLocale) {
-  const copy = EVENT_COPY[locale]
-  if (event.capacity === null) return copy.openCapacity
-
-  const remaining = Math.max(0, event.capacity - event._count.registrations)
-  if (remaining === 0) return copy.full
-  if (remaining === 1) return copy.oneSeat
-  return copy.seatsLeft(remaining)
-}
-
-function getAvailabilityVariant(event: EventWithDetails) {
-  if (event.capacity === null) return 'success' as const
-
-  const remaining = Math.max(0, event.capacity - event._count.registrations)
-  if (remaining === 0) return 'destructive' as const
-  if (remaining <= 10) return 'warning' as const
-  return 'neutral' as const
-}
-
 function getEventActionLabel(event: EventWithDetails, locale: PublicEventsLocale) {
   const copy = EVENT_COPY[locale]
   const end = new Date(event.end_at).getTime()
@@ -226,13 +189,11 @@ function EventCard({ event, locale }: { event: EventWithDetails; locale: PublicE
   const copy = EVENT_COPY[locale]
   const timing = getEventTiming(event, locale)
   const ownerChapter = event.chapter?.name ?? event.owner_chapter?.name ?? 'LEAD'
-  const availability = getAvailabilityLabel(event, locale)
-  const availabilityVariant = getAvailabilityVariant(event)
   const actionLabel = getEventActionLabel(event, locale)
   const description = event.description?.trim()
 
   return (
-    <Card className={cn('group overflow-hidden transition-colors hover:border-primary/40', timing.label === copy.past && 'opacity-80')}>
+    <Card className={cn('group overflow-hidden border-border/60 transition-all duration-300 hover:border-primary/50 hover:shadow-sm', timing.label === copy.past && 'opacity-80')}>
       <CardContent className="p-0">
         <Link href={`/events/${event.id}`} className="block">
           <div className="grid gap-0 lg:grid-cols-[17rem_1fr]">
@@ -243,14 +204,11 @@ function EventCard({ event, locale }: { event: EventWithDetails; locale: PublicE
                   alt={event.title || copy.fallbackTitle}
                   fill
                   sizes="(min-width: 1024px) 17rem, 100vw"
-                  className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
                 />
               ) : (
                 <div className="flex h-full min-h-52 flex-col justify-between bg-[radial-gradient(circle_at_20%_15%,hsl(var(--primary)/0.28),transparent_34%),linear-gradient(135deg,hsl(var(--muted)),hsl(var(--card)))] p-5">
-                  <div className="flex items-center justify-between gap-3">
-                    <Badge variant="outline" className="bg-background/70 backdrop-blur">
-                      {copy.leadEvent}
-                    </Badge>
+                  <div className="flex justify-end">
                     <CalendarDays className="h-6 w-6 text-primary" />
                   </div>
                   <div>
@@ -264,63 +222,48 @@ function EventCard({ event, locale }: { event: EventWithDetails; locale: PublicE
               )}
             </div>
 
-            <div className="space-y-5 p-5 md:p-6">
+            <div className="space-y-4 p-5 md:p-6">
+              <div className="text-sm text-muted-foreground">
+                <CalendarDays className="mr-1.5 inline-block h-4 w-4 align-text-top" />
+                {formatDate(event.start_at, locale)} - {formatTime(event.start_at, locale)}
+              </div>
+
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div className="min-w-0 space-y-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant={timing.variant}>{timing.label}</Badge>
-                    <Badge variant="outline">{getEventTypeLabel(event.event_type, locale)}</Badge>
-                    <Badge variant={availabilityVariant}>{availability}</Badge>
-                  </div>
-                  <div className="space-y-2">
-                    <h2 className="line-clamp-2 text-xl font-semibold tracking-tight text-foreground md:text-2xl">
-                      {event.title || copy.fallbackTitle}
-                    </h2>
-                    {description ? (
-                      <p className="line-clamp-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-                        {description}
-                      </p>
-                    ) : null}
-                  </div>
+                <div className="min-w-0 space-y-2">
+                  <h2 className="line-clamp-2 text-xl font-medium tracking-tight text-foreground/85 transition-colors duration-300 group-hover:text-foreground md:text-2xl">
+                    {event.title || copy.fallbackTitle}
+                  </h2>
+                  {description ? (
+                    <p className="line-clamp-2 max-w-3xl text-sm leading-6 text-muted-foreground">
+                      {description}
+                    </p>
+                  ) : null}
                 </div>
 
                 <span
                   className={cn(
                     buttonVariants({ variant: 'outline' }),
-                    'w-full shrink-0 justify-between sm:w-auto sm:min-w-36'
+                    'w-full shrink-0 justify-between transition-all duration-300 sm:w-auto sm:min-w-36 group-hover:border-primary/30 group-hover:text-foreground'
                   )}
                   aria-hidden="true"
                 >
                   {actionLabel}
-                  <ArrowRight className="h-4 w-4" />
+                  <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
                 </span>
               </div>
 
-              <div className="grid gap-3 border-t pt-4 text-sm text-muted-foreground sm:grid-cols-2 xl:grid-cols-4">
-                <div className="flex min-w-0 items-center gap-2">
-                  <CalendarDays className="h-4 w-4 shrink-0" />
-                  <span className="truncate">
-                    {formatDate(event.start_at, locale)} - {formatTime(event.start_at, locale)}
-                  </span>
-                </div>
-                <div className="flex min-w-0 items-center gap-2">
+              <div className="space-y-2 border-t pt-4 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
                   <Users className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{ownerChapter}</span>
+                  <span>{ownerChapter}</span>
                 </div>
-                <div className="flex min-w-0 items-center gap-2">
+                <div className="flex items-center gap-2">
                   {event.event_type === 'online' ? (
                     <Monitor className="h-4 w-4 shrink-0" />
                   ) : (
                     <MapPin className="h-4 w-4 shrink-0" />
                   )}
-                  <span className="truncate">{getLocationLabel(event, locale)}</span>
-                </div>
-                <div className="flex min-w-0 items-center gap-2 sm:col-span-2 xl:col-span-1">
-                  <Users className="h-4 w-4 shrink-0" />
-                  <span className="truncate">
-                    {event._count.registrations} {copy.registrations}
-                    {event.capacity !== null ? ` / ${event.capacity}` : ''}
-                  </span>
+                  <span>{getLocationLabel(event, locale)}</span>
                 </div>
               </div>
             </div>
@@ -343,54 +286,19 @@ async function EventsContent({ locale }: { locale: PublicEventsLocale }) {
     upcomingLimit: INITIAL_UPCOMING_EVENT_LIMIT,
     pastLimit: INITIAL_PAST_EVENT_LIMIT,
   })
-  const publishedSummary = `${upcomingEvents.length + pastEvents.length}${hasMoreUpcoming || hasMorePast ? '+' : ''}`
-  const openEventsSummary = `${upcomingEvents.length}${hasMoreUpcoming ? '+' : ''}`
-
   return (
     <main className="min-h-screen bg-background">
       <MainContainer className="space-y-8 pb-20 pt-8 md:pt-12">
-        <section className="space-y-6">
-          <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-            <div className="max-w-3xl space-y-3">
-              <Badge variant="outline" className="w-fit">
-                {copy.badge}
-              </Badge>
-              <div className="space-y-2">
-                <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-5xl">
-                  {copy.heading}
-                </h1>
-                <p className="text-base text-muted-foreground md:text-lg">
-                  {copy.subheading}
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 sm:flex">
-              <div className="rounded-lg border bg-card px-4 py-3">
-                <p className="text-2xl font-semibold">{publishedSummary}</p>
-                <p className="text-xs text-muted-foreground">{copy.published}</p>
-              </div>
-              <div className="rounded-lg border bg-card px-4 py-3">
-                <p className="text-2xl font-semibold">{openEventsSummary}</p>
-                <p className="text-xs text-muted-foreground">{copy.upcoming}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3 rounded-lg border bg-card px-4 py-3 text-sm text-muted-foreground">
-            <CalendarDays className="mt-0.5 h-4 w-4 shrink-0" />
-            <span>{copy.note}</span>
-          </div>
+        <section className="space-y-2">
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-5xl">
+            {copy.heading}
+          </h1>
+          <p className="text-base text-muted-foreground md:text-lg">
+            {copy.subheading}
+          </p>
         </section>
 
         <section className="space-y-4">
-          <div className="flex items-center justify-between gap-4 border-b pb-3">
-            <div>
-              <h2 className="text-xl font-semibold tracking-tight">{copy.upcomingTitle}</h2>
-              <p className="text-sm text-muted-foreground">{copy.upcomingDescription}</p>
-            </div>
-          </div>
-
           {upcomingEvents.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center gap-3 px-6 py-12 text-center">
