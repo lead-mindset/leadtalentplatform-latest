@@ -352,8 +352,8 @@ export const RecruiterService = {
     const validation = await this.validateInviteToken(supabase, token)
     if (!validation.valid) return { success: false, error: validation.error }
 
-    const invitedEmail = validation.access.recruiter_email.toLowerCase()
-    if (authEmail.toLowerCase() !== invitedEmail) {
+    const invitedEmail = validation.access.recruiter_email.trim().toLowerCase()
+    if (authEmail.trim().toLowerCase() !== invitedEmail) {
       return {
         success: false,
         error: `This invite was sent to ${validation.access.recruiter_email}. Please sign in with that email address.`,
@@ -369,25 +369,9 @@ export const RecruiterService = {
       }
     }
 
-    if (!validation.access.accepted_at) {
-      const { error: updateInviteError } = await supabase
-        .from('recruiter_access')
-        .update({
-          accepted_at: now,
-          accepted_by_user_id: userId,
-          is_active: true,
-        })
-        .eq('id', validation.access.id)
-
-      if (updateInviteError) {
-        logger.error({ context: 'RecruiterService.acceptInvite', error: updateInviteError }, 'update error')
-        return { success: false, error: 'Failed to accept invite.' }
-      }
-    }
-
     const { data: existingUser, error: existingUserError } = await supabase
       .from('user')
-      .select('id')
+      .select('id, role')
       .eq('id', userId)
       .maybeSingle()
 
@@ -397,6 +381,13 @@ export const RecruiterService = {
     }
 
     if (existingUser) {
+      if (existingUser.role === 'member') {
+        return {
+          success: false,
+          error: 'This account is already registered as a LEAD member. Please use a different email address.',
+        }
+      }
+
       const { error: roleError } = await supabase
         .from('user')
         .update({ role: 'recruiter', updated_at: now })
@@ -419,6 +410,22 @@ export const RecruiterService = {
       })
       if (createUserError) {
         logger.error({ context: 'RecruiterService.acceptInvite', error: createUserError }, 'user insert error')
+        return { success: false, error: 'Failed to accept invite.' }
+      }
+    }
+
+    if (!validation.access.accepted_at) {
+      const { error: updateInviteError } = await supabase
+        .from('recruiter_access')
+        .update({
+          accepted_at: now,
+          accepted_by_user_id: userId,
+          is_active: true,
+        })
+        .eq('id', validation.access.id)
+
+      if (updateInviteError) {
+        logger.error({ context: 'RecruiterService.acceptInvite', error: updateInviteError }, 'update error')
         return { success: false, error: 'Failed to accept invite.' }
       }
     }

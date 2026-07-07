@@ -5,6 +5,12 @@ vi.mock('@/i18n/routing', () => ({
 }))
 
 describe('Supabase proxy route visibility', () => {
+  it('allows signed-out recruiters to open company invite acceptance links', async () => {
+    const { isPublicRoute } = await import('./proxy')
+    expect(isPublicRoute('/es/recruiter/access')).toBe(true)
+    expect(isPublicRoute('/en/recruiter/access')).toBe(true)
+  })
+
   it('allows signed-out recipients to view chapter invite acceptance links', async () => {
     const { isPublicRoute } = await import('./proxy')
     expect(isPublicRoute('/es/chapter/invites/accept')).toBe(true)

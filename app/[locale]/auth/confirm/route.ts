@@ -13,6 +13,9 @@ function getSafeNextPath(value: string | null, locale: string) {
     if (decoded === `/${locale}` || decoded.startsWith(`/${locale}/`)) {
       return decoded;
     }
+    if (decoded.startsWith("/") && !decoded.startsWith("/auth/")) {
+      return `/${locale}${decoded}`;
+    }
     return null;
   } catch {
     return null;
@@ -75,7 +78,7 @@ export async function GET(request: NextRequest) {
   }
 
   const safeNext = getSafeNextPath(searchParams.get("next"), locale);
-  if (type === "recovery" && safeNext) {
+  if (safeNext) {
     return NextResponse.redirect(`${siteUrl}${safeNext}`);
   }
 
@@ -105,7 +108,7 @@ export async function GET(request: NextRequest) {
   }
 
   if (role === "recruiter") {
-    return NextResponse.redirect(`${siteUrl}/${locale}/company`);
+    return NextResponse.redirect(`${siteUrl}/${locale}/company/dashboard`);
   }
 
   if (role === "admin") {
