@@ -1,17 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server-service'
 import { AdminService } from '@/lib/services/admin.service'
-import type {
-  ActivityItem,
-  ChapterRow,
-  Company,
-  MemberWithProfile,
-  RecruiterInvite,
-  UserWithDetails,
-  UserWithDetailsRaw,
-  UserWithFullProfile,
-} from '@/lib/types'
+import type { UserWithDetailsRaw } from '@/lib/types'
 export async function getAdminDashboardStats() {
-  const supabase = await createClient()
+  const supabase = createServiceClient()
   return AdminService.getAdminDashboardStats(supabase)
 }
 export async function getChapterActivityList() {

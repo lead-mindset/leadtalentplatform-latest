@@ -1575,6 +1575,9 @@ export const AdminService = {
       throw new Error('No se pudieron cargar los usuarios. Revisa la conexion o intenta nuevamente.')
     }
 
+    console.log('DEBUG queryFilteredUsers', { count: users?.length, usersError })
+
+
     const typedUsers = users as Pick<UserRow, 'id' | 'name' | 'email' | 'role' | 'created_at' | 'deactivated_at'>[]
     const userIds = typedUsers.map((user) => user.id)
     if (userIds.length === 0) return []
@@ -1584,6 +1587,8 @@ export const AdminService = {
       .from('person_profile')
       .select('user_id')
       .in('user_id', userIds)
+
+      
 
     const personProfileSet = new Set((personProfiles ?? []).map((p) => p.user_id))
 
@@ -2362,7 +2367,7 @@ export const AdminService = {
     const token = crypto.randomUUID()
     const { error } = await supabase.from('recruiter_access').insert({
       company_id: companyId,
-      recruiter_email: recruiterEmail,
+      recruiter_email: recruiterEmail.trim().toLowerCase(),
       granted_by_id: userId,
       invite_token: token,
       invite_expires_at: getExpiryDate(expiresInDays),
@@ -2485,7 +2490,7 @@ export const AdminService = {
     const { data, error } = await supabase
       .from('recruiter_access')
       .select('id, accepted_at, revoked_at')
-      .eq('recruiter_email', email)
+      .eq('recruiter_email', email.trim().toLowerCase())
       .eq('company_id', companyId)
       .maybeSingle()
 
@@ -2510,7 +2515,7 @@ export const AdminService = {
     const { data: invite, error: inviteError } = await supabase
       .from('recruiter_access')
       .insert({
-        recruiter_email: params.recruiterEmail,
+        recruiter_email: params.recruiterEmail.trim().toLowerCase(),
         company_id: params.companyId,
         granted_by_id: userId,
         granted_at: new Date().toISOString(),

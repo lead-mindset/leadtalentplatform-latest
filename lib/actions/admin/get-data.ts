@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server-service'
 import { AdminService } from '@/lib/services/admin.service'
 import { PathwayCheckInService } from '@/lib/services/pathway-check-in.service'
 import type {
@@ -13,22 +14,26 @@ import type {
 } from '@/lib/types'
 
 export async function getAdminDashboardStats() {
-  const supabase = await createClient()
+  const supabase = getAdminServiceClient()
   return AdminService.getAdminDashboardStats(supabase)
 }
 
+function getAdminServiceClient() {
+  return createServiceClient()
+}
+
 export async function getChapterActivityList() {
-  const supabase = await createClient()
+  const supabase = getAdminServiceClient()
   return AdminService.getChapterActivityList(supabase)
 }
 
 export async function getRecentJoins(limit = 10) {
-  const supabase = await createClient()
+  const supabase = getAdminServiceClient()
   return AdminService.getRecentJoins(supabase, limit)
 }
 
 export async function getPendingRecruiterRequests() {
-  const supabase = await createClient()
+  const supabase = getAdminServiceClient()
   return AdminService.getPendingRecruiterRequests(supabase)
 }
 
@@ -38,7 +43,7 @@ export async function getCompanyAccessForUser(userId: string, email: string) {
 }
 
 export async function getSystemStats() {
-  const supabase = await createClient()
+  const supabase = getAdminServiceClient()
   return AdminService.getSystemStats(supabase)
 }
 
@@ -48,22 +53,22 @@ export async function getPathwayPilotMetrics() {
 }
 
 export async function getRecentActivity() {
-  const supabase = await createClient()
+  const supabase = getAdminServiceClient()
   return AdminService.getRecentActivity(supabase)
 }
 
 export async function getChapters(): Promise<Array<ChapterRow & { _count: { users: number } }>> {
-  const supabase = await createClient()
+  const supabase = getAdminServiceClient()
   return AdminService.getChapters(supabase)
 }
 
 export async function getChapterMembers(chapter_id: string): Promise<MemberWithProfile[]> {
-  const supabase = await createClient()
+  const supabase = getAdminServiceClient()
   return AdminService.getChapterMembers(supabase, chapter_id)
 }
 
 export async function getChapterMemberCount(chapter_id: string): Promise<number> {
-  const supabase = await createClient()
+  const supabase = getAdminServiceClient()
   return AdminService.getChapterMemberCount(supabase, chapter_id)
 }
 
@@ -74,17 +79,17 @@ export function normalizeUserWithDetails(
 }
 
 export async function getUsers(): Promise<UserWithDetails[]> {
-  const supabase = await createClient()
+  const supabase = getAdminServiceClient()
   return AdminService.getUsers(supabase)
 }
 
 export async function getActivityLog(): Promise<ActivityItem[]> {
-  const supabase = await createClient()
+  const supabase = getAdminServiceClient()
   return AdminService.getActivityLog(supabase)
 }
 
 export async function getCompanies(): Promise<Company[]> {
-  const supabase = await createClient()
+  const supabase = getAdminServiceClient()
   return AdminService.getCompanies(supabase)
 }
 
@@ -95,16 +100,16 @@ export function normalizeRecruiterInvites(
 }
 
 export async function getInvites(): Promise<RecruiterInvite[]> {
-  const supabase = await createClient()
+  const supabase = getAdminServiceClient()
   return AdminService.getInvites(supabase)
 }
 
 export async function getUserById(id: string): Promise<UserWithFullProfile | null> {
-  const supabase = await createClient()
+  const supabase = getAdminServiceClient()
   return AdminService.getUserById(supabase, id)
 }
 
 export async function getChapterById(id: string): Promise<ChapterRow | null> {
-  const supabase = await createClient()
+  const supabase = getAdminServiceClient()
   return AdminService.getChapterById(supabase, id)
 }
