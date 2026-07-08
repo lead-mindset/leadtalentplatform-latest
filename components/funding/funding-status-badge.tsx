@@ -4,7 +4,7 @@ import type { FundingRequestStatus } from '@/lib/services/funding.service'
 
 const STATUS_VARIANTS: Record<FundingRequestStatus, BadgeProps['variant']> = {
   draft: 'secondary',
-  submitted: 'info',
+  submitted: 'default',
   changes_requested: 'warning',
   approved: 'success',
   rejected: 'neutral',
