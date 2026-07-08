@@ -133,7 +133,7 @@ p { font-size: var(--fluid-body); line-height: 1.7; font-family: var(--font-mont
   --md-sys-color-surface: #080D3B; /* Your brand background */
   --md-sys-color-on-surface: #FFFFFF; /* Your brand foreground */
   --md-sys-color-surface-variant: #1A1F4B; /* Slightly lighter than background */
-  --md-sys-color-on-surface-variant: #E0E0FF; /* Light text for variants */
+  --md-sys-color-on-surface-variant: #B8B9D6; /* Light text for variants */
   --md-sys-color-outline: #A18BFF; /* Accessible accent color for outlines */
   --md-sys-color-outline-variant: #5D41B0; /* Darker variant */
   --md-sys-color-shadow: #000000;
@@ -163,7 +163,7 @@ p { font-size: var(--fluid-body); line-height: 1.7; font-family: var(--font-mont
   --secondary: #BA4E5E; /* Muted Coral */
   --secondary-foreground: #FFFFFF;
   --muted: #1A1F4B; /* Surface variant */
-  --muted-foreground: #E0E0FF; /* On surface variant */
+  --muted-foreground: #B8B9D6; /* On surface variant */
   --accent: #7E56E2; /* Vibrant Purple */
   --accent-foreground: #FFFFFF;
   --destructive: #C43D45; /* Accessible warm red from header */
@@ -424,7 +424,7 @@ p { font-size: var(--fluid-body); line-height: 1.7; font-family: var(--font-mont
   --md-sys-color-surface: #080D3B; /* Your brand background */
   --md-sys-color-on-surface: #FFFFFF; /* Your brand foreground */
   --md-sys-color-surface-variant: #1A1F4B; /* Slightly lighter than background */
-  --md-sys-color-on-surface-variant: #E0E0FF; /* Light text for variants */
+  --md-sys-color-on-surface-variant: #B8B9D6; /* Light text for variants */
   --md-sys-color-outline: #A18BFF; /* Accessible accent color for outlines */
   --md-sys-color-outline-variant: #5D41B0; /* Darker variant */
   --md-sys-color-inverse-surface: #FFFFFF; /* Inverse of your background */
@@ -452,7 +452,7 @@ p { font-size: var(--fluid-body); line-height: 1.7; font-family: var(--font-mont
   --secondary: #BA4E5E; /* Muted Coral */
   --secondary-foreground: #FFFFFF;
   --muted: #1A1F4B; /* Surface variant */
-  --muted-foreground: #E0E0FF; /* On surface variant */
+  --muted-foreground: #B8B9D6; /* On surface variant */
   --accent: #7E56E2; /* Vibrant Purple */
   --accent-foreground: #FFFFFF;
   --destructive: #C43D45; /* Accessible warm red from header */
