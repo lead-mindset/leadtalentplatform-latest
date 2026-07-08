@@ -3,7 +3,7 @@
 import { useActionState, useEffect } from 'react'
 import { useFormStatus } from 'react-dom'
 import { useRouter } from 'next/navigation'
-import { Icons } from '@/components/ui/icons'
+import { Loader2 } from 'lucide-react'
 import { registerForEvent, type RegisterForEventState } from '@/lib/actions/events/register'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -20,7 +20,7 @@ function SubmitButton({ disabled, label }: { disabled?: boolean; label: string }
     <Button type="submit" className="w-full" disabled={disabled || pending}>
       {pending ? (
         <span className="flex items-center">
-          <Icons.Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           Registrando...
         </span>
       ) : (

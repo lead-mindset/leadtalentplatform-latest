@@ -1,8 +1,7 @@
 import * as React from "react"
-import { ChevronDown, ChevronRight, Plus, Minus } from "lucide-react"
+import { ChevronDown, ChevronRight, ChevronUp, Settings, Plus, Minus } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Icons } from "@/components/ui/icons"
 
 interface CollapsibleSectionProps {
   title: string
@@ -32,7 +31,7 @@ export function CollapsibleSection({
           {icon}
           {title}
         </div>
-        {isOpen ? <Icons.ChevronDown /> : <Icons.ChevronRight />}
+        {isOpen ? <ChevronDown /> : <ChevronRight />}
       </Button>
       {isOpen && (
         <div className="p-4 pt-0 border-t">
@@ -126,9 +125,9 @@ export function AdvancedToggle({ title, children, className }: AdvancedTogglePro
         className="text-xs"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <Icons.Settings className="mr-1" />
+        <Settings className="mr-1" />
         {title}
-        {isOpen ? <Icons.ChevronUp className="ml-1" /> : <Icons.ChevronDown className="ml-1" />}
+        {isOpen ? <ChevronUp className="ml-1" /> : <ChevronDown className="ml-1" />}
       </Button>
       {isOpen && (
         <div className="p-4 border rounded-md bg-muted/50">
