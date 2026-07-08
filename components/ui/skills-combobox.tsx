@@ -1,10 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Icons } from '@/components/ui/icons'
+import { ChevronDown, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
 import {
   Command,
   CommandEmpty,
@@ -110,7 +109,7 @@ export function SkillsCombobox({
             {value.length > 0
               ? `${value.length} skill${value.length > 1 ? 's' : ''} selected`
               : placeholder}
-            <Icons.ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
 
@@ -138,12 +137,6 @@ export function SkillsCombobox({
                       setOpen(false)
                     }}
                   >
-                    <Icons.CheckCircle2
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        value.includes(option.value) ? "opacity-100" : "opacity-0"
-                      )}
-                    />
                     {option.label}
                   </CommandItem>
                 ))}
@@ -159,7 +152,6 @@ export function SkillsCombobox({
                       setOpen(false)
                     }}
                   >
-                    <Icons.Plus className="mr-2 h-4 w-4" />
                     Create "{search}"
                   </CommandItem>
                 )}
@@ -180,7 +172,7 @@ export function SkillsCombobox({
                 className="ml-0.5 rounded-full p-0.5 hover:bg-secondary-foreground/10 transition-colors"
                 aria-label={`Remove ${getLabel(skill)}`}
               >
-                <Icons.X className="h-3 w-3" />
+                <X className="h-3 w-3" />
               </button>
             </Badge>
           ))}
@@ -189,7 +181,7 @@ export function SkillsCombobox({
 
       {error && (
         <p className="flex items-center gap-1 text-sm text-destructive">
-          <Icons.X className="h-3 w-3" />
+          <X className="h-3 w-3" />
           {error}
         </p>
       )}
