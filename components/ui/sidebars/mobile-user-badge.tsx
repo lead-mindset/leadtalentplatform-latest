@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { LogoutButton } from '@/components/auth/logout-button'
-import { Icons } from '@/components/ui/icons'
+import { LogOut } from 'lucide-react'
 import { getInitials } from '@/lib/utils'
 
 interface MobileUserBadgeProps {
@@ -48,7 +48,7 @@ export function MobileUserBadge({ name, memberId }: MobileUserBadgeProps) {
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <div className="flex items-center gap-2 cursor-pointer">
-            <Icons.LogOut className="mr-2 h-4 w-4" />
+            <LogOut className="mr-2 h-4 w-4" />
             <LogoutButton label="Cerrar sesión" />
           </div>
         </DropdownMenuItem>

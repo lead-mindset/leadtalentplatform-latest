@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui'
-import { Icons } from '@/components/ui/icons'
+import { Loader2 } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import type { EventApplicationQuestionRow } from '@/lib/types'
 
@@ -257,7 +257,7 @@ export function ApplyModal({
           <Button onClick={handleConfirm} disabled={isSubmitting}>
             {isSubmitting ? (
               <>
-                <Icons.Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Enviando
               </>
             ) : (

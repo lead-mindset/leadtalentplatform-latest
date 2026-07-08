@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Icons } from '@/components/ui/icons'
+import { CheckCircle2, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -225,7 +225,7 @@ export function ApplicationReviewCard({
                 onClick={handleApprove}
                 disabled={isActionPending || isProcessing}
               >
-                <Icons.CheckCircle2 className="mr-2 h-4 w-4" />
+                <CheckCircle2 className="mr-2 h-4 w-4" />
                 Aprobar
               </Button>
               <Button
@@ -234,7 +234,7 @@ export function ApplicationReviewCard({
                 onClick={() => setShowRejectDialog(true)}
                 disabled={isActionPending || isProcessing}
               >
-                <Icons.XCircle className="mr-2 h-4 w-4" />
+                <XCircle className="mr-2 h-4 w-4" />
                 Rechazar
               </Button>
             </div>
