@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Icons } from '@/components/ui/icons'
+import { ChevronDown, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useTranslations } from 'next-intl'
 import { useTranslatedCareers } from '@/lib/use-translated-options'
@@ -32,7 +32,7 @@ export default function CareerCommandSelect({
 }: CareerCommandSelectProps) {
   const t = useTranslations('onboarding')
   const translatedCareers = useTranslatedCareers()
-  
+
   const [open, setOpen] = useState<boolean>(false)
   const [searchValue, setSearchValue] = useState<string>('')
 
@@ -79,7 +79,7 @@ export default function CareerCommandSelect({
             className="w-full justify-between"
           >
             {displayValue || t('selectCareerField')}
-            <Icons.ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
 
@@ -117,13 +117,12 @@ export default function CareerCommandSelect({
                       key={option.value}
                       value={option.value}
                       onSelect={handleSelect}
+                      className="flex items-center justify-between"
                     >
-                      <Icons.CheckCircle2
-                        className={`mr-2 h-4 w-4 ${
-                          value.includes(option.value) ? "opacity-100" : "opacity-0"
-                        }`}
-                      />
                       <span>{option.label}</span>
+                      {value === option.value && (
+                        <Check className="h-4 w-4 text-primary" />
+                      )}
                     </CommandItem>
                   ))}
                 </CommandGroup>
@@ -143,7 +142,7 @@ export default function CareerCommandSelect({
 
       {error && (
         <p className="flex items-center gap-1 text-sm text-destructive">
-          <Icons.X className="h-3 w-3" />
+          <span className="h-3 w-3" />
           {error}
         </p>
       )}
