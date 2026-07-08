@@ -48,7 +48,6 @@ export default function ProfilePage() {
   return (
     <MainContainer maxWidth="7xl" className="space-y-6 py-6 pb-24 sm:py-8">
       <PageHeader
-        eyebrow="Mi LEAD"
         title="Mi perfil"
         description="Gestiona los datos reutilizables de tu perfil. La membresía de capítulo y el estado de miembro se manejan por separado."
       />
