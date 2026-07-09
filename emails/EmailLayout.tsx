@@ -1,5 +1,3 @@
-import { getConfiguredAppUrl } from '@/lib/app-url'
-
 type EmailLayoutProps = {
   title: string
   children: React.ReactNode
@@ -26,22 +24,7 @@ const COLORS = {
 }
 
 const BRAND_URL = 'https://www.leadmindset.org'
-const ASSET_BASE_URL = getConfiguredAppUrl('https://leadtalentplatform-latest.vercel.app')
-const LOGO_URL = `${ASSET_BASE_URL}/emails/logo.png`
-export const SUPPORT_EMAIL = 'soporte@leadamericas.org'
-
-export const SOCIAL_LINKS = [
-  {
-    name: 'LinkedIn',
-    url: 'https://www.linkedin.com/company/leadmindsetorg/posts/?feedView=all',
-    icon: `${ASSET_BASE_URL}/emails/linkedin.png`,
-  },
-  {
-    name: 'Instagram',
-    url: 'https://www.instagram.com/lead_americas/',
-    icon: `${ASSET_BASE_URL}/emails/instagram.png`,
-  },
-]
+export const SUPPORT_EMAIL = 'abriones@leadmindset.org'
 
 export function EmailLayout({ title, children, preview }: EmailLayoutProps) {
   return (
@@ -93,14 +76,6 @@ export function EmailLayout({ title, children, preview }: EmailLayoutProps) {
             }}
           />
 
-          <img
-            src={LOGO_URL}
-            alt="LEAD Americas"
-            width={140}
-            height={48}
-            style={{ display: 'block', margin: '0 auto 12px', objectFit: 'contain' }}
-          />
-
           <div
             style={{
               fontSize: 11,
@@ -112,27 +87,6 @@ export function EmailLayout({ title, children, preview }: EmailLayoutProps) {
           >
             LEAD Talent Platform
           </div>
-        </div>
-
-        <div
-          style={{
-            backgroundColor: COLORS.white,
-            borderBottom: `1px solid ${COLORS.border}`,
-            padding: '22px 32px',
-          }}
-        >
-          <h1
-            style={{
-              margin: 0,
-              color: COLORS.foreground,
-              fontSize: 23,
-              fontWeight: 800,
-              lineHeight: 1.3,
-              fontFamily: '"Raleway", "Helvetica Neue", Arial, sans-serif',
-            }}
-          >
-            {title}
-          </h1>
         </div>
 
         <div
@@ -154,43 +108,6 @@ export function EmailLayout({ title, children, preview }: EmailLayoutProps) {
             padding: '28px 32px',
           }}
         >
-          <div style={{ textAlign: 'center', marginBottom: 20 }}>
-            <p
-              style={{
-                margin: '0 0 12px 0',
-                fontSize: 11,
-                color: COLORS.muted,
-                textTransform: 'uppercase',
-                letterSpacing: '1.5px',
-                fontWeight: 700,
-                fontFamily: '"Raleway", "Helvetica Neue", Arial, sans-serif',
-              }}
-            >
-              Síguenos
-            </p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
-              {SOCIAL_LINKS.map((social) => (
-                <a
-                  key={social.name}
-                  href={social.url}
-                  title={social.name}
-                  style={{
-                    display: 'inline-block',
-                    width: 34,
-                    height: 34,
-                    borderRadius: '50%',
-                    overflow: 'hidden',
-                    border: `1.5px solid ${COLORS.border}`,
-                    textDecoration: 'none',
-                    backgroundColor: COLORS.white,
-                  }}
-                >
-                  <img src={social.icon} alt={social.name} width={34} height={34} style={{ display: 'block' }} />
-                </a>
-              ))}
-            </div>
-          </div>
-
           <div style={{ height: 1, backgroundColor: COLORS.border, margin: '0 0 20px 0' }} />
 
           <div style={{ textAlign: 'center' }}>
