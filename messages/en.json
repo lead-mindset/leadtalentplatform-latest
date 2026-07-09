@@ -97,7 +97,8 @@
     "userNotFound": "No account found with this email",
     "emailAlreadyInUse": "This email is already in use",
     "invalidEmailAddress": "Enter a valid email address",
-    "confirmAccountMessage": "You've successfully signed up. Please check your email to confirm your account before signing in."
+    "confirmAccountMessage": "You've successfully signed up. Please check your email to confirm your account before signing in.",
+    "contactSupport": "If you have problems, contact "
   },
   "gender": {
     "label": "Gender",

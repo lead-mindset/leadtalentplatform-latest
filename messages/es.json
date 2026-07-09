@@ -97,7 +97,8 @@
     "updatePasswordDescription": "Por favor ingresa tu nueva contraseña a continuación.",
     "thankYouSignUp": "¡Gracias por registrarte!",
     "checkEmailConfirm": "Revisa tu correo electrónico para confirmar",
-    "confirmAccountMessage": "Te has registrado exitosamente. Por favor revisa tu correo electrónico para confirmar tu cuenta antes de iniciar sesión."
+    "confirmAccountMessage": "Te has registrado exitosamente. Por favor revisa tu correo electrónico para confirmar tu cuenta antes de iniciar sesión.",
+    "contactSupport": "Si tienes problemas, comunícate con "
   },
   "home": {
     "logoAlt": "Logotipo LEAD",

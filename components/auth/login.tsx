@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Eye, EyeOff, Info } from "lucide-react";
+import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import { Link, useRouter } from '@/i18n/routing';
 import { useSearchParams } from 'next/navigation';
 import { useState } from "react";
@@ -238,7 +238,15 @@ export function LoginForm({
           </CardContent>
         </Card>
 
-        {}
+        <p className="text-center text-xs text-muted-foreground">
+          {t('contactSupport')}
+          <a
+            href="mailto:abriones@leadmindset.org"
+            className="text-primary underline hover:text-primary/80 transition-colors underline-offset-4"
+          >
+            abriones@leadmindset.org
+          </a>
+        </p>
       </div>
     </div>
   );
