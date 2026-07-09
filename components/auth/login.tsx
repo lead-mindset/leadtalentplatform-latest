@@ -63,7 +63,6 @@ export function LoginForm({
   const searchParams = useSearchParams();
   const t = useTranslations('auth');
   const locale = useLocale();
-  const isEnglish = locale === 'en';
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,16 +124,7 @@ export function LoginForm({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {isEnglish ? (
-              <Alert>
-                <Info className="h-4 w-4" />
-                <AlertDescription>
-                  Public LEAD pages are available in English. The MVP workspace after sign-in is Spanish-first for students, chapters, admins, and company representatives.
-                </AlertDescription>
-              </Alert>
-            ) : null}
-
-            <GoogleButton />
+             <GoogleButton />
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">

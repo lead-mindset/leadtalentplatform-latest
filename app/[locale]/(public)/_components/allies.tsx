@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { useGSAP } from "@gsap/react";
 import gsap from "@/lib/gsap-setup";
 import { SectionLabel } from "@/components/ui/section-label";
@@ -16,6 +17,7 @@ const images = [
 ];
 
 export function Allies() {
+  const t = useTranslations("homepage");
   const rowRef = useRef<HTMLDivElement>(null);
 
   useGSAP(() => {
@@ -37,7 +39,7 @@ export function Allies() {
   return (
     <section className="pt-12 pb-8 bg-foreground border-y border-border/10">
       <div className="container mx-auto px-4">
-        <SectionLabel size="sm" className="text-center mb-2">Organizaciones que nos apoyan</SectionLabel>
+        <SectionLabel size="sm" className="text-center mb-2">{t("alliesLabel")}</SectionLabel>
         <div className="relative overflow-hidden">
           <div
             ref={rowRef}

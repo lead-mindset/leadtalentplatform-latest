@@ -1,21 +1,18 @@
 'use client'
 
 import Link from 'next/link'
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
+import { ChevronDown, ChevronUp, EllipsisVertical } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   Table,
   TableBody,
@@ -26,40 +23,34 @@ import {
 } from '@/components/ui/table'
 import { updateEvent } from '@/lib/actions/events/update-event'
 import { deleteEvent } from '@/lib/actions/events/delete-event'
-import { EventShareButton } from '@/components/events/event-share-button'
 import type { EventWithDetails } from '@/lib/types'
 import { useRouter } from 'next/navigation'
 import LocalDate from './local_date'
 import { Icons } from '@/components/ui/icons'
 import { presentLaunchEventTitle } from '@/lib/launch-copy'
 
-function statusForEvent(event: EventWithDetails): {
-  label: 'Borrador' | 'Publicado' | 'Finalizado'
-  variant: 'outline' | 'secondary' | 'neutral'
-} {
-  const isPast = new Date(event.end_at) < new Date()
-  if (isPast) return { label: 'Finalizado', variant: 'neutral' }
-  return event.is_published
-    ? { label: 'Publicado', variant: 'secondary' }
-    : { label: 'Borrador', variant: 'outline' }
-}
-
 function ownershipLabel(event: EventWithDetails) {
   if (event.is_owned_by_chapter === false) {
     return { label: 'Colaborador', icon: Icons.Handshake }
   }
-
   return { label: 'Propio', icon: Icons.Crown }
 }
 
-export function EventsTable({
-  events,
-  canArchiveEvents,
-}: {
-  events: EventWithDetails[]
+type EventsTableProps = {
+  publishedEvents: EventWithDetails[]
+  draftEvents: EventWithDetails[]
+  finalizedEvents: EventWithDetails[]
   canArchiveEvents: boolean
-}) {
+}
+
+export function EventsTable({
+  publishedEvents,
+  draftEvents,
+  finalizedEvents,
+  canArchiveEvents,
+}: EventsTableProps) {
   const [isPending, startTransition] = useTransition()
+  const [showAllFinalized, setShowAllFinalized] = useState(false)
   const router = useRouter()
 
   function onTogglePublish(event: EventWithDetails) {
@@ -86,137 +77,301 @@ export function EventsTable({
     })
   }
 
+  async function copyLink(eventId: string) {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/events/${eventId}`)
+      toast.success('Enlace copiado')
+    } catch {
+      toast.error('No se pudo copiar el enlace')
+    }
+  }
+
+  const hasMoreFinalized = finalizedEvents.length > 5
+  const visibleFinalized = showAllFinalized ? finalizedEvents : finalizedEvents.slice(0, 5)
+
   return (
-    <div className="rounded-lg border border-border bg-card">
-      <div className="hidden lg:block">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[34%] pl-4">Evento</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead>Registro</TableHead>
-              <TableHead>Postulaciones</TableHead>
-              <TableHead className="w-[30rem] text-right pr-4">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {events.map((event) => {
-              const status = statusForEvent(event)
-              const ownership = ownershipLabel(event)
-              const OwnershipIcon = ownership.icon
-              const registrations = event._count.registrations
-              const pendingApplications = event._count?.pending_applications ?? 0
-              const fillRate = event.capacity && event.capacity > 0
-                ? Math.min(100, Math.round((registrations / event.capacity) * 100))
-                : null
+    <div className="space-y-10">
+      <SectionTable
+        title="Publicados"
+        count={publishedEvents.length}
+        events={publishedEvents}
+        emptyMessage="No hay eventos publicados próximos"
+        isPending={isPending}
+        canArchiveEvents={canArchiveEvents}
+        onTogglePublish={onTogglePublish}
+        onDelete={onDelete}
+        copyLink={copyLink}
+      >
+        {(event) => (
+          <>
+            <DropdownMenuItem asChild>
+              <Link href={`/chapter/events/${event.id}`}>Editar</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href={`/events/${event.id}`}>Vista pública</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => copyLink(event.id)}>
+              Copiar enlace
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href={`/chapter/events/${event.id}/checkin`}>Check-in</Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => onTogglePublish(event)}>
+              Despublicar
+            </DropdownMenuItem>
+            {canArchiveEvents && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => {
+                    if (window.confirm(`¿Eliminar ${presentLaunchEventTitle(event.title)}?`)) {
+                      onDelete(event.id)
+                    }
+                  }}
+                >
+                  Eliminar
+                </DropdownMenuItem>
+              </>
+            )}
+          </>
+        )}
+      </SectionTable>
 
-              return (
-                <TableRow key={event.id} className={status.label === 'Finalizado' ? 'bg-muted/10' : ''}>
-                  <TableCell className="pl-4 align-top">
-                    <div className="min-w-0 space-y-2">
-                      <div className="flex min-w-0 items-center gap-2">
-                        <OwnershipIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
-                        <Link
-                          href={`/chapter/events/${event.id}`}
-                          className="truncate font-medium text-foreground hover:text-primary"
-                        >
-                          {presentLaunchEventTitle(event.title)}
-                        </Link>
-                      </div>
-                      <LocalDate isoString={event.start_at} />
-                      <Badge variant="outline" size="sm">
-                        {ownership.label}
-                      </Badge>
-                    </div>
-                  </TableCell>
-                  <TableCell className="align-top">
-                    <Badge variant={status.variant}>{status.label}</Badge>
-                  </TableCell>
-                  <TableCell className="align-top">
-                    <div className="space-y-2">
-                      <p className="text-sm text-foreground">
-                        {event.capacity === null
-                          ? `${registrations} registrados`
-                          : `${registrations}/${event.capacity} registrados`}
-                      </p>
-                      {fillRate !== null ? (
-                        <div className="h-2 w-32 overflow-hidden rounded-full bg-muted">
-                          <div className="h-full bg-primary" style={{ width: `${fillRate}%` }} />
-                        </div>
-                      ) : null}
-                    </div>
-                  </TableCell>
-                  <TableCell className="align-top">
-                    {event.access_model === 'application' ? (
-                      <Badge variant={pendingApplications > 0 ? 'warning' : 'outline'}>
-                        {pendingApplications} pendientes
-                      </Badge>
-                    ) : (
-                      <span className="text-sm text-muted-foreground">Registro abierto</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="pr-4 align-top">
-                    <div className="grid grid-cols-3 justify-end gap-2 xl:flex xl:flex-wrap">
-                      <Button asChild size="sm" variant="outline">
-                        <Link href={`/chapter/events/${event.id}`}>Editar</Link>
-                      </Button>
-                      {event.is_published ? (
-                        <Button asChild size="sm" variant="outline">
-                          <Link href={`/events/${event.id}`}>Vista publica</Link>
-                        </Button>
-                      ) : null}
-                      {event.is_published ? (
-                        <EventShareButton
-                          eventId={event.id}
-                          eventTitle={event.title}
-                          mode="copy"
-                          size="sm"
-                          variant="outline"
-                        />
-                      ) : null}
-                      {event.access_model === 'application' ? (
-                        <Button asChild size="sm" variant="outline">
-                          <Link href={`/chapter/events/${event.id}/applications`}>
-                            Postulaciones
-                          </Link>
-                        </Button>
-                      ) : null}
-                      <Button size="sm" variant="outline" disabled={isPending} onClick={() => onTogglePublish(event)}>
-                        {event.is_published ? 'Despublicar' : 'Publicar'}
-                      </Button>
-                      <Button asChild size="sm" variant="outline">
-                        <Link href={`/chapter/events/${event.id}/checkin`}>Check-in</Link>
-                      </Button>
-                      {canArchiveEvents ? (
-                        <DeleteEventButton
-                          disabled={isPending}
-                          eventTitle={presentLaunchEventTitle(event.title)}
-                          onConfirm={() => onDelete(event.id)}
-                          tone="destructive"
-                        />
-                      ) : null}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )
-            })}
-          </TableBody>
-        </Table>
-      </div>
+      <SectionTable
+        title="Borradores"
+        count={draftEvents.length}
+        events={draftEvents}
+        emptyMessage="No hay eventos en borrador"
+        isPending={isPending}
+        canArchiveEvents={canArchiveEvents}
+        onTogglePublish={onTogglePublish}
+        onDelete={onDelete}
+        copyLink={copyLink}
+      >
+        {(event) => (
+          <>
+            <DropdownMenuItem asChild>
+              <Link href={`/chapter/events/${event.id}`}>Editar</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onTogglePublish(event)}>
+              Publicar
+            </DropdownMenuItem>
+            {canArchiveEvents && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => {
+                    if (window.confirm(`¿Eliminar ${presentLaunchEventTitle(event.title)}?`)) {
+                      onDelete(event.id)
+                    }
+                  }}
+                >
+                  Eliminar
+                </DropdownMenuItem>
+              </>
+            )}
+          </>
+        )}
+      </SectionTable>
 
-      <div className="divide-y divide-border lg:hidden">
-        {events.map((event) => (
-          <MobileEventRow
-            key={event.id}
-            event={event}
-            isPending={isPending}
-            canArchiveEvents={canArchiveEvents}
-            onDelete={onDelete}
-            onTogglePublish={onTogglePublish}
-          />
-        ))}
-      </div>
+      <SectionTable
+        title="Finalizados"
+        count={finalizedEvents.length}
+        events={visibleFinalized}
+        emptyMessage="No hay eventos finalizados"
+        isPending={isPending}
+        canArchiveEvents={canArchiveEvents}
+        onTogglePublish={onTogglePublish}
+        onDelete={onDelete}
+        copyLink={copyLink}
+        footer={
+          hasMoreFinalized ? (
+            <div className="border-t border-border px-4 py-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full text-muted-foreground"
+                onClick={() => setShowAllFinalized(!showAllFinalized)}
+              >
+                {showAllFinalized ? (
+                  <>Mostrar menos <ChevronUp className="ml-1 h-4 w-4" /></>
+                ) : (
+                  <>Mostrar todos ({finalizedEvents.length}) <ChevronDown className="ml-1 h-4 w-4" /></>
+                )}
+              </Button>
+            </div>
+          ) : null
+        }
+      >
+        {(event) => (
+          <>
+            <DropdownMenuItem asChild>
+              <Link href={`/events/${event.id}`}>Vista pública</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => copyLink(event.id)}>
+              Copiar enlace
+            </DropdownMenuItem>
+          </>
+        )}
+      </SectionTable>
     </div>
+  )
+}
+
+function SectionTable({
+  title,
+  count,
+  events,
+  emptyMessage,
+  isPending,
+  canArchiveEvents,
+  onTogglePublish,
+  onDelete,
+  copyLink,
+  children,
+  footer,
+}: {
+  title: string
+  count: number
+  events: EventWithDetails[]
+  emptyMessage: string
+  isPending: boolean
+  canArchiveEvents: boolean
+  onTogglePublish: (event: EventWithDetails) => void
+  onDelete: (eventId: string) => void
+  copyLink: (eventId: string) => void
+  children: (event: EventWithDetails) => React.ReactNode
+  footer?: React.ReactNode
+}) {
+  return (
+    <section>
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold tracking-tight">{title} ({count})</h2>
+      </div>
+
+      {events.length === 0 ? (
+        <p className="text-sm text-muted-foreground">{emptyMessage}</p>
+      ) : (
+        <div className="rounded-lg border border-border bg-card">
+          <div className="hidden lg:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[40%] pl-4">Evento</TableHead>
+                  <TableHead>Registro</TableHead>
+                  <TableHead>Postulaciones</TableHead>
+                  <TableHead className="text-right pr-4">Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {events.map((event) => (
+                  <EventRow
+                    key={event.id}
+                    event={event}
+                    renderKebab={children(event)}
+                  />
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          <div className="divide-y divide-border lg:hidden">
+            {events.map((event) => (
+              <MobileEventRow
+                key={event.id}
+                event={event}
+                isPending={isPending}
+                canArchiveEvents={canArchiveEvents}
+                onDelete={onDelete}
+                onTogglePublish={onTogglePublish}
+                copyLink={copyLink}
+              />
+            ))}
+          </div>
+
+          {footer}
+        </div>
+      )}
+    </section>
+  )
+}
+
+function EventRow({
+  event,
+  renderKebab,
+}: {
+  event: EventWithDetails
+  renderKebab: React.ReactNode
+}) {
+  const ownership = ownershipLabel(event)
+  const OwnershipIcon = ownership.icon
+  const registrations = event._count.registrations
+  const pendingApplications = event._count?.pending_applications ?? 0
+  const fillRate = event.capacity && event.capacity > 0
+    ? Math.min(100, Math.round((registrations / event.capacity) * 100))
+    : null
+
+  return (
+    <TableRow>
+      <TableCell className="pl-4 align-top">
+        <div className="min-w-0 space-y-2 max-w-md">
+          <div className="flex min-w-0 items-center gap-2">
+            <OwnershipIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <Link
+              href={`/chapter/events/${event.id}`}
+              className="truncate font-medium text-foreground hover:text-primary"
+              title={event.title}
+            >
+              {presentLaunchEventTitle(event.title)}
+            </Link>
+          </div>
+          <LocalDate isoString={event.start_at} />
+          <Badge variant="outline" size="sm">
+            {ownership.label}
+          </Badge>
+        </div>
+      </TableCell>
+      <TableCell className="align-top">
+        <div className="space-y-2">
+          <p className="text-sm text-foreground">
+            {event.capacity === null
+              ? `${registrations} registrados`
+              : `${registrations}/${event.capacity} registrados`}
+          </p>
+          {fillRate !== null ? (
+            <div className="h-2 w-32 overflow-hidden rounded-full bg-muted">
+              <div className="h-full bg-primary" style={{ width: `${fillRate}%` }} />
+            </div>
+          ) : null}
+        </div>
+      </TableCell>
+      <TableCell className="align-top">
+        {event.access_model === 'application' ? (
+          <Badge variant={pendingApplications > 0 ? 'warning' : 'outline'}>
+            {pendingApplications} pendientes
+          </Badge>
+        ) : (
+          <span className="text-sm text-muted-foreground">Registro abierto</span>
+        )}
+      </TableCell>
+      <TableCell className="pr-4 align-top">
+        <div className="flex items-center justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                <EllipsisVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {renderKebab}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </TableCell>
+    </TableRow>
   )
 }
 
@@ -226,14 +381,20 @@ function MobileEventRow({
   canArchiveEvents,
   onDelete,
   onTogglePublish,
+  copyLink,
 }: {
   event: EventWithDetails
   isPending: boolean
   canArchiveEvents: boolean
   onDelete: (eventId: string) => void
   onTogglePublish: (event: EventWithDetails) => void
+  copyLink: (eventId: string) => void
 }) {
-  const status = statusForEvent(event)
+  const statusLabel = new Date(event.end_at) < new Date()
+    ? 'Finalizado'
+    : event.is_published
+      ? 'Publicado'
+      : 'Borrador'
   const ownership = ownershipLabel(event)
   const OwnershipIcon = ownership.icon
   const pendingApplications = event._count?.pending_applications ?? 0
@@ -244,11 +405,13 @@ function MobileEventRow({
         <div className="min-w-0 space-y-2">
           <div className="flex items-center gap-2">
             <OwnershipIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <p className="break-words font-medium">{presentLaunchEventTitle(event.title)}</p>
+            <p className="break-words font-medium" title={event.title}>{presentLaunchEventTitle(event.title)}</p>
           </div>
           <LocalDate isoString={event.start_at} />
           <div className="flex flex-wrap gap-2">
-            <Badge variant={status.variant}>{status.label}</Badge>
+            <Badge variant={statusLabel === 'Publicado' ? 'secondary' : statusLabel === 'Finalizado' ? 'neutral' : 'outline'}>
+              {statusLabel}
+            </Badge>
             <Badge variant="outline">{ownership.label}</Badge>
             {event.access_model === 'application' ? (
               <Badge variant={pendingApplications > 0 ? 'warning' : 'outline'}>
@@ -257,6 +420,85 @@ function MobileEventRow({
             ) : null}
           </div>
         </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size="sm" variant="ghost" className="h-8 w-8 p-0 shrink-0">
+              <EllipsisVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {statusLabel === 'Borrador' && (
+              <>
+                <DropdownMenuItem asChild>
+                  <Link href={`/chapter/events/${event.id}`}>Editar</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onTogglePublish(event)}>
+                  Publicar
+                </DropdownMenuItem>
+                {canArchiveEvents && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={() => {
+                        if (window.confirm(`¿Eliminar ${presentLaunchEventTitle(event.title)}?`)) {
+                          onDelete(event.id)
+                        }
+                      }}
+                    >
+                      Eliminar
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </>
+            )}
+            {statusLabel === 'Publicado' && (
+              <>
+                <DropdownMenuItem asChild>
+                  <Link href={`/chapter/events/${event.id}`}>Editar</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href={`/events/${event.id}`}>Vista pública</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => copyLink(event.id)}>
+                  Copiar enlace
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href={`/chapter/events/${event.id}/checkin`}>Check-in</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => onTogglePublish(event)}>
+                  Despublicar
+                </DropdownMenuItem>
+                {canArchiveEvents && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={() => {
+                        if (window.confirm(`¿Eliminar ${presentLaunchEventTitle(event.title)}?`)) {
+                          onDelete(event.id)
+                        }
+                      }}
+                    >
+                      Eliminar
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </>
+            )}
+            {statusLabel === 'Finalizado' && (
+              <>
+                <DropdownMenuItem asChild>
+                  <Link href={`/events/${event.id}`}>Vista pública</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => copyLink(event.id)}>
+                  Copiar enlace
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <p className="text-sm text-muted-foreground">
@@ -264,95 +506,6 @@ function MobileEventRow({
           ? `${event._count.registrations} registrados`
           : `${event._count.registrations}/${event.capacity} registrados`}
       </p>
-
-      <div className="grid grid-cols-2 gap-2">
-        <Button asChild size="sm" variant="outline">
-          <Link href={`/chapter/events/${event.id}`}>Editar</Link>
-        </Button>
-        {event.is_published ? (
-          <Button asChild size="sm" variant="outline">
-            <Link href={`/events/${event.id}`}>Vista publica</Link>
-          </Button>
-        ) : null}
-        {event.is_published ? (
-          <EventShareButton
-            eventId={event.id}
-            eventTitle={event.title}
-            mode="copy"
-            size="sm"
-            variant="outline"
-          />
-        ) : null}
-        <Button asChild size="sm" variant="outline">
-          <Link href={`/chapter/events/${event.id}/checkin`}>Check-in</Link>
-        </Button>
-        {event.access_model === 'application' ? (
-          <Button asChild size="sm" variant="outline">
-            <Link href={`/chapter/events/${event.id}/applications`}>Postulaciones</Link>
-          </Button>
-        ) : null}
-        <Button size="sm" variant="outline" disabled={isPending} onClick={() => onTogglePublish(event)}>
-          {event.is_published ? 'Despublicar' : 'Publicar'}
-        </Button>
-        {canArchiveEvents ? (
-          <DeleteEventButton
-            disabled={isPending}
-            eventTitle={presentLaunchEventTitle(event.title)}
-            onConfirm={() => onDelete(event.id)}
-            tone="quiet"
-          />
-        ) : null}
-      </div>
     </div>
-  )
-}
-
-function DeleteEventButton({
-  disabled,
-  eventTitle,
-  onConfirm,
-  tone,
-}: {
-  disabled: boolean
-  eventTitle: string
-  onConfirm: () => void
-  tone: 'destructive' | 'quiet'
-}) {
-  const isQuiet = tone === 'quiet'
-
-  return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button
-          size="sm"
-          variant={isQuiet ? 'outline' : 'destructive'}
-          aria-disabled={disabled}
-          tabIndex={disabled ? -1 : undefined}
-          className={
-            disabled
-              ? 'pointer-events-none bg-muted! text-muted-foreground! hover:bg-muted!'
-              : isQuiet
-                ? 'border-destructive/60 bg-destructive/15 text-foreground hover:border-destructive/70 hover:bg-destructive/25 hover:text-foreground focus-visible:ring-destructive/40'
-                : undefined
-          }
-        >
-          Eliminar
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent size="sm">
-        <AlertDialogHeader>
-          <AlertDialogTitle>¿Eliminar evento?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Esto eliminará {eventTitle}. Usa esta acción solo para eventos que ya no deben existir en las operaciones del capítulo.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Mantener evento</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-            Eliminar evento
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
   )
 }

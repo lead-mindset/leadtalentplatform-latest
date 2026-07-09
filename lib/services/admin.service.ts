@@ -2489,16 +2489,20 @@ export const AdminService = {
   ): Promise<{ id: string; accepted_at: string | null; revoked_at: string | null } | null> {
     const { data, error } = await supabase
       .from('recruiter_access')
-      .select('id, accepted_at, revoked_at')
+      .select('id, accepted_at, revoked_at, granted_at')
       .eq('recruiter_email', email.trim().toLowerCase())
       .eq('company_id', companyId)
-      .maybeSingle()
+      .order('granted_at', { ascending: false })
 
-    if (error || !data) {
+    if (error) {
+      logger.error({ context: 'AdminService.checkExistingRecruiterInvite', error }, 'query error')
       return null
     }
+    if (!data || data.length === 0) return null
 
-    return data as { id: string; accepted_at: string | null; revoked_at: string | null }
+    // Prefer the currently-active (non-revoked) row; fall back to most recent otherwise.
+    const active = data.find((row) => !row.revoked_at)
+    return active ?? data[0]
   },
 
   async createRecruiterInvite(
@@ -2528,6 +2532,9 @@ export const AdminService = {
 
     if (inviteError || !invite) {
       logger.error({ context: 'AdminService.createRecruiterInvite', error: inviteError }, 'insert error')
+      if (inviteError?.code === '23505') {
+        return { success: false, error: 'Pending invite already exists' }
+      }
       return { success: false, error: inviteError?.message ?? 'Failed to create invite' }
     }
 

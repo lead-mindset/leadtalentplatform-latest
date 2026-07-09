@@ -55,6 +55,7 @@ export type PublicChapterDirectoryItem = {
   university: string
   city: string | null
   region: string | null
+  instagram_url: string | null
   approvedMemberCount: number
   upcomingEventsCount: number
   hasLocation: boolean
@@ -175,7 +176,7 @@ export const ChapterProfileService = {
   ): Promise<PublicChapterDirectory> {
     const { data: chapters, error: chaptersError } = await supabase
       .from('chapter')
-      .select('id, name, university, city, region')
+      .select('id, name, university, city, region, instagram_url')
       .order('name', { ascending: true })
 
     if (chaptersError) {
@@ -193,7 +194,7 @@ export const ChapterProfileService = {
       }
     }
 
-    const chapterRows = (chapters ?? []) as Pick<ChapterRow, 'id' | 'name' | 'university' | 'city' | 'region'>[]
+    const chapterRows = (chapters ?? []) as Pick<ChapterRow, 'id' | 'name' | 'university' | 'city' | 'region' | 'instagram_url'>[]
     const chapterIds = chapterRows.map((chapter) => chapter.id)
 
     if (chapterIds.length === 0) {
@@ -250,6 +251,7 @@ export const ChapterProfileService = {
         university: chapter.university,
         city: chapter.city,
         region: chapter.region,
+        instagram_url: chapter.instagram_url,
         approvedMemberCount,
         upcomingEventsCount,
         hasLocation: Boolean(chapter.city || chapter.region),

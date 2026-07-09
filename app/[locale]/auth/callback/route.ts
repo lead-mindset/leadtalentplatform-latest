@@ -58,15 +58,13 @@ const safeNext = getSafeNextPath(
   searchParams.get('next'),
   locale
 )
-  if (!code) {
-    return NextResponse.redirect(`${siteUrl}/${locale}/auth/error`)
-  }
-
   const supabase = await createClient()
-  const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
 
-  if (exchangeError) {
-    return NextResponse.redirect(`${siteUrl}/${locale}/auth/error`)
+  if (code) {
+    const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+    if (exchangeError) {
+      return NextResponse.redirect(`${siteUrl}/${locale}/auth/error`)
+    }
   }
 
   const { data: { user }, error: userFetchError } = await supabase.auth.getUser()

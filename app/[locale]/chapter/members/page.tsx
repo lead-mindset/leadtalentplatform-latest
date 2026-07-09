@@ -1,7 +1,6 @@
 import { requireChapterMember } from '@/lib/auth'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { Breadcrumb } from '@/components/ui/breadcrumb'
 import { MainContainer } from '@/components/global/main-container'
 import { Icons } from '@/components/ui/icons'
 import { PageHeader } from '@/components/ui/page-header'
@@ -17,7 +16,7 @@ import { EboardInviteManagement } from './components/eboard-invite-management'
 import { MembersList } from './components/members-list'
 import { MembersTabs, type MemberStatusCounts } from './components/member-tabs'
 
-export type MemberFilterStatus = 'pending' | 'active' | 'rejected' | 'inactive' | 'alumni'
+export type MemberFilterStatus = 'pending' | 'active' | 'rejected'
 
 export function filterMembers(members: MemberWithProfile[], status: MemberFilterStatus): MemberWithProfile[] {
   switch (status) {
@@ -33,14 +32,6 @@ export function filterMembers(members: MemberWithProfile[], status: MemberFilter
       return members.filter(
         member => member.chapter_membership?.status === 'rejected'
       )
-    case 'inactive':
-      return members.filter(
-        member => member.chapter_membership?.status === 'inactive'
-      )
-    case 'alumni':
-      return members.filter(
-        member => member.chapter_membership?.status === 'alumni'
-      )
   }
 }
 
@@ -49,8 +40,6 @@ function getVisibleStatuses(permissions: ChapterMemberPermissionFlags): MemberFi
   if (permissions.canManageApplications || permissions.canViewApplicants) statuses.push('pending')
   if (permissions.canViewApproved) statuses.push('active')
   if (permissions.canViewRejected) statuses.push('rejected')
-  if (permissions.canViewInactive) statuses.push('inactive')
-  if (permissions.canViewAlumni) statuses.push('alumni')
   return statuses
 }
 
@@ -112,8 +101,6 @@ export default async function ChapterMembersPage({
     pending: stats.pending,
     active: stats.approved,
     rejected: stats.rejected,
-    inactive: stats.inactive,
-    alumni: stats.alumni,
   }
   const visibleStatuses = getVisibleStatuses(permissions)
   const defaultStatus: MemberFilterStatus =
@@ -128,15 +115,7 @@ export default async function ChapterMembersPage({
 
   return (
     <MainContainer className="py-8 space-y-6">
-      <Breadcrumb
-        items={[
-          { label: 'Resumen', href: '/chapter' },
-          { label: 'Miembros' },
-        ]}
-      />
-
       <PageHeader
-        eyebrow="Herramientas del capítulo"
         title="Miembros del capítulo"
         badge={<Badge variant="outline">{chapter.name}</Badge>}
       />

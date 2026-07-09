@@ -66,7 +66,7 @@ export const CHAPTER_NAV: NavItemConfig[] = [
   },
   {
     id: 'events',
-    label: 'Eventos',
+    label: 'Gestionar eventos',
     href: '/chapter/events',
     icon: CalendarDays,
   },
@@ -87,12 +87,6 @@ export const CHAPTER_NAV: NavItemConfig[] = [
     label: 'Financiamiento',
     href: '/chapter/funding',
     icon: HandCoins,
-  },
-  {
-    id: 'my-profile',
-    label: 'Perfil',
-    href: '/student/profile',
-    icon: User,
   },
 ]
 

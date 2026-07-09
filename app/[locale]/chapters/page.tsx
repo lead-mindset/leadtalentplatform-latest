@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import { ArrowRight, Building2, CalendarDays, MapPin } from 'lucide-react'
+import { ArrowRight, Building2, CalendarDays, Instagram, MapPin } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { MainContainer } from '@/components/global/main-container'
@@ -86,49 +86,32 @@ function ChapterCard({
   return (
     <Card className="group rounded-lg transition-colors hover:border-primary/40">
       <CardContent className="flex h-full flex-col gap-5 p-5">
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border bg-muted">
-            <Building2 className="h-5 w-5 text-primary" />
-          </div>
-          <div className="min-w-0">
-            <h2 className="line-clamp-2 text-lg font-semibold tracking-tight">
-              {chapter.name}
-            </h2>
-            <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-              {chapter.university}
-            </p>
-          </div>
+        <div className="min-w-0 space-y-1">
+          <h2 className="line-clamp-2 text-lg font-semibold tracking-tight">
+            {chapter.name}
+          </h2>
+          <p className="line-clamp-2 text-sm text-muted-foreground">
+            {chapter.university}
+          </p>
         </div>
 
-        <div className="space-y-3 text-sm text-muted-foreground">
+        <div className="mt-auto space-y-3 text-sm text-muted-foreground">
           <div className="flex min-w-0 items-center gap-2">
             <MapPin className="h-4 w-4 shrink-0" />
             <span className="truncate">{formatLocation(chapter, locale)}</span>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="outline" className="max-w-full justify-start gap-1.5 whitespace-normal">
-              <Building2 className="h-3.5 w-3.5" />
-              {copy.locationSignal}
-            </Badge>
-            <Badge variant="outline" className="max-w-full justify-start gap-1.5 whitespace-normal">
-              <CalendarDays className="h-3.5 w-3.5" />
-              {copy.eventsSignal}
-            </Badge>
-          </div>
-          {!chapter.hasActivity && (
-            <p className="rounded-md bg-muted/50 px-3 py-2 text-xs">
-              {copy.quietChapter}
-            </p>
+          {chapter.instagram_url && (
+            <a
+              href={chapter.instagram_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 transition-colors hover:text-foreground"
+            >
+              <Instagram className="h-4 w-4 shrink-0" />
+              <span className="truncate">{chapter.instagram_url.replace(/^https?:\/\/(www\.)?/, '')}</span>
+            </a>
           )}
         </div>
-
-        <Link
-          href={`/chapter/${chapter.id}`}
-          className="mt-auto inline-flex items-center justify-between rounded-md border px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
-        >
-          {copy.viewChapter}
-          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-        </Link>
       </CardContent>
     </Card>
   )
@@ -144,9 +127,6 @@ async function ChaptersContent({ locale }: { locale: DirectoryLocale }) {
         <section className="space-y-5 md:space-y-6">
           <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div className="max-w-3xl space-y-3">
-              <Badge variant="outline" className="w-fit">
-                {copy.badge}
-              </Badge>
               <div className="space-y-2">
                 <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl md:text-5xl">
                   {copy.heading}

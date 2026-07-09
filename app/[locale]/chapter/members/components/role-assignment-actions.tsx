@@ -114,133 +114,139 @@ export function RoleAssignmentActions({ targetUserId, targetName, assignment }: 
   }
 
   return (
-    <div className="space-y-2 rounded-lg border bg-muted/20 p-3 text-left">
+    <div className="space-y-3 rounded-lg border bg-muted/20 p-3 text-left">
       <div className="flex items-start gap-2">
         <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
         <div className="min-w-0">
-          <p className="text-xs font-medium uppercase text-muted-foreground">Rol e-board</p>
-          <p className="break-words text-sm font-medium">
-            {assignment?.display_title ?? 'Sin rol e-board asignado'}
-          </p>
+          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">ROL E-BOARD</p>
           {assignment ? (
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              {CHAPTER_ROLE_LEVEL_LABELS[assignment.role_level as keyof typeof CHAPTER_ROLE_LEVEL_LABELS] ?? assignment.role_level}
-              {' / '}
-              {CHAPTER_FUNCTIONAL_AREA_LABELS[assignment.functional_area as ChapterFunctionalArea] ?? assignment.functional_area}
-            </p>
-          ) : null}
+            <>
+              <p className="mt-0.5 break-words text-sm font-semibold text-primary">
+                {assignment.display_title}
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {CHAPTER_FUNCTIONAL_AREA_LABELS[assignment.functional_area as ChapterFunctionalArea] ?? assignment.functional_area}
+              </p>
+            </>
+          ) : (
+            <p className="mt-0.5 text-sm font-medium">Sin rol e-board asignado</p>
+          )}
         </div>
       </div>
 
       {hasProtectedAssignment ? (
-        <p className="rounded-md border bg-background p-2 text-xs text-muted-foreground">
-          Presidencia y vicepresidencia solo se corrigen desde admin.
-        </p>
+        <div className="border-t pt-2">
+          <p className="text-[11px] text-muted-foreground/60">
+            Gestionado por admin
+          </p>
+        </div>
       ) : (
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
-          <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm" variant="outline" className="w-full justify-center">
-                <UserCog className="mr-2 h-4 w-4" />
-                {assignment ? 'Cambiar rol' : 'Asignar rol'}
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Asignar rol e-board</DialogTitle>
-                <DialogDescription>
-                  Define el nivel, área y título visible para {targetName}.
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="grid gap-4">
-                <div className="space-y-2">
-                  <Label>Nivel</Label>
-                  <Select value={roleLevel} onValueChange={(value) => setRoleLevel(value as RegularEboardRoleLevel)}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {REGULAR_EBOARD_ROLE_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Área funcional</Label>
-                  <Select value={functionalArea} onValueChange={(value) => setFunctionalArea(value as ChapterFunctionalArea)}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CHAPTER_FUNCTIONAL_AREA_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Input
-                  label="Título visible"
-                  value={displayTitle}
-                  onChange={(event) => setDisplayTitle(event.target.value)}
-                  placeholder="Ej. Directora de Marketing"
-                  helperText="Este título aparece en la plataforma; el nivel normalizado se usa para permisos."
-                />
-              </div>
-
-              <DialogFooter>
-                <Button
-                  onClick={submitAssignment}
-                  disabled={isPending || displayTitle.trim().length < 2}
-                >
-                  {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserCog className="mr-2 h-4 w-4" />}
-                  Guardar rol
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-
-          {assignment ? (
-            <Dialog open={removeOpen} onOpenChange={setRemoveOpen}>
+        <div className="min-h-[2.25rem]">
+          <div className="flex flex-wrap gap-2">
+            <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
               <DialogTrigger asChild>
-                <Button size="sm" variant="outline" className="w-full justify-center">
-                  <XCircle className="mr-2 h-4 w-4" />
-                  Retirar rol
+                <Button size="sm" variant={assignment ? 'outline' : 'default'} className="gap-1.5">
+                  <UserCog className="h-4 w-4" />
+                  {assignment ? 'Cambiar rol' : 'Asignar rol'}
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Retirar rol e-board</DialogTitle>
+                  <DialogTitle>Asignar rol e-board</DialogTitle>
                   <DialogDescription>
-                    La membresía seguirá aprobada. Solo se desactivará el rol y sus permisos.
+                    Define el nivel, área y título visible para {targetName}.
                   </DialogDescription>
                 </DialogHeader>
-                <Textarea
-                  value={removeReason}
-                  onChange={(event) => setRemoveReason(event.target.value)}
-                  placeholder="Motivo requerido para auditoría interna"
-                  rows={4}
-                />
+
+                <div className="grid gap-4">
+                  <div className="space-y-2">
+                    <Label>Nivel</Label>
+                    <Select value={roleLevel} onValueChange={(value) => setRoleLevel(value as RegularEboardRoleLevel)}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {REGULAR_EBOARD_ROLE_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Área funcional</Label>
+                    <Select value={functionalArea} onValueChange={(value) => setFunctionalArea(value as ChapterFunctionalArea)}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CHAPTER_FUNCTIONAL_AREA_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Input
+                    label="Título visible"
+                    value={displayTitle}
+                    onChange={(event) => setDisplayTitle(event.target.value)}
+                    placeholder="Ej. Directora de Marketing"
+                    helperText="Este título aparece en la plataforma; el nivel normalizado se usa para permisos."
+                  />
+                </div>
+
                 <DialogFooter>
                   <Button
-                    variant="destructive"
-                    onClick={submitRemoval}
-                    disabled={isPending || removeReason.trim().length === 0}
+                    onClick={submitAssignment}
+                    disabled={isPending || displayTitle.trim().length < 2}
                   >
-                    {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <XCircle className="mr-2 h-4 w-4" />}
-                    Confirmar retiro
+                    {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserCog className="mr-2 h-4 w-4" />}
+                    Guardar rol
                   </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
-          ) : null}
+
+            {assignment ? (
+              <Dialog open={removeOpen} onOpenChange={setRemoveOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" variant="destructive" className="gap-1.5">
+                    <XCircle className="h-4 w-4" />
+                    Retirar rol
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Retirar rol e-board</DialogTitle>
+                    <DialogDescription>
+                      La membresía seguirá aprobada. Solo se desactivará el rol y sus permisos.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <Textarea
+                    value={removeReason}
+                    onChange={(event) => setRemoveReason(event.target.value)}
+                    placeholder="Motivo requerido para auditoría interna"
+                    rows={4}
+                  />
+                  <DialogFooter>
+                    <Button
+                      variant="destructive"
+                      onClick={submitRemoval}
+                      disabled={isPending || removeReason.trim().length === 0}
+                    >
+                      {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <XCircle className="mr-2 h-4 w-4" />}
+                      Confirmar retiro
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            ) : null}
+          </div>
         </div>
       )}
     </div>

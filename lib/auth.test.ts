@@ -47,7 +47,11 @@ function buildMockSupabase(overrides: Partial<Record<string, Partial<TableMock>>
       eq: vi.fn().mockReturnThis(),
       match: vi.fn().mockReturnThis(),
       is: vi.fn().mockReturnThis(),
-      maybeSingle: vi.fn(),
+      not: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
+      returns: vi.fn().mockResolvedValue({ data: [], error: null }),
+      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
     },
     user: {
       select: vi.fn().mockReturnThis(),
@@ -453,8 +457,8 @@ describe('auth recruiter access helpers', () => {
 
   it('resolves active accepted recruiter access without profile or membership tables', async () => {
     const { mockSupabase, tableMocks } = buildMockSupabase()
-    tableMocks.recruiter_access.maybeSingle.mockResolvedValue({
-      data: {
+    tableMocks.recruiter_access.returns.mockResolvedValue({
+      data: [{
         id: 'access-1',
         company_id: 'company-1',
         is_active: true,
@@ -468,7 +472,7 @@ describe('auth recruiter access helpers', () => {
         invite_token: 'token-1',
         revoked_by_id: null,
         Company: [{ id: 'company-1', name: 'Acme', created_at: '2026-05-03T00:00:00.000Z', created_by_id: 'admin-1' }],
-      },
+      }],
       error: null,
     })
 
@@ -484,7 +488,7 @@ describe('auth recruiter access helpers', () => {
 
   it('denies missing recruiter access', async () => {
     const { mockSupabase, tableMocks } = buildMockSupabase()
-    tableMocks.recruiter_access.maybeSingle.mockResolvedValue({ data: null, error: null })
+    tableMocks.recruiter_access.returns.mockResolvedValue({ data: [], error: null })
 
     const result = await resolveRecruiterAccess(mockSupabase, 'recruiter-1')
 
@@ -493,13 +497,9 @@ describe('auth recruiter access helpers', () => {
 
   it('denies revoked recruiter access', async () => {
     const { mockSupabase, tableMocks } = buildMockSupabase()
+    tableMocks.recruiter_access.returns.mockResolvedValue({ data: [], error: null })
     tableMocks.recruiter_access.maybeSingle.mockResolvedValue({
-      data: {
-        id: 'access-1',
-        is_active: true,
-        revoked_at: '2026-05-03T00:00:00.000Z',
-        Company: [],
-      },
+      data: { id: 'access-1' },
       error: null,
     })
 
@@ -510,13 +510,13 @@ describe('auth recruiter access helpers', () => {
 
   it('denies inactive recruiter access', async () => {
     const { mockSupabase, tableMocks } = buildMockSupabase()
-    tableMocks.recruiter_access.maybeSingle.mockResolvedValue({
-      data: {
+    tableMocks.recruiter_access.returns.mockResolvedValue({
+      data: [{
         id: 'access-1',
         is_active: false,
         revoked_at: null,
         Company: [],
-      },
+      }],
       error: null,
     })
 
@@ -527,14 +527,14 @@ describe('auth recruiter access helpers', () => {
 
   it('denies expired recruiter access', async () => {
     const { mockSupabase, tableMocks } = buildMockSupabase()
-    tableMocks.recruiter_access.maybeSingle.mockResolvedValue({
-      data: {
+    tableMocks.recruiter_access.returns.mockResolvedValue({
+      data: [{
         id: 'access-1',
         is_active: true,
         revoked_at: null,
         invite_expires_at: '2026-01-01T00:00:00.000Z',
         Company: [],
-      },
+      }],
       error: null,
     })
 
@@ -545,7 +545,7 @@ describe('auth recruiter access helpers', () => {
 
   it('denies recruiter access when the access query fails', async () => {
     const { mockSupabase, tableMocks } = buildMockSupabase()
-    tableMocks.recruiter_access.maybeSingle.mockResolvedValue({
+    tableMocks.recruiter_access.returns.mockResolvedValue({
       data: null,
       error: { message: 'DB error' },
     })

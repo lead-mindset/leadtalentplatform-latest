@@ -1,32 +1,18 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 const STEPS = [
-  {
-    number: 1,
-    title: "Ingresa con Google o email",
-    description: "Dos opciones de acceso, tú eliges.",
-  },
-  {
-    number: 2,
-    title: "Elige tu capítulo LEAD",
-    description: "Selecciona tu universidad y año de egreso.",
-  },
-  {
-    number: 3,
-    title: "Completa tu perfil",
-    description: "Carrera, habilidades, LinkedIn y CV — todo opcional según avanzas.",
-  },
-  {
-    number: 4,
-    title: "Obtén tu Member ID",
-    description: "Tu número oficial como miembro de la Red LEAD. Generado automáticamente.",
-  },
-  {
-    number: 5,
-    title: "Activa tu visibilidad cuando quieras",
-    description: "Tú decides si las empresas pueden verte. Sin presión. Cámbialo en cualquier momento.",
-  },
+  { number: 1, titleKey: "howStep1Title", descKey: "howStep1Desc" },
+  { number: 2, titleKey: "howStep2Title", descKey: "howStep2Desc" },
+  { number: 3, titleKey: "howStep3Title", descKey: "howStep3Desc" },
+  { number: 4, titleKey: "howStep4Title", descKey: "howStep4Desc" },
+  { number: 5, titleKey: "howStep5Title", descKey: "howStep5Desc" },
 ] as const;
 
 export function HowItWorks() {
+  const t = useTranslations("homepage");
+
   return (
     <section
       className="py-16 sm:py-20 border-b border-border/60"
@@ -39,23 +25,20 @@ export function HowItWorks() {
             id="how-it-works-heading"
             className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground"
           >
-            5 minutos. Así de simple.
+            {t("howTitle")}
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Crea tu perfil y obtén tu Member&nbsp;ID oficial.
+            {t("howSubtitle")}
           </p>
         </div>
 
-        <ol className="flex flex-col" aria-label="Pasos para unirse a LEAD">
+        <ol className="flex flex-col" aria-label="Steps to join LEAD">
           {STEPS.map((step, index) => {
             const isLast = index === STEPS.length - 1;
             return (
               <li
                 key={step.number}
-                className={`
-                  flex gap-5 pb-0
-                  ${!isLast ? "mb-0" : ""}
-                `}
+                className="flex gap-5 pb-0"
               >
                 <div className="flex flex-col items-center shrink-0">
                   <div
@@ -81,10 +64,10 @@ export function HowItWorks() {
 
                 <div className={`flex-1 pt-1 ${!isLast ? "pb-6" : "pb-0"}`}>
                   <h3 className="text-sm font-semibold text-foreground mb-1 leading-snug">
-                    {step.title}
+                    {t(step.titleKey)}
                   </h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    {step.description}
+                    {t(step.descKey)}
                   </p>
                 </div>
               </li>
