@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { getChapterEventPermissionFlags, getChapterEvents } from '@/lib/actions/events/get-data'
 import { EventsTable } from './_components/events-table'
 import { Icons } from '@/components/ui/icons'
-import { Breadcrumb } from '@/components/ui/breadcrumb'
 import { MainContainer } from '@/components/global/main-container'
 import type { ElementType } from 'react'
 import { PageHeader } from '@/components/ui/page-header'
@@ -36,8 +35,9 @@ export default async function ChapterEventsPage() {
   const events = await getChapterEvents()
   const permissions = await getChapterEventPermissionFlags()
   const now = new Date()
-  const activeEvents = events.filter(event => event.is_published && new Date(event.end_at) >= now)
+  const publishedEvents = events.filter(event => event.is_published && new Date(event.end_at) >= now)
   const draftEvents = events.filter(event => !event.is_published && new Date(event.end_at) >= now)
+  const finalizedEvents = events.filter(event => new Date(event.end_at) < now)
   const pendingApplications = events.reduce(
     (total, event) => total + (event._count?.pending_applications ?? 0),
     0
@@ -46,16 +46,8 @@ export default async function ChapterEventsPage() {
 
   return (
     <MainContainer className="w-full max-w-full py-8 space-y-8">
-      <Breadcrumb
-        items={[
-          { label: 'Resumen', href: '/chapter' },
-          { label: 'Eventos' },
-        ]}
-      />
-
       <div className="space-y-5">
         <PageHeader
-          eyebrow="Herramientas del capítulo"
           title="Eventos del capítulo"
           description="Gestiona eventos propios y colaborativos asociados a tu capítulo. Revisa borradores, publica con intención y prepara el check-in antes del evento."
           actions={
@@ -70,8 +62,8 @@ export default async function ChapterEventsPage() {
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <StatBlock
-            label="Activos"
-            value={activeEvents.length}
+            label="Publicados"
+            value={publishedEvents.length}
             helper="Publicados y vigentes"
             icon={Icons.Calendar}
           />
@@ -115,7 +107,12 @@ export default async function ChapterEventsPage() {
           </CardContent>
         </Card>
       ) : (
-        <EventsTable events={events} canArchiveEvents={permissions.canArchiveEvents} />
+        <EventsTable
+          publishedEvents={publishedEvents}
+          draftEvents={draftEvents}
+          finalizedEvents={finalizedEvents}
+          canArchiveEvents={permissions.canArchiveEvents}
+        />
       )}
     </MainContainer>
   )

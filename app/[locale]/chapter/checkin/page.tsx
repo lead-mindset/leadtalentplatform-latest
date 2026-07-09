@@ -6,7 +6,6 @@ import { Icons } from '@/components/ui/icons'
 import { getChapterEvents } from '@/lib/actions/events/get-data'
 import { getCheckInCounter } from '@/lib/actions/events/checkin'
 import { CheckinScanner } from '../events/_components/checkin-scanner'
-import { Breadcrumb } from '@/components/ui/breadcrumb'
 import { MainContainer } from '@/components/global/main-container'
 import { PageHeader } from '@/components/ui/page-header'
 
@@ -65,17 +64,9 @@ export default async function ChapterCheckinPage({
 
   return (
     <MainContainer className="w-full max-w-full py-8 space-y-8">
-      <Breadcrumb
-        items={[
-          { label: 'Resumen', href: '/chapter' },
-          { label: 'Check-in' },
-        ]}
-      />
-
       <PageHeader
-        eyebrow="Herramientas del capítulo"
         title="Check-in"
-        description="Escanea códigos QR, busca asistentes o pega un token para el evento seleccionado."
+        description="Escanea códigos QR o busca asistentes para el evento seleccionado."
         actions={
           <Button asChild variant="outline">
           <Link href="/chapter/events">Eventos del capítulo</Link>

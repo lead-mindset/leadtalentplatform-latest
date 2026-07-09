@@ -985,7 +985,7 @@ describe('AdminService', () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
       tableMocks.recruiter_access._builder._setThenValue({
-        data: { id: 'ra-1', accepted_at: null, revoked_at: null },
+        data: [{ id: 'ra-1', accepted_at: null, revoked_at: null }],
         error: null,
       })
 

@@ -133,6 +133,18 @@ function formatTime(value: string, locale: PublicEventsLocale) {
   })
 }
 
+function formatDateShort(value: string, locale: PublicEventsLocale) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return { month: 'TBD', day: '--' }
+  return {
+    month: date
+      .toLocaleDateString(EVENT_LOCALES[locale], { month: 'short', timeZone: EVENT_TIME_ZONE })
+      .toUpperCase()
+      .replace('.', ''),
+    day: date.toLocaleDateString(EVENT_LOCALES[locale], { day: 'numeric', timeZone: EVENT_TIME_ZONE }),
+  }
+}
+
 function getLocationLabel(event: EventWithDetails, locale: PublicEventsLocale) {
   const copy = EVENT_COPY[locale]
   if (event.event_type === 'online') return copy.online
@@ -197,37 +209,45 @@ function EventCard({ event, locale }: { event: EventWithDetails; locale: PublicE
       <CardContent className="p-0">
         <Link href={`/events/${event.id}`} className="block">
           <div className="grid gap-0 lg:grid-cols-[17rem_1fr]">
-            <div className="relative min-h-52 overflow-hidden bg-muted lg:min-h-full">
+            <div className="relative flex flex-col rounded-r-lg bg-muted">
               {event.cover_image ? (
-                <Image
-                  src={event.cover_image}
-                  alt={event.title || copy.fallbackTitle}
-                  fill
-                  sizes="(min-width: 1024px) 17rem, 100vw"
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-              ) : (
-                <div className="flex h-full min-h-52 flex-col justify-between bg-[radial-gradient(circle_at_20%_15%,hsl(var(--primary)/0.28),transparent_34%),linear-gradient(135deg,hsl(var(--muted)),hsl(var(--card)))] p-5">
-                  <div className="flex justify-end">
-                    <CalendarDays className="h-6 w-6 text-primary" />
+                <div className="relative min-h-52 flex-1">
+                  <Image
+                    src={event.cover_image}
+                    alt={event.title || copy.fallbackTitle}
+                    fill
+                    sizes="(min-width: 1024px) 17rem, 100vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute bottom-3 left-3 flex flex-col items-center justify-center rounded-lg border bg-background/80 px-3 py-1.5 shadow-sm backdrop-blur-sm">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      {formatDateShort(event.start_at, locale).month}
+                    </span>
+                    <span className="text-lg font-bold leading-none text-foreground">
+                      {formatDateShort(event.start_at, locale).day}
+                    </span>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">{formatDate(event.start_at, locale)}</p>
-                    <p className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
+                </div>
+              ) : (
+                <div className="relative flex flex-1 items-center justify-center p-6">
+                  <div className="flex flex-col items-center gap-2.5">
+                    <div className="flex flex-col items-center justify-center rounded-lg border bg-background/60 px-5 py-2 shadow-sm">
+                      <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                        {formatDateShort(event.start_at, locale).month}
+                      </span>
+                      <span className="text-3xl font-bold leading-none text-foreground">
+                        {formatDateShort(event.start_at, locale).day}
+                      </span>
+                    </div>
+                    <p className="text-sm font-medium text-foreground/80">
                       {formatTime(event.start_at, locale)}
                     </p>
-                    <p className="mt-3 line-clamp-1 text-sm text-muted-foreground">{ownerChapter}</p>
                   </div>
                 </div>
               )}
             </div>
 
             <div className="space-y-4 p-5 md:p-6">
-              <div className="text-sm text-muted-foreground">
-                <CalendarDays className="mr-1.5 inline-block h-4 w-4 align-text-top" />
-                {formatDate(event.start_at, locale)} - {formatTime(event.start_at, locale)}
-              </div>
-
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0 space-y-2">
                   <h2 className="line-clamp-2 text-xl font-medium tracking-tight text-foreground/85 transition-colors duration-300 group-hover:text-foreground md:text-2xl">
@@ -252,19 +272,19 @@ function EventCard({ event, locale }: { event: EventWithDetails; locale: PublicE
                 </span>
               </div>
 
-              <div className="space-y-2 border-t pt-4 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t pt-4 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1.5">
                   <Users className="h-4 w-4 shrink-0" />
-                  <span>{ownerChapter}</span>
-                </div>
-                <div className="flex items-center gap-2">
+                  {ownerChapter}
+                </span>
+                <span className="flex items-center gap-1.5">
                   {event.event_type === 'online' ? (
                     <Monitor className="h-4 w-4 shrink-0" />
                   ) : (
                     <MapPin className="h-4 w-4 shrink-0" />
                   )}
-                  <span>{getLocationLabel(event, locale)}</span>
-                </div>
+                  {getLocationLabel(event, locale)}
+                </span>
               </div>
             </div>
           </div>

@@ -148,7 +148,7 @@ export function MemberActionButtons({
       <Button
         onClick={() => setShowRevokeReason(v => !v)}
         disabled={isLoading}
-        variant="outline"
+        variant="destructive"
         className="w-full"
       >
         <XCircle className="mr-2 h-4 w-4" />

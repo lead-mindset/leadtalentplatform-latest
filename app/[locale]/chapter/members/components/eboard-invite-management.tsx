@@ -141,57 +141,53 @@ export function EboardInviteManagement({ invites }: Props) {
   }
 
   return (
-    <section className="space-y-3 rounded-lg border bg-card p-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-base font-semibold">Invitaciones e-board</h2>
-            <Badge variant="outline">{invites.length} pendientes</Badge>
-          </div>
-          <p className="max-w-2xl text-sm text-muted-foreground">
-            Envía un enlace de acceso. Cuando la persona entre con ese correo, su rol e-board queda listo en este capítulo.
-          </p>
+    <section className="space-y-2 rounded-lg border bg-card p-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-sm font-medium">
+          <span>Invitaciones e-board</span>
+          {invites.length > 0 ? (
+            <Badge variant="outline" size="sm">{invites.length}</Badge>
+          ) : null}
         </div>
 
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="w-full sm:w-auto">
-              <MailPlus className="mr-2 h-4 w-4" />
-              Invitar e-board
+            <Button size="sm">
+              <MailPlus className="mr-1.5 h-3.5 w-3.5" />
+              Invitar
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-xl">
+          <DialogContent className="sm:max-w-lg">
             <DialogHeader>
-              <DialogTitle>Invitar e-board del capítulo</DialogTitle>
+              <DialogTitle>Nueva invitación e-board</DialogTitle>
               <DialogDescription>
-                Escribe el correo, elige el rol y envía el enlace. Vence en 30 días.
+                La persona ingresa con este correo y su rol queda listo. Vence en 30 días.
               </DialogDescription>
             </DialogHeader>
 
             <form
-              className="grid gap-4"
+              className="grid gap-3"
               onSubmit={(event) => {
                 event.preventDefault()
                 if (canSubmit && !isPending) submitInvite()
               }}
             >
               <Input
-                label="Correo de la persona"
+                label="Correo"
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                placeholder="lider@example.edu"
-                helperText="La persona debe iniciar sesión o crear cuenta con este mismo correo."
+                placeholder="lider@universidad.edu"
                 autoComplete="email"
                 autoFocus
                 required
               />
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Rol</Label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Rol</Label>
                   <Select value={roleLevel} onValueChange={(value) => setRoleLevel(value as RegularEboardRoleLevel)}>
-                    <SelectTrigger className="w-full" aria-label="Rol">
+                    <SelectTrigger aria-label="Rol">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -204,10 +200,10 @@ export function EboardInviteManagement({ invites }: Props) {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Área</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Área</Label>
                   <Select value={functionalArea} onValueChange={(value) => setFunctionalArea(value as ChapterFunctionalArea)}>
-                    <SelectTrigger className="w-full" aria-label="Área de trabajo">
+                    <SelectTrigger aria-label="Área">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -226,26 +222,18 @@ export function EboardInviteManagement({ invites }: Props) {
                 value={displayTitle}
                 onChange={(event) => setDisplayTitle(event.target.value)}
                 placeholder={suggestedDisplayTitle}
-                helperText={`Opcional. Si lo dejas vacío, se usará: ${suggestedDisplayTitle}.`}
+                helperText={`Se usará: ${effectiveDisplayTitle}`}
               />
 
-              <div className="rounded-md border bg-muted/30 p-3 text-sm">
-                <p className="font-medium">Antes de enviar</p>
-                <p className="mt-1 text-muted-foreground">
-                  {email.trim() || 'correo@universidad.edu'} recibirá un enlace de 30 días para activar{' '}
-                  <span className="font-medium text-foreground">{effectiveDisplayTitle}</span>.
-                </p>
-              </div>
-
-              <DialogFooter className="pt-1">
+              <DialogFooter>
                 <DialogClose asChild>
-                  <Button type="button" variant="outline" disabled={isPending}>
+                  <Button type="button" variant="ghost" size="sm" disabled={isPending}>
                     Cancelar
                   </Button>
                 </DialogClose>
-                <Button type="submit" disabled={isPending || !canSubmit}>
-                  <Send className="mr-2 h-4 w-4" />
-                  {isPending ? 'Enviando...' : 'Enviar invitación'}
+                <Button type="submit" size="sm" disabled={isPending || !canSubmit}>
+                  <Send className="mr-1.5 h-3.5 w-3.5" />
+                  {isPending ? 'Enviando...' : 'Enviar'}
                 </Button>
               </DialogFooter>
             </form>
@@ -254,44 +242,25 @@ export function EboardInviteManagement({ invites }: Props) {
       </div>
 
       {invites.length === 0 ? (
-        <div className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
-          Aún no hay invitaciones e-board. Cuando envíes una, podrás cancelarla o reenviarla si expira.
-        </div>
+        <p className="text-xs text-muted-foreground">Sin invitaciones activas.</p>
       ) : (
-        <div className="divide-y rounded-md border">
+        <div className="divide-y">
           {invites.map((invite) => (
-            <div key={invite.id} className="grid gap-3 p-3 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_auto] md:items-center">
+            <div key={invite.id} className="flex items-center justify-between gap-2 py-2 text-sm">
               <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="break-words text-sm font-medium">{invite.email}</p>
-                  <Badge variant={invite.status === 'expired' ? 'secondary' : 'outline'}>
-                    {statusLabel(invite.status)}
-                  </Badge>
-                </div>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Invitada: {formatDate(invite.created_at)} / Expira: {formatDate(invite.expires_at)}
-                </p>
+                <span className="font-medium">{invite.email}</span>
+                <span className="ml-2 text-xs text-muted-foreground">
+                  {invite.display_title} &middot; {statusLabel(invite.status)}
+                </span>
               </div>
-
-              <div className="min-w-0 text-sm">
-                <p className="break-words font-medium">{invite.display_title}</p>
-                <p className="text-xs text-muted-foreground">
-                  {CHAPTER_ROLE_LEVEL_LABELS[invite.role_level as keyof typeof CHAPTER_ROLE_LEVEL_LABELS] ?? invite.role_level}
-                  {' / '}
-                  {CHAPTER_FUNCTIONAL_AREA_LABELS[invite.functional_area as ChapterFunctionalArea] ?? invite.functional_area}
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-2 sm:flex-row md:justify-end">
+              <div className="shrink-0">
                 {invite.status === 'expired' ? (
-                  <Button size="sm" variant="outline" disabled={isPending} onClick={() => reinvite(invite.id)}>
-                    <RefreshCcw className="mr-2 h-4 w-4" />
-                    Reinvitar
+                  <Button size="sm" variant="ghost" disabled={isPending} onClick={() => reinvite(invite.id)}>
+                    <RefreshCcw className="h-3.5 w-3.5" />
                   </Button>
                 ) : (
-                  <Button size="sm" variant="outline" disabled={isPending} onClick={() => cancelInvite(invite.id)}>
-                    <XCircle className="mr-2 h-4 w-4" />
-                    Cancelar
+                  <Button size="sm" variant="ghost" disabled={isPending} onClick={() => cancelInvite(invite.id)}>
+                    <XCircle className="h-3.5 w-3.5" />
                   </Button>
                 )}
               </div>

@@ -11,16 +11,6 @@ const tabLabels: Record<MemberFilterStatus, string> = {
   pending: 'Pendientes',
   active: 'Aprobados',
   rejected: 'Rechazados',
-  inactive: 'Inactivos',
-  alumni: 'Alumni',
-}
-
-const badgeVariants: Record<MemberFilterStatus, 'warning' | 'success' | 'destructive' | 'neutral'> = {
-  pending: 'warning',
-  active: 'success',
-  rejected: 'destructive',
-  inactive: 'neutral',
-  alumni: 'neutral',
 }
 
 export function MembersTabs({
@@ -41,15 +31,15 @@ export function MembersTabs({
   return (
     <Tabs value={currentStatus} onValueChange={handleTabChange} className="w-full pb-3">
       <div className="w-full">
-        <TabsList className="grid !h-auto w-full grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-5">
+        <TabsList className="grid !h-auto w-full grid-cols-1 gap-1 sm:grid-cols-3">
           {visibleStatuses.map((status) => (
             <TabsTrigger
               key={status}
               value={status}
-              className="h-auto min-h-9 min-w-0 gap-2 whitespace-normal px-2 py-2 text-xs sm:text-sm"
+              className="h-auto min-h-9 min-w-0 gap-2 px-2 py-2 text-xs sm:text-sm"
             >
               {tabLabels[status]}
-              <Badge variant={badgeVariants[status]} size="sm">
+              <Badge variant="outline" size="sm">
                 {counts[status]}
               </Badge>
             </TabsTrigger>

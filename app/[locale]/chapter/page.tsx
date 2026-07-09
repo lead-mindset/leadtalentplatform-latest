@@ -12,7 +12,6 @@ import {
 import type { ChapterMemberPermissionFlags } from '@/lib/services/chapter.service'
 import { getChapterEvents } from '@/lib/actions/events/get-data'
 import MemberCard from './members/components/member-card'
-import { Breadcrumb } from '@/components/ui/breadcrumb'
 import { MainContainer } from '@/components/global/main-container'
 
 function StatCard({
@@ -143,7 +142,7 @@ function RecentApprovals({ members }: { members: RecentActivityMember[] }) {
       {members.map(member => (
         <div
           key={member.id}
-          className="flex items-center justify-between rounded-md px-2 py-2.5 hover:bg-accent transition-colors"
+          className="flex items-center justify-between rounded-md px-2 py-2.5"
         >
           <div className="min-w-0">
             <p className="text-sm font-medium truncate">{member.name || 'Unknown'}</p>
@@ -346,27 +345,11 @@ async function ChapterContent() {
 
   return (
     <MainContainer className="py-8 space-y-8">
-      {/* Breadcrumb Navigation */}
-      <Breadcrumb items={[{ label: 'Resumen', href: '/chapter' }]} />
-
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Resumen del capítulo</h1>
-          <p className="max-w-2xl text-muted-foreground">
-            {chapter?.name} - {chapter?.university}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button asChild>
-            <Link href="/chapter/events/new">
-              <Icons.Plus className="mr-2 h-4 w-4" />
-              Crear evento
-            </Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/chapter/events">Gestionar eventos</Link>
-          </Button>
-        </div>
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Resumen del capítulo</h1>
+        <p className="max-w-2xl text-muted-foreground">
+          {chapter?.name} - {chapter?.university}
+        </p>
       </div>
 
       {stats.total === 0 && (

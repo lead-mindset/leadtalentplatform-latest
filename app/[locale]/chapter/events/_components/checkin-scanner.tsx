@@ -16,7 +16,6 @@ import {
   AlertCircle,
   Camera,
   CheckCircle2,
-  Keyboard,
   Loader2,
   Search,
   ShieldCheck,
@@ -454,7 +453,7 @@ export function CheckinScanner({
         </Card>
 
         <div className="space-y-4">
-          <Card>
+          <Card className="lg:hidden">
             <CardHeader className="pb-2">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
@@ -474,7 +473,7 @@ export function CheckinScanner({
               )}
               {!hasBarcodeDetector && (
                 <p className="rounded-lg border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
-                  El escaneo con cámara no está disponible en este navegador. Busca a la persona o pega el token QR.
+                  El escaneo con cámara no está disponible en este navegador. Busca a la persona directamente.
                 </p>
               )}
               {hasBarcodeDetector && (
@@ -488,42 +487,6 @@ export function CheckinScanner({
                   {scanStatus === 'scanning' ? 'Detener cámara' : 'Iniciar cámara'}
                 </Button>
               )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                  <Keyboard className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">Pegar token QR</CardTitle>
-                  <p className="mt-1 text-sm text-muted-foreground">Alternativa para capturas o enlaces copiados.</p>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Input
-                aria-label="Pegar token QR"
-                value={qrToken}
-                onChange={(e) => setQrToken(e.target.value)}
-                placeholder="Pegar token"
-                autoComplete="off"
-                className="h-11"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={() => void prepareFromToken(qrToken)}
-                disabled={isPending || !qrToken.trim()}
-              >
-                {isPending
-                  ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Buscando...</>
-                  : 'Buscar asistente'
-                }
-              </Button>
             </CardContent>
           </Card>
         </div>

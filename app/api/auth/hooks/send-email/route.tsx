@@ -33,6 +33,14 @@ function parsePathFromUrl(url: string): string {
   }
 }
 
+function getRedirectNext(url: string): string | null {
+  try {
+    return new URL(url).searchParams.get('next')
+  } catch {
+    return null
+  }
+}
+
 function getRequestOrigin(request: Request) {
   const forwardedProto = request.headers.get('x-forwarded-proto')
   const forwardedHost =
@@ -121,7 +129,7 @@ export async function POST(request: Request) {
       email_data.email_action_type || 'signup'
 
     const nextPath = email_data.redirect_to
-      ? parsePathFromUrl(email_data.redirect_to)
+      ? (getRedirectNext(email_data.redirect_to) ?? parsePathFromUrl(email_data.redirect_to))
       : `/${locale}/dashboard`
 
     const confirmationUrl =

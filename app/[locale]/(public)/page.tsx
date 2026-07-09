@@ -1,10 +1,11 @@
 import { Navbar } from "./_components/navbar";
 import { Hero } from "./_components/hero";
+import { TrustStrip } from "./_components/trust-strip";
 import { Allies } from "./_components/allies";
 import { ValueCards } from "./_components/value-cards";
-import { CompanyBand } from "./_components/company-band";
+import { HowItWorks } from "./_components/how-it-works";
+import { ChapterTeaser } from "./_components/chapter-teaser";
 import { FinalCTA } from "./_components/final-cta";
-
 import { Footer } from "./_components/footer";
 
 export const metadata = {
@@ -12,22 +13,18 @@ export const metadata = {
   description: 'Connect with LEAD events, student talent, and partner company opportunities.',
 }
 
-type MarketingHomePageProps = {
-  params: Promise<{ locale: string }>;
-};
-
-export default async function MarketingHomePage({ params }: MarketingHomePageProps) {
-  const { locale } = await params;
-
+export default async function MarketingHomePage() {
   return (
     <div className="min-h-screen flex flex-col text-foreground antialiased relative overflow-hidden">
       <div className="relative z-10">
         <Navbar />
         <main className="flex-1">
-          <Hero locale={locale} />
+          <Hero />
+          <TrustStrip />
           <Allies />
           <ValueCards />
-          <CompanyBand />
+          <HowItWorks />
+          <ChapterTeaser />
           <FinalCTA />
         </main>
         <Footer />

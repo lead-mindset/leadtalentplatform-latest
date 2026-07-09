@@ -489,25 +489,33 @@ export async function resolveRecruiterAccess(
   supabase: SupabaseClient<Database>,
   userId: string
 ): Promise<RecruiterAccessResolution> {
-  const { data: access, error } = await supabase
+  const { data: accessRows, error } = await supabase
     .from('recruiter_access')
     .select(`
       ${RECRUITER_ACCESS_SELECT},
       company!inner (id, name, created_at, created_by_id)
     `)
     .eq('accepted_by_user_id', userId)
-    .maybeSingle<ActiveRecruiterAccessRaw>()
+    .is('revoked_at', null)
+    .order('accepted_at', { ascending: false })
+    .returns<ActiveRecruiterAccessRaw[]>()
 
   if (error) {
     return { allowed: false, reason: 'error' }
   }
 
-  if (!access) {
-    return { allowed: false, reason: 'missing' }
-  }
+  const access = accessRows?.[0] ?? null
 
-  if (access.revoked_at) {
-    return { allowed: false, reason: 'revoked' }
+  if (!access) {
+    const { data: revokedRow } = await supabase
+      .from('recruiter_access')
+      .select('id')
+      .eq('accepted_by_user_id', userId)
+      .not('revoked_at', 'is', null)
+      .limit(1)
+      .maybeSingle()
+
+    return { allowed: false, reason: revokedRow ? 'revoked' : 'missing' }
   }
 
   if (!access.is_active) {

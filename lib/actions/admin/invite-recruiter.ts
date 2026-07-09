@@ -48,11 +48,11 @@ export async function createRecruiterInvite(formData: {
     formData.companyId
   )
 
-  if (existingInvite) {
-    if (existingInvite.accepted_at)
+  if (existingInvite && !existingInvite.revoked_at) {
+    if (existingInvite.accepted_at) {
       return { success: false, error: 'Company representative already has access' }
-    if (!existingInvite.revoked_at)
-      return { success: false, error: 'Pending invite already exists' }
+    }
+    return { success: false, error: 'Pending invite already exists' }
   }
 
   const result = await AdminService.createRecruiterInvite(supabase, user.id, {
