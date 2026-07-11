@@ -129,6 +129,24 @@ export const ChapterMembershipService = {
 
     const now = new Date().toISOString()
 
+    if (existingMembership?.status === 'inactive') {
+      const { error } = await supabase
+        .from('chapter_membership')
+        .update({
+          status: 'pending',
+          position: params.position ?? 'member',
+          approved_by_id: null,
+          updated_at: now,
+        })
+        .match({ user_id: params.userId, chapter_id: params.chapterId })
+
+      if (error) {
+        return { success: false, error: friendlyMembershipError(error) }
+      }
+
+      return { success: true }
+    }
+
     if (existingMembership?.status === 'rejected') {
       const { error } = await supabase
         .from('chapter_membership')
