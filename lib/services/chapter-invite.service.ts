@@ -646,6 +646,29 @@ export const ChapterInviteService = {
     return { success: true, invites: (data ?? []).map((row) => toInvite(row as ChapterInviteRow)) }
   },
 
+  async findPendingInviteForEmail(
+    supabase: SupabaseClient<Database>,
+    email: string
+  ): Promise<ChapterInvite | null> {
+    const normalizedEmail = normalizeChapterInviteEmail(email)
+    const { data, error } = await supabase
+      .from('chapter_invite')
+      .select('*')
+      .eq('normalized_email', normalizedEmail)
+      .eq('status', 'pending')
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (error) {
+      logger.error({ context: 'chapter-invite/find-pending-email', error }, 'Failed to find pending invite')
+      return null
+    }
+
+    return data ? toInvite(data as ChapterInviteRow) : null
+  },
+
   async validateToken(
     supabase: SupabaseClient<Database>,
     token: string,
