@@ -1,6 +1,7 @@
 import React, { useState, Children, useRef, useLayoutEffect, HTMLAttributes, ReactNode } from 'react';
 import { motion, AnimatePresence, Variants } from 'motion/react';
 import { useFormContext } from 'react-hook-form';
+import { X } from 'lucide-react';
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -570,12 +571,14 @@ interface FormInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement
   name: string;
   error?: string;
   validation?: object;
+  required?: boolean;
 }
 
 export function FormInput({
   name,
   label,
   validation,
+  required,
   ...props
 }: FormInputProps) {
   const {
@@ -587,7 +590,10 @@ export function FormInput({
 
   return (
     <div className="space-y-2">
-      <Label htmlFor={name}>{label}</Label>
+      <Label htmlFor={name}>
+        {label}
+        {required && <span className="text-destructive ml-0.5">*</span>}
+      </Label>
 
       <Input
         id={name}
@@ -598,7 +604,7 @@ export function FormInput({
 
       {error && (
         <div className="flex items-center gap-1 text-sm text-destructive">
-          <Icons.X className="h-3 w-3" />
+          <X className="h-3 w-3" />
           {error}
         </div>
       )}
