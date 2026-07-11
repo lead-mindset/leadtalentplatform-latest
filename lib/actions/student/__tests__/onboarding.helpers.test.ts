@@ -6,8 +6,10 @@ import {
   saveBasicOnboarding,
 } from '@/lib/actions/student/onboarding.helpers'
 import { PersonProfileService } from '@/lib/services/person-profile.service'
+import { StudentService } from '@/lib/services/student.service'
 import { NewsletterSubscriptionService } from '@/lib/services/newsletter-subscription.service'
 import { ChapterMembershipService } from '@/lib/services/chapter-membership.service'
+import { ChapterInviteService } from '@/lib/services/chapter-invite.service'
 import { ChapterPreapprovalService } from '@/lib/services/chapter-preapproval.service'
 
 vi.mock('@/lib/services/person-profile.service', () => ({
@@ -16,10 +18,28 @@ vi.mock('@/lib/services/person-profile.service', () => ({
   },
 }))
 
+vi.mock('@/lib/services/student.service', () => ({
+  StudentService: {
+    saveResume: vi.fn(),
+  },
+}))
+
+vi.mock('@/lib/services/student.service', () => ({
+  StudentService: {
+    saveResume: vi.fn(),
+  },
+}))
+
 vi.mock('@/lib/services/newsletter-subscription.service', () => ({
   NewsletterSubscriptionService: {
     subscribeGlobal: vi.fn(),
     subscribeToChapters: vi.fn(),
+  },
+}))
+
+vi.mock('@/lib/services/chapter-invite.service', () => ({
+  ChapterInviteService: {
+    findPendingInviteForEmail: vi.fn(),
   },
 }))
 
@@ -60,9 +80,12 @@ function validFormData() {
 describe('basic onboarding helpers', () => {
   beforeEach(() => {
     vi.mocked(PersonProfileService.upsertBasicProfile).mockReset()
+    vi.mocked(StudentService.saveResume).mockReset()
     vi.mocked(NewsletterSubscriptionService.subscribeGlobal).mockReset()
     vi.mocked(NewsletterSubscriptionService.subscribeToChapters).mockReset()
     vi.mocked(ChapterMembershipService.applyToChapter).mockReset()
+    vi.mocked(ChapterInviteService.findPendingInviteForEmail).mockReset()
+    vi.mocked(ChapterInviteService.findPendingInviteForEmail).mockResolvedValue(null)
     vi.mocked(ChapterPreapprovalService.activatePreapprovalForUser).mockReset()
     vi.mocked(ChapterPreapprovalService.activatePreapprovalForUser).mockResolvedValue({
       success: true,
@@ -82,7 +105,7 @@ describe('basic onboarding helpers', () => {
       career: 'Product Design',
       chapterIntent: 'events_only',
       selectedChapterId: '',
-      chapterNewsletterIds: ['leaduni', 'leadutec'],
+      chapterNewsletterIds: [],
       consentRecruiterVisibility: true,
       emailNotificationsEnabled: true,
     })
@@ -205,14 +228,7 @@ describe('basic onboarding helpers', () => {
       {},
       { userId: 'user-123', source: 'onboarding' }
     )
-    expect(NewsletterSubscriptionService.subscribeToChapters).toHaveBeenCalledWith(
-      {},
-      {
-        userId: 'user-123',
-        chapterIds: ['leaduni', 'leadutec'],
-        source: 'onboarding',
-      }
-    )
+    expect(NewsletterSubscriptionService.subscribeToChapters).not.toHaveBeenCalled()
     expect(ChapterMembershipService.applyToChapter).not.toHaveBeenCalled()
   })
 
@@ -364,5 +380,30 @@ describe('basic onboarding helpers', () => {
     expect(ChapterMembershipService.applyToChapter).not.toHaveBeenCalled()
     expect(NewsletterSubscriptionService.subscribeGlobal).not.toHaveBeenCalled()
     expect(NewsletterSubscriptionService.subscribeToChapters).not.toHaveBeenCalled()
+  })
+
+  it('saves resume when resumePdf file is provided', async () => {
+    vi.mocked(PersonProfileService.upsertBasicProfile).mockResolvedValue({ success: true })
+    vi.mocked(StudentService.saveResume).mockResolvedValue({ success: true })
+    vi.mocked(NewsletterSubscriptionService.subscribeGlobal).mockResolvedValue({ success: true })
+
+    const parsed = parseBasicOnboardingFormData(validFormData(), t)
+    if (!parsed.success) throw new Error('Expected valid onboarding data')
+
+    const mockFile = new File([''], 'resume.pdf', { type: 'application/pdf' })
+
+    const result = await saveBasicOnboarding({} as SupabaseClient<Database>, {
+      userId: 'user-123',
+      email: 'participant@test.com',
+      data: parsed.data,
+      resumePdf: mockFile,
+    })
+
+    expect(result).toEqual({ success: true })
+    expect(StudentService.saveResume).toHaveBeenCalledWith(
+      {},
+      'user-123',
+      mockFile,
+    )
   })
 })

@@ -89,13 +89,14 @@ export function createBaseProfileSchema(t: Translator) {
 
 export function createBasicPersonProfileSchema(t: Translator) {
   return createBaseProfileSchema(t).extend({
+    university: z.string().trim().min(1, t('validation.universityRequired')),
     portfolio_url: optionalUrl(t).optional(),
   })
 }
 
 export function createBasicOnboardingSchema(t: Translator) {
   return createBaseProfileSchema(t).extend({
-    university: z.string().trim().optional().default(''),
+    university: z.string().trim().min(1, t('validation.universityRequired')),
     portfolio_url: optionalUrl(t),
     chapterIntent: z.enum(CHAPTER_INTENT_VALUES, {
       message: t('validation.selectChapterIntent'),

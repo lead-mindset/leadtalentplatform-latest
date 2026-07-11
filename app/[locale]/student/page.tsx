@@ -697,15 +697,15 @@ async function StudentDashboardDetails({
       {pathwayFlags.enable_recommendation_card ? (
         <PathwayGuidanceCard guidance={pathwayGuidance} />
       ) : null}
-      {dashboard.status === 'participant' ? (
-        <ChapterActivationInterestCard latestInterest={latestActivationInterest} />
-      ) : null}
       <ParticipantApplicationCard
         dashboard={dashboard}
         chapterOptions={chapterOptions}
         chapterOptionsLoadState={chapterOptionsLoadState}
         chapterOptionsError={chapterOptionsError}
       />
+      {dashboard.status === 'participant' ? (
+        <ChapterActivationInterestCard latestInterest={latestActivationInterest} />
+      ) : null}
     </div>
   )
 }

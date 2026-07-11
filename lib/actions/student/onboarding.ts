@@ -54,11 +54,15 @@ export async function submitOnboarding(formData: FormData) {
       return { error: 'Validation failed', details: parsed.error.flatten() }
     }
 
+    const resumeFile = formData.get('resume_pdf')
+    const resumePdf = resumeFile instanceof File ? resumeFile : undefined
+
     const serviceSupabase = createServiceClient()
     const result = await saveBasicOnboarding(supabase, {
       userId: user.id,
       email: user.email,
       data: parsed.data,
+      resumePdf,
       preapprovalSupabase: serviceSupabase,
     })
 

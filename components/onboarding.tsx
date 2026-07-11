@@ -1,22 +1,22 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Controller, FormProvider, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Building2, CalendarCheck, CheckCircle2, Mail, ShieldCheck, UserRound, UsersRound } from 'lucide-react'
+import { Building2, CalendarCheck, CheckCircle2, Mail, ShieldCheck, Upload, UserRound, UsersRound, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import z from 'zod'
 import { submitOnboarding } from '@/lib/actions/student/onboarding'
 import { createBasicOnboardingSchema } from '@/lib/memberschema'
 import {
+  useTranslatedCareers,
   useTranslatedChapters,
   useTranslatedGender,
   useTranslatedSkills,
 } from '@/lib/use-translated-options'
 import CareerCommandSelect from './ui/career-combobox'
 import { SkillsCombobox } from './ui/skills-combobox'
-import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -33,12 +33,18 @@ import { FormInput, FormStepper } from './ui/stepper'
 
 type BasicOnboardingValues = z.input<ReturnType<typeof createBasicOnboardingSchema>>
 
+type PendingInviteInfo = {
+  chapterId: string
+  displayTitle: string
+}
+
 type OnboardingProps = {
   initialValues?: Partial<BasicOnboardingValues>
   nextPath?: string | null
+  pendingInvite?: PendingInviteInfo | null
 }
 
-export default function Onboarding({ initialValues, nextPath }: OnboardingProps) {
+export default function Onboarding({ initialValues, nextPath, pendingInvite }: OnboardingProps) {
   const t = useTranslations('onboarding')
   const tCommon = useTranslations('common')
   const tValidation = useTranslations()
@@ -46,10 +52,16 @@ export default function Onboarding({ initialValues, nextPath }: OnboardingProps)
   const translatedSkills = useTranslatedSkills()
   const translatedChapters = useTranslatedChapters()
   const translatedGender = useTranslatedGender()
+  const translatedCareers = useTranslatedCareers()
 
+  const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const [lastAutoNewsletterChapterId, setLastAutoNewsletterChapterId] = useState<string | null>(null)
+  const [resumeFile, setResumeFile] = useState<File | null>(null)
+  const resumeUploading = false
+  const [resumeError, setResumeError] = useState<string | null>(null)
+
+  const hasPendingInvite = !!pendingInvite
 
   const basicOnboardingSchema = createBasicOnboardingSchema(tValidation)
 
@@ -66,9 +78,8 @@ export default function Onboarding({ initialValues, nextPath }: OnboardingProps)
       gender: initialValues?.gender,
       linkedin_url: initialValues?.linkedin_url ?? '',
       portfolio_url: initialValues?.portfolio_url ?? '',
-      chapterIntent: initialValues?.chapterIntent,
-      selectedChapterId: initialValues?.selectedChapterId ?? '',
-      chapterNewsletterIds: initialValues?.chapterNewsletterIds ?? [],
+      chapterIntent: hasPendingInvite ? 'events_only' : (initialValues?.chapterIntent),
+      selectedChapterId: hasPendingInvite ? '' : (initialValues?.selectedChapterId ?? ''),
       consentRecruiterVisibility: initialValues?.consentRecruiterVisibility ?? false,
       emailNotificationsEnabled: initialValues?.emailNotificationsEnabled ?? true,
       termsAccepted: initialValues?.termsAccepted,
@@ -97,37 +108,12 @@ export default function Onboarding({ initialValues, nextPath }: OnboardingProps)
           : null
 
   const stepFields: Record<number, (keyof BasicOnboardingValues)[]> = {
-    1: ['full_name', 'phone', 'gender'],
-    2: ['university', 'career', 'graduation_year', 'skills', 'linkedin_url', 'portfolio_url'],
+    1: ['full_name', 'phone', 'gender', 'linkedin_url'],
+    2: ['university', 'career', 'graduation_year', 'skills', 'portfolio_url'],
     3: ['chapterIntent', 'selectedChapterId'],
-    4: ['consentRecruiterVisibility', 'emailNotificationsEnabled', 'chapterNewsletterIds'],
+    4: ['consentRecruiterVisibility', 'emailNotificationsEnabled'],
     5: ['termsAccepted'],
   }
-
-  useEffect(() => {
-    if (!needsChapterSelection || !selectedChapterId) {
-      setLastAutoNewsletterChapterId(null)
-      return
-    }
-
-    if (lastAutoNewsletterChapterId === selectedChapterId) return
-
-    const selectedChapterIds = getValues('chapterNewsletterIds') ?? []
-    if (!selectedChapterIds.includes(selectedChapterId)) {
-      setValue('chapterNewsletterIds', [...selectedChapterIds, selectedChapterId], {
-        shouldDirty: true,
-        shouldValidate: true,
-      })
-    }
-
-    setLastAutoNewsletterChapterId(selectedChapterId)
-  }, [
-    getValues,
-    lastAutoNewsletterChapterId,
-    needsChapterSelection,
-    selectedChapterId,
-    setValue,
-  ])
 
   const validateCurrentStep = async (step: number) => trigger(stepFields[step])
 
@@ -149,6 +135,7 @@ export default function Onboarding({ initialValues, nextPath }: OnboardingProps)
       }
     })
     if (nextPath) formData.append('next', nextPath)
+    if (resumeFile) formData.append('resume_pdf', resumeFile)
 
     try {
       const result = await submitOnboarding(formData)
@@ -167,7 +154,7 @@ export default function Onboarding({ initialValues, nextPath }: OnboardingProps)
   const FieldError = ({ message }: { message?: string }) =>
     message ? (
       <div className="mt-1 flex items-center gap-1 text-sm text-destructive">
-        <Icons.X className="h-3 w-3 shrink-0" />
+        <X className="h-3 w-3 shrink-0" />
         {message}
       </div>
     ) : null
@@ -240,6 +227,13 @@ export default function Onboarding({ initialValues, nextPath }: OnboardingProps)
     </button>
   )
 
+  const ReviewRow = ({ label, value }: { label: string; value: unknown }) => (
+    <div className="flex justify-between gap-4 py-2 first:pt-0 last:pb-0">
+      <span className="shrink-0 text-muted-foreground">{label}</span>
+      <span className="max-w-[60%] truncate text-right font-medium text-foreground">{String(value ?? '') || '—'}</span>
+    </div>
+  )
+
   const ContextItem = ({
     icon,
     text,
@@ -257,10 +251,9 @@ export default function Onboarding({ initialValues, nextPath }: OnboardingProps)
 
   return (
     <FormProvider {...methods}>
-      <div className="mx-auto grid min-h-screen w-full max-w-6xl gap-6 px-4 py-5 sm:px-6 md:grid-cols-[minmax(0,1fr)_20rem] md:gap-8 md:py-12 lg:px-8">
+      <div className="mx-auto grid min-h-screen w-full max-w-6xl gap-6 px-4 py-5 sm:px-6 md:grid-cols-[minmax(0,1fr)_20rem] md:gap-8 md:py-16 lg:px-8">
         <section className="space-y-5">
           <div className="space-y-3">
-            <Badge variant="outline">{t('profileOnlyBadge')}</Badge>
             <div className="space-y-2">
               <h1 className="max-w-3xl text-2xl font-semibold tracking-tight text-foreground sm:text-4xl">
                 {t('pageTitle')}
@@ -271,11 +264,12 @@ export default function Onboarding({ initialValues, nextPath }: OnboardingProps)
             </div>
           </div>
 
-          <Card className="rounded-lg">
+          <Card className="rounded-lg p-2 sm:p-4 md:p-6">
             <CardContent className="p-0">
               <FormStepper
                 validateStep={validateCurrentStep}
                 onFinalStepCompleted={handleComplete}
+                onStepChange={(step) => setCurrentStep(step)}
                 className="min-h-0 p-0 sm:aspect-auto md:aspect-auto"
                 stepCircleContainerClassName="max-w-none p-0 shadow-none"
                 stepContainerClassName="px-4 py-4 sm:px-6 sm:py-5"
@@ -296,6 +290,7 @@ export default function Onboarding({ initialValues, nextPath }: OnboardingProps)
                         name="full_name"
                         placeholder={t('fullNamePlaceholder')}
                         error={errors.full_name?.message}
+                        required
                       />
                     </div>
 
@@ -304,6 +299,7 @@ export default function Onboarding({ initialValues, nextPath }: OnboardingProps)
                       name="phone"
                       placeholder={t('phonePlaceholder')}
                       error={errors.phone?.message}
+                      required
                     />
 
                     <Controller
@@ -313,6 +309,7 @@ export default function Onboarding({ initialValues, nextPath }: OnboardingProps)
                         <div className="space-y-2">
                           <label className="text-sm font-medium text-foreground">
                             {t('genderLabel')}
+                            <span className="text-destructive ml-0.5">*</span>
                           </label>
                           <Select value={field.value ?? ''} onValueChange={field.onChange}>
                             <SelectTrigger className="w-full">
@@ -330,6 +327,16 @@ export default function Onboarding({ initialValues, nextPath }: OnboardingProps)
                         </div>
                       )}
                     />
+
+                    <div className="sm:col-span-2">
+                      <FormInput
+                        label={t('linkedinProfile')}
+                        name="linkedin_url"
+                        type="url"
+                        error={errors.linkedin_url?.message}
+                        required
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -363,13 +370,7 @@ export default function Onboarding({ initialValues, nextPath }: OnboardingProps)
                         type="number"
                         validation={{ valueAsNumber: true }}
                         error={errors.graduation_year?.message}
-                      />
-
-                      <FormInput
-                        label={t('linkedinProfile')}
-                        name="linkedin_url"
-                        type="url"
-                        error={errors.linkedin_url?.message}
+                        required
                       />
                     </div>
 
@@ -382,6 +383,7 @@ export default function Onboarding({ initialValues, nextPath }: OnboardingProps)
                           onChange={field.onChange}
                           options={translatedSkills}
                           label={t('skillsExpertise')}
+                          required
                           countLabel={t('selected')}
                           placeholder={t('selectSkills')}
                           searchPlaceholder={t('searchSkills')}
@@ -393,10 +395,9 @@ export default function Onboarding({ initialValues, nextPath }: OnboardingProps)
                     />
 
                     <FormInput
-                      label={t('portfolioUrl')}
+                      label={t('portfolioUrl') + ' (opcional)'}
                       name="portfolio_url"
                       type="url"
-                      placeholder={t('portfolioPlaceholder')}
                       error={errors.portfolio_url?.message}
                     />
                   </div>
@@ -405,58 +406,71 @@ export default function Onboarding({ initialValues, nextPath }: OnboardingProps)
                 <div className="space-y-6">
                   <StepHeader title={t('step3Title')} subtitle={t('step3Subtitle')} />
 
-                  <Controller
-                    control={control}
-                    name="chapterIntent"
-                    render={({ field }) => (
-                      <div className="space-y-4">
-                        <div className="grid gap-3 md:grid-cols-3">
-                          <ChapterIntentCard
-                            selected={field.value === 'already_member'}
-                            onSelect={() => field.onChange('already_member')}
-                            icon={<UsersRound className="h-4 w-4" />}
-                            title={t('chapterIntentAlreadyMemberTitle')}
-                            description={t('chapterIntentAlreadyMemberDesc')}
-                          />
-                          <ChapterIntentCard
-                            selected={field.value === 'apply_to_chapter'}
-                            onSelect={() => field.onChange('apply_to_chapter')}
-                            icon={<Building2 className="h-4 w-4" />}
-                            title={t('chapterIntentApplyTitle')}
-                            description={t('chapterIntentApplyDesc')}
-                          />
-                          <ChapterIntentCard
-                            selected={field.value === 'events_only'}
-                            onSelect={() => {
-                              field.onChange('events_only')
-                              setValue('selectedChapterId', '', {
-                                shouldDirty: true,
-                                shouldValidate: true,
-                              })
-                            }}
-                            icon={<CalendarCheck className="h-4 w-4" />}
-                            title={t('chapterIntentEventsOnlyTitle')}
-                            description={t('chapterIntentEventsOnlyDesc')}
-                          />
-                        </div>
-                        <FieldError message={errors.chapterIntent?.message} />
-                        {chapterIntentHelper ? (
-                          <div className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm leading-5 text-muted-foreground">
-                            {chapterIntentHelper}
+                  {hasPendingInvite ? (
+                    <div className="rounded-lg border border-primary/40 bg-primary/5 p-4 text-sm leading-6">
+                      <p className="font-medium text-foreground">
+                        {t('pendingInviteTitle')}
+                      </p>
+                      <p className="mt-1 text-muted-foreground">
+                        {t('pendingInviteDescription', {
+                          role: pendingInvite!.displayTitle,
+                        })}
+                      </p>
+                    </div>
+                  ) : (
+                    <Controller
+                      control={control}
+                      name="chapterIntent"
+                      render={({ field }) => (
+                        <div className="space-y-4">
+                          <div className="grid gap-3 md:grid-cols-3">
+                            <ChapterIntentCard
+                              selected={field.value === 'already_member'}
+                              onSelect={() => field.onChange('already_member')}
+                              icon={<UsersRound className="h-4 w-4" />}
+                              title={t('chapterIntentAlreadyMemberTitle')}
+                              description={t('chapterIntentAlreadyMemberDesc')}
+                            />
+                            <ChapterIntentCard
+                              selected={field.value === 'apply_to_chapter'}
+                              onSelect={() => field.onChange('apply_to_chapter')}
+                              icon={<Building2 className="h-4 w-4" />}
+                              title={t('chapterIntentApplyTitle')}
+                              description={t('chapterIntentApplyDesc')}
+                            />
+                            <ChapterIntentCard
+                              selected={field.value === 'events_only'}
+                              onSelect={() => {
+                                field.onChange('events_only')
+                                setValue('selectedChapterId', '', {
+                                  shouldDirty: true,
+                                  shouldValidate: true,
+                                })
+                              }}
+                              icon={<CalendarCheck className="h-4 w-4" />}
+                              title={t('chapterIntentEventsOnlyTitle')}
+                              description={t('chapterIntentEventsOnlyDesc')}
+                            />
                           </div>
-                        ) : null}
-                      </div>
-                    )}
-                  />
+                          <FieldError message={errors.chapterIntent?.message} />
+                          {chapterIntentHelper ? (
+                            <div className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm leading-5 text-muted-foreground">
+                              {chapterIntentHelper}
+                            </div>
+                          ) : null}
+                        </div>
+                      )}
+                    />
+                  )}
 
-                  {needsChapterSelection ? (
+                  {!hasPendingInvite && needsChapterSelection ? (
                     <Controller
                       control={control}
                       name="selectedChapterId"
                       render={({ field }) => (
                         <div className="space-y-2 rounded-lg border border-border bg-card p-4">
                           <label className="text-sm font-medium text-foreground">
-                            {t('chapterSelectionLabel')}
+                            {t('chapterSelectionLabel')} (opcional)
                           </label>
                           <Select value={field.value ?? ''} onValueChange={field.onChange}>
                             <SelectTrigger className="w-full">
@@ -478,24 +492,72 @@ export default function Onboarding({ initialValues, nextPath }: OnboardingProps)
                       )}
                     />
                   ) : null}
+
+                  <div className="space-y-4">
+                    <p className="text-sm font-medium text-foreground">{t('resumePdf')}</p>
+                    <p className="text-sm leading-5 text-muted-foreground">{t('resumeEncouraged')}</p>
+                    <div className="flex items-center gap-3">
+                      <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/60">
+                        <Upload className="h-4 w-4" />
+                        <span>{resumeFile ? t('readyToUpload') : t('clickToUpload')}</span>
+                        <input
+                          type="file"
+                          accept="application/pdf"
+                          className="sr-only"
+                          disabled={resumeUploading}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0]
+                            if (!file) return
+                            if (file.type !== 'application/pdf') {
+                              setResumeError(tValidation('onlyPdfAllowed'))
+                              return
+                            }
+                            if (file.size > 10 * 1024 * 1024) {
+                              setResumeError(tValidation('pdfMaxSize'))
+                              return
+                            }
+                            setResumeError(null)
+                            setResumeFile(file)
+                          }}
+                        />
+                      </label>
+                      {resumeUploading ? (
+                        <span className="text-sm text-muted-foreground">{t('uploading')}</span>
+                      ) : resumeFile ? (
+                        <span className="text-sm text-muted-foreground">{resumeFile.name}</span>
+                      ) : null}
+                    </div>
+                    <FieldError message={resumeError} />
+                  </div>
                 </div>
 
                 <div className="space-y-6">
                   <StepHeader title={t('step4Title')} subtitle={t('step4Subtitle')} />
 
                   <div className="space-y-3">
-                    <Controller
-                      control={control}
-                      name="consentRecruiterVisibility"
-                      render={({ field }) => (
-                        <PrefCard
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          title={t('makeProfileVisible')}
-                          description={t('profileVisibilityDesc')}
+                    {needsChapterSelection && (
+                      <>
+                        <Controller
+                          control={control}
+                          name="consentRecruiterVisibility"
+                          render={({ field }) => (
+                            <PrefCard
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              title={t('makeProfileVisible')}
+                              description={
+                                <>
+                                  {t('profileVisibilityDesc')}
+                                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                                    {t('profileVisibilityCaveat')}
+                                  </span>
+                                </>
+                              }
+                            />
+                          )}
                         />
-                      )}
-                    />
+                      </>
+                    )}
 
                     <Controller
                       control={control}
@@ -509,53 +571,77 @@ export default function Onboarding({ initialValues, nextPath }: OnboardingProps)
                         />
                       )}
                     />
-
-                    <Controller
-                      control={control}
-                      name="chapterNewsletterIds"
-                      render={({ field }) => (
-                        <div className="space-y-4 rounded-lg border border-border bg-card p-4">
-                          <div className="space-y-1">
-                            <p className="text-sm font-medium text-foreground">
-                              {t('chapterNewsletterInterests')}
-                            </p>
-                            <p className="text-sm leading-5 text-muted-foreground">
-                              {t('chapterNewsletterInterestsDesc')}
-                            </p>
-                          </div>
-                          <div className="grid gap-2 sm:grid-cols-2">
-                            {translatedChapters.map((option) => {
-                              const selectedChapterIds = field.value ?? []
-                              const selected = selectedChapterIds.includes(option.value)
-                              return (
-                                <label
-                                  key={option.value}
-                                  className="flex min-h-10 cursor-pointer items-center gap-2 rounded-lg border border-transparent px-2 py-1.5 text-sm hover:border-border hover:bg-muted/60"
-                                >
-                                  <Checkbox
-                                    checked={selected}
-                                    onCheckedChange={(value) => {
-                                      field.onChange(
-                                        value
-                                          ? [...selectedChapterIds, option.value]
-                                          : selectedChapterIds.filter((id) => id !== option.value)
-                                      )
-                                    }}
-                                  />
-                                  <span>{option.label}</span>
-                                </label>
-                              )
-                            })}
-                          </div>
-                          <FieldError message={errors.chapterNewsletterIds?.message} />
-                        </div>
-                      )}
-                    />
                   </div>
                 </div>
 
                 <div className="space-y-6">
                   <StepHeader title={t('step5Title')} subtitle={t('step5Subtitle')} />
+
+                  <div className="space-y-3 rounded-lg border border-border bg-card p-4">
+                    <p className="text-sm font-semibold text-foreground">
+                      {t('reviewSummaryTitle')}
+                    </p>
+                    <div className="divide-y divide-border text-sm">
+                      <ReviewRow label={t('fullName')} value={getValues('full_name')} />
+                      <ReviewRow label={t('phoneNumber')} value={getValues('phone')} />
+                      <ReviewRow
+                        label={t('genderLabel')}
+                        value={translatedGender.find(g => g.value === getValues('gender'))?.label ?? ''}
+                      />
+                      <ReviewRow label={t('linkedinProfile')} value={getValues('linkedin_url')} />
+                      {getValues('university') ? (
+                        <ReviewRow label={t('university')} value={getValues('university')!} />
+                      ) : null}
+                      {getValues('career') ? (
+                        <ReviewRow label={t('majorCareerField')} value={translatedCareers.find(c => c.value === getValues('career'))?.label ?? getValues('career')!} />
+                      ) : null}
+                      {getValues('graduation_year') > 0 ? (
+                        <ReviewRow label={t('expectedGradYear')} value={String(getValues('graduation_year'))} />
+                      ) : null}
+                      <ReviewRow
+                        label={t('skillsExpertise')}
+                        value={
+                          getValues('skills')?.length
+                            ? getValues('skills')!
+                                .map(s => translatedSkills.find(sk => sk.value === s)?.label ?? s)
+                                .join(', ')
+                            : ''
+                        }
+                      />
+                      <ReviewRow
+                        label={t('leadChapter')}
+                        value={
+                          hasPendingInvite
+                            ? pendingInvite!.displayTitle
+                            : (() => {
+                                const intent = getValues('chapterIntent')
+                                let label: string
+                                if (intent === 'already_member') label = t('chapterIntentAlreadyMemberTitle')
+                                else if (intent === 'apply_to_chapter') label = t('chapterIntentApplyTitle')
+                                else label = t('chapterIntentEventsOnlyTitle')
+                                const chapter = needsChapterSelection && selectedChapterId
+                                  ? translatedChapters.find(c => c.value === selectedChapterId)?.label
+                                  : null
+                                return chapter ? `${label} — ${chapter}` : label
+                              })()
+                        }
+                      />
+                      <ReviewRow label={t('resumePdf')} value={resumeFile?.name ?? ''} />
+                      <ReviewRow
+                        label={t('emailNotifications')}
+                        value={getValues('emailNotificationsEnabled') ? t('yes') : t('no')}
+                      />
+                      {needsChapterSelection ? (
+                        <ReviewRow
+                          label={t('makeProfileVisible')}
+                          value={getValues('consentRecruiterVisibility') ? t('yes') : t('no')}
+                        />
+                      ) : null}
+                    </div>
+                    <p className="pt-2 text-sm leading-5 text-muted-foreground">
+                      {t('reviewMotivation')}
+                    </p>
+                  </div>
 
                   <Controller
                     control={control}
@@ -633,6 +719,12 @@ export default function Onboarding({ initialValues, nextPath }: OnboardingProps)
                 <ContextItem icon={<ShieldCheck className="h-4 w-4" />} text={t('sideVisibility')} />
                 <ContextItem icon={<CheckCircle2 className="h-4 w-4" />} text={t('sideMembership')} />
               </ul>
+              <div className="mt-4 flex items-center gap-2 border-t pt-4 text-sm text-muted-foreground">
+                <Mail className="h-4 w-4 shrink-0" />
+                {t.rich('sideContact', {
+                  contact: (chunks) => <a href="mailto:abriones@leadmindset.org" className="text-primary underline underline-offset-2 transition-opacity hover:opacity-80">{chunks}</a>
+                })}
+              </div>
             </CardContent>
           </Card>
         </aside>
