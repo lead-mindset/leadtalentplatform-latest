@@ -76,6 +76,7 @@ const UI_DIRECT_DB_ALLOWLIST = new Map([
   ['components/auth/update-password.tsx', 'Existing auth client flow.'],
   ['components/global/navigation/NavHeader.tsx', 'Existing server navigation lookup.'],
   ['app/[locale]/recruiter/access/invite-email-signin-button.tsx', 'Recruiter invite auth client flow — uses supabase.auth.signInWithOtp().'],
+  ['app/[locale]/(public)/chapter/invites/accept/invite-google-button.tsx', 'New invite Google OAuth button — uses supabase.auth.signInWithOAuth() for invite acceptance.'],
 ])
 
 async function collectSourceFiles(rootRelativePath: string): Promise<SourceFile[]> {
