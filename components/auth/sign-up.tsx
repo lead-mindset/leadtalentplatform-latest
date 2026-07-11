@@ -34,7 +34,8 @@ export function SignUpForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
-  const [email, setEmail] = useState("");
+  const searchParams = useSearchParams();
+  const [email, setEmail] = useState(searchParams.get('email') ?? "");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -42,7 +43,6 @@ export function SignUpForm({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
   const t = useTranslations('auth');
   const locale = useLocale(); // This will get 'en' or 'es'
 
@@ -78,7 +78,7 @@ export function SignUpForm({
           data: {
             locale: locale,
           },
-          emailRedirectTo: `${window.location.origin}/${locale}/auth/callback${nextPath ? `?next=${encodeURIComponent(nextPath)}` : ''}`
+          emailRedirectTo: `${window.location.origin}/${locale}/auth/confirm${nextPath ? `?next=${encodeURIComponent(nextPath)}` : ''}`
         },
       });
       if (error) throw error;
