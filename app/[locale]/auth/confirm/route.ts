@@ -11,6 +11,7 @@ function getSafeNextPath(value: string | null, locale: string) {
   try {
     const decoded = decodeURIComponent(value);
     if (decoded.startsWith("//")) return null;
+    if (decoded.startsWith(`/${locale}/auth/`) || decoded === `/${locale}/auth`) return null;
     if (decoded === `/${locale}` || decoded.startsWith(`/${locale}/`)) {
       return decoded;
     }
