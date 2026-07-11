@@ -160,9 +160,47 @@ async function hasApprovedChapterMembership(
   return Boolean(data)
 }
 
+const EBOARD_ROLE_LEVELS = new Set<ChapterRoleLevel>([
+  'president',
+  'vice_president',
+  'chief_of_staff',
+  'director',
+  'coordinator',
+])
+
 export const ChapterPermissionService = {
   getTemplatePermissions(roleLevel: ChapterRoleLevel): ChapterPermissionKey[] {
     return uniquePermissionKeys(CHAPTER_ROLE_PERMISSION_TEMPLATES[roleLevel])
+  },
+
+  async getEboardRoleLevel(
+    supabase: SupabaseClient<Database>,
+    userId: string,
+    chapterId: string
+  ): Promise<ChapterRoleLevel | null> {
+    const role = await getUserRole(supabase, userId)
+    if (role === 'admin' || role === 'editor') return 'president'
+
+    const { data, error } = await supabase
+      .from('chapter_role_assignment')
+      .select('role_level')
+      .match({ user_id: userId, chapter_id: chapterId, status: 'active' })
+      .maybeSingle()
+
+    if (error) {
+      logger.error(
+        { context: 'chapter-permission/eboard-role', error, userId, chapterId },
+        'Failed to load eboard role assignment'
+      )
+      return null
+    }
+
+    if (!data) return null
+
+    const roleLevel = data.role_level as ChapterRoleLevel
+    if (!EBOARD_ROLE_LEVELS.has(roleLevel)) return null
+
+    return roleLevel
   },
 
   async hasChapterPermission(

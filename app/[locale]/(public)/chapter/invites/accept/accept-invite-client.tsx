@@ -3,7 +3,7 @@
 import { useTransition } from 'react'
 import { useRouter } from '@/i18n/routing'
 import { toast } from 'sonner'
-import { CheckCircle2, Loader2 } from 'lucide-react'
+import { Loader2, PartyPopper } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { acceptChapterInvite } from '@/lib/actions/chapter/invite-acceptance'
 
@@ -23,16 +23,20 @@ export function AcceptInviteClient({ token }: Props) {
         return
       }
 
-      toast.success(result.message ?? 'Listo, tu rol esta activo.')
+      toast.success('¡Rol activado! Bienvenido/a al equipo.')
       router.push('/chapter')
       router.refresh()
     })
   }
 
   return (
-    <Button onClick={acceptInvite} disabled={isPending} className="w-full sm:w-auto">
-      {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
-      {isPending ? 'Activando...' : 'Activar mi rol'}
+    <Button onClick={acceptInvite} disabled={isPending} size="lg" className="w-full sm:w-auto">
+      {isPending ? (
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+      ) : (
+        <PartyPopper className="mr-2 h-4 w-4" />
+      )}
+      {isPending ? 'Activando...' : '¡Aceptar y activar mi rol!'}
     </Button>
   )
 }
