@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronDown, Check } from 'lucide-react'
+import { ChevronDown, Check, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useTranslations } from 'next-intl'
 import { useTranslatedCareers } from '@/lib/use-translated-options'
@@ -67,6 +67,7 @@ export default function CareerCommandSelect({
     <div className="space-y-2">
       <label className="text-sm font-medium text-foreground">
         {t('majorCareerField')}
+        <span className="text-destructive ml-0.5">*</span>
       </label>
 
       <Popover open={open} onOpenChange={setOpen}>
@@ -76,7 +77,7 @@ export default function CareerCommandSelect({
             role="combobox"
             aria-expanded={open}
             aria-label={t('majorCareerField')}
-            className="w-full justify-between"
+            className="w-full justify-between h-9"
           >
             {displayValue || t('selectCareerField')}
             <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -142,7 +143,7 @@ export default function CareerCommandSelect({
 
       {error && (
         <p className="flex items-center gap-1 text-sm text-destructive">
-          <span className="h-3 w-3" />
+          <X className="h-3 w-3" />
           {error}
         </p>
       )}

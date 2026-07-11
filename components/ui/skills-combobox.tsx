@@ -35,6 +35,7 @@ interface SkillsComboboxProps {
   createLabel?: (input: string) => string
   noResultsLabel?: string
   error?: string
+  required?: boolean
 }
 
 export function SkillsCombobox({
@@ -48,6 +49,7 @@ export function SkillsCombobox({
   createLabel = (input) => `Create "${input}"`,
   noResultsLabel = 'No skills found.',
   error,
+  required,
 }: SkillsComboboxProps) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
@@ -89,7 +91,10 @@ export function SkillsCombobox({
     <div className="space-y-2">
       {label && (
         <div className="flex justify-between items-center">
-          <label className="text-sm font-medium text-foreground">{label}</label>
+          <label className="text-sm font-medium text-foreground">
+            {label}
+            {required && <span className="text-destructive ml-0.5">*</span>}
+          </label>
           {countLabel && (
             <span className="text-xs text-muted-foreground">
               {value.length} {countLabel}
@@ -104,7 +109,7 @@ export function SkillsCombobox({
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className="w-full justify-between font-normal"
+            className="w-full justify-between font-normal h-9"
           >
             {value.length > 0
               ? `${value.length} skill${value.length > 1 ? 's' : ''} selected`
