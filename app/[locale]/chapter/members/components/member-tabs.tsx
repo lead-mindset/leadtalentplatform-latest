@@ -11,6 +11,7 @@ const tabLabels: Record<MemberFilterStatus, string> = {
   pending: 'Pendientes',
   active: 'Aprobados',
   rejected: 'Rechazados',
+  inactive: 'Inactivos',
 }
 
 export function MembersTabs({
@@ -31,7 +32,7 @@ export function MembersTabs({
   return (
     <Tabs value={currentStatus} onValueChange={handleTabChange} className="w-full pb-3">
       <div className="w-full">
-        <TabsList className="grid !h-auto w-full grid-cols-1 gap-1 sm:grid-cols-3">
+        <TabsList className="grid !h-auto w-full grid-cols-1 gap-1 sm:grid-cols-[repeat(auto-fit,minmax(100px,1fr))]">
           {visibleStatuses.map((status) => (
             <TabsTrigger
               key={status}

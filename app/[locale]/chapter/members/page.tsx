@@ -16,7 +16,7 @@ import { EboardInviteManagement } from './components/eboard-invite-management'
 import { MembersList } from './components/members-list'
 import { MembersTabs, type MemberStatusCounts } from './components/member-tabs'
 
-export type MemberFilterStatus = 'pending' | 'active' | 'rejected'
+export type MemberFilterStatus = 'pending' | 'active' | 'rejected' | 'inactive'
 
 export function filterMembers(members: MemberWithProfile[], status: MemberFilterStatus): MemberWithProfile[] {
   switch (status) {
@@ -32,6 +32,10 @@ export function filterMembers(members: MemberWithProfile[], status: MemberFilter
       return members.filter(
         member => member.chapter_membership?.status === 'rejected'
       )
+    case 'inactive':
+      return members.filter(
+        member => member.chapter_membership?.status === 'inactive'
+      )
   }
 }
 
@@ -40,6 +44,7 @@ function getVisibleStatuses(permissions: ChapterMemberPermissionFlags): MemberFi
   if (permissions.canManageApplications || permissions.canViewApplicants) statuses.push('pending')
   if (permissions.canViewApproved) statuses.push('active')
   if (permissions.canViewRejected) statuses.push('rejected')
+  if (permissions.canViewInactive) statuses.push('inactive')
   return statuses
 }
 
@@ -101,6 +106,7 @@ export default async function ChapterMembersPage({
     pending: stats.pending,
     active: stats.approved,
     rejected: stats.rejected,
+    inactive: stats.inactive,
   }
   const visibleStatuses = getVisibleStatuses(permissions)
   const defaultStatus: MemberFilterStatus =
