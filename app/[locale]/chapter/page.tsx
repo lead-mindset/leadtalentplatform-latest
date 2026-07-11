@@ -1,18 +1,23 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import Link from 'next/link'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Suspense, cache } from 'react'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 import { Icons } from '@/components/ui/icons'
 import { requireChapterMember } from '@/lib/auth'
 import type { MemberWithProfile, RecentActivityMember } from '@/lib/types'
+import { getTranslations } from 'next-intl/server'
 import {
   getChapterOverviewRoster,
   getMemberStats,
 } from '@/lib/actions/chapter/get-data'
 import type { ChapterMemberPermissionFlags } from '@/lib/services/chapter.service'
 import { getChapterEvents } from '@/lib/actions/events/get-data'
-import MemberCard from './members/components/member-card'
+import { ChapterPermissionService } from '@/lib/services/chapter-permission.service'
+import { BoardGuideDialog } from '@/components/board-guide-dialog'
+import { BOARD_GUIDES } from '@/lib/board-guides'
+import { DashboardPendingCard } from './dashboard-pending-card'
 import { MainContainer } from '@/components/global/main-container'
+import { ChapterHeader } from './chapter-header'
 
 function StatCard({
   label,
@@ -80,12 +85,10 @@ function PendingInbox({
   members,
   total,
   permissions,
-  currentUserId,
 }: {
   members: MemberWithProfile[]
   total: number
   permissions: ChapterMemberPermissionFlags
-  currentUserId: string
 }) {
   if (members.length === 0) {
     return (
@@ -109,11 +112,10 @@ function PendingInbox({
   return (
     <div className="space-y-3">
       {preview.map(member => (
-        <MemberCard
+        <DashboardPendingCard
           key={member.id}
           member={member}
           permissions={permissions}
-          currentUserId={currentUserId}
         />
       ))}
       {remaining > 0 && (
@@ -128,7 +130,7 @@ function PendingInbox({
   )
 }
 
-function RecentApprovals({ members }: { members: RecentActivityMember[] }) {
+function RecentApprovals({ members, t }: { members: RecentActivityMember[]; t: (key: string) => string }) {
   if (members.length === 0) {
     return (
       <p className="text-sm text-muted-foreground py-4 text-center">
@@ -147,7 +149,9 @@ function RecentApprovals({ members }: { members: RecentActivityMember[] }) {
           <div className="min-w-0">
             <p className="text-sm font-medium truncate">{member.name || 'Unknown'}</p>
             <p className="text-xs text-muted-foreground truncate">
-              {member.person_profile.major_or_interest ?? 'No major listed'}
+              {member.person_profile.major_or_interest
+                ? t(member.person_profile.major_or_interest)
+                : 'No major listed'}
             </p>
           </div>
           <p className="text-xs text-muted-foreground ml-3 shrink-0">
@@ -334,6 +338,7 @@ async function ChapterContent() {
   const allMembers = overviewRoster?.members ?? []
   const recentActivity = overviewRoster?.recentActivity ?? []
   const memberPermissions = overviewRoster?.permissions ?? null
+  const tCareers = await getTranslations('careers')
 
   const stats = getMemberStats(allMembers)
   const approvalRate =
@@ -343,14 +348,21 @@ async function ChapterContent() {
     m => m.person_profile && m.chapter_membership?.status === 'pending'
   )
 
+  const eboardRoleLevel = await ChapterPermissionService.getEboardRoleLevel(supabase, user.id, chapter_id)
+
   return (
     <MainContainer className="py-8 space-y-8">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Resumen del capítulo</h1>
-        <p className="max-w-2xl text-muted-foreground">
-          {chapter?.name} - {chapter?.university}
-        </p>
-      </div>
+      <ChapterHeader
+        roleLevel={eboardRoleLevel}
+        title="Resumen del capítulo"
+        subtitle={`${chapter?.name} - ${chapter?.university}`}
+      >
+        {eboardRoleLevel && (
+          <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl">
+            {BOARD_GUIDES[eboardRoleLevel]?.roleOverview}
+          </p>
+        )}
+      </ChapterHeader>
 
       {stats.total === 0 && (
         <Card>
@@ -396,29 +408,36 @@ async function ChapterContent() {
         <div className="lg:col-span-2 space-y-4">
           {stats.pending > 0 && (
             <>
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-base font-semibold">Aprobaciones pendientes</h2>
-                  <p className="text-sm text-muted-foreground">
-                    {stats.pending} miembro{stats.pending > 1 ? 's' : ''} esperando tu decisión
-                  </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-base font-semibold">Aprobaciones pendientes</h2>
+                    <p className="text-sm text-muted-foreground">
+                      {stats.pending} miembro{stats.pending > 1 ? 's' : ''} esperando tu decisión
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {stats.pending > 3 && (
+                      <Button asChild variant="outline" size="sm">
+                        <Link href="/chapter/members?status=pending">
+                          <span className="flex items-center">
+                            Ver todo
+                            <Icons.ChevronRight className="ml-1 h-4 w-4" />
+                          </span>
+                        </Link>
+                      </Button>
+                    )}
+                    <Button asChild variant="ghost" size="sm" className="text-xs text-muted-foreground">
+                      <Link href="/chapter/members">
+                        Ir a miembros
+                        <Icons.ChevronRight className="ml-1 h-3 w-3" />
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
-                {stats.pending > 3 && (
-                  <Button asChild variant="outline" size="sm">
-                    <Link href="/chapter/members?status=pending">
-                      <span className="flex items-center">
-                        Ver todo
-                        <Icons.ChevronRight className="ml-1 h-4 w-4" />
-                      </span>
-                    </Link>
-                  </Button>
-                )}
-              </div>
 
               <PendingInbox
                 members={pending_members}
                 total={stats.pending}
-                currentUserId={user.id}
                 permissions={memberPermissions ?? {
                   canViewApproved: false,
                   canViewAlumni: false,
@@ -454,7 +473,7 @@ async function ChapterContent() {
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              <RecentApprovals members={recentActivity as RecentActivityMember[]} />
+              <RecentApprovals members={recentActivity as RecentActivityMember[]} t={tCareers} />
             </CardContent>
           </Card>
 
@@ -466,6 +485,22 @@ async function ChapterContent() {
               <QuickLinks pendingCount={stats.pending} />
             </CardContent>
           </Card>
+
+          {eboardRoleLevel && (
+            <BoardGuideDialog roleLevel={eboardRoleLevel}>
+              <Card variant="interactive">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-semibold">Guia de JD</CardTitle>
+                    <Icons.BookOpen className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <CardDescription>
+                    Manual, FAQ y contacto para tu rol en junta directiva
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </BoardGuideDialog>
+          )}
         </div>
       </div>
     </MainContainer>
