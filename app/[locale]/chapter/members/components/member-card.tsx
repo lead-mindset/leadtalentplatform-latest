@@ -300,7 +300,7 @@ export default function MemberCard({
   )
 
   return (
-    <article className="grid min-w-0 gap-4 px-4 py-3 transition-colors hover:bg-muted/[0.035] sm:px-5 min-[1100px]:grid-cols-[minmax(9.5rem,0.9fr)_minmax(13rem,1.35fr)_minmax(10rem,0.8fr)_2.5rem] min-[1100px]:items-center">
+    <article className="grid min-w-0 gap-4 px-4 py-3 transition-colors hover:bg-muted/[0.035] sm:px-5     min-[1100px]:grid-cols-[minmax(9.5rem,0.9fr)_minmax(13rem,1.35fr)_minmax(10rem,0.8fr)_minmax(2.5rem,auto)] min-[1100px]:items-center">
       {/* ── Col 1: Miembro ── */}
       <div className="flex min-w-0 gap-3">
         {showSelector ? (
@@ -364,8 +364,37 @@ export default function MemberCard({
       </div>
 
       {/* ── Col 4: Acciones ── */}
-      <div className="flex justify-center">
-        {hasAnyAction ? (
+      <div className="flex justify-end gap-1">
+        {canManage ? (
+          <>
+            <Button
+              size="sm"
+              onClick={() => submitApprove()}
+              disabled={isPendingAction}
+              className="bg-success text-success-foreground hover:bg-success/90"
+            >
+              {isPendingAction ? (
+                <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
+              )}
+              Aprobar
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-7 w-7">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" side="bottom">
+                <DropdownMenuItem onSelect={() => setRejectOpen(true)}>
+                  <XCircle className="h-4 w-4" />
+                  Rechazar
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
+        ) : (canRevoke || canAssign) ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-7 w-7">
@@ -373,19 +402,6 @@ export default function MemberCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" side="bottom">
-              {canManage ? (
-                <>
-                  <DropdownMenuItem onSelect={() => submitApprove()}>
-                    <CheckCircle2 className="h-4 w-4" />
-                    Aprobar
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => setRejectOpen(true)}>
-                    <XCircle className="h-4 w-4" />
-                    Rechazar
-                  </DropdownMenuItem>
-                </>
-              ) : null}
-
               {canRevoke ? (
                 <DropdownMenuItem
                   variant="destructive"
@@ -398,7 +414,7 @@ export default function MemberCard({
 
               {canAssign && !hasProtectedAssignment ? (
                 <>
-                  {canRevoke || canManage ? <DropdownMenuSeparator /> : null}
+                  {canRevoke ? <DropdownMenuSeparator /> : null}
                   <DropdownMenuItem onSelect={() => setAssignOpen(true)}>
                     <UserCog className="h-4 w-4" />
                     {roleAssignment ? 'Cambiar rol e-board' : 'Asignar rol e-board'}

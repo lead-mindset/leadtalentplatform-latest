@@ -40,6 +40,13 @@ import {
   reinviteExpiredChapterEboardInvite,
 } from '@/lib/actions/chapter/eboard-invites'
 
+const ROLE_ACCESS_DESCRIPTIONS: Record<RegularEboardRoleLevel, string> = {
+  chief_of_staff:
+    'gestión completa de miembros (aprobar/rechazar), eventos, financiamiento y operaciones del capítulo',
+  director: 'panel del capítulo, eventos, registros, check-in y financiamiento',
+  coordinator: 'panel del capítulo, eventos, registros, check-in y financiamiento',
+}
+
 type Props = {
   invites: ChapterEboardInvite[]
 }
@@ -164,6 +171,15 @@ export function EboardInviteManagement({ invites }: Props) {
                 La persona ingresa con este correo y su rol queda listo. Vence en 30 días.
               </DialogDescription>
             </DialogHeader>
+
+            <div className="rounded-lg border border-border bg-info/5 px-4 py-3 text-xs text-muted-foreground leading-relaxed">
+              Al darle a esta persona el rol de{' '}
+              <span className="font-medium text-foreground">{CHAPTER_ROLE_LEVEL_LABELS[roleLevel]}</span>
+              {' '}en{' '}
+              <span className="font-medium text-foreground">{CHAPTER_FUNCTIONAL_AREA_LABELS[functionalArea].toLowerCase()}</span>
+              , le estás dando acceso a:{' '}
+              <span className="text-foreground">{ROLE_ACCESS_DESCRIPTIONS[roleLevel]}</span>.
+            </div>
 
             <form
               className="grid gap-3"
