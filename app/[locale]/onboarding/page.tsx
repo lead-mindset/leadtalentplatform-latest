@@ -1,7 +1,9 @@
 import { redirect } from 'next/navigation'
 import Onboarding from '@/components/onboarding'
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server-service'
 import { PersonProfileService } from '@/lib/services/person-profile.service'
+import { ChapterInviteService } from '@/lib/services/chapter-invite.service'
 
 type OnboardingPageProps = {
   params: Promise<{ locale: string }>
@@ -33,6 +35,11 @@ export default async function OnboardingPage({ params, searchParams }: Onboardin
     redirect(`/${locale}${nextPath ?? '/events'}`)
   }
 
+  const serviceSupabase = createServiceClient()
+  const pendingInvite = user.email
+    ? await ChapterInviteService.findPendingInviteForEmail(serviceSupabase, user.email)
+    : null
+
   return (
     <Onboarding
       initialValues={{
@@ -44,6 +51,10 @@ export default async function OnboardingPage({ params, searchParams }: Onboardin
               : '',
       }}
       nextPath={nextPath}
+      pendingInvite={pendingInvite ? {
+        chapterId: pendingInvite.chapter_id,
+        displayTitle: pendingInvite.display_title,
+      } : null}
     />
   )
 }

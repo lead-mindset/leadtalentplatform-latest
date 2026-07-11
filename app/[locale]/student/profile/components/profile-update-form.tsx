@@ -192,6 +192,7 @@ export default function ProfileUpdateForm({
               name="full_name"
               placeholder="Juan Perez"
               error={errors.full_name?.message}
+              required
             />
 
             <FormInput
@@ -199,6 +200,7 @@ export default function ProfileUpdateForm({
               name="phone"
               placeholder="+51 999 999 999"
               error={errors.phone?.message}
+              required
             />
 
             <Controller
@@ -208,6 +210,7 @@ export default function ProfileUpdateForm({
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-foreground">
                     {t('personalInfo.gender')}
+                    <span className="text-destructive ml-0.5">*</span>
                   </label>
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger className="h-11" aria-label={t('personalInfo.gender')}>
@@ -289,6 +292,7 @@ export default function ProfileUpdateForm({
               type="number"
               validation={{ valueAsNumber: true }}
               error={errors.graduation_year?.message}
+              required
             />
 
             <Controller
@@ -299,6 +303,7 @@ export default function ProfileUpdateForm({
                   <div className="flex items-center justify-between">
                     <label className="text-sm font-medium text-foreground">
                       {t('academic.skills')}
+                      <span className="text-destructive ml-0.5">*</span>
                     </label>
                     <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
                       {field.value.length} {t('academic.selected')}
@@ -363,10 +368,11 @@ export default function ProfileUpdateForm({
               name="linkedin_url"
               type="url"
               error={errors.linkedin_url?.message}
+              required
             />
 
             <FormInput
-              label={t('professional.portfolio')}
+              label={t('professional.portfolio') + ' (opcional)'}
               name="portfolio_url"
               type="url"
               placeholder={t('professional.portfolioPlaceholder')}

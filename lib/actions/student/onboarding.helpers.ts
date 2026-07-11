@@ -2,10 +2,12 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { z } from 'zod'
 import { createBasicOnboardingSchema } from '@/lib/memberschema'
 import type { Database } from '@/lib/database.generated'
-import { PersonProfileService } from '@/lib/services/person-profile.service'
+import { ChapterInviteService } from '@/lib/services/chapter-invite.service'
 import { ChapterMembershipService } from '@/lib/services/chapter-membership.service'
 import { ChapterPreapprovalService } from '@/lib/services/chapter-preapproval.service'
 import { NewsletterSubscriptionService } from '@/lib/services/newsletter-subscription.service'
+import { PersonProfileService } from '@/lib/services/person-profile.service'
+import { StudentService } from '@/lib/services/student.service'
 
 type BasicOnboardingData = z.infer<ReturnType<typeof createBasicOnboardingSchema>>
 type ActionResult =
@@ -46,7 +48,6 @@ export function parseBasicOnboardingFormData(
     portfolio_url: formData.get('portfolio_url')?.toString() ?? '',
     chapterIntent: formData.get('chapterIntent')?.toString() ?? '',
     selectedChapterId: formData.get('selectedChapterId')?.toString() ?? '',
-    chapterNewsletterIds: parseJsonStringArray(formData.get('chapterNewsletterIds')),
     consentRecruiterVisibility: readBoolean(formData, 'consentRecruiterVisibility'),
     emailNotificationsEnabled: readBoolean(formData, 'emailNotificationsEnabled'),
     termsAccepted: readBoolean(formData, 'termsAccepted'),
@@ -59,6 +60,7 @@ export async function saveBasicOnboarding(
     userId: string
     email: string
     data: BasicOnboardingData
+    resumePdf?: File
     preapprovalSupabase?: SupabaseClient<Database>
   }
 ): Promise<ActionResult> {
@@ -67,7 +69,7 @@ export async function saveBasicOnboarding(
     email: params.email,
     fullName: params.data.full_name,
     phone: params.data.phone,
-    university: params.data.university || null,
+    university: params.data.university,
     majorOrInterest: params.data.career,
     graduationYear: params.data.graduation_year,
     linkedinUrl: params.data.linkedin_url,
@@ -79,6 +81,11 @@ export async function saveBasicOnboarding(
 
   if (!profileResult.success) return profileResult
 
+  if (params.resumePdf) {
+    const resumeResult = await StudentService.saveResume(supabase, params.userId, params.resumePdf)
+    if (!resumeResult.success) return resumeResult
+  }
+
   const preapprovalResult = await ChapterPreapprovalService.activatePreapprovalForUser(
     params.preapprovalSupabase ?? supabase,
     {
@@ -89,8 +96,16 @@ export async function saveBasicOnboarding(
 
   if (!preapprovalResult.success) return preapprovalResult
 
+  const pendingInvite = params.email
+    ? await ChapterInviteService.findPendingInviteForEmail(
+        params.preapprovalSupabase ?? supabase,
+        params.email
+      )
+    : null
+
   const shouldApplyToChapter =
     !preapprovalResult.activated &&
+    !pendingInvite &&
     (params.data.chapterIntent === 'already_member' || params.data.chapterIntent === 'apply_to_chapter')
 
   if (shouldApplyToChapter) {
@@ -110,16 +125,6 @@ export async function saveBasicOnboarding(
     })
 
     if (!globalResult.success) return globalResult
-  }
-
-  if (params.data.chapterNewsletterIds.length > 0) {
-    const chapterResult = await NewsletterSubscriptionService.subscribeToChapters(supabase, {
-      userId: params.userId,
-      chapterIds: params.data.chapterNewsletterIds,
-      source: 'onboarding',
-    })
-
-    if (!chapterResult.success) return chapterResult
   }
 
   if (

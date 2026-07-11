@@ -21,7 +21,7 @@ export type UpsertBasicProfileParams = {
   email: string
   fullName: string
   phone?: string | null
-  university?: string | null
+  university: string
   majorOrInterest?: string | null
   graduationYear?: number | null
   linkedinUrl?: string | null
@@ -113,7 +113,7 @@ export const PersonProfileService = {
       .upsert(
         {
           user_id: params.userId,
-          university: params.university ?? null,
+          university: params.university,
           major_or_interest: params.majorOrInterest ?? null,
           graduation_year: params.graduationYear ?? null,
           linkedin_url: params.linkedinUrl ?? null,
