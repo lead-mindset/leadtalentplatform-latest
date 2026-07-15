@@ -2,8 +2,11 @@ import {
   EmailLayout,
   EMAIL_COLORS as C,
   SUPPORT_EMAIL,
+  mb,
+  Greeting,
+  ButtonRow,
+  HelpFooter,
   buttonStyle,
-  helpTextStyle,
   infoBoxStyle,
 } from '../EmailLayout'
 
@@ -40,23 +43,21 @@ export default function ResetPasswordEmail({ resetUrl, locale = 'es' }: ResetPas
 
   return (
     <EmailLayout title={t.title} preview={t.preview}>
-      <p style={{ fontSize: 20, fontWeight: 700, margin: '0 0 16px 0', color: C.foreground }}>
-        {t.greeting}
-      </p>
-      <p style={{ margin: '0 0 16px 0' }}>{t.body}</p>
-      <p style={{ margin: '0 0 28px 0', color: C.muted }}>{t.cta}</p>
-      <div style={{ textAlign: 'center', margin: '32px 0' }}>
+      <Greeting>{t.greeting}</Greeting>
+      <p style={{ margin: mb.lg }}>{t.body}</p>
+      <p style={{ margin: mb.xxl, color: C.muted }}>{t.cta}</p>
+      <ButtonRow>
         <a href={resetUrl} style={buttonStyle}>{t.button}</a>
-      </div>
+      </ButtonRow>
       <div style={infoBoxStyle}>
         <strong>{t.securityTitle}:</strong> {t.security}
       </div>
-      <p style={helpTextStyle}>
+      <HelpFooter>
         {t.help}{' '}
         <a href={`mailto:${SUPPORT_EMAIL}`} style={{ color: C.primary, textDecoration: 'none', fontWeight: 600 }}>
           {SUPPORT_EMAIL}
         </a>
-      </p>
+      </HelpFooter>
     </EmailLayout>
   )
 }

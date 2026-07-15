@@ -2,11 +2,15 @@ import {
   EmailLayout,
   EMAIL_COLORS as C,
   SUPPORT_EMAIL,
+  mb,
+  Greeting,
+  ButtonRow,
+  ClosingSignature,
+  HelpFooter,
   bulletDotStyle,
   buttonStyle,
   featureBoxStyle,
   featureItemStyle,
-  helpTextStyle,
   infoBoxStyle,
   sectionLabelStyle,
 } from '../EmailLayout'
@@ -99,10 +103,8 @@ export default function WelcomeEmail({
 
   return (
     <EmailLayout title={t.title} preview={t.preview}>
-      <p style={{ fontSize: 20, fontWeight: 700, margin: '0 0 16px 0', color: C.foreground }}>
-        {t.greeting}
-      </p>
-      <p style={{ margin: '0 0 24px 0' }}>{t.intro}</p>
+      <Greeting>{t.greeting}</Greeting>
+      <p style={{ margin: mb.xxl }}>{t.intro}</p>
       <div style={featureBoxStyle}>
         <p style={sectionLabelStyle}>
           {t.listTitle}
@@ -118,21 +120,20 @@ export default function WelcomeEmail({
         ))}
       </div>
       {dashboardUrl && (
-        <div style={{ textAlign: 'center', margin: '32px 0' }}>
+        <ButtonRow>
           <a href={dashboardUrl} style={buttonStyle}>{t.button}</a>
-        </div>
+        </ButtonRow>
       )}
       <div style={infoBoxStyle}>
         <strong>{locale === 'es' ? 'Consejo:' : 'Tip:'}</strong> {t.tip}
       </div>
-      <p style={{ marginTop: 28, marginBottom: 4 }}>{t.closing}</p>
-      <p style={{ margin: 0, fontWeight: 600, color: C.foreground }}>{t.signature}</p>
-      <p style={helpTextStyle}>
+      <ClosingSignature closing={t.closing} signature={t.signature} />
+      <HelpFooter>
         {t.help}{' '}
         <a href={`mailto:${SUPPORT_EMAIL}`} style={{ color: C.primary, textDecoration: 'none', fontWeight: 600 }}>
           {SUPPORT_EMAIL}
         </a>
-      </p>
+      </HelpFooter>
     </EmailLayout>
   )
 }

@@ -1,4 +1,4 @@
-import { EmailLayout, EMAIL_COLORS as C, SUPPORT_EMAIL, buttonStyle, detailBoxStyle, helpTextStyle, infoBoxStyle } from '../EmailLayout'
+import { EmailLayout, EMAIL_COLORS as C, SUPPORT_EMAIL, mb, Greeting, ButtonRow, ClosingSignature, HelpFooter, secondaryButtonStyle, buttonStyle, detailBoxStyle, infoBoxStyle } from '../EmailLayout'
 
 type ApplicationApprovedEmailProps = {
   name: string
@@ -30,23 +30,25 @@ export default function ApplicationApprovedEmail({
       title: 'Solicitud aprobada',
       preview: `Tu solicitud para ${eventTitle} fue aprobada.`,
       greeting: `Hola, ${name}`,
-      intro: 'Tu solicitud fue aprobada. Ya puedes revisar los detalles y tu codigo QR.',
+      intro: 'Tu solicitud fue aprobada. Ya puedes revisar los detalles y tu código QR.',
+      event: 'Evento',
       date: 'Fecha',
       location: 'Lugar',
       meetingLink: 'Enlace',
-      qrTitle: 'Tu codigo QR',
-      qrDesc: 'Usa tu codigo QR desde LEAD Talent Platform para hacer check-in.',
-      qrButton: 'Ver codigo QR',
+      qrTitle: 'Tu código QR',
+      qrDesc: 'Usa tu código QR desde LEAD Talent Platform para hacer check-in.',
+      qrButton: 'Ver código QR',
       eventsButton: 'Ir a mis eventos',
       closing: 'Te esperamos en el evento.',
       signature: 'Equipo LEAD Americas',
-      help: 'Necesitas ayuda?',
+      help: '¿Necesitas ayuda?',
     },
     en: {
       title: 'Application approved',
       preview: `Your application for ${eventTitle} was approved.`,
       greeting: `Hi, ${name}`,
       intro: 'Your application was approved. You can now review details and your QR code.',
+      event: 'Event',
       date: 'Date',
       location: 'Location',
       meetingLink: 'Link',
@@ -62,12 +64,10 @@ export default function ApplicationApprovedEmail({
 
   return (
     <EmailLayout title={t.title} preview={t.preview}>
-      <p style={{ fontSize: 20, fontWeight: 700, margin: '0 0 16px 0', color: C.foreground }}>
-        {t.greeting}
-      </p>
-      <p style={{ margin: '0 0 20px 0' }}>{t.intro}</p>
+      <Greeting>{t.greeting}</Greeting>
+      <p style={{ margin: mb.xxl }}>{t.intro}</p>
       <div style={detailBoxStyle}>
-        <p style={{ margin: '0 0 8px 0' }}><strong>Evento:</strong> {eventTitle}</p>
+        <p style={{ margin: '0 0 8px 0' }}><strong>{t.event}:</strong> {eventTitle}</p>
         <p style={{ margin: '0 0 8px 0' }}><strong>{t.date}:</strong> {eventDate}</p>
         {!isOnline && eventLocation && <p style={{ margin: '0 0 8px 0' }}><strong>{t.location}:</strong> {eventLocation}</p>}
         {(isOnline || isHybrid) && meetingUrl && (
@@ -80,20 +80,19 @@ export default function ApplicationApprovedEmail({
       <div style={infoBoxStyle}>
         <strong>{t.qrTitle}:</strong> {t.qrDesc}
       </div>
-      <div style={{ textAlign: 'center', margin: '32px 0' }}>
+      <ButtonRow>
         <a href={qrUrl || eventsUrl} style={buttonStyle}>{t.qrButton}</a>
-      </div>
-      <div style={{ textAlign: 'center', margin: '0 0 32px 0' }}>
-        <a href={eventsUrl} style={{ ...buttonStyle, backgroundColor: C.foreground, boxShadow: 'none' }}>{t.eventsButton}</a>
-      </div>
-      <p style={{ marginTop: 28, marginBottom: 4 }}>{t.closing}</p>
-      <p style={{ margin: 0, fontWeight: 600, color: C.foreground }}>{t.signature}</p>
-      <p style={helpTextStyle}>
+        <div style={{ marginTop: 12 }}>
+          <a href={eventsUrl} style={secondaryButtonStyle}>{t.eventsButton}</a>
+        </div>
+      </ButtonRow>
+      <ClosingSignature closing={t.closing} signature={t.signature} />
+      <HelpFooter>
         {t.help}{' '}
         <a href={`mailto:${SUPPORT_EMAIL}`} style={{ color: C.primary, textDecoration: 'none', fontWeight: 600 }}>
           {SUPPORT_EMAIL}
         </a>
-      </p>
+      </HelpFooter>
     </EmailLayout>
   )
 }

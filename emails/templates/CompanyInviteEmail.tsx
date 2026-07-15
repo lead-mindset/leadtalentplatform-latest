@@ -1,4 +1,4 @@
-import { EmailLayout, EMAIL_COLORS as C, SUPPORT_EMAIL, buttonStyle, helpTextStyle, infoBoxStyle } from '../EmailLayout'
+import { EmailLayout, EMAIL_COLORS as C, SUPPORT_EMAIL, mb, Greeting, ButtonRow, HelpFooter, buttonStyle, infoBoxStyle } from '../EmailLayout'
 
 type CompanyInviteEmailProps = {
   companyName: string
@@ -9,14 +9,14 @@ type CompanyInviteEmailProps = {
 export default function CompanyInviteEmail({ companyName, inviteUrl, locale = 'es' }: CompanyInviteEmailProps) {
   const t = {
     es: {
-      title: 'Invitacion para representante de empresa',
+      title: 'Invitación para representante de empresa',
       preview: `${companyName} fue invitada a LEAD Talent Platform.`,
       greeting: 'Hola',
-      intro: `Recibiste una invitacion para acceder como representante de ${companyName} en LEAD Talent Platform.`,
-      cta: 'Acepta la invitacion para configurar tu acceso y revisar talento autorizado por LEAD Americas.',
-      button: 'Aceptar invitacion',
+      intro: `Recibiste una invitación para acceder como representante de ${companyName} en LEAD Talent Platform.`,
+      cta: 'Acepta la invitación para configurar tu acceso y revisar talento autorizado por LEAD Americas.',
+      button: 'Aceptar invitación',
       note: 'Este enlace es personal y expira por seguridad.',
-      help: 'Necesitas ayuda?',
+      help: '¿Necesitas ayuda?',
     },
     en: {
       title: 'Company representative invitation',
@@ -32,21 +32,19 @@ export default function CompanyInviteEmail({ companyName, inviteUrl, locale = 'e
 
   return (
     <EmailLayout title={t.title} preview={t.preview}>
-      <p style={{ fontSize: 20, fontWeight: 700, margin: '0 0 16px 0', color: C.foreground }}>
-        {t.greeting}
-      </p>
-      <p style={{ margin: '0 0 20px 0' }}>{t.intro}</p>
-      <p style={{ margin: '0 0 28px 0', color: C.muted }}>{t.cta}</p>
-      <div style={{ textAlign: 'center', margin: '32px 0' }}>
+      <Greeting>{t.greeting}</Greeting>
+      <p style={{ margin: mb.xxl }}>{t.intro}</p>
+      <p style={{ margin: mb.xxl, color: C.muted }}>{t.cta}</p>
+      <ButtonRow>
         <a href={inviteUrl} style={buttonStyle}>{t.button}</a>
-      </div>
+      </ButtonRow>
       <div style={infoBoxStyle}>{t.note}</div>
-      <p style={helpTextStyle}>
+      <HelpFooter>
         {t.help}{' '}
         <a href={`mailto:${SUPPORT_EMAIL}`} style={{ color: C.primary, textDecoration: 'none', fontWeight: 600 }}>
           {SUPPORT_EMAIL}
         </a>
-      </p>
+      </HelpFooter>
     </EmailLayout>
   )
 }

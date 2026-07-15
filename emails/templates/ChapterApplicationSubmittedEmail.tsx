@@ -1,4 +1,4 @@
-import { EmailLayout, EMAIL_COLORS as C, SUPPORT_EMAIL, buttonStyle, helpTextStyle, infoBoxStyle } from '../EmailLayout'
+import { EmailLayout, EMAIL_COLORS as C, SUPPORT_EMAIL, mb, Greeting, ButtonRow, HelpFooter, buttonStyle, infoBoxStyle } from '../EmailLayout'
 
 type ChapterApplicationSubmittedEmailProps = {
   name: string
@@ -15,16 +15,16 @@ export default function ChapterApplicationSubmittedEmail({
 }: ChapterApplicationSubmittedEmailProps) {
   const t = {
     es: {
-      title: 'Solicitud de capitulo recibida',
+      title: 'Solicitud de capítulo recibida',
       preview: `Recibimos tu solicitud para ${chapterName}.`,
       greeting: `Hola, ${name}`,
-      intro: 'Recibimos tu solicitud para formar parte del capitulo.',
-      chapter: 'Capitulo',
-      nextTitle: 'Que sigue',
-      next: 'Un editor revisara tu solicitud. Mientras tanto, puedes seguir usando tu dashboard como participante.',
+      intro: 'Recibimos tu solicitud para formar parte del capítulo.',
+      chapter: 'Capítulo',
+      nextTitle: 'Qué sigue',
+      next: 'Un editor revisará tu solicitud. Mientras tanto, puedes seguir usando tu dashboard como participante.',
       button: 'Ver mi dashboard',
       signature: 'Equipo LEAD Americas',
-      help: 'Necesitas ayuda?',
+      help: '¿Necesitas ayuda?',
     },
     en: {
       title: 'Chapter application received',
@@ -42,22 +42,20 @@ export default function ChapterApplicationSubmittedEmail({
 
   return (
     <EmailLayout title={t.title} preview={t.preview}>
-      <p style={{ fontSize: 20, fontWeight: 700, margin: '0 0 16px 0', color: C.foreground }}>
-        {t.greeting}
-      </p>
-      <p style={{ margin: '0 0 20px 0' }}>{t.intro}</p>
-      <p style={{ margin: '0 0 24px 0' }}><strong>{t.chapter}:</strong> {chapterName}</p>
+      <Greeting>{t.greeting}</Greeting>
+      <p style={{ margin: mb.xxl }}>{t.intro}</p>
+      <p style={{ margin: mb.xxl }}><strong>{t.chapter}:</strong> {chapterName}</p>
       <div style={infoBoxStyle}><strong>{t.nextTitle}:</strong> {t.next}</div>
-      <div style={{ textAlign: 'center', margin: '32px 0' }}>
+      <ButtonRow>
         <a href={dashboardUrl} style={buttonStyle}>{t.button}</a>
-      </div>
+      </ButtonRow>
       <p style={{ margin: 0, fontWeight: 600, color: C.foreground }}>{t.signature}</p>
-      <p style={helpTextStyle}>
+      <HelpFooter>
         {t.help}{' '}
         <a href={`mailto:${SUPPORT_EMAIL}`} style={{ color: C.primary, textDecoration: 'none', fontWeight: 600 }}>
           {SUPPORT_EMAIL}
         </a>
-      </p>
+      </HelpFooter>
     </EmailLayout>
   )
 }

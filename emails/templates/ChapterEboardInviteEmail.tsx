@@ -1,4 +1,4 @@
-import { EmailLayout, EMAIL_COLORS as C, buttonStyle, helpTextStyle, infoBoxStyle } from '../EmailLayout'
+import { EmailLayout, EMAIL_COLORS as C, SUPPORT_EMAIL, mb, my, Greeting, ButtonRow, HelpFooter, buttonStyle, infoBoxStyle } from '../EmailLayout'
 
 type ChapterEboardInviteEmailProps = {
   chapterName: string
@@ -9,14 +9,12 @@ type ChapterEboardInviteEmailProps = {
   locale?: 'en' | 'es'
 }
 
-const DEFAULT_SUPPORT_EMAIL = 'abriones@leadmindset.org'
-
 export default function ChapterEboardInviteEmail({
   chapterName,
   displayTitle,
   invitedEmail,
   inviteUrl,
-  supportEmail = DEFAULT_SUPPORT_EMAIL,
+  supportEmail = SUPPORT_EMAIL,
   locale = 'es',
 }: ChapterEboardInviteEmailProps) {
   const t = {
@@ -25,13 +23,13 @@ export default function ChapterEboardInviteEmail({
       preview: `Fuiste invitado/a a activar tu rol ${displayTitle} en ${chapterName}.`,
       greeting: 'Hola',
       intro: `Fuiste invitado/a a activar tu rol de ${displayTitle} en ${chapterName}.`,
-      cta: 'Abre el enlace, inicia sesion o crea tu cuenta usando exactamente el correo invitado, revisa el resumen y acepta la invitacion. El enlace vence en 30 dias.',
-      button: 'Revisar y aceptar invitacion',
+      cta: 'Abre el enlace, inicia sesión o crea tu cuenta usando exactamente el correo invitado, revisa el resumen y acepta la invitación. El enlace vence en 30 días.',
+      button: 'Revisar y aceptar invitación',
       roleLabel: 'Rol',
       chapterLabel: 'Chapter',
       emailLabel: 'Correo que debes usar',
       note: 'Si el correo, chapter o rol no se ve correcto, escribe antes de aceptar o crear una segunda cuenta.',
-      help: 'Necesitas ayuda?',
+      help: '¿Necesitas ayuda?',
     },
     en: {
       title: 'Activate your role in LEAD Talent Platform',
@@ -50,26 +48,24 @@ export default function ChapterEboardInviteEmail({
 
   return (
     <EmailLayout title={t.title} preview={t.preview}>
-      <p style={{ fontSize: 20, fontWeight: 700, margin: '0 0 16px 0', color: C.foreground }}>
-        {t.greeting}
-      </p>
-      <p style={{ margin: '0 0 20px 0' }}>{t.intro}</p>
+      <Greeting>{t.greeting}</Greeting>
+      <p style={{ margin: mb.xxl }}>{t.intro}</p>
       <div style={infoBoxStyle}>
         <div><strong>{t.roleLabel}:</strong> {displayTitle}</div>
         <div><strong>{t.chapterLabel}:</strong> {chapterName}</div>
         <div><strong>{t.emailLabel}:</strong> {invitedEmail}</div>
       </div>
-      <p style={{ margin: '24px 0 28px 0', color: C.muted }}>{t.cta}</p>
-      <div style={{ textAlign: 'center', margin: '32px 0' }}>
+      <p style={{ margin: my.lg, color: C.muted }}>{t.cta}</p>
+      <ButtonRow>
         <a href={inviteUrl} style={buttonStyle}>{t.button}</a>
-      </div>
+      </ButtonRow>
       <div style={infoBoxStyle}>{t.note}</div>
-      <p style={helpTextStyle}>
+      <HelpFooter>
         {t.help}{' '}
         <a href={`mailto:${supportEmail}`} style={{ color: C.primary, textDecoration: 'none', fontWeight: 600 }}>
           {supportEmail}
         </a>
-      </p>
+      </HelpFooter>
     </EmailLayout>
   )
 }
