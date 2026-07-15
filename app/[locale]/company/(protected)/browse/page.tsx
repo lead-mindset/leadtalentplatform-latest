@@ -13,6 +13,12 @@ interface BrowsePageProps {
     major?: string
     year?: string
     chapter?: string
+    city?: string
+    showAlumni?: string
+    hasLinkedIn?: string
+    hasPortfolio?: string
+    hasResume?: string
+    sortBy?: string
   }>
 }
 
@@ -25,6 +31,12 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
     major: params.major && params.major !== 'all' ? params.major : undefined,
     graduation_year: params.year && params.year !== 'all' ? Number(params.year) : undefined,
     chapter_id: params.chapter && params.chapter !== 'all' ? params.chapter : undefined,
+    city: params.city && params.city !== 'all' ? params.city : undefined,
+    includeAlumni: params.showAlumni === 'true',
+    hasLinkedIn: params.hasLinkedIn === 'true',
+    hasPortfolio: params.hasPortfolio === 'true',
+    hasResume: params.hasResume === 'true',
+    sortBy: params.sortBy === 'updated_at' ? ('updated_at' as const) : undefined,
   }
 
   const [filtered, savedIds] = await Promise.all([
@@ -55,6 +67,12 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
       })
       .filter((chapter): chapter is [string, string] => chapter !== null)
   ).entries()]
+
+  const cities = [...new Set(
+    students
+      .map(s => s.chapter?.city)
+      .filter((c): c is string => Boolean(c))
+  )].sort()
 
   return (
     <MainContainer className="space-y-5 py-8">
@@ -93,11 +111,18 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
         majors={majors}
         years={years}
         chapters={chapters}
+        cities={cities}
         currentFilters={{
           q: params.q,
           major: params.major,
           year: params.year,
           chapter: params.chapter,
+          city: params.city,
+          sortBy: params.sortBy,
+          showAlumni: params.showAlumni,
+          hasLinkedIn: params.hasLinkedIn,
+          hasPortfolio: params.hasPortfolio,
+          hasResume: params.hasResume,
         }}
       />
 

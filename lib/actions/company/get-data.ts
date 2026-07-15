@@ -87,7 +87,7 @@ export async function getCompanyStatsResult(
 
 /**
  * Searches students with filters pushed to the database where possible.
- * Client-side fallback only for skills (array containment via Supabase is limited).
+ * Skills, name, and email matching use client-side fallback for OR semantics.
  */
 export async function searchStudents(
   supabase: SupabaseClient<Database>,
@@ -96,6 +96,12 @@ export async function searchStudents(
     major?: string
     graduation_year?: number
     chapter_id?: string
+    city?: string
+    includeAlumni?: boolean
+    hasLinkedIn?: boolean
+    hasPortfolio?: boolean
+    hasResume?: boolean
+    sortBy?: 'created_at' | 'updated_at'
   }
 ): Promise<StudentForRecruiter[]> {
   return CompanyService.searchStudents(supabase, filters)
@@ -108,6 +114,12 @@ export async function searchStudentsResult(
     major?: string
     graduation_year?: number
     chapter_id?: string
+    city?: string
+    includeAlumni?: boolean
+    hasLinkedIn?: boolean
+    hasPortfolio?: boolean
+    hasResume?: boolean
+    sortBy?: 'created_at' | 'updated_at'
   }
 ): Promise<CompanyDataResult<StudentForRecruiter[]>> {
   return CompanyService.searchStudentsResult(supabase, filters)
