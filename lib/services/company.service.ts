@@ -93,6 +93,12 @@ type VisibleTalentFilters = {
   major?: string
   graduation_year?: number
   chapter_id?: string
+  city?: string
+  includeAlumni?: boolean
+  hasLinkedIn?: boolean
+  hasPortfolio?: boolean
+  hasResume?: boolean
+  sortBy?: 'created_at' | 'updated_at'
 }
 
 export type CompanyDataResult<T> =
@@ -131,6 +137,14 @@ async function loadVisibleStudentsResult(
     profileQuery = profileQuery.eq('graduation_year', filters.graduation_year)
   }
 
+  if (filters.hasLinkedIn) {
+    profileQuery = profileQuery.not('linkedin_url', 'is', null)
+  }
+
+  if (filters.hasPortfolio) {
+    profileQuery = profileQuery.not('portfolio_url', 'is', null)
+  }
+
   const { data: profiles, error: profilesError } = await profileQuery
   if (profilesError) {
     logger.error({ context: 'loadVisibleStudents', error: profilesError }, 'Profile load error')
@@ -145,7 +159,12 @@ async function loadVisibleStudentsResult(
     .from('chapter_membership')
     .select('user_id, chapter_id, status')
     .in('user_id', profileUserIds)
-    .eq('status', 'approved')
+
+  if (filters.includeAlumni) {
+    membershipQuery = membershipQuery.in('status', ['approved', 'alumni'])
+  } else {
+    membershipQuery = membershipQuery.eq('status', 'approved')
+  }
 
   if (filters.chapter_id) {
     membershipQuery = membershipQuery.eq('chapter_id', filters.chapter_id)
@@ -161,15 +180,10 @@ async function loadVisibleStudentsResult(
   const eligibleUserIds = membershipRows.map((membership) => membership.user_id)
   if (eligibleUserIds.length === 0) return { success: true, data: [] }
 
-  let userQuery = supabase
+  const userQuery = supabase
     .from('user')
     .select('id, email, name, phone, created_at')
     .in('id', eligibleUserIds)
-
-  if (filters.query?.trim()) {
-    const query = filters.query.trim()
-    userQuery = userQuery.or(`name.ilike.%${query}%,email.ilike.%${query}%`)
-  }
 
   const chapterIds = Array.from(new Set(membershipRows.map((membership) => membership.chapter_id)))
   const [{ data: users, error: usersError }, { data: chapters, error: chaptersError }] = await Promise.all([
@@ -189,7 +203,7 @@ async function loadVisibleStudentsResult(
   const membershipsByUserId = new Map(membershipRows.map((membership) => [membership.user_id, membership]))
   const chaptersById = new Map((chapters ?? []).map((chapter) => [chapter.id, chapter]))
 
-  const data = ((users ?? []) as Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'created_at'>[])
+  let data = ((users ?? []) as Pick<UserRow, 'id' | 'email' | 'name' | 'phone' | 'created_at'>[])
     .map((user): StudentForRecruiter | null => {
       const profile = profilesByUserId.get(user.id)
       const membership = membershipsByUserId.get(user.id)
@@ -217,7 +231,48 @@ async function loadVisibleStudentsResult(
       }
     })
     .filter((student): student is StudentForRecruiter => student !== null)
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+  const searchQuery = filters.query?.trim()?.toLowerCase()
+  if (searchQuery) {
+    data = data.filter(student => {
+      const nameMatch = student.name.toLowerCase().includes(searchQuery)
+      const emailMatch = student.email.toLowerCase().includes(searchQuery)
+      const skills = Array.isArray(student.person_profile?.skills) ? student.person_profile.skills : []
+      const skillMatch = skills.some(
+        (skill: unknown) => typeof skill === 'string' && skill.toLowerCase().includes(searchQuery)
+      )
+      return nameMatch || emailMatch || skillMatch
+    })
+  }
+
+  if (filters.hasResume) {
+    const studentIds = data.map(s => s.id)
+    if (studentIds.length > 0) {
+      const { data: resumeRows } = await supabase
+        .from('resume')
+        .select('student_id')
+        .in('student_id', studentIds)
+      const studentIdsWithResumes = new Set((resumeRows ?? []).map(r => r.student_id))
+      data = data.filter(s => studentIdsWithResumes.has(s.id))
+    } else {
+      data = []
+    }
+  }
+
+  if (filters.city?.trim()) {
+    const cityQuery = filters.city.trim().toLowerCase()
+    data = data.filter(student => student.chapter?.city?.toLowerCase() === cityQuery)
+  }
+
+  if (filters.sortBy === 'updated_at') {
+    data.sort((a, b) => {
+      const aDate = a.person_profile?.updated_at ?? a.created_at
+      const bDate = b.person_profile?.updated_at ?? b.created_at
+      return new Date(bDate).getTime() - new Date(aDate).getTime()
+    })
+  } else {
+    data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  }
 
   return { success: true, data }
 }
@@ -383,7 +438,7 @@ export const CompanyService = {
 
   /**
    * Searches students with filters pushed to the database where possible.
-   * Client-side fallback only for skills (array containment via Supabase is limited).
+   * Skills, name, and email matching use client-side fallback for OR semantics.
    */
   async searchStudents(
     supabase: SupabaseClient<Database>,
@@ -392,6 +447,12 @@ export const CompanyService = {
       major?: string
       graduation_year?: number
       chapter_id?: string
+      city?: string
+      includeAlumni?: boolean
+      hasLinkedIn?: boolean
+      hasPortfolio?: boolean
+      hasResume?: boolean
+      sortBy?: 'created_at' | 'updated_at'
     }
   ): Promise<StudentForRecruiter[]> {
     return loadVisibleStudents(supabase, filters)
@@ -404,6 +465,12 @@ export const CompanyService = {
       major?: string
       graduation_year?: number
       chapter_id?: string
+      city?: string
+      includeAlumni?: boolean
+      hasLinkedIn?: boolean
+      hasPortfolio?: boolean
+      hasResume?: boolean
+      sortBy?: 'created_at' | 'updated_at'
     }
   ): Promise<CompanyDataResult<StudentForRecruiter[]>> {
     return loadVisibleStudentsResult(supabase, filters)
