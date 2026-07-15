@@ -20,6 +20,7 @@ const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
       in: vi.fn(() => builder),
       or: vi.fn(() => builder),
       ilike: vi.fn(() => builder),
+      not: vi.fn(() => builder),
       limit: vi.fn(() => builder),
       order: vi.fn(() => builder),
       contains: vi.fn(() => builder),
@@ -367,6 +368,511 @@ describe('CompanyService', () => {
       expect(tableMocks.chapter_membership._builder.eq).not.toHaveBeenCalled()
       expect(tableMocks.user._builder.eq).not.toHaveBeenCalledWith('role', 'member')
       expect(tableMocks.user._builder.in).not.toHaveBeenCalled()
+    })
+
+    it('should filter by skills client-side when query matches a skill', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.person_profile._builder._setThenValue({
+        data: [
+          {
+            user_id: 'student-1',
+            major_or_interest: 'CS',
+            graduation_year: 2025,
+            linkedin_url: null,
+            portfolio_url: null,
+            skills: ['React', 'TypeScript'],
+            is_recruiter_visible: true,
+            updated_at: '2024-01-01',
+          },
+          {
+            user_id: 'student-2',
+            major_or_interest: 'Design',
+            graduation_year: 2026,
+            linkedin_url: null,
+            portfolio_url: null,
+            skills: ['Figma', 'UI/UX'],
+            is_recruiter_visible: true,
+            updated_at: '2024-01-01',
+          },
+        ],
+        error: null,
+      })
+
+      tableMocks.chapter_membership._builder._setThenValue({
+        data: [
+          { user_id: 'student-1', chapter_id: 'ch-1', status: 'approved' },
+          { user_id: 'student-2', chapter_id: 'ch-1', status: 'approved' },
+        ],
+        error: null,
+      })
+
+      tableMocks.user._builder._setThenValue({
+        data: [
+          { id: 'student-1', email: 'student1@test.com', name: 'Alice', phone: null, created_at: '2024-01-01' },
+          { id: 'student-2', email: 'student2@test.com', name: 'Bob', phone: null, created_at: '2024-01-01' },
+        ],
+        error: null,
+      })
+
+      tableMocks.chapter._builder._setThenValue({
+        data: [
+          { id: 'ch-1', name: 'MIT', university: 'MIT', city: 'Cambridge', region: 'MA' },
+        ],
+        error: null,
+      })
+
+      const result = await CompanyService.searchStudents(mockSupabase as unknown as SupabaseClient, { query: 'React' })
+
+      expect(result).toHaveLength(1)
+      expect(result[0].name).toBe('Alice')
+      expect(result[0].person_profile?.skills).toContain('React')
+    })
+
+    it('should match by skill even when name and email do not contain the query', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.person_profile._builder._setThenValue({
+        data: [
+          {
+            user_id: 'student-1',
+            major_or_interest: 'CS',
+            graduation_year: 2025,
+            linkedin_url: null,
+            portfolio_url: null,
+            skills: ['Python', 'Django'],
+            is_recruiter_visible: true,
+            updated_at: '2024-01-01',
+          },
+          {
+            user_id: 'student-2',
+            major_or_interest: 'Design',
+            graduation_year: 2026,
+            linkedin_url: null,
+            portfolio_url: null,
+            skills: ['Figma'],
+            is_recruiter_visible: true,
+            updated_at: '2024-01-01',
+          },
+        ],
+        error: null,
+      })
+
+      tableMocks.chapter_membership._builder._setThenValue({
+        data: [
+          { user_id: 'student-1', chapter_id: 'ch-1', status: 'approved' },
+          { user_id: 'student-2', chapter_id: 'ch-1', status: 'approved' },
+        ],
+        error: null,
+      })
+
+      tableMocks.user._builder._setThenValue({
+        data: [
+          { id: 'student-1', email: 'alice@test.com', name: 'Alice', phone: null, created_at: '2024-01-01' },
+          { id: 'student-2', email: 'bob@test.com', name: 'Bob', phone: null, created_at: '2024-01-01' },
+        ],
+        error: null,
+      })
+
+      tableMocks.chapter._builder._setThenValue({
+        data: [
+          { id: 'ch-1', name: 'MIT', university: 'MIT', city: 'Cambridge', region: 'MA' },
+        ],
+        error: null,
+      })
+
+      const result = await CompanyService.searchStudents(mockSupabase as unknown as SupabaseClient, { query: 'Python' })
+
+      expect(result).toHaveLength(1)
+      expect(result[0].name).toBe('Alice')
+      expect(result[0].person_profile?.skills).toContain('Python')
+    })
+
+    it('should use in status query when includeAlumni is true', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.person_profile._builder._setThenValue({
+        data: [
+          {
+            user_id: 'student-1',
+            major_or_interest: 'CS',
+            graduation_year: 2024,
+            linkedin_url: null,
+            portfolio_url: null,
+            skills: ['React'],
+            is_recruiter_visible: true,
+            updated_at: '2024-01-01',
+          },
+          {
+            user_id: 'student-2',
+            major_or_interest: 'Design',
+            graduation_year: 2022,
+            linkedin_url: null,
+            portfolio_url: null,
+            skills: ['Figma'],
+            is_recruiter_visible: true,
+            updated_at: '2024-01-01',
+          },
+        ],
+        error: null,
+      })
+
+      tableMocks.chapter_membership._builder._setThenValue({
+        data: [
+          { user_id: 'student-1', chapter_id: 'ch-1', status: 'approved' },
+          { user_id: 'student-2', chapter_id: 'ch-1', status: 'alumni' },
+        ],
+        error: null,
+      })
+
+      tableMocks.user._builder._setThenValue({
+        data: [
+          { id: 'student-1', email: 'alice@test.com', name: 'Alice', phone: null, created_at: '2024-01-01' },
+          { id: 'student-2', email: 'bob@test.com', name: 'Bob', phone: null, created_at: '2024-01-01' },
+        ],
+        error: null,
+      })
+
+      tableMocks.chapter._builder._setThenValue({
+        data: [
+          { id: 'ch-1', name: 'MIT', university: 'MIT', city: 'Cambridge', region: 'MA' },
+        ],
+        error: null,
+      })
+
+      await CompanyService.searchStudents(mockSupabase as unknown as SupabaseClient, { includeAlumni: true })
+
+      expect(tableMocks.chapter_membership._builder.in).toHaveBeenCalledWith('status', ['approved', 'alumni'])
+      expect(tableMocks.chapter_membership._builder.eq).not.toHaveBeenCalledWith('status', 'approved')
+    })
+
+    it('should use eq approved query when includeAlumni is false or unset', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.person_profile._builder._setThenValue({
+        data: [
+          {
+            user_id: 'student-1',
+            major_or_interest: 'CS',
+            graduation_year: 2024,
+            linkedin_url: null,
+            portfolio_url: null,
+            skills: ['React'],
+            is_recruiter_visible: true,
+            updated_at: '2024-01-01',
+          },
+        ],
+        error: null,
+      })
+
+      tableMocks.chapter_membership._builder._setThenValue({
+        data: [
+          { user_id: 'student-1', chapter_id: 'ch-1', status: 'approved' },
+        ],
+        error: null,
+      })
+
+      tableMocks.user._builder._setThenValue({
+        data: [
+          { id: 'student-1', email: 'alice@test.com', name: 'Alice', phone: null, created_at: '2024-01-01' },
+        ],
+        error: null,
+      })
+
+      tableMocks.chapter._builder._setThenValue({
+        data: [
+          { id: 'ch-1', name: 'MIT', university: 'MIT', city: 'Cambridge', region: 'MA' },
+        ],
+        error: null,
+      })
+
+      await CompanyService.searchStudents(mockSupabase as unknown as SupabaseClient, {})
+
+      expect(tableMocks.chapter_membership._builder.eq).toHaveBeenCalledWith('status', 'approved')
+    })
+
+    it('should filter by hasLinkedIn at the DB level', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.person_profile._builder._setThenValue({
+        data: [
+          {
+            user_id: 'student-1',
+            major_or_interest: 'CS',
+            graduation_year: 2025,
+            linkedin_url: 'https://linkedin.com/in/alice',
+            portfolio_url: null,
+            skills: [],
+            is_recruiter_visible: true,
+            updated_at: '2024-01-01',
+          },
+        ],
+        error: null,
+      })
+
+      tableMocks.chapter_membership._builder._setThenValue({
+        data: [
+          { user_id: 'student-1', chapter_id: 'ch-1', status: 'approved' },
+        ],
+        error: null,
+      })
+
+      tableMocks.user._builder._setThenValue({
+        data: [
+          { id: 'student-1', email: 'alice@test.com', name: 'Alice', phone: null, created_at: '2024-01-01' },
+        ],
+        error: null,
+      })
+
+      tableMocks.chapter._builder._setThenValue({
+        data: [
+          { id: 'ch-1', name: 'MIT', university: 'MIT', city: 'Cambridge', region: 'MA' },
+        ],
+        error: null,
+      })
+
+      await CompanyService.searchStudents(mockSupabase as unknown as SupabaseClient, { hasLinkedIn: true })
+
+      expect(tableMocks.person_profile._builder.not).toHaveBeenCalledWith('linkedin_url', 'is', null)
+    })
+
+    it('should filter by hasPortfolio at the DB level', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.person_profile._builder._setThenValue({
+        data: [
+          {
+            user_id: 'student-1',
+            major_or_interest: 'CS',
+            graduation_year: 2025,
+            linkedin_url: null,
+            portfolio_url: 'https://portfolio.example.com/alice',
+            skills: [],
+            is_recruiter_visible: true,
+            updated_at: '2024-01-01',
+          },
+        ],
+        error: null,
+      })
+
+      tableMocks.chapter_membership._builder._setThenValue({
+        data: [
+          { user_id: 'student-1', chapter_id: 'ch-1', status: 'approved' },
+        ],
+        error: null,
+      })
+
+      tableMocks.user._builder._setThenValue({
+        data: [
+          { id: 'student-1', email: 'alice@test.com', name: 'Alice', phone: null, created_at: '2024-01-01' },
+        ],
+        error: null,
+      })
+
+      tableMocks.chapter._builder._setThenValue({
+        data: [
+          { id: 'ch-1', name: 'MIT', university: 'MIT', city: 'Cambridge', region: 'MA' },
+        ],
+        error: null,
+      })
+
+      await CompanyService.searchStudents(mockSupabase as unknown as SupabaseClient, { hasPortfolio: true })
+
+      expect(tableMocks.person_profile._builder.not).toHaveBeenCalledWith('portfolio_url', 'is', null)
+    })
+
+    it('should filter by hasResume post-query when resume table has matching records', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.person_profile._builder._setThenValue({
+        data: [
+          {
+            user_id: 'student-1',
+            major_or_interest: 'CS',
+            graduation_year: 2025,
+            linkedin_url: null,
+            portfolio_url: null,
+            skills: ['React'],
+            is_recruiter_visible: true,
+            updated_at: '2024-01-01',
+          },
+          {
+            user_id: 'student-2',
+            major_or_interest: 'Design',
+            graduation_year: 2026,
+            linkedin_url: null,
+            portfolio_url: null,
+            skills: ['Figma'],
+            is_recruiter_visible: true,
+            updated_at: '2024-01-01',
+          },
+        ],
+        error: null,
+      })
+
+      tableMocks.chapter_membership._builder._setThenValue({
+        data: [
+          { user_id: 'student-1', chapter_id: 'ch-1', status: 'approved' },
+          { user_id: 'student-2', chapter_id: 'ch-1', status: 'approved' },
+        ],
+        error: null,
+      })
+
+      tableMocks.user._builder._setThenValue({
+        data: [
+          { id: 'student-1', email: 'alice@test.com', name: 'Alice', phone: null, created_at: '2024-01-01' },
+          { id: 'student-2', email: 'bob@test.com', name: 'Bob', phone: null, created_at: '2024-01-01' },
+        ],
+        error: null,
+      })
+
+      tableMocks.chapter._builder._setThenValue({
+        data: [
+          { id: 'ch-1', name: 'MIT', university: 'MIT', city: 'Cambridge', region: 'MA' },
+        ],
+        error: null,
+      })
+
+      tableMocks.resume._builder._setThenValue({
+        data: [
+          { student_id: 'student-1' },
+        ],
+        error: null,
+      })
+
+      const result = await CompanyService.searchStudents(mockSupabase as unknown as SupabaseClient, { hasResume: true })
+
+      expect(result).toHaveLength(1)
+      expect(result[0].name).toBe('Alice')
+      expect(mockSupabase.from).toHaveBeenCalledWith('resume')
+    })
+
+    it('should filter by city post-query', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.person_profile._builder._setThenValue({
+        data: [
+          {
+            user_id: 'student-1',
+            major_or_interest: 'CS',
+            graduation_year: 2025,
+            linkedin_url: null,
+            portfolio_url: null,
+            skills: [],
+            is_recruiter_visible: true,
+            updated_at: '2024-01-01',
+          },
+          {
+            user_id: 'student-2',
+            major_or_interest: 'Design',
+            graduation_year: 2026,
+            linkedin_url: null,
+            portfolio_url: null,
+            skills: [],
+            is_recruiter_visible: true,
+            updated_at: '2024-01-01',
+          },
+        ],
+        error: null,
+      })
+
+      tableMocks.chapter_membership._builder._setThenValue({
+        data: [
+          { user_id: 'student-1', chapter_id: 'ch-1', status: 'approved' },
+          { user_id: 'student-2', chapter_id: 'ch-2', status: 'approved' },
+        ],
+        error: null,
+      })
+
+      tableMocks.user._builder._setThenValue({
+        data: [
+          { id: 'student-1', email: 'alice@test.com', name: 'Alice', phone: null, created_at: '2024-01-01' },
+          { id: 'student-2', email: 'bob@test.com', name: 'Bob', phone: null, created_at: '2024-01-01' },
+        ],
+        error: null,
+      })
+
+      tableMocks.chapter._builder._setThenValue({
+        data: [
+          { id: 'ch-1', name: 'MIT', university: 'MIT', city: 'Cambridge', region: 'MA' },
+          { id: 'ch-2', name: 'Harvard', university: 'Harvard', city: 'Boston', region: 'MA' },
+        ],
+        error: null,
+      })
+
+      const result = await CompanyService.searchStudents(mockSupabase as unknown as SupabaseClient, { city: 'Cambridge' })
+
+      expect(result).toHaveLength(1)
+      expect(result[0].name).toBe('Alice')
+      expect(result[0].chapter?.city).toBe('Cambridge')
+    })
+
+    it('should sort by created_at by default', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.person_profile._builder._setThenValue({
+        data: [
+          { user_id: 'student-1', major_or_interest: 'CS', graduation_year: 2025, linkedin_url: null, portfolio_url: null, skills: [], is_recruiter_visible: true, updated_at: '2024-06-01' },
+          { user_id: 'student-2', major_or_interest: 'CS', graduation_year: 2025, linkedin_url: null, portfolio_url: null, skills: [], is_recruiter_visible: true, updated_at: '2024-06-01' },
+        ],
+        error: null,
+      })
+      tableMocks.chapter_membership._builder._setThenValue({
+        data: [
+          { user_id: 'student-1', chapter_id: 'ch-1', status: 'approved' },
+          { user_id: 'student-2', chapter_id: 'ch-1', status: 'approved' },
+        ],
+        error: null,
+      })
+      tableMocks.user._builder._setThenValue({
+        data: [
+          { id: 'student-1', email: 'alice@test.com', name: 'Alice', phone: null, created_at: '2024-01-01' },
+          { id: 'student-2', email: 'bob@test.com', name: 'Bob', phone: null, created_at: '2024-03-01' },
+        ],
+        error: null,
+      })
+      tableMocks.chapter._builder._setThenValue({
+        data: [{ id: 'ch-1', name: 'MIT', university: 'MIT', city: 'Cambridge', region: 'MA' }],
+        error: null,
+      })
+
+      const result = await CompanyService.searchStudents(mockSupabase as unknown as SupabaseClient, {})
+      expect(result[0].name).toBe('Bob')
+      expect(result[1].name).toBe('Alice')
+    })
+
+    it('should sort by updated_at when sortBy is updated_at', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.person_profile._builder._setThenValue({
+        data: [
+          { user_id: 'student-1', major_or_interest: 'CS', graduation_year: 2025, linkedin_url: null, portfolio_url: null, skills: [], is_recruiter_visible: true, updated_at: '2024-06-01' },
+          { user_id: 'student-2', major_or_interest: 'CS', graduation_year: 2025, linkedin_url: null, portfolio_url: null, skills: [], is_recruiter_visible: true, updated_at: '2024-01-01' },
+        ],
+        error: null,
+      })
+      tableMocks.chapter_membership._builder._setThenValue({
+        data: [
+          { user_id: 'student-1', chapter_id: 'ch-1', status: 'approved' },
+          { user_id: 'student-2', chapter_id: 'ch-1', status: 'approved' },
+        ],
+        error: null,
+      })
+      tableMocks.user._builder._setThenValue({
+        data: [
+          { id: 'student-1', email: 'alice@test.com', name: 'Alice', phone: null, created_at: '2024-01-01' },
+          { id: 'student-2', email: 'bob@test.com', name: 'Bob', phone: null, created_at: '2024-01-01' },
+        ],
+        error: null,
+      })
+      tableMocks.chapter._builder._setThenValue({
+        data: [{ id: 'ch-1', name: 'MIT', university: 'MIT', city: 'Cambridge', region: 'MA' }],
+        error: null,
+      })
+
+      const result = await CompanyService.searchStudents(mockSupabase as unknown as SupabaseClient, { sortBy: 'updated_at' })
+      expect(result[0].name).toBe('Alice')
+      expect(result[1].name).toBe('Bob')
     })
   })
 
