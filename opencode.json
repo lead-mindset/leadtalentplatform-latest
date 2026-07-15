@@ -9,7 +9,8 @@
   "mcp": {
     "supabase": {
       "type": "remote",
-      "url": "http://127.0.0.1:54321/mcp"
+      "url": "https://mcp.supabase.com/mcp?project_ref=sboibxszratyaswwursb",
+      "enabled": true
     }
   }
 }
