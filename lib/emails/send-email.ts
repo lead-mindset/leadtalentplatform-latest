@@ -46,7 +46,7 @@ export async function sendWelcomeEmail(
   return sendTransactionalEmail({
     to,
     subject: resolvedLocale === 'es'
-      ? 'Tu perfil esta listo en LEAD Talent Platform'
+      ? 'Tu perfil está listo en LEAD Talent Platform'
       : 'Your profile is ready in LEAD Talent Platform',
     html,
   })
@@ -96,7 +96,7 @@ export async function sendChapterApplicationRejectedEmail(
   return sendTransactionalEmail({
     to,
     subject: resolvedLocale === 'es'
-      ? `Actualizacion de solicitud: ${chapterName}`
+      ? `Actualización de solicitud: ${chapterName}`
       : `Application update: ${chapterName}`,
     html,
   })
@@ -114,7 +114,7 @@ export async function sendMemberApprovalEmail(
     MemberApprovalEmail({
       name,
       memberId,
-      chapter_name: chapterName,
+      chapterName,
       dashboardUrl: appPath(resolvedLocale, '/student'),
       locale: resolvedLocale,
     })
@@ -123,7 +123,7 @@ export async function sendMemberApprovalEmail(
   return sendTransactionalEmail({
     to,
     subject: resolvedLocale === 'es'
-      ? `Membresia aprobada: ${memberId}`
+      ? `Membresía aprobada: ${memberId}`
       : `Membership approved: ${memberId}`,
     html,
   })
@@ -141,7 +141,7 @@ export async function sendApplicationReceivedEmail(
     ApplicationReceivedEmail({
       name,
       eventTitle,
-      chapter_name: chapterName,
+      chapterName,
       eventsUrl: appPath(resolvedLocale, '/student/events'),
       locale: resolvedLocale,
     })
@@ -239,7 +239,7 @@ export async function sendApplicationRejectedEmail(
     ApplicationRejectedEmail({
       name,
       eventTitle,
-      chapter_name: chapterName,
+      chapterName,
       eventsUrl: appPath(resolvedLocale, '/student/events'),
       locale: resolvedLocale,
     })
@@ -248,7 +248,7 @@ export async function sendApplicationRejectedEmail(
   return sendTransactionalEmail({
     to,
     subject: resolvedLocale === 'es'
-      ? `Actualizacion de solicitud: ${eventTitle}`
+      ? `Actualización de solicitud: ${eventTitle}`
       : `Application update: ${eventTitle}`,
     html,
   })
@@ -273,7 +273,7 @@ export async function sendCompanyRepresentativeInviteEmail(
   return sendTransactionalEmail({
     to,
     subject: resolvedLocale === 'es'
-      ? `Invitacion de ${companyName} a LEAD Talent Platform`
+      ? `Invitación de ${companyName} a LEAD Talent Platform`
       : `${companyName} invitation to LEAD Talent Platform`,
     html,
     critical: true,

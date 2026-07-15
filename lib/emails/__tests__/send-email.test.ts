@@ -21,7 +21,7 @@ describe('transactional email senders', () => {
     expect(sendTransactionalEmailMock).toHaveBeenCalledWith(
       expect.objectContaining({
         to: 'rep@example.com',
-        subject: 'Invitacion de Acme a LEAD Talent Platform',
+        subject: 'Invitación de Acme a LEAD Talent Platform',
         critical: true,
       })
     )
@@ -60,7 +60,7 @@ describe('transactional email senders', () => {
     await sendMemberApprovalEmail('member@test.com', 'Abi', 'LEAD-123', 'LEAD PUCP')
 
     const payload = sendTransactionalEmailMock.mock.calls[0][0]
-    expect(payload.subject).toBe('Membresia aprobada: LEAD-123')
+    expect(payload.subject).toBe('Membresía aprobada: LEAD-123')
     expect(payload.html).toContain('LEAD-123')
     expect(payload.html).toContain('LEAD Americas')
   })
