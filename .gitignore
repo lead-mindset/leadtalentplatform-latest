@@ -80,6 +80,12 @@ ecosystem.config.json
 start-remote.sh
 test-remote.sh
 
+# database backups / dumps (may contain secrets)
+prod_full_backup_*.sql
+prod_objects.txt
+qa_objects.txt
+unapplied_migrations.txt
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
