@@ -23,6 +23,8 @@ import type {
   FundingSourceKey,
 } from '@/lib/services/funding.service'
 import { AdminFundingReviewPanel } from './_components/admin-funding-review-panel'
+import { ComingSoon } from '@/components/ui/coming-soon'
+
 
 type PageSearchParams = {
   status?: string | string[]
@@ -198,53 +200,58 @@ export default async function AdminFundingPage({
   const visibleContexts = filterContexts(contexts, activeStatus)
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        eyebrow="Administración"
-        title="Financiamiento"
-        description="Revisa solicitudes de financiamiento de capítulos, asigna fuente interna y monitorea comprobantes."
-      />
+    <ComingSoon
+      title="Estamos revolucionando el financiamiento"
+      description="Monitorea y administra las solicitudes de financiamiento de todos los capítulos."
+    >
+      <div className="space-y-6">
+        <PageHeader
+          eyebrow="Administración"
+          title="Financiamiento"
+          description="Revisa solicitudes de financiamiento de capítulos, asigna fuente interna y monitorea comprobantes."
+        />
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-        {FILTERS.map(filter => (
-          <Link
-            key={filter.key}
-            href={filter.key === 'submitted' ? '/admin/funding' : `/admin/funding?status=${filter.key}`}
-            className={`rounded-lg border bg-card p-3 transition-colors hover:bg-muted/40 sm:p-4 ${
-              activeStatus === filter.key ? 'border-primary/50 ring-1 ring-primary/25' : ''
-            }`}
-          >
-            <p className="text-sm font-medium text-muted-foreground">{filter.label}</p>
-            <p className="mt-2 text-xl font-semibold tracking-tight sm:mt-3 sm:text-2xl">{countByStatus(contexts, filter.key)}</p>
-          </Link>
-        ))}
-      </div>
-
-      <div className="space-y-3">
-        <div>
-          <h2 className="text-lg font-semibold">
-            {activeStatus === 'all' ? 'Todas las solicitudes' : FUNDING_STATUS_LABELS[activeStatus]}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {visibleContexts.length} solicitud{visibleContexts.length === 1 ? '' : 'es'} en esta vista.
-          </p>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+          {FILTERS.map(filter => (
+            <Link
+              key={filter.key}
+              href={filter.key === 'submitted' ? '/admin/funding' : `/admin/funding?status=${filter.key}`}
+              className={`rounded-lg border bg-card p-3 transition-colors hover:bg-muted/40 sm:p-4 ${
+                activeStatus === filter.key ? 'border-primary/50 ring-1 ring-primary/25' : ''
+              }`}
+            >
+              <p className="text-sm font-medium text-muted-foreground">{filter.label}</p>
+              <p className="mt-2 text-xl font-semibold tracking-tight sm:mt-3 sm:text-2xl">{countByStatus(contexts, filter.key)}</p>
+            </Link>
+          ))}
         </div>
 
-        {visibleContexts.length === 0 ? (
-          <Card className="border-dashed">
-            <CardContent className="py-14 text-center">
-              <h3 className="text-lg font-semibold">No hay solicitudes en esta vista</h3>
-              <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-                Cambia el filtro para revisar otros estados o espera nuevas solicitudes de los capítulos.
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          visibleContexts.map(context => (
-            <FundingAdminCard key={context.request.id} context={context} />
-          ))
-        )}
+        <div className="space-y-3">
+          <div>
+            <h2 className="text-lg font-semibold">
+              {activeStatus === 'all' ? 'Todas las solicitudes' : FUNDING_STATUS_LABELS[activeStatus]}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {visibleContexts.length} solicitud{visibleContexts.length === 1 ? '' : 'es'} en esta vista.
+            </p>
+          </div>
+
+          {visibleContexts.length === 0 ? (
+            <Card className="border-dashed">
+              <CardContent className="py-14 text-center">
+                <h3 className="text-lg font-semibold">No hay solicitudes en esta vista</h3>
+                <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+                  Cambia el filtro para revisar otros estados o espera nuevas solicitudes de los capítulos.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            visibleContexts.map(context => (
+              <FundingAdminCard key={context.request.id} context={context} />
+            ))
+          )}
+        </div>
       </div>
-    </div>
+    </ComingSoon>
   )
 }
