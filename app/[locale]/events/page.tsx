@@ -15,6 +15,8 @@ import { Navbar } from '../(public)/_components/navbar'
 import { MainContainer } from '@/components/global/main-container'
 import { cn } from '@/lib/utils'
 import type { EventWithDetails } from '@/lib/types'
+import { ComingSoon } from '@/components/ui/coming-soon'
+
 
 const EVENT_TIME_ZONE = 'America/Lima'
 const INITIAL_UPCOMING_EVENT_LIMIT = 12
@@ -383,15 +385,20 @@ export default async function EventsPage({ params }: EventsPageProps) {
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
-      <Suspense
-        fallback={
-          <div className="p-8 text-center text-sm text-muted-foreground">
-            {copy.loading}
-          </div>
-        }
+      <ComingSoon
+        title="Algo increíble se acerca"
+        description="Explora los eventos abiertos de LEAD y regístrate a los que más te interesen."
       >
-        <EventsContent locale={resolvedLocale} />
-      </Suspense>
+        <Suspense
+          fallback={
+            <div className="p-8 text-center text-sm text-muted-foreground">
+              {copy.loading}
+            </div>
+          }
+        >
+          <EventsContent locale={resolvedLocale} />
+        </Suspense>
+      </ComingSoon>
     </div>
   )
 }

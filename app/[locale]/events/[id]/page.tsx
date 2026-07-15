@@ -7,6 +7,8 @@ import type { EventApplicationQuestionRow } from '@/lib/types'
 import { PersonProfileService } from '@/lib/services/person-profile.service'
 import { getEventOnboardingPath } from '@/lib/actions/events/register.helpers'
 import { EventService } from '@/lib/services/event.service'
+import { ComingSoon } from '@/components/ui/coming-soon'
+
 
 export default async function EventDetailPage({
   params,
@@ -54,15 +56,20 @@ export default async function EventDetailPage({
       <Suspense fallback={null}>
         <Navbar />
       </Suspense>
-      <EventContent
-        event={serializedEvent}
-        myRegistration={serializedRegistration}
-        applicationQuestions={serializedApplicationQuestions}
-        isLoggedIn={!!auth.user}
-        hasBasicProfile={hasBasicProfile}
-        onboardingUrl={getEventOnboardingPath(id)}
-        registrationBlockedReason={registrationBlockedReason}
-      />
+      <ComingSoon
+        title="Algo increíble se acerca"
+        description="Descubre los detalles del evento, regístrate o postúlate como miembro LEAD."
+      >
+        <EventContent
+          event={serializedEvent}
+          myRegistration={serializedRegistration}
+          applicationQuestions={serializedApplicationQuestions}
+          isLoggedIn={!!auth.user}
+          hasBasicProfile={hasBasicProfile}
+          onboardingUrl={getEventOnboardingPath(id)}
+          registrationBlockedReason={registrationBlockedReason}
+        />
+      </ComingSoon>
     </>
   )
 }
