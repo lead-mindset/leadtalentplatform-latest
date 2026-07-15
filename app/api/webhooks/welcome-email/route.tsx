@@ -20,12 +20,12 @@ export async function POST(request: Request) {
   const supabase = createServiceClient()
   const { data: authUser, error } = await supabase.auth.admin.getUserById(record.id)
 
-  if (error || !authUser) {
-    console.error('Could not fetch auth user:', error)
+  if (error || !authUser?.user) {
+    console.error('[welcome-email] Could not fetch auth user, skipping:', error?.message ?? 'user not found')
+    return Response.json({ skipped: 'auth user not found' }, { status: 200 })
   }
 
-  const meta = authUser?.user?.user_metadata ?? {}
-  const locale = meta.locale === 'en' ? 'en' : 'es'
+  const locale = authUser.user.user_metadata?.locale === 'en' ? 'en' : 'es'
   const role = record.role ?? 'member'
   const dashboardPath =
     role === 'admin' ? 'admin' :
