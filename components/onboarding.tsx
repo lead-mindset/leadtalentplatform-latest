@@ -527,7 +527,7 @@ export default function Onboarding({ initialValues, nextPath, pendingInvite }: O
                         <span className="text-sm text-muted-foreground">{resumeFile.name}</span>
                       ) : null}
                     </div>
-                    <FieldError message={resumeError} />
+                    <FieldError message={resumeError || undefined} />
                   </div>
                 </div>
 
