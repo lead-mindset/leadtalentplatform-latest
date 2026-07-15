@@ -8,6 +8,8 @@ import { getCheckInCounter } from '@/lib/actions/events/checkin'
 import { CheckinScanner } from '../events/_components/checkin-scanner'
 import { MainContainer } from '@/components/global/main-container'
 import { PageHeader } from '@/components/ui/page-header'
+import { ComingSoon } from '@/components/ui/coming-soon'
+
 
 function formatDate(value: string) {
   const d = new Date(value)
@@ -63,83 +65,88 @@ export default async function ChapterCheckinPage({
   const counter = selectedEvent ? await getCheckInCounter(selectedEvent.id) : null
 
   return (
-    <MainContainer className="w-full max-w-full py-8 space-y-8">
-      <PageHeader
-        title="Check-in"
-        description="Escanea códigos QR o busca asistentes para el evento seleccionado."
-        actions={
-          <Button asChild variant="outline">
-          <Link href="/chapter/events">Eventos del capítulo</Link>
-        </Button>
-        }
-      />
+    <ComingSoon
+      title="Algo grande se está cocinando"
+      description="Check-in exprés para eventos de capítulo con escaneo de QR en vivo."
+    >
+      <MainContainer className="w-full max-w-full py-8 space-y-8">
+        <PageHeader
+          title="Check-in"
+          description="Escanea códigos QR o busca asistentes para el evento seleccionado."
+          actions={
+            <Button asChild variant="outline">
+            <Link href="/chapter/events">Eventos del capítulo</Link>
+          </Button>
+          }
+        />
 
-      {selectedEvent ? (
-        <>
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-xl font-semibold">{selectedEvent.title}</h2>
-              <Badge variant={selectedEvent.is_published ? 'success' : 'outline'}>
-                {selectedEvent.is_published ? 'Publicado' : 'Borrador'}
-              </Badge>
-            </div>
-            <CheckInSummary
-              checkedIn={counter?.checkedIn ?? 0}
-              total={counter?.total ?? selectedEvent._count.registrations}
-            />
-          </div>
-
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-            <CheckinScanner
-              eventId={selectedEvent.id}
-              initialCheckedIn={counter?.checkedIn ?? 0}
-              initialTotal={counter?.total ?? selectedEvent._count.registrations}
-            />
-
-            <aside className="space-y-3">
-              <div className="rounded-lg border bg-card p-4">
-                <h3 className="font-semibold">Selector de evento</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Cambia rápidamente si estás operando varios eventos del capítulo.
-                </p>
+        {selectedEvent ? (
+          <>
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-xl font-semibold">{selectedEvent.title}</h2>
+                <Badge variant={selectedEvent.is_published ? 'success' : 'outline'}>
+                  {selectedEvent.is_published ? 'Publicado' : 'Borrador'}
+                </Badge>
               </div>
-              <div className="divide-y overflow-hidden rounded-lg border bg-card">
-                {upcomingOrLive.slice(0, 8).map((event) => (
-                  <div key={event.id} className="p-3">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                      <div className="min-w-0">
-                        <p className="truncate font-medium">{event.title}</p>
-                        <p className="mt-1 text-xs text-muted-foreground">{formatDate(event.start_at)}</p>
-                        <p className="text-xs text-muted-foreground">{event._count.registrations} registrados</p>
+              <CheckInSummary
+                checkedIn={counter?.checkedIn ?? 0}
+                total={counter?.total ?? selectedEvent._count.registrations}
+              />
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+              <CheckinScanner
+                eventId={selectedEvent.id}
+                initialCheckedIn={counter?.checkedIn ?? 0}
+                initialTotal={counter?.total ?? selectedEvent._count.registrations}
+              />
+
+              <aside className="space-y-3">
+                <div className="rounded-lg border bg-card p-4">
+                  <h3 className="font-semibold">Selector de evento</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Cambia rápidamente si estás operando varios eventos del capítulo.
+                  </p>
+                </div>
+                <div className="divide-y overflow-hidden rounded-lg border bg-card">
+                  {upcomingOrLive.slice(0, 8).map((event) => (
+                    <div key={event.id} className="p-3">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
+                          <p className="truncate font-medium">{event.title}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">{formatDate(event.start_at)}</p>
+                          <p className="text-xs text-muted-foreground">{event._count.registrations} registrados</p>
+                        </div>
+                        <Button asChild size="sm" variant={event.id === selectedEvent.id ? 'default' : 'outline'} className="w-full sm:w-auto">
+                          <Link href={`/chapter/checkin?eventId=${event.id}`}>
+                            {event.id === selectedEvent.id ? 'En uso' : 'Usar'}
+                          </Link>
+                        </Button>
                       </div>
-                      <Button asChild size="sm" variant={event.id === selectedEvent.id ? 'default' : 'outline'} className="w-full sm:w-auto">
-                        <Link href={`/chapter/checkin?eventId=${event.id}`}>
-                          {event.id === selectedEvent.id ? 'En uso' : 'Usar'}
-                        </Link>
-                      </Button>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </aside>
-          </div>
-        </>
-      ) : (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-              <Icons.Calendar className="h-5 w-5 text-muted-foreground" />
+                  ))}
+                </div>
+              </aside>
             </div>
-            <h2 className="text-xl font-semibold">No hay eventos activos para check-in</h2>
-            <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-              Crea o publica un evento próximo antes de abrir el check-in.
-            </p>
-            <Button asChild className="mt-6">
-              <Link href="/chapter/events">Gestionar eventos</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-    </MainContainer>
+          </>
+        ) : (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                <Icons.Calendar className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <h2 className="text-xl font-semibold">No hay eventos activos para check-in</h2>
+              <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+                Crea o publica un evento próximo antes de abrir el check-in.
+              </p>
+              <Button asChild className="mt-6">
+                <Link href="/chapter/events">Gestionar eventos</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+      </MainContainer>
+    </ComingSoon>
   )
 }

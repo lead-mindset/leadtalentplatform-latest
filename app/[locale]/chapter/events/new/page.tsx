@@ -10,6 +10,8 @@ import { Breadcrumb } from '@/components/ui/breadcrumb'
 import { MainContainer } from '@/components/global/main-container'
 import { Icons } from '@/components/ui/icons'
 import { PageHeader } from '@/components/ui/page-header'
+import { ComingSoon } from '@/components/ui/coming-soon'
+
 
 export default async function NewChapterEventPage() {
   const supabase = await createClient()
@@ -36,31 +38,36 @@ export default async function NewChapterEventPage() {
     editorChapter = chapter
   }
   return (
-    <MainContainer className="py-8 space-y-8">
-      <Breadcrumb
-        items={[
-          { label: 'Resumen', href: '/chapter' },
-          { label: 'Eventos', href: '/chapter/events' },
-          { label: 'Nuevo evento' },
-        ]}
-      />
+    <ComingSoon
+      title="Algo grande se está cocinando"
+      description="Crea un nuevo evento con registro, preguntas y todo lo que necesitas para publicarlo."
+    >
+      <MainContainer className="py-8 space-y-8">
+        <Breadcrumb
+          items={[
+            { label: 'Resumen', href: '/chapter' },
+            { label: 'Eventos', href: '/chapter/events' },
+            { label: 'Nuevo evento' },
+          ]}
+        />
 
-      <PageHeader
-        eyebrow="Gestión de eventos"
-        title="Nuevo evento"
-        description="Crea un borrador y publícalo cuando los datos, el registro y las preguntas estén listos."
-        actions={(
-          <Button asChild variant="outline">
-          <Link href="/chapter/events">
-            <Icons.ArrowLeft className="mr-2 h-4 w-4" />
-            Eventos
-          </Link>
-          </Button>
-        )}
-      />
+        <PageHeader
+          eyebrow="Gestión de eventos"
+          title="Nuevo evento"
+          description="Crea un borrador y publícalo cuando los datos, el registro y las preguntas estén listos."
+          actions={(
+            <Button asChild variant="outline">
+            <Link href="/chapter/events">
+              <Icons.ArrowLeft className="mr-2 h-4 w-4" />
+              Eventos
+            </Link>
+            </Button>
+          )}
+        />
 
-      <EventForm mode="create" editorChapter={editorChapter} />
-    </MainContainer>
+        <EventForm mode="create" editorChapter={editorChapter} />
+      </MainContainer>
+    </ComingSoon>
   )
 }
 

@@ -21,6 +21,8 @@ import type {
   FundingRequestStatus,
 } from '@/lib/services/funding.service'
 import { FundingAccountabilityPanel } from './_components/funding-accountability-panel'
+import { ComingSoon } from '@/components/ui/coming-soon'
+
 
 function isOverdue(value: string | null, submittedAt: string | null) {
   if (!value || submittedAt) return false
@@ -70,120 +72,125 @@ export default async function ChapterFundingDetailPage({
   const editable = status === 'draft' || status === 'changes_requested'
 
   return (
-    <MainContainer className="space-y-8 py-8">
-      <Breadcrumb
-        items={[
-          { label: 'Resumen', href: `/${locale}/chapter` },
-          { label: 'Financiamiento', href: `/${locale}/chapter/funding` },
-          { label: request.title },
-        ]}
-      />
+    <ComingSoon
+      title="Estamos revolucionando el financiamiento"
+      description="Revisa el estado, presupuesto y comprobantes de esta solicitud de fondos."
+    >
+      <MainContainer className="space-y-8 py-8">
+        <Breadcrumb
+          items={[
+            { label: 'Resumen', href: `/${locale}/chapter` },
+            { label: 'Financiamiento', href: `/${locale}/chapter/funding` },
+            { label: request.title },
+          ]}
+        />
 
-      <PageHeader
-        eyebrow="Financiamiento del capítulo"
-        title={request.title}
-        description="Revisa el estado, presupuesto, comprobantes y reflexión post-evento de esta solicitud."
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <FundingStatusBadge status={status} />
-            {request.is_late_request && <Badge variant="warning">Solicitud tardía</Badge>}
-            {overdue && <Badge variant="warning">Comprobantes vencidos</Badge>}
-            {editable && (
-              <Button asChild variant="outline">
-                <Link href={`/${locale}/chapter/funding/${request.id}/edit`}>Editar</Link>
-              </Button>
-            )}
-          </div>
-        }
-      />
-
-      {overdue && (
-        <Card className="border-warning/40 bg-warning/5">
-          <CardContent className="py-4 text-sm">
-            Los comprobantes o evidencia están vencidos. Esto no bloquea nuevas solicitudes en v1, pero ayuda a cerrar el ciclo con transparencia.
-          </CardContent>
-        </Card>
-      )}
-
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
-        <div className="space-y-5">
-          <Card>
-            <CardHeader>
-              <CardTitle>Resumen</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              <p className="text-sm leading-6 text-muted-foreground">{request.purpose}</p>
-              <div className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
-                <MetaBlock label="Fecha" value={formatFundingDate(request.event_date)} />
-                <MetaBlock label="Solicitado" value={formatFundingCurrency(request.requested_amount, request.currency)} />
-                <MetaBlock label="Aprobado" value={request.approved_amount == null ? 'Pendiente' : formatFundingCurrency(request.approved_amount, request.currency)} />
-                <MetaBlock label="Gasto real" value={request.actual_spend_amount == null ? 'Pendiente' : formatFundingCurrency(request.actual_spend_amount, request.currency)} />
-              </div>
-
-              <div className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
-                <MetaBlock label="Audiencia" value={request.expected_audience} />
-                <MetaBlock label="Asistencia esperada" value={request.expected_attendee_count == null ? 'No indicada' : String(request.expected_attendee_count)} />
-                <MetaBlock label="Partner" value={request.partner_name ?? 'Sin partner'} />
-                <MetaBlock label="Límite comprobantes" value={formatFundingDate(request.accountability_due_at)} />
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-sm font-medium">OKRs y pilares</p>
-                <div className="flex flex-wrap gap-2">
-                  {okrs.map(key => <Badge key={key} variant="secondary">{FUNDING_OKR_LABELS[key]}</Badge>)}
-                  {pillars.map(key => <Badge key={key} variant="outline">{FUNDING_PILLAR_LABELS[key]}</Badge>)}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Presupuesto</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {detail.budgetItems.map(item => (
-                <div key={item.id} className="grid gap-2 rounded-md border border-border/60 p-3 text-sm sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-                  <div className="min-w-0">
-                    <p className="break-words font-medium">{item.label}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {FUNDING_BUDGET_CATEGORY_LABELS[item.category as FundingBudgetCategory]}
-                    </p>
-                  </div>
-                  <span className="font-medium sm:text-right">
-                    {formatFundingCurrency(item.amount, request.currency)}
-                  </span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Historial</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {detail.statusEvents.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Todavía no hay historial.</p>
-              ) : (
-                detail.statusEvents.map(event => (
-                  <div key={event.id} className="rounded-md border border-border/60 p-3 text-sm">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <FundingStatusBadge status={event.to_status} />
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(event.created_at).toLocaleDateString('es-PE')}
-                      </span>
-                    </div>
-                    {event.note && <p className="mt-2 text-muted-foreground">{event.note}</p>}
-                  </div>
-                ))
+        <PageHeader
+          eyebrow="Financiamiento del capítulo"
+          title={request.title}
+          description="Revisa el estado, presupuesto, comprobantes y reflexión post-evento de esta solicitud."
+          actions={
+            <div className="flex flex-wrap items-center gap-2">
+              <FundingStatusBadge status={status} />
+              {request.is_late_request && <Badge variant="warning">Solicitud tardía</Badge>}
+              {overdue && <Badge variant="warning">Comprobantes vencidos</Badge>}
+              {editable && (
+                <Button asChild variant="outline">
+                  <Link href={`/${locale}/chapter/funding/${request.id}/edit`}>Editar</Link>
+                </Button>
               )}
+            </div>
+          }
+        />
+
+        {overdue && (
+          <Card className="border-warning/40 bg-warning/5">
+            <CardContent className="py-4 text-sm">
+              Los comprobantes o evidencia están vencidos. Esto no bloquea nuevas solicitudes en v1, pero ayuda a cerrar el ciclo con transparencia.
             </CardContent>
           </Card>
-        </div>
+        )}
 
-        <FundingAccountabilityPanel detail={detail} />
-      </div>
-    </MainContainer>
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
+          <div className="space-y-5">
+            <Card>
+              <CardHeader>
+                <CardTitle>Resumen</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <p className="text-sm leading-6 text-muted-foreground">{request.purpose}</p>
+                <div className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
+                  <MetaBlock label="Fecha" value={formatFundingDate(request.event_date)} />
+                  <MetaBlock label="Solicitado" value={formatFundingCurrency(request.requested_amount, request.currency)} />
+                  <MetaBlock label="Aprobado" value={request.approved_amount == null ? 'Pendiente' : formatFundingCurrency(request.approved_amount, request.currency)} />
+                  <MetaBlock label="Gasto real" value={request.actual_spend_amount == null ? 'Pendiente' : formatFundingCurrency(request.actual_spend_amount, request.currency)} />
+                </div>
+
+                <div className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
+                  <MetaBlock label="Audiencia" value={request.expected_audience} />
+                  <MetaBlock label="Asistencia esperada" value={request.expected_attendee_count == null ? 'No indicada' : String(request.expected_attendee_count)} />
+                  <MetaBlock label="Partner" value={request.partner_name ?? 'Sin partner'} />
+                  <MetaBlock label="Límite comprobantes" value={formatFundingDate(request.accountability_due_at)} />
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">OKRs y pilares</p>
+                  <div className="flex flex-wrap gap-2">
+                    {okrs.map(key => <Badge key={key} variant="secondary">{FUNDING_OKR_LABELS[key]}</Badge>)}
+                    {pillars.map(key => <Badge key={key} variant="outline">{FUNDING_PILLAR_LABELS[key]}</Badge>)}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Presupuesto</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {detail.budgetItems.map(item => (
+                  <div key={item.id} className="grid gap-2 rounded-md border border-border/60 p-3 text-sm sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                    <div className="min-w-0">
+                      <p className="break-words font-medium">{item.label}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {FUNDING_BUDGET_CATEGORY_LABELS[item.category as FundingBudgetCategory]}
+                      </p>
+                    </div>
+                    <span className="font-medium sm:text-right">
+                      {formatFundingCurrency(item.amount, request.currency)}
+                    </span>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Historial</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {detail.statusEvents.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Todavía no hay historial.</p>
+                ) : (
+                  detail.statusEvents.map(event => (
+                    <div key={event.id} className="rounded-md border border-border/60 p-3 text-sm">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <FundingStatusBadge status={event.to_status} />
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(event.created_at).toLocaleDateString('es-PE')}
+                        </span>
+                      </div>
+                      {event.note && <p className="mt-2 text-muted-foreground">{event.note}</p>}
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          <FundingAccountabilityPanel detail={detail} />
+        </div>
+      </MainContainer>
+    </ComingSoon>
   )
 }

@@ -13,6 +13,8 @@ import { Breadcrumb } from '@/components/ui/breadcrumb'
 import { MainContainer } from '@/components/global/main-container'
 import { Icons } from '@/components/ui/icons'
 import { assertCanAccessEvent, assertCanManageEvent } from '@/lib/actions/events/access'
+import { ComingSoon } from '@/components/ui/coming-soon'
+
 
 export default async function ChapterEventDetailPage({
   params,
@@ -85,51 +87,56 @@ export default async function ChapterEventDetailPage({
   }
 
   return (
-    <MainContainer className="py-8 space-y-8">
-      <Breadcrumb
-        items={[
-          { label: 'Resumen', href: `/${locale}/chapter` },
-          { label: 'Eventos', href: `/${locale}/chapter/events` },
-          { label: 'Editar evento' },
-        ]}
-      />
+    <ComingSoon
+      title="Algo grande se está cocinando"
+      description="Edita los detalles, revisa postulaciones y prepara el check-in de tu evento."
+    >
+      <MainContainer className="py-8 space-y-8">
+        <Breadcrumb
+          items={[
+            { label: 'Resumen', href: `/${locale}/chapter` },
+            { label: 'Eventos', href: `/${locale}/chapter/events` },
+            { label: 'Editar evento' },
+          ]}
+        />
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-3xl font-bold tracking-tight">Editar evento</h1>
-            <Badge variant={event.is_published ? 'success' : 'outline'}>
-              {event.is_published ? 'Publicado' : 'Borrador'}
-            </Badge>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-3xl font-bold tracking-tight">Editar evento</h1>
+              <Badge variant={event.is_published ? 'success' : 'outline'}>
+                {event.is_published ? 'Publicado' : 'Borrador'}
+              </Badge>
+            </div>
+            <p className="max-w-2xl text-muted-foreground">
+              {event.title}
+            </p>
           </div>
-          <p className="max-w-2xl text-muted-foreground">
-            {event.title}
-          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline">
+              <Link href={`/${locale}/chapter/events`}>
+                <Icons.ArrowLeft className="mr-2 h-4 w-4" />
+                Eventos
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href={`/${locale}/chapter/events/${event.id}/checkin`}>
+                Check-in
+              </Link>
+            </Button>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button asChild variant="outline">
-            <Link href={`/${locale}/chapter/events`}>
-              <Icons.ArrowLeft className="mr-2 h-4 w-4" />
-              Eventos
-            </Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href={`/${locale}/chapter/events/${event.id}/checkin`}>
-              Check-in
-            </Link>
-          </Button>
-        </div>
-      </div>
 
-      <EventForm
-        mode="edit"
-        initial={event}
-        editorChapter={editorChapter}
-        canArchiveEvents={canArchiveEvents}
-        applicationQuestions={(applicationQuestions ?? []) as EventApplicationQuestionRow[]}
-        pathwayMetadata={pathwayMetadata}
-      />
-    </MainContainer>
+        <EventForm
+          mode="edit"
+          initial={event}
+          editorChapter={editorChapter}
+          canArchiveEvents={canArchiveEvents}
+          applicationQuestions={(applicationQuestions ?? []) as EventApplicationQuestionRow[]}
+          pathwayMetadata={pathwayMetadata}
+        />
+      </MainContainer>
+    </ComingSoon>
   )
 }
 

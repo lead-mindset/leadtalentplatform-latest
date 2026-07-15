@@ -149,9 +149,7 @@ function RecentApprovals({ members, t }: { members: RecentActivityMember[]; t: (
           <div className="min-w-0">
             <p className="text-sm font-medium truncate">{member.name || 'Unknown'}</p>
             <p className="text-xs text-muted-foreground truncate">
-              {member.person_profile.major_or_interest
-                ? t(member.person_profile.major_or_interest)
-                : 'No major listed'}
+              {member.person_profile.major_or_interest ?? 'No major listed'}
             </p>
           </div>
           <p className="text-xs text-muted-foreground ml-3 shrink-0">

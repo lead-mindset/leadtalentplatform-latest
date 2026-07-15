@@ -7,6 +7,8 @@ import { Icons } from '@/components/ui/icons'
 import { CheckinScanner } from '../../_components/checkin-scanner'
 import { getCheckInCounter } from '@/lib/actions/events/checkin'
 import { assertCanAccessEvent } from '@/lib/actions/events/access'
+import { ComingSoon } from '@/components/ui/coming-soon'
+
 
 function CheckInSummary({
   checkedIn,
@@ -72,82 +74,87 @@ export default async function ChapterEventCheckinPage({
   }
 
   return (
-    <MainContainer className="w-full max-w-full py-8 space-y-8">
-      <Breadcrumb
-        items={[
-          { label: 'Resumen', href: `/${locale}/chapter` },
-          { label: 'Eventos', href: `/${locale}/chapter/events` },
-          { label: 'Check-in' },
-        ]}
-      />
-
-      <div className="space-y-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight">Check-in del evento</h1>
-            <p className="max-w-2xl text-muted-foreground">
-              {event.title}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button asChild variant="outline">
-              <Link href={`/${locale}/chapter/events/${id}`}>
-                <Icons.ArrowLeft className="mr-2 h-4 w-4" />
-                Evento
-              </Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href={`/${locale}/chapter/checkin`}>
-                Centro de check-in
-              </Link>
-            </Button>
-          </div>
-        </div>
-
-        <CheckInSummary
-          checkedIn={counter?.checkedIn ?? 0}
-          total={counter?.total ?? 0}
-        />
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-        <CheckinScanner
-          eventId={event.id}
-          initialCheckedIn={counter?.checkedIn ?? 0}
-          initialTotal={counter?.total ?? 0}
+    <ComingSoon
+      title="Algo grande se está cocinando"
+      description="Registra asistentes mediante escaneo de código QR en tu evento."
+    >
+      <MainContainer className="w-full max-w-full py-8 space-y-8">
+        <Breadcrumb
+          items={[
+            { label: 'Resumen', href: `/${locale}/chapter` },
+            { label: 'Eventos', href: `/${locale}/chapter/events` },
+            { label: 'Check-in' },
+          ]}
         />
 
-        <aside className="space-y-3">
-          <Card>
-            <CardContent className="space-y-3 py-5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                <Icons.Ticket className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <h2 className="font-semibold">Notas para operar</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Solo asistentes registrados y aprobados pueden hacer check-in. Códigos pendientes, rechazados, cancelados, duplicados o de otro evento se bloquean.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="space-y-3 py-5">
-              <h2 className="font-semibold">Recuperación rápida</h2>
-              <p className="text-sm text-muted-foreground">
-                Si el escaneo falla, busca por nombre o correo antes de pedirle a la persona que encuentre otro QR.
+        <div className="space-y-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold tracking-tight">Check-in del evento</h1>
+              <p className="max-w-2xl text-muted-foreground">
+                {event.title}
               </p>
-              <Button asChild variant="outline" className="w-full">
-                <Link href={`/${locale}/chapter/events`}>
-                  Todos los eventos del capítulo
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild variant="outline">
+                <Link href={`/${locale}/chapter/events/${id}`}>
+                  <Icons.ArrowLeft className="mr-2 h-4 w-4" />
+                  Evento
                 </Link>
               </Button>
-            </CardContent>
-          </Card>
-        </aside>
-      </div>
-    </MainContainer>
+              <Button asChild variant="outline">
+                <Link href={`/${locale}/chapter/checkin`}>
+                  Centro de check-in
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          <CheckInSummary
+            checkedIn={counter?.checkedIn ?? 0}
+            total={counter?.total ?? 0}
+          />
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+          <CheckinScanner
+            eventId={event.id}
+            initialCheckedIn={counter?.checkedIn ?? 0}
+            initialTotal={counter?.total ?? 0}
+          />
+
+          <aside className="space-y-3">
+            <Card>
+              <CardContent className="space-y-3 py-5">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                  <Icons.Ticket className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="font-semibold">Notas para operar</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Solo asistentes registrados y aprobados pueden hacer check-in. Códigos pendientes, rechazados, cancelados, duplicados o de otro evento se bloquean.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="space-y-3 py-5">
+                <h2 className="font-semibold">Recuperación rápida</h2>
+                <p className="text-sm text-muted-foreground">
+                  Si el escaneo falla, busca por nombre o correo antes de pedirle a la persona que encuentre otro QR.
+                </p>
+                <Button asChild variant="outline" className="w-full">
+                  <Link href={`/${locale}/chapter/events`}>
+                    Todos los eventos del capítulo
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </aside>
+        </div>
+      </MainContainer>
+    </ComingSoon>
   )
 }
 
