@@ -17,6 +17,8 @@ import { Icons } from '@/components/ui/icons'
 import { MainContainer } from '@/components/global/main-container'
 import { PageHeader } from '@/components/ui/page-header'
 import { getEventLifecycle } from '@/lib/events/lifecycle'
+import { ComingSoon } from '@/components/ui/coming-soon'
+
 
 type RegistrationWithEvent = Awaited<ReturnType<typeof getMyRegistrations>>[number]
 
@@ -420,131 +422,136 @@ export default async function StudentEventsPage({
   )
 
   return (
-    <MainContainer maxWidth="7xl" className="space-y-8 py-6 pb-24 sm:py-8">
-      <ScrollToHighlightedEvent eventId={highlightEventId} />
+    <ComingSoon
+      title="Algo increíble se acerca"
+      description="Revisa tus registros, postulaciones y códigos QR de check-in en un solo lugar."
+    >
+      <MainContainer maxWidth="7xl" className="space-y-8 py-6 pb-24 sm:py-8">
+        <ScrollToHighlightedEvent eventId={highlightEventId} />
 
-      <PageHeader
-        title="Mis eventos"
-        description="Revisa tus registros, decisiones de postulación y códigos QR de check-in en un solo lugar."
-        actions={
-          <Button asChild>
-            <Link href="/events">Explorar eventos</Link>
-          </Button>
-        }
-      />
+        <PageHeader
+          title="Mis eventos"
+          description="Revisa tus registros, decisiones de postulación y códigos QR de check-in en un solo lugar."
+          actions={
+            <Button asChild>
+              <Link href="/events">Explorar eventos</Link>
+            </Button>
+          }
+        />
 
-      {registrations.length === 0 ? (
-        <EmptyState />
-      ) : (
-        <div className="space-y-6">
-            {currentTicket ? (
-              <CurrentTicket
-                registration={currentTicket}
-                qrDataUrl={currentTicketQrDataUrl}
-              />
-            ) : null}
-
-            <Tabs defaultValue="active" className="min-w-0 space-y-4">
-              <TabsList
-                className={`grid h-auto w-full gap-1 overflow-visible p-1 ${
-                  cancelledRegistrations.length > 0 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'
-                }`}
-              >
-                <TabsTrigger className="h-9 min-w-0 px-1.5 text-xs leading-tight sm:px-3 sm:text-sm" value="active">
-                  Activos ({visibleActiveRegistrations.length})
-                </TabsTrigger>
-                <TabsTrigger className="h-9 min-w-0 px-1.5 text-xs leading-tight sm:px-3 sm:text-sm" value="applications">
-                  Postulaciones ({applicationRegistrations.length})
-                </TabsTrigger>
-                <TabsTrigger className="h-9 min-w-0 px-1.5 text-xs leading-tight sm:px-3 sm:text-sm" value="history">
-                  Historial ({historyRegistrations.length})
-                </TabsTrigger>
-                {cancelledRegistrations.length > 0 ? (
-                  <TabsTrigger className="h-9 min-w-0 px-1.5 text-xs leading-tight sm:px-3 sm:text-sm" value="cancelled">
-                    Cancelados ({cancelledRegistrations.length})
-                  </TabsTrigger>
-                ) : null}
-              </TabsList>
-
-              <TabsContent value="active" className="space-y-4">
-                {visibleActiveRegistrations.length === 0 ? (
-                  <TabEmptyState
-                    icon={<Icons.Ticket className="h-5 w-5" />}
-                    title="No hay otros tickets activos"
-              description="Tu próximo ticket se muestra arriba. Otros registros futuros aparecerán aquí."
-                  />
-                ) : (
-                  <div className="grid gap-4 lg:grid-cols-2">
-                    {visibleActiveRegistrations.map((registration) => (
-                      <EventRegistrationCard
-                        key={registration.id}
-                        registration={registration}
-                        qrDataUrl={qrByRegistrationId.get(registration.id) ?? null}
-                        showQr
-                      />
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="applications" className="space-y-4">
-                {applicationRegistrations.length === 0 ? (
-                  <TabEmptyState
-                    icon={<Icons.Clock className="h-5 w-5" />}
-                    title="No hay postulaciones en espera"
-              description="Los eventos con postulación aparecerán aquí mientras se revisan."
-                  />
-                ) : (
-                  <div className="grid gap-4 lg:grid-cols-2">
-                    {applicationRegistrations.map((registration) => (
-                      <EventRegistrationCard
-                        key={registration.id}
-                        registration={registration}
-                        qrDataUrl={null}
-                        compact
-                      />
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="history" className="space-y-4">
-                {historyRegistrations.length === 0 ? (
-                  <TabEmptyState
-                    icon={<Icons.Calendar className="h-5 w-5" />}
-              title="Aún no hay historial de eventos"
-                    description="Los eventos pasados y registros completados aparecerán aquí."
-                  />
-                ) : (
-                  <div className="grid gap-4 lg:grid-cols-2">
-                    {historyRegistrations.map((registration) => (
-                      <EventRegistrationCard
-                        key={registration.id}
-                        registration={registration}
-                        qrDataUrl={null}
-                        compact
-                      />
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-
-              {cancelledRegistrations.length > 0 ? (
-                <TabsContent value="cancelled" className="space-y-4">
-                  <div className="grid gap-4 lg:grid-cols-2">
-                    {cancelledRegistrations.map((registration) => (
-                      <EventRegistrationCard
-                        key={registration.id}
-                        registration={registration}
-                        qrDataUrl={null}
-                      />
-                    ))}
-                  </div>
-                </TabsContent>
+        {registrations.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <div className="space-y-6">
+              {currentTicket ? (
+                <CurrentTicket
+                  registration={currentTicket}
+                  qrDataUrl={currentTicketQrDataUrl}
+                />
               ) : null}
-            </Tabs>
-          </div>
-        )}
-    </MainContainer>
+
+              <Tabs defaultValue="active" className="min-w-0 space-y-4">
+                <TabsList
+                  className={`grid h-auto w-full gap-1 overflow-visible p-1 ${
+                    cancelledRegistrations.length > 0 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'
+                  }`}
+                >
+                  <TabsTrigger className="h-9 min-w-0 px-1.5 text-xs leading-tight sm:px-3 sm:text-sm" value="active">
+                    Activos ({visibleActiveRegistrations.length})
+                  </TabsTrigger>
+                  <TabsTrigger className="h-9 min-w-0 px-1.5 text-xs leading-tight sm:px-3 sm:text-sm" value="applications">
+                    Postulaciones ({applicationRegistrations.length})
+                  </TabsTrigger>
+                  <TabsTrigger className="h-9 min-w-0 px-1.5 text-xs leading-tight sm:px-3 sm:text-sm" value="history">
+                    Historial ({historyRegistrations.length})
+                  </TabsTrigger>
+                  {cancelledRegistrations.length > 0 ? (
+                    <TabsTrigger className="h-9 min-w-0 px-1.5 text-xs leading-tight sm:px-3 sm:text-sm" value="cancelled">
+                      Cancelados ({cancelledRegistrations.length})
+                    </TabsTrigger>
+                  ) : null}
+                </TabsList>
+
+                <TabsContent value="active" className="space-y-4">
+                  {visibleActiveRegistrations.length === 0 ? (
+                    <TabEmptyState
+                      icon={<Icons.Ticket className="h-5 w-5" />}
+                      title="No hay otros tickets activos"
+                description="Tu próximo ticket se muestra arriba. Otros registros futuros aparecerán aquí."
+                    />
+                  ) : (
+                    <div className="grid gap-4 lg:grid-cols-2">
+                      {visibleActiveRegistrations.map((registration) => (
+                        <EventRegistrationCard
+                          key={registration.id}
+                          registration={registration}
+                          qrDataUrl={qrByRegistrationId.get(registration.id) ?? null}
+                          showQr
+                        />
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="applications" className="space-y-4">
+                  {applicationRegistrations.length === 0 ? (
+                    <TabEmptyState
+                      icon={<Icons.Clock className="h-5 w-5" />}
+                      title="No hay postulaciones en espera"
+                description="Los eventos con postulación aparecerán aquí mientras se revisan."
+                    />
+                  ) : (
+                    <div className="grid gap-4 lg:grid-cols-2">
+                      {applicationRegistrations.map((registration) => (
+                        <EventRegistrationCard
+                          key={registration.id}
+                          registration={registration}
+                          qrDataUrl={null}
+                          compact
+                        />
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="history" className="space-y-4">
+                  {historyRegistrations.length === 0 ? (
+                    <TabEmptyState
+                      icon={<Icons.Calendar className="h-5 w-5" />}
+                title="Aún no hay historial de eventos"
+                      description="Los eventos pasados y registros completados aparecerán aquí."
+                    />
+                  ) : (
+                    <div className="grid gap-4 lg:grid-cols-2">
+                      {historyRegistrations.map((registration) => (
+                        <EventRegistrationCard
+                          key={registration.id}
+                          registration={registration}
+                          qrDataUrl={null}
+                          compact
+                        />
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                {cancelledRegistrations.length > 0 ? (
+                  <TabsContent value="cancelled" className="space-y-4">
+                    <div className="grid gap-4 lg:grid-cols-2">
+                      {cancelledRegistrations.map((registration) => (
+                        <EventRegistrationCard
+                          key={registration.id}
+                          registration={registration}
+                          qrDataUrl={null}
+                        />
+                      ))}
+                    </div>
+                  </TabsContent>
+                ) : null}
+              </Tabs>
+            </div>
+          )}
+      </MainContainer>
+    </ComingSoon>
   )
 }

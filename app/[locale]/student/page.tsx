@@ -623,7 +623,7 @@ function StatusCallout({ status }: { status: StudentActivationDashboard['status'
     <Card className="rounded-lg">
       <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
         <p className="text-sm text-muted-foreground">{config.title}</p>
-        {'action' in config ? (
+        {config.action ? (
           <Button asChild size="sm">
             <Link href={config.action.href}>
               {config.action.label}
