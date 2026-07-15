@@ -173,7 +173,7 @@ export default function Onboarding({ initialValues, nextPath, pendingInvite }: O
     title,
   }: {
     checked: boolean
-    description: string
+    description: ReactNode
     onCheckedChange: (value: boolean) => void
     title: ReactNode
   }) => (
