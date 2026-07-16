@@ -25,7 +25,7 @@ export function Hero() {
         />
       </div>
       <div className="absolute inset-0 z-10 bg-[radial-gradient(circle_at_50%_18%,rgba(216,76,197,0.15),transparent_32%),linear-gradient(to_bottom,rgba(9,9,11,0.65),rgba(9,9,11,0.85)_48%,hsl(var(--background)))]" />
-      <div className="absolute inset-0 z-[15] bg-background/75 pointer-events-none" />
+      <div className="absolute inset-0 z-[15] bg-background/90 pointer-events-none" />
 
       <MainContainer className="relative z-20 flex flex-col items-center justify-center py-16">
         <span className="inline-block text-xs font-semibold uppercase tracking-[0.2em] text-primary mb-4">

@@ -30,7 +30,7 @@ export function FinalCTA() {
           />
         </div>
 
-        <div className="absolute inset-0 bg-black/60 z-1"></div>
+        <div className="absolute inset-0 bg-black/80 z-1"></div>
 
         <div className="relative z-10 h-full flex flex-col justify-end p-8 sm:p-12 md:p-16 lg:p-24">
           <div className="max-w-4xl">
