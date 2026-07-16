@@ -9,7 +9,7 @@ export function Footer() {
   const copy = locale === "en"
     ? {
         description:
-          "Connecting Latin American student leaders with community, mentorship, events, and opportunity.",
+          "LEAD Talent Platform connects students, chapter leaders, and partner companies to strengthen the community and create professional opportunities.",
         community: "Community",
         events: "Events",
         partners: "Partners",
@@ -25,7 +25,7 @@ export function Footer() {
       }
     : {
         description:
-          "Conectando lideres estudiantiles de Latinoamerica con comunidad, mentoria, eventos y oportunidades.",
+          "LEAD Talent Platform conecta estudiantes, l\u00edderes de cap\u00edtulos y empresas aliadas para fortalecer la comunidad y crear oportunidades profesionales.",
         community: "Comunidad",
         events: "Eventos",
         partners: "Aliados",
