@@ -20,8 +20,6 @@ export function getVisibleLinks(role: Role | null, hasChapterAccess?: boolean): 
   return NAV_LINKS.filter((link) => {
     if (link.auth === "authenticated" && !role) return false;
 
-    const roleMatches = !link.roles || (role && link.roles.includes(role));
-
     if (link.label === "Chapter tools") {
       if (role === "editor") return true;
       if (role === "member" && hasChapterAccess) return true;
