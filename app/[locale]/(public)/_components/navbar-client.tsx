@@ -59,7 +59,7 @@ export function NavbarClient({ visibleLinks, user, dashboardHref }: Props) {
       Chapters: "Capítulos",
       Partners: "Aliados",
       Help: "Ayuda",
-      Dashboard: "Inicio",
+      Dashboard: "Dashboard",
       "Chapter tools": "Capítulo",
       Admin: "Administración",
     };
