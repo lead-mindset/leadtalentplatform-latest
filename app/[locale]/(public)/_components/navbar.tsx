@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { NavbarClient } from "./navbar-client";
 import { NavbarSkeleton } from "./navbar-skeleton";
 import { getVisibleLinks } from "./nav-links";
+import { getChapterDashboardMembership } from "@/lib/auth";
 import type { Role } from "@/lib/types";
 
 function getDashboardHref(role: Role | null): string {
@@ -45,7 +46,13 @@ async function NavbarContent() {
     name = dbUser?.name ?? null;
   }
 
-  const visibleLinks = getVisibleLinks(role);
+  let hasChapterAccess = false;
+  if (authUser && role === 'member') {
+    const membership = await getChapterDashboardMembership(supabase, authUser.id);
+    hasChapterAccess = Boolean(membership?.chapter_id);
+  }
+
+  const visibleLinks = getVisibleLinks(role, hasChapterAccess);
   const dashboardHref = getDashboardHref(role);
 
   return (
