@@ -27,7 +27,7 @@ export interface NavItemConfig {
 export const STUDENT_NAV: NavItemConfig[] = [
   {
     id: 'dashboard',
-    label: 'Inicio',
+    label: 'Dashboard',
     href: '/student',
     icon: LayoutDashboard,
   },
@@ -60,7 +60,7 @@ export const STUDENT_NAV: NavItemConfig[] = [
 export const CHAPTER_NAV: NavItemConfig[] = [
   {
     id: 'overview',
-    label: 'Inicio',
+    label: 'Dashboard',
     href: '/chapter',
     icon: LayoutDashboard,
   },
@@ -93,7 +93,7 @@ export const CHAPTER_NAV: NavItemConfig[] = [
 export const ADMIN_NAV: NavItemConfig[] = [
   {
     id: 'overview',
-    label: 'Inicio',
+    label: 'Dashboard',
     href: '/admin',
     icon: LayoutDashboard,
   },
@@ -144,7 +144,7 @@ export const ADMIN_NAV: NavItemConfig[] = [
 export const COMPANY_NAV: NavItemConfig[] = [
   {
     id: 'dashboard',
-    label: 'Inicio',
+    label: 'Dashboard',
     href: '/company/dashboard',
     icon: LayoutDashboard,
   },
