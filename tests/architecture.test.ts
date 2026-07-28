@@ -284,7 +284,7 @@ describe('architecture boundaries', () => {
       `Architecture rule: final public.is_admin() must check public."user".role, not the Supabase JWT role. Last definition: ${finalDefinition?.relativePath ?? '(missing)'}`
     ).toMatch(/FROM\s+public\."user"\s+\w+/i)
 
-    expect(finalDefinition?.body).toMatch(/\.role\s*=\s*'admin'/i)
+    expect(finalDefinition?.body).toMatch(/role\s*=\s*'admin'(::"public"\."Role")?/i)
     expect(finalDefinition?.body).not.toMatch(/request\.jwt\.claims|auth\.jwt\(\)\s*->>\s*'role'/i)
   })
 
