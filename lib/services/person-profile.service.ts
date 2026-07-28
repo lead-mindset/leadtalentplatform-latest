@@ -6,6 +6,7 @@ export type BasicProfile = {
   email: string
   fullName: string
   phone: string | null
+  leadId: string | null
   university: string | null
   majorOrInterest: string | null
   graduationYear: number | null
@@ -31,12 +32,18 @@ export type UpsertBasicProfileParams = {
   isRecruiterVisible?: boolean
 }
 
+export type BasicProfileActionData = {
+  id: string
+  lead_id: string | null
+}
+
 export type ProfileActionResult =
-  | { success: true }
+  | { success: true; data: BasicProfileActionData }
   | { success: false; error: string }
 
 const PROFILE_SELECT = `
   user_id,
+  lead_id,
   university,
   major_or_interest,
   graduation_year,
@@ -46,6 +53,10 @@ const PROFILE_SELECT = `
   gender,
   is_recruiter_visible
 `
+
+export type IssueLeadIdResult =
+  | { success: true; data: string }
+  | { success: false; error: string }
 
 export const PersonProfileService = {
   async getBasicProfile(
@@ -73,6 +84,7 @@ export const PersonProfileService = {
       email: user.email,
       fullName: user.name ?? '',
       phone: user.phone,
+      leadId: profile.lead_id,
       university: profile.university,
       majorOrInterest: profile.major_or_interest,
       graduationYear: profile.graduation_year,
@@ -108,7 +120,7 @@ export const PersonProfileService = {
       return { success: false, error: userError.message }
     }
 
-    const { error: profileError } = await supabase
+    const { data: profileData, error: profileError } = await supabase
       .from('person_profile')
       .upsert(
         {
@@ -125,11 +137,41 @@ export const PersonProfileService = {
         },
         { onConflict: 'user_id' }
       )
+      .select('id, lead_id')
+      .single()
 
     if (profileError) {
       return { success: false, error: profileError.message }
     }
 
-    return { success: true }
+    return {
+      success: true,
+      data: { id: profileData.id, lead_id: profileData.lead_id },
+    }
+  },
+
+  async issueLeadId(
+    supabase: SupabaseClient<Database>,
+    userId: string
+  ): Promise<IssueLeadIdResult> {
+    const { data: profile, error: profileError } = await supabase
+      .from('person_profile')
+      .select('id')
+      .eq('user_id', userId)
+      .single()
+
+    if (profileError || !profile) {
+      return { success: false, error: profileError?.message ?? 'Profile not found' }
+    }
+
+    const { data, error } = await supabase.rpc('issue_lead_id', {
+      p_person_id: profile.id,
+    })
+
+    if (error) {
+      return { success: false, error: error.message }
+    }
+
+    return { success: true, data: data as string }
   },
 }

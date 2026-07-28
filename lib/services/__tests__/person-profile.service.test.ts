@@ -12,6 +12,11 @@ describe('PersonProfileService', () => {
     maybeSingle?: ReturnType<typeof vi.fn>
   }
 
+  interface MockSupabase {
+    from: ReturnType<typeof vi.fn>
+    rpc: ReturnType<typeof vi.fn>
+  }
+
   const buildMockSupabase = (overrides: Record<string, unknown> = {}) => {
     const tableMocks: Record<string, TableMock> = {
       user: {
@@ -35,7 +40,8 @@ describe('PersonProfileService', () => {
 
     const mockSupabase = {
       from: vi.fn().mockImplementation((table: string) => tableMocks[table]),
-    } as unknown as SupabaseClient
+      rpc: vi.fn().mockReturnThis(),
+    } as unknown as SupabaseClient & { rpc: ReturnType<typeof vi.fn> }
 
     return { mockSupabase, tableMocks }
   }
@@ -71,6 +77,7 @@ describe('PersonProfileService', () => {
       tableMocks.person_profile.single?.mockResolvedValue({
         data: {
           user_id: 'user-123',
+          lead_id: null,
           university: 'Universidad Nacional',
           major_or_interest: 'Product Design',
           graduation_year: 2027,
@@ -93,6 +100,7 @@ describe('PersonProfileService', () => {
         email: 'participant@test.com',
         fullName: 'Public Participant',
         phone: '+1234567890',
+        leadId: null,
         university: 'Universidad Nacional',
         majorOrInterest: 'Product Design',
         graduationYear: 2027,
@@ -130,14 +138,19 @@ describe('PersonProfileService', () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
       tableMocks.user.eq?.mockResolvedValue({ error: null })
-      tableMocks.person_profile.upsert?.mockResolvedValue({ error: null })
+      tableMocks.person_profile.upsert?.mockReturnThis()
+      tableMocks.person_profile.select?.mockReturnThis()
+      tableMocks.person_profile.single?.mockResolvedValue({
+        data: { id: 'profile-1', lead_id: null },
+        error: null,
+      })
 
       const result = await PersonProfileService.upsertBasicProfile(
         mockSupabase as unknown as SupabaseClient,
         baseParams
       )
 
-      expect(result).toEqual({ success: true })
+      expect(result).toEqual({ success: true, data: { id: 'profile-1', lead_id: null } })
       expect(tableMocks.user.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
           id: 'user-123',
@@ -182,7 +195,10 @@ describe('PersonProfileService', () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
       tableMocks.user.eq?.mockResolvedValue({ error: null })
-      tableMocks.person_profile.upsert?.mockResolvedValue({
+      tableMocks.person_profile.upsert?.mockReturnThis()
+      tableMocks.person_profile.select?.mockReturnThis()
+      tableMocks.person_profile.single?.mockResolvedValue({
+        data: null,
         error: { message: 'Profile write failed' },
       })
 
@@ -192,6 +208,74 @@ describe('PersonProfileService', () => {
       )
 
       expect(result).toEqual({ success: false, error: 'Profile write failed' })
+    })
+  })
+
+  describe('issueLeadId', () => {
+    it('returns lead_id on success', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.person_profile.select?.mockReturnThis()
+      tableMocks.person_profile.eq?.mockReturnThis()
+      tableMocks.person_profile.single?.mockResolvedValue({
+        data: { id: 'profile-1' },
+        error: null,
+      })
+      mockSupabase.rpc.mockResolvedValue({
+        data: 'LEAD-000001',
+        error: null,
+      })
+
+      const result = await PersonProfileService.issueLeadId(
+        mockSupabase as unknown as SupabaseClient,
+        'user-123'
+      )
+
+      expect(result).toEqual({ success: true, data: 'LEAD-000001' })
+      expect(mockSupabase.rpc).toHaveBeenCalledWith('issue_lead_id', {
+        p_person_id: 'profile-1',
+      })
+    })
+
+    it('returns error when profile is not found', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.person_profile.select?.mockReturnThis()
+      tableMocks.person_profile.eq?.mockReturnThis()
+      tableMocks.person_profile.single?.mockResolvedValue({
+        data: null,
+        error: { message: 'Not found' },
+      })
+
+      const result = await PersonProfileService.issueLeadId(
+        mockSupabase as unknown as SupabaseClient,
+        'user-unknown'
+      )
+
+      expect(result).toEqual({ success: false, error: 'Not found' })
+      expect(mockSupabase.rpc).not.toHaveBeenCalled()
+    })
+
+    it('returns error when rpc fails', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.person_profile.select?.mockReturnThis()
+      tableMocks.person_profile.eq?.mockReturnThis()
+      tableMocks.person_profile.single?.mockResolvedValue({
+        data: { id: 'profile-1' },
+        error: null,
+      })
+      mockSupabase.rpc.mockResolvedValue({
+        data: null,
+        error: { message: 'Sequence error' },
+      })
+
+      const result = await PersonProfileService.issueLeadId(
+        mockSupabase as unknown as SupabaseClient,
+        'user-123'
+      )
+
+      expect(result).toEqual({ success: false, error: 'Sequence error' })
     })
   })
 })

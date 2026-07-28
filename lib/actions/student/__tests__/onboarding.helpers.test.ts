@@ -15,6 +15,7 @@ import { ChapterPreapprovalService } from '@/lib/services/chapter-preapproval.se
 vi.mock('@/lib/services/person-profile.service', () => ({
   PersonProfileService: {
     upsertBasicProfile: vi.fn(),
+    issueLeadId: vi.fn(),
   },
 }))
 
@@ -80,6 +81,7 @@ function validFormData() {
 describe('basic onboarding helpers', () => {
   beforeEach(() => {
     vi.mocked(PersonProfileService.upsertBasicProfile).mockReset()
+    vi.mocked(PersonProfileService.issueLeadId).mockReset()
     vi.mocked(StudentService.saveResume).mockReset()
     vi.mocked(NewsletterSubscriptionService.subscribeGlobal).mockReset()
     vi.mocked(NewsletterSubscriptionService.subscribeToChapters).mockReset()
@@ -91,6 +93,10 @@ describe('basic onboarding helpers', () => {
       success: true,
       activated: false,
       reason: 'no_matching_preapproval',
+    })
+    vi.mocked(PersonProfileService.issueLeadId).mockResolvedValue({
+      success: true,
+      data: 'LEAD-000001',
     })
   })
 
@@ -193,7 +199,10 @@ describe('basic onboarding helpers', () => {
   })
 
   it('saves person_profile data and optional newsletter subscriptions', async () => {
-    vi.mocked(PersonProfileService.upsertBasicProfile).mockResolvedValue({ success: true })
+    vi.mocked(PersonProfileService.upsertBasicProfile).mockResolvedValue({
+      success: true,
+      data: { id: 'profile-1', lead_id: null },
+    })
     vi.mocked(NewsletterSubscriptionService.subscribeGlobal).mockResolvedValue({ success: true })
     vi.mocked(NewsletterSubscriptionService.subscribeToChapters).mockResolvedValue({ success: true })
 
@@ -233,7 +242,10 @@ describe('basic onboarding helpers', () => {
   })
 
   it('creates a pending membership application for an existing chapter member claim', async () => {
-    vi.mocked(PersonProfileService.upsertBasicProfile).mockResolvedValue({ success: true })
+    vi.mocked(PersonProfileService.upsertBasicProfile).mockResolvedValue({
+      success: true,
+      data: { id: 'profile-1', lead_id: null },
+    })
     vi.mocked(ChapterMembershipService.applyToChapter).mockResolvedValue({ success: true })
     vi.mocked(NewsletterSubscriptionService.subscribeGlobal).mockResolvedValue({ success: true })
     vi.mocked(NewsletterSubscriptionService.subscribeToChapters).mockResolvedValue({ success: true })
@@ -263,7 +275,10 @@ describe('basic onboarding helpers', () => {
   })
 
   it('activates matching preapproval with the service client and skips pending chapter application', async () => {
-    vi.mocked(PersonProfileService.upsertBasicProfile).mockResolvedValue({ success: true })
+    vi.mocked(PersonProfileService.upsertBasicProfile).mockResolvedValue({
+      success: true,
+      data: { id: 'profile-1', lead_id: null },
+    })
     vi.mocked(ChapterPreapprovalService.activatePreapprovalForUser).mockResolvedValue({
       success: true,
       activated: true,
@@ -304,7 +319,10 @@ describe('basic onboarding helpers', () => {
   })
 
   it('creates a pending membership application for chapter applicants', async () => {
-    vi.mocked(PersonProfileService.upsertBasicProfile).mockResolvedValue({ success: true })
+    vi.mocked(PersonProfileService.upsertBasicProfile).mockResolvedValue({
+      success: true,
+      data: { id: 'profile-1', lead_id: null },
+    })
     vi.mocked(ChapterMembershipService.applyToChapter).mockResolvedValue({ success: true })
     vi.mocked(NewsletterSubscriptionService.subscribeGlobal).mockResolvedValue({ success: true })
     vi.mocked(NewsletterSubscriptionService.subscribeToChapters).mockResolvedValue({ success: true })
@@ -334,7 +352,10 @@ describe('basic onboarding helpers', () => {
   })
 
   it('returns membership application failure and skips newsletter writes', async () => {
-    vi.mocked(PersonProfileService.upsertBasicProfile).mockResolvedValue({ success: true })
+    vi.mocked(PersonProfileService.upsertBasicProfile).mockResolvedValue({
+      success: true,
+      data: { id: 'profile-1', lead_id: null },
+    })
     vi.mocked(ChapterMembershipService.applyToChapter).mockResolvedValue({
       success: false,
       error: 'User already has an active approved chapter membership.',
@@ -362,7 +383,10 @@ describe('basic onboarding helpers', () => {
   })
 
   it('skips newsletter writes when no newsletter choices are selected', async () => {
-    vi.mocked(PersonProfileService.upsertBasicProfile).mockResolvedValue({ success: true })
+    vi.mocked(PersonProfileService.upsertBasicProfile).mockResolvedValue({
+      success: true,
+      data: { id: 'profile-1', lead_id: null },
+    })
     const formData = validFormData()
     formData.set('emailNotificationsEnabled', 'false')
     formData.set('chapterNewsletterIds', JSON.stringify([]))
@@ -383,7 +407,10 @@ describe('basic onboarding helpers', () => {
   })
 
   it('saves resume when resumePdf file is provided', async () => {
-    vi.mocked(PersonProfileService.upsertBasicProfile).mockResolvedValue({ success: true })
+    vi.mocked(PersonProfileService.upsertBasicProfile).mockResolvedValue({
+      success: true,
+      data: { id: 'profile-1', lead_id: null },
+    })
     vi.mocked(StudentService.saveResume).mockResolvedValue({ success: true })
     vi.mocked(NewsletterSubscriptionService.subscribeGlobal).mockResolvedValue({ success: true })
 

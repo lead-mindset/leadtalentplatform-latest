@@ -7,30 +7,10 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.1"
   }
   public: {
     Tables: {
@@ -1817,44 +1797,53 @@ export type Database = {
       }
       person_profile: {
         Row: {
+          consent_date: string | null
+          consent_recruiter_visibility: boolean
           created_at: string
           gender: string | null
-          graduation_year: number | null
+          graduation_year: number
           id: string
           is_recruiter_visible: boolean | null
+          lead_id: string | null
           linkedin_url: string | null
-          major_or_interest: string | null
+          major_or_interest: string
           portfolio_url: string | null
           skills: string[] | null
-          university: string | null
+          university: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          consent_date?: string | null
+          consent_recruiter_visibility?: boolean
           created_at?: string
           gender?: string | null
-          graduation_year?: number | null
+          graduation_year: number
           id?: string
           is_recruiter_visible?: boolean | null
+          lead_id?: string | null
           linkedin_url?: string | null
-          major_or_interest?: string | null
+          major_or_interest: string
           portfolio_url?: string | null
           skills?: string[] | null
-          university?: string | null
+          university: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          consent_date?: string | null
+          consent_recruiter_visibility?: boolean
           created_at?: string
           gender?: string | null
-          graduation_year?: number | null
+          graduation_year?: number
           id?: string
           is_recruiter_visible?: boolean | null
+          lead_id?: string | null
           linkedin_url?: string | null
-          major_or_interest?: string | null
+          major_or_interest?: string
           portfolio_url?: string | null
           skills?: string[] | null
-          university?: string | null
+          university?: string
           updated_at?: string
           user_id?: string
         }
@@ -2708,6 +2697,7 @@ export type Database = {
         | { Args: { event_uuid: string }; Returns: boolean }
         | { Args: { p_event_id: string; p_user_id: string }; Returns: boolean }
       is_recruiter: { Args: never; Returns: boolean }
+      issue_lead_id: { Args: { p_person_id: string }; Returns: string }
       longtransactionsenabled: { Args: never; Returns: boolean }
       populate_geometry_columns:
         | { Args: { tbl_oid: unknown; use_typmod?: boolean }; Returns: number }
@@ -3502,9 +3492,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       approval_status: ["pending", "approved", "rejected"],
@@ -3539,4 +3526,3 @@ export const Constants = {
     },
   },
 } as const
-
