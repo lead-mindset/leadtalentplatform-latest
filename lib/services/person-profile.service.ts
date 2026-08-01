@@ -1,5 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.generated'
+import { formatMemberId, generateRandomNumber, MAX_RETRIES } from '@/lib/utils/member-id'
 
 export type BasicProfile = {
   userId: string
@@ -154,24 +155,54 @@ export const PersonProfileService = {
     supabase: SupabaseClient<Database>,
     userId: string
   ): Promise<IssueLeadIdResult> {
-    const { data: profile, error: profileError } = await supabase
-      .from('person_profile')
-      .select('id')
-      .eq('user_id', userId)
-      .single()
+    // Try-write-with-retry: rely on the UNIQUE(lead_id) constraint to catch
+    // collisions instead of check-then-write, which has a TOCTOU race window.
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      const candidateId = formatMemberId(generateRandomNumber())
 
-    if (profileError || !profile) {
-      return { success: false, error: profileError?.message ?? 'Profile not found' }
+      const { data, error } = await supabase
+        .from('person_profile')
+        .update({ lead_id: candidateId })
+        .eq('user_id', userId)
+        .is('lead_id', null)
+        .select('lead_id')
+        .maybeSingle()
+
+      if (error) {
+        // 23505 = unique_violation — the candidate collided, retry with a new value.
+        if (error.code === '23505') {
+          console.warn(
+            `LEAD ID collision for ${candidateId}, retrying... (${attempt + 1}/${MAX_RETRIES})`
+          )
+          continue
+        }
+        return { success: false, error: error.message }
+      }
+
+      if (data?.lead_id) {
+        return { success: true, data: data.lead_id }
+      }
+
+      // No row updated: the profile doesn't exist or already has a LEAD ID.
+      // Read the existing one so the call is idempotent.
+      const { data: existing, error: existingError } = await supabase
+        .from('person_profile')
+        .select('lead_id')
+        .eq('user_id', userId)
+        .maybeSingle()
+
+      if (existingError) {
+        return { success: false, error: existingError.message }
+      }
+      if (existing?.lead_id) {
+        return { success: true, data: existing.lead_id }
+      }
+      return { success: false, error: 'Profile not found' }
     }
 
-    const { data, error } = await supabase.rpc('issue_lead_id', {
-      p_person_id: profile.id,
-    })
-
-    if (error) {
-      return { success: false, error: error.message }
+    return {
+      success: false,
+      error: 'Could not generate a unique LEAD ID after multiple attempts.',
     }
-
-    return { success: true, data: data as string }
   },
 }

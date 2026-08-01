@@ -8,6 +8,7 @@ describe('PersonProfileService', () => {
     update?: ReturnType<typeof vi.fn>
     upsert?: ReturnType<typeof vi.fn>
     eq?: ReturnType<typeof vi.fn>
+    is?: ReturnType<typeof vi.fn>
     single?: ReturnType<typeof vi.fn>
     maybeSingle?: ReturnType<typeof vi.fn>
   }
@@ -28,7 +29,10 @@ describe('PersonProfileService', () => {
       person_profile: {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
+        update: vi.fn().mockReturnThis(),
+        is: vi.fn().mockReturnThis(),
         single: vi.fn(),
+        maybeSingle: vi.fn(),
         upsert: vi.fn(),
       },
       chapter_membership: {
@@ -212,17 +216,11 @@ describe('PersonProfileService', () => {
   })
 
   describe('issueLeadId', () => {
-    it('returns lead_id on success', async () => {
+    it('returns the assigned lead_id on success', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.person_profile.select?.mockReturnThis()
-      tableMocks.person_profile.eq?.mockReturnThis()
-      tableMocks.person_profile.single?.mockResolvedValue({
-        data: { id: 'profile-1' },
-        error: null,
-      })
-      mockSupabase.rpc.mockResolvedValue({
-        data: 'LEAD-000001',
+      tableMocks.person_profile.maybeSingle?.mockResolvedValue({
+        data: { lead_id: 'LEAD-123456' },
         error: null,
       })
 
@@ -231,20 +229,40 @@ describe('PersonProfileService', () => {
         'user-123'
       )
 
-      expect(result).toEqual({ success: true, data: 'LEAD-000001' })
-      expect(mockSupabase.rpc).toHaveBeenCalledWith('issue_lead_id', {
-        p_person_id: 'profile-1',
+      expect(result).toEqual({ success: true, data: 'LEAD-123456' })
+      expect(tableMocks.person_profile.update).toHaveBeenCalledWith({
+        lead_id: expect.stringMatching(/^LEAD-\d{6}$/),
       })
+      expect(tableMocks.person_profile.is).toHaveBeenCalledWith('lead_id', null)
     })
 
-    it('returns error when profile is not found', async () => {
+    it('returns existing lead_id when the profile already has one (idempotent)', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.person_profile.select?.mockReturnThis()
-      tableMocks.person_profile.eq?.mockReturnThis()
-      tableMocks.person_profile.single?.mockResolvedValue({
+      // First call: UPDATE matches 0 rows (already has a lead_id), so the
+      // fallback read returns the existing value.
+      tableMocks.person_profile.maybeSingle
+        ?.mockResolvedValueOnce({ data: null, error: null })
+        .mockResolvedValueOnce({
+          data: { lead_id: 'LEAD-999999' },
+          error: null,
+        })
+
+      const result = await PersonProfileService.issueLeadId(
+        mockSupabase as unknown as SupabaseClient,
+        'user-123'
+      )
+
+      expect(result).toEqual({ success: true, data: 'LEAD-999999' })
+    })
+
+    it('returns error when the profile does not exist', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      // UPDATE matches 0 rows and the fallback read also returns nothing.
+      tableMocks.person_profile.maybeSingle?.mockResolvedValue({
         data: null,
-        error: { message: 'Not found' },
+        error: null,
       })
 
       const result = await PersonProfileService.issueLeadId(
@@ -252,22 +270,41 @@ describe('PersonProfileService', () => {
         'user-unknown'
       )
 
-      expect(result).toEqual({ success: false, error: 'Not found' })
-      expect(mockSupabase.rpc).not.toHaveBeenCalled()
+      expect(result).toEqual({ success: false, error: 'Profile not found' })
     })
 
-    it('returns error when rpc fails', async () => {
+    it('retries with a new id when the update hits a unique violation', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
-      tableMocks.person_profile.select?.mockReturnThis()
-      tableMocks.person_profile.eq?.mockReturnThis()
-      tableMocks.person_profile.single?.mockResolvedValue({
-        data: { id: 'profile-1' },
-        error: null,
-      })
-      mockSupabase.rpc.mockResolvedValue({
+      // First attempt: unique_violation. Second attempt: success.
+      tableMocks.person_profile.maybeSingle
+        ?.mockResolvedValueOnce({
+          data: null,
+          error: {
+            code: '23505',
+            message: 'duplicate key value violates unique constraint "person_profile_lead_id_key"',
+          },
+        })
+        .mockResolvedValueOnce({
+          data: { lead_id: 'LEAD-654321' },
+          error: null,
+        })
+
+      const result = await PersonProfileService.issueLeadId(
+        mockSupabase as unknown as SupabaseClient,
+        'user-123'
+      )
+
+      expect(result).toEqual({ success: true, data: 'LEAD-654321' })
+      expect(tableMocks.person_profile.update).toHaveBeenCalledTimes(2)
+    })
+
+    it('returns error on a non-collision database error', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.person_profile.maybeSingle?.mockResolvedValue({
         data: null,
-        error: { message: 'Sequence error' },
+        error: { code: '42P01', message: 'relation does not exist' },
       })
 
       const result = await PersonProfileService.issueLeadId(
@@ -275,7 +312,29 @@ describe('PersonProfileService', () => {
         'user-123'
       )
 
-      expect(result).toEqual({ success: false, error: 'Sequence error' })
+      expect(result).toEqual({ success: false, error: 'relation does not exist' })
+    })
+
+    it('returns error after exhausting retries on repeated collisions', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.person_profile.maybeSingle?.mockResolvedValue({
+        data: null,
+        error: {
+          code: '23505',
+          message: 'duplicate key value violates unique constraint "person_profile_lead_id_key"',
+        },
+      })
+
+      const result = await PersonProfileService.issueLeadId(
+        mockSupabase as unknown as SupabaseClient,
+        'user-123'
+      )
+
+      expect(result).toEqual({
+        success: false,
+        error: 'Could not generate a unique LEAD ID after multiple attempts.',
+      })
     })
   })
 })

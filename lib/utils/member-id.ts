@@ -3,13 +3,13 @@ import type { Database } from '@/lib/types'
 
 const RANDOM_MIN = 100001
 const RANDOM_MAX = 999999
-const MAX_RETRIES = 10
+export const MAX_RETRIES = 10
 
-function generateRandomNumber(): number {
+export function generateRandomNumber(): number {
   return Math.floor(Math.random() * (RANDOM_MAX - RANDOM_MIN + 1)) + RANDOM_MIN
 }
 
-function formatMemberId(number: number): string {
+export function formatMemberId(number: number): string {
   return `LEAD-${number.toString().padStart(6, '0')}` 
 }
 
@@ -17,23 +17,27 @@ async function isMemberIdUnique(
   supabase: SupabaseClient<Database>,
   memberId: string
 ): Promise<boolean> {
-  const { data, error } = await supabase
+  const { data: cmData, error: cmError } = await supabase
     .from('chapter_membership')
     .select('member_id')
     .eq('member_id', memberId)
-    .single()
+    .maybeSingle()
 
-  if (error && error.code === 'PGRST116') {
-    return true
+  if (cmData) return false
+
+  const { data: ppData, error: ppError } = await supabase
+    .from('person_profile')
+    .select('lead_id')
+    .eq('lead_id', memberId)
+    .maybeSingle()
+
+  if (ppData) return false
+
+  if (cmError && cmError.code !== 'PGRST116') {
+    console.error('Error checking member ID uniqueness (chapter_membership):', cmError)
   }
-
-  if (data) {
-    return false
-  }
-
-  if (error) {
-    console.error('Error checking member ID uniqueness:', error)
-    return false
+  if (ppError && ppError.code !== 'PGRST116') {
+    console.error('Error checking member ID uniqueness (person_profile):', ppError)
   }
 
   return true

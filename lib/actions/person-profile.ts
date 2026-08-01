@@ -74,6 +74,11 @@ export async function upsertBasicPersonProfile(
 
   if (!result.success) return result
 
+  const leadResult = await PersonProfileService.issueLeadId(supabase, user.id)
+  if (!leadResult.success) {
+    return { success: false, error: leadResult.error }
+  }
+
   revalidatePath('/student/profile')
   revalidatePath('/onboarding')
 
