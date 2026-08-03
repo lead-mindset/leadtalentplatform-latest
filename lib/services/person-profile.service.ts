@@ -151,6 +151,27 @@ export const PersonProfileService = {
     }
   },
 
+  async getOrIssueLeadId(
+    supabase: SupabaseClient<Database>,
+    userId: string
+  ): Promise<IssueLeadIdResult> {
+    const { data, error } = await supabase
+      .from('person_profile')
+      .select('lead_id')
+      .eq('user_id', userId)
+      .maybeSingle()
+
+    if (error) {
+      return { success: false, error: error.message }
+    }
+
+    if (data?.lead_id) {
+      return { success: true, data: data.lead_id }
+    }
+
+    return PersonProfileService.issueLeadId(supabase, userId)
+  },
+
   async issueLeadId(
     supabase: SupabaseClient<Database>,
     userId: string

@@ -1,7 +1,6 @@
 ﻿import { logger } from '@/lib/logger'
 import { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.generated'
-import { generateUniqueMemberId } from '@/lib/utils/member-id'
 import type { ChapterRow, MemberWithProfile } from '@/lib/types'
 import { ChapterMembershipService } from '@/lib/services/chapter-membership.service'
 import type { ChapterPermissionKey } from '@/lib/services/chapter-permission.service'
@@ -170,7 +169,7 @@ export const ChapterService = {
   // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   /**
    * Approve a single member.
-   * Validates profile is complete, generates a unique member ID,
+   * Validates profile is complete, copies the user's LEAD ID into member_id,
    * and updates the chapter_membership row.
    */
   async approveMember(
@@ -198,7 +197,6 @@ export const ChapterService = {
       userId,
       chapterId,
       approverId,
-      generateMemberId: generateUniqueMemberId,
     })
   },
 

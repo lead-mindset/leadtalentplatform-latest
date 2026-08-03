@@ -11,6 +11,7 @@ const validProfileData = {
   full_name: 'Test Participant',
   phone: '+1 555 123 4567',
   gender: 'woman',
+  university: 'Test University',
   career: 'Product Design',
   graduation_year: 2028,
   skills: ['Leadership', 'Research'],
