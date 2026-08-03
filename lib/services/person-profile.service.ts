@@ -1,11 +1,13 @@
 import { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.generated'
+import { formatMemberId, generateRandomNumber, MAX_RETRIES } from '@/lib/utils/member-id'
 
 export type BasicProfile = {
   userId: string
   email: string
   fullName: string
   phone: string | null
+  leadId: string | null
   university: string | null
   majorOrInterest: string | null
   graduationYear: number | null
@@ -31,12 +33,18 @@ export type UpsertBasicProfileParams = {
   isRecruiterVisible?: boolean
 }
 
+export type BasicProfileActionData = {
+  id: string
+  lead_id: string | null
+}
+
 export type ProfileActionResult =
-  | { success: true }
+  | { success: true; data: BasicProfileActionData }
   | { success: false; error: string }
 
 const PROFILE_SELECT = `
   user_id,
+  lead_id,
   university,
   major_or_interest,
   graduation_year,
@@ -46,6 +54,10 @@ const PROFILE_SELECT = `
   gender,
   is_recruiter_visible
 `
+
+export type IssueLeadIdResult =
+  | { success: true; data: string }
+  | { success: false; error: string }
 
 export const PersonProfileService = {
   async getBasicProfile(
@@ -73,6 +85,7 @@ export const PersonProfileService = {
       email: user.email,
       fullName: user.name ?? '',
       phone: user.phone,
+      leadId: profile.lead_id,
       university: profile.university,
       majorOrInterest: profile.major_or_interest,
       graduationYear: profile.graduation_year,
@@ -108,7 +121,7 @@ export const PersonProfileService = {
       return { success: false, error: userError.message }
     }
 
-    const { error: profileError } = await supabase
+    const { data: profileData, error: profileError } = await supabase
       .from('person_profile')
       .upsert(
         {
@@ -125,11 +138,92 @@ export const PersonProfileService = {
         },
         { onConflict: 'user_id' }
       )
+      .select('id, lead_id')
+      .single()
 
     if (profileError) {
       return { success: false, error: profileError.message }
     }
 
-    return { success: true }
+    return {
+      success: true,
+      data: { id: profileData.id, lead_id: profileData.lead_id },
+    }
+  },
+
+  async getOrIssueLeadId(
+    supabase: SupabaseClient<Database>,
+    userId: string
+  ): Promise<IssueLeadIdResult> {
+    const { data, error } = await supabase
+      .from('person_profile')
+      .select('lead_id')
+      .eq('user_id', userId)
+      .maybeSingle()
+
+    if (error) {
+      return { success: false, error: error.message }
+    }
+
+    if (data?.lead_id) {
+      return { success: true, data: data.lead_id }
+    }
+
+    return PersonProfileService.issueLeadId(supabase, userId)
+  },
+
+  async issueLeadId(
+    supabase: SupabaseClient<Database>,
+    userId: string
+  ): Promise<IssueLeadIdResult> {
+    // Try-write-with-retry: rely on the UNIQUE(lead_id) constraint to catch
+    // collisions instead of check-then-write, which has a TOCTOU race window.
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      const candidateId = formatMemberId(generateRandomNumber())
+
+      const { data, error } = await supabase
+        .from('person_profile')
+        .update({ lead_id: candidateId })
+        .eq('user_id', userId)
+        .is('lead_id', null)
+        .select('lead_id')
+        .maybeSingle()
+
+      if (error) {
+        // 23505 = unique_violation — the candidate collided, retry with a new value.
+        if (error.code === '23505') {
+          console.warn(
+            `LEAD ID collision for ${candidateId}, retrying... (${attempt + 1}/${MAX_RETRIES})`
+          )
+          continue
+        }
+        return { success: false, error: error.message }
+      }
+
+      if (data?.lead_id) {
+        return { success: true, data: data.lead_id }
+      }
+
+      // No row updated: the profile doesn't exist or already has a LEAD ID.
+      // Read the existing one so the call is idempotent.
+      const { data: existing, error: existingError } = await supabase
+        .from('person_profile')
+        .select('lead_id')
+        .eq('user_id', userId)
+        .maybeSingle()
+
+      if (existingError) {
+        return { success: false, error: existingError.message }
+      }
+      if (existing?.lead_id) {
+        return { success: true, data: existing.lead_id }
+      }
+      return { success: false, error: 'Profile not found' }
+    }
+
+    return {
+      success: false,
+      error: 'Could not generate a unique LEAD ID after multiple attempts.',
+    }
   },
 }

@@ -9,10 +9,12 @@ import { ChapterPermissionService } from '@/lib/services/chapter-permission.serv
 import type { MemberWithProfile } from '@/lib/types'
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Mock generateUniqueMemberId
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-vi.mock('@/lib/utils/member-id', () => ({
-  generateUniqueMemberId: vi.fn(),
+// Mock PersonProfileService.getOrIssueLeadId
+// ──────────────────────────────────────────────────────────────────────────
+vi.mock('@/lib/services/person-profile.service', () => ({
+  PersonProfileService: {
+    getOrIssueLeadId: vi.fn(),
+  },
 }))
 
 vi.mock('@/lib/services/chapter-permission.service', () => ({
@@ -21,7 +23,7 @@ vi.mock('@/lib/services/chapter-permission.service', () => ({
   },
 }))
 
-import { generateUniqueMemberId } from '@/lib/utils/member-id'
+import { PersonProfileService } from '@/lib/services/person-profile.service'
 
 /**
  * ChapterService Tests
@@ -37,7 +39,11 @@ import { generateUniqueMemberId } from '@/lib/utils/member-id'
 describe('ChapterService', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(generateUniqueMemberId).mockReset()
+    vi.mocked(PersonProfileService.getOrIssueLeadId).mockReset()
+    vi.mocked(PersonProfileService.getOrIssueLeadId).mockResolvedValue({
+      success: true,
+      data: 'LEAD-123456',
+    })
     vi.mocked(ChapterPermissionService.hasChapterPermission).mockReset()
     vi.mocked(ChapterPermissionService.hasChapterPermission).mockResolvedValue(true)
   })
@@ -136,7 +142,10 @@ describe('ChapterService', () => {
       tableMocks.chapter_membership._selectChain.maybeSingle
         .mockResolvedValueOnce({ data: { id: 'membership-1', status: 'pending', member_id: null }, error: null })
 
-      vi.mocked(generateUniqueMemberId).mockResolvedValue('LEAD-123456')
+      vi.mocked(PersonProfileService.getOrIssueLeadId).mockResolvedValue({
+        success: true,
+        data: 'LEAD-123456',
+      })
 
       const result = await ChapterService.approveMember(mockSupabase as unknown as SupabaseClient, 'user-123', 'approver-1', 'ch-1')
 
@@ -144,7 +153,7 @@ describe('ChapterService', () => {
       expect(mockSupabase.from).toHaveBeenCalledWith('person_profile')
       expect(tableMocks.person_profile.select).toHaveBeenCalledWith('user_id')
       expect(tableMocks.person_profile._selectChain.eq).toHaveBeenCalledWith('user_id', 'user-123')
-      expect(generateUniqueMemberId).toHaveBeenCalledWith(mockSupabase)
+      expect(PersonProfileService.getOrIssueLeadId).toHaveBeenCalledWith(mockSupabase, 'user-123')
       expect(tableMocks.chapter_membership.update).toHaveBeenCalledWith(
         expect.objectContaining({
           approved_by_id: 'approver-1',
@@ -169,7 +178,7 @@ describe('ChapterService', () => {
       const result = await ChapterService.approveMember(mockSupabase as unknown as SupabaseClient, 'user-123', 'approver-1', 'ch-1')
 
       expect(result).toEqual({ success: false, error: 'Profile not found' })
-      expect(generateUniqueMemberId).not.toHaveBeenCalled()
+      expect(PersonProfileService.getOrIssueLeadId).not.toHaveBeenCalled()
     })
 
     it('should approve when basic person profile exists', async () => {
@@ -182,15 +191,18 @@ describe('ChapterService', () => {
       tableMocks.chapter_membership._selectChain.maybeSingle
         .mockResolvedValueOnce({ data: { id: 'membership-1', status: 'pending', member_id: null }, error: null })
 
-      vi.mocked(generateUniqueMemberId).mockResolvedValue('LEAD-123456')
+      vi.mocked(PersonProfileService.getOrIssueLeadId).mockResolvedValue({
+        success: true,
+        data: 'LEAD-123456',
+      })
 
       const result = await ChapterService.approveMember(mockSupabase as unknown as SupabaseClient, 'user-123', 'approver-1', 'ch-1')
 
       expect(result).toEqual({ success: true, member_id: 'LEAD-123456' })
-      expect(generateUniqueMemberId).toHaveBeenCalled()
+      expect(PersonProfileService.getOrIssueLeadId).toHaveBeenCalled()
     })
 
-    it('should return error when member ID generation fails', async () => {
+    it('should return error when member ID issuance fails', async () => {
       const { mockSupabase, tableMocks } = buildMockSupabase()
 
       tableMocks.person_profile._selectChain.single.mockResolvedValueOnce({
@@ -200,13 +212,16 @@ describe('ChapterService', () => {
       tableMocks.chapter_membership._selectChain.maybeSingle
         .mockResolvedValueOnce({ data: { id: 'membership-1', status: 'pending', member_id: null }, error: null })
 
-      vi.mocked(generateUniqueMemberId).mockRejectedValue(new Error('Too many collisions'))
+      vi.mocked(PersonProfileService.getOrIssueLeadId).mockResolvedValue({
+        success: false,
+        error: 'Profile not found',
+      })
 
       const result = await ChapterService.approveMember(mockSupabase as unknown as SupabaseClient, 'user-123', 'approver-1', 'ch-1')
 
       expect(result).toEqual({
         success: false,
-        error: 'Could not generate a member ID - please try again.',
+        error: 'Profile not found',
       })
     })
 
@@ -219,8 +234,6 @@ describe('ChapterService', () => {
       })
       tableMocks.chapter_membership._selectChain.maybeSingle
         .mockResolvedValueOnce({ data: { id: 'membership-1', status: 'pending', member_id: null }, error: null })
-
-      vi.mocked(generateUniqueMemberId).mockResolvedValue('LEAD-123456')
 
       tableMocks.chapter_membership._updateChain.match.mockResolvedValueOnce({
         error: { message: 'Database error' },
@@ -262,9 +275,9 @@ describe('ChapterService', () => {
         .mockResolvedValueOnce({ data: { id: 'membership-1', status: 'pending', member_id: null }, error: null })
         .mockResolvedValueOnce({ data: { id: 'membership-2', status: 'pending', member_id: null }, error: null })
 
-      vi.mocked(generateUniqueMemberId)
-        .mockResolvedValueOnce('LEAD-111111')
-        .mockResolvedValueOnce('LEAD-222222')
+      vi.mocked(PersonProfileService.getOrIssueLeadId)
+        .mockResolvedValueOnce({ success: true, data: 'LEAD-111111' })
+        .mockResolvedValueOnce({ success: true, data: 'LEAD-222222' })
 
       const result = await ChapterService.approveMembersBulk(
         mockSupabase as unknown as SupabaseClient,
@@ -276,7 +289,7 @@ describe('ChapterService', () => {
       expect(result.success).toBe(true)
       expect(result.count).toBe(2)
       expect(result.skipped).toBe(0)
-      expect(generateUniqueMemberId).toHaveBeenCalledTimes(2)
+      expect(PersonProfileService.getOrIssueLeadId).toHaveBeenCalledTimes(2)
     })
 
     it('should skip members from different chapters when chapterId is provided', async () => {
@@ -304,7 +317,10 @@ describe('ChapterService', () => {
       tableMocks.chapter_membership._selectChain.maybeSingle
         .mockResolvedValueOnce({ data: { id: 'membership-1', status: 'pending', member_id: null }, error: null })
 
-      vi.mocked(generateUniqueMemberId).mockResolvedValueOnce('LEAD-111111')
+      vi.mocked(PersonProfileService.getOrIssueLeadId).mockResolvedValueOnce({
+        success: true,
+        data: 'LEAD-111111',
+      })
 
       const result = await ChapterService.approveMembersBulk(
         mockSupabase as unknown as SupabaseClient,
@@ -342,7 +358,10 @@ describe('ChapterService', () => {
       tableMocks.chapter_membership._selectChain.maybeSingle
         .mockResolvedValueOnce({ data: { id: 'membership-1', status: 'pending', member_id: null }, error: null })
 
-      vi.mocked(generateUniqueMemberId).mockResolvedValueOnce('LEAD-111111')
+      vi.mocked(PersonProfileService.getOrIssueLeadId).mockResolvedValueOnce({
+        success: true,
+        data: 'LEAD-111111',
+      })
 
       const result = await ChapterService.approveMembersBulk(
         mockSupabase as unknown as SupabaseClient,
@@ -426,9 +445,9 @@ describe('ChapterService', () => {
         .mockResolvedValueOnce({ data: { id: 'membership-1', status: 'pending', member_id: null }, error: null })
         .mockResolvedValueOnce({ data: { id: 'membership-2', status: 'pending', member_id: null }, error: null })
 
-      vi.mocked(generateUniqueMemberId)
-        .mockResolvedValueOnce('LEAD-111111')
-        .mockRejectedValueOnce(new Error('Collision'))
+      vi.mocked(PersonProfileService.getOrIssueLeadId)
+        .mockResolvedValueOnce({ success: true, data: 'LEAD-111111' })
+        .mockResolvedValueOnce({ success: false, error: 'Profile not found' })
 
       const result = await ChapterService.approveMembersBulk(
         mockSupabase as unknown as SupabaseClient,
@@ -441,9 +460,7 @@ describe('ChapterService', () => {
       expect(result.count).toBe(1)
       expect(result.skipped).toBe(1)
       expect(result.errors).toHaveLength(1)
-      expect(result.errors![0].error).toBe(
-        'Could not generate a member ID - please try again.'
-      )
+      expect(result.errors![0].error).toBe('Profile not found')
     })
   })
 

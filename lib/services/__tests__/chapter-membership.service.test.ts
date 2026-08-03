@@ -2,10 +2,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { SupabaseClient } from '@supabase/supabase-js'
 import { ChapterMembershipService } from '../chapter-membership.service'
 import { ChapterPermissionService } from '@/lib/services/chapter-permission.service'
+import { PersonProfileService } from '@/lib/services/person-profile.service'
 
 vi.mock('@/lib/services/chapter-permission.service', () => ({
   ChapterPermissionService: {
     hasChapterPermission: vi.fn(),
+  },
+}))
+
+vi.mock('@/lib/services/person-profile.service', () => ({
+  PersonProfileService: {
+    getOrIssueLeadId: vi.fn(),
   },
 }))
 
@@ -76,6 +83,11 @@ describe('ChapterMembershipService', () => {
   beforeEach(() => {
     vi.mocked(ChapterPermissionService.hasChapterPermission).mockReset()
     vi.mocked(ChapterPermissionService.hasChapterPermission).mockResolvedValue(true)
+    vi.mocked(PersonProfileService.getOrIssueLeadId).mockReset()
+    vi.mocked(PersonProfileService.getOrIssueLeadId).mockResolvedValue({
+      success: true,
+      data: 'LEAD-123456',
+    })
   })
 
   describe('applyToChapter', () => {
@@ -225,18 +237,20 @@ describe('ChapterMembershipService', () => {
           error: null,
         })
 
-      const generateMemberId = vi.fn().mockResolvedValue('LEAD-123456')
       const result = await ChapterMembershipService.approveMembership(
         mockSupabase as unknown as SupabaseClient,
         {
           userId: 'user-1',
           chapterId: 'leaduni',
           approverId: 'editor-1',
-          generateMemberId,
         }
       )
 
       expect(result).toEqual({ success: true, member_id: 'LEAD-123456' })
+      expect(PersonProfileService.getOrIssueLeadId).toHaveBeenCalledWith(
+        mockSupabase,
+        'user-1'
+      )
       expect(tableMocks.chapter_membership.select).toHaveBeenCalledWith('id, status, member_id')
       expect(tableMocks.chapter_membership.match).toHaveBeenCalledWith({
         user_id: 'user-1',
@@ -262,7 +276,6 @@ describe('ChapterMembershipService', () => {
           userId: 'user-1',
           chapterId: 'leaduni',
           approverId: 'editor-1',
-          generateMemberId: vi.fn(),
         }
       )
 
@@ -280,7 +293,6 @@ describe('ChapterMembershipService', () => {
           userId: 'user-1',
           chapterId: 'leaduni',
           approverId: 'editor-1',
-          generateMemberId: vi.fn(),
         }
       )
 
@@ -304,13 +316,36 @@ describe('ChapterMembershipService', () => {
           userId: 'user-1',
           chapterId: 'leaduni',
           approverId: 'admin-1',
-          generateMemberId: vi.fn().mockResolvedValue('LEAD-123456'),
         }
       )
 
       expect(tableMocks.chapter_membership.update).toHaveBeenCalledWith(
         expect.objectContaining({ position: 'member' })
       )
+    })
+
+    it('propagates a LEAD ID issuance failure instead of approving', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+      tableMocks.chapter_membership.maybeSingle?.mockResolvedValue({
+        data: { id: 'membership-1', status: 'pending', member_id: null },
+        error: null,
+      })
+      vi.mocked(PersonProfileService.getOrIssueLeadId).mockResolvedValue({
+        success: false,
+        error: 'Profile not found',
+      })
+
+      const result = await ChapterMembershipService.approveMembership(
+        mockSupabase as unknown as SupabaseClient,
+        {
+          userId: 'user-1',
+          chapterId: 'leaduni',
+          approverId: 'editor-1',
+        }
+      )
+
+      expect(result).toEqual({ success: false, error: 'Profile not found' })
+      expect(tableMocks.chapter_membership.update).not.toHaveBeenCalled()
     })
   })
 

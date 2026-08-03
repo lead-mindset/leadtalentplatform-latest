@@ -1822,11 +1822,12 @@ export type Database = {
           graduation_year: number | null
           id: string
           is_recruiter_visible: boolean | null
+          lead_id: string | null
           linkedin_url: string | null
           major_or_interest: string | null
           portfolio_url: string | null
           skills: string[] | null
-          university: string | null
+          university: string
           updated_at: string
           user_id: string
         }
@@ -1836,11 +1837,12 @@ export type Database = {
           graduation_year?: number | null
           id?: string
           is_recruiter_visible?: boolean | null
+          lead_id?: string | null
           linkedin_url?: string | null
           major_or_interest?: string | null
           portfolio_url?: string | null
           skills?: string[] | null
-          university?: string | null
+          university: string
           updated_at?: string
           user_id: string
         }
@@ -1850,11 +1852,12 @@ export type Database = {
           graduation_year?: number | null
           id?: string
           is_recruiter_visible?: boolean | null
+          lead_id?: string | null
           linkedin_url?: string | null
           major_or_interest?: string | null
           portfolio_url?: string | null
           skills?: string[] | null
-          university?: string | null
+          university?: string
           updated_at?: string
           user_id?: string
         }

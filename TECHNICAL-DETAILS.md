@@ -436,7 +436,6 @@ lib/actions/
 │   ├── student-profile.ts    # Student profile view
 │   └── talent-pool.ts        # Talent browsing
 └── student/
-    ├── generate-member-ids.ts
     ├── handle-resume.ts      # Resume upload/delete
     ├── onboarding.ts         # Onboarding completion
     └── profile.ts            # Profile updates

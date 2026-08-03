@@ -11,6 +11,7 @@ import {
   ChapterPermissionService,
   type ChapterPermissionKey,
 } from '@/lib/services/chapter-permission.service'
+import { PersonProfileService } from '@/lib/services/person-profile.service'
 
 type ActionResult = { success: true } | { success: false; error: string }
 type ApprovalResult = { success: true; member_id: string } | { success: false; error: string }
@@ -38,7 +39,6 @@ type MembershipTarget = {
 
 type ApproveMembershipParams = MembershipTarget & {
   approverId: string
-  generateMemberId: (supabase: SupabaseClient<Database>) => Promise<string>
 }
 
 type RejectMembershipParams = MembershipTarget & {
@@ -338,12 +338,15 @@ export const ChapterMembershipService = {
       return { success: false, error: 'Only pending memberships can be approved.' }
     }
 
-    let memberId: string
-    try {
-      memberId = membership.member_id ?? await params.generateMemberId(supabase)
-    } catch {
-      return { success: false, error: 'Could not generate a member ID - please try again.' }
+    const leadIdResult = membership.member_id
+      ? { success: true as const, data: membership.member_id }
+      : await PersonProfileService.getOrIssueLeadId(supabase, params.userId)
+
+    if (!leadIdResult.success) {
+      return { success: false, error: leadIdResult.error }
     }
+
+    const memberId = leadIdResult.data
 
     const now = new Date().toISOString()
     const { error: updateError } = await supabase

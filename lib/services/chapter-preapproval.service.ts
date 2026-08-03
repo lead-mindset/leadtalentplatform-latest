@@ -1,12 +1,13 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/database.generated'
 import { logger } from '@/lib/logger'
-import { generateUniqueMemberId } from '@/lib/utils/member-id'
+import { PersonProfileService } from '@/lib/services/person-profile.service'
 import {
   ChapterPermissionService,
   type ChapterPermissionKey,
   type ChapterRoleLevel,
 } from '@/lib/services/chapter-permission.service'
+import { onboardPresident } from '@/lib/services/chapter-president.service'
 
 type ChapterPreapprovalRow = Database['public']['Tables']['chapter_preapproval']['Row']
 type ChapterMembershipRow = Pick<
@@ -23,7 +24,6 @@ type ActivationParams = {
   userId: string
   email: string
   activatedById?: string | null
-  generateMemberId?: (supabase: SupabaseClient<Database>) => Promise<string>
 }
 
 type ActivationNoopReason = 'no_matching_preapproval'
@@ -133,12 +133,15 @@ async function ensureApprovedMembership(
     return { success: true, memberId: membership.member_id }
   }
 
-  let memberId: string
-  try {
-    memberId = membership?.member_id ?? await (params.generateMemberId ?? generateUniqueMemberId)(supabase)
-  } catch {
-    return { success: false, error: 'Could not generate a member ID - please try again.' }
+  const leadIdResult = membership?.member_id
+    ? { success: true as const, data: membership.member_id }
+    : await PersonProfileService.getOrIssueLeadId(supabase, params.userId)
+
+  if (!leadIdResult.success) {
+    return { success: false, error: leadIdResult.error }
   }
+
+  const memberId = leadIdResult.data
 
   const membershipPayload = {
     approved_by_id: params.activatedById ?? membership?.approved_by_id ?? null,
@@ -329,6 +332,15 @@ export const ChapterPreapprovalService = {
       })
 
       if (!grantResult.success) return grantResult
+
+      if (roleResult.roleLevel === 'president') {
+        const presidentResult = await onboardPresident(supabase, {
+          userId: params.userId,
+          chapterId: preapproval.chapter_id,
+          grantedById: params.activatedById ?? null,
+        })
+        if (!presidentResult.success) return presidentResult
+      }
 
       roleAssignmentId = roleResult.roleAssignmentId
       grantedPermissions = grantResult.grantedPermissions

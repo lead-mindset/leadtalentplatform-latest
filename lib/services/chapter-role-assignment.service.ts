@@ -6,6 +6,7 @@ import {
   type ChapterPermissionKey,
   type ChapterRoleLevel,
 } from '@/lib/services/chapter-permission.service'
+import { LeadIdentityService } from '@/lib/services/lead-identity.service'
 
 export type AssignableChapterRoleLevel = Exclude<ChapterRoleLevel, 'member'>
 
@@ -34,6 +35,10 @@ type AssignChapterRoleParams = {
   functionalArea: ChapterFunctionalArea
   displayTitle: string
   rawTitle?: string | null
+  source?: string
+  sourceChapterInviteId?: string | null
+  grantedById?: string
+  skipAuth?: boolean
 }
 
 type DeactivateChapterRoleParams = {
@@ -47,7 +52,7 @@ type AssignmentAuthResult =
   | { success: false; error: string }
 
 type AssignmentResult =
-  | { success: true; roleAssignmentId: string; grantedPermissions: ChapterPermissionKey[] }
+  | { success: true; roleAssignmentId: string; grantedPermissions: ChapterPermissionKey[]; identityIssued: boolean }
   | { success: false; error: string }
 
 type ActionResult = { success: true } | { success: false; error: string }
@@ -256,8 +261,12 @@ export const ChapterRoleAssignmentService = {
       return { success: false, error: 'Display title is required.' }
     }
 
-    const auth = await authorizeAssignment(supabase, params)
-    if (!auth.success) return auth
+    let isAdmin = false
+    if (!params.skipAuth) {
+      const auth = await authorizeAssignment(supabase, params)
+      if (!auth.success) return auth
+      isAdmin = auth.isAdmin
+    }
 
     const targetHasMembership = await hasApprovedMembership(supabase, {
       userId: params.targetUserId,
@@ -278,6 +287,9 @@ export const ChapterRoleAssignmentService = {
 
     if (!deactivateResult.success) return deactivateResult
 
+    const roleSource = params.source ?? (isAdmin ? 'manual_admin' : 'manual')
+    const assignedById = params.grantedById ?? params.actorUserId
+
     const { data: createdRole, error: insertError } = await supabase
       .from('chapter_role_assignment')
       .insert({
@@ -289,8 +301,9 @@ export const ChapterRoleAssignmentService = {
         raw_title: params.rawTitle ?? null,
         is_primary: true,
         status: 'active',
-        assigned_by_id: params.actorUserId,
-        source: auth.isAdmin ? 'manual_admin' : 'manual',
+        assigned_by_id: assignedById,
+        source: roleSource,
+        source_chapter_invite_id: params.sourceChapterInviteId ?? null,
         source_preapproval_id: null,
         starts_at: now,
         updated_at: now,
@@ -310,12 +323,29 @@ export const ChapterRoleAssignmentService = {
       userId: params.targetUserId,
       chapterId: params.chapterId,
       roleLevel: params.roleLevel,
-      grantedById: params.actorUserId,
+      grantedById: assignedById,
       source: 'role_template',
       sourceRoleAssignmentId: createdRole.id,
     })
 
     if (!grantResult.success) return grantResult
+
+    let identityIssued = false
+    try {
+      const identityResult = await LeadIdentityService.issueIdentity(supabase, {
+        userId: params.targetUserId,
+        identityType: 'chapter_editor',
+        chapterId: params.chapterId,
+        issuedById: assignedById,
+        makePrimary: true,
+      })
+      identityIssued = identityResult.success
+    } catch (identityError) {
+      logger.error(
+        { context: 'chapter-role-assignment/identity', error: identityError, userId: params.targetUserId },
+        'Failed to issue LEAD identity'
+      )
+    }
 
     await writeRoleAssignmentAudit(supabase, {
       action: 'chapter.role.assigned',
@@ -328,7 +358,7 @@ export const ChapterRoleAssignmentService = {
         functional_area: params.functionalArea,
         display_title: displayTitle,
         raw_title: params.rawTitle ?? null,
-        source: auth.isAdmin ? 'manual_admin' : 'manual',
+        source: roleSource,
       },
     })
 
@@ -336,6 +366,7 @@ export const ChapterRoleAssignmentService = {
       success: true,
       roleAssignmentId: createdRole.id,
       grantedPermissions: grantResult.grantedPermissions,
+      identityIssued,
     }
   },
 

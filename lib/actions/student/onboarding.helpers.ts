@@ -81,6 +81,9 @@ export async function saveBasicOnboarding(
 
   if (!profileResult.success) return profileResult
 
+  const leadIdResult = await PersonProfileService.issueLeadId(supabase, params.userId)
+  if (!leadIdResult.success) return leadIdResult
+
   if (params.resumePdf) {
     const resumeResult = await StudentService.saveResume(supabase, params.userId, params.resumePdf)
     if (!resumeResult.success) return resumeResult
