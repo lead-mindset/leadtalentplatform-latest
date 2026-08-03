@@ -1893,7 +1893,7 @@ export const AdminService = {
     }
 
     const now = new Date().toISOString()
-    const [{ data: memberships }, { data: events }] = await Promise.all([
+    const [{ data: memberships }, { data: events }, { data: roleAssignments }] = await Promise.all([
       supabase
         .from('chapter_membership')
         .select('chapter_id, user_id')
@@ -1904,9 +1904,18 @@ export const AdminService = {
         .in('chapter_id', chapter_ids)
         .eq('is_published', true)
         .gt('end_at', now),
+      supabase
+        .from('chapter_role_assignment')
+        .select('chapter_id, user_id')
+        .in('chapter_id', chapter_ids),
     ])
 
     type ChapterMembershipListRow = Pick<ChapterMembershipRow, 'chapter_id' | 'user_id'>
+    type AssignmentRow = { chapter_id: string; user_id: string }
+    const editorKey = (c: string, u: string) => `${c}:${u}`
+    const editorSet = new Set<string>(
+      (roleAssignments ?? []).map((a: AssignmentRow) => editorKey(a.chapter_id, a.user_id))
+    )
     type ChapterEventRow = Pick<EventRow, 'id' | 'chapter_id'>
 
     const membershipRows = (memberships ?? []) as unknown as ChapterMembershipListRow[]
@@ -1932,10 +1941,9 @@ export const AdminService = {
     const rows: ChapterListItem[] = chapterRows.map((chapter: ChapterListRow) => {
       const chapterMemberships = membershipByChapter.get(chapter.id) ?? []
       const editors = chapterMemberships
-        .filter((membership: ChapterMembershipListRow) => {
-          const user = memberUserMap.get(membership.user_id)
-          return user?.role === 'editor'
-        })
+        .filter((membership: ChapterMembershipListRow) =>
+          editorSet.has(editorKey(membership.chapter_id, membership.user_id))
+        )
         .map((membership: ChapterMembershipListRow) => {
           const user = memberUserMap.get(membership.user_id)
           return {
@@ -2068,7 +2076,7 @@ export const AdminService = {
 
     membershipRows.forEach((row) => {
       const user = userMap.get(row.user_id)
-      if (!user || (user.role !== 'member' && user.role !== 'editor')) return
+      if (!user || user.role !== 'member') return
       editorsByChapter[row.chapter_id] ??= []
       editorsByChapter[row.chapter_id].push({
         id: user.id,

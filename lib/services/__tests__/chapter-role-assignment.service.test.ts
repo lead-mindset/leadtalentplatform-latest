@@ -106,6 +106,7 @@ describe('ChapterRoleAssignmentService', () => {
       success: true,
       roleAssignmentId: 'role-1',
       grantedPermissions: ['chapter.dashboard.access'],
+      identityIssued: false,
     })
     expect(tableMocks.chapter_role_assignment.insert).toHaveBeenCalledWith(
       expect.objectContaining({

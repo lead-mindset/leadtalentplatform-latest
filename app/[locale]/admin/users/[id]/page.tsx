@@ -108,7 +108,7 @@ export default async function UserDetailPage({
   const supabase = await createClient()
   const { data: { user: currentUser } } = await supabase.auth.getUser()
 
-  const { data: currentUserData } = currentUser
+  const { data: currentUserRoleData } = currentUser
     ? await supabase
         .from('user')
         .select('role')
@@ -116,9 +116,19 @@ export default async function UserDetailPage({
         .single()
     : { data: null }
 
+  const targetChapterId = membership?.chapter_id
+
+  const { count: activeRoleCount } = currentUser && targetChapterId
+    ? await supabase
+        .from('chapter_role_assignment')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', currentUser.id)
+        .eq('chapter_id', targetChapterId)
+        .eq('status', 'active')
+    : { count: 0 }
+
   const canApprove =
-    currentUserData &&
-    (currentUserData.role === 'admin' || currentUserData.role === 'editor')
+    currentUserRoleData?.role === 'admin' || (activeRoleCount ?? 0) > 0
 
   const [identityResult, chaptersResult, companyAccess] = await Promise.all([
     LeadIdentityService.getActiveIdentities(supabase, resolvedUser.id),
@@ -369,7 +379,7 @@ export default async function UserDetailPage({
             </Card>
           )}
 
-          {currentUserData?.role === 'admin' && membership?.status === 'approved' && (
+          {currentUserRoleData?.role === 'admin' && membership?.status === 'approved' && (
             <AdminChapterRoleCorrectionPanel
               userId={resolvedUser.id}
               userName={resolvedUser.name ?? resolvedUser.email}

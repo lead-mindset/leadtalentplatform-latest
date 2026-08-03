@@ -27,16 +27,16 @@ const FOUNDATION_SERVICES = [
 
 const ACTION_DIRECT_DB_ALLOWLIST = new Map([
   [
-    'lib/actions/student/generate-member-ids.ts',
-    'Legacy admin utility; move to a service when member ID workflows are next touched.',
-  ],
-  [
     'lib/actions/events/event-chapter.ts',
     'Existing collaborator lookup path; candidate for EventService consolidation.',
   ],
   [
     'lib/actions/events/register.ts',
     'Existing registration preflight lookup; candidate for EventService consolidation.',
+  ],
+  [
+    'lib/actions/admin/onboard-president.ts',
+    'Phase-3 onboarding shim: creates approved memberships from scratch and issues identity. ChapterMembershipService.approveMembership only approves pre-existing pending rows, so this direct path is a documented interim debt; consolidate into the membership service when preapproval onboarding replaces it. See issue-204 plan.',
   ],
 ])
 

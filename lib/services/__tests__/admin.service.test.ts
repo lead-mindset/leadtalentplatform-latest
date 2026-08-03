@@ -766,6 +766,53 @@ describe('AdminService', () => {
       expect(result.total).toBe(2)
       expect(result.items[0].name).toBe('Alpha Chapter')
     })
+
+    it('populates editors from chapter_role_assignment data', async () => {
+      const { mockSupabase, tableMocks } = buildMockSupabase()
+
+      tableMocks.chapter._builder._setThenValue({
+        data: [
+          { id: 'ch-1', name: 'Alpha Chapter', university: 'Uni A', city: 'City A', region: 'Region A', created_at: '2024-01-01' },
+        ],
+        error: null,
+      })
+      tableMocks.chapter._builder._setThenValue({ data: [], error: null, count: 1 })
+
+      tableMocks.chapter_membership._builder._setThenValue({
+        data: [
+          { chapter_id: 'ch-1', user_id: 'user-1' },
+          { chapter_id: 'ch-1', user_id: 'user-2' },
+        ],
+        error: null,
+      })
+
+      tableMocks.event._builder._setThenValue({
+        data: [],
+        error: null,
+      })
+
+      tableMocks.chapter_role_assignment._builder._setThenValue({
+        data: [
+          { chapter_id: 'ch-1', user_id: 'user-2' },
+        ],
+        error: null,
+      })
+
+      tableMocks.user._builder._setThenValue({
+        data: [
+          { id: 'user-1', name: 'Member One', email: 'one@test.com', role: 'member' },
+          { id: 'user-2', name: 'Editor Two', email: 'two@test.com', role: 'member' },
+        ],
+        error: null,
+      })
+
+      const result = await AdminService.getChaptersList(mockSupabase as unknown as SupabaseClient, {}, { page: 1, pageSize: 10 })
+
+      expect(result.items).toHaveLength(1)
+      expect(result.items[0].editors).toEqual([
+        { id: 'user-2', name: 'Editor Two', email: 'two@test.com' },
+      ])
+    })
   })
 
   // ───────────────────────────────────────────────────────────────
@@ -786,7 +833,7 @@ describe('AdminService', () => {
       tableMocks.user._builder._setThenValue({
         data: [
           { id: 'user-1', name: 'Member One', email: 'one@test.com', role: 'member' },
-          { id: 'user-2', name: 'Editor Two', email: 'two@test.com', role: 'editor' },
+          { id: 'user-2', name: 'Editor Two', email: 'two@test.com', role: 'member' },
           { id: 'user-3', name: 'Admin Three', email: 'three@test.com', role: 'admin' },
         ],
         error: null,
@@ -799,7 +846,7 @@ describe('AdminService', () => {
 
       expect(result).toEqual({
         'ch-1': [{ id: 'user-1', name: 'Member One', email: 'one@test.com', role: 'member' }],
-        'ch-2': [{ id: 'user-2', name: 'Editor Two', email: 'two@test.com', role: 'editor' }],
+        'ch-2': [{ id: 'user-2', name: 'Editor Two', email: 'two@test.com', role: 'member' }],
       })
       expect(tableMocks.chapter_membership._builder.in).toHaveBeenCalledWith('chapter_id', ['ch-1', 'ch-2'])
     })

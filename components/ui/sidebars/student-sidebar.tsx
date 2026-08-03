@@ -18,7 +18,7 @@ interface StudentNavigationProps {
 export function StudentNavigation({ 
   userRole, 
   has_pending_approvals,
-  canManageChapter = userRole === 'editor',
+  canManageChapter = false,
 }: StudentNavigationProps) {
   return (
     <>

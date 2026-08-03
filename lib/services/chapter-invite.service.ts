@@ -2,15 +2,15 @@ import { createHash, randomBytes } from 'crypto'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database, Json } from '@/lib/database.generated'
 import { logger } from '@/lib/logger'
-import { generateUniqueMemberId } from '@/lib/utils/member-id'
+import { PersonProfileService } from '@/lib/services/person-profile.service'
 import {
   ChapterPermissionService,
   type ChapterPermissionKey,
-  type ChapterRoleLevel,
 } from '@/lib/services/chapter-permission.service'
-import type {
-  AssignableChapterRoleLevel,
-  ChapterFunctionalArea,
+import {
+  ChapterRoleAssignmentService,
+  type AssignableChapterRoleLevel,
+  type ChapterFunctionalArea,
 } from '@/lib/services/chapter-role-assignment.service'
 
 type ChapterInviteRow = Database['public']['Tables']['chapter_invite']['Row']
@@ -19,7 +19,6 @@ type ChapterMembershipRow = Pick<
   'approved_by_id' | 'chapter_id' | 'id' | 'joined_at' | 'member_id' | 'position' | 'status'
 >
 type UserRow = Pick<Database['public']['Tables']['user']['Row'], 'id' | 'role'>
-type RoleAssignmentRow = Pick<Database['public']['Tables']['chapter_role_assignment']['Row'], 'id' | 'role_level'>
 
 export type ChapterInviteType = 'member' | 'regular_eboard' | 'protected_leader'
 export type ChapterInviteStatus = 'pending' | 'accepted' | 'revoked' | 'expired'
@@ -74,7 +73,6 @@ type AcceptInviteParams = {
   userId: string
   email: string
   now?: Date
-  generateMemberId?: (supabase: SupabaseClient<Database>) => Promise<string>
 }
 
 type CreateInviteResult =
@@ -378,12 +376,15 @@ async function ensureApprovedMembership(
     return { success: true, memberId: membership.member_id }
   }
 
-  let memberId: string
-  try {
-    memberId = membership?.member_id ?? await (params.generateMemberId ?? generateUniqueMemberId)(supabase)
-  } catch {
-    return { success: false, error: 'Could not generate a member ID - please try again.' }
+  const leadIdResult = membership?.member_id
+    ? { success: true as const, data: membership.member_id }
+    : await PersonProfileService.getOrIssueLeadId(supabase, params.userId)
+
+  if (!leadIdResult.success) {
+    return { success: false, error: leadIdResult.error }
   }
+
+  const memberId = leadIdResult.data
 
   const payload = {
     approved_by_id: invite.created_by_user_id ?? membership?.approved_by_id ?? null,
@@ -422,115 +423,6 @@ async function ensureApprovedMembership(
   }
 
   return { success: true, memberId }
-}
-
-async function ensureRoleAssignment(
-  supabase: SupabaseClient<Database>,
-  invite: ChapterInviteRow,
-  params: AcceptInviteParams,
-  now: string
-): Promise<{ success: true; roleAssignmentId?: string; roleLevel?: ChapterRoleLevel } | { success: false; error: string }> {
-  if (invite.role_level === 'member') return { success: true }
-
-  if (isProtectedRole(invite.role_level)) {
-    const conflict = await hasProtectedRoleConflict(supabase, {
-      chapterId: invite.chapter_id,
-      roleLevel: invite.role_level,
-      excludeInviteId: invite.id,
-    })
-    if (conflict) {
-      return { success: false, error: 'This protected chapter role is already assigned or pending.' }
-    }
-  }
-
-  const { data: sourceAssignment, error: sourceError } = await supabase
-    .from('chapter_role_assignment')
-    .select('id, role_level')
-    .match({
-      user_id: params.userId,
-      chapter_id: invite.chapter_id,
-      status: 'active',
-      source_chapter_invite_id: invite.id,
-    })
-    .maybeSingle()
-
-  if (sourceError) {
-    logger.error({ context: 'chapter-invite/role-source-find', error: sourceError }, 'Failed to find source role')
-    return { success: false, error: 'Failed to activate chapter role.' }
-  }
-
-  if (sourceAssignment) {
-    return {
-      success: true,
-      roleAssignmentId: (sourceAssignment as RoleAssignmentRow).id,
-      roleLevel: invite.role_level as ChapterRoleLevel,
-    }
-  }
-
-  const { data: primaryAssignment, error: primaryError } = await supabase
-    .from('chapter_role_assignment')
-    .select('id, role_level')
-    .match({
-      user_id: params.userId,
-      chapter_id: invite.chapter_id,
-      status: 'active',
-      is_primary: true,
-    })
-    .maybeSingle()
-
-  if (primaryError) {
-    logger.error({ context: 'chapter-invite/role-primary-find', error: primaryError }, 'Failed to find primary role')
-    return { success: false, error: 'Failed to activate chapter role.' }
-  }
-
-  if (primaryAssignment) {
-    const { error } = await supabase
-      .from('chapter_role_assignment')
-      .update({
-        status: 'inactive',
-        ends_at: now,
-        updated_at: now,
-      })
-      .eq('id', (primaryAssignment as RoleAssignmentRow).id)
-      .eq('status', 'active')
-
-    if (error) {
-      logger.error({ context: 'chapter-invite/role-primary-deactivate', error }, 'Failed to deactivate primary role')
-      return { success: false, error: 'Failed to activate chapter role.' }
-    }
-  }
-
-  const { data: createdAssignment, error: insertError } = await supabase
-    .from('chapter_role_assignment')
-    .insert({
-      user_id: params.userId,
-      chapter_id: invite.chapter_id,
-      role_level: invite.role_level,
-      functional_area: invite.functional_area,
-      display_title: invite.display_title,
-      raw_title: invite.raw_title,
-      is_primary: true,
-      status: 'active',
-      assigned_by_id: invite.created_by_user_id,
-      source: 'chapter_invite',
-      source_chapter_invite_id: invite.id,
-      starts_at: now,
-      updated_at: now,
-    })
-    .select('id, role_level')
-    .single()
-
-  if (insertError || !createdAssignment) {
-    logger.error({ context: 'chapter-invite/role-insert', error: insertError }, 'Failed to insert role assignment')
-    return { success: false, error: 'Failed to activate chapter role.' }
-  }
-
-  const assignment = createdAssignment as RoleAssignmentRow
-  return {
-    success: true,
-    roleAssignmentId: assignment.id,
-    roleLevel: assignment.role_level as ChapterRoleLevel,
-  }
 }
 
 async function markAccepted(
@@ -774,22 +666,36 @@ export const ChapterInviteService = {
     const membership = await ensureApprovedMembership(supabase, invite, params, now)
     if (!membership.success) return membership
 
-    const role = await ensureRoleAssignment(supabase, invite, params, now)
-    if (!role.success) return role
-
+    let roleAssignmentId: string | undefined
     let grantedPermissions: ChapterPermissionKey[] = []
-    if (role.roleLevel && role.roleAssignmentId) {
-      const grant = await ChapterPermissionService.grantRoleTemplatePermissions(supabase, {
-        userId: params.userId,
+
+    if (invite.role_level !== 'member') {
+      const conflict = await hasProtectedRoleConflict(supabase, {
         chapterId: invite.chapter_id,
-        roleLevel: role.roleLevel,
-        grantedById: invite.created_by_user_id,
+        roleLevel: invite.role_level,
+        excludeInviteId: invite.id,
+      })
+      if (conflict) {
+        return { success: false, error: 'This protected chapter role is already assigned or pending.' }
+      }
+
+      const assignResult = await ChapterRoleAssignmentService.assignChapterRole(supabase, {
+        actorUserId: params.userId,
+        targetUserId: params.userId,
+        chapterId: invite.chapter_id,
+        roleLevel: invite.role_level as AssignableChapterRoleLevel,
+        functionalArea: invite.functional_area as ChapterFunctionalArea,
+        displayTitle: invite.display_title,
+        rawTitle: invite.raw_title,
         source: 'chapter_invite',
-        sourceRoleAssignmentId: role.roleAssignmentId,
+        sourceChapterInviteId: invite.id,
+        grantedById: invite.created_by_user_id ?? undefined,
+        skipAuth: true,
       })
 
-      if (!grant.success) return grant
-      grantedPermissions = grant.grantedPermissions
+      if (!assignResult.success) return assignResult
+      roleAssignmentId = assignResult.roleAssignmentId
+      grantedPermissions = assignResult.grantedPermissions
     }
 
     const accepted = await markAccepted(supabase, {
@@ -804,7 +710,7 @@ export const ChapterInviteService = {
       accepted: true,
       invite: toInvite({ ...invite, status: 'accepted', accepted_at: now, accepted_by_user_id: params.userId }, new Date(now)),
       memberId: membership.memberId,
-      roleAssignmentId: role.roleAssignmentId,
+      roleAssignmentId,
       grantedPermissions,
     }
   },

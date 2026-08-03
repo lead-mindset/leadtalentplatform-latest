@@ -1,21 +1,28 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/database.generated'
-import { generateUniqueMemberId } from '@/lib/utils/member-id'
+import { PersonProfileService } from '@/lib/services/person-profile.service'
 import { ChapterPermissionService } from '@/lib/services/chapter-permission.service'
+import { onboardPresident } from '@/lib/services/chapter-president.service'
 import {
   ChapterPreapprovalService,
   normalizePreapprovalEmail,
 } from '../chapter-preapproval.service'
 
-vi.mock('@/lib/utils/member-id', () => ({
-  generateUniqueMemberId: vi.fn(),
+vi.mock('@/lib/services/person-profile.service', () => ({
+  PersonProfileService: {
+    getOrIssueLeadId: vi.fn(),
+  },
 }))
 
 vi.mock('@/lib/services/chapter-permission.service', () => ({
   ChapterPermissionService: {
     grantRoleTemplatePermissions: vi.fn(),
   },
+}))
+
+vi.mock('@/lib/services/chapter-president.service', () => ({
+  onboardPresident: vi.fn(),
 }))
 
 type MockFn = ReturnType<typeof vi.fn>
@@ -127,13 +134,18 @@ function eboardPreapproval(overrides: Record<string, unknown> = {}) {
 
 describe('ChapterPreapprovalService', () => {
   beforeEach(() => {
-    vi.mocked(generateUniqueMemberId).mockReset()
-    vi.mocked(generateUniqueMemberId).mockResolvedValue('LEAD-123456')
+    vi.mocked(PersonProfileService.getOrIssueLeadId).mockReset()
+    vi.mocked(PersonProfileService.getOrIssueLeadId).mockResolvedValue({
+      success: true,
+      data: 'LEAD-123456',
+    })
     vi.mocked(ChapterPermissionService.grantRoleTemplatePermissions).mockReset()
     vi.mocked(ChapterPermissionService.grantRoleTemplatePermissions).mockResolvedValue({
       success: true,
       grantedPermissions: ['chapter.dashboard.access'],
     })
+    vi.mocked(onboardPresident).mockReset()
+    vi.mocked(onboardPresident).mockResolvedValue({ success: true })
   })
 
   it('normalizes preapproval email by trimming and lowercasing', () => {
@@ -269,6 +281,92 @@ describe('ChapterPreapprovalService', () => {
     )
   })
 
+  it('calls onboardPresident for president-level eboard preapproval', async () => {
+    const { mockSupabase, tableMocks } = buildMockSupabase()
+    tableMocks.chapter_preapproval._setResult({ data: eboardPreapproval(), error: null })
+    tableMocks.chapter_preapproval._setResult({ data: null, error: null })
+    tableMocks.chapter_membership._setResult({ data: null, error: null })
+    tableMocks.chapter_membership._setResult({ data: null, error: null })
+    tableMocks.chapter_role_assignment._setResult({ data: null, error: null })
+    tableMocks.chapter_role_assignment._setResult({ data: null, error: null })
+    tableMocks.chapter_role_assignment._setResult({ data: { id: 'role-1', role_level: 'president' }, error: null })
+
+    const result = await ChapterPreapprovalService.activatePreapprovalForUser(mockSupabase, {
+      userId: 'leader-1',
+      email: 'leader@test.com',
+      activatedById: 'admin-1',
+    })
+
+    expect(result).toEqual(expect.objectContaining({ success: true, activated: true }))
+    expect(onboardPresident).toHaveBeenCalledWith(mockSupabase, {
+      userId: 'leader-1',
+      chapterId: 'leaduni',
+      grantedById: 'admin-1',
+    })
+  })
+
+  it('does not call onboardPresident for non-president eboard preapproval', async () => {
+    const { mockSupabase, tableMocks } = buildMockSupabase()
+    tableMocks.chapter_preapproval._setResult({
+      data: eboardPreapproval({ role_level: 'vice_president', display_title: 'VP', raw_title: 'VP' }),
+      error: null,
+    })
+    tableMocks.chapter_preapproval._setResult({ data: null, error: null })
+    tableMocks.chapter_membership._setResult({ data: null, error: null })
+    tableMocks.chapter_membership._setResult({ data: null, error: null })
+    tableMocks.chapter_role_assignment._setResult({ data: null, error: null })
+    tableMocks.chapter_role_assignment._setResult({ data: null, error: null })
+    tableMocks.chapter_role_assignment._setResult({ data: { id: 'role-1', role_level: 'vice_president' }, error: null })
+
+    await ChapterPreapprovalService.activatePreapprovalForUser(mockSupabase, {
+      userId: 'vp-user',
+      email: 'vp@test.com',
+    })
+
+    expect(onboardPresident).not.toHaveBeenCalled()
+  })
+
+  it('does not consume preapproval if onboardPresident fails', async () => {
+    const { mockSupabase, tableMocks } = buildMockSupabase()
+    tableMocks.chapter_preapproval._setResult({ data: eboardPreapproval(), error: null })
+    tableMocks.chapter_preapproval._setResult({ data: null, error: null })
+    tableMocks.chapter_membership._setResult({ data: null, error: null })
+    tableMocks.chapter_membership._setResult({ data: null, error: null })
+    tableMocks.chapter_role_assignment._setResult({ data: null, error: null })
+    tableMocks.chapter_role_assignment._setResult({ data: null, error: null })
+    tableMocks.chapter_role_assignment._setResult({ data: { id: 'role-1', role_level: 'president' }, error: null })
+    vi.mocked(onboardPresident).mockResolvedValue({
+      success: false,
+      error: 'User must have an approved chapter membership before becoming an editor.',
+    })
+
+    const result = await ChapterPreapprovalService.activatePreapprovalForUser(mockSupabase, {
+      userId: 'leader-1',
+      email: 'leader@test.com',
+    })
+
+    expect(result).toEqual({
+      success: false,
+      error: 'User must have an approved chapter membership before becoming an editor.',
+    })
+    expect(tableMocks.chapter_preapproval.update).not.toHaveBeenCalled()
+  })
+
+  it('does not call onboardPresident for member-type preapproval', async () => {
+    const { mockSupabase, tableMocks } = buildMockSupabase()
+    tableMocks.chapter_preapproval._setResult({ data: memberPreapproval(), error: null })
+    tableMocks.chapter_preapproval._setResult({ data: null, error: null })
+    tableMocks.chapter_membership._setResult({ data: null, error: null })
+    tableMocks.chapter_membership._setResult({ data: null, error: null })
+
+    await ChapterPreapprovalService.activatePreapprovalForUser(mockSupabase, {
+      userId: 'user-1',
+      email: 'leader@test.com',
+    })
+
+    expect(onboardPresident).not.toHaveBeenCalled()
+  })
+
   it('does not duplicate approved membership or role assignment when matching records already exist', async () => {
     const { mockSupabase, tableMocks } = buildMockSupabase()
     tableMocks.chapter_preapproval._setResult({ data: eboardPreapproval(), error: null })
@@ -295,7 +393,7 @@ describe('ChapterPreapprovalService', () => {
     })
 
     expect(result).toEqual(expect.objectContaining({ success: true, activated: true, memberId: 'LEAD-999999' }))
-    expect(vi.mocked(generateUniqueMemberId)).not.toHaveBeenCalled()
+    expect(PersonProfileService.getOrIssueLeadId).not.toHaveBeenCalled()
     expect(tableMocks.chapter_membership.insert).not.toHaveBeenCalled()
     expect(tableMocks.chapter_membership.update).not.toHaveBeenCalled()
     expect(tableMocks.chapter_role_assignment.insert).not.toHaveBeenCalled()

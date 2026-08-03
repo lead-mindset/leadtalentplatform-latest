@@ -1,12 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/database.generated'
+import { PersonProfileService } from '@/lib/services/person-profile.service'
 import { ChapterPermissionService } from '@/lib/services/chapter-permission.service'
 import {
   ChapterInviteService,
   hashChapterInviteToken,
   normalizeChapterInviteEmail,
 } from '../chapter-invite.service'
+
+vi.mock('@/lib/services/person-profile.service', () => ({
+  PersonProfileService: {
+    getOrIssueLeadId: vi.fn(),
+  },
+}))
 
 vi.mock('@/lib/services/chapter-permission.service', () => ({
   ChapterPermissionService: {
@@ -41,6 +48,8 @@ type TableName =
   | 'chapter_permission_grant'
   | 'chapter_role_assignment'
   | 'user'
+  | 'lead_identity'
+  | 'chapter_audit_log'
 
 function createBuilder(defaultValue: QueryResult = { data: null, error: null }): MockBuilder {
   const valueQueue: QueryResult[] = []
@@ -81,6 +90,8 @@ function buildMockSupabase() {
     chapter_permission_grant: createBuilder(),
     chapter_role_assignment: createBuilder(),
     user: createBuilder(),
+    lead_identity: createBuilder(),
+    chapter_audit_log: createBuilder(),
   }
 
   const mockSupabase = {
@@ -121,6 +132,11 @@ function inviteRow(overrides: Record<string, unknown> = {}) {
 
 describe('ChapterInviteService', () => {
   beforeEach(() => {
+    vi.mocked(PersonProfileService.getOrIssueLeadId).mockReset()
+    vi.mocked(PersonProfileService.getOrIssueLeadId).mockResolvedValue({
+      success: true,
+      data: 'LEAD-123456',
+    })
     vi.mocked(ChapterPermissionService.hasChapterPermission).mockReset()
     vi.mocked(ChapterPermissionService.hasChapterPermission).mockResolvedValue(true)
     vi.mocked(ChapterPermissionService.grantRoleTemplatePermissions).mockReset()
@@ -257,17 +273,20 @@ describe('ChapterInviteService', () => {
     tableMocks.chapter_membership._setResult({ data: [], error: null })
     tableMocks.chapter_membership._setResult({ data: null, error: null })
     tableMocks.chapter_membership._setResult({ data: null, error: null })
-    tableMocks.chapter_role_assignment._setResult({ data: null, error: null })
+    tableMocks.chapter_membership._setResult({ data: { user_id: 'user-1' }, error: null })
     tableMocks.chapter_role_assignment._setResult({ data: null, error: null })
     tableMocks.chapter_role_assignment._setResult({ data: { id: 'role-1', role_level: 'director' }, error: null })
     tableMocks.chapter_invite._setResult({ data: null, error: null })
+    vi.mocked(PersonProfileService.getOrIssueLeadId).mockResolvedValue({
+      success: true,
+      data: 'LEAD-UNI-9999',
+    })
 
     const result = await ChapterInviteService.acceptInvite(mockSupabase, {
       token: 'token-123',
       userId: 'user-1',
       email: 'leader@test.com',
       now: new Date('2026-05-31T00:00:00.000Z'),
-      generateMemberId: async () => 'LEAD-UNI-9999',
     })
 
     expect(result.success).toBe(true)
@@ -297,7 +316,7 @@ describe('ChapterInviteService', () => {
         userId: 'user-1',
         chapterId: 'leaduni',
         roleLevel: 'director',
-        source: 'chapter_invite',
+        source: 'role_template',
         sourceRoleAssignmentId: 'role-1',
       })
     )
@@ -327,17 +346,20 @@ describe('ChapterInviteService', () => {
     tableMocks.chapter_membership._setResult({ data: null, error: null })
     tableMocks.chapter_role_assignment._setResult({ data: null, error: null })
     tableMocks.chapter_invite._setResult({ data: null, error: null })
-    tableMocks.chapter_role_assignment._setResult({ data: null, error: null })
+    tableMocks.chapter_membership._setResult({ data: { user_id: 'user-1' }, error: null })
     tableMocks.chapter_role_assignment._setResult({ data: null, error: null })
     tableMocks.chapter_role_assignment._setResult({ data: { id: 'role-1', role_level: 'president' }, error: null })
     tableMocks.chapter_invite._setResult({ data: null, error: null })
+    vi.mocked(PersonProfileService.getOrIssueLeadId).mockResolvedValue({
+      success: true,
+      data: 'LEAD-UNI-0001',
+    })
 
     const result = await ChapterInviteService.acceptInvite(mockSupabase, {
       token: 'token-123',
       userId: 'user-1',
       email: 'president@test.com',
       now: new Date('2026-05-31T00:00:00.000Z'),
-      generateMemberId: async () => 'LEAD-UNI-0001',
     })
 
     expect(result.success).toBe(true)
