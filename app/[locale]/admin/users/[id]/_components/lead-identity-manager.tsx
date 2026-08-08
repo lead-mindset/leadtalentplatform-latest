@@ -38,6 +38,7 @@ type Props = {
   identities: LeadIdentityRow[]
   chapters: IdentityManagerChapter[]
   defaultChapterId?: string | null
+  eligibleMembershipChapterIds?: string[]
 }
 
 const IDENTITY_TYPES: Array<{ value: PublicIdentityType; label: string; requiresChapter: boolean }> = [
@@ -61,6 +62,7 @@ export function LeadIdentityManager({
   identities,
   chapters,
   defaultChapterId,
+  eligibleMembershipChapterIds = [],
 }: Props) {
   const router = useRouter()
   const [identityType, setIdentityType] = useState<PublicIdentityType>('chapter_member')
@@ -132,6 +134,8 @@ export function LeadIdentityManager({
   }
 
   const canIssue = !selectedIdentityType.requiresChapter || chapterId.length > 0
+  const hasEligibleMembership =
+    !selectedIdentityType.requiresChapter || eligibleMembershipChapterIds.includes(chapterId)
 
   return (
     <Card>
@@ -267,11 +271,20 @@ export function LeadIdentityManager({
             </Select>
           </div>
 
-          <Button disabled={isPending || !canIssue} onClick={issueIdentity}>
+          <Button
+            disabled={isPending || !canIssue || !hasEligibleMembership}
+            onClick={issueIdentity}
+          >
             <ShieldCheck className="h-4 w-4" />
             Issue
           </Button>
         </div>
+
+        {selectedIdentityType.requiresChapter && !hasEligibleMembership && (
+          <p className="text-sm text-destructive">
+            Cannot issue a chapter-scoped identity. Assign membership first.
+          </p>
+        )}
 
         <AlertDialog open={Boolean(confirmState)} onOpenChange={(open) => !open && setConfirmState(null)}>
           <AlertDialogContent>

@@ -16,6 +16,7 @@
     "db:push": "supabase db push && pnpm run types:generate",
     "migration:new": "supabase migration new",
     "chapter-eboard:dry-run": "tsx scripts/chapter-eboard-dry-run.ts",
+    "repair:president": "tsx scripts/repair-president.ts",
     "chapter-eboard:review-package": "tsx scripts/chapter-eboard-human-review-package.ts",
     "chapter-eboard:approved-artifact": "tsx scripts/chapter-eboard-approved-artifact.ts",
     "event-ops:readiness": "tsx scripts/event-ops-readiness-validation.ts",

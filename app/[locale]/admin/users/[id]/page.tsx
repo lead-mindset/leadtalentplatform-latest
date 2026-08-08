@@ -117,6 +117,10 @@ export default async function UserDetailPage({
     : { data: null }
 
   const targetChapterId = membership?.chapter_id
+  const eligibleMembershipChapterIds =
+    membership && (membership.status === 'approved' || membership.status === 'alumni')
+      ? [membership.chapter_id]
+      : []
 
   const { count: activeRoleCount } = currentUser && targetChapterId
     ? await supabase
@@ -308,6 +312,7 @@ export default async function UserDetailPage({
             identities={identities}
             chapters={chapters}
             defaultChapterId={membership?.chapter_id}
+            eligibleMembershipChapterIds={eligibleMembershipChapterIds}
           />
 
           <Card>
