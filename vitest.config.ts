@@ -14,6 +14,8 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: [],
+    pool: 'threads',
+    testTimeout: 15000,
     include: ['**/*.test.{ts,tsx}'],
     coverage: {
       reporter: ['text', 'json', 'html'],
