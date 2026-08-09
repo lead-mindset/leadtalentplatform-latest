@@ -2,8 +2,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const requireAdminMock = vi.hoisted(() => vi.fn())
 const revalidatePathMock = vi.hoisted(() => vi.fn())
+const createAdminClientMock = vi.hoisted(() => vi.fn())
 const getOrIssueLeadIdMock = vi.hoisted(() => vi.fn())
 const assignChapterRoleMock = vi.hoisted(() => vi.fn())
+const grantRoleTemplatePermissionsMock = vi.hoisted(() => vi.fn())
 const onboardPresidentMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/lib/auth', () => ({
@@ -12,6 +14,10 @@ vi.mock('@/lib/auth', () => ({
 
 vi.mock('next/cache', () => ({
   revalidatePath: revalidatePathMock,
+}))
+
+vi.mock('@/lib/supabase/admin', () => ({
+  createAdminClient: createAdminClientMock,
 }))
 
 vi.mock('@/lib/services/person-profile.service', () => ({
@@ -26,6 +32,12 @@ vi.mock('@/lib/services/chapter-role-assignment.service', () => ({
   },
 }))
 
+vi.mock('@/lib/services/chapter-permission.service', () => ({
+  ChapterPermissionService: {
+    grantRoleTemplatePermissions: grantRoleTemplatePermissionsMock,
+  },
+}))
+
 vi.mock('@/lib/services/chapter-president.service', () => ({
   onboardPresident: onboardPresidentMock,
 }))
@@ -33,7 +45,7 @@ vi.mock('@/lib/services/chapter-president.service', () => ({
 // --- Per-table, queued mock builder (mirrors chapter-preapproval.service.test.ts) ---
 
 type QueryResult = { data: unknown; error: unknown }
-type TableName = 'user' | 'chapter' | 'chapter_membership'
+type TableName = 'user' | 'chapter' | 'chapter_membership' | 'chapter_role_assignment'
 
 type MockBuilder = {
   select: ReturnType<typeof vi.fn>
@@ -44,6 +56,7 @@ type MockBuilder = {
   is: ReturnType<typeof vi.fn>
   single: ReturnType<typeof vi.fn>
   maybeSingle: ReturnType<typeof vi.fn>
+  then: ReturnType<typeof vi.fn>
   _setResult: (value: QueryResult) => void
 }
 
@@ -65,6 +78,7 @@ function createBuilder(defaultValue: QueryResult = { data: null, error: null }):
     is: vi.fn(() => builder),
     single: vi.fn(() => Promise.resolve(shiftValue())),
     maybeSingle: vi.fn(() => Promise.resolve(shiftValue())),
+    then: vi.fn((resolve: (value: QueryResult) => unknown) => resolve(shiftValue())),
     _setResult: (value: QueryResult) => {
       valueQueue.push(value)
       fallback = value
@@ -79,6 +93,7 @@ function buildMockSupabase() {
     user: createBuilder(),
     chapter: createBuilder(),
     chapter_membership: createBuilder(),
+    chapter_role_assignment: createBuilder(),
   }
 
   const supabase = {
@@ -86,6 +101,50 @@ function buildMockSupabase() {
   }
 
   return { supabase, tableMocks }
+}
+
+// --- Admin client mock ---
+
+const adminInsertBuilder = {
+  insert: vi.fn().mockResolvedValue({ data: null, error: null }),
+}
+
+const adminClientMock = {
+  auth: {
+    admin: {
+      getUserById: vi.fn(),
+      updateUserById: vi.fn(),
+      createUser: vi.fn(),
+    },
+  },
+  from: vi.fn(() => adminInsertBuilder),
+}
+
+function existingUser(overrides: Record<string, unknown> = {}) {
+  return { id: 'user-1', email: 'president@test.com', role: 'member', ...overrides }
+}
+
+function existingChapter(overrides: Record<string, unknown> = {}) {
+  return { id: 'leaduni', name: 'LEAD University', ...overrides }
+}
+
+function approvedMembership(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'membership-1',
+    status: 'approved',
+    member_id: 'LEAD-123456',
+    joined_at: '2026-01-01T00:00:00.000Z',
+    ...overrides,
+  }
+}
+
+function presidentRole(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'role-1',
+    role_level: 'president',
+    status: 'active',
+    ...overrides,
+  }
 }
 
 describe('onboardPresidentAction', () => {
@@ -100,6 +159,16 @@ describe('onboardPresidentAction', () => {
       supabase: {},
       user: { id: 'admin-1' },
     })
+    createAdminClientMock.mockReturnValue(adminClientMock)
+    adminClientMock.auth.admin.getUserById.mockResolvedValue({
+      data: { user: { id: 'user-1', email: 'president@test.com', email_confirmed_at: '2026-01-01T00:00:00.000Z' } },
+      error: null,
+    })
+    adminClientMock.auth.admin.updateUserById.mockResolvedValue({ data: { user: null }, error: null })
+    adminClientMock.auth.admin.createUser.mockResolvedValue({
+      data: { user: { id: 'created-user-1', email: 'president@test.com' } },
+      error: null,
+    })
     getOrIssueLeadIdMock.mockResolvedValue({
       success: true,
       data: 'LEAD-123456',
@@ -109,18 +178,48 @@ describe('onboardPresidentAction', () => {
       roleAssignmentId: 'role-1',
       grantedPermissions: ['chapter.dashboard.access'],
     })
+    grantRoleTemplatePermissionsMock.mockResolvedValue({
+      success: true,
+      grantedPermissions: ['chapter.dashboard.access'],
+    })
     onboardPresidentMock.mockResolvedValue({ success: true })
   })
 
-  it('succeeds with valid email and chapter', async () => {
+  function baseTables() {
     const { supabase, tableMocks } = buildMockSupabase()
-    tableMocks.user._setResult({
-      data: { id: 'user-1', email: 'president@test.com', role: 'member' },
-      error: null,
-    })
-    tableMocks.chapter._setResult({ data: { id: 'leaduni', name: 'LEAD University' }, error: null })
-    tableMocks.chapter_membership._setResult({ data: null, error: null })
+    tableMocks.user._setResult({ data: existingUser(), error: null })
+    tableMocks.chapter._setResult({ data: existingChapter(), error: null })
     requireAdminMock.mockResolvedValue({ supabase, user: { id: 'admin-1' } })
+    return { supabase, tableMocks }
+  }
+
+  function seedCrossChapterList(tableMocks: ReturnType<typeof buildMockSupabase>['tableMocks'], rows: Array<Record<string, unknown>> = []) {
+    tableMocks.chapter_membership._setResult({ data: rows, error: null })
+  }
+
+  function seedExistingMembership(
+    tableMocks: ReturnType<typeof buildMockSupabase>['tableMocks'],
+    value: Record<string, unknown> | null
+  ) {
+    tableMocks.chapter_membership._setResult({ data: value, error: null })
+  }
+
+  function seedExistingRole(
+    tableMocks: ReturnType<typeof buildMockSupabase>['tableMocks'],
+    value: Record<string, unknown> | null
+  ) {
+    tableMocks.chapter_role_assignment._setResult({ data: value, error: null })
+  }
+
+  function seedRoleUpdate(tableMocks: ReturnType<typeof buildMockSupabase>['tableMocks']) {
+    tableMocks.chapter_role_assignment._setResult({ data: null, error: null })
+  }
+
+  it('succeeds with valid email and chapter, inserting an approved president membership', async () => {
+    const { supabase, tableMocks } = baseTables()
+    seedCrossChapterList(tableMocks, [])
+    seedExistingMembership(tableMocks, null)
+    seedExistingRole(tableMocks, null)
 
     const { onboardPresidentAction } = await import('./onboard-president')
     const result = await onboardPresidentAction(validInput)
@@ -132,6 +231,7 @@ describe('onboardPresidentAction', () => {
         chapter_id: 'leaduni',
         status: 'approved',
         member_id: 'LEAD-123456',
+        position: 'president',
       })
     )
     expect(assignChapterRoleMock).toHaveBeenCalledWith(
@@ -166,24 +266,8 @@ describe('onboardPresidentAction', () => {
     expect(assignChapterRoleMock).not.toHaveBeenCalled()
   })
 
-  it('fails if user not found by email', async () => {
-    const { supabase, tableMocks } = buildMockSupabase()
-    tableMocks.user._setResult({ data: null, error: null })
-    requireAdminMock.mockResolvedValue({ supabase, user: { id: 'admin-1' } })
-
-    const { onboardPresidentAction } = await import('./onboard-president')
-    const result = await onboardPresidentAction(validInput)
-
-    expect(result).toEqual({ success: false, error: 'User not found with that email.' })
-    expect(assignChapterRoleMock).not.toHaveBeenCalled()
-  })
-
   it('fails if chapter not found', async () => {
     const { supabase, tableMocks } = buildMockSupabase()
-    tableMocks.user._setResult({
-      data: { id: 'user-1', email: 'president@test.com', role: 'member' },
-      error: null,
-    })
     tableMocks.chapter._setResult({ data: null, error: null })
     requireAdminMock.mockResolvedValue({ supabase, user: { id: 'admin-1' } })
 
@@ -194,61 +278,103 @@ describe('onboardPresidentAction', () => {
     expect(assignChapterRoleMock).not.toHaveBeenCalled()
   })
 
-  it('fails if user already has approved membership in this chapter', async () => {
-    const { supabase, tableMocks } = buildMockSupabase()
-    tableMocks.user._setResult({
-      data: { id: 'user-1', email: 'president@test.com', role: 'member' },
-      error: null,
-    })
-    tableMocks.chapter._setResult({ data: { id: 'leaduni', name: 'LEAD University' }, error: null })
-    tableMocks.chapter_membership._setResult({
-      data: {
-        id: 'membership-1',
-        status: 'approved',
-        member_id: 'LEAD-999999',
-        joined_at: '2026-01-01T00:00:00.000Z',
-      },
-      error: null,
-    })
-    requireAdminMock.mockResolvedValue({ supabase, user: { id: 'admin-1' } })
-
-    const { onboardPresidentAction } = await import('./onboard-president')
-    const result = await onboardPresidentAction(validInput)
-
-    expect(result).toEqual({ success: false, error: 'User already has an approved membership in this chapter.' })
-    expect(assignChapterRoleMock).not.toHaveBeenCalled()
-  })
-
-  it('updates existing unapproved membership instead of inserting', async () => {
-    const { supabase, tableMocks } = buildMockSupabase()
-    tableMocks.user._setResult({
-      data: { id: 'user-1', email: 'president@test.com', role: 'member' },
-      error: null,
-    })
-    tableMocks.chapter._setResult({ data: { id: 'leaduni', name: 'LEAD University' }, error: null })
-    tableMocks.chapter_membership._setResult({
-      data: { id: 'membership-1', status: 'pending', member_id: null, joined_at: null },
-      error: null,
-    })
-    requireAdminMock.mockResolvedValue({ supabase, user: { id: 'admin-1' } })
+  it('returns success without changes when membership and president role are already active', async () => {
+    const { tableMocks } = baseTables()
+    seedCrossChapterList(tableMocks, [])
+    seedExistingMembership(tableMocks, approvedMembership())
+    seedExistingRole(tableMocks, presidentRole())
 
     const { onboardPresidentAction } = await import('./onboard-president')
     const result = await onboardPresidentAction(validInput)
 
     expect(result).toEqual({ success: true })
-    expect(tableMocks.chapter_membership.update).toHaveBeenCalled()
+    expect(tableMocks.chapter_membership.insert).not.toHaveBeenCalled()
+    expect(tableMocks.chapter_membership.update).not.toHaveBeenCalled()
+    expect(assignChapterRoleMock).not.toHaveBeenCalled()
+    expect(onboardPresidentMock).not.toHaveBeenCalled()
+    expect(revalidatePathMock).toHaveBeenCalledWith('/admin')
+  })
+
+  it('reactivates a deactivated president role for an approved member', async () => {
+    const { supabase, tableMocks } = baseTables()
+    seedCrossChapterList(tableMocks, [])
+    seedExistingMembership(tableMocks, approvedMembership())
+    seedExistingRole(tableMocks, presidentRole({ status: 'inactive' }))
+    seedRoleUpdate(tableMocks)
+
+    const { onboardPresidentAction } = await import('./onboard-president')
+    const result = await onboardPresidentAction(validInput)
+
+    expect(result).toEqual({ success: true })
+    expect(tableMocks.chapter_role_assignment.update).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'active', ends_at: null })
+    )
+    expect(grantRoleTemplatePermissionsMock).toHaveBeenCalledWith(
+      supabase,
+      expect.objectContaining({
+        userId: 'user-1',
+        chapterId: 'leaduni',
+        roleLevel: 'president',
+        grantedById: 'admin-1',
+        source: 'role_template',
+        sourceRoleAssignmentId: 'role-1',
+      })
+    )
+    expect(onboardPresidentMock).toHaveBeenCalledWith(supabase, {
+      userId: 'user-1',
+      chapterId: 'leaduni',
+      grantedById: 'admin-1',
+    })
+    expect(assignChapterRoleMock).not.toHaveBeenCalled()
+  })
+
+  it('rejects onboarding a user already approved in another chapter', async () => {
+    const { supabase, tableMocks } = buildMockSupabase()
+    tableMocks.user._setResult({ data: existingUser(), error: null })
+    tableMocks.chapter._setResult({ data: existingChapter(), error: null })
+    tableMocks.chapter_membership._setResult({ data: [{ chapter_id: 'other-chapter' }], error: null })
+    requireAdminMock.mockResolvedValue({ supabase, user: { id: 'admin-1' } })
+
+    const { onboardPresidentAction } = await import('./onboard-president')
+    const result = await onboardPresidentAction(validInput)
+
+    expect(result).toEqual({
+      success: false,
+      error: 'This account already belongs to another chapter. Contact support before onboarding.',
+    })
+    expect(assignChapterRoleMock).not.toHaveBeenCalled()
+  })
+
+  it('upgrades an existing unapproved membership to approved president', async () => {
+    const { tableMocks } = baseTables()
+    seedCrossChapterList(tableMocks, [])
+    seedExistingMembership(tableMocks, {
+      id: 'membership-1',
+      status: 'pending',
+      member_id: null,
+      joined_at: null,
+    })
+    seedExistingRole(tableMocks, null)
+
+    const { onboardPresidentAction } = await import('./onboard-president')
+    const result = await onboardPresidentAction(validInput)
+
+    expect(result).toEqual({ success: true })
+    expect(tableMocks.chapter_membership.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'approved',
+        member_id: 'LEAD-123456',
+        position: 'president',
+      })
+    )
     expect(tableMocks.chapter_membership.insert).not.toHaveBeenCalled()
   })
 
   it('fails if assignChapterRole fails', async () => {
-    const { supabase, tableMocks } = buildMockSupabase()
-    tableMocks.user._setResult({
-      data: { id: 'user-1', email: 'president@test.com', role: 'member' },
-      error: null,
-    })
-    tableMocks.chapter._setResult({ data: { id: 'leaduni', name: 'LEAD University' }, error: null })
-    tableMocks.chapter_membership._setResult({ data: null, error: null })
-    requireAdminMock.mockResolvedValue({ supabase, user: { id: 'admin-1' } })
+    const { tableMocks } = baseTables()
+    seedCrossChapterList(tableMocks, [])
+    seedExistingMembership(tableMocks, null)
+    seedExistingRole(tableMocks, null)
     assignChapterRoleMock.mockResolvedValue({
       success: false,
       error: 'Target user must be an approved member of this chapter.',
@@ -262,14 +388,10 @@ describe('onboardPresidentAction', () => {
   })
 
   it('fails if onboardPresident fails', async () => {
-    const { supabase, tableMocks } = buildMockSupabase()
-    tableMocks.user._setResult({
-      data: { id: 'user-1', email: 'president@test.com', role: 'member' },
-      error: null,
-    })
-    tableMocks.chapter._setResult({ data: { id: 'leaduni', name: 'LEAD University' }, error: null })
-    tableMocks.chapter_membership._setResult({ data: null, error: null })
-    requireAdminMock.mockResolvedValue({ supabase, user: { id: 'admin-1' } })
+    const { tableMocks } = baseTables()
+    seedCrossChapterList(tableMocks, [])
+    seedExistingMembership(tableMocks, null)
+    seedExistingRole(tableMocks, null)
     onboardPresidentMock.mockResolvedValue({ success: false, error: 'Failed to issue LEAD identity.' })
 
     const { onboardPresidentAction } = await import('./onboard-president')
@@ -278,15 +400,103 @@ describe('onboardPresidentAction', () => {
     expect(result).toEqual({ success: false, error: 'Failed to issue LEAD identity.' })
   })
 
-  it('accepts custom functionalArea and displayTitle', async () => {
-    const { supabase, tableMocks } = buildMockSupabase()
-    tableMocks.user._setResult({
-      data: { id: 'user-1', email: 'president@test.com', role: 'member' },
+  it('confirms an existing auth account that has not confirmed email', async () => {
+    const { tableMocks } = baseTables()
+    seedCrossChapterList(tableMocks, [])
+    seedExistingMembership(tableMocks, null)
+    seedExistingRole(tableMocks, null)
+    adminClientMock.auth.admin.getUserById.mockResolvedValue({
+      data: { user: { id: 'user-1', email: 'president@test.com', email_confirmed_at: null } },
       error: null,
     })
-    tableMocks.chapter._setResult({ data: { id: 'leaduni', name: 'LEAD University' }, error: null })
+
+    const { onboardPresidentAction } = await import('./onboard-president')
+    const result = await onboardPresidentAction(validInput)
+
+    expect(result).toEqual({ success: true })
+    expect(adminClientMock.auth.admin.getUserById).toHaveBeenCalledWith('user-1')
+    expect(adminClientMock.auth.admin.updateUserById).toHaveBeenCalledWith('user-1', { email_confirm: true })
+  })
+
+  it('does not touch confirmation when the auth account is already confirmed', async () => {
+    const { tableMocks } = baseTables()
+    seedCrossChapterList(tableMocks, [])
+    seedExistingMembership(tableMocks, null)
+    seedExistingRole(tableMocks, null)
+
+    const { onboardPresidentAction } = await import('./onboard-president')
+    const result = await onboardPresidentAction(validInput)
+
+    expect(result).toEqual({ success: true })
+    expect(adminClientMock.auth.admin.updateUserById).not.toHaveBeenCalled()
+  })
+
+  it('auto-creates the auth account and reuses the public user created by the trigger', async () => {
+    const { supabase, tableMocks } = buildMockSupabase()
+    tableMocks.user._setResult({ data: null, error: null })
+    tableMocks.user._setResult({ data: { id: 'created-user-1', email: 'president@test.com' }, error: null })
+    tableMocks.chapter._setResult({ data: existingChapter(), error: null })
+    tableMocks.chapter_membership._setResult({ data: [], error: null })
     tableMocks.chapter_membership._setResult({ data: null, error: null })
+    tableMocks.chapter_role_assignment._setResult({ data: null, error: null })
     requireAdminMock.mockResolvedValue({ supabase, user: { id: 'admin-1' } })
+
+    const { onboardPresidentAction } = await import('./onboard-president')
+    const result = await onboardPresidentAction(validInput)
+
+    expect(result).toEqual({ success: true })
+    expect(adminClientMock.auth.admin.createUser).toHaveBeenCalledWith({
+      email: 'president@test.com',
+      email_confirm: true,
+    })
+    expect(adminClientMock.from).not.toHaveBeenCalled()
+    expect(tableMocks.chapter_membership.insert).toHaveBeenCalledWith(
+      expect.objectContaining({ user_id: 'created-user-1', position: 'president' })
+    )
+  })
+
+  it('falls back to a manual public user insert when the trigger did not run', async () => {
+    const { supabase, tableMocks } = buildMockSupabase()
+    tableMocks.user._setResult({ data: null, error: null })
+    tableMocks.user._setResult({ data: null, error: null })
+    tableMocks.chapter._setResult({ data: existingChapter(), error: null })
+    tableMocks.chapter_membership._setResult({ data: [], error: null })
+    tableMocks.chapter_membership._setResult({ data: null, error: null })
+    tableMocks.chapter_role_assignment._setResult({ data: null, error: null })
+    requireAdminMock.mockResolvedValue({ supabase, user: { id: 'admin-1' } })
+
+    const { onboardPresidentAction } = await import('./onboard-president')
+    const result = await onboardPresidentAction(validInput)
+
+    expect(result).toEqual({ success: true })
+    expect(adminClientMock.from).toHaveBeenCalledWith('user')
+    expect(adminInsertBuilder.insert).toHaveBeenCalledWith({
+      id: 'created-user-1',
+      email: 'president@test.com',
+      name: '',
+      role: 'member',
+    })
+  })
+
+  it('fails when the auth account cannot be created', async () => {
+    const { supabase, tableMocks } = buildMockSupabase()
+    tableMocks.user._setResult({ data: null, error: null })
+    tableMocks.chapter._setResult({ data: existingChapter(), error: null })
+    requireAdminMock.mockResolvedValue({ supabase, user: { id: 'admin-1' } })
+    adminClientMock.auth.admin.createUser.mockResolvedValue({ data: { user: null }, error: { message: 'dup' } })
+
+    const { onboardPresidentAction } = await import('./onboard-president')
+    const result = await onboardPresidentAction(validInput)
+
+    expect(result).toEqual({ success: false, error: 'Failed to create the account.' })
+    expect(assignChapterRoleMock).not.toHaveBeenCalled()
+  })
+
+  it('accepts custom functionalArea and displayTitle', async () => {
+    const { supabase, tableMocks } = baseTables()
+    seedCrossChapterList(tableMocks, [])
+    seedExistingMembership(tableMocks, null)
+    seedExistingRole(tableMocks, null)
 
     const { onboardPresidentAction } = await import('./onboard-president')
     const result = await onboardPresidentAction({
@@ -301,19 +511,16 @@ describe('onboardPresidentAction', () => {
       expect.objectContaining({
         functionalArea: 'strategy_operations',
         displayTitle: 'Presidenta',
+        rawTitle: 'Presidenta',
       })
     )
   })
 
   it('uses defaults for functionalArea and displayTitle when omitted', async () => {
-    const { supabase, tableMocks } = buildMockSupabase()
-    tableMocks.user._setResult({
-      data: { id: 'user-1', email: 'president@test.com', role: 'member' },
-      error: null,
-    })
-    tableMocks.chapter._setResult({ data: { id: 'leaduni', name: 'LEAD University' }, error: null })
-    tableMocks.chapter_membership._setResult({ data: null, error: null })
-    requireAdminMock.mockResolvedValue({ supabase, user: { id: 'admin-1' } })
+    const { supabase, tableMocks } = baseTables()
+    seedCrossChapterList(tableMocks, [])
+    seedExistingMembership(tableMocks, null)
+    seedExistingRole(tableMocks, null)
 
     const { onboardPresidentAction } = await import('./onboard-president')
     const result = await onboardPresidentAction(validInput)
