@@ -159,6 +159,10 @@ describe('LeadIdentityService', () => {
     const { mockSupabase, tableMocks } = buildMockSupabase()
     const revokedIdentity = { ...activeIdentity, status: 'revoked', revoked_at: '2026-05-01T00:00:00.000Z' }
 
+    tableMocks.chapter_membership._builder._setThenValue({
+      data: { user_id: 'user-1', chapter_id: 'leaduni', status: 'approved' },
+      error: null,
+    })
     tableMocks.lead_identity._builder._setThenValue({ data: revokedIdentity, error: null })
     tableMocks.lead_identity._builder._setThenValue({ data: { ...revokedIdentity, status: 'active', revoked_at: null }, error: null })
 
@@ -173,6 +177,71 @@ describe('LeadIdentityService', () => {
     expect(tableMocks.lead_identity.insert).not.toHaveBeenCalled()
     expect(tableMocks.lead_identity.update).toHaveBeenCalledWith(
       expect.objectContaining({ status: 'active', revoked_at: null })
+    )
+  })
+
+  it('rejects a chapter-scoped identity when the user has no chapter membership', async () => {
+    const { mockSupabase } = buildMockSupabase()
+
+    const result = await LeadIdentityService.issueIdentity(mockSupabase, {
+      userId: 'user-1',
+      identityType: 'chapter_editor',
+      chapterId: 'leaduni',
+      issuedById: 'admin-1',
+    })
+
+    expect(result).toEqual({
+      success: false,
+      error: 'Cannot issue a chapter-scoped identity. Assign membership first.',
+    })
+  })
+
+  it('rejects a chapter-scoped identity when the membership is pending', async () => {
+    const { mockSupabase, tableMocks } = buildMockSupabase()
+
+    tableMocks.chapter_membership._builder._setThenValue({
+      data: { user_id: 'user-1', chapter_id: 'leaduni', status: 'pending' },
+      error: null,
+    })
+
+    const result = await LeadIdentityService.issueIdentity(mockSupabase, {
+      userId: 'user-1',
+      identityType: 'chapter_editor',
+      chapterId: 'leaduni',
+      issuedById: 'admin-1',
+    })
+
+    expect(result).toEqual({
+      success: false,
+      error: 'Cannot issue a chapter-scoped identity. Assign membership first.',
+    })
+  })
+
+  it('allows an alumni identity when the membership status is alumni', async () => {
+    const { mockSupabase, tableMocks } = buildMockSupabase()
+    const alumniIdentity = { ...activeIdentity, identity_type: 'alumni' }
+
+    tableMocks.chapter_membership._builder._setThenValue({
+      data: { user_id: 'user-1', chapter_id: 'leaduni', status: 'alumni' },
+      error: null,
+    })
+    tableMocks.lead_identity._builder._setThenValue({ data: null, error: null })
+    tableMocks.lead_identity._builder._setThenValue({ data: alumniIdentity, error: null })
+
+    const result = await LeadIdentityService.issueIdentity(mockSupabase, {
+      userId: 'user-1',
+      identityType: 'alumni',
+      chapterId: 'leaduni',
+      issuedById: 'admin-1',
+    })
+
+    expect(result.success).toBe(true)
+    expect(tableMocks.lead_identity.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        user_id: 'user-1',
+        identity_type: 'alumni',
+        chapter_id: 'leaduni',
+      })
     )
   })
 

@@ -33,6 +33,9 @@ const CHAPTER_SCOPED_TYPES = new Set<ChapterScopedIdentityType>([
   'alumni',
 ])
 const GLOBAL_TYPES = new Set<GlobalIdentityType>(['founder', 'staff'])
+
+const MEMBERSHIP_STATUSES_REQUIRED_FOR_IDENTITY: ReadonlySet<Database['public']['Enums']['membership_status']> =
+  new Set(['approved', 'alumni'])
 const IDENTITY_PRIORITY: Record<IdentityType, number> = {
   founder: 500,
   staff: 400,
@@ -65,6 +68,28 @@ function validateIdentityScope(identityType: SupportedIdentityType, chapterId?: 
   return null
 }
 
+async function hasEligibleChapterMembership(
+  supabase: SupabaseClient<Database>,
+  params: { userId: string; chapterId: string }
+): Promise<boolean> {
+  const { data: membership, error } = await supabase
+    .from('chapter_membership')
+    .select('user_id, chapter_id, status')
+    .eq('user_id', params.userId)
+    .eq('chapter_id', params.chapterId)
+    .maybeSingle()
+
+  if (error) {
+    logger.error(
+      { context: 'lead-identity/issue', error, userId: params.userId, chapterId: params.chapterId },
+      'Failed to verify chapter membership'
+    )
+    return false
+  }
+
+  return membership !== null && MEMBERSHIP_STATUSES_REQUIRED_FOR_IDENTITY.has(membership.status)
+}
+
 function sortPrimaryFallback(a: LeadIdentityRow, b: LeadIdentityRow) {
   const priorityDiff = IDENTITY_PRIORITY[b.identity_type] - IDENTITY_PRIORITY[a.identity_type]
   if (priorityDiff !== 0) return priorityDiff
@@ -80,6 +105,19 @@ export const LeadIdentityService = {
     const scopeError = validateIdentityScope(params.identityType, chapterId)
     if (scopeError) {
       return { success: false, error: scopeError }
+    }
+
+    if (isChapterScopedIdentity(params.identityType) && chapterId) {
+      const hasMembership = await hasEligibleChapterMembership(supabase, {
+        userId: params.userId,
+        chapterId,
+      })
+      if (!hasMembership) {
+        return {
+          success: false,
+          error: 'Cannot issue a chapter-scoped identity. Assign membership first.',
+        }
+      }
     }
 
     const identityType = params.identityType as IdentityType
