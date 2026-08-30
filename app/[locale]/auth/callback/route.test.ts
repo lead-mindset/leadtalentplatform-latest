@@ -13,10 +13,6 @@ vi.mock('@/i18n/routing', () => ({
   },
 }))
 
-vi.mock('@/lib/app-url', () => ({
-  getConfiguredAppUrl: () => 'https://example.com',
-}))
-
 describe('auth callback redirect', () => {
   beforeEach(() => {
     vi.clearAllMocks()
