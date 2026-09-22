@@ -19,6 +19,7 @@ import { getChapterById } from '@/lib/actions/admin/chapters'
 import { getChapterMembers } from '@/lib/actions/admin/get-data'
 import { formatLeadDate } from '@/lib/utils/date-format'
 import { ProtectedLeadershipInvites } from './protected-leadership-invites'
+import { OnboardPresidentPanel } from './onboard-president-panel'
 
 export default async function ChapterDetailPage({
   params,
@@ -123,6 +124,8 @@ export default async function ChapterDetailPage({
           activeLeaders={protectedLeadership.activeLeaders}
           invites={protectedLeadership.invites}
         />
+
+        <OnboardPresidentPanel chapterId={resolvedChapter.id} />
 
         {/* ── Member sections ── */}
         <div className="space-y-4">

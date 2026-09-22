@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server'
-import { getConfiguredAppUrl } from '@/lib/app-url'
 import { NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
@@ -17,12 +16,19 @@ function resolveLocalizedNextPath(nextPath: string | null, locale: string) {
 }
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
+  const requestUrl = new URL(request.url)
+  const { searchParams } = requestUrl
   const code = searchParams.get('code')
-  const localeMatch = new URL(request.url).pathname.match(/^\/([a-z]{2})\//)
+  const localeMatch = requestUrl.pathname.match(/^\/([a-z]{2})\//)
   const locale = localeMatch?.[1] ?? 'es'
   const next = resolveLocalizedNextPath(searchParams.get('next'), locale)
-  const baseUrl = getConfiguredAppUrl().replace(/\/+$/, '')
+
+  // Redirect back to the same origin the OAuth flow started from so the
+  // session cookie set by exchangeCodeForSession is honored. On Vercel
+  // previews the request origin is a unique deployment URL that never
+  // matches a configured FRONTEND_URL; using the request origin keeps the
+  // cookie on-origin and avoids bouncing to a different deployment.
+  const baseUrl = requestUrl.origin
 
   if (!code) {
     return NextResponse.redirect(`${baseUrl}/${locale}/auth/error?error=missing_code`)
