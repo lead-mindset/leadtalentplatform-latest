@@ -4,9 +4,23 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
+  basePath: "/talent",
+
   allowedDevOrigins: [
     "morbidity-pulp-broadways.ngrok-free.dev",
   ],
+
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "talent.leadmindset.org" }],
+        destination: "https://www.leadmindset.org/talent/:path*",
+        permanent: true,
+        basePath: false,
+      },
+    ];
+  },
 
   async rewrites() {
     return [
