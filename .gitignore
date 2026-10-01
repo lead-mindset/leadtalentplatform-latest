@@ -10,43 +10,19 @@
 !.yarn/releases
 !.yarn/versions
 
-# package manager lock files (using pnpm)
-package-lock.json
-yarn.lock
-
 # testing
 /coverage
-/test-results
-/playwright-report
 
 # next.js
 /.next/
 /out/
-.next/cache/
 
 # production
 /build
-/dist
 
 # misc
 .DS_Store
 *.pem
-.turbo/
-.cache/
-.contentlayer/
-Thumbs.db
-
-# IDE
-.venv/
-.windsurf/
-.windsurf
-.windsurfrc
-.vscode/
-.idea/
-*.code-workspace
-*.swp
-*.swo
-*~
 
 # debug
 npm-debug.log*
@@ -54,37 +30,11 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# local generated artifacts
-/outputs
-/tmp
-
 # env files (can opt-in for committing if needed)
-.env*.local
-.env
-.env.remote
-.env.production
+.env*
 
 # vercel
 .vercel
-
-# supabase local artifacts
-supabase/.branches/
-supabase/.temp/
-
-# remote opencode
-logs/
-tmp/
-*.log
-ecosystem.config.json
-.pm2/
-start-remote.sh
-test-remote.sh
-
-# database backups / dumps (may contain secrets)
-prod_full_backup_*.sql
-prod_objects.txt
-qa_objects.txt
-unapplied_migrations.txt
 
 # typescript
 *.tsbuildinfo
